@@ -1,0 +1,30 @@
+The exchange File is reponsible for exchanging Spirit data.
+
+
+The architecture is the following:
+
+- com.actelion.research.spirit.business:
+
+	- Exchange: encapsulates the business logic using JPA entities
+	
+- com.actelion.research.spirit.rest.pojo:
+	
+	- ExchangePojo: encapsulates the business logic using POJO entities (cycles are not possibles)
+	
+	- BiotypePojo: For each JPA entity, there is a matching POJO
+	- BiosamplePojo
+	- LocationPojo
+	- TestPojo
+	- ResultPojo
+	...
+
+- com.actelion.research.spirit.services.exchange:
+
+	- Exporter: used to convert business entities to POJO
+	
+	- Importer: used to convert POJO to business entities
+	
+	- ImporterMapping: used to convert the business entities from one representation to an other, using the specified mapping of biotypes, tests, ...
+	
+	
+ 
