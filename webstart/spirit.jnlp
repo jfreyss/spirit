@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<jnlp spec="1.0+" codebase="https://jfreyss.github.io/spirit/webstart/spirit-bin">
+<jnlp spec="1.0+" codebase="https://github.com/jfreyss/spirit/raw/master/webstart/spirit-bin">
 	<information>
 		<title>Spirit Biobanking</title>
 		<vendor>Actelion</vendor>
