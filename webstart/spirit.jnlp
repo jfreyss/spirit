@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<jnlp spec="1.0+" codebase="spirit-bin">
+	<information>
+		<title>Spirit</title>
+		<vendor>Actelion</vendor>
+		<homepage href="http://www.actelion.com"/>
+		<description>Spirit - (C) Actelion Pharmaceuticals Ltd</description>
+		<description kind="short">Spirit</description>
+		<icon href="ico.png"/>
+		<icon kind="shortcut" href="ico.png"/>
+		<icon kind="splash"  href="spirit.jpg"/>
+		<icon kind="splash2"  href="spirit.jpg"/>
+		<shortcut online="false">
+	      <desktop/>
+	      <menu submenu="Actelion"/>
+	    </shortcut>
+	</information>
+	<security>
+		<all-permissions/>
+	</security>
+	<resources>
+		<j2se version="1.7+" href="http://java.sun.com/products/autodl/j2se"  java-vm-args="-Xmx1024M" />
+		
+		<jar href="antlr-2.7.7.jar" download="lazily"/>
+		<jar href="barcode4j-light.jar" download="lazily"/>
+		<jar href="classmate-1.3.0.jar" download="lazily"/>
+		<jar href="commons-collections-3.1.jar" download="lazily"/>
+		<jar href="commons-logging-1.1.jar" download="lazily"/>
+		<jar href="commons-math3-3.5.jar" download="lazily"/>
+		<jar href="commons-pool-1.6.jar" download="lazily"/>
+		<jar href="dom4j-1.6.1.jar" download="lazily"/>
+		<jar href="exp4j-0.4.7.jar" download="lazily"/>
+		<jar href="genson-1.3.jar" download="lazily"/>
+		<jar href="geronimo-jta_1.1_spec-1.1.1.jar" download="lazily"/>
+		<jar href="gson-2.2.4.jar" download="lazily"/>
+		<jar href="hibernate-commons-annotations-5.0.1.Final.jar" download="lazily"/>
+		<jar href="hibernate-core-5.1.0.Final.jar" download="lazily"/>
+		<jar href="hibernate-entitymanager-5.1.0.Final.jar" download="lazily"/>
+		<jar href="hibernate-envers-5.1.0.Final.jar" download="lazily"/>
+		<jar href="hibernate-jpa-2.1-api-1.0.0.Final.jar" download="lazily"/>
+		<jar href="hsqldb.jar" download="lazily"/>
+		<jar href="itextpdf-5.2.1.jar" download="lazily"/>
+		<jar href="jandex-2.0.0.Final.jar" download="lazily"/>
+		<jar href="javassist-3.20.0-GA.jar" download="lazily"/>
+		<jar href="javaws.jar" download="lazily"/>
+		<jar href="jboss-logging-3.3.0.Final.jar" download="lazily"/>
+		<jar href="mysql-connector-java-5.1.22-bin.jar" download="lazily"/>
+		<jar href="ojdbc6.jar" download="lazily"/>
+		<jar href="paranamer-2.3.jar" download="lazily"/>
+		<jar href="poi-3.12-20150511.jar" download="lazily"/>
+		<jar href="poi-ooxml-3.12-20150511.jar" download="lazily"/>
+		<jar href="poi-ooxml-schemas-3.12-20150511.jar" download="lazily"/>
+		<jar href="poi-scratchpad-3.12-20150511.jar" download="lazily"/>
+		<jar href="servlet-api.jar" download="lazily"/>
+		<jar href="slf4j-api-1.7.12.jar" download="lazily"/>
+		<jar href="slf4j-simple-1.7.12.jar" download="lazily"/>
+		<jar href="swingx-all-1.6.4.jar" download="lazily"/>
+		<jar href="xmlbeans-2.6.0.jar" download="lazily"/>
+		
+		<jar href="spirit.jar" main="true"/>
+		
+		<!-- Custom Adapter (overwrite local properties if needed, to be configured on a secure server) -->
+		<!--		
+			<property name="jnlp.adapter" value="com.actelion.research.spirit.adapter.CustomAdapter"/>	
+			<property name="jnlp.custom.hdialect" value="org.hibernate.dialect.MySQLDialect"/>
+			<property name="jnlp.custom.driver" value="com.mysql.jdbc.Driver"/>
+			<property name="jnlp.custom.dburl" value="jdbc:mysql://localhost:3306/mysql"/>
+			<property name="jnlp.custom.password" value="encrypted password"/>
+		-->
+	
+	
+	</resources>
+	<application-desc main-class="com.actelion.research.spiritapp.spirit.Spirit"/>
+</jnlp> 				
+
+
