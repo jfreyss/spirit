@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <jnlp spec="1.0+" codebase="https://jfreyss.github.io/spirit/webstart/spirit-bin">
 	<information>
-		<title>Spirit</title>
+		<title>Spirit Biobanking</title>
 		<vendor>Actelion</vendor>
 		<homepage href="http://www.actelion.com"/>
 		<description>Spirit - (C) Actelion Pharmaceuticals Ltd</description>
