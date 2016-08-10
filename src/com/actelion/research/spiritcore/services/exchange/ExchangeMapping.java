@@ -856,23 +856,23 @@ public class ExchangeMapping {
 				inputResult.setCreUser(null);
 				inputResult.setUpdDate(null);
 				inputResult.setCreDate(null);
-				logger.info("new result "+inputResult);
+				logger.debug("new result "+inputResult);
 			} else {
 				if(existingResultAction==null || existingResultAction==MappingAction.SKIP) {
 					//Ignore
-					logger.info("skip "+inputResult);
+					logger.debug("skip "+inputResult);
 					continue;
 				} else if(existingResultAction==MappingAction.MAP_REPLACE) {
 					inputResult.setId(existing.getId());
 					inputResult.setUpdDate(null);//Force replacing without looking at existing date
-					logger.info("replace "+inputResult+" id="+existing.getId());
+					logger.debug("replace "+inputResult+" id="+existing.getId());
 				} else if(existingResultAction==MappingAction.CREATE) {
 					//Duplicate result
 					inputResult.setCreDate(null);
 					inputResult.setCreUser(null);
 					inputResult.setUpdDate(null);
 					inputResult.setCreDate(null);
-					logger.info("create duplicate "+inputResult);
+					logger.debug("create duplicate "+inputResult);
 				} else {
 					throw new Exception("Invalid existingAction "+existingResultAction);
 				}
