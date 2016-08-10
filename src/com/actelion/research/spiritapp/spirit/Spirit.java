@@ -248,7 +248,8 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 						}
 						
 						Exchange exchange = Importer.read(new InputStreamReader(is));
-						List<Study> exampleStudies = DAOStudy.queryStudies(StudyQuery.createForState("TEST"), null);
+						List<Study> exampleStudies = DAOStudy.queryStudies(StudyQuery.createForState("EXAMPLE"), null);
+						if(exampleStudies.size()==0) exampleStudies = DAOStudy.queryStudies(StudyQuery.createForState("TEST"), null);
 						boolean importDemo = DAOTest.getTests().size()==0;
 						boolean askToRewrite = !importDemo && DBAdapter.getAdapter().getClass()==HSQLFileAdapter.class && exampleStudies.size()<exchange.getStudies().size();
 						if(askToRewrite) {
