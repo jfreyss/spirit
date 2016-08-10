@@ -67,6 +67,7 @@ public class LocationDepictor extends JPanel {
 	private LocationPanel activeLocationPanel;
 	
 	private final RackDepictor rackPanel = new RackDepictor(this);
+	private boolean forRevisions;
 
 
 	public LocationDepictor() {
@@ -119,15 +120,20 @@ public class LocationDepictor extends JPanel {
 		return getRackPanel().getHighlightPoses();
 	}
 	
+	/**
+	 * Updates the location of this depictor.
+	 * The location is updated/reattached if it is different from the current one (expect if the locationDepictor is set forRevisions) 
+	 * @param loc
+	 */
 	public void setBioLocation(Location loc) {
-		if((this.location == null && loc==null) || (this.location!=null && this.location.equals(loc))) return;
+		if(!forRevisions && ((this.location == null && loc==null) || (this.location!=null && this.location.equals(loc)))) return;
 		this.location = loc;
 		
+		if(!forRevisions) location = JPAUtil.reattach(location);
 		updateView();
 		
 		firePropertyChange(PROPERTY_LOCATIONCHANGED, "", this.location);
 	}
-	
 	
 	public void updateView() {
 		
@@ -155,11 +161,11 @@ public class LocationDepictor extends JPanel {
 				}
 				active = top.initializeLayoutForTop(roots, 0, depth);
 			} else {
-				location = JPAUtil.reattach(location);
+//				location = JPAUtil.reattach(location);
 				active = top.initializeLayoutForParents(location.getHierarchy(), 0, depth);
 			}
 		} else {
-			location = JPAUtil.reattach(location);
+//			location = JPAUtil.reattach(location);
 			active = top.initializeLayoutForMain(location, 0, 0);
 		}
 		
@@ -350,5 +356,9 @@ public class LocationDepictor extends JPanel {
 	public RackDropListener getDropListener() {
 		return getRackPanel().getDropListener();
 	}
+	public void setForRevisions(boolean forRevisions) {
+		this.forRevisions = forRevisions;
+	}
+	
 
 }

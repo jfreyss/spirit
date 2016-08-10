@@ -205,10 +205,6 @@ public class PivotCardPanel extends JPanel {
 			subListPane = subTableSp;
 		}
 
-		// JTabbedPane bottomPane = new JTabbedPane(JTabbedPane.EAST);
-		// bottomPane.add("Visualization", visualizationPane);
-		// bottomPane.add("Selection Details", subListPane);
-
 		// CenterPane
 		final JSplitPane centerPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JBGScrollPane(pivotTable, 1), subListPane);
 		centerPane.setOneTouchExpandable(true);
@@ -374,10 +370,7 @@ public class PivotCardPanel extends JPanel {
 			templatePanel.add(button);
 			buttonGroup.add(button);
 
-			if (currentPivotTemplate == null /*
-												 * && template.getClass()==
-												 * defaultTemplate.getClass()
-												 */) {
+			if (currentPivotTemplate == null) {
 				setCurrentPivotTemplate(button.getPivotTemplate());
 				button.setSelected(true);
 			}

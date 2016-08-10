@@ -64,7 +64,7 @@ public class SpecimenWeighingToxicologyReport extends AbstractReport {
 		}
 		
 		//Load Weighings
-		DAOResult.attachOrCreateStudyResultsToSpecimen(study, animals, null, false);
+		DAOResult.attachOrCreateStudyResultsToSpecimen(study, animals, null, null);
 		
 		Test weightingTest = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
 		if(weightingTest==null) throw new Exception("Error test "+DAOTest.WEIGHING_TESTNAME+" not found");

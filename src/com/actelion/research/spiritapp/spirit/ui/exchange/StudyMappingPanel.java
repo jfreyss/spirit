@@ -31,7 +31,6 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.MappingAction;
 import com.actelion.research.util.ui.FastFont;
@@ -48,8 +47,6 @@ public class StudyMappingPanel extends JPanel implements IMappingPanel {
 //	private JRadioButton r2 = new JRadioButton("Replace the existing study"); //Not supported yet
 	private JRadioButton r3 = new JRadioButton("Create a copy");
 
-	private String nextStudyId;
-	
 	public StudyMappingPanel(ImporterDlg dlg, Study fromStudy) {
 		super(new BorderLayout());
 		this.dlg = dlg;
@@ -59,7 +56,6 @@ public class StudyMappingPanel extends JPanel implements IMappingPanel {
 		
 		ButtonGroup group = new ButtonGroup();
 		group.add(r1);
-//		group.add(r2);
 		group.add(r3);
 		
 		add(BorderLayout.CENTER, 
@@ -68,8 +64,6 @@ public class StudyMappingPanel extends JPanel implements IMappingPanel {
 						r1, 
 						r3,
 						Box.createHorizontalGlue()));
-		nextStudyId = DAOStudy.getNextStudyId();
-		
 		updateView();
 		
 		
@@ -83,19 +77,19 @@ public class StudyMappingPanel extends JPanel implements IMappingPanel {
 		if(mappedStudy==null) {
 			commentLabel.setText("This study is new");
 			r1.setText("Don't import");
-			r3.setText("Import under: "+nextStudyId);
+			r3.setText("Import");
 			setOpaque(false);
 			
 		} else {
 			commentLabel.setText("This study matches the existing study: " + mappedStudy.getStudyId() + (mappedStudy.getIvv()==null?"": " ("+mappedStudy.getIvv()+") "));
 			commentLabel.setForeground(Color.RED); 
 			r1.setText("Keep the existing design: "+mappedStudy.getStudyId());
-			r3.setText("Create a copy: "+nextStudyId);
+			r3.setText("Create a copy");
 			setBackground(Color.PINK);
 			setOpaque(true);
 			
 		}
-		if(action==MappingAction.CREATE_COPY) {
+		if(action==MappingAction.CREATE) {
 			r3.setSelected(true);
 		} else {
 			r1.setSelected(true);
@@ -105,7 +99,7 @@ public class StudyMappingPanel extends JPanel implements IMappingPanel {
 	
 	public void updateMapping() {
 		ExchangeMapping mapping = dlg.getMapping();
-		MappingAction action = mappedStudy==null?  MappingAction.CREATE_COPY: r1.isSelected()? MappingAction.IGNORE_LINK: r3.isSelected()? MappingAction.CREATE_COPY: null;
+		MappingAction action = mappedStudy==null?  MappingAction.CREATE: r1.isSelected()? MappingAction.SKIP: r3.isSelected()? MappingAction.CREATE: null;
 		mapping.getStudyId2mappedStudy().put(fromStudy.getStudyId(), mappedStudy);
 		mapping.getStudyId2action().put(fromStudy.getStudyId(), action);
 	}

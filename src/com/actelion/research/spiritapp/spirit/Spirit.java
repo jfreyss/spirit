@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.swing.Box;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -78,6 +79,7 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.SchemaCreator;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
+import com.actelion.research.spiritcore.adapter.HSQLFileAdapter;
 import com.actelion.research.spiritcore.business.Exchange;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
@@ -90,6 +92,7 @@ import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Study;
+import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
@@ -99,6 +102,7 @@ import com.actelion.research.spiritcore.services.dao.DAOExchange;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
+import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
@@ -108,7 +112,9 @@ import com.actelion.research.spiritcore.services.migration.MigrationScript.Fatal
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.Config;
 import com.actelion.research.util.ui.ApplicationErrorLog;
+import com.actelion.research.util.ui.CustomTabbedPaneUI;
 import com.actelion.research.util.ui.FastFont;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JStatusBar;
 import com.actelion.research.util.ui.SplashScreen2;
@@ -138,9 +144,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	private static SpiritUser user; 	
 	
 	public Spirit() {
-		super("Spirit");
-		
-		
+		super("Spirit Biobank");
 		
 		
 		SpiritChangeListener.register(this);
@@ -152,7 +156,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		
 		
 		statusBar = new JStatusBar();
-		tabbedPane = new JTabbedPane();
+		tabbedPane = new JCustomTabbedPane();
 		
 		// Keep the same Study when we change tabs
 		final ChangeListener studyListener = new ChangeListener() {
@@ -236,15 +240,52 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 			} 
 			
 			//Check emptyness?
-			if(DAOTest.getTests().size()==0 && SpiritRights.isSuperAdmin(getUser())) {
-				try (InputStream is = DBAdapter.class.getResourceAsStream("demo.spirit")) {
-					if(is==null) {
-						throw new Exception("The system could not find the default configuration. The system is therefore empty");
+			try {
+				if(SpiritRights.isSuperAdmin(getUser())) {
+					try (InputStream is = DBAdapter.class.getResourceAsStream("demo.spirit")) {
+						if(is==null) {
+							throw new Exception("The system could not find the default configuration. The system is therefore empty");
+						}
+						
+						Exchange exchange = Importer.read(new InputStreamReader(is));
+						List<Study> exampleStudies = DAOStudy.queryStudies(StudyQuery.createForState("TEST"), null);
+						boolean importDemo = DAOTest.getTests().size()==0;
+						boolean askToRewrite = !importDemo && DBAdapter.getAdapter().getClass()==HSQLFileAdapter.class && exampleStudies.size()<exchange.getStudies().size();
+						if(askToRewrite) {
+							int res = JOptionPane.showConfirmDialog(this, "There are new examples available!\nDo you want to update the current examples with the new ones?", "Examples", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+							if(res==JOptionPane.YES_OPTION) {
+								importDemo = true;
+							}
+						}
+						if(importDemo) {
+							try {
+								JPAUtil.pushEditableContext(getUser());
+								ExchangeMapping mapping = new ExchangeMapping(exchange);
+								DAOExchange.persist(mapping, getUser());
+							} catch(Throwable e2) {
+								e2.printStackTrace();
+								//Clean
+								EntityManager session = JPAUtil.getManager();
+								try {
+									LoggerFactory.getLogger(getClass()).error("Could not persist examples: replace old examples", e2);
+									session.getTransaction().begin();
+									DAOResult.deleteResults(session, DAOResult.queryResults(session, ResultQuery.createQueryForSids(JPAUtil.getIds(exampleStudies)), user), user);
+									DAOBiosample.deleteBiosamples(session, DAOBiosample.queryBiosamples(session, BiosampleQuery.createQueryForSids(JPAUtil.getIds(exampleStudies)), user), user);
+									DAOStudy.deleteStudies(session, exampleStudies, user);
+									LoggerFactory.getLogger(getClass()).info("examples deleted: "+exampleStudies);
+									session.getTransaction().commit();									
+								} catch(Throwable e3) {
+									e3.printStackTrace();
+									session.getTransaction().rollback();
+								} finally {
+									JPAUtil.popEditableContext();
+								}								
+							}
+						}
 					}
-					Exchange exchange = Importer.read(new InputStreamReader(is));
-					ExchangeMapping mapping = new ExchangeMapping(exchange);
-					DAOExchange.persist(mapping, getUser());
 				}
+			} catch(Exception e) {
+				JExceptionDialog.showError(this, e);
 			}
 			
 		} catch(Throwable e) {
@@ -255,7 +296,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 			ta.setEditable(false);
 			JScrollPane sp = new JScrollPane(ta);
 			sp.setPreferredSize(new Dimension(600, 350));
-			JOptionPane.showMessageDialog(null, UIUtils.createBox(sp, new JLabel("<html><b>Database Error</b><br>The tables may not be up to dates, please contact support with the following trace!"), null, null, null), "DB Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, UIUtils.createBox(sp, new JLabel("<html><b>Database Error</b><br>The tables may not be up to dates, please contact support with the following trace!"), null, null, null), "DB Error", JOptionPane.ERROR_MESSAGE);
 		}
 		
 		

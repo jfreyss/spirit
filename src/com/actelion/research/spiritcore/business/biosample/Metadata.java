@@ -77,10 +77,12 @@ public class Metadata implements Serializable {
 			this.value = MiscUtils.unsplit(v, ";");
 		}
 
-		//Be sure to call preSave (hibernate Bug Hack, which prevents preSave from being called before updates)
+		/*
+		//Be sure to call preSave (hibernate Bug Hack <5.0, which prevents preSave from being called before updates)
 		if(getBiosample()!=null) {
 			getBiosample().preSave();
 		}
+		*/
 	}
 
 

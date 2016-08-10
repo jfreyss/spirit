@@ -170,7 +170,7 @@ public class StudyEditorPane extends JEditorPane {
 			if(study.getIvv()!=null) sb.append(" <span style='font-size:10px'>  " + MiscUtils.removeHtml(study.getIvv()) + "</span> ");
 			sb.append("<br>");
 			if(study.getTitle()!=null) {
-				sb.append("<span style='font-size:9px;color:#000000'>" + MiscUtils.removeHtml(study.getTitle()) + "</span><br>");
+				sb.append("<span style='font-size:10px; color:#000000'>" + MiscUtils.removeHtml(study.getTitle()) + "</span><br>");
 			}
 			
 			//Display metadata
@@ -196,18 +196,21 @@ public class StudyEditorPane extends JEditorPane {
 				Set<String> adminSet = new LinkedHashSet<>();
 				adminSet.addAll(Arrays.asList(ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, study.getState())));
 				adminSet.addAll(study.getAdminUsersAsSet());
-				
 				sb.append("<tr><td>Admin:</td><td><b>" + (adminSet.size()==0?"-": MiscUtils.flatten(adminSet, ", ")) + "</b></td></tr>");
 				
 				Set<String> expertSet = new LinkedHashSet<>();
 				expertSet.addAll(Arrays.asList(ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, study.getState())));
 				expertSet.addAll(study.getExpertUsersAsSet());
 				expertSet.addAll(EmployeeGroup.getNames(study.getEmployeeGroups()));
-				sb.append("<tr><td>Expert:</td><td><b>" + (expertSet.size()==0? "-": MiscUtils.flatten(expertSet, ", ")) + "</b></td></tr>");
+				if(expertSet.size()>0) {
+					sb.append("<tr><td>Expert:</td><td><b>" + (expertSet.size()==0? "-": MiscUtils.flatten(expertSet, ", ")) + "</b></td></tr>");
+				}
 				
 				Set<String> viewSet = new LinkedHashSet<>();
 				viewSet.addAll(Arrays.asList(ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState())));
-				sb.append("<tr><td>View:</td><td><b>" + (viewSet.size()==0? "-": MiscUtils.flatten(viewSet, ", ")) + "</b></td></tr>");
+				if(viewSet.size()>0) {
+					sb.append("<tr><td>View:</td><td><b>" + (viewSet.size()==0? "-": MiscUtils.flatten(viewSet, ", ")) + "</b></td></tr>");
+				}
 				
 				if(study.getBlindDetailsUsersAsSet().size()>0) sb.append("<tr><td>Blind-Names:</td><td><b>" + MiscUtils.flatten(study.getBlindDetailsUsersAsSet(), ", ") + "</b></td></tr>");
 				if(study.getBlindAllUsersAsSet().size()>0) sb.append("<tr><td>Blind-All:</td><td><b>" + MiscUtils.flatten(study.getBlindAllUsersAsSet(), ", ") + "</b></td></tr>");
@@ -353,7 +356,7 @@ public class StudyEditorPane extends JEditorPane {
 			for (Biotype t: m1.keySet()) {					
 				sb.append("<tr><td><a href='bios:" + study.getStudyId() + ":" + t.getName() + "'>" + t.getName() + "</a> (" + m1.get(t).getFirst() + ")");																								
 				sb.append("</td><td style='padding-left:5px;color:" + getColor(m1.get(t).getThird()) + "'>");
-				sb.append("  [" + Formatter.formatDateOrTime(m1.get(t).getThird()) + " - " + m1.get(t).getSecond() +"]");
+				sb.append(" <span style='font-size:8px'> [" + Formatter.formatDateOrTime(m1.get(t).getThird()) + " - " + m1.get(t).getSecond() +"]</span>");
 				sb.append("</td></tr>");
 			}
 			sb.append("</table>");
@@ -372,7 +375,7 @@ public class StudyEditorPane extends JEditorPane {
 			for (Test t: m2.keySet()) {					
 				sb.append("<tr><td><a href='test:" + study.getStudyId() + ":" + t.getId() + "'>" + t.getName() + "</a>&nbsp;(" + m2.get(t).getFirst() + ")");																								
 				sb.append("</td><td style='padding-left:5px;color:" + getColor(m2.get(t).getThird()) + "'>");
-				sb.append("  [" + Formatter.formatDateOrTime(m2.get(t).getThird()) + " - " + m2.get(t).getSecond() +"]");
+				sb.append(" <span style='font-size:8px'> [" + Formatter.formatDateOrTime(m2.get(t).getThird()) + " - " + m2.get(t).getSecond() +"]</span>");
 				sb.append("</td></tr>");
 			}
 			sb.append("</table>");

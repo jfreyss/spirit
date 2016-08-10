@@ -105,10 +105,11 @@ public class MonitoringHelper {
 		int nDone = 0;
 		int nMade = 0;
 	
-		ListHashMap<String, Result> resultsMap = new ListHashMap<String, Result>();
+		ListHashMap<String, Result> resultsMap = new ListHashMap<>();
 		for (Result r : results) resultsMap.add(r.getTest().getId() + "_" + r.getBiosample().getId() + "_"+ r.getPhase(), r);
 				
 		for (Biosample animal : animals) {
+			System.out.println("MonitoringHelper.calculateDoneRequiredTest() "+animal+" "+animal.getStatus()+" "+animal.getStudyAction(phase));
 			if(!animal.getStatus().isAvailable()) continue;
 			//required?
 			boolean required = false;
@@ -127,10 +128,9 @@ public class MonitoringHelper {
 				}
 			}
 			
-			//Loop through results
-			List<Result> list = resultsMap.get(test.getId() + "_" + animal.getId() + "_" + phase);
-			
+			//Loop through results			
 			boolean made = false;
+			List<Result> list = resultsMap.get(test.getId() + "_" + animal.getId() + "_" + phase);
 			if(list!=null) {
 				for (Result r : list) {				
 					if(r.getOutputResultValuesAsString().length()>0) {

@@ -23,6 +23,7 @@ package com.actelion.research.spiritapp.spirit.ui.study;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -102,7 +103,7 @@ public class StudyHistoryDlg extends JEscapeDialog {
 				JPAUtil.pushEditableContext(Spirit.getUser());
 				int res = JOptionPane.showConfirmDialog(StudyHistoryDlg.this, "Are you sure you want to restore to the selected version?", "Restore", JOptionPane.YES_NO_OPTION);
 				if(res!=JOptionPane.YES_OPTION) return;
-				DAOStudy.persistStudy(study, Spirit.askForAuthentication());
+				DAOStudy.persistStudies(Collections.singleton(study), Spirit.askForAuthentication());
 				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, study);
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);

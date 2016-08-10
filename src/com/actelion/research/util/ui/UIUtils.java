@@ -55,6 +55,9 @@ import javax.swing.border.Border;
 
 public final class UIUtils {
 
+	private static Map<Integer, Color> colorMap = new HashMap<Integer, Color>();
+	public static final Color TITLEPANEL_BACKGROUND = UIUtils.getColor(183,204,223);
+	
 	public static Frame getMainFrame() {
 		Frame res = null;
 		for(Frame f:  Frame.getFrames()) {
@@ -67,8 +70,9 @@ public final class UIUtils {
 		return getDilutedColor(color1, color2, .5);
 	}
 	
-	//Get Colors from (small) cache
-	private static Map<Integer, Color> colorMap = new HashMap<Integer, Color>();
+	/**
+	 * Get Colors from (small) cache
+	 */
 	public static Color getColor(int r, int g, int b) {
 		return getColor(r, g, b, 255);
 	}
@@ -212,18 +216,18 @@ public final class UIUtils {
 	}
 	
 	public static JPanel createTitleBoxSmall(final String title, JComponent comp) {
-		return createTitleBox(title, comp, FastFont.SMALL, Color.GRAY, UIUtils.getColor(183,204,223),  6);
+		return createTitleBox(title, comp, FastFont.SMALL, Color.GRAY, TITLEPANEL_BACKGROUND,  6);
 	}
 	
 	public static JPanel createTitleBox(JComponent comp) {
 		return createTitleBox("", comp);
 	}
 	public static JPanel createTitleBox(final String title, JComponent comp) {
-		return createTitleBox(title, comp, FastFont.BIGGER, Color.BLACK, UIUtils.getColor(183,204,223), 10);
+		return createTitleBox(title, comp, FastFont.BIGGER, Color.BLACK, TITLEPANEL_BACKGROUND, 10);
 	}
 	
 	public static JPanel createTitleBoxBigger(final String title, JComponent comp) {
-		return createTitleBox(title, comp, FastFont.BIGGEST, Color.BLACK, UIUtils.getColor(183,204,223), 12);
+		return createTitleBox(title, comp, FastFont.BIGGEST, Color.BLACK, TITLEPANEL_BACKGROUND, 12);
 	}
 	
 	public static JPanel createTitleBox(final String title, final JComponent comp, final Font font, final Color titleColor, final Color bgColor, final int radius) {

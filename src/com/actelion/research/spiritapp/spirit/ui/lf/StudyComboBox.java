@@ -37,6 +37,7 @@ import javax.swing.JList;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.study.Study;
+import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.JTextComboBox;
@@ -80,7 +81,7 @@ public class StudyComboBox extends JTextComboBox {
 					String title = (study.getTitle()==null?"":study.getTitle());
 					int maxLength = 100 - (study.getIvv()==null?0: study.getIvv().length()+2);
 					if(title.length()>maxLength) title = title.substring(0,maxLength-2) + "...";
-					boolean resp = study.getWriteUsers().contains(user) || study.getBlindAllUsers().contains(user) || study.getBlindDetailsUsers().contains(user);
+					boolean resp = study.isMentioned(user);
 					
 					setText("<html><div style='white-space:nowrap'>" +
 							(study.getStudyId()!=null? "<b style='font-size:10px'>" + study.getStudyId() + "</b>:&nbsp;&nbsp;": "") +

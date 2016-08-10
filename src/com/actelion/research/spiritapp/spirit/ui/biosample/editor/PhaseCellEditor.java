@@ -54,16 +54,16 @@ public class PhaseCellEditor extends AbstractCellEditor implements TableCellEdit
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, final int row, int column) {
 		final EditBiosampleTable t = (EditBiosampleTable) table;
+		if(row>=0 && row<t.getRows().size()) {
+			b = t.getRows().get(row);
+		}
 		textComboBox = new JTextComboBox(false) {
 			@Override
 			public Collection<String> getChoices() {
-				List<String> choices = new ArrayList<String>();
-				if(row>=0 && row<=t.getRows().size()) {
-					b = t.getRows().get(row);
-					if(b!=null && b.getInheritedStudy()!=null) {
-						for(Phase s : b.getInheritedStudy().getPhases()) {
-							choices.add(s.getShortName());
-						}
+				List<String> choices = new ArrayList<>();
+				if(b!=null && b.getInheritedStudy()!=null) {
+					for(Phase s : b.getInheritedStudy().getPhases()) {
+						choices.add(s.getShortName());
 					}
 				}
 				return choices;
@@ -74,6 +74,9 @@ public class PhaseCellEditor extends AbstractCellEditor implements TableCellEdit
 		} else if(value instanceof Phase) {
 			textComboBox.setText(((Phase)value).getShortName());
 		}
+		
+		System.out.println("PhaseCellEditor.getTableCellEditorComponent() "+value);
+		
 		AlphaNumericalCellEditor.initComp(textComboBox, (JComponent) table.getCellRenderer(row, column).getTableCellRendererComponent(table, value, isSelected, isSelected, row, column));		
 		textComboBox.selectAll();
 		return textComboBox;

@@ -269,11 +269,13 @@ public class LocationTab extends JPanel implements ISpiritTab {
 		addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentShown(ComponentEvent e) {
+				System.out.println("LocationTab.LocationTab() first="+first);
 				if(getRootPane()!=null){
 					getRootPane().setDefaultButton(searchPane.getSearchButton());		
 				}
 				if(first) {
 					first = false;
+					System.out.println("LocationTab.LocationTab() getStudyIds='"+getStudyIds()+"'");
 					if(getStudyIds().length()>0) {
 						searchPane.query();
 					} else {
@@ -355,7 +357,7 @@ public class LocationTab extends JPanel implements ISpiritTab {
 			
 			//Refresh their parent
 			List<Location> parents = JPAUtil.reattach(Location.getParents(locs));
-			List<Location> rows = new ArrayList<Location>(searchPane.getLocationTable().getRows());
+			List<Location> rows = new ArrayList<>(searchPane.getLocationTable().getRows());
 			rows.removeAll(locs);
 			rows = JPAUtil.reattach(rows);
 			searchPane.getLocationTable().setRows(rows);
@@ -369,14 +371,14 @@ public class LocationTab extends JPanel implements ISpiritTab {
 			locs = JPAUtil.reattach(locs);
 			
 			//Add the parents
-			for (Location l : new ArrayList<Location>(locs)) {
+			for (Location l : new ArrayList<>(locs)) {
 				if(l!=null && l.getParent()!=null && !locs.contains(l.getParent())) {
 					locs.add(l.getParent());
 				}
 			}
 			
 			//Refresh location or parents
-			List<Location> rows = new ArrayList<Location>(searchPane.getLocationTable().getRows());
+			List<Location> rows = new ArrayList<>(searchPane.getLocationTable().getRows());
 			rows = JPAUtil.reattach(rows);
 			rows.addAll(locs);
 			searchPane.getLocationTable().setRows(rows);	

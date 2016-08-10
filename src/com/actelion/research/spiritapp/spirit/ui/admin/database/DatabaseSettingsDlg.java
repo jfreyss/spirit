@@ -65,6 +65,7 @@ import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JComboCheckBox;
 import com.actelion.research.util.ui.JCustomLabel;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JInfoLabel;
@@ -207,7 +208,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 		refreshConfigPanels();
 		
 		//TabbedPane
-		JTabbedPane tabbedPane = new JTabbedPane();
+		JTabbedPane tabbedPane = new JCustomTabbedPane();
 		tabbedPane.setFont(FastFont.BOLD);
 		tabbedPane.add("Database", UIUtils.createBox(
 				UIUtils.createTitleBox("DB Connection",specificConfigPane), 

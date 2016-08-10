@@ -51,9 +51,7 @@ import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
-import javax.persistence.PreUpdate;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -68,8 +66,8 @@ import org.hibernate.envers.RevisionNumber;
 import org.hibernate.envers.RevisionTimestamp;
 
 import com.actelion.research.spiritcore.business.Document;
-import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.Document.DocumentType;
+import com.actelion.research.spiritcore.business.IEntity;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.util.CorrespondanceMap;
@@ -89,40 +87,8 @@ import com.actelion.research.util.CompareUtils;
 })
 @SequenceGenerator(name="study_sequence", sequenceName="study_sequence", allocationSize=1)
 @BatchSize(size=8)
-public class Study implements Serializable, IObject, Comparable<Study> {
-	
-//	@Deprecated
-//	public enum StudyStatus {
-//		TEST("Test", "Only for testing, not searchable"),
-//		ONGOING("Private", "Read-rights enforced to the given users"),
-//		FINISHED("Published", "Everybody can read (if config is open)"),
-//		STOPPED("Stopped", "Searchable by everybody, but marked as stopped");
-//		
-//		private String name;
-//		private String description;
-//		private StudyStatus(String name, String description) {this.name = name; this.description = description;}
-//		public String getName() {return name;}
-//		public String getDescription() {return description;}
-//		@Override
-//		public String toString() {return name;}
-//	}
-	
-//	@Deprecated
-//	public enum ClinicalStatus {
-//		PRECLINICAL("preclinical"),
-//		CLINICAL("clinical");
-//		
-//		private String name;
-//		private ClinicalStatus(String name) {this.name = name;}
-//		
-//		public String getName() {
-//			return name;
-//		}
-//		
-//		@Override
-//		public String toString() {return name;}
-//	}
-	
+public class Study implements Serializable, IEntity, Comparable<Study> {
+
 	@Id
 	@RevisionNumber	
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="study_sequence")
@@ -154,33 +120,6 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 	
 	@Column(name="comments", length=2048)
 	private String notes = "";
-	
-//	@Column(name="owner", length=20)
-//	private String owner;	
-
-//	//TODO Move to metadata
-//	@Column(name="type", length=20)
-//	private String type;
-//
-//	//TODO Move to metadata
-//	@Column(name="project", length=20)
-//	private String project;
-//
-//	//TODO Move to metadata
-//	@Column(name="external_site", length=30)
-//	private String site = "";
-//	
-//	//TODO Move to metadata
-//	@Column(name="licenceno", length=20)
-//	private String licenceNo;
-//	
-//	//TODO Move to metadata
-//	@Column(name="rnd_experimenter", length=20)
-//	private String experimenter;
-//	
-//	//TODO Move to metadata
-//	@Column(name="diseasearea", length=128)
-//	private String diseaseArea;
 	
 	@Column(name="metadata", length=4000)
 	private String serializedMetadata;
@@ -232,11 +171,6 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 	@Column(name="status", nullable=true, length=24)
 	private String state = null;
 	
-//	@Enumerated(EnumType.STRING)
-//	@Column(name="clinical", nullable=true)
-//	//TODO Move to metadata
-//	private ClinicalStatus clinical = ClinicalStatus.PRECLINICAL;
-	
 	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY)
 	@JoinColumn(name="department_id")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
@@ -248,13 +182,6 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@BatchSize(size=8)
 	private EmployeeGroup employeeGroup2 = null;
-
-//	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY)
-//	@JoinColumn(name="department3_id")
-//	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-//	@BatchSize(size=8)
-//	private EmployeeGroup employeeGroup3 = null;
-
 	
 	@Column(name="synchrosamples")
 	private Boolean synchronizeSamples = Boolean.TRUE;
@@ -281,16 +208,25 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 	private Set<Biosample> attachedBiosamples = new TreeSet<>();
 	
 	/** Helpful function for faster access groupId_groupName_subgroup->phaseName->action */
-	private transient Map<String, Map<String, StudyAction>> mapGroupPhase2Action = null;
-	
+	private transient Map<String, Map<String, StudyAction>> mapGroupPhase2Action = null;	
 	private transient Map<String, String> metadataMap = null;
+	private transient Set<String> adminUsersSet;
+	private transient Set<String> expertUsersSet;
+	private transient Set<String> blindAllUsersSet;
+	private transient Set<String> blindDetailsUsersSet;
+	private transient Map<Pair<Group, Integer>, Phase> phaseFirstTreatments = new HashMap<Pair<Group,Integer>, Phase>();
 
 	
-	public Study() {}
+	/**
+	 * Basic constructor
+	 */
+	public Study() {
+		
+	}
 	
 	@Override
 	public String toString() {		
-		return getStudyId(); 
+		return getIvvOrStudyId(); 
 	}
 	
 	
@@ -325,7 +261,7 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 	}
 
 
-	public String getWriteUsers() {
+	public String getAdminUsers() {
 		return adminUsers;
 	}
 
@@ -357,7 +293,7 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 		this.ivv = ivv;
 	}
 
-	public void setWriteUsers(String writeUsers) {
+	public void setAdminUsers(String writeUsers) {
 		adminUsersSet = null;
 		this.adminUsers = writeUsers;
 	}
@@ -380,8 +316,7 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 
 	public Set<Group> getGroups() {
 		return groups;
-	}
-	
+	}	
 
 	public List<Group> getGroupsHierarchical() {
 		List<Group> res = new ArrayList<Group>();
@@ -426,12 +361,15 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 	public void setGroups(Set<Group> groups) {
 		this.groups = groups;
 	}
+	
 	public Set<Phase> getPhases() {
 		return phases;
-	}
+	}	
+	
 	public void setPhases(Set<Phase> phases) {
 		this.phases = phases;
 	}
+	
 	public Phase getPhase(int phaseId) {
 		for (Phase p : getPhases()) {
 			if(p.getId()==phaseId) {
@@ -479,8 +417,7 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 					if(s.getDetailsLong().equalsIgnoreCase(samplingDetailsLong)) {
 						return s;
 					}
-				}
-				
+				}				
 			}	
 		}
 		return null;
@@ -527,12 +464,22 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 
 	@Override
 	public int hashCode() {
-		return studyId==null?0: studyId.hashCode();
+		return id;
 	}
 
 	public Group getGroup(String groupName) {		
 		for (Group group : getGroups()) {
 			if(group.getName().equals(groupName)) return group;
+		}
+		return null;
+	}
+	
+	public Group getGroup(Integer id) {		
+		if(id==null) return null;
+		for (Group g : getGroups()) {
+			if(g.getId()==id) {
+				return g;
+			}			
 		}
 		return null;
 	}
@@ -553,16 +500,10 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 		study.setIvv(getIvv());
 		study.setTitle(getTitle());
 		study.setNotes(getNotes());
-		study.setWriteUsers(getWriteUsers());
+		study.setAdminUsers(getAdminUsers());
 		study.setExpertUsers(getExpertUsers());
 		study.expertUsers = this.expertUsers;
-//		study.setProject(getProject());
-//		study.setType(getType());
-//		study.setDiseaseArea(getDiseaseArea());
-//		study.setOwner(getOwner());
 		study.setEmployeeGroups(getEmployeeGroups());
-//		study.setSite(getSite());
-//		study.setClinicalStatus(getClinicalStatus());
 		study.setDocuments(new HashSet<Document>());
 		study.setSynchronizeSamples(isSynchronizeSamples());
 		study.serializedMetadata = serializedMetadata;
@@ -654,12 +595,6 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 		String sid2 = ((Study)obj).getStudyId();
 		return getStudyId()==null? (sid2==null): getStudyId().equals(sid2);
 	}
-//	public void setProject(String project) {
-//		this.project = project;
-//	}
-//	public String getProject() {
-//		return project;
-//	}	
 		
 	public Set<NamedTreatment> getNamedTreatments() {
 		return namedTreatments;
@@ -921,14 +856,9 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 		return expertUsers;
 	}
 	
-	private transient Set<String> adminUsersSet;
-	private transient Set<String> expertUsersSet;
-	private transient Set<String> blindAllUsersSet;
-	private transient Set<String> blindDetailsUsersSet;
-	
 	private void populateUserSets() {
 		if(adminUsersSet==null) {
-			adminUsersSet = new TreeSet<>(Arrays.asList(MiscUtils.split(getWriteUsers(), MiscUtils.SPLIT_SEPARATORS_WITH_SPACE)));
+			adminUsersSet = new TreeSet<>(Arrays.asList(MiscUtils.split(getAdminUsers(), MiscUtils.SPLIT_SEPARATORS_WITH_SPACE)));
 			expertUsersSet = new TreeSet<>(Arrays.asList(MiscUtils.split(getExpertUsers(), MiscUtils.SPLIT_SEPARATORS_WITH_SPACE)));
 			
 			blindAllUsersSet = new TreeSet<>();
@@ -984,32 +914,21 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 			n.remove();
 		}
 	}
+	
 	/**
 	 * @param documents the documents to set
 	 */
 	public void setDocuments(Set<Document> documents) {
 		this.documents = documents;
 	}
+	
 	/**
 	 * @return the documents
 	 */
 	public Set<Document> getDocuments() {
 		return documents;
 	}
-	
-	
-//	/**
-//	 * @param externalSite the externalSite to set
-//	 */
-//	public void setSite(String externalSite) {
-//		this.site = externalSite;
-//	}
-//	/**
-//	 * @return the externalSite
-//	 */
-//	public String getSite() {
-//		return site;
-//	}
+		
 	public Date getDayOneDate() {
 		return startingDate;
 	}
@@ -1081,21 +1000,18 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 	public String getStudyId() {
 		return studyId;
 	}
+	
 	public void setStudyId(String name) {
 		this.studyId = name;
 	}
+	
 	public String getState() {
 		return state;
 	}
 	public void setState(String status) {
 		this.state = status;
 	}
-//	public ClinicalStatus getClinicalStatus() {
-//		return clinical;
-//	}
-//	public void setClinicalStatus(ClinicalStatus clinical) {
-//		this.clinical = clinical;
-//	}
+
 	/**
 	 * @param department the department to set
 	 */
@@ -1133,19 +1049,6 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 		return "["+sb.toString()+"]";
 	}
 
-	
-//	public String getExperimenter() {
-//		return experimenter;
-//	}
-//	public void setExperimenter(String experimenter) {
-//		this.experimenter = experimenter;
-//	}
-//	public String getLicenceNo() {
-//		return licenceNo;
-//	}
-//	public void setLicenceNo(String licenceNo) {
-//		this.licenceNo = licenceNo;
-//	}
 	/**
 	 * @param attachedBiosamples the attachedBiosamples to set
 	 */
@@ -1222,7 +1125,7 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 		return MiscUtils.flatten(getBlindDetailsUsersAsSet(), ", ");
 	}
 	
-	private void setBlind(Collection<String> all, Collection<String> group) {
+	public void setBlindUsers(Collection<String> all, Collection<String> group) {
 		StringBuilder sb = new StringBuilder();
 		for (String u : all) {
 			if(sb.length()>0) sb.append(" ");
@@ -1234,14 +1137,13 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 		}
 
 		this.blindUsers = sb.toString();
-		adminUsersSet = null;				
 	}
 	
 	public void setBlindAllUsers(Collection<String> set) {
-		setBlind(set, getBlindDetailsUsersAsSet());				
+		setBlindUsers(set, getBlindDetailsUsersAsSet());				
 	}
 	public void setBlindDetailsUsers(Collection<String> set) {
-		setBlind(getBlindAllUsersAsSet(), set);				
+		setBlindUsers(getBlindAllUsersAsSet(), set);				
 	}	
 
 	public Set<String> getCompounds(){
@@ -1350,14 +1252,6 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 		mapGroupPhase2Action = null;
 	}
 
-	
-//	public String getBiotypeName() {
-//		return clinical==ClinicalStatus.CLINICAL?"Human":"Animal";
-//	}
-	
-	
-	private transient Map<Pair<Group, Integer>, Phase> phaseFirstTreatments = new HashMap<Pair<Group,Integer>, Phase>();
-	
 	public Phase getPhaseFirstTreatment(Group group, int subgroup) {
 		if(group==null) return null;
 		Pair<Group, Integer> key = new Pair<>(group, subgroup);
@@ -1417,29 +1311,14 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 		return res;
 	}
 
-//	public String getOwner() {
-//		return owner;
-//	}
-//
-//	public void setOwner(String owner) {
-//		this.owner = owner;
-//	}
-
-//	public String getDiseaseArea() {
-//		return diseaseArea;
-//	}
-//
-//	public void setDiseaseArea(String diseasearea) {
-//		this.diseaseArea = diseasearea;
-//	}
-//
-//	public String getType() {
-//		return type;
-//	}
-//
-//	public void setType(String type) {
-//		this.type = type;
-//	}
+	public static Set<String> getStudyIds(Collection<Study> studies){
+		Set<String> res = new HashSet<>();
+		if(studies==null) return res;
+		for (Study s : studies) {
+			if(s!=null) res.add(s.getStudyId());
+		}
+		return res;
+	}
 
 	public Map<String, String> getMetadata() {
 		if(metadataMap==null) {
@@ -1450,15 +1329,34 @@ public class Study implements Serializable, IObject, Comparable<Study> {
 	
 	public  void setMetadata(Map<String, String> metadataMap) {
 		this.metadataMap = metadataMap;
-		serializeMetadataMap();
+//		preSave();
 	}
 	
-	@PrePersist @PreUpdate
-	private void serializeMetadataMap() {
+	/**
+	 * PreSave serializes the data. However this function must be called from within the DAO because session.merge does not call this function even with @PreUpdate
+	 */
+//	@PrePersist @PreUpdate
+	public void preSave() {
+		//Serialize Metadata
 		if(metadataMap!=null) {
 			this.serializedMetadata = MiscUtils.serializeStringMap(metadataMap);
 		}
+		//Serialize Sampling
+		for (NamedSampling ns : getNamedSamplings()) {
+			for (Sampling s : ns.getAllSamplings()) {
+				s.preSave();
+			}
+			
+		}
 	}
 	
+	public boolean isMentioned(String user) {
+		if(getAdminUsersAsSet().contains(user)) return true;
+		if(getBlindAllUsersAsSet().contains(user)) return true;
+		if(getExpertUsersAsSet().contains(user)) return true;
+		if(getBlindDetailsUsers().contains(user)) return true;
+		if(getCreUser().equals(user)) return true;
+		return false;
+	}
 
 }

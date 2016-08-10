@@ -45,30 +45,85 @@ public class Randomization {
 	
 	/**
 	 * Deserializes the samples, must be called before any other calls
-	 * @param study
+	 * The format is expected to be &{versi 
 	 */
-	protected void deserialize(Phase phase, String rndSamples) {
+	protected void deserialize(Phase phase, String serializedRando) {
 		samples = new ArrayList<>();
-		if(rndSamples!=null && rndSamples.length()>0) {
-			if(rndSamples.startsWith("&1\n")) {
+		if(serializedRando!=null && serializedRando.length()>0) {
+			if(serializedRando.startsWith("&1\n")) {
 				//Version 1
-				String[] split = rndSamples.split("\n");
+				String[] split = serializedRando.split("\n");
 				for (int i=1; i<split.length; i++) {
-					AttachedBiosample s = new AttachedBiosample();
-					s.deserialize(phase.getStudy(), split[i], 1);
+					AttachedBiosample s = deserialize(phase.getStudy(), split[i]);
 					samples.add(s);
 				}			
 			} else {
-				//Older version
-				for (String item : rndSamples.split("#")) {
-					AttachedBiosample s = new AttachedBiosample();
-					s.deserialize(phase.getStudy(), item, 0);
-					samples.add(s);
-				}		
+				System.err.println("Cannot deserializes rando for phase "+phase+" in "+ phase.getStudy());
+				return;
 			}
 		}
 	}
 		
+
+	public AttachedBiosample deserialize(Study study, String s) {
+		AttachedBiosample b = new AttachedBiosample();
+		String[] split = s.split(":", -1); //split's limit <0 to return also empty strings
+//		if(versionNo==1) {
+			int i = -1;
+			//Version 1 of serialization
+			try {
+				b.setNo(Integer.parseInt(split[++i]));
+				b.setSampleName(split[++i].length()==0? null: split[i]);
+				b.setWeight(split[++i].length()==0? null: Double.parseDouble(split[i]));
+				b.setSampleId(split[++i]);
+				if(split[++i].length()==0) {
+					b.setGroup(null);
+				} else {
+					b.setGroup(study.getGroup(Integer.parseInt(split[i])));
+				}
+				b.setContainerId(split[++i].length()==0? null: split[i]);
+				b.setSubGroup(split[++i].length()==0? 0: Integer.parseInt(split[i]));
+				
+				for(int j = ++i; j<split.length; j++) {
+					try {
+						b.getDataList().add(Double.parseDouble(split[j]));
+					} catch(Exception e) {
+						b.getDataList().add(null);
+					}
+				}
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+//		} else {
+//			//Older version of serialization (subgroup at the end, only one data)
+//			try {
+//				no = Integer.parseInt(split[0]);
+//				sampleName = split[1].length()==0? null: split[1];
+//				weight = split[2].length()==0? null: Double.parseDouble(split[2]);
+//				sampleId = split[3];
+//				if(split[4].length()==0) {
+//					group = null;
+//				} else {
+//					group = getGroup(study, Integer.parseInt(split[4]));
+//				}
+//				containerId = split[5].length()==0? null: split[5];
+//				
+//				try {
+//					dataList.add(Double.parseDouble(split[6]));
+//				} catch(Exception e) {
+//					
+//				}
+//				
+//				subGroup = split.length<8 || split[7].length()==0? 0: Integer.parseInt(split[7]);
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
+		
+		return b;
+	}
+	
 	/**
 	 * Serialize the samples (Version 1)
 	 */

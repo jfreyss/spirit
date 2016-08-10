@@ -92,11 +92,9 @@ public class BrotherLabelsDlg extends JEscapeDialog {
 	private JPanel configPanel;
 	private JComponent previewPanel = new JPanel(new BorderLayout());
 	
-//	private JTextField barcodeTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC);
-//	private JTextArea textArea = new JTextArea(4, 30);
 	private JButton printButton = new JIconButton(IconType.PRINT, "Print");
 	private JLabel printLabel = new JCustomLabel("", Font.ITALIC);
-	private JComboBox<String> marginCombobox = new JComboBox<String>(new String[] { "Use top margin (older PTouch config: 36mm paper)", "No Top margin (12mm paper)"});
+	private JComboBox<String> marginCombobox = new JComboBox<String>(new String[] { "Add top margin (PTouch config: 36mm paper)", "No top margin (PTouch config: 12mm paper)"});
 
 	
 	public BrotherLabelsDlg() {
@@ -122,19 +120,6 @@ public class BrotherLabelsDlg extends JEscapeDialog {
 				fireConfigChanged();
 			}
 		});
-//		textArea.addKeyListener(new KeyAdapter() {
-//			@Override
-//			public void keyReleased(KeyEvent e) {
-//				if(labelTable.getSelectedRows().length==1) {
-//					PrintLabel label = labelTable.getSelection().get(0);
-//					label.setLabel(textArea.getText());
-//					labelTable.repaint();
-//					fireConfigChanged();
-//				}				
-//			}
-//		});
-//			
-//		textArea.setEnabled(false);
 		
 		if(labels==null || labels.size()==0) {
 			labels = new ArrayList<PrintLabel>();

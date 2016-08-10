@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -51,7 +50,6 @@ import com.actelion.research.util.CompareUtils;
 @Entity
 @Table(name="employee_group", indexes = {@Index(name="employeegroup_parent_index", columnList="group_parent"), @Index(name="employeegroup_name_index", columnList="group_name")})
 @SequenceGenerator(name="employee_group_sequence", sequenceName="employee_group_sequence", allocationSize=1)
-@Cacheable
 @BatchSize(size=64)
 public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 
@@ -69,7 +67,7 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 	
 	@OneToMany(mappedBy="parent", fetch=FetchType.LAZY)
 	@SortNatural	
-	private Set<EmployeeGroup> children = new TreeSet<EmployeeGroup>();	
+	private Set<EmployeeGroup> children = new TreeSet<>();	
 	
 	
 	public EmployeeGroup() {}

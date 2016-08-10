@@ -47,7 +47,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.RevisionTimestamp;
 
-import com.actelion.research.spiritcore.business.IObject;
+import com.actelion.research.spiritcore.business.IEntity;
 
 
 /**
@@ -58,7 +58,7 @@ import com.actelion.research.spiritcore.business.IObject;
 @Audited
 @Table(name="bioorder")
 @SequenceGenerator(name="bioorder_sequence", sequenceName="bioorder_sequence", allocationSize=1)
-public class Order implements IObject, Comparable<Order>, Serializable {
+public class Order implements IEntity, Comparable<Order>, Serializable {
 
 	
 	@Id

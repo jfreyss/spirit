@@ -259,7 +259,7 @@ public class AttachBiosamplesHelper {
 		
 
 
-		List<Biosample> dividingBiosamplesToRemove = new ArrayList<Biosample>();
+		List<Biosample> dividingBiosamplesToRemove = new ArrayList<>();
 		toSave.addAll(BiosampleCreationHelper.processDividingSamples(study, dividingBiosamplesToRemove));
 
 				
@@ -286,7 +286,7 @@ public class AttachBiosamplesHelper {
 			//Persist the weights into the result table
 			if(saveWeights) {
 				//Load existing results
-				DAOResult.attachOrCreateStudyResultsToSpecimen(study, toSave, phase, true);
+				DAOResult.attachOrCreateStudyResultsToSpecimen(study, toSave, phase, DAOResult.suggestElb(Spirit.getUsername()));
 				List<Result> weighings = new ArrayList<Result>();
 				
 				//Update results if the samples have a weight

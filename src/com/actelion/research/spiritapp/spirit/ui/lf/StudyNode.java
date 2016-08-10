@@ -53,7 +53,7 @@ public class StudyNode extends TextComboBoxOneNode {
 	private Map<String, Study> quickCache = null;
 	
 	public StudyNode(FormTree tree, RightLevel level, boolean multiple, Strategy<String> strategy) {
-		super(tree, "", strategy);
+		super(tree, "StudyId", strategy);
 		this.level = level;
 		
 		getComponent().setMultipleChoices(multiple);
@@ -69,7 +69,8 @@ public class StudyNode extends TextComboBoxOneNode {
 					String title = (study.getTitle()==null?"":study.getTitle());
 					int maxLength = 100 - (study.getIvv()==null?0: study.getIvv().length()+2);
 					if(title.length()>maxLength) title = title.substring(0,maxLength-2) + "...";
-					boolean resp = study.getWriteUsers().contains(user) || study.getBlindAllUsers().contains(user) || study.getBlindDetailsUsers().contains(user);
+					boolean resp = study.isMentioned(user); 
+							
 					
 					setText("<html><div style='white-space:nowrap'>" +
 							(study.getStudyId()!=null? "<b style='font-size:10px'>" + study.getStudyId() + "</b>:&nbsp;&nbsp;": "") +

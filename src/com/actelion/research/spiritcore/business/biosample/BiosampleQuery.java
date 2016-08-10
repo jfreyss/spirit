@@ -70,7 +70,7 @@ public class BiosampleQuery implements Serializable {
 	private String parentSampleIds;
 	private String topSampleIds;
 	
-	private Map<BiosampleLinker, String> linker2values = new HashMap<BiosampleLinker, String>();
+	private Map<BiosampleLinker, String> linker2values = new HashMap<>();
 	
 	private Date expiryDateMin;
 	private Date expiryDateMax;
@@ -283,6 +283,11 @@ public class BiosampleQuery implements Serializable {
 	public static BiosampleQuery createQueryForStudyIds(String studyIds) {
 		BiosampleQuery q = new BiosampleQuery();
 		q.setStudyIds(studyIds);
+		return q;		
+	}
+	public static BiosampleQuery createQueryForSids(Collection<Integer> sids) {
+		BiosampleQuery q = new BiosampleQuery();
+		q.setSids(sids);
 		return q;		
 	}
 	public static BiosampleQuery createQueryForBiotype(Biotype biotype) {

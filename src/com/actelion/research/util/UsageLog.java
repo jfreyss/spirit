@@ -51,7 +51,8 @@ public class UsageLog {
 			@Override
 			public void run() {
 				try {
-					// The following stuff is not safe: -Duser.name=xxx may spoof the username
+					
+
 					String userId2 = userId == null? System.getProperty("user.name"): userId;
 					String pcName2;
 					if(pcName==null) {
@@ -63,22 +64,19 @@ public class UsageLog {
 					if("freyssj".equals(pcName2)) return;
 
 					String action2 = action==null? ACTION_LOGON: action;
-					System.out.println("UsageLog.logUsage("+application+","+userId2+")");
-					
-					String parameters2 = parameters==null || parameters.length()==0? null: parameters;
-					if(parameters2==null) {
-						String home = System.getProperty("java.home");
-						String userId = System.getProperty("user.name");
-						String os = System.getProperty("os.name");
-						parameters2 = "home="+home+";user="+userId+";os="+os+";version="+System.getProperty("java.version");
-					}
-					
+					String userId = System.getProperty("user.name");
+					String os = System.getProperty("os.name");
+					String home = System.getProperty("java.home");
+					String parameters2 = "home="+home+";user="+userId+";os="+os+";version="+System.getProperty("java.version")+";";
+					if(parameters!=null) parameters2 += parameters;
+
 					new URL("http://ares:8080/dataCenter/log.do?project=" + URLEncoder.encode(application, "UTF-8") 
 							+ "&username="+URLEncoder.encode(userId2, "UTF-8")
 							+ "&pcname=" + URLEncoder.encode(pcName2, "UTF-8")
 							+ "&action=" + URLEncoder.encode(action2, "UTF-8") 
 							+ (parameters2!=null? "&parameters="+URLEncoder.encode(parameters2, "UTF-8"): "")
 							).getContent();
+						
 				} catch(Throwable e) {
 					e.printStackTrace();
 				}				

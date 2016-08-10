@@ -433,7 +433,10 @@ public class PivotTemplate implements Serializable, Cloneable {
 				if(keysWithout.contains(key)) {
 					if(!keysWith.contains(key2)) {
 						count++;
-						if(percentage==0) return true;
+						if(percentage==0) {
+							System.out.println("PivotTemplate.isDiscriminating() "+discrimator+" "+keysWith+" / "+key2);
+							return true;
+						}
 					}
 					keysWith.add(key2);
 				} else {

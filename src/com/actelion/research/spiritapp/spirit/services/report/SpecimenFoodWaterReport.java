@@ -66,7 +66,7 @@ public class SpecimenFoodWaterReport extends AbstractReport {
 		
 		Row row;
 		
-		DAOResult.attachOrCreateStudyResultsToSpecimen(study, study.getTopAttachedBiosamples(), null, false);
+		DAOResult.attachOrCreateStudyResultsToSpecimen(study, study.getTopAttachedBiosamples(), null, null);
 		List<FoodWater> fws = DAOFoodWater.getFoodWater(study, null);
 		List<Phase> phases = FoodWater.getPhases(fws);
 		

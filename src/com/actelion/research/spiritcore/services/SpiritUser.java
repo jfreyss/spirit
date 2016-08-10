@@ -39,11 +39,8 @@ public class SpiritUser {
 	public static String ROLE_READALL = "readall";
 	
 	private String username;
-//	private boolean readall;
-//	private boolean superAdmin;
 	
-	private Set<String> managedUsers = new HashSet<>();
-	
+	private Set<String> managedUsers = new HashSet<>();	
 	private Set<EmployeeGroup> groupMembership = new HashSet<>();
 	private Set<String> roles = new HashSet<>();
 	private EmployeeGroup mainGroup;

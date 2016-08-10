@@ -94,7 +94,7 @@ public class TestMappingPanel extends JPanel implements IMappingPanel {
 				updateLayout();
 			}
 		});
-		if(possibleMatches.size()==0) testMappingPanel.setMappingAction(MappingAction.CREATE_COPY);
+		if(possibleMatches.size()==0) testMappingPanel.setMappingAction(MappingAction.CREATE);
 
 		testComboBox.addActionListener(new ActionListener() {			
 			@Override
@@ -151,13 +151,13 @@ public class TestMappingPanel extends JPanel implements IMappingPanel {
 		centerPanel.removeAll();
 		List<JComponent> formComponents = new ArrayList<>();
 		MappingAction action = testMappingPanel.getMappingAction();
-		if(action!=MappingAction.IGNORE_LINK) {
+		if(action!=MappingAction.SKIP) {
 			for (int index = 0; index < attributes.size(); index++) {
 				TestAttribute m = attributes.get(index);
 				formComponents.add(new JLabel("<html>Attribute '<b>"+m.getName()+"</b>': "));
 				formComponents.add(attributeMappingPanels.get(index));
-				if(action==MappingAction.CREATE_COPY) {
-					attributeMappingPanels.get(index).setMappingAction(MappingAction.CREATE_COPY);
+				if(action==MappingAction.CREATE) {
+					attributeMappingPanels.get(index).setMappingAction(MappingAction.CREATE);
 					attributeMappingPanels.get(index).setMappingComponent(null);
 				}
 			}

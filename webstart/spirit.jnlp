@@ -51,7 +51,6 @@
 		<jar href="poi-ooxml-3.12-20150511.jar" download="lazily"/>
 		<jar href="poi-ooxml-schemas-3.12-20150511.jar" download="lazily"/>
 		<jar href="poi-scratchpad-3.12-20150511.jar" download="lazily"/>
-		<jar href="servlet-api.jar" download="lazily"/>
 		<jar href="slf4j-api-1.7.12.jar" download="lazily"/>
 		<jar href="slf4j-simple-1.7.12.jar" download="lazily"/>
 		<jar href="swingx-all-1.6.4.jar" download="lazily"/>

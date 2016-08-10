@@ -182,73 +182,7 @@ public class AttachedBiosample implements Comparable<AttachedBiosample> {
 		return sb.toString();
 	}		
 	
-	public void deserialize(Study study, String s, int versionNo) {
-		String[] split = s.split(":", -1); //split's limit <0 to return also empty strings
-		dataList.clear();
-		if(versionNo==1) {
-			int i = -1;
-			//Version 1 of serialization
-			try {
-				no = Integer.parseInt(split[++i]);
-				sampleName = split[++i].length()==0? null: split[i];
-				weight = split[++i].length()==0? null: Double.parseDouble(split[i]);
-				sampleId = split[++i];
-				if(split[++i].length()==0) {
-					group = null;
-				} else {
-					group = getGroup(study, Integer.parseInt(split[i]));
-				}
-				containerId = split[++i].length()==0? null: split[i];
-				subGroup = split[++i].length()==0? 0: Integer.parseInt(split[i]);
-				
-				for(int j = ++i; j<split.length; j++) {
-					try {
-						dataList.add(Double.parseDouble(split[j]));
-					} catch(Exception e) {
-						dataList.add(null);
-					}
-				}
-				
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		} else {
-			//Older version of serialization (subgroup at the end, only one data)
-			try {
-				no = Integer.parseInt(split[0]);
-				sampleName = split[1].length()==0? null: split[1];
-				weight = split[2].length()==0? null: Double.parseDouble(split[2]);
-				sampleId = split[3];
-				if(split[4].length()==0) {
-					group = null;
-				} else {
-					group = getGroup(study, Integer.parseInt(split[4]));
-				}
-				containerId = split[5].length()==0? null: split[5];
-				
-				try {
-					dataList.add(Double.parseDouble(split[6]));
-				} catch(Exception e) {
-					
-				}
-				
-				subGroup = split.length<8 || split[7].length()==0? 0: Integer.parseInt(split[7]);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		
-
-	}
-	private static Group getGroup(Study s, Integer id) {		
-		if(id==null || s==null) return null;
-		for (Group g : s.getGroups()) {
-			if((int)g.getId()==(int)id) {
-				return g;
-			}			
-		}
-		return null;
-	}
+	
 	
 	public static List<Biosample> getBiosamples(Collection<AttachedBiosample> attachedBiosamples) {
 		if(attachedBiosamples==null) return null;

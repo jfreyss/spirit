@@ -151,7 +151,7 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 		centerPanel.removeAll();
 		List<JComponent> formComponents = new ArrayList<>();
 		MappingAction action = biotypeMappingPanel.getMappingAction();
-		if(action!=MappingAction.IGNORE_LINK) {
+		if(action!=MappingAction.SKIP) {
 			if(biotype.getSampleNameLabel()!=null) {
 				formComponents.add(new JLabel("<html>MainField '<b>"+biotype.getSampleNameLabel()+"</b>':"));
 				formComponents.add(new JLabel("MAP TO NAME"));
@@ -160,8 +160,8 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 				BiotypeMetadata m = metadatas.get(index);
 				formComponents.add(new JLabel("<html>Metadata '<b>"+m.getName()+"</b>': "));
 				formComponents.add(metadataMappingPanels.get(index));
-				if(action==MappingAction.CREATE_COPY) {
-					metadataMappingPanels.get(index).setMappingAction(MappingAction.CREATE_COPY);
+				if(action==MappingAction.CREATE) {
+					metadataMappingPanels.get(index).setMappingAction(MappingAction.CREATE);
 					metadataMappingPanels.get(index).setMappingComponent(null);
 				}
 			}

@@ -28,7 +28,7 @@ public class PhasePojo implements Serializable {
 	private int id = 0;
 	private String name;	
 //	private String label;
-//	private String serializedRandomization;
+	private String rando;
 	
 	public int getId() {
 		return id;
@@ -42,17 +42,11 @@ public class PhasePojo implements Serializable {
 	public void setName(String name) {
 		this.name = name;
 	}
-//	public String getLabel() {
-//		return label;
-//	}
-//	public void setLabel(String label) {
-//		this.label = label;
-//	}
-//	public String getSerializedRandomization() {
-//		return serializedRandomization;
-//	}
-//	public void setSerializedRandomization(String serializedRandomization) {
-//		this.serializedRandomization = serializedRandomization;
-//	}
+	public String getRando() {
+		return rando;
+	}
+	public void setRando(String rando) {
+		this.rando = rando;
+	}
 	
 }

@@ -100,7 +100,7 @@ public class SpecimenWeighingInVivoReport extends AbstractReport {
 		}
 
 		// Load Weighings
-		DAOResult.attachOrCreateStudyResultsToSpecimen(study, animals, null, false);
+		DAOResult.attachOrCreateStudyResultsToSpecimen(study, animals, null, null);
 
 		for (int i = 0; i < 3; i++) {
 

@@ -57,6 +57,7 @@ import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.Mappin
 import com.actelion.research.spiritcore.services.exchange.Importer;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
@@ -81,7 +82,7 @@ public class ImporterDlg extends JEscapeDialog {
 	
 	public ImporterDlg(File file) {
 		super(UIUtils.getMainFrame(), "Import Data", true);
-		JTabbedPane tabbedPane = new JTabbedPane();
+		JTabbedPane tabbedPane = new JCustomTabbedPane();
 		
 		//Read exchange file
 		try(FileReader reader = new FileReader(file)) {
@@ -111,7 +112,7 @@ public class ImporterDlg extends JEscapeDialog {
 		r1Button.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				mapping.initializeMappingFromDb(MappingAction.IGNORE_LINK);
+				mapping.initializeMappingFromDb(MappingAction.SKIP);
 				updateView();
 			}
 		});
@@ -125,7 +126,7 @@ public class ImporterDlg extends JEscapeDialog {
 		r3Button.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				mapping.initializeMappingFromDb(MappingAction.CREATE_COPY);
+				mapping.initializeMappingFromDb(MappingAction.CREATE);
 				updateView();
 			}
 		});

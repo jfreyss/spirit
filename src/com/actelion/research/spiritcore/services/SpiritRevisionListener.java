@@ -33,7 +33,6 @@ public class SpiritRevisionListener implements RevisionListener {
 	public void newRevision(Object obj) {
 		SpiritRevisionEntity rev = (SpiritRevisionEntity) obj;		
 		SpiritUser user = JPAUtil.getSpiritUser();
-		if(user==null) System.err.println("SpiritRevisionListener: User is null");
 		rev.setUserId(user==null?"": user.getUsername());
 		rev.setTimestamp(JPAUtil.getCurrentDateFromDatabase().getTime());
 	}

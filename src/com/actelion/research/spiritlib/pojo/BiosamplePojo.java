@@ -50,9 +50,13 @@ public class BiosamplePojo implements Serializable {
 	private String containerId;
 	private String containerType;
 	private String fullLocation;
+	private String amount;
 	
 	private Map<String, String> metadata = new LinkedHashMap<>();
 	
+	private String quality;
+	private String status;
+	private String comments;
 	private Date updDate;
 	private String updUser;
 	private Date creDate;
@@ -184,6 +188,30 @@ public class BiosamplePojo implements Serializable {
 	}
 	public void setAttachedSamplingId(int attachedSamplingId) {
 		this.attachedSamplingId = attachedSamplingId;
+	}
+	public String getComments() {
+		return comments;
+	}
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
+	public String getQuality() {
+		return quality;
+	}
+	public void setQuality(String quality) {
+		this.quality = quality;
+	}
+	public void setAmount(String amount) {
+		this.amount = amount;
+	}
+	public String getAmount() {
+		return amount;
+	}
+	public void setStatus(String status) {
+		this.status = status;
+	}
+	public String getStatus() {
+		return status;
 	}
 	
 	@Override

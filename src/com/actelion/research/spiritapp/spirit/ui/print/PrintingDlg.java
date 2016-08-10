@@ -36,12 +36,13 @@ import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.ListHashMap;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.UIUtils;
 
 public class PrintingDlg extends JEscapeDialog {
 
-	private final JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.NORTH);
+	private final JTabbedPane tabbedPane = new JCustomTabbedPane(JTabbedPane.NORTH);
 	
 	private List<Biosample> biosamples;
 	private ContainerType missingType;
@@ -73,7 +74,7 @@ public class PrintingDlg extends JEscapeDialog {
 		
 		//TabbedPane
 		//Filters and Splits locations by ContainerType
-		ListHashMap<ContainerType, Container> type2containers = new ListHashMap<ContainerType, Container>();		
+		ListHashMap<ContainerType, Container> type2containers = new ListHashMap<>();		
 		for (Biosample b : biosamples) {
 			if(b.getContainer()!=null && b.getContainerType()!=null) {
 				Container container = b.getContainer();

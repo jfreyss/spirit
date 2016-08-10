@@ -103,17 +103,20 @@ public class MonitoringDlg extends JEscapeDialog {
 	private JPanel cagePanel = new JPanel(new GridBagLayout());
 	private JPanel animalPanel = new JPanel(new GridBagLayout());
 	private List<JTextComponent> requiredComponents = new ArrayList<>();
-
+	private final String elb;
+	
 	public MonitoringDlg(Phase p) {
 		super(UIUtils.getMainFrame(), "Live Monitoring");
 
+		
 		this.phase = p;
 		this.study = JPAUtil.reattach(phase.getStudy());
 		Set<Biosample> animals = study.getTopAttachedBiosamples();
+		this.elb = DAOResult.suggestElb(Spirit.getUsername()); 
 
 		// Reload results
 		try {
-			DAOResult.attachOrCreateStudyResultsToSpecimen(study, animals, phase, true);
+			DAOResult.attachOrCreateStudyResultsToSpecimen(study, animals, phase, elb);
 		} catch (Exception e) {
 			JExceptionDialog.showError(e);
 			return;
@@ -189,6 +192,10 @@ public class MonitoringDlg extends JEscapeDialog {
 		setContentPane(contentPanel);
 		UIUtils.adaptSize(this, 1100, 1200);
 		setVisible(true);
+	}
+	
+	public String getElb() {
+		return elb;
 	}
 
 	private Set<NamedTreatment> getNamedTreatments() {

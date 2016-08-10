@@ -154,7 +154,12 @@ public class DocumentTextField extends JCustomTextField {
 		if(document==null) return;
 		try {
 			File f = new File(System.getProperty("java.io.tmpdir"), document.getFileName());
+			if(f.exists()) {
+				f.renameTo(new File(System.getProperty("java.io.tmpdir"), "del_"+System.currentTimeMillis()+"_"+document.getFileName()));
+				f.deleteOnExit();
+			}
 			IOUtils.bytesToFile(document.getBytes(), f);
+			f.deleteOnExit();
 			Desktop.getDesktop().open(f);
 		} catch (Exception ex) {
 			JExceptionDialog.showError(ex);

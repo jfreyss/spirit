@@ -25,6 +25,7 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,7 @@ import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.util.ui.FastFont;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
@@ -62,7 +64,7 @@ public class RandomizationDlg extends JSpiritEscapeDialog {
 	private final Phase phase;
 	private final List<Group> groups;
 	
-	private JTabbedPane wizardPane = new JTabbedPane(JTabbedPane.LEFT);
+	private JTabbedPane wizardPane = new JCustomTabbedPane(JTabbedPane.LEFT);
 	private ConfigTab configTab;
 	private DataTab weighingTab;
 	private GroupTab groupTab;
@@ -158,7 +160,7 @@ public class RandomizationDlg extends JSpiritEscapeDialog {
 	protected void saveForLater() throws Exception {
 		WizardPanel.updateModel(wizardPane, false);
 		
-		DAOStudy.persistStudy(study, Spirit.getUser());
+		DAOStudy.persistStudies(Collections.singleton(study), Spirit.getUser());
 	}
 	
 	

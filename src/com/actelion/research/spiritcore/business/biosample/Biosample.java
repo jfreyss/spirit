@@ -79,7 +79,7 @@ import org.hibernate.envers.RevisionTimestamp;
 
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Document;
-import com.actelion.research.spiritcore.business.IObject;
+import com.actelion.research.spiritcore.business.IEntity;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.Location;
@@ -132,7 +132,7 @@ import com.actelion.research.util.CompareUtils;
 		@Index(name="biosample_elb_index", columnList = "elb")})
 
 @BatchSize(size=64)
-public class Biosample implements Serializable, Comparable<Biosample>, Cloneable, IObject {
+public class Biosample implements Serializable, Comparable<Biosample>, Cloneable, IEntity {
 
 	public static final String AUX_RESULT_ALL = "AllResult";
 	
@@ -610,7 +610,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			}
 		} 
 			
-		throw new IllegalArgumentException("Invalid metadatatype: "+metadataName);
+		throw new IllegalArgumentException("Invalid metadatatype: "+metadataName+" not in "+biotype.getMetadata());
 		
 	}
 	
@@ -757,35 +757,6 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		return inheritedStudy;
 	}
 	
-	public String getPhaseName() {
-		if(getInheritedPhase()!=null) return getInheritedPhase().toString();
-		return null;
-	}
-	
-//	public Biosample duplicate() {
-//		Biosample res = new Biosample();
-//		res.setSampleName(name);
-//		res.setBiotype(getBiotype());
-//		res.setParent(getParent());
-//		res.setComments(getComments());
-//		res.setAmount(amount);
-//		if(getContainerType()!=null) {
-//			res.setContainer(new Container(getContainerType()));
-//		}
-//		if(getBiotype()!=null) {
-//			for (BiotypeMetadata metadataType : getBiotype().getMetadata()) {
-//				Metadata m = getMetadata(metadataType);
-//				if(m!=null) {
-//					res.setMetadata(metadataType, m.getValue());
-//				}
-//			}
-//		}
-//		res.setInheritedGroup(inheritedGroup);
-//		res.setInheritedPhase(inheritedPhase);
-//		res.setAttachedStudy(attachedStudy);
-//		return res;
-//	}
-	
 	/**
 	 * Clone this sample except its children and container (don't follow the relationships)
 	 * Keep the same parent however
@@ -801,22 +772,22 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			res.group = group;
 			res.elb = elb;
 			res.id = id;
+			res.attachedStudy  = attachedStudy;
+			res.attachedSampling = attachedSampling;
 			res.inheritedStudy = inheritedStudy;
 			res.inheritedGroup = inheritedGroup;
 			res.inheritedPhase = inheritedPhase;			
 			res.name = name;
-			res.container = null;
+			res.container = container;
 			res.containerIndex = containerIndex;
 			
 			res.quality = quality;
 			res.sampleId = sampleId;
 			res.expiryDate = expiryDate;
 			res.amount = amount;
-			res.attachedSampling = attachedSampling;
 			res.containerIndex = containerIndex;
 			
 			res.setParent(parent);
-			res.setTopParent(topParent);
 			
 			if(getBiotype()!=null) {
 				for (BiotypeMetadata metadataType : getBiotype().getMetadata()) {
@@ -1740,15 +1711,19 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		StringBuilder sb2 = new StringBuilder();
 		if(dataFormat.contains(InfoFormat.METATADATA)) {
 			
-			SetHashMap<String, String> map = new SetHashMap<String, String>();
+			SetHashMap<String, String> map = new SetHashMap<>();
 			for(Biosample b : biosamples) {		
-				if(b.getBiotype()!=null) {
-					for(BiotypeMetadata m: b.getBiotype().getMetadata()) {
-						if(m.getDataType()==DataType.D_FILE) continue;
-						if(m.isSecundary()) continue;
-						if(b.getMetadata(m).getValue()==null || b.getMetadata(m).getValue().length()==0) continue;
-						map.add(m.getName(), b.getMetadata(m).getValue() + m.extractUnit());
-					}
+				for(Map.Entry<BiotypeMetadata, Metadata> e: b.getMetadataMap().entrySet()) {
+					BiotypeMetadata bm = e.getKey();
+					Metadata m = e.getValue();
+				
+//				if(b.getBiotype()!=null) {
+//					for(BiotypeMetadata m: b.getBiotype().getMetadata()) {
+						if(bm.getDataType()==DataType.D_FILE) continue;
+						if(bm.isSecundary()) continue;
+						if(m.getValue()==null || m.getValue().length()==0) continue;
+						map.add(bm.getName(), m.getValue() + bm.extractUnit());
+//					}
 				}
 			}
 			int count = 0;
@@ -2567,8 +2542,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			if(!metadataMap.containsKey(bm)) linkedDocuments.remove(bm);
 		}
 		
-		System.out.println("Biosample.preSave() "+this+">"+res+" > "+MiscUtils.serializeIntegerMap(res));
-		setSerializedMetadata(MiscUtils.serializeIntegerMap(res));	
+		setSerializedMetadata(MiscUtils.serializeIntegerMap(res));
 	}
 	
 	protected void setSerializedMetadata(String serializedMetadata) {

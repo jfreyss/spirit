@@ -59,7 +59,7 @@ import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.RevisionNumber;
 import org.hibernate.envers.RevisionTimestamp;
 
-import com.actelion.research.spiritcore.business.IObject;
+import com.actelion.research.spiritcore.business.IEntity;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
@@ -80,7 +80,7 @@ import com.actelion.research.util.CompareUtils;
 @SequenceGenerator(name="assay_result_seq", sequenceName="assay_result_seq", allocationSize=1)
 @Audited
 @AuditTable(value="assay_result_aud")
-public class Result implements Comparable<Result>, IObject, Cloneable {
+public class Result implements Comparable<Result>, IEntity, Cloneable {
 		
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="assay_result_seq")
@@ -290,9 +290,6 @@ public class Result implements Comparable<Result>, IObject, Cloneable {
 				}
 			}
 			//end-hack
-			for (TestAttribute ta : values.keySet()) {
-				System.out.println("Result.getResultValue() > "+att.getId()+" =? "+ta.getId()+" > "+att.equals(ta)+" "+att.hashCode()+" "+ta.hashCode());
-			}
 			v = new ResultValue(this, att, "");
 			values.put(att, v);
 		}
@@ -674,7 +671,7 @@ public class Result implements Comparable<Result>, IObject, Cloneable {
 //			if(b.getTest()==null) continue;
 			List<Result> l = map.get(b.getTest());
 			if(l==null) {
-				l = new ArrayList<Result>();
+				l = new ArrayList<>();
 				map.put(b.getTest(), l);
 			}
 			l.add(b);			
@@ -683,13 +680,13 @@ public class Result implements Comparable<Result>, IObject, Cloneable {
 	}
 	
 	public static Map<Biosample, List<Result>> mapBiosample(Collection<Result> col) {
-		Map<Biosample, List<Result>> map = new HashMap<Biosample, List<Result>>();
+		Map<Biosample, List<Result>> map = new HashMap<>();
 		if(col==null) return map;
 		for (Result b : col) {			
 //			if(b.getTest()==null) continue;
 			List<Result> l = map.get(b.getBiosample());
 			if(l==null) {
-				l = new ArrayList<Result>();
+				l = new ArrayList<>();
 				map.put(b.getBiosample(), l);
 			}
 			l.add(b);			
@@ -704,7 +701,7 @@ public class Result implements Comparable<Result>, IObject, Cloneable {
 //			if(b.getStudy()==null) continue;
 			List<Result> l = map.get(b.getStudy());
 			if(l==null) {
-				l = new ArrayList<Result>();
+				l = new ArrayList<>();
 				map.put(b.getStudy(), l);
 			}
 			l.add(b);			

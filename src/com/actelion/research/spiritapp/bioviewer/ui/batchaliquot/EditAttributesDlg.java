@@ -29,7 +29,9 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -215,16 +217,16 @@ public class EditAttributesDlg extends JEscapeDialog {
 		if(type!=null) {
 			
 			//Update Metadata
-			IntegerMap tsl = new IntegerMap();
 			int i = 0;
+			Map<BiotypeMetadata, String> metadataMap = new HashMap<>();
 			for (BiotypeMetadata m : type.getMetadata()) {
 				if(i>components.size()) break;
 				if(!(components.get(i) instanceof MetadataComponent)) continue;
 				String data = ((MetadataComponent) components.get(i)).getData();
-				if(data.length()>0) tsl.put(m.getId(), data);
+				metadataMap.put(m, data);
 				i++;
 			}
-			d.setParameters(tsl.getSerializedMap());
+			d.setMetadataMap(metadataMap);
 			
 			d.setAmount(amountTextField.getTextDouble());
 			
@@ -242,7 +244,7 @@ public class EditAttributesDlg extends JEscapeDialog {
 			
 			
 		} else {
-			d.setParameters(null);
+			d.setMetadataMap(new HashMap<BiotypeMetadata, String>());
 		}
 		return d;
 	}

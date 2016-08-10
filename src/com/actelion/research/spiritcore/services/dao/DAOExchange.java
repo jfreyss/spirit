@@ -22,7 +22,6 @@
 package com.actelion.research.spiritcore.services.dao;
 
 import java.util.List;
-import java.util.Map.Entry;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -33,9 +32,7 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.result.Result;
-import com.actelion.research.spiritcore.business.result.ResultValue;
 import com.actelion.research.spiritcore.business.result.Test;
-import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
@@ -70,11 +67,6 @@ public class DAOExchange {
 			txn = session.getTransaction();
 			txn.begin();
 			
-			for (Biosample b : biosamples) {	
-				System.out.println("DAOExchange.persist(0) "+b+" "+b.getMetadataMap());
-			}
-
-			
 			LoggerFactory.getLogger(DAOExchange.class).debug("Persist Biotypes: "+biotypes);
 			DAOBiotype.persistBiotypes(session, biotypes, user);		
 
@@ -82,21 +74,13 @@ public class DAOExchange {
 			DAOTest.persistTests(session, tests, user);
 			
 			LoggerFactory.getLogger(DAOExchange.class).debug("Persist Studies: "+studies);
-			for (Study study : studies) {
-				DAOStudy.persistStudy(session, study, user);
-			}
+			DAOStudy.persistStudies(session, studies, user);
 	
 			LoggerFactory.getLogger(DAOExchange.class).debug("Persist Locations: n="+locations.size());
 			DAOLocation.persistLocations(session, locations, user);
 			
-
 			LoggerFactory.getLogger(DAOExchange.class).debug("Persist Biosamples: n="+biosamples.size());
-			DAOBiosample.persistBiosamples(session, biosamples, user);
-						
-			for (Biosample b : biosamples) {	
-				System.out.println("DAOExchange.persist(1) "+b+" "+b.getMetadataMap());
-			}
-
+			DAOBiosample.persistBiosamples(session, biosamples, user);					
 			
 			LoggerFactory.getLogger(DAOExchange.class).debug("Persist Results: n="+results.size());
 			DAOResult.persistResults(session, results, user);

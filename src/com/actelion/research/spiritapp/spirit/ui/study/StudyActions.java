@@ -45,6 +45,7 @@ import com.actelion.research.spiritapp.animalcare.ui.sampleweighing.SampleWeighi
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.SpiritAction;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions.Action_SetLivingStatus;
+import com.actelion.research.spiritapp.spirit.ui.lf.StudyComboBox;
 import com.actelion.research.spiritapp.spirit.ui.lf.UserIdComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.Selection;
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.StudyDepictor;
@@ -90,7 +91,7 @@ public class StudyActions {
 			study.setState(ConfigProperties.getInstance().getValue(PropertyKey.STUDY_STATE_DEFAULT));
 			if(Spirit.getUser()!=null) {
 //				study.setOwner(Spirit.getUser().getUsername());
-				study.setWriteUsers(Spirit.getUser().getUsername());
+				study.setAdminUsers(Spirit.getUser().getUsername());
 			}
 			if(Spirit.getUser().getMainGroup()!=null) study.setEmployeeGroups(Collections.singletonList(Spirit.getUser().getMainGroup()));
 			StudyWizardDlg.editStudy(study);
@@ -247,46 +248,57 @@ public class StudyActions {
 		}
 	}
 	
-//	public static class Action_Attach_SamplesModel1 extends AbstractAction {
-//		private final Study study;
-//		public Action_Attach_SamplesModel1(Study study) {
-//			super("Manual Assignment (samples coming from parent " + (study==null || study.getClinical()==ClinicalStatus.PRECLINICAL? "Animals": "Humans")+")");
-//			this.study = study;
-//			putValue(AbstractAction.MNEMONIC_KEY, (int)('b'));			
-//			putValue(AbstractAction.SMALL_ICON, IconType.LINK.getIcon());			
-//			setEnabled(SpiritRights.canEdit(study, Spirit.getUser()));
-//		}
-//		
-//		@Override
-//		public void actionPerformed(ActionEvent e) {
-//			new AttachAnimalsFromCommonParentDlg(study);
-//		}
-//	}
-	
-	
-	public static class Action_Rando extends AbstractAction {
-		private Study study;
-		private Phase phase;
-		public Action_Rando() {
-			this(null, null);
-		}
-		public Action_Rando(Study study, Phase phase) {
-			super(phase==null? "Group Assignment": phase.toString());
-			this.study = study;
-			this.phase = phase;
-			putValue(AbstractAction.SMALL_ICON, IconType.LINK.getIcon());			
-			setEnabled(getStudy()==null || (getStudy().getPhasesWithGroupAssignments().size()>0 && SpiritRights.canBlind(getStudy(), Spirit.getUser())));
-		}
+	public static class Action_GroupAssignmentSelecter extends AbstractAction {
+		private StudyComboBox comboBox;
 		
-		public Study getStudy() {
-			return study;
+		public Action_GroupAssignmentSelecter(StudyComboBox comboBox) {			
+			super("Group Assignment");
+			putValue(AbstractAction.SMALL_ICON, IconType.LINK.getIcon());
+			this.comboBox = comboBox;
 		}
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			Study study = DAOStudy.getStudyByStudyId(comboBox.getText());
+			System.out.println("StudyActions.Action_GroupAssignmentSelecter.actionPerformed() "+study+" / "+comboBox.getText());			
+			if(study==null || !SpiritRights.canBlind(study, Spirit.getUser())) return;
 			
-			Study study = getStudy();
-			Phase phase = this.phase;
+			Phase phase;
+			Set<Phase> phases = study.getPhasesWithGroupAssignments();
+			PhaseComboBox phaseComboBox = new PhaseComboBox(phases);
+			
+			if(phases.size()==1) {
+				phase = phases.iterator().next();
+			} else {					
+				int res = JOptionPane.showOptionDialog(null, UIUtils.createVerticalBox(
+						UIUtils.createHorizontalBox(new JLabel("Please select a phase for the group assignment: "), Box.createHorizontalGlue()),
+						UIUtils.createHorizontalBox(new JLabel("Phase: "), phaseComboBox, Box.createHorizontalGlue())), "Group Assignment", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, null, null);
+				
+				if(res!=JOptionPane.YES_OPTION || phaseComboBox.getSelection()==null) return;					
+				phase = phaseComboBox.getSelection();
+			}
+			
+			new RandomizationDlg(phase);
+			
+		}
+	}
+	
+	
+	
+	public static class Action_GroupAssignment extends AbstractAction {
+		private Phase phase;
+		
+		public Action_GroupAssignment(Phase phase) {
+			super(phase.toString());
+			this.phase = phase;
+			putValue(AbstractAction.SMALL_ICON, IconType.LINK.getIcon());			
+			setEnabled(phase.getStudy().getPhasesWithGroupAssignments().size()>0 && SpiritRights.canBlind(phase.getStudy(), Spirit.getUser()));
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			Study study = phase.getStudy();
+			
 			if(study==null || !SpiritRights.canBlind(study, Spirit.getUser())) return;
 			
 			if(phase==null) {
@@ -602,7 +614,7 @@ public class StudyActions {
 				Set<Phase> randoPhases = study.getPhasesWithGroupAssignments();
 				if(randoPhases.size()>0) {					
 					for (Phase phase : randoPhases) {
-						attachMenu.add(new JMenuItem(new Action_Rando(study, phase)));
+						attachMenu.add(new JMenuItem(new Action_GroupAssignment(phase)));
 					}
 				} else {
 					attachMenu.add(new JMenuItem());

@@ -52,7 +52,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.RevisionTimestamp;
 
-import com.actelion.research.spiritcore.business.IObject;
+import com.actelion.research.spiritcore.business.IEntity;
 import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
 
 @Entity
@@ -60,7 +60,7 @@ import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType
 @SequenceGenerator(name="sequence", sequenceName="assay_seq", allocationSize=1)
 @Audited
 @AuditTable(value="assay_aud")
-public class Test implements Comparable<Test>, IObject {
+public class Test implements Comparable<Test>, IEntity {
 	
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="sequence")

@@ -34,7 +34,6 @@ import com.actelion.research.spiritcore.adapter.HSQLFileAdapter;
 import com.actelion.research.spiritcore.adapter.PropertyKey;
 import com.actelion.research.spiritcore.services.DBTools;
 import com.actelion.research.util.SQLConverter.SQLVendor;
-import com.actelion.research.util.ui.JExceptionDialog;
 
 /**
  * The Migration Script class is responsible for updating the DB from one version to the next. Therefore each script must implement:
@@ -45,7 +44,6 @@ import com.actelion.research.util.ui.JExceptionDialog;
  * 
  *  
  * @author freyssj
- *
  */
 public abstract class MigrationScript {
 

@@ -22,6 +22,7 @@
 package com.actelion.research.spiritapp.spirit.ui.study.wizard.group;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
 import java.awt.Insets;
@@ -81,9 +82,6 @@ public class EditGroupPanel extends JPanel {
 	private final JGenericComboBox<String> model1ComboBox = new JGenericComboBox<>(new String[] {Group.DISEASE_NAIVE, Group.DISEASE_SHAM, Group.DISEASE_DISEASED}, true);
 	private final JGenericComboBox<String> model2ComboBox = new JGenericComboBox<>(new String[] {Group.TREATMENT_NONTREATED, Group.TREATMENT_VEHICLE, Group.TREATMENT_COMPOUND}, true);
 
-//	private final JRadioButton initialRadioButton = new JRadioButton("Group Assignement"); 
-//	private final PhaseComboBox initialPhaseComboBox;
-	
 	private final JRadioButton splitRadioButton = new JRadioButton("Normal group assignement"); 
 	private final PhaseComboBox splitPhaseComboBox;
 	private final JGenericComboBox<Group> splitGroupComboBox;
@@ -159,7 +157,7 @@ public class EditGroupPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				Sampling sampling = group.getDividingSampling();
 				if(sampling==null) sampling = new Sampling();
-				SamplingDlg dlg = new SamplingDlg(study, sampling, false);
+				SamplingDlg dlg = new SamplingDlg(null, study, sampling, false);
 				if(dlg.isSuccess()) {
 					divideSampleLabel.setSampling(sampling);
 					repaint();
@@ -184,7 +182,7 @@ public class EditGroupPanel extends JPanel {
 		});
 		
 		//namePanel
-		JPanel namePanel = UIUtils.createTable(3,
+		JPanel namePanel = UIUtils.createTable(3,				
 				new JLabel("Abbreviation: "), shortField, new JInfoLabel("required (Ex: 1, 1A); hidden for user in  'blind-all'"),
 				new JLabel("Name: "), nameField, new JInfoLabel("hidden for users in 'blind-details'"), 
 				new JLabel("Color: "), colorChooser, new JInfoLabel("background, hidden for users in 'blind-all'")
@@ -194,10 +192,6 @@ public class EditGroupPanel extends JPanel {
 		
 		//groupAssignementPanel
 		JPanel groupAssignementPanel = UIUtils.createVerticalBox(
-//				UIUtils.createHorizontalBox(initialRadioButton, Box.createHorizontalGlue()),
-//				UIUtils.createHorizontalBox(Box.createHorizontalStrut(20), UIUtils.createTable(3,
-//						 new JLabel("When: "), initialPhaseComboBox, new JInfoLabel("optional ")), Box.createHorizontalGlue()),
-//				Box.createVerticalStrut(5),
 				UIUtils.createHorizontalBox(splitRadioButton, Box.createHorizontalGlue()),
 				UIUtils.createHorizontalBox(Box.createHorizontalStrut(20), UIUtils.createTable(3,
 						new JLabel("When (phase): "), splitPhaseComboBox, new JInfoLabel("optional, only for the auto-randomization or for group-splitting"),
@@ -214,10 +208,9 @@ public class EditGroupPanel extends JPanel {
 				UIUtils.createTitleBox("Group Size", UIUtils.createBox(
 						new JScrollPane(subgroupPanel), 
 						new JInfoLabel("<html>Subgroups are used to represents samples, which should be analyzed together  (ex. stratification) <br>"
-								+ "<i>(Leave N=0 if the size is not known)</i></html>"))),
+								+ "<i>(optional)</i></html>"))),
 				UIUtils.createVerticalBox(
-					UIUtils.createBox(BorderFactory.createEtchedBorder(), groupLabel),
-					UIUtils.createTitleBox("Group Definition", namePanel),
+					UIUtils.createTitleBox("Group Definition", UIUtils.createBox(namePanel, UIUtils.createBox(BorderFactory.createEtchedBorder(), groupLabel))),
 					UIUtils.createTitleBox("Group Assignment", groupAssignementPanel)
 				));
 		
@@ -256,10 +249,6 @@ public class EditGroupPanel extends JPanel {
 		model2ComboBox.setSelection(group.getTreatmentModel());
 		
 		
-//		if(group.getFromGroup()==null) {
-//			initialRadioButton.setSelected(true);
-//			initialPhaseComboBox.setSelection(group.getFromPhase());
-//		} else 
 		if(group.getDividingSampling()==null) {
 			splitRadioButton.setSelected(true);
 			splitPhaseComboBox.setSelection(group.getFromPhase());
@@ -281,8 +270,6 @@ public class EditGroupPanel extends JPanel {
 	}
 	
 	private void refreshGroupAssignment() {
-//		initialPhaseComboBox.setEnabled(initialRadioButton.isSelected());
-		
 		splitPhaseComboBox.setEnabled(splitRadioButton.isSelected());
 		splitGroupComboBox.setEnabled(splitRadioButton.isSelected());
 
@@ -310,6 +297,7 @@ public class EditGroupPanel extends JPanel {
 
 				JSpinner cb = new JSpinner(new SpinnerNumberModel(0, 0, null, 1));
 				cb.setValue(n);
+				cb.setPreferredSize(new Dimension(55, 24));
 				subGroupSizeSpinners.add(cb);
 				
 				JButton deleteSubgroupButton = new JButton("Delete");

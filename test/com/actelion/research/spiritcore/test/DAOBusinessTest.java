@@ -21,6 +21,7 @@
 
 package com.actelion.research.spiritcore.test;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Assert;
@@ -100,14 +101,14 @@ public class DAOBusinessTest {
 		//Persist new Study
 		Study study = new Study();
 		study.setTitle("My New Study");
-		DAOStudy.persistStudy(study, user);
+		DAOStudy.persistStudies(Collections.singleton(study), user);
 		
 		Assert.assertEquals(n+1, DAOStudy.getStudies().size());
 		Assert.assertEquals("My New Study", DAOStudy.getStudies().get(0).getTitle());
 		
 		//Update study
 		study.setNotes("some notes");
-		DAOStudy.persistStudy(study, user);
+		DAOStudy.persistStudies(Collections.singleton(study), user);
 		Assert.assertEquals(n+1, DAOStudy.getStudies().size());
 		Assert.assertEquals("some notes", DAOStudy.getStudies().get(0).getNotes());
 		

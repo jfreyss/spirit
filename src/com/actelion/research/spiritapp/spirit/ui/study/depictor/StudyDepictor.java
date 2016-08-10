@@ -25,6 +25,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -159,6 +160,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 		try {
 
 			g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+			g.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING, java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 			//Refresh actual time
 			Calendar cal = Calendar.getInstance();
 			cal.setTime(JPAUtil.getCurrentDateFromDatabase());
@@ -178,12 +180,12 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 				s = study.getStudyId();
 				if (s == null) s = "";
 				g.setColor(Color.BLACK);
-				g.setFont(FastFont.BOLD.deriveSize(14));
-				g.drawString(s, 2, 14);
-	
-				g.setColor(Color.BLACK);
-				g.setFont(FastFont.REGULAR.deriveSize(12));
-				g.drawString(study.getIvv() == null ? "" : study.getIvv(), 2, 28);
+				g.setFont(FastFont.REGULAR.deriveSize(14));
+				g.drawString(s, 4, 15);
+				if(study.getIvv()!=null && study.getIvv().length()>0) {
+					g.setFont(FastFont.REGULAR);
+					g.drawString(study.getIvv(), 4, 32);
+				}
 			}
 
 			paintBackground(g);
@@ -240,118 +242,6 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 
 				}
 			}
-
-//			int currentY = maxY;
-
-			// //////////////////////////////////////////////////////////////////////////////
-//			currentY += 3;
-
-//			if(isPrintLegend()) {
-				
-//				if(namingProblem) {
-//					g.setFont(FastFont.BOLD);
-//					g.setColor(Color.YELLOW);
-//					g.fillRect(3, currentY-12, maxX-6, 14);
-//					g.setColor(Color.RED);
-//					g.drawString("Careful: The groups shown here are not sorted alphabetically", 3, currentY);
-//					currentY += 16;					
-//				}
-				
-				// Draw Title
-				/*
-				g.setColor(Color.BLACK);
-				g.setFont(FastFont.REGULAR);
-				currentY = UIUtils.drawString(g, study.getTitle(), 3, currentY, Math.max(400, getWidth() - 6), 40);
-				currentY += 15;
-	
-				// Draw Responsibles
-				g.setFont(FastFont.REGULAR);
-				int x = 3;
-				{
-					StringBuilder sb = new StringBuilder();
-					for (String user : study.getSetWriteUsers()) {
-						sb.append(user + " ");
-					}
-					s = "Write: " + sb;
-					g.setColor(new Color(0, 100, 0));
-					g.drawString(s, x, currentY);
-					x += g.getFontMetrics().stringWidth(s) + 10;
-				}
-				
-				if(study.isBlind()) {
-					x = 3; currentY+=15;
-					if (study.getSetBlindDetailsUsers() != null && !study.getSetBlindDetailsUsers().isEmpty()) {
-						StringBuilder sb = new StringBuilder();
-						for (String user : study.getSetBlindDetailsUsers()) {
-							sb.append(user + " ");
-						}
-						s = "Blind-Details: " + sb;
-						g.setColor(new Color(70, 70, 0));
-						g.drawString(s, x, currentY);
-						x += g.getFontMetrics().stringWidth(s) + 10;
-					}
-					if (study.getSetBlindAllUsers() != null && !study.getSetBlindAllUsers().isEmpty()) {
-						StringBuilder sb = new StringBuilder();
-						for (String user : study.getSetBlindAllUsers()) {
-							sb.append(user + " ");
-						}
-						s = "Blind-All: " + sb;
-						g.setColor(new Color(70, 70, 0));
-						g.drawString(s, x, currentY);
-						x += g.getFontMetrics().stringWidth(s) + 10;
-					}
-				}
-				x = 3; currentY+=15;
-				
-				if (study.getEmployeeGroups().size() > 0 || (study.getReadUsers() != null && study.getReadUsers().length() > 0)) {
-					StringBuilder sb = new StringBuilder();
-					if (study.getReadUsers() != null) {
-						for (String user : study.getSetReadUsers()) {
-							sb.append(user + " ");
-						}
-					}
-					g.setColor(new Color(100, 0, 0));
-					s = "Read: " + sb;
-					g.drawString(s, x, currentY);
-					x += g.getFontMetrics().stringWidth(s) + 5;
-	
-					// Groups
-					g.setFont(FastFont.BOLD);
-					sb.setLength(0);
-					for (EmployeeGroup eg : study.getEmployeeGroups()) {
-						sb.append(eg.getName() + " ");
-					}
-					s = sb.toString();
-					g.drawString(s, x, currentY);
-					x += g.getFontMetrics().stringWidth(s) + 10;
-					g.setFont(FastFont.REGULAR);
-	
-				}
-				currentY += 17;
-				*/
-				// Draw UpdDate
-//				int x = 3;
-//				g.setColor(Color.GRAY);
-//				g.setFont(FastFont.REGULAR.deriveSize(11).deriveFont(Font.ITALIC));
-//				s = "Created the " + Formatter.formatDateTimeShort(study.getCreDate()) + " by " + study.getCreUser();
-//				x = Math.max(g.getFontMetrics().stringWidth(s) + 50, x);
-//				g.drawString(s, 3, currentY);
-//	
-//				currentY += 11;
-//				if (study.getUpdDate() != null && study.getUpdDate().getTime() > study.getCreDate().getTime() + 1000) {
-//					s = "Updated the " + Formatter.formatDateTimeShort(study.getUpdDate()) + " by " + study.getUpdUser();
-//					x = Math.max(g.getFontMetrics().stringWidth(s) + 50, x);
-//					g.drawString(s, 3, currentY);
-//				}
-	
-//				StringBuilder sb2 = new StringBuilder();
-//				sb2.append((study.isSynchronizeSamples() ? "The samples are automatically synchronized when the design changes" : "The samples are not synchronized"));
-//	
-//				g.setColor(new Color(70, 70, 150));
-//				g.setFont(FastFont.REGULAR.deriveSize(11));
-//				g.drawString(sb2.toString(), x, currentY-1);
-//			}
-
 			
 			//Draw a cross if the study is stopped
 			if("STOPPED".equalsIgnoreCase(study.getState())) {
@@ -757,14 +647,19 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			int y1 = getY(group, 0);
 			int y2 = getY(group, group.getNSubgroups() - 1);
 			Color bg = group.getBlindedColor(Spirit.getUsername());
-			g.setColor(UIUtils.getDilutedColor(bg, getBackground(), .5));
-			g.fillRect(0, y1-17, marginX, y2-y1+getHeight(group, group.getNSubgroups()-1)-1 );
+			Color c1 = bg;
+			Color c2 = UIUtils.getDilutedColor(bg, getBackground(), .3);
+			g.setColor(c1);
+
+			g.setPaint(new GradientPaint(0, 0, c1, marginX, 0, c2));
 			
-			g.setColor(UIUtils.getDilutedColor(bg, getBackground(), .3));
+			g.fillRect(1, y1-17, marginX, y2-y1+getHeight(group, group.getNSubgroups()-1)-1 );
+			
+			g.setColor(c2);
 			g.fillRect(marginX, y1-17, maxX-marginX, y2-y1+getHeight(group, group.getNSubgroups()-1)-1 );
 			g.fillPolygon(new int[]{maxX, maxX+20, maxX}, 
 					new int[]{y1-17, (y1-17 + y2-17+getHeight(group, group.getNSubgroups()-1))/2-1, y2-17+getHeight(group, group.getNSubgroups()-1)-1}, 3);
-			
+
 //			//Paint model
 //			Color col1 = null;
 //			if(group.getDiseaseModel()!=null && group.getDiseaseModel().startsWith(Group.DISEASE_NAIVE)) col1 = Color.GRAY;
@@ -866,9 +761,6 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 
 					g.setColor(Color.LIGHT_GRAY);
 					g.drawLine(x1 - offset+1, y0+1, x1 - offset+1, y-1);
-					
-//					g.setColor(Color.WHITE);
-//					g.drawLine(x1-offset-1, y0+1, x1-offset-1, y-1);					
 				}
 				if(isBlind) break;
 			}
@@ -1043,9 +935,9 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 				g.setTransform(AffineTransform.getRotateInstance(-Math.PI / 2, x, y));
 				int px = x-3-g.getFontMetrics().stringWidth(abbr)*2/3;
 				g.setColor(Color.WHITE);
-				g.drawString(abbr, px-1, y);
+				g.drawString(abbr, px-1, y-3);
 				g.setColor(UIUtils.getColor(0, 60, 220));
-				g.drawString(abbr, px, y);
+				g.drawString(abbr, px, y-3);
 					
 				g.setTransform(AffineTransform.getTranslateInstance(0, 0));
 			}
@@ -1070,8 +962,6 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 				// Draw Treatment Arrow
 				g.setColor(c==null?Color.BLUE: c);
 				g.fillPolygon(new int[] { x, x - 3, x + 3 }, new int[] { y, y - 10, y - 10 }, 3);
-//				g.setColor(Color.BLACK);
-//				g.drawPolygon(new int[] { x, x - 3, x + 3 }, new int[] { y, y - 10, y - 10 }, 3);
 
 				// Draw Treatment Name (if not same treatment than before)
 				g.setColor(UIUtils.getDilutedColor(Color.BLACK, g.getColor()));
@@ -1102,11 +992,8 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 				// Draw Sampling Arrow
 				g.setColor(Color.RED);
 				g.fillPolygon(new int[] { x - 3, x, x + 3 }, new int[] { y + 1, y + 10, y + 1 }, 3);
-//				g.setColor(Color.BLACK);
-//				g.drawPolygon(new int[] { x - 3, x, x + 3 }, new int[] { y + 1, y + 10, y + 1 }, 3);
 			}
 			
-//			y += 2;
 			y = getSamplingY(group, subgroupNo);
 			if (action.getNamedSampling1() != null) {
 				String s = action.getNamedSampling1().getName() + (action.getNamedSampling1().getStudy() != null && !study.equals(action.getNamedSampling1().getStudy()) ? "(" + action.getNamedSampling1().getStudy() + ")" : "");

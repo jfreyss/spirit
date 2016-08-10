@@ -44,6 +44,7 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
+import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationLabeling;
 import com.actelion.research.spiritcore.business.location.LocationType;
@@ -191,7 +192,7 @@ public class Importer {
 			study.setSynchronizeSamples(s.isSynchronizeSamples());
 			study.setUpdDate(s.getUpdDate());
 			study.setUpdUser(s.getUpdUser());
-			study.setWriteUsers(s.getAdminUsers());
+			study.setAdminUsers(s.getAdminUsers());
 			
 			study.setPhases(convertPhases(s.getPhases(), study));
 			study.setGroups(convertGroups(s.getGroups(), study));
@@ -254,9 +255,7 @@ public class Importer {
 			p.setStudy(forStudy);
 			p.setId(g.getId());
 			p.setName(g.getName());
-//			p.setLabel(g.getLabel());
-//			p.setSerializedRandomization(g.getSerializedRandomization());
-			
+			p.setSerializedRandomization(g.getRando());			
 			studyIdPhaseName2phase.put(forStudy.getStudyId()+"_"+p.getShortName(), p);
 			res.add(p);
 		}
@@ -304,6 +303,9 @@ public class Importer {
 			for (SamplingPojo sampling : g.getSamplings()) {
 				convertSamplingAndItsChildren(sampling, allSamplings);
 			}			
+			for (Sampling sampling : allSamplings) {
+				sampling.setNamedSampling(p);
+			}
 			p.setAllSamplings(allSamplings);
 			
 			studyIdNamedSampling2namedSampling.put(forStudy.getStudyId()+"_"+p.getName(), p);
@@ -334,11 +336,16 @@ public class Importer {
 		
 		p.setId(g.getId());
 		p.setLengthRequired(g.isLengthRequired());
-		p.setParameters(g.getParameters());
 		p.setSampleName(g.getSampleName());
 		p.setWeighingRequired(g.isWeighingRequired());
 		
+		//Convert metadata
+		for (BiotypeMetadata bm : biotype.getMetadata()) {				
+			String value = g.getMetadata()==null? null: g.getMetadata().get(bm.getName());
+			if(value!=null && value.length()>0) p.setMetadata(bm, value);
+		}
 		
+		//Convert measurements
 		List<Measurement> measurements = new ArrayList<>();
 		if(g.getMeasurements()!=null) {
 			for(MeasurementPojo mp: g.getMeasurements()) {
@@ -347,7 +354,6 @@ public class Importer {
 			}
 		}
 		p.setMeasurements(measurements);
-		
 		if(outAllSamplings!=null) outAllSamplings.add(p);
 		
 		//convert children
@@ -553,6 +559,31 @@ public class Importer {
 				biosample.setLocPos(loc, loc.parsePosition(posString));
 			}
 			
+			
+			biosample.setComments(b.getComments());
+			if(b.getStatus()!=null && b.getStatus().length()>0) {
+				try {
+					Status status = Status.valueOf(b.getStatus());					
+					biosample.setStatus(status);
+				} catch(Exception e) {
+					throw new Exception("The status "+b.getStatus()+" is invalid");
+				}
+			}
+			if(b.getQuality()!=null && b.getQuality().length()>0) {
+				try {
+					Quality quality = Quality.valueOf(b.getQuality());					
+					biosample.setQuality(quality);
+				} catch(Exception e) {
+					throw new Exception("The quality "+b.getStatus()+" is invalid");
+				}
+			}
+			if(b.getAmount()!=null && b.getAmount().length()>0) {
+				try {
+					biosample.setAmount(Double.parseDouble(b.getAmount()));
+				} catch(Exception e) {
+					throw new Exception("The amount "+b.getAmount()+" is invalid");
+				}
+			}
 			biosample.setUpdDate(b.getUpdDate());
 			biosample.setUpdUser(b.getUpdUser());
 			biosample.setCreDate(b.getCreDate());
@@ -610,7 +641,6 @@ public class Importer {
 				location.setParent(parent);
 			} else {
 				//Accept that location don't have their parent 
-//				throw new Exception("The location "+l.getParent()+" was not exported");
 			}
 		}
 		
@@ -695,6 +725,7 @@ public class Importer {
 			
 			Result res = new Result();
 			res.setId(r.getId());
+			res.setElb(r.getElb());
 			
 			//Set the test
 			Test test = name2test.get(r.getTestName());

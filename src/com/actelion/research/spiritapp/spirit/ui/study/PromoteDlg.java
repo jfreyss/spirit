@@ -24,6 +24,7 @@ package com.actelion.research.spiritapp.spirit.ui.study;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.Box;
@@ -87,7 +88,7 @@ public class PromoteDlg extends JSpiritEscapeDialog {
 	private static void promote(Study study, String state, SpiritUser user) throws Exception {
 		if(state==null) throw new Exception("You must select a state");
 		study.setState(state);
-		DAOStudy.persistStudy(study, user);
+		DAOStudy.persistStudies(Collections.singleton(study), user);
 		SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, study);
 	}
 }

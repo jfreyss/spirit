@@ -160,7 +160,6 @@ public class Measurement implements Comparable<Measurement> {
 				Measurement e = extraMeasurementList.get(i);
 				int id = e.getTestId();
 				if(id<=0 && e.getTest()!=null) id = e.getTest().getId();
-//				assert id>0;
 				measurements[i] = id + "#" + MiscUtils.unsplit(e.getParameters(), "#");
 			}
 			extraMeasurement = MiscUtils.unsplit(measurements, ",");

@@ -141,11 +141,6 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		//CenterPanel
 		JScrollPane sp1 = new JScrollPane(samplingsPanel);
 		sp1.setBorder(BorderFactory.createLoweredBevelBorder());
-		
-//		JScrollPane sp2 = new JScrollPane(namedSamplingEditorPane);
-//		JSplitPane centerPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, 
-//				UIUtils.createTitleBox("Samplings", sp1),  
-//				UIUtils.createTitleBox("Produced Containers", sp2)); 
 		samplingsPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 				
 		nameTextField.setText(this.namedSamplingToEdit.getName());
@@ -261,7 +256,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			public void actionPerformed(ActionEvent e) {
 				Sampling sd = new Sampling();
 				sd.setBiotype(DAOBiotype.getBiotype(Biotype.ORGAN));
-				SamplingDlg dlg = new SamplingDlg(study, sd, true);
+				SamplingDlg dlg = new SamplingDlg(NamedSamplingDlg.this, study, sd, true);
 				if(dlg.isSuccess() && sd.getBiotype()!=null) {
 					namedSamplingProxy.getAllSamplings().add(sd);
 					refresh();
@@ -336,7 +331,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 				try {
 					Sampling copyFrom = sampling.clone();
 					sampling.setAmount(amountTextField.getText().length()==0? null: Double.parseDouble(amountTextField.getText()));					
-					NamedSamplingDlg.synchronizeSamples(study, copyFrom, sampling);
+					synchronizeSamples(study, copyFrom, sampling);
 					
 				} catch(Exception e) {
 					amountTextField.setText("");
@@ -385,7 +380,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 					Sampling copyFrom = sampling.clone();
 					sampling.setContainerType(containerTypeComboBox.getSelection());
 					blocNoComboBox.setVisible(sampling.getContainerType()!=null && sampling.getContainerType().isMultiple());
-					NamedSamplingDlg.synchronizeSamples(study, copyFrom, sampling);
+					synchronizeSamples(study, copyFrom, sampling);
 				} catch(Exception ex) {
 					JExceptionDialog.showError(ex);
 				}
@@ -398,7 +393,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 				try {
 					Sampling copyFrom = sampling.clone();
 					sampling.setBlocNo(blocNoComboBox.getSelection());
-					NamedSamplingDlg.synchronizeSamples(study, copyFrom, sampling);
+					synchronizeSamples(study, copyFrom, sampling);
 				} catch(Exception ex) {
 					JExceptionDialog.showError(ex);
 				}
@@ -482,7 +477,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			new SamplingDlg(study, sampling, true);
+			new SamplingDlg(NamedSamplingDlg.this, study, sampling, true);
 			refresh();
 		}
 	}
@@ -497,7 +492,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			Sampling s = sampling.clone();
-			SamplingDlg dlg = new SamplingDlg(study, s, true);
+			SamplingDlg dlg = new SamplingDlg(NamedSamplingDlg.this, study, s, true);
 			if(dlg.isSuccess() && s.getBiotype()!=null) {
 				s.setParent(sampling.getParent());
 				namedSamplingProxy.getAllSamplings().add(s);
@@ -520,10 +515,10 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		public void actionPerformed(ActionEvent e) {
 			Sampling s = new Sampling();
 			s.setBiotype(sampling.getBiotype());			
-			s.setParameters(sampling.getParameters());
+			s.setMetadataMap(sampling.getMetadataMap());
 			s.setComments(sampling.getComments());
 			
-			SamplingDlg dlg = new SamplingDlg(study, s, true);
+			SamplingDlg dlg = new SamplingDlg(NamedSamplingDlg.this, study, s, true);
 			if(dlg.isSuccess() && s.getBiotype()!=null) {
 				namedSamplingProxy.getAllSamplings().add(s);
 				s.setParent(sampling);
@@ -611,9 +606,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 				}
 			});
 			
-			JPanel panel = UIUtils.createTitleBox("To be deleted", sp);
-			panel.setBorder(BorderFactory.createEtchedBorder());
-			mainPanel.add(panel);
+			mainPanel.add(UIUtils.createTitleBox("To be deleted", sp));
 		}
 		
 		if(biosamplesToOverwrite!=null && biosamplesToOverwrite.size()>0) {
@@ -622,9 +615,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			JScrollPane sp = new JScrollPane(table);
 			sp.setPreferredSize(new Dimension(900, 250));
 			
-			JPanel panel = UIUtils.createTitleBox("To be overwritten", sp);
-			panel.setBorder(BorderFactory.createEtchedBorder());
-			mainPanel.add(panel);
+			mainPanel.add(UIUtils.createTitleBox("To be overwritten", sp));
 		}
 		if(biosamplesToKeep!=null && biosamplesToKeep.size()>0) {
 			BiosampleTable table = new BiosampleTable();
@@ -640,9 +631,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 				}
 			});
 			
-			JPanel panel = UIUtils.createTitleBox("Modified samples", sp);
-			panel.setBorder(BorderFactory.createEtchedBorder());
-			mainPanel.add(panel);
+			mainPanel.add(UIUtils.createTitleBox("Modified samples", sp));
 		}
 		
 		JPanel panel = new JPanel(new BorderLayout());
@@ -695,7 +684,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			}
 			study.setUpdUser(Spirit.askForAuthentication().getUsername());
 			
-			if(transactionMode) DAOStudy.persistStudy(study, Spirit.askForAuthentication());								
+			if(transactionMode) DAOStudy.persistStudies(Collections.singleton(study), Spirit.askForAuthentication());								
 		}
 		
 		//Delete the NamedSampling
@@ -766,7 +755,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 
 	}
 
-	public static boolean synchronizeSamples(Study study, Sampling fromSamplingClone, Sampling toSampling) throws Exception {
+	public boolean synchronizeSamples(Study study, Sampling fromSamplingClone, Sampling toSampling) throws Exception {
 	
 		//Check that there are no samples coming from this sampling
 		Set<Biosample> samples = toSampling.getSamples();
@@ -784,23 +773,23 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			//Open dialog
 			String[] options;
 			if(samplesToKeep.size()>0 && samplesToUpdate.size()>0) {
-				options = new String[] {"Overwrite (except modified samples)", "Overwrite all samples", "Do not synchronize"};
+				options = new String[] {"Update (except modified samples)", "Update all samples", "Do not update/synchronize"};
 			} else {
-				options = new String[] {"Overwrite all samples", "Do not synchronize"};
+				options = new String[] {"Update all samples", "Do not update/synchronize"};
 			}
 			int res = createOptionDialog(null, "There are "+samples.size()+" samples already saved. Would you like to update those existing samples to the new settings?", null, samplesToUpdate, samplesToKeep, options);
-			if(samplesToKeep.size()>0) {
-				if(res!=0 && res!=1) return false;
+			if(samplesToKeep.size()>0 && samplesToUpdate.size()>0) {				
 				if(res==1) {
 					samplesToUpdate.addAll(samplesToKeep);
+				} else if(res!=0) {
+					return false;
 				}
 			} else {
-				if(res!=0) return false;				
+				if(res!=0) {
+					return false;				
+				}
 			}
 	
-			//Update Model
-//			updateModel();
-			
 			//Update the samples
 			for (Biosample b : samplesToUpdate) {
 				if(!b.getBiotype().equals( toSampling.getBiotype())) throw new Exception("The biotype cannot be changed");
@@ -816,10 +805,11 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			List<Biosample> pool = DAOBiosample.queryBiosamples(q, null);
 			pool.removeAll(samplesToUpdate);
 			BiosampleCreationHelper.assignContainers(pool, samplesToUpdate);
-	
-		} else {
-			//Update Model
-//			updateModel();
+			
+			//Inform the parent dlg, that those samples have to be updated before saved (to set upddate)
+			if(dlg!=null) {
+				dlg.getToUpdate().addAll(samplesToUpdate);
+			}
 		}
 		return true;
 	}

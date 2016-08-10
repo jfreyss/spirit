@@ -25,6 +25,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -268,7 +269,7 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		try {
 			txn = session.getTransaction();
 			txn.begin();
-			DAOStudy.persistStudy(session, study, Spirit.getUser());
+			DAOStudy.persistStudies(session, Collections.singletonList(study), Spirit.getUser());
 			if(toSave.size()>0) {
 				DAOBiosample.persistBiosamples(session, toSave, Spirit.getUser());
 			}

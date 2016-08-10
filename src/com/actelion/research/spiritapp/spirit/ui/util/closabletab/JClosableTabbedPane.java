@@ -28,7 +28,9 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-public class JClosableTabbedPane extends JTabbedPane {
+import com.actelion.research.util.ui.JCustomTabbedPane;
+
+public class JClosableTabbedPane extends JCustomTabbedPane {
 
 	/**
 	 * 
@@ -59,7 +61,7 @@ public class JClosableTabbedPane extends JTabbedPane {
 	
 	
 	public JClosableTabbedPane() {		
-		setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
+		setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 	}
 	
 	

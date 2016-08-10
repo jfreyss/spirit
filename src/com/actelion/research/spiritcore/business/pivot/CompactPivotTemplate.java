@@ -41,47 +41,34 @@ public class CompactPivotTemplate extends PivotTemplate {
 		setWhere(PivotItemFactory.BIOSAMPLE_TOPID, Where.ASROW);
 		setWhere(PivotItemFactory.BIOSAMPLE_TOPNAME, Where.ASROW);
 
-		boolean isDiscriminating1 = isDiscriminating(PivotItemFactory.BIOSAMPLE_BIOTYPE, results);
-		if(isDiscriminating1) {
+		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_BIOTYPE, results)) {
 			setWhere(PivotItemFactory.BIOSAMPLE_BIOTYPE, Where.ASCOL);
 		}
 		
-		boolean isDiscriminating2 = isDiscriminating(PivotItemFactory.RESULT_TEST, results);
-		if(isDiscriminating2) {
+		if(isDiscriminating(PivotItemFactory.RESULT_TEST, results)) {
 			setWhere(PivotItemFactory.RESULT_TEST, Where.ASCOL);
 		}
 		
-		setWhere(PivotItemFactory.RESULT_INPUT, Where.ASCELL);
+		if(isDiscriminating(PivotItemFactory.STUDY_PHASE_DATE, results)) {
+			setWhere(PivotItemFactory.STUDY_PHASE_DATE, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);			
+		}
 
-		if(isDiscriminating(PivotItemFactory.RESULT_OUTPUT, results)) {
-			setWhere(PivotItemFactory.RESULT_OUTPUT, Where.ASCELL);
+		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_SAMPLING, results)) {
+			setWhere(PivotItemFactory.BIOSAMPLE_SAMPLING, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
+		} else if(isDiscriminating(PivotItemFactory.BIOSAMPLE_SAMPLENAME, results)) {
+			setWhere(PivotItemFactory.BIOSAMPLE_SAMPLENAME, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
 		}
 		
-		boolean isDiscriminating3 = isDiscriminating(PivotItemFactory.BIOSAMPLE_SAMPLING, results);
-		boolean isDiscriminating4 = isPopulated(PivotItemFactory.BIOSAMPLE_SAMPLENAME, results);
-		boolean isDiscriminating5 = isDiscriminating(PivotItemFactory.STUDY_PHASE_DATE, results);
-		if(isDiscriminating3) {
-			setWhere(PivotItemFactory.BIOSAMPLE_SAMPLING, isDiscriminating5? Where.ASCELL: Where.ASCOL);
-		} else if(isDiscriminating4) {
-			setWhere(PivotItemFactory.BIOSAMPLE_SAMPLENAME, isDiscriminating5? Where.ASCELL: Where.ASCOL);
-		}
+		setWhere(PivotItemFactory.RESULT_INPUT, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
+		setWhere(PivotItemFactory.RESULT_TEST, Where.ASCOL);
+
 		
-		System.out.println("CompactPivotTemplate.init() isPopulated(STUDY_PHASE_DATE)="+isPopulated(PivotItemFactory.STUDY_PHASE_DATE, results));
-		if(isPopulated(PivotItemFactory.STUDY_PHASE_DATE, results)) {
-			if(isDiscriminating1 || isDiscriminating2 || isDiscriminating3 || isDiscriminating4) {
-				setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASCELL);
-			} else {				
-				setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASCOL);			
-			}
-		}
 
 		if(isDiscriminating(PivotItemFactory.RESULT_COMMENTS, results)) {
 			setWhere(PivotItemFactory.RESULT_COMMENTS, Where.ASCELL);
 		}
-
-		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_COMMENTS, results)) {
-			setWhere(PivotItemFactory.BIOSAMPLE_COMMENTS, Where.ASCELL);
-		}
+		
+		
 		
 		
 	}

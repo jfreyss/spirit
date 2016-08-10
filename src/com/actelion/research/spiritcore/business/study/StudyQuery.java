@@ -24,6 +24,7 @@ package com.actelion.research.spiritcore.business.study;
 public class StudyQuery {
 	private String studyIds = "";
 	private String keywords = "";
+	private String state = "";
 	private String user = "";
 	private String updDays = "";
 	private String creDays = "";
@@ -38,8 +39,12 @@ public class StudyQuery {
 		q.setStudyIds(studyIds);
 		return q;
 	}
-	
-	
+	public static StudyQuery createForState(String state) {
+		StudyQuery q = new StudyQuery();
+		q.setState(state);
+		return q;
+	}
+		
 	public String getStudyIds() {
 		return studyIds;
 	}
@@ -58,11 +63,18 @@ public class StudyQuery {
 	public void setUser(String user) {
 		this.user = user;
 	}	
+	public String getState() {
+		return state;
+	}
+	public void setState(String state) {
+		this.state = state;
+	}
 	
 	public void copyFrom(StudyQuery query) {
 		this.studyIds = query.studyIds;
 		this.keywords = query.keywords;
 		this.user = query.user;
+		this.state = query.state;
 		this.updDays = query.updDays;
 		this.creDays = query.creDays;
 		this.recentStartDays = query.recentStartDays;			

@@ -302,6 +302,7 @@ public class Group implements Comparable<Group>, Cloneable {
 	 * @return
 	 */
 	public int getNAnimals(Phase phase) {
+		if(phase==null) return getNAnimals();
 		int n = getNAnimals(); 
 		for(Group gr: getToGroups()) {
 			if(gr.getFromPhase()!=null && gr.getFromPhase().compareTo(phase)<=0) {

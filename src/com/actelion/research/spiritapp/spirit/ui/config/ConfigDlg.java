@@ -30,13 +30,14 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 
 public class ConfigDlg extends JEscapeDialog {
 	
-	private JTabbedPane tabbedPane = new JTabbedPane();
+	private JTabbedPane tabbedPane = new JCustomTabbedPane();
 
 	private ConfigWeighingTab weighingTab = new ConfigWeighingTab();
 //	private ConfigRTab rTab = new ConfigRTab();

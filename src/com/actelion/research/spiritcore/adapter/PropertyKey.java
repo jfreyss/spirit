@@ -74,29 +74,28 @@ public class PropertyKey {
 	 * <li>KEY_STUDY_METADATA.{METADATA}.parameters = {parameters for the datatype: ex list of choices}
 	 * <li>KEY_STUDY_METADATA.{METADATA}.roles = {ROLEs as csv}
 	 */
-	public static final PropertyKey STUDY_METADATA = new PropertyKey(Tab.STUDY, "Metadata", "Extra metadata used to configure the study (CSV)", "study.metadata", "TYPE, CLINICAL, PROJECT, SITE, LICENCENO, EXPERIMENTER, DISEASEAREA");
-	public static final PropertyKey STUDY_STATES = new PropertyKey(Tab.STUDY, "States", "configurable states allowed by the study (CSV)", "study.states", "TEST, ONGOING, PUBLISHED, STOPPED");
+	public static final PropertyKey STUDY_METADATA = new PropertyKey(Tab.STUDY, "Metadata", "Extra metadata used to configure the study (CSV)", "study.metadata", "CLINICAL, PROJECT, SITE, LICENSENO, EXPERIMENTER, DISEASEAREA");
+	public static final PropertyKey STUDY_STATES = new PropertyKey(Tab.STUDY, "States", "configurable states allowed by the study (CSV)", "study.states", "EXAMPLE, TEST, ONGOING, PUBLISHED, STOPPED");
 
 	
 	
 	public static final PropertyKey STUDY_METADATA_NAME = new PropertyKey(STUDY_METADATA, "Name", "", "study.metadata.name", "") {
 		@Override public String getDefaultValue(String nestedValue) {
 			return
-				"TYPE".equals(nestedValue)?"Study Type":
-					"CLINICAL".equals(nestedValue)?"Clinical Status":
-						"PROJECT".equals(nestedValue)?"Project":
-							"SITE".equals(nestedValue)?"Site":
-								"LICENCENO".equals(nestedValue)?"Licence No.":
-									"EXPERIMENTER".equals(nestedValue)?"Experimenter":
-										"DISEASEAREA".equals(nestedValue)?"Disease Area": "";
+				"CLINICAL".equals(nestedValue)?"Clinical Status":
+					"PROJECT".equals(nestedValue)?"Project":
+						"SITE".equals(nestedValue)?"Site":
+							"LICENSENO".equals(nestedValue)?"License No.":
+								"EXPERIMENTER".equals(nestedValue)?"Experimenter":
+									"DISEASEAREA".equals(nestedValue)?"Disease Area": "";
 		};
 	};
 	public static final PropertyKey STUDY_METADATA_DATATYPE = new PropertyKey(STUDY_METADATA, "DataType", "", "datatype", "", "ALPHA, AUTO, LIST, DATE") {
 		@Override public String getDefaultValue(String nestedValue) {
 			return "CLINICAL".equals(nestedValue)? DataType.LIST.name(): 
-				"LICENCENO".equals(nestedValue)? DataType.ALPHA.name(): 
+				"LICENSENO".equals(nestedValue)? DataType.ALPHA.name(): 
 					"EXPERIMENTER".equals(nestedValue)? DataType.ALPHA.name(): 
-						DataType.AUTO.name();};
+						DataType.ALPHA.name();};
 	};
 	public static final PropertyKey STUDY_METADATA_PARAMETERS = new PropertyKey(STUDY_METADATA, "Parameters", "", "parameters", "") {
 		@Override public String getDefaultValue(String nestedValue) {return "CLINICAL".equals(nestedValue)?"PRECLINICAL, CLINICAL": DataType.AUTO.name();};		

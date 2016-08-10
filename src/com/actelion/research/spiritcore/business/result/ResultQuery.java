@@ -100,6 +100,12 @@ public class ResultQuery implements Serializable {
 		return query;
 	}
 
+	public static ResultQuery createQueryForSids(Collection<Integer> sids) {
+		ResultQuery query = new ResultQuery();
+		query.setSids(sids);
+		return query;
+	}
+
 	
 //	public static ResultQuery createQueryForTestIdPhaseId(Test test, Phase phase) {
 //		ResultQuery query = new ResultQuery();

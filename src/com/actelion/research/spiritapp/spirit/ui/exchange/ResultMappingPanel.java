@@ -110,14 +110,14 @@ public class ResultMappingPanel extends JPanel implements IMappingPanel {
 	public void updateView() {
 		ExchangeMapping mapping = dlg.getMapping();
 		MappingAction action = mapping.getTest2existingResultAction().get(inputTest.getName());
-		if(action==MappingAction.IGNORE_LINK) r1.setSelected(true);
+		if(action==MappingAction.SKIP) r1.setSelected(true);
 		if(action==MappingAction.MAP_REPLACE) r2.setSelected(true);
-		if(action==MappingAction.CREATE_COPY) r3.setSelected(true);
+		if(action==MappingAction.CREATE) r3.setSelected(true);
 	}
 	
 	public void updateMapping() {
 		ExchangeMapping mapping = dlg.getMapping();
-		MappingAction action = r1.isSelected()? MappingAction.IGNORE_LINK: r2.isSelected()? MappingAction.MAP_REPLACE: r3.isSelected()? MappingAction.CREATE_COPY: MappingAction.IGNORE_LINK;
+		MappingAction action = r1.isSelected()? MappingAction.SKIP: r2.isSelected()? MappingAction.MAP_REPLACE: r3.isSelected()? MappingAction.CREATE: MappingAction.SKIP;
 		mapping.getTest2existingResultAction().put(inputTest.getName(), action);
 	}
 

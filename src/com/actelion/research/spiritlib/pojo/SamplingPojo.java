@@ -24,6 +24,7 @@ package com.actelion.research.spiritlib.pojo;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class SamplingPojo implements Serializable {
 
@@ -39,7 +40,7 @@ public class SamplingPojo implements Serializable {
 	private String sampleName;
 	private String containerType;
 	private Double amount;
-	private String parameters;
+	private Map<String, String> metadata;
 	private String comments;
 	private Integer blocNo;
 	
@@ -56,11 +57,11 @@ public class SamplingPojo implements Serializable {
 	public void setBiotype(String biotype) {
 		this.biotype = biotype;
 	}
-	public String getParameters() {
-		return parameters;
+	public Map<String, String> getMetadata() {
+		return metadata;
 	}
-	public void setParameters(String parameters) {
-		this.parameters = parameters;
+	public void setMetadata(Map<String, String> metadata) {
+		this.metadata = metadata;
 	}
 	public List<SamplingPojo> getChildren() {
 		return children;

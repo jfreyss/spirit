@@ -69,6 +69,7 @@ import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
@@ -129,15 +130,15 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 			
 			@Override
 			protected void doInBackground() throws Exception {
-				Study reloaded = JPAUtil.reattach(s);
-				study = reloaded;
+				study = JPAUtil.reattach(s);
 				// Load animals
-				animals = reloaded.getTopAttachedBiosamples();
+				animals = study.getTopAttachedBiosamples();
 
 				//Load Results (except foodwater which is loaded separately)
-				DAOResult.attachOrCreateStudyResultsToSpecimen(reloaded, animals, null, false);
+				DAOResult.attachOrCreateStudyResultsToSpecimen(study, animals, null, null);
 				mapResults = Result.mapTest(extractResults(animals, null));
 				tests = new ArrayList<>();
+				System.out.println("MonitoringOverviewDlg.recreateUIInThread() "+tests);
 				for (Test t : mapResults.keySet()) {
 					if(t.getName().equals(DAOTest.FOODWATER_TESTNAME)) continue;
 					tests.add(t);
@@ -146,7 +147,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 				
 						
 				//Load FWs
-				allFws = DAOFoodWater.getFoodWater(reloaded, null);
+				allFws = DAOFoodWater.getFoodWater(study, null);
 				
 			}
 			
@@ -202,7 +203,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 						}
 						
 						if(phasesWithGroupAssignments.contains(phase)) {
-							JButton b = new JButton(new StudyActions.Action_Rando(study, phase));
+							JButton b = new JButton(new StudyActions.Action_GroupAssignment(phase));
 							b.setText("<html>Group<br>Assign.");
 							b.setIcon(null);
 							comps.add(b);
@@ -226,7 +227,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 					final PivotTemplate tpl2 = new MonitorPivotTemplate();
 					tpl2.setComputed(Computed.INC_START_PERCENT);
 
-					JTabbedPane tabbedPane = new JTabbedPane();
+					JTabbedPane tabbedPane = new JCustomTabbedPane();
 					for(final Test t: mapResults.keySet()) {
 						final PivotCardPanel panel = new PivotCardPanel(null, true, null);
 						tabbedPane.add("<html>Result<br><b>"+t.getName()+"</b>", panel);						
@@ -285,7 +286,6 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 	@Override
 	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
 		if(!isVisible()) return;
-//		JPAUtil.clear();
 		recreateUIInThread();
 	}
 }

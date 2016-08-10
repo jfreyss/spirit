@@ -55,6 +55,7 @@ import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
@@ -82,7 +83,7 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 	private boolean forRevision = true;
 	
 	
-	private final JTabbedPane tabbedPane = new JTabbedPane();
+	private final JTabbedPane tabbedPane = new JCustomTabbedPane();
 	
 	private final CardLayout cardLayout = new CardLayout();
 	private final JPanel cardPanel = new JPanel(cardLayout);

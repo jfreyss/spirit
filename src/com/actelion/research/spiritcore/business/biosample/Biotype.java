@@ -60,14 +60,14 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.RevisionTimestamp;
 
-import com.actelion.research.spiritcore.business.IObject;
+import com.actelion.research.spiritcore.business.IEntity;
 
 @Entity
 @Audited
 @Table(name="biotype")
 @Cacheable
 @Cache(usage=CacheConcurrencyStrategy.NONE)
-public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IObject {
+public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IEntity {
 
 	public static final String ANIMAL = "Animal";
 	public static final String ORGAN = "Organ";
@@ -209,6 +209,13 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IO
 	public BiotypeMetadata getMetadata(String name) {
 		for (BiotypeMetadata bm : getMetadata()) {
 			if(bm.getName().equals(name)) return bm;
+		}
+		return null;
+	}
+	
+	public BiotypeMetadata getMetadata(int id) {
+		for (BiotypeMetadata bm : getMetadata()) {
+			if(bm.getId()==id) return bm;
 		}
 		return null;
 	}
@@ -530,6 +537,18 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IO
 			res.put(s.getName(), s);
 		}
 		return res;
+	}
+	
+	/**
+	 * Used for debug
+	 * @return
+	 */
+	public String getMetadataIds() {
+		String s = "";
+		for (BiotypeMetadata bm : getMetadata()) {
+			s+="["+bm.getId()+"]"+bm.getName()+",";
+		}
+		return s.length()==0?"": s.substring(0, s.length()-1);
 	}
 	
 }

@@ -141,12 +141,6 @@ public class RackDepictor extends JPanel {
 			}
 			
 			@Override
-			public void mouseReleased(MouseEvent e) {
-				super.mouseReleased(e);
-				
-			}
-			
-			@Override
 			protected void showPopup(MouseEvent e) {
 				int pos = getPosAt(e.getX(), e.getY());
 				addSelection(pos, e.isControlDown(), e.isShiftDown(), true);
@@ -207,14 +201,9 @@ public class RackDepictor extends JPanel {
 					}
 					repaint();
 					return;
-//				} else if( e.getModifiers() == KeyEvent.CTRL_MASK && e.getKeyCode() == 67) {//CtrlC
-//					
-//					EasyClipboard.setClipboard(CSVUtils.flatten(depictor.getLocationLayout()));
 				} else {
 					return;
 				}
-
-				//setPosition(posY, posX);
 			}
 		});
 		
@@ -231,12 +220,10 @@ public class RackDepictor extends JPanel {
 	
 	@Override
 	public String getToolTipText(MouseEvent event) {
-		
 		int pos = getPosAt(event.getX(), event.getY());
 		Container c = pos2Containers.get(pos);
 		if(c==null || !SpiritRights.canReadBiosamples(c.getBiosamples(), Spirit.getUser())) return null;
-		
-		
+				
 		return "<html><body><div style='font-size:8px'>" +
 			"<b>" + c.getContainerOrBiosampleId() + "</b>" + 
 			("\n" + c.getPrintStudyLabel(Spirit.getUsername())  + "\n" + c.getPrintMetadataLabel(InfoSize.EXPANDED)).replaceAll("(\n)+", "<br>");
@@ -284,7 +271,6 @@ public class RackDepictor extends JPanel {
 	}
 	
 	public void setBiolocation(Location location) {
-//		if(this.location==location) return;
 		this.location = location;
 		
 		//Create the cache of positions
@@ -321,28 +307,19 @@ public class RackDepictor extends JPanel {
 		} else {
 			cols = location.getCols()>0? location.getCols(): (int)(Math.sqrt(maxSize)+.5);
 			rows = location.getRows()>0? location.getRows(): (int)(.99 + 1.0 * maxSize / cols);			
-
-//			if(rows==1) {
-//				split = Math.min(5, Math.max(1, cols / rows / 10));				
-//			}  else {
-//				split = 1;				
-//			}
 			maxSize = Math.max(pos2Containers.size(), cols * rows);											
 		}
 		if(cols<=0) cols = 1;
 		if(rows<=0) rows = 1;
 		
-//		colsBySplit = Math.max(1, (cols + split - 1) / split);
 				
 		pos2Shapes.clear();
 		for (int pos = 0; pos < maxSize; pos++) {
-//			int s = split==1? 0: pos / colsBySplit;
-//			int col = pos % colsBySplit;
 			int col = pos % cols;
 			int row = pos / cols;
 			Rectangle r = new Rectangle(
 					MARGIN + (int)(col*cellWidth), 
-					MARGIN + (int)(row*cellHeight), // + s * (int)(cellHeight + 12),				
+					MARGIN + (int)(row*cellHeight),				
 					(int)((col+1)*cellWidth) - (int)(col*cellWidth), 
 					(int)((row+1)*cellHeight) - (int)(row*cellHeight));
 			pos2Shapes.put(pos, r);
@@ -350,8 +327,8 @@ public class RackDepictor extends JPanel {
 		
 		//Add scrolling bars by setting the size if needed
 		Dimension dim = new Dimension(
-				(int)(MARGIN*2 + cellWidth * cols/*colsBySplit*/), 
-						(int)(MARGIN*2 + cellHeight * rows /* split*/));			
+				(int)(MARGIN*2 + cellWidth * cols), 
+						(int)(MARGIN*2 + cellHeight * rows));			
 		if(dim.width!=getPreferredSize().width || dim.height!=getPreferredSize().height) {
 			setPreferredSize(dim);
 			setSize(dim);			
@@ -400,8 +377,6 @@ public class RackDepictor extends JPanel {
 			g.setColor(Color.GRAY);
 			g.drawRect(r.x, r.y, r.width, r.height);
 
-			//draw the well
-//			java.awt.Shape previousClip = g.getClip();
 			//Draw content
 			if(!canRead) {
 				g.setColor(Color.LIGHT_GRAY);
@@ -412,16 +387,9 @@ public class RackDepictor extends JPanel {
 					g.drawString("NoRights", r.x+r.width/2 - g.getFontMetrics().stringWidth("NoRights")/2, r.y + r.height/2);
 				}
 			
-			} else { //if(depictor.getPaintMode()==PaintMode.DETAILS) {
+			} else { 
 				renderer.paintWellPre(this, g, location, pos, c, r);
-//				Rectangle clip = previousClip.getBounds().intersection(r);
-//				if(clip.getHeight()==0 || clip.getWidth()==0) continue;
-//				g.setClip(clip);
-//				g.translate(r.x, r.y);
 				renderer.paintWell(this, g, location, pos, c, r);
-
-//				g.translate(-r.x, -r.y);
-//				g.setClip(previousClip);
 				renderer.paintWellPost(this, g, location, pos, c, r);					
 			}
 						

@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.actelion.research.spiritcore.business.pivot.PivotItem;
-import com.actelion.research.spiritcore.business.pivot.PivotItemFactory;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Where;
 
 

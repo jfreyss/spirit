@@ -84,7 +84,7 @@ public class LocationMappingPanel extends JPanel implements IMappingPanel  {
 				}
 			} catch(Exception e) {
 				//no match
-				mappingPanel.setMappingAction(MappingAction.CREATE_COPY);
+				mappingPanel.setMappingAction(MappingAction.CREATE);
 				mappingPanel.setCreationEnabled(true);
 			}
 			
@@ -101,7 +101,7 @@ public class LocationMappingPanel extends JPanel implements IMappingPanel  {
 				for (String l: mappingPanels.keySet()) {
 					MappingPanel mappingPanel = mappingPanels.get(l);
 					if(mappingPanel==null) return;
-					mappingPanel.setMappingAction(MappingAction.CREATE_COPY);
+					mappingPanel.setMappingAction(MappingAction.CREATE);
 				}
 			}
 		});
@@ -112,7 +112,7 @@ public class LocationMappingPanel extends JPanel implements IMappingPanel  {
 				for (String l: mappingPanels.keySet()) {
 					MappingPanel mappingPanel = mappingPanels.get(l);
 					if(mappingPanel==null) return;
-					mappingPanel.setMappingAction(MappingAction.IGNORE_LINK);
+					mappingPanel.setMappingAction(MappingAction.SKIP);
 				}
 			}
 		});

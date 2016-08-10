@@ -29,11 +29,9 @@ import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
 
 import com.actelion.research.spiritapp.animalcare.ui.monitor.MonitoringOverviewDlg;
 import com.actelion.research.spiritapp.spirit.Spirit;
@@ -47,7 +45,6 @@ import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
-import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -58,16 +55,13 @@ import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 public class AnimalCarePanel extends JPanel {
 
 	private final StudyEditorPane studyEditorPane = new StudyEditorPane(); 
-	private final JButton editNotesButton = new JIconButton(IconType.EDIT, "Edit Notes");
+	private final JButton editInfosButton = new JIconButton(IconType.EDIT, "Edit Infos");
+	private final JButton editDesignButton = new JIconButton(IconType.STUDY, "Edit Design");
 	
 	private final StudyComboBox studyComboBox;
 	private final StudyDetailPanel studyDetailPanel = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT, false);
 
-	private final JButton randomizeButton = new JBigButton(new StudyActions.Action_Rando() {
-		public Study getStudy() {
-			return studyComboBox==null? null: DAOStudy.getStudyByStudyId(studyComboBox.getText());
-		};
-	});	
+	private final JButton groupAssignButton;	
 	private final JButton cageButton = new JIconButton(IconType.PRINT, "", "Print cage labels ");
 	
 	private final JButton weighingButton = new JBigButton(new StudyActions.Action_AnimalMonitoring(null));
@@ -89,47 +83,54 @@ public class AnimalCarePanel extends JPanel {
 				eventStudyChanged();
 			}
 		});
-		
-		JPanel studyPanel = UIUtils.createVerticalBox(
-				UIUtils.createHorizontalBox(new JCustomLabel("Study:", FastFont.BOLD), Box.createHorizontalGlue()),
-				UIUtils.createHorizontalBox(studyComboBox, Box.createHorizontalGlue())
-				);
-		studyPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(), BorderFactory.createEmptyBorder(2, 2, 2, 2)));
-		
+		groupAssignButton = new JBigButton(new StudyActions.Action_GroupAssignmentSelecter(studyComboBox));	
+		JPanel studyPanel = UIUtils.createTitleBox("", UIUtils.createHorizontalBox(studyComboBox, Box.createHorizontalGlue()));
 		studyDetailPanel.showSpecimen();
 		
 		StudyActions.attachPopup(studyDetailPanel);
 		
 		//Tooltip		
-		randomizeButton.setToolTipText("Assign the groups manually through the Group Assignment Wizard");
+		groupAssignButton.setToolTipText("Assign the groups through the Group Assignment Wizard");
 		
 		//Button Menu
-		JPanel buttonPanel = UIUtils.createVerticalBox(
-					UIUtils.createBox(randomizeButton, null, null, null, cageButton),
-					Box.createVerticalStrut(20),
+		JPanel buttonPanel = UIUtils.createTitleBox("", UIUtils.createVerticalBox(
+					UIUtils.createBox(groupAssignButton, null, null, null, cageButton),
+					Box.createVerticalStrut(10),
 					weighingButton,
 					markDeadButton,
-					Box.createVerticalStrut(20),
+					Box.createVerticalStrut(10),
 					manageButton,
 					extraSamplingButton,
 					measurementButton,
-					Box.createVerticalStrut(20),
+					Box.createVerticalStrut(10),
 					reportButton
-				);
-		buttonPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(), BorderFactory.createEmptyBorder(2, 2, 2, 2)));
-//		buttonPanel.setOpaque(true);
-//		buttonPanel.setBackground(Color.LIGHT_GRAY);
+				));
 		
 		JPanel westPanel = UIUtils.createBox(
-				UIUtils.createBox(BorderFactory.createEtchedBorder(), new JScrollPane(studyEditorPane), null, UIUtils.createHorizontalBox(editNotesButton, Box.createHorizontalGlue())), 
+				UIUtils.createBox(BorderFactory.createEtchedBorder(), new JScrollPane(studyEditorPane), null, UIUtils.createHorizontalBox(editInfosButton, editDesignButton, Box.createHorizontalGlue())), 
 				UIUtils.createBox(buttonPanel, studyPanel, null),
 				null);
 
-		editNotesButton.addActionListener(new ActionListener() {			
+		editInfosButton.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					editNotes();
+					Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
+					if(!SpiritRights.canAdmin(study, Spirit.getUser())) throw new Exception("You must be an admin to edit");
+					new StudyActions.Action_EditInfos(study).actionPerformed(null);
+				} catch (Exception ex) {
+					JExceptionDialog.showError(ex);
+				}
+			}
+		});
+		
+		editDesignButton.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
+					if(!SpiritRights.canAdmin(study, Spirit.getUser())) throw new Exception("You must be an admin to edit");
+					new StudyActions.Action_EditDesign(study).actionPerformed(null);
 				} catch (Exception ex) {
 					JExceptionDialog.showError(ex);
 				}
@@ -250,7 +251,7 @@ public class AnimalCarePanel extends JPanel {
 			
 			int nAnimals = study==null? 0: study.getTopAttachedBiosamples().size();
 
-			randomizeButton.setEnabled(canBlind && !SpiritRights.isBlindAll(study, Spirit.getUser()));
+			groupAssignButton.setEnabled(canBlind && !SpiritRights.isBlindAll(study, Spirit.getUser()));
 			reportButton.setEnabled(canRead && nAnimals>0);
 			markDeadButton.setEnabled(canBlind && nAnimals>0);
 			extraSamplingButton.setEnabled(canBlind && nAnimals>0);
@@ -260,36 +261,33 @@ public class AnimalCarePanel extends JPanel {
 			cageButton.setEnabled(canBlind && nAnimals>0);
 				
 			studyEditorPane.setStudy(study);
-			if(study==null) {
-				editNotesButton.setEnabled(false);
-			} else {
-				editNotesButton.setEnabled(true);
-			}
+			editInfosButton.setEnabled(study!=null);
+			editDesignButton.setEnabled(study!=null);
 	}
 			
 	
 	
-	private void editNotes() throws Exception{
-		Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
-		if(study==null || !SpiritRights.canBlind(study, Spirit.getUser())) throw new Exception("You must select a study");
-				
-		JTextArea ta = new JTextArea(study.getNotes());
-		JScrollPane scrollPane = new JScrollPane(ta);		
-		scrollPane.setPreferredSize(new Dimension(350, 150));
-		
-		// pass the scrollpane to the joptionpane.				
-		int res = JOptionPane.showConfirmDialog(this, scrollPane, "Edit Notes of "+study, JOptionPane.OK_CANCEL_OPTION);
-		if(res!=JOptionPane.YES_OPTION) return;
-		try {
-			JPAUtil.pushEditableContext(Spirit.getUser());
-			study.setNotes(ta.getText());
-			DAOStudy.persistStudy(study, Spirit.askForAuthentication());
-		} finally {
-			JPAUtil.popEditableContext();
-			eventStudyChanged();
-		}
-		
-	}
+//	private void editNotes() throws Exception{
+//		Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
+//		if(study==null || !SpiritRights.canBlind(study, Spirit.getUser())) throw new Exception("You must select a study");
+//				
+//		JTextArea ta = new JTextArea(study.getNotes());
+//		JScrollPane scrollPane = new JScrollPane(ta);		
+//		scrollPane.setPreferredSize(new Dimension(350, 150));
+//		
+//		// pass the scrollpane to the joptionpane.				
+//		int res = JOptionPane.showConfirmDialog(this, scrollPane, "Edit Notes of "+study, JOptionPane.OK_CANCEL_OPTION);
+//		if(res!=JOptionPane.YES_OPTION) return;
+//		try {
+//			JPAUtil.pushEditableContext(Spirit.getUser());
+//			study.setNotes(ta.getText());
+//			DAOStudy.persistStudy(study, Spirit.askForAuthentication());
+//		} finally {
+//			JPAUtil.popEditableContext();
+//			eventStudyChanged();
+//		}
+//		
+//	}
 	
 	public void refresh() {
 		studyComboBox.reload();

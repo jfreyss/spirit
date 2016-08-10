@@ -45,7 +45,8 @@ public class RevisionList extends JList<Revision> {
 			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 				Revision s = (Revision) value;
-				setText((index+1)+ ". " + Formatter.formatDateOrTime(s.getDate()) + " - "+ s.getUser());
+				setText((index+1)+ ". " + Formatter.formatDateTime(s.getDate()) + " - "+ s.getUser());
+				setToolTipText("Revision: "+s.getRevId());
 				return this;
 			}
 		});

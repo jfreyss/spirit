@@ -65,22 +65,14 @@ public class ELBRenameDlg extends JEscapeDialog {
 	public ELBRenameDlg() {
 		super(UIUtils.getMainFrame(), "Admin - Rename ELB");
 		
-		JPanel centerPanel = new JPanel(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-		c.anchor = GridBagConstraints.WEST;
-		c.gridx = 0; c.gridy = 0; centerPanel.add(new JLabel("Old ELB: "), c);
-		c.gridx = 0; c.gridy = 2; centerPanel.add(new JLabel("New ELB: "), c);
-		c.weightx = 1;
-		c.fill = GridBagConstraints.BOTH;
-		c.gridx = 1; c.gridy = 0; centerPanel.add(oldElbTextField, c);
-		c.gridx = 1; c.gridy = 1; centerPanel.add(infoLabel, c);
-		c.gridx = 1; c.gridy = 2; centerPanel.add(newElbTextField, c);
-		
+	
 		oldElbTextField.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				newElbTextField.setText(oldElbTextField.getText());
-				newElbTextField.selectAll();
+				if(newElbTextField.getText().length()==0) {
+					newElbTextField.setText(oldElbTextField.getText());
+					newElbTextField.selectAll();
+				}
 				
 				try {
 					List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForElb(oldElbTextField.getText()), null);
@@ -108,9 +100,12 @@ public class ELBRenameDlg extends JEscapeDialog {
 				eventOk();
 			}
 		});
-		
+				
 		JPanel contentPanel = new JPanel(new BorderLayout());
-		contentPanel.add(BorderLayout.CENTER, centerPanel);
+		contentPanel.add(BorderLayout.CENTER, UIUtils.createTable(2, 
+				new JLabel("Old ELB: "), oldElbTextField,
+				null, infoLabel,
+				new JLabel("New ELB: "), newElbTextField));
 		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), renameButton));
 		
 		setContentPane(contentPanel);
@@ -124,7 +119,7 @@ public class ELBRenameDlg extends JEscapeDialog {
 	
 	private void eventOk() {
 		if(!Spirit.getUser().isSuperAdmin()) {
-			JExceptionDialog.showError(ELBRenameDlg.this, "Only a superuser can rename an ELB");
+			JExceptionDialog.showError(ELBRenameDlg.this, "Only an admin can rename an ELB");
 			return;
 		}
 		try {

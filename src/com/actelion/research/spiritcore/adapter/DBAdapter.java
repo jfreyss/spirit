@@ -156,7 +156,7 @@ public abstract class DBAdapter {
 	public final static void saveDBProperties() throws Exception {
 		Properties prop = new Properties();
 		for (Entry<String, String> e : properties.entrySet()) {
-			prop.put(e.getKey(), e.getValue());
+			prop.put(e.getKey(), e.getValue()==null?"": e.getValue());
 		}
 		try(FileWriter writer = new FileWriter(configFile)) {
 			prop.store(writer, "Spirit Connection Properties");

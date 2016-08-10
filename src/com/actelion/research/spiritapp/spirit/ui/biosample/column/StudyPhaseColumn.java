@@ -33,6 +33,8 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 public class StudyPhaseColumn extends Column<Biosample, Phase> {
 	
+	private static PhaseLabel phaseLabel = new PhaseLabel();
+
 	public StudyPhaseColumn() {
 		super("Study\nPhase", Phase.class, 30, 60);
 	}
@@ -62,14 +64,17 @@ public class StudyPhaseColumn extends Column<Biosample, Phase> {
 	
 	@Override
 	public boolean isEditable(Biosample row) {
-		return row!=null && row.getInheritedStudy()!=null;
+		return row!=null && row.getInheritedStudy()!=null && row.getParent()!=null && row.getParent().getInheritedPhase()==null;
 	}
 	
-	private static PhaseLabel phaseLabel = new PhaseLabel();
 	
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
-		phaseLabel.setPhase(row==null? null: row.getInheritedPhase(), row==null? null: row.getInheritedGroup());
+		if(!isEditable(row)) {
+			phaseLabel.setPhase(null, row.getInheritedGroup());
+		} else {
+			phaseLabel.setPhase(row.getInheritedPhase(), row.getInheritedGroup());
+		}
 		phaseLabel.setToolTipText(row==null || row.getInheritedPhase()==null? null: row.getInheritedPhase().getName());
 		return phaseLabel;
 	}

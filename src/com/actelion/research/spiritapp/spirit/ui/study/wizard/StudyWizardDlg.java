@@ -31,6 +31,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -376,7 +377,7 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 						txn = session.getTransaction();
 						txn.begin();
 
-						study = DAOStudy.persistStudy(session, study, Spirit.askForAuthentication());
+						DAOStudy.persistStudies(session, Collections.singletonList(study), Spirit.askForAuthentication());
 						
 						if(getToUpdate().size()>0) {
 							DAOBiosample.persistBiosamples(session, getToUpdate(), Spirit.getUser());

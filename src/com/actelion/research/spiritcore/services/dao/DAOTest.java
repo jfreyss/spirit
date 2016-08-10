@@ -49,7 +49,10 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.QueryTokenizer;
 
-@SuppressWarnings("unchecked")
+/**
+ * 
+ * @author freyssj
+ */
 public class DAOTest {
 
 	private static Logger logger = LoggerFactory.getLogger(DAOTest.class);

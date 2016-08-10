@@ -80,7 +80,7 @@ public class LocationSearchPane extends JPanel {
 		GridBagConstraints c = new GridBagConstraints();
 		filterLocation.setBackground(Color.WHITE);
 		studyComboBox = new StudyComboBox(RightLevel.WRITE, "StudyId");
-		viewMineButton.setEnabled(Spirit.getUser()!=null && Spirit.getUser().getMainGroup()!=null);
+		viewMineButton.setVisible(Spirit.getUser()!=null && Spirit.getUser().getMainGroup()!=null);
 		
 		c.anchor = GridBagConstraints.WEST;
 		this.forcedBiotype = forcedBiotype;
@@ -171,10 +171,6 @@ public class LocationSearchPane extends JPanel {
 			
 			@Override
 			protected void done() {
-				System.out.println("LocationSearchPane.query(...).new SwingWorkerExtended() {...}.done() ");
-				for (Location location : res) {
-					System.out.println("LocationSearchPane.query(...).new SwingWorkerExtended() {...}.done() "+location.getId());
-				}
 				res = JPAUtil.reattach(res);
 				
 				//Update the table
@@ -229,7 +225,6 @@ public class LocationSearchPane extends JPanel {
 	}
 	
 	public void queryMyLocations() {
-		if(Spirit.getUser()==null || Spirit.getUser().getMainGroup()==null) return;
 		LocationQuery query = new LocationQuery();
 		query.setEmployeeGroup(Spirit.getUser().getMainGroup());
 		query.setBiotype(forcedBiotype);

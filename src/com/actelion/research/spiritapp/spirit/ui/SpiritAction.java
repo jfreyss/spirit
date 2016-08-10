@@ -23,6 +23,8 @@ package com.actelion.research.spiritapp.spirit.ui;
 
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
+import java.net.URL;
+import java.net.URLEncoder;
 
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
@@ -130,16 +132,35 @@ public class SpiritAction {
 			}
 			
 			//Log usage
+			logUsage("Spirit");
+		}
+	}
+	
+	public static void logUsage(final String app) {
+		if(Spirit.getUser()!=null) {
 			if(DBAdapter.getAdapter().isInActelionDomain()) {
-				if(Spirit.getUser()!=null) {
-					UsageLog.logUsage("Spirit", Spirit.getUser().getUsername(), null, UsageLog.ACTION_LOGON, "Spirit");
-				}
+				UsageLog.logUsage("Spirit", Spirit.getUser().getUsername(), null, UsageLog.ACTION_LOGON, "app=" + app + ";v="+Spirit.class.getPackage().getImplementationVersion());
+			} else {
+				new Thread() {
+					public void run() {
+						try {
+							String os = System.getProperty("os.name");
+							String home = System.getProperty("java.home");
+							new URL("https://ssl.google-analytics.com/collect?v=1&"
+									+ "t=" + URLEncoder.encode(app, "UTF-8") + "&ec=Launch&tid=UA-81953907-3&"
+									+ "z=1111&cid=100&ea="+URLEncoder.encode(Spirit.class.getPackage().getImplementationVersion(), "UTF-8")
+									+ "&el=" + URLEncoder.encode("os="+os+";home="+home, "UTF-8")).getContent();							
+						} catch(Exception e) {
+							e.printStackTrace();
+						}
+						
+					};
+				}.start();
+				
 			}
-			
 		}
-		public void updateStatus() {
-			
-		}
+		
+		
 	}
 	
 	public static class Action_ChangePassword extends AbstractAction {

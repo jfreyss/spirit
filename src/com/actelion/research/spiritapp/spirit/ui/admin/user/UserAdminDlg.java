@@ -25,6 +25,7 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JTabbedPane;
 
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.UIUtils;
 
@@ -35,7 +36,7 @@ public class UserAdminDlg extends JEscapeDialog {
 	public UserAdminDlg() {
 		super(UIUtils.getMainFrame(), "User/Group Administration");
 		
-		JTabbedPane tabbedPane = new JTabbedPane();
+		JTabbedPane tabbedPane = new JCustomTabbedPane();
 		tabbedPane.add("Users", employeePanel);
 		tabbedPane.add("Groups", employeeGroupPanel);
 

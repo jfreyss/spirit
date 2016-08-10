@@ -21,13 +21,17 @@
 
 package com.actelion.research.spiritapp.spirit.ui.location;
 
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
@@ -39,7 +43,11 @@ import com.actelion.research.spiritapp.spirit.ui.print.BrotherLabelsDlg;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.Privacy;
 import com.actelion.research.spiritcore.services.SpiritRights;
+import com.actelion.research.spiritcore.services.dao.DAORevision;
+import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.ui.JCustomLabel;
+import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
@@ -49,13 +57,14 @@ public class LocationActions {
 		private Location parent;
 
 		public Action_New() {
-			super("New Location");
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('l'));
-			putValue(AbstractAction.SMALL_ICON, IconType.LOCATION.getIcon());
+			this((Location)null);
 		}
 		public Action_New(Location parent) {
-			super("New Location" + (parent==null?"": " (under "+parent.getName()+")"));
-			this.parent = parent;
+			this(Collections.singleton(parent));
+		}
+		public Action_New(Collection<Location> selection) {
+			super("New Locations");
+			this.parent = selection==null || selection.size()==0? null: selection.iterator().next();
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('l'));
 			putValue(AbstractAction.SMALL_ICON, IconType.LOCATION.getIcon());
 			setEnabled(SpiritRights.canRead(parent, Spirit.getUser()));
@@ -84,14 +93,6 @@ public class LocationActions {
 	
 	public static class Action_Delete extends AbstractAction {
 		private List<Location> locations;
-
-		public Action_Delete(Location location) {
-			super("Delete Location ("+location+")");
-			this.locations = Collections.singletonList(location);
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('l'));
-			putValue(AbstractAction.SMALL_ICON, IconType.DELETE.getIcon());
-			setEnabled(SpiritRights.canEdit(location, Spirit.getUser()));
-		}
 		
 		public Action_Delete(List<Location> locations) {
 			super("Delete Batch");
@@ -110,6 +111,26 @@ public class LocationActions {
 		public void actionPerformed(ActionEvent e) {
 			if(Spirit.getUser()==null) return;
 			LocationBatchEditDlg.deleteInNewContext(locations);
+		}
+	}
+	
+	public static class Action_History extends AbstractAction {
+		private final Collection<Location> locations;
+		public Action_History(Collection<Location> locations) {
+			super("View Change History");
+			this.locations = locations;
+			putValue(AbstractAction.MNEMONIC_KEY, (int)('h'));
+			putValue(Action.SMALL_ICON, IconType.HISTORY.getIcon());
+			setEnabled(locations.size()==1);
+		}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				List<Revision> revisions = DAORevision.getRevisions(locations.iterator().next());
+				new LocationHistoryDlg(revisions);
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ex);
+			}
 		}
 	}
 	
@@ -153,16 +174,8 @@ public class LocationActions {
 	}
 	public static class Action_Duplicate extends AbstractAction {
 		private List<Location> locations;
-		public Action_Duplicate(Location location) {
-			super("Duplicate Location");
-			this.locations = Collections.singletonList(location);
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
-			putValue(AbstractAction.SMALL_ICON, IconType.DUPLICATE.getIcon());
-			setEnabled(SpiritRights.canEdit(location.getParent(), Spirit.getUser()));
-		}
-		
 		public Action_Duplicate(List<Location> locations) {
-			super("Duplicate Batch");
+			super("Duplicate");
 			this.locations = locations;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			putValue(AbstractAction.SMALL_ICON, IconType.DUPLICATE.getIcon());
@@ -264,28 +277,32 @@ public class LocationActions {
 //	}
 	
 	public static JPopupMenu createPopup(List<Location> locations) {
-		JPopupMenu popupMenu = new JPopupMenu();
+		JPopupMenu menu = new JPopupMenu();
 		
-		if(locations.size()==1) {
-			Location l = locations.get(0);
-			popupMenu.add(new JMenuItem(new Action_New(l)));
-			popupMenu.add(new JSeparator());
-			popupMenu.add(new JMenuItem(new Action_EditBatch(l)));			
-			popupMenu.add(new JMenuItem(new Action_Duplicate(l)));				
-			popupMenu.add(new JMenuItem(new Action_Delete(l)));
-//			popupMenu.add(new JMenuItem(new Action_Move(l)));
-			popupMenu.add(new JSeparator());
-			popupMenu.add(new JMenuItem(new Action_Print(l)));			
-		} else if(locations.size()>1) {
-			popupMenu.add(new JMenuItem(new Action_EditBatch(locations)));			
-			popupMenu.add(new JMenuItem(new Action_Duplicate(locations)));				
-			popupMenu.add(new JMenuItem(new Action_Delete(locations)));				
-//			popupMenu.add(new JMenuItem(new Action_Move(locations)));
-			popupMenu.add(new JSeparator());
-			popupMenu.add(new JMenuItem(new Action_Print(locations)));
-		}
+		String s = locations.size()==1? locations.get(0).getName(): locations.size()+" selected";
+		menu.add(new JCustomLabel("   Location: "+s, Font.BOLD));
 		
-		return popupMenu;
+		JMenu newMenu = new JMenu("New");
+		newMenu.setMnemonic('n');
+		newMenu.setIcon(IconType.NEW.getIcon());
+		menu.add(newMenu);
+		newMenu.add(new JMenuItem(new Action_New(locations)));
+		newMenu.add(new JMenuItem(new Action_Duplicate(locations)));	
+		
+		menu.add(new JMenuItem(new Action_EditBatch(locations)));			
+		menu.add(new JSeparator());
+		menu.add(new JMenuItem(new Action_Print(locations)));			
+		menu.add(new JSeparator());
+		
+		JMenu advancedMenu = new JMenu("Advanced");
+		advancedMenu.setMnemonic('n');
+		advancedMenu.setIcon(IconType.ADMIN.getIcon());
+		menu.add(advancedMenu);
+		advancedMenu.add(new JMenuItem(new Action_Delete(locations)));			
+		advancedMenu.add(new JSeparator());
+		advancedMenu.add(new JMenuItem(new Action_History(locations)));			
+
+		return menu;
 	}
 	
 	
@@ -299,9 +316,9 @@ public class LocationActions {
 			protected void showPopup(MouseEvent e) {
 
 				JPopupMenu popupMenu = LocationActions.createPopup(table.getSelection());
-				popupMenu.insert(table.new TreeViewExpandAll(true, true), 0);
-				popupMenu.insert(table.new TreeViewExpandAll(false, true), 1);
-				popupMenu.insert(new JSeparator(), 2);
+//				popupMenu.insert(table.new TreeViewExpandAll(true, true), 0);
+//				popupMenu.insert(table.new TreeViewExpandAll(false, true), 1);
+//				popupMenu.insert(new JSeparator(), 2);
 				popupMenu.show(table, e.getX(), e.getY());
 			}
 		});

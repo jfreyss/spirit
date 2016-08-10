@@ -22,20 +22,21 @@
 package com.actelion.research.spiritapp.animalcare.ui;
 
 import java.awt.Dimension;
-import java.awt.Font;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.SwingConstants;
 
+import com.actelion.research.util.ui.FastFont;
+
 public class JBigButton extends JButton {
 	
 	public JBigButton(Icon icon, String text) {
 		super(text);
 		
-		setMinimumSize(new Dimension(100, 32));
-		setFont(new Font(Font.DIALOG, Font.BOLD, 12));
+		setMinimumSize(new Dimension(80, 32));
+		setFont(FastFont.REGULAR);
 		setHorizontalAlignment(SwingConstants.LEFT);
 		setIcon(icon);
 		
@@ -43,6 +44,7 @@ public class JBigButton extends JButton {
 	
 	public JBigButton(AbstractAction action) {
 		this((Icon)action.getValue(AbstractAction.SMALL_ICON), (String) action.getValue(AbstractAction.NAME));
+		addActionListener(action);
 	}
 
 	

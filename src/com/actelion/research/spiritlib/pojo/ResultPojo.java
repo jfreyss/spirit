@@ -29,6 +29,7 @@ import java.util.Map;
 public class ResultPojo implements Serializable {
 
 	private int id;
+	private String elb;
 	private String testName;
 	private String sampleId;
 	private String phase;
@@ -41,13 +42,10 @@ public class ResultPojo implements Serializable {
 	private String creUser;
 	
 	public ResultPojo() {
-	}
-	
+	}	
 	public ResultPojo(int id) {
 		this.id = id;
 	}
-
-	
 	public int getId() {
 		return id;
 	}
@@ -59,6 +57,12 @@ public class ResultPojo implements Serializable {
 	}
 	public void setTestName(String testName) {
 		this.testName = testName;
+	}
+	public String getElb() {
+		return elb;
+	}
+	public void setElb(String elb) {
+		this.elb = elb;
 	}
 	public Date getUpdDate() {
 		return updDate;

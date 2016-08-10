@@ -45,13 +45,11 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import com.actelion.research.spiritapp.animalcare.ui.AnimalCarePanel;
 import com.actelion.research.spiritapp.slidecare.ui.ContainerCreatorDlg;
 import com.actelion.research.spiritapp.slidecare.ui.InventoryPanel;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.SpiritMenu;
 import com.actelion.research.spiritapp.spirit.ui.SpiritAction;
-import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.lf.StudyComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyDetailPanel;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritChangeObserver;
@@ -73,12 +71,13 @@ import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.util.ui.FastFont;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JStatusBar;
 import com.actelion.research.util.ui.SplashScreen2;
+import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
-import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritContextObserver {
@@ -90,7 +89,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	private JButton createCassetteButton = new JButton(new Action_CreateCassette());
 	private JButton createSlideButton = new JButton(new Action_CreateSlide());
 	
-	private JTabbedPane tabbedPane = new JTabbedPane();
+	private JTabbedPane tabbedPane = new JCustomTabbedPane();
 	private InventoryPanel cassettePanel = new InventoryPanel(ContainerType.K7) {
 		@Override
 		public JComponent createEastPanel() {

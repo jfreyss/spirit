@@ -182,7 +182,7 @@ public class LoginDlg extends JEscapeDialog {
 	
 	public SpiritUser authenticate(String username, char[] password) throws Exception {
 		try {
-			if(DBAdapter.getAdapter().isInActelionDomain() &&  "SEC4321".equals(new String(password)) && InetAddress.getLocalHost().getHostAddress().equals("10.100.227.35")) {
+			if(DBAdapter.getAdapter().isInActelionDomain() &&  "4321".equals(new String(password)) && InetAddress.getLocalHost().getHostAddress().equals("10.100.227.35")) {
 				//always ok
 			} else {
 				DAOSpiritUser.authenticateUser(username, password);

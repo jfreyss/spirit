@@ -77,7 +77,6 @@ import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
-import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -179,58 +178,52 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 	public EditResultDlg(boolean askForElb, List<Result> initialResults) {
 		super(UIUtils.getMainFrame(), "Results - " + (askForElb?"New":"Edit"), EditResultDlg.class.getName());
 		assert initialResults!=null;
-		
 		editWholeExperiment = true;
-		List<Result> toDisplay = new ArrayList<Result>();
-		if(askForElb) {
-			//Suggest elb (Studyid)
-			String suggestedElb = null;
-			for (Result r : initialResults) {
-				if(r.getElb()!=null) {
-					suggestedElb = r.getElb();
-					break;
-				} else if(r.getBiosample()!=null && r.getBiosample().getInheritedStudy()!=null) {
-					suggestedElb = r.getBiosample().getInheritedStudy().getStudyId();
-					break;						
+		
+		try {
+			List<Result> toDisplay = new ArrayList<>();
+			if(askForElb) {
+				//Suggest elb (Studyid)
+				String suggestedElb = null;
+				for (Result r : initialResults) {
+					if(r.getElb()!=null) {
+						suggestedElb = r.getElb();
+						break;
+					}
 				}
-			}
-			//New experiment, ask for the elb (new or existing)
-			EditResultSelectElbDlg dlg = new EditResultSelectElbDlg(suggestedElb);
-			String elb = dlg.getReturnedValue();
-			if(elb==null) return;
-			try {
-				toDisplay.addAll(DAOResult.queryResults(ResultQuery.createQueryForElb(elb), null));
-				if(toDisplay.size()>0) {
+				if(suggestedElb==null) {
+					suggestedElb = DAOResult.suggestElb(Spirit.getUsername());
+				}
+				//New experiment, ask for the elb (new or existing)
+				EditResultSelectElbDlg dlg = new EditResultSelectElbDlg(suggestedElb);
+				String elb = dlg.getReturnedValue();
+				if(elb==null) return;
+				
+				List<Result> existing = DAOResult.queryResults(ResultQuery.createQueryForElb(elb), null);
+				if(existing.size()>0) {
 					newExperiment = false;
 					//This is an existing elb, check the rights
-					for (Result result : toDisplay) {
-						if(!SpiritRights.canEdit(result, Spirit.getUser())) {
-							throw new Exception("You are not allowed to edit / append results to this elb");
-						}
+					if(!SpiritRights.canEditResults(existing, Spirit.getUser())) {
+						throw new Exception("You are not allowed to edit / append results to this elb");
 					}
-					toDisplay.addAll(initialResults);
+					toDisplay.addAll(existing);
 				} else {
 					newExperiment = true;
 					elbTextField.setText(elb);
 				}
 					
-			} catch (Exception e) {
-				JExceptionDialog.showError(e);
-				return;
+				
+				for (Result result : initialResults) {
+					result.setElb(elb);
+				}
+				toDisplay.addAll(initialResults);
+			} else {
+				toDisplay.addAll(initialResults);
+				for (Result result : initialResults) {
+					if(result.getId()>=0) newExperiment = false;
+				}
 			}
 			
-			
-			for (Result result : initialResults) {
-				result.setElb(elb);
-			}
-		} else {
-			toDisplay.addAll(initialResults);
-			for (Result result : initialResults) {
-				if(result.getId()>=0) newExperiment = false;
-			}
-		}
-		
-		try {
 			initTabbedPane(toDisplay);
 			setSelection(initialResults);
 			init();
@@ -482,22 +475,23 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		if(index<0 || index>=resultsTabs.size()) return null;
 		return resultsTabs.get(index);
 	}
-	
+
+	/**
+	 * 
+	 * @param results
+	 * @param emptyCurrentTab
+	 */
 	protected void addResults(List<Result> results, boolean emptyCurrentTab) {
 		EditResultTab current = getCurrentTab();
 		
-		Map<EditResultTab, List<Result>> tab2results = new HashMap<EditResultTab, List<Result>>();
-		//Add results
-		
-		
-
+		Map<EditResultTab, List<Result>> tab2results = new HashMap<>();
 		Map<Test, List<Result>> mapTest = Result.mapTest(results);
 		List<Test> tests = new ArrayList<>(mapTest.keySet());
-		MiscUtils.removeNulls(tests);
-		
+//		MiscUtils.removeNulls(tests);
+		System.out.println("EditResultDlg.addResults() "+mapTest);
 		Collections.sort(tests);
 		for (Test test : tests) {
-			if(test==null) continue;
+//			if(test==null) continue;
 			Map<Study, List<Result>> map = Result.mapStudy(mapTest.get(test));
 			List<Study> studies = new ArrayList<>(map.keySet());
 			Collections.sort(studies);
@@ -521,12 +515,13 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		}
 		
 		//Update the components
-		System.out.println("EditResultDlg.addResults(1) > "+resultsTabs.size()+" tabs");
 		updateCenterPanel();
 		
 
 		//Set the results
+		System.out.println("EditResultDlg.addResults(1) > "+resultsTabs.size()+" tabs");
 		for(EditResultTab tab: tab2results.keySet()) {
+			System.out.println("EditResultDlg.addResults(1) > tab > "+tab2results.get(tab).size()+" results");
 			tab.setResults(tab2results.get(tab));
 		}
 				
@@ -538,6 +533,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 				if(!result.isEmpty()) {empty = false; break;}
 			}
 			if(empty) {
+				System.out.println("EditResultDlg.addResults(2) remove tab");
 				removeTab(resultTab);
 			}
 		}
@@ -639,8 +635,6 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 				if(result.isEmpty()) continue;
 
 				if(elb!=null && elb.length()>0) result.setElb(elb);
-				
-				System.out.println("EditResultDlg.validateResults() "+result);
 				
 				if(result.getBiosample()==null || result.getBiosample().getSampleId().length()==0) {
 					throw new ValidationException("SampleId is required", result, "SampleId");

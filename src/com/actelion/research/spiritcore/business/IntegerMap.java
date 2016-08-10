@@ -21,6 +21,7 @@
 
 package com.actelion.research.spiritcore.business;
 
+import java.util.Map;
 import java.util.TreeMap;
 
 import com.actelion.research.spiritcore.util.MiscUtils;
@@ -32,6 +33,10 @@ import com.actelion.research.spiritcore.util.MiscUtils;
 public class IntegerMap extends TreeMap<Integer, String> {
 	
 	public IntegerMap() {
+	}
+	
+	public IntegerMap(Map<Integer, String> map) {
+		putAll(map);
 	}
 	
 	public IntegerMap(String list) {		

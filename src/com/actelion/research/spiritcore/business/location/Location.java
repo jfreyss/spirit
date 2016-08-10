@@ -62,7 +62,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.RevisionTimestamp;
 
-import com.actelion.research.spiritcore.business.IObject;
+import com.actelion.research.spiritcore.business.IEntity;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
@@ -78,7 +78,7 @@ import com.actelion.research.util.CompareUtils;
 @Audited
 @Table(name="biolocation", uniqueConstraints= {@UniqueConstraint(columnNames= {"name", "parent_id"})})
 @SequenceGenerator(name="biolocation_sequence", sequenceName="biolocation_sequence", allocationSize=1)
-public class Location implements IObject, Serializable, Comparable<Location>, Cloneable {
+public class Location implements IEntity, Serializable, Comparable<Location>, Cloneable {
 
 
 	public static final String SEPARATOR = "/";
@@ -617,6 +617,7 @@ public class Location implements IObject, Serializable, Comparable<Location>, Cl
 	 */
 	public static Set<Location> getParents(Collection<Location> locations) {
 		Set<Location> res = new HashSet<>();
+		if(locations==null) return res;
 		for (Location loc : locations) {
 			if(loc.getParent()!=null) {
 				res.add(loc.getParent());			
@@ -627,6 +628,7 @@ public class Location implements IObject, Serializable, Comparable<Location>, Cl
 		
 	public static Set<Biosample> getBiosamples(Collection<Location> locations) {
 		Set<Biosample> res = new HashSet<>();
+		if(locations==null) return res;
 		for (Location loc : locations) {
 			res.addAll(loc.getBiosamples());
 		}

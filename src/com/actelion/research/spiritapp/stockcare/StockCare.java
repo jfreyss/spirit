@@ -73,7 +73,6 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.stockcare.ui.item.StockCareItem;
-import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -87,23 +86,23 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.util.UsageLog;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JStatusBar;
 import com.actelion.research.util.ui.SplashScreen2;
+import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.WrapLayout;
-import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritContextObserver {
 	
 	private static SplashConfig splashConfig = new SplashConfig(StockCare.class.getResource("stockcare.png"), "StockCare", "StockCare v" + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Actelion - J.Freyss");
-	private JTabbedPane tabbedPane = new JTabbedPane();
+	private JTabbedPane tabbedPane = new JCustomTabbedPane();
 	private JStatusBar statusBar = new JStatusBar();
 	
 	
@@ -215,9 +214,7 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		if(user==null) {
 			userStatus = "No user logged in";
 		} else {
-			if(DBAdapter.getAdapter().isInActelionDomain()) {
-				UsageLog.logUsage("Spirit", Spirit.getUser().getUsername(), null, UsageLog.ACTION_LOGON, "StockCare");
-			}
+			SpiritAction.logUsage("StockCare");
 			userStatus = user.getUsername() + " ("+ (user.getMainGroup()==null?"NoDept":user.getMainGroup().getName())+ ") logged in";
 		}
 		statusBar.setUser(userStatus);

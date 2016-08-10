@@ -38,6 +38,7 @@ import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyWizardDlg;
 import com.actelion.research.spiritcore.business.study.PhaseFormat;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.util.FormatterUtils;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
@@ -52,7 +53,7 @@ public class PhaseDlg extends JEscapeDialog {
 	private JXDatePicker startingDayPicker = new JXDatePicker();
 		
 	private JLabel startingDateLabel = new JLabel();
-	private JTabbedPane tabbedPane = new JTabbedPane();
+	private JTabbedPane tabbedPane = new JCustomTabbedPane();
 	
 	private final PhaseList phaseList1 = new PhaseList();
 	private final PhaseList phaseList2 = new PhaseList();

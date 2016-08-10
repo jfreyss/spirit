@@ -354,9 +354,6 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 		StringBuilder description = new StringBuilder();
 		Set<NamedSampling> nss = study.getNamedSamplings(this);
 		Set<NamedTreatment> treatments = study.getNamedTreatments(this);
-//		if(study.getPhasesWithGroupAssignments().contains(this)) {
-//			description.append("<span style='color:#0000AA'>Group Assignment</span>"); 
-//		} 
 		boolean weighing = false;
 		boolean food = false;
 		boolean water = false;
@@ -375,18 +372,18 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 		
 		if(treatments.size()==1) {		
 			if(description.length()>0) description.append(" + ");
-			description.append("<span style='color:#"+ Integer.toHexString(treatments.iterator().next().getColor().getRGB()).substring(2).toUpperCase() + "'>" + treatments.iterator().next().getName()+"</span>");
+			description.append(treatments.iterator().next().getName());
 		} else if(treatments.size()>0) {		
 			if(description.length()>0) description.append(" + ");
-			description.append("<span style='color:#0088AA'>Treatments</span>");
+			description.append("Treatments");
 		}
 
 		if(nss.size()==1) {		
 			if(description.length()>0) description.append(" + ");
-			description.append("<span style='color:#AA0000'>" + nss.iterator().next().getName()+"</span>");
+			description.append(nss.iterator().next().getName());
 		} else if(nss.size()==2) {		
 			if(description.length()>0) description.append(" + ");
-			description.append("<span style='color:#AA0000'>Samplings</span>");
+			description.append("Samplings");
 		}
 		return description.toString();
 	}

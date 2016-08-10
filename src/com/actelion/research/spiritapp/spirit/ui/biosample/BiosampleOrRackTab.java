@@ -47,13 +47,14 @@ import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.location.Location;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.exceltable.IExportable;
 
 public class BiosampleOrRackTab extends JPanel implements IExportable {
 
 	public static final String PROPERTY_SELECTION = "selection";
 	
-	private final JTabbedPane tabbedPane = new JTabbedPane();
+	private final JTabbedPane tabbedPane = new JCustomTabbedPane();
 	private final BiosampleTable biosampleTable = new BiosampleTable();
 	private final RackDepictor rackDepictor = new RackDepictor();
 	private int push = 0;

@@ -45,6 +45,7 @@ import com.actelion.research.spiritcore.business.slide.Template;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 
@@ -52,11 +53,11 @@ public class ContainerCreatorDlg extends JSpiritEscapeDialog {
 	
 	public static int MAX_SAMPLES = 6;
 	
-	private JTabbedPane tabbedPane = new JTabbedPane();
+	private JTabbedPane tabbedPane = new JCustomTabbedPane();
 	private ContainerType containerTypeToCreate;
 	private Study study;
-	private JTabbedPane samplePoolTabs = new JTabbedPane();
-	private List<OrganTab> organPanels = new ArrayList<OrganTab>();
+	private JTabbedPane samplePoolTabs = new JCustomTabbedPane();
+	private List<OrganTab> organPanels = new ArrayList<>();
 	/** 1st Tab to create the template */
 	private TemplatePreviewPanel templatePreviewPanel;
 	/** 2nd Tab to generate the containers */

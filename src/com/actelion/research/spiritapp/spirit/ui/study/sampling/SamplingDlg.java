@@ -30,7 +30,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -52,7 +54,6 @@ import com.actelion.research.spiritapp.spirit.ui.study.wizard.ExtraMeasurementDl
 import com.actelion.research.spiritapp.spirit.ui.util.correction.Correction;
 import com.actelion.research.spiritapp.spirit.ui.util.correction.CorrectionDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.correction.CorrectionMap;
-import com.actelion.research.spiritcore.business.IntegerMap;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
@@ -67,7 +68,17 @@ import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JTextComboBox;
 import com.actelion.research.util.ui.UIUtils;
 
+/**
+ * 
+ * @author Joel Freyss
+ *
+ */
 public class SamplingDlg extends JEscapeDialog {
+	
+	/**
+	 * The parent dialog, can be null
+	 */
+//	private NamedSamplingDlg dlg;
 	
 	private BiotypeComboBox typeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 	private final Sampling sampling;
@@ -89,8 +100,9 @@ public class SamplingDlg extends JEscapeDialog {
 	private final JLabel warningLabel1 = new JCustomLabel(" ", Color.RED);
 	private final JLabel warningLabel2 = new JCustomLabel(" ", Color.RED);
 	
-	public SamplingDlg(final Study study, final Sampling sampling, boolean addActions) {
-		super(UIUtils.getMainFrame(), "Edit Sampling", true);
+	public SamplingDlg(final NamedSamplingDlg dlg, final Study study, final Sampling sampling, boolean addActions) {
+		super(dlg, "Edit Sampling", true);
+//		this.dlg = dlg;
 		this.sampling = sampling;
 		
 		typeComboBox.addActionListener(new ActionListener() {
@@ -159,7 +171,9 @@ public class SamplingDlg extends JEscapeDialog {
 
 					updateModel();
 					
-					NamedSamplingDlg.synchronizeSamples(study, fromSampling, sampling);
+					if(dlg!=null) { 
+						dlg.synchronizeSamples(study, fromSampling, sampling);
+					}
 					
 					dispose();
 					success = true;
@@ -375,19 +389,19 @@ public class SamplingDlg extends JEscapeDialog {
 				sampling.setSampleName(data);
 			}
 			//Update Metadata
-			IntegerMap tsl = new IntegerMap();
+			Map<BiotypeMetadata, String> metadataMap = new HashMap<>();
 			int i = 0;
 			for (BiotypeMetadata m : type.getMetadata()) {
 				if(i>components.size()) break;
 				if((components.get(i) instanceof MetadataComponent)) {
 					String data = ((MetadataComponent) components.get(i)).getData();
-					tsl.put(m.getId(), data);
+					metadataMap.put(m, data);
 					
 					if(m.isRequired() && data.length()==0) throw new Exception(m.getName()+" is required");
 				}
 				i++;
 			}
-			sampling.setParameters(tsl.getSerializedMap());
+			sampling.setMetadataMap(metadataMap);
 			
 			sampling.setAmount(amountTextField.getTextDouble());
 			
@@ -405,7 +419,7 @@ public class SamplingDlg extends JEscapeDialog {
 			
 			
 		} else {
-			sampling.setParameters(null);
+			sampling.setMetadataMap(new HashMap<BiotypeMetadata, String>());
 		}
 		return sampling;
 	}

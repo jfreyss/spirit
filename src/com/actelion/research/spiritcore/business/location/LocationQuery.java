@@ -74,7 +74,9 @@ public class LocationQuery implements Serializable {
 	}
 		
 	public boolean isEmpty() {
-		return onlyOccupied==null && getStudyId()==null && getEmployeeGroup()==null && getBiotype()==null && /*getContainerType()==null && */ getLocationType()==null && (getName()==null || getName().length()==0); 
+		return onlyOccupied==null && (getStudyId()==null || getStudyId().length()==0)
+				&& getEmployeeGroup()==null && getBiotype()==null
+				&& getLocationType()==null && (getName()==null || getName().length()==0); 
 	}
 
 	/**

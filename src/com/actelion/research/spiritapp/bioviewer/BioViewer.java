@@ -314,7 +314,7 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 
 		setJMenuBar(menuBar);
 
-		UsageLog.logUsage("Spirit", null, null, UsageLog.ACTION_LOGON, "BioViewer");
+		SpiritAction.logUsage("BioViewer");
 	}
 
 	private void selectionChanged() {

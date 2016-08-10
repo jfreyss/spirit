@@ -22,7 +22,6 @@
 package com.actelion.research.spiritcore.adapter;
 
 import java.io.File;
-import java.sql.DriverManager;
 
 import org.hsqldb.Server;
 
@@ -39,7 +38,7 @@ import com.actelion.research.spiritcore.services.migration.MigrationScript;
 	
     protected static Server server = null;
 
-	public static DBProperty DBPATH_PROPERTY = new DBProperty("jnlp.hsqlFileAdapter.path", "DB Path", new File(System.getProperty("user.home"), ".spirit/db").getPath());
+	public static DBProperty DBPATH_PROPERTY = new DBProperty("jnlp.hsqlFileAdapter.path", "DB Path", new File(System.getProperty("user.home"), ".spirit/hsqldb").getPath());
 	
 	public HSQLFileAdapter() {
 	}

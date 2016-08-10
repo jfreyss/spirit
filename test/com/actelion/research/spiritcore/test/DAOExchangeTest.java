@@ -25,7 +25,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -36,19 +38,25 @@ import com.actelion.research.spiritcore.adapter.HSQLMemoryAdapter;
 import com.actelion.research.spiritcore.business.Exchange;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
+import com.actelion.research.spiritcore.business.biosample.Biotype;
+import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
+import com.actelion.research.spiritcore.business.study.NamedSampling;
+import com.actelion.research.spiritcore.business.study.Sampling;
+import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
+import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAOExchange;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
-import com.actelion.research.spiritcore.services.exchange.Importer;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.MappingAction;
+import com.actelion.research.spiritcore.services.exchange.Importer;
 
 public class DAOExchangeTest {
 
@@ -56,77 +64,125 @@ public class DAOExchangeTest {
 	
 	@BeforeClass
 	public static void initDB() throws Exception {
-		//Set properties
-//		System.setProperty("show_sql", "true");
-		
+		System.out.println("DAOExchangeTest.initDB()");
 		//Init user
 		user = SpiritUser.getFakeAdmin();
 		
-		//Init DB and test emptyness
+		//Init DB and test emptynes
+		JPAUtil.close();
 		DBAdapter.setAdapter(new HSQLMemoryAdapter());
 	}
 	
+	
 	@Test
 	public void testImportDemo() throws Exception {
+		JPAUtil.close();
+		DBAdapter.setAdapter(new HSQLMemoryAdapter());
+		Assert.assertFalse(JPAUtil.getManager().getTransaction().isActive());
+		
 		int n = DAOStudy.getStudies().size();
-		
-		try (InputStream is = DBAdapter.class.getResourceAsStream("demo.spirit")) {
-			if(is==null) {
-				throw new Exception("The system could not find the default configuration. The system is therefore empty");
+		{
+			try (InputStream is = DBAdapter.class.getResourceAsStream("demo.spirit")) {
+				if(is==null) {
+					throw new Exception("The system could not find the default configuration. The system is therefore empty");
+				}
+				Exchange exchange = Importer.read(new InputStreamReader(is));
+				Assert.assertTrue(exchange.getStudies().size()>=2);
+	
+				Study s = exchange.getStudies().iterator().next();
+				Assert.assertEquals(2, s.getNamedSamplings().size());
+				Assert.assertNotNull(s.getSampling("Blood Sampling", "Blood: EDTA; Alive"));
+				
+				Biotype blood = Biotype.mapName(exchange.getBiotypes()).get("Blood");
+				Assert.assertNotNull(blood);
+				BiotypeMetadata bloodType = blood.getMetadata("Type");
+				Assert.assertNotNull(bloodType);
+				
+				ExchangeMapping mapping = new ExchangeMapping(exchange);
+				DAOExchange.persist(mapping, user);
+			}		
+			
+	
+			JPAUtil.clear();
+			
+			
+			//Check biotypes
+			Biotype blood = DAOBiotype.getBiotype("Blood");
+			Assert.assertNotNull(blood);
+			BiotypeMetadata bloodType = blood.getMetadata("Type");
+			System.out.println("DAOExchangeTest.testImportDemo() after bloodType.getId()= "+bloodType.getId());
+			Assert.assertNotNull(bloodType);	
+			
+			//Check the studies
+			Assert.assertTrue(DAOStudy.getStudies().size()>=n+2);
+			int nref1 = DAOStudy.getStudies().size()-1;
+			int nref2 = DAOStudy.getStudies().size()-2;
+			Assert.assertEquals("IVV2016-1", DAOStudy.getStudies().get(nref1).getIvv());
+			Assert.assertEquals("IVV2016-2", DAOStudy.getStudies().get(nref2).getIvv());
+			Study s = DAOStudy.getStudies().get(nref1);
+			Set<NamedSampling> samplings = s.getNamedSamplings();
+			List<NamedSampling> ns = new ArrayList<>(samplings);
+			Assert.assertTrue(ns.size()==2);
+			Sampling sampling = s.getSampling("Blood Sampling", "Blood: EDTA; Alive");
+			Assert.assertNotNull("Cannot find Blood: EDTA; Dead among " + ns.get(1).getAllSamplings(), sampling);
+			
+			
+			
+			
+			//Check the biosamples
+			BiosampleQuery q1 = new BiosampleQuery();
+			q1.setStudyIds(DAOStudy.getStudies().get(nref1).getStudyId());
+			List<Biosample> biosamples = DAOBiosample.queryBiosamples(q1, user);
+			Assert.assertTrue(biosamples.size()>0);
+			for (Biosample b : biosamples) {
+				System.out.println("DAOExchangeTest.testImportDemo() "+b+">"+ b.getMetadataMap());
+				if(b.getParent()==null) {
+					Assert.assertEquals("Rat", b.getMetadata("Type").getValue());
+					Assert.assertTrue(b.getAttachedSampling()==null);
+				} else {
+					Assert.assertTrue(b.getAttachedSampling()!=null);
+				}
 			}
-			Exchange exchange = Importer.read(new InputStreamReader(is));
-			ExchangeMapping mapping = new ExchangeMapping(exchange);
-			DAOExchange.persist(mapping, user);
+			
+			//Check the locations
+			Location loc = DAOLocation.getCompatibleLocation("Office/Lab 2/Tank A/Tower 1/Box 1", user);
+			Assert.assertTrue("The location " + "Office/Lab 2/Tank A/Tower 1/Box 1" + " is empty", loc.getBiosamples().size()>0);
+			for (Biosample b : loc.getBiosamples()) {
+				Assert.assertTrue("The position " + b + " is null", b.getPos()>=0);
+				Assert.assertTrue("The attached sampling of " + b + " is null", b.getParent()==null || b.getAttachedSampling()!=null);
+			}
+			Assert.assertTrue(loc.getBiosamples().size()>0);
+			
+			//Check the results
+			ResultQuery q = new ResultQuery();
+			q.setStudyIds(DAOStudy.getStudies().get(nref1).getStudyId());
+			List<Result> results = DAOResult.queryResults(q, user);
+			Assert.assertTrue(results.size()>0);
+			for (Result r : results) {			
+				Assert.assertTrue(r.getOutputResultValuesAsString().length()>0);
+			}
+		}
+		
+		{
+			//Check if we do the import it twice (->map, without inserts)
+			try (InputStream is = DBAdapter.class.getResourceAsStream("demo.spirit")) {
+				if(is==null) {
+					throw new Exception("The system could not find the default configuration. The system is therefore empty");
+				}
+				Exchange exchange = Importer.read(new InputStreamReader(is));
+				ExchangeMapping mapping = new ExchangeMapping(exchange);
+				DAOExchange.persist(mapping, user);
+			}		
+			Assert.assertTrue(DAOStudy.getStudies().size()>=n+2);
 		}
 
-		JPAUtil.clear();
-		
-		
-		Assert.assertTrue(DAOStudy.getStudies().size()>=n+2);
-		
-		//Check the persistent order
-		Assert.assertEquals("IVV2016-2", DAOStudy.getStudies().get(n).getIvv());
-		Assert.assertEquals("IVV2016-1", DAOStudy.getStudies().get(n+1).getIvv());
-		
-		//Check the biosamples
-		BiosampleQuery q1 = new BiosampleQuery();
-		q1.setStudyIds(DAOStudy.getStudies().get(n+1).getStudyId());
-		List<Biosample> biosamples = DAOBiosample.queryBiosamples(q1, user);
-		Assert.assertTrue(biosamples.size()>0);
-		for (Biosample b : biosamples) {
-			System.out.println("DAOExchangeTest.testImportDemo() "+b+">"+ b.getMetadataMap());
-			if(b.getParent()==null) {
-				Assert.assertEquals("Rat", b.getMetadata("Type").getValue());
-				Assert.assertTrue(b.getAttachedSampling()==null);
-			} else {
-				Assert.assertTrue(b.getAttachedSampling()!=null);
-			}
-		}
-		
-		//Check the locations
-		Location loc = DAOLocation.getCompatibleLocation("Office/Lab 2/Tank A/Tower 1/Box 1", user);
-		Assert.assertTrue("The location " + "Office/Lab 2/Tank A/Tower 1/Box 1" + " is empty", loc.getBiosamples().size()>0);
-		for (Biosample b : loc.getBiosamples()) {
-			Assert.assertTrue("The position " + b + " is null", b.getPos()>=0);
-			Assert.assertTrue("The attached sampling of " + b + " is null", b.getParent()==null || b.getAttachedSampling()!=null);
-		}
-		Assert.assertTrue(loc.getBiosamples().size()>0);
-		
-		//Check the results
-		ResultQuery q = new ResultQuery();
-		q.setStudyIds(DAOStudy.getStudies().get(n+1).getStudyId());
-		List<Result> results = DAOResult.queryResults(q, user);
-		Assert.assertTrue(results.size()>0);
-		for (Result r : results) {			
-			Assert.assertTrue(r.getOutputResultValuesAsString().length()>0);
-		}
-
-		
-		
 	}
+
 	
 	@Test
 	public void testImportExchange1() throws Exception {
+		Assert.assertFalse(JPAUtil.getManager().getTransaction().isActive());
+
 		int n = DAOStudy.getStudies().size();
 
 		//1st import: should create without error
@@ -148,7 +204,7 @@ public class DAOExchangeTest {
 		//3rd import: do nothing
 		try (FileReader r =  new FileReader(new File("test/files/S-00085.spirit"))) {
 			Exchange exchange = Importer.read(r);
-			ExchangeMapping mapping = new ExchangeMapping(exchange, MappingAction.IGNORE_LINK);			
+			ExchangeMapping mapping = new ExchangeMapping(exchange, MappingAction.SKIP);			
 			DAOExchange.persist(mapping, user);
 		}
 		Assert.assertEquals(n+1, DAOStudy.getStudies().size());
@@ -156,7 +212,7 @@ public class DAOExchangeTest {
 		//4th import: should create a new study
 		try (FileReader r =  new FileReader(new File("test/files/S-00085.spirit"))) {
 			Exchange exchange = Importer.read(r);
-			ExchangeMapping mapping = new ExchangeMapping(exchange, MappingAction.CREATE_COPY);			
+			ExchangeMapping mapping = new ExchangeMapping(exchange, MappingAction.CREATE);			
 			DAOExchange.persist(mapping, user);
 		}
 		Assert.assertEquals(n+2, DAOStudy.getStudies().size());

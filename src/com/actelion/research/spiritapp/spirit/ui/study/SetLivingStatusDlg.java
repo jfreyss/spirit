@@ -281,6 +281,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 		final List<Biosample> biosamplesToSave = new ArrayList<Biosample>();
 		final List<Biosample> samplesFromNecropsy = new ArrayList<Biosample>();
 
+		String elb = DAOResult.suggestElb(Spirit.getUsername());
 		for(Biosample animal: animals) {
 			//update the status
 			if(status!=null) {
@@ -336,7 +337,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 				Test t = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);
 				if(t==null) throw new Exception("The test "+DAOTest.OBSERVATION_TESTNAME+" does not exist");
 				Result r = new Result();
-				r.setElb(phase.getStudy().getStudyId());
+				r.setElb(elb);
 				r.setTest(t);
 				r.setBiosample(animal);
 				r.setPhase(phase);

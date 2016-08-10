@@ -23,7 +23,9 @@ package com.actelion.research.spiritcore.business.biosample;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.persistence.CascadeType;
@@ -46,6 +48,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
 import com.actelion.research.spiritcore.business.DataType;
+import com.actelion.research.spiritcore.business.IntegerMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 
@@ -95,8 +98,11 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 	@Column(name="idx", nullable=false)
 	private int index = 0;
 	
-	public BiotypeMetadata() {
-		
+	public BiotypeMetadata() {		
+	}
+	
+	public BiotypeMetadata(int id) {
+		this.id = id;
 	}
 	
 
@@ -250,6 +256,27 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 		m2.setRequired(isRequired());
 		m2.setSecundary(isSecundary());
 		return m2;
+	}
+
+	public static Map<BiotypeMetadata, String> deserialize(Biotype biotype, String metadataString) {
+		IntegerMap map = new IntegerMap(metadataString);
+		Map<BiotypeMetadata, String> res = new HashMap<>();
+		for (int id : map.keySet()) {
+			if(id<=0) throw new RuntimeException("Cannot deserialize "+metadataString);
+			if(biotype.getMetadata(id)==null) throw new RuntimeException(id+" not in "+biotype+" "+biotype.getMetadataIds());
+			res.put(biotype.getMetadata(id), map.get(id));				
+		}
+		return res;		
+	}
+	
+	public static String serialize(Map<BiotypeMetadata, String> metadata) {
+		IntegerMap map = new IntegerMap();
+		for (Map.Entry<BiotypeMetadata, String> e : metadata.entrySet()) {
+			assert e.getKey().getId()>0: "Cannot serialize metadata: "+metadata+": "+e.getKey()+" has an id of "+e.getKey().getId();
+			if(e.getKey().getBiotype().getMetadata(e.getKey().getId())==null) throw new RuntimeException(e.getKey().getId()+" not in "+e.getKey().getBiotype().getMetadata());
+			map.put(e.getKey().getId(), e.getValue());
+		}
+		return map.getSerializedMap();
 	}
 	
 }

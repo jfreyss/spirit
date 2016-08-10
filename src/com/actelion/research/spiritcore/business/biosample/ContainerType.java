@@ -130,7 +130,7 @@ public enum ContainerType {
 					if(url!=null) {
 						try {
 							image = ImageIO.read(url);
-							image = image.getScaledInstance(22, 22, Image.SCALE_FAST);
+							image = image.getScaledInstance(22, 22, Image.SCALE_DEFAULT);
 						} catch (Exception e) {
 							e.printStackTrace();
 							System.err.println("no image for "+name.toLowerCase()+".png  "+e);

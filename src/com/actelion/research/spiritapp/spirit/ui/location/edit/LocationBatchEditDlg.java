@@ -168,6 +168,7 @@ public class LocationBatchEditDlg extends JSpiritEscapeDialog {
 			}
 
 			delete(locations);
+			SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_DELETED, Location.class, locations);
 			return true;
 		} catch (Exception e) {
 			JExceptionDialog.showError(e);
@@ -230,7 +231,6 @@ public class LocationBatchEditDlg extends JSpiritEscapeDialog {
 			txn.commit();
 			txn = null;
 			
-			if(toCheckout.size()>0) SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, toCheckout);
 			SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_DELETED, Location.class, locations);
 
 		} finally {

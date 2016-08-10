@@ -265,7 +265,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 		//At this stage this.samplings have all an id
 		//Either, there is a match between this and ns and we keep the link
 		//Either, there is no match and we create a copy
-		CorrespondanceMap<Sampling, Sampling> input2this = new CorrespondanceMap<Sampling, Sampling>();
+		CorrespondanceMap<Sampling, Sampling> input2this = new CorrespondanceMap<>();
 		for (Sampling inputSampling : input.getAllSamplings()) {
 			Sampling thisSampling = getSampling(inputSampling.getId());
 			if(thisSampling!=null) {
@@ -281,7 +281,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 			//always copy the attributes of the sampling
 			thisSampling.setBiotype(inputSampling.getBiotype());
 			thisSampling.setSampleName(inputSampling.getSampleName());
-			thisSampling.setParameters(inputSampling.getParameters());
+			thisSampling.setSerializedMetadata(inputSampling.getSerializedMetadata());
 			thisSampling.setComments(inputSampling.getComments());
 			thisSampling.setWeighingRequired(inputSampling.isWeighingRequired());
 			thisSampling.setLengthRequired(inputSampling.isLengthRequired());
@@ -311,14 +311,14 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 		NamedSampling res = new NamedSampling();
 		res.setName(getName());
 		res.setNecropsy(isNecropsy());
-		CorrespondanceMap<Sampling, Sampling> old2new = new CorrespondanceMap<Sampling, Sampling>();
+		CorrespondanceMap<Sampling, Sampling> old2new = new CorrespondanceMap<>();
 
 		//Create new sampling objects
 		for (Sampling existingSampling : getAllSamplings()) {
 			Sampling s = new Sampling();			
 			s.setBiotype(existingSampling.getBiotype());
 			s.setSampleName(existingSampling.getSampleName());
-			s.setParameters(existingSampling.getParameters());
+			s.setSerializedMetadata(existingSampling.getSerializedMetadata());
 			s.setComments(existingSampling.getComments());
 			s.setWeighingRequired(existingSampling.isWeighingRequired());
 			s.setLengthRequired(existingSampling.isLengthRequired());
@@ -381,7 +381,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 	 * @return
 	 */
 	public Map<Pair<ContainerType, Integer>, List<Sampling>> getContainerToSamplingsMap() {
-		Map<Pair<ContainerType, Integer>, List<Sampling>> map = new HashMap<Pair<ContainerType, Integer>, List<Sampling>>();
+		Map<Pair<ContainerType, Integer>, List<Sampling>> map = new HashMap<>();
 		
 		for (Sampling s : getAllSamplings()) {
 			Pair<ContainerType, Integer> key;
@@ -393,7 +393,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 			
 			List<Sampling> l = map.get(key);
 			if(l==null) {
-				l = new ArrayList<Sampling>();
+				l = new ArrayList<>();
 				map.put(key, l);
 			}
 			l.add(s);
@@ -433,13 +433,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 				return CompareUtils.compare(o1, o2);
 			}
 		});
-//		ContainerType previous = null;
 		for (Pair<ContainerType, Integer> key: keys) {
-			
-//			if(previous!=null && (key==null || key.getFirst()!=previous)) {
-//				sb.append("<hr>");
-//			}
-//			previous = key==null? null: key.getFirst();
 			
 			sb.append("<b style='font-size:105%'>");
 			if(key!=null) sb.append("Container: " + key.getFirst() + (key.getSecond()==null?"": " " + key.getSecond())  );

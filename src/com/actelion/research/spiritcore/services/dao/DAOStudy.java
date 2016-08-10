@@ -41,17 +41,18 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
 
+import org.hibernate.jpa.QueryHints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritcore.business.Document;
-import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.Document.DocumentType;
+import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
-import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.result.Test;
@@ -179,71 +180,6 @@ public class DAOStudy {
 		return res;
 	}
 	
-//
-//	public static List<String> getAllStudyCenters() {
-//		List<String> res = (List<String>) Cache.getInstance().get("study_centers");
-//		if(res==null) {
-//			EntityManager session = JPAUtil.getManager();
-//			Query query = session.createQuery("select distinct(s.site) from Study s where s.site is not null");		
-//			res = query.getResultList();		
-//			Collections.sort(res);
-//			Cache.getInstance().add("study_centers", res, Cache.LONG);
-//		} 
-//		return res;
-//	}
-//	
-//	public static List<String> getAllStudyTypes() {
-//		List<String> res = (List<String>) Cache.getInstance().get("study_types");
-//		if(res==null) {
-//			EntityManager session = JPAUtil.getManager();
-//			Query query = session.createQuery("select distinct(s.type) from Study s where s.type is not null");		
-//			res = query.getResultList();		
-//			Collections.sort(res);
-//			Cache.getInstance().add("study_types", res, Cache.LONG);
-//		} 
-//		return res;
-//	}
-//	
-//	public static List<String> getAllStudyDiseaseArea() {
-//		List<String> res = (List<String>) Cache.getInstance().get("study_diseases");
-//		if(res==null) {
-//			EntityManager session = JPAUtil.getManager();
-//			Query query = session.createQuery("select distinct(s.diseaseArea) from Study s where s.type is not null");
-//			Set<String> set = new TreeSet<>();
-//			for (String string : (List<String>) query.getResultList()) {
-//				for (String s : MiscUtils.split(string)) {
-//					set.add(s);
-//				}				
-//			}
-//			res = new ArrayList<>(set);
-//			Collections.sort(res);
-//			Cache.getInstance().add("study_diseases", res, Cache.LONG);
-//		} 
-//		return res;
-//	}
-//	
-//	public static List<String> getAllStudyProjects() {
-//		List<String> res = (List<String>) Cache.getInstance().get("study_projects");
-//		if(res==null) {
-//			if(DBAdapter.getAdapter().isInActelionDomain()) {
-//				EntityManager session = JPAUtil.getManager();
-//				try {
-//					res = session.createNativeQuery("select project_name from osiris.project").getResultList();
-//					Collections.sort(res);
-//				} catch (Exception e) {
-//					res = new ArrayList<String>();
-//				}
-//			} else {
-//				EntityManager session = JPAUtil.getManager();
-//				Query query = session.createQuery("select distinct(s.project) from Study s where s.project is not null");				
-//				res = query.getResultList();
-//				Collections.sort(res);
-//			}
-//			Cache.getInstance().add("study_projects", res, Cache.LONG);
-//		}
-//		return res;
-//	}
-//	
 	public static void fullLoad(Study study) {
 		if(study==null) return;
 
@@ -352,6 +288,11 @@ public class DAOStudy {
 								" or s.id in (select nt.study.id from NamedTreatment nt where lower(nt.name) like lower(?) or lower(nt.compoundName) like lower(?) or lower(nt.compoundName2) like lower(?))";
 				clause.append(" and (" + QueryTokenizer.expandQuery(expr, q.getKeywords(), true, true) + ")");
 			}			
+			
+			if(q.getState()!=null && q.getState().length()>0) {
+				clause.append(" and (s.state = ?)");
+				parameters.add(q.getState());
+			}
 
 			if(q.getUser()!=null && q.getUser().length()>0) {
 				clause.append(" and (lower(s.adminUsers) like lower(?) or lower(s.expertUsers) like lower(?) or lower(s.creUser) like lower(?))");
@@ -402,7 +343,7 @@ public class DAOStudy {
 		for (int i = 0; i < parameters.size(); i++) {
 			query.setParameter(1+i, parameters.get(i));				
 		}
-//		query.setHint(QueryHints.READ_ONLY, !JPAUtil.isEditableContext());
+		query.setHint(QueryHints.HINT_READONLY, !JPAUtil.isEditableContext());
 		List<Study> studies = query.getResultList();
 		
 		Collections.sort(studies, new Comparator<Study>() {
@@ -431,8 +372,7 @@ public class DAOStudy {
 	 * @return
 	 * @throws Exception
 	 */
-	public static Study persistStudy(Study study, SpiritUser user) throws Exception {
-		logger.info("Persist "+study+ "(id="+study.getId()+")");
+	public static void persistStudies(Collection<Study> studies, SpiritUser user) throws Exception {
 		EntityManager session = JPAUtil.getManager();		
 		//Start the transaction
 		EntityTransaction txn = null;
@@ -440,11 +380,10 @@ public class DAOStudy {
 			txn = session.getTransaction();
 			txn.begin();
 
-			Study s = persistStudy(session, study, user);
+			persistStudies(session, studies, user);
 			
 			txn.commit();
 			txn = null;			
-			return s;
 		} finally {
 			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {}
 		}
@@ -457,75 +396,87 @@ public class DAOStudy {
 	 * @return
 	 * @throws Exception
 	 */
-	public static Study persistStudy(EntityManager session, Study study, SpiritUser user) throws Exception {
+	public static void persistStudies(EntityManager session, Collection<Study> studies, SpiritUser user) throws Exception {
 		
-		assert study!=null;
+		assert studies!=null;
+		logger.info("Persist "+studies.size()+ "(studies)");
 		assert user!=null;
 		assert session!=null;
 		assert session.getTransaction().isActive();
 
 		
 		//Test that nobody else modified the study
-		if(study.getId()>0) {
-			EntityManager ses = null;
-			try {
-				ses = JPAUtil.createManager();
-				Object[] lastUpdate = (Object[]) ses.createQuery("select s.updDate, s.updUser from Study s where s.id = "+study.getId()).getSingleResult();
-				Date lastDate = (Date) lastUpdate[0];
-				String lastUser = (String) lastUpdate[1];
-				
-				if(lastDate!=null && lastUser!=null && !lastUser.equals(user.getUsername())) {
-					int diffSeconds = (int) ((lastDate.getTime() - study.getUpdDate().getTime())/1000);
-					if(diffSeconds>0) throw new Exception("The study "+study+" has just been updated by "+lastUser+" [" + diffSeconds + "seconds ago].\nYou cannot overwrite those changes unless you reopen the newest version.");
-				}
-			} finally {
-				if(ses!=null) ses.close();
-			}
-		}		
-		
+		for (Study study : studies) {
 			
-		if(!SpiritRights.canAdmin(study, user) && !SpiritRights.canBlind(study, user)) throw new Exception("You are not allowed to edit this study");
-		if(study.getId()<0 && getStudyByIvvOrStudyId(study.getIvv()).size()>0) throw new Exception("The internalId must be unique");
-		Date now = JPAUtil.getCurrentDateFromDatabase();
-		
-		
-		//Fix documents without docType (Spirit v<=1.9)
-		for (Document doc : study.getDocuments()) {
-			if(doc.getType()==null) {
-				doc.setType(DocumentType.DESIGN);
-			}
-		}
-
-		study.setUpdUser(user.getUsername());
-		study.setUpdDate(now);
+			if(study.getId()>0) {
+				EntityManager ses = null;
+				try {
+					ses = JPAUtil.createManager();
+					Object[] lastUpdate = (Object[]) ses.createQuery("select s.updDate, s.updUser from Study s where s.id = "+study.getId()).getSingleResult();
+					Date lastDate = (Date) lastUpdate[0];
+					String lastUser = (String) lastUpdate[1];
 					
-		for (StudyAction a : new ArrayList<StudyAction>(study.getStudyActions())) {
-			if(a.isEmpty() || a.getSubGroup()<0 || a.getSubGroup()>=a.getGroup().getNSubgroups()) {
-				a.remove();
+					if(lastDate!=null && lastUser!=null && !lastUser.equals(user.getUsername())) {
+						int diffSeconds = (int) ((lastDate.getTime() - study.getUpdDate().getTime())/1000);
+						if(diffSeconds>0) throw new Exception("The study "+study+" has just been updated by "+lastUser+" [" + diffSeconds + "seconds ago].\nYou cannot overwrite those changes unless you reopen the newest version.");
+					}
+				} finally {
+					if(ses!=null) ses.close();
+				}
+			}		
+			
+				
+			if(!SpiritRights.canAdmin(study, user) && !SpiritRights.canBlind(study, user)) throw new Exception("You are not allowed to edit this study");
+			if(study.getId()<0 && getStudyByIvvOrStudyId(study.getIvv()).size()>0) throw new Exception("The internalId must be unique");
+			Date now = JPAUtil.getCurrentDateFromDatabase();
+			
+			
+			//Fix documents without docType (Spirit v<=1.9)
+			for (Document doc : study.getDocuments()) {
+				if(doc.getType()==null) {
+					doc.setType(DocumentType.DESIGN);
+				}
 			}
-		}
-		
-		//Now save the study
-		if(study.getId()>0) {				
-			if(!session.contains(study)) {
-				study = session.merge(study);
-				logger.info("Merge "+study);
+	
+			study.setUpdUser(user.getUsername());
+			study.setUpdDate(now);
+						
+			for (StudyAction a : new ArrayList<>(study.getStudyActions())) {
+				if(a.isEmpty() || a.getSubGroup()<0 || a.getSubGroup()>=a.getGroup().getNSubgroups()) {
+					a.remove();
+				}
 			}
-		} else {
-			study.setStudyId(getNextStudyId(session));
-			study.setCreUser(study.getUpdUser());
-			study.setCreDate(study.getUpdDate());
-			session.persist(study);
-			logger.info("Persist "+study);
+			
+			for (NamedSampling ns : study.getNamedSamplings()) {
+				for (Sampling n : ns.getAllSamplings()) {
+					System.out.println("DAOStudy.persistStudy() "+study+" "+ns+" "+n.getDetailsLong());
+					
+				}
+			}
+			//Now save the study
+			study.preSave();
+			if(study.getId()>0) {				
+				if(!session.contains(study)) {
+					study = session.merge(study);
+					logger.info("Merge "+study);
+				}
+			} else {
+				study.setStudyId(getNextStudyId(session));
+				study.setCreUser(study.getUpdUser());
+				study.setCreDate(study.getUpdDate());
+				session.persist(study);
+				logger.info("Persist "+study);
+			}
+	
+			for(Phase phase: study.getPhases()) {
+				phase.serializeRandomization();
+			}
 		}
 
-		for(Phase phase: study.getPhases()) {
-			phase.serializeRandomization();
-		}
 		Cache.getInstance().remove("studies_"+user);
 		Cache.getInstance().remove("allstudies");
 
-		return study;
+//		return study;
 		
 	}
 
@@ -545,6 +496,11 @@ public class DAOStudy {
 		}
 	}
 		
+	public static void deleteStudies(EntityManager session, Collection<Study> studies, SpiritUser user) throws Exception {
+		for (Study study : studies) {
+			deleteStudy(session, study, user);
+		}
+	}
 	public static void deleteStudy(EntityManager session, Study study, SpiritUser user) throws Exception {
 		if(!SpiritRights.canDelete(study, user)) throw new Exception("You are not allowed to delete the study");
 		
@@ -575,7 +531,9 @@ public class DAOStudy {
 	}
 	
 	public static String getNextStudyId(EntityManager session) {
-		String s = (String) session.createQuery("select max(s.studyId) from Study s where s.studyId like ('S-%')").getSingleResult();
+		String s = (String) session.createQuery("select max(s.studyId) from Study s where s.studyId like ('S-%')")
+				.setHint(QueryHints.HINT_READONLY, true)
+				.getSingleResult();
 		if(s==null) {
 			return "S-00001";
 		} else {

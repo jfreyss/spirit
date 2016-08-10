@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritapp.bioviewer;
 
-
 public class Main {
 
 	public static void main(String[] args) {

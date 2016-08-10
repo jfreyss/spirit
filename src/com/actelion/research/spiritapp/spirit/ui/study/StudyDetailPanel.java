@@ -58,6 +58,7 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.SwingWorkerExecutor;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
@@ -80,7 +81,7 @@ public class StudyDetailPanel extends JPanel {
 
 	private final StudyDepictor studyDepictor = new StudyDepictor();
 
-	private final JTabbedPane infoTabbedPane = new JTabbedPane();
+	private final JTabbedPane infoTabbedPane = new JCustomTabbedPane();
 	private final StudyEditorPane editorPane = new StudyEditorPane();
 	private final BiosampleTable animalTable = new BiosampleTable();
 	private final NamedSamplingEditorPane samplingsEditorPane = new NamedSamplingEditorPane();
@@ -146,7 +147,7 @@ public class StudyDetailPanel extends JPanel {
 
 		
 		infoTabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
-		infoTabbedPane.add("Specimen", animalTab);
+		infoTabbedPane.add("Samples", animalTab);
 		infoTabbedPane.add("Samplings", new JScrollPane(samplingsEditorPane));
 		infoTabbedPane.add("Infos", new JScrollPane(editorPane));		
 		infoTabbedPane.setSelectedIndex(1);

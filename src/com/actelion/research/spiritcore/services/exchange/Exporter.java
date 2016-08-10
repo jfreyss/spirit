@@ -26,6 +26,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +82,11 @@ import com.actelion.research.spiritlib.pojo.TestAttributePojo;
 import com.actelion.research.spiritlib.pojo.TestPojo;
 import com.owlike.genson.Genson;
 
+/**
+ * 
+ * @author freyssj
+ *
+ */
 public class Exporter {
 
 	/**
@@ -165,7 +171,7 @@ public class Exporter {
 			r.setSynchronizeSamples(s.isSynchronizeSamples());
 			r.setUpdDate(s.getUpdDate());
 			r.setUpdUser(s.getUpdUser());
-			r.setAdminUsers(s.getWriteUsers());			
+			r.setAdminUsers(s.getAdminUsers());			
 			res.add(r);
 		}
 		
@@ -195,6 +201,7 @@ public class Exporter {
 			PhasePojo p = new PhasePojo();			
 			p.setId(g.getId());
 			p.setName(g.getName());
+			p.setRando(g.getSerializedRandomization());
 //			p.setLabel(g.getLabel());
 //			p.setSerializedRandomization(g.getSerializedRandomization());
 			res.add(p);
@@ -254,9 +261,17 @@ public class Exporter {
 			p.setContainerType(g.getContainerType()==null?"": g.getContainerType().name());
 			p.setId(g.getId());
 			p.setLengthRequired(g.isLengthRequired());
-			p.setParameters(g.getParameters());
+			
 			p.setSampleName(g.getSampleName());
 			p.setWeighingRequired(g.isWeighingRequired());
+			
+			//Metadata
+			Map<String, String> map = new HashMap<>();
+			for(Map.Entry<BiotypeMetadata, String> e: g.getMetadataMap().entrySet()) {
+				assert e.getKey().getName()!=null; 
+				map.put(e.getKey().getName(), e.getValue());
+			}
+			p.setMetadata(map);
 			
 			//Measurements
 			List<MeasurementPojo> mps = new ArrayList<>();			
@@ -385,7 +400,10 @@ public class Exporter {
 			}
 			
 			biosample.setFullLocation(b.getLocationString(LocationFormat.FULL_POS, null));
-			
+			biosample.setAmount(b.getAmount()==null?"":""+b.getAmount());
+			biosample.setStatus(b.getStatus()==null?"":b.getStatus().name());
+			biosample.setQuality(b.getQuality()==null?"":b.getQuality().name());
+			biosample.setComments(b.getComments());
 			biosample.setUpdDate(b.getUpdDate());
 			biosample.setUpdUser(b.getUpdUser());
 			biosample.setCreDate(b.getCreDate());
@@ -435,6 +453,7 @@ public class Exporter {
 			if(r==null) continue;
 			ResultPojo result = new ResultPojo();
 			result.setId(r.getId());
+			result.setElb(r.getElb());
 			result.setTestName(r.getTest()==null? null: r.getTest().getName());
 			if(r.getBiosample()!=null) {
 				result.setSampleId(r.getBiosample().getSampleId());

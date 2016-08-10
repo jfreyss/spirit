@@ -212,7 +212,7 @@ public class LocationPanel extends JPanel {
 			ld.initializeLayoutForChild(child, depth+1, displayChildrenDepth);
 			i++;
 		}
-		setToolTipText(getTooltip(location));
+		setToolTipText(null);
 
 		return this;
 		
@@ -237,7 +237,8 @@ public class LocationPanel extends JPanel {
 		if(location==null || !SpiritRights.canRead(location, Spirit.getUser())) return;
 		
 		offset_children = LEGEND_HEIGHT;
-		offset_positions = offset_children; 	
+		offset_positions = offset_children; 
+		
 
 		//////////////////////////////////////////////////////////////////////////////////////////
 		//Display children locations
@@ -287,10 +288,6 @@ public class LocationPanel extends JPanel {
 					heightChild = (height-offset_children-MARGIN+PADDING)/rows;				
 					widthChild = (getWidth()-MARGIN*2+PADDING)/cols;
 				}
-//				if(widthChild>800) widthChild = 800;
-//				if(heightChild>450) heightChild = 450;
-				
-//				if(heightChild>20) heightChild = (int)(heightChild/10)*10;
 				
 				offset_positions = offset_children + (int)(rows*heightChild+10);
 				
@@ -413,7 +410,7 @@ public class LocationPanel extends JPanel {
 					g.drawString(s, left+10, 15);
 				}
 				
-			} else if(getHeight()>16) { //Child Mode
+			} else if(getHeight()>16) { //Child Mode with sufficient height
 				
 				//Draw Icon
 				if(location.getLocationType()!=null) {
@@ -429,13 +426,13 @@ public class LocationPanel extends JPanel {
 				g.drawString(s, left, 13);
 				
 				
-				if(getHeight()>22 && location.getChildren().size()==0 && depth<=1) {
-					int n = location.getBiosamples().size();
-					g.setColor(n==0? Color.LIGHT_GRAY: location.getSize()<0? Color.DARK_GRAY: n<location.getSize()? Color.GREEN.darker(): Color.RED.darker());
-					g.setFont(FastFont.SMALL_CONDENSED);
-					s = n + " samples " + (location.getSize()>0? " / "+location.getSize():"");				
-					g.drawString(s, left, 22);
-				}				
+//				if(getHeight()>22 && location.getChildren().size()==0 && depth<=1) {
+//					int n = location.getBiosamples().size();
+//					g.setColor(n==0? Color.LIGHT_GRAY: location.getSize()<0? Color.DARK_GRAY: n<location.getSize()? Color.GREEN.darker(): Color.RED.darker());
+//					g.setFont(FastFont.SMALL_CONDENSED);
+//					s = n + " samples " + (location.getSize()>0? " / "+location.getSize():"");				
+//					g.drawString(s, left, 22);
+//				}				
 			}
 		}
 			
@@ -444,8 +441,6 @@ public class LocationPanel extends JPanel {
 		g.setColor(UIUtils.getColor(50+20*d,50+20*d,50+20*d));		
 		g.drawLine(0, 0, getWidth()-1, 0);
 		g.drawLine(0, 0, 0, getHeight()-1);
-//		g.drawLine(1, 1, getWidth()-2, 1);
-//		g.drawLine(1, 1, 1, getHeight()-2);
 		g.drawLine(getWidth()-1, 0, getWidth()-1, getHeight()-1);
 		g.drawLine(0, getHeight()-1, getWidth()-1, getHeight()-1);
 		g.setColor(UIUtils.brighter(g.getColor(),.5));		

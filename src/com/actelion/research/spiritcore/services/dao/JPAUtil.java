@@ -65,26 +65,6 @@ import com.actelion.research.spiritcore.util.QueryTokenizer;
  * 
  * 
  * @author Joel Freyss 
- * 
- * 
- * 
- * Library of queries:
- * 
- * --- Delete containers without samples ---
- * delete from container where not exists(select * from biosample where biosample.container_id = container.id);
- * 
- * --- Restore all from Envers ---
- * insert into biosample_metadata (id, value, biosample_id, linked_biosample_id, linked_compound_id, linked_document_id, metadata_type_id)
- * select id, value, biosample_id, linked_biosample_id, linked_compound_id, linked_document_id, metadata_type_id
- * from biosample_metadata_aud
- * where (id,rev, revtype) in
- * (select id,max(rev), max(revtype) from  biosample_metadata_aud group by id) and revtype<>2
- * and exists(select * from biosample b where b.id = biosample_id)
- * and exists(select * from biotype_metadata b where b.id = metadata_type_id);
-
- * 
- * 
- * 
  */
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class JPAUtil {

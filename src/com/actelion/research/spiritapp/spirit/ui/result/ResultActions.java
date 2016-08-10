@@ -328,10 +328,10 @@ public class ResultActions {
 	}
 	
 	public static JPopupMenu createPopup(List<Result> results) {
-		JPopupMenu popupMenu = new JPopupMenu();
+		JPopupMenu menu = new JPopupMenu();
 		if(results!=null && results.size()>0) {
-			popupMenu.add(new JCustomLabel("   Result Menu" + (results.size()>1?" ("+results.size()+" results)":""), Font.BOLD));
-			popupMenu.add(new JSeparator());
+			menu.add(new JCustomLabel("   Results: " + (results.size()>1?" "+results.size()+" selected":""), Font.BOLD));
+			menu.add(new JSeparator());
 			
 			String elb = null;
 			for (Result result : results) {
@@ -343,19 +343,27 @@ public class ResultActions {
 				}
 			}
 			
-			popupMenu.add(new Action_Edit_ELB(elb, results.get(0)));			
-			popupMenu.add(new Action_Edit_Results(results));
+			JMenu newMenu = new JMenu("New");
+			newMenu.setIcon(IconType.NEW.getIcon());
+			newMenu.setMnemonic('n');		
+			menu.add(newMenu);
+			newMenu.add(new Action_New());
 			
-			popupMenu.add(new JSeparator());
-
+			JMenu editMenu = new JMenu("Edit");
+			editMenu.setIcon(IconType.EDIT.getIcon());
+			editMenu.setMnemonic('e');		
+			menu.add(editMenu);
+			editMenu.add(new Action_Edit_ELB(elb, results.get(0)));			
+			editMenu.add(new Action_Edit_Results(results));
+			editMenu.add(new JSeparator());
 			JMenu markMenu = new JMenu("Set Quality"); 
 			markMenu.setIcon(IconType.QUALITY.getIcon());
 			for (Quality quality : Quality.getQualities()) {
 				markMenu.add(new Action_SetQuality(results, quality));
 			}			
-			popupMenu.add(markMenu);			
+			editMenu.add(markMenu);	
 			
-			popupMenu.add(new JSeparator());
+			menu.add(new JSeparator());
 			
 			JMenu systemMenu = new JMenu("Advanced"); 
 			systemMenu.setIcon(IconType.ADMIN.getIcon());
@@ -365,10 +373,10 @@ public class ResultActions {
 			systemMenu.add(new Action_AssignTo(results));
 			systemMenu.add(new JSeparator());			
 			systemMenu.add(new Action_History(results.size()==1? results.get(0): null));
-			popupMenu.add(systemMenu);
+			menu.add(systemMenu);
 			
 		}
-		return popupMenu;
+		return menu;
 	}
 	
 	public static void attachRevisionPopup(final ResultTable table) {

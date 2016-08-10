@@ -49,6 +49,7 @@ import com.actelion.research.spiritcore.business.location.LocationType;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -63,7 +64,7 @@ import com.actelion.research.util.ui.scanner.ScannerConfiguration;
 public class SelectRackDlg extends JEscapeDialog {
 	
 	private final ScannerConfiguration config;
-	private final JTabbedPane tabbedPane = new JTabbedPane();
+	private final JTabbedPane tabbedPane = new JCustomTabbedPane();
 
 	private final JCustomTextField newRackNameTextField = new JCustomTextField(10, "", null);		
 	private final LocationBrowser newRackParentBrowser = new LocationBrowser(LocationBrowserFilter.CONTAINER);

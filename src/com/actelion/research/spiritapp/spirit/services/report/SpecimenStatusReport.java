@@ -69,7 +69,7 @@ public class SpecimenStatusReport extends AbstractReport {
 		String cageBefore = null;
 		Group groupBefore = null;
 		
-		DAOResult.attachOrCreateStudyResultsToSpecimen(study, study.getAttachedBiosamples(), null, false);
+		DAOResult.attachOrCreateStudyResultsToSpecimen(study, study.getAttachedBiosamples(), null, null);
 		Test observationTest = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);
 		if(observationTest==null) throw new Exception("The test "+DAOTest.OBSERVATION_TESTNAME+" does not exist");
 		for (Biosample a : study.getAttachedBiosamples()) {

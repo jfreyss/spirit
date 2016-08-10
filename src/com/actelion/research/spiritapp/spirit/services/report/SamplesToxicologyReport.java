@@ -71,8 +71,8 @@ public class SamplesToxicologyReport extends AbstractReport {
 			allSamples.addAll(topAnimal.getSamplesFromStudyDesign(null, requiredOnly));
 		}
 		
-		DAOResult.attachOrCreateStudyResultsToSpecimen(study, study.getTopAttachedBiosamples(), null, false);
-		DAOResult.attachOrCreateStudyResultsToSamples(study, allSamples, null, false);
+		DAOResult.attachOrCreateStudyResultsToSpecimen(study, study.getTopAttachedBiosamples(), null, null);
+		DAOResult.attachOrCreateStudyResultsToSamples(study, allSamples, null, null);
 		
 		if(allSamples.size()==0) throw new Exception("There are no samples to be reported. Make sure you have a sampling template with some required weighings.");
 		

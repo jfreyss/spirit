@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritapp.spirit.ui.pivot;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -37,6 +36,7 @@ import javax.swing.JToggleButton;
 
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.util.ui.FastFont;
+import com.actelion.research.util.ui.UIUtils;
 
 public class PivotTemplateButton extends JToggleButton {
 
@@ -98,11 +98,10 @@ public class PivotTemplateButton extends JToggleButton {
 		Graphics2D g = (Graphics2D) image.getGraphics();
 		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		int[] tint = template==null?  new int[] {15,15,25}: new int[] {25,25,15};
 		if(up) {
-			g.setPaint(new GradientPaint(0, h, new Color(210 + tint[0], 210 + tint[1], 210 + tint[2]), 0, 0, new Color(235, 235, 235)));
+			g.setPaint(new GradientPaint(0, 0, UIUtils.TITLEPANEL_BACKGROUND, 0, h, Color.LIGHT_GRAY));
 		} else {
-			g.setPaint(new GradientPaint(0, h, new Color(230 + tint[0], 230 + tint[1], 230 + tint[2]), 0, 0, new Color(255, 255, 255)));
+			g.setPaint(new GradientPaint(0, 0, UIUtils.TITLEPANEL_BACKGROUND, 0, h, Color.WHITE));
 		}
 		g.fillRoundRect(1, 1, w-4, h-1, round, round);			
 		
@@ -113,21 +112,18 @@ public class PivotTemplateButton extends JToggleButton {
 		if(text!=null) {			
 			Font font = FastFont.BOLD;
 			g.setFont(font);
-			int y = h/2+5;// h - g.getFontMetrics().getMaxDescent() - 6 + (up?1: 2);
-			
-			int x = img==null? 6: img.getWidth(this) + 8; //w/2 - g.getFontMetrics().stringWidth(lines[j])/2 + (up?0: 1);				
+			int x = img==null? 6: img.getWidth(this) + 8;				
+			int y = h/2+5;
 
-			g.setColor(Color.BLACK);
+			g.setColor(up? Color.DARK_GRAY: Color.BLACK);
 			g.drawString(text, x + (up?0:1), y  + (up?0:1));					
 		}
 		
 		
 		if(up) {
-			g.setStroke(new BasicStroke(.6f));
-			g.setColor(Color.BLACK);
+			g.setColor(Color.GRAY);
 			g.drawRoundRect(0, 0, w-3, h-1, round, round);
 		} else {
-			g.setStroke(new BasicStroke(1.5f));
 			g.setColor(Color.BLUE);
 			g.drawRoundRect(1, 1, w-4, h-2, round, round);
 		}

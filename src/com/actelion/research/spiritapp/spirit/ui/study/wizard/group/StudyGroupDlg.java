@@ -41,6 +41,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -71,18 +72,18 @@ public class StudyGroupDlg extends JEscapeDialog {
 	private int push = 0;
 	
 	
-	private Column<Group, String> nameColumn = new Column<Group, String>("Name", String.class, 60) {
+	private Column<Group, String> nameColumn = new Column<Group, String>("Name", String.class, 100) {
 		public String getValue(Group row) {
 			return row.getName();
 		}			
 	};
-	private Column<Group, String> modelColumn = new Column<Group, String>("Model", String.class) {
-		public String getValue(Group row) {
-			return (row.getDiseaseModel()==null?"": row.getDiseaseModel()) + " " + (row.getTreatmentModel()==null?"": row.getTreatmentModel());
-		}			
-	};	
+//	private Column<Group, String> modelColumn = new Column<Group, String>("Model", String.class) {
+//		public String getValue(Group row) {
+//			return (row.getDiseaseModel()==null?"": row.getDiseaseModel()) + " " + (row.getTreatmentModel()==null?"": row.getTreatmentModel());
+//		}			
+//	};	
 	@SuppressWarnings("unchecked")
-	private final ExtendTableModel<Group> groupModel = new ExtendTableModel<Group>(new Column[] {nameColumn, modelColumn}) {
+	private final ExtendTableModel<Group> groupModel = new ExtendTableModel<Group>(new Column[] {nameColumn}) {
 		@Override
 		public Column<Group, ?> getTreeColumn()  {
 			return nameColumn;
@@ -106,6 +107,8 @@ public class StudyGroupDlg extends JEscapeDialog {
 		this.dlg  = dlg;
 		this.study = s;
 		
+		groupTable.setFillsViewportHeight(true);
+		groupTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		
 		editGroupPanel = new EditGroupPanel(this);
 		//

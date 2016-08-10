@@ -106,10 +106,10 @@ public class MappingPanel extends JPanel {
 			return;
 		}
 		switch (action) {
-		case CREATE_COPY:
+		case CREATE:
 			if(b1.isEnabled()) b1.setSelected(true);
 			break;
-		case IGNORE_LINK:
+		case SKIP:
 			if(b2.isEnabled()) b2.setSelected(true);
 			break;
 		case MAP_REPLACE:
@@ -120,8 +120,8 @@ public class MappingPanel extends JPanel {
 	}
 	
 	public MappingAction getMappingAction() {
-		if(b1.isSelected()) return MappingAction.CREATE_COPY;
-		if(b2.isSelected()) return MappingAction.IGNORE_LINK;
+		if(b1.isSelected()) return MappingAction.CREATE;
+		if(b2.isSelected()) return MappingAction.SKIP;
 		return MappingAction.MAP_REPLACE;
 	}
 	

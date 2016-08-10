@@ -50,8 +50,6 @@ public class FormatterUtils {
 		new SimpleDateFormat("dd.MM.yyyy"),
 		new SimpleDateFormat("MM.yyyy"),
 		new SimpleDateFormat("yyyy")};
-//	private static final DateFormat dateTimeFormat2 = new SimpleDateFormat("dd.MM.yy HH:mm");
-//	private static final DateFormat dateTimeFormat3 = new SimpleDateFormat("dd.MM.yy");
 
 	private static final DecimalFormat df0 = new DecimalFormat("0");
 	private static final DecimalFormat df1 = new DecimalFormat("0.0");

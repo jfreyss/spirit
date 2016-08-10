@@ -67,9 +67,10 @@ import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDia
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
-import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.DateTextField;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.SwingWorkerExtended;
@@ -254,7 +255,7 @@ public class RecentChancesDlg extends JSpiritEscapeDialog {
 	private void refreshSelection() {
 		new SwingWorkerExtended("Loading Revision", contentPanel, true) {
 			private Revision rev;
-			private JTabbedPane detailPanel = new JTabbedPane();
+			private JTabbedPane detailPanel = new JCustomTabbedPane();
 			@Override
 			protected void doInBackground() throws Exception {
 				rev = (Revision) revisionList.getSelectedValue();

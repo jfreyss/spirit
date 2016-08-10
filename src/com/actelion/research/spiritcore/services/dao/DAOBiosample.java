@@ -730,9 +730,8 @@ public class DAOBiosample {
 			persistBiosamples(session, biosamples, user);			
 			txn.commit();
 			txn = null;
-		} catch (Exception e) {
-			if (txn != null)try {txn.rollback();} catch (Exception e2) {}
-			throw e;
+		} finally {
+			if (txn != null)try {txn.rollback();} catch (Exception e2) {e2.printStackTrace();}
 		}
 	}
 
@@ -773,8 +772,6 @@ public class DAOBiosample {
 		
 		
 
-		long s = System.currentTimeMillis();
-		
 		testConcurrentModification(biosamples);
 		
 		//Create a map of actual locationId_pos to biosample, to make sure positions are unique
@@ -792,18 +789,15 @@ public class DAOBiosample {
 					int pos = (Integer) object[3];
 					if(biosampleIdsToSave.contains(biosampleId)) continue;
 					String key =  locationId + "_" + pos;
-					assert !locIdPos2container.containsKey(key);
+					assert !locIdPos2container.containsKey(key) || locIdPos2container.get(key).equals(containerId); 
 					locIdPos2container.put(key, containerId);
 				}
 		} finally {
 			if(newEm!=null) newEm.close();
 		}
 
-//		System.out.println("DAOBiosample.persistBiosamples()2" + " > " + (System.currentTimeMillis() - s) + "ms");
-
 		// ///////////////////////
-		// Validation		
-		
+		// Validation				
 		for (Biosample biosample : biosamples) {
 
 			// Test that the biosample has a sampleid

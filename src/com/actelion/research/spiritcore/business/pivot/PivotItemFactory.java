@@ -515,9 +515,6 @@ public class PivotItemFactory {
 		@Override
 		public String getTitle(ResultValue rv) {
 			if(rv.getAttribute().getName().equals(rv.getAttribute().getTest().getName()) && rv.getAttribute().getTest().getOutputAttributes().size()==1) return "";
-//			if(rv.getResult().getTest().getOutputAttributes().size()==1) {
-//				return rv.getAttribute().getUnit()==null?"": "<y>" + rv.getAttribute().getUnit();				
-//			} 
 			return "<y>" + rv.getAttribute().getName();
 		}		
 	};

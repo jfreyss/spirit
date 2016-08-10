@@ -25,6 +25,7 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -74,6 +75,10 @@ import net.objecthunter.exp4j.Expression;
 public class DAOResult {
 	
 	private static Logger logger = LoggerFactory.getLogger(DAOResult.class); 
+	
+	public static String suggestElb(String user) {
+		return "ELB-" + (user==null?"": user + "-") + new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date());
+	}
 	
 	public static List<Result> reload(List<Result> results) {
 		List<Result> res = JPAUtil.reattach(results);
@@ -957,7 +962,7 @@ public class DAOResult {
 	 * @param createMissingOnes
 	 * @throws Exception
 	 */
-	public static void attachOrCreateStudyResultsToSpecimen(Study study, Collection<Biosample> allBiosamples, Phase phaseFilter, boolean createMissingOnes) throws Exception  {
+	public static void attachOrCreateStudyResultsToSpecimen(Study study, Collection<Biosample> allBiosamples, Phase phaseFilter, String elbForCreatingMissingOnes) throws Exception  {
 		Test weighingTest = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
 		Test fwTest = DAOTest.getTest(DAOTest.FOODWATER_TESTNAME);
 		Test obsTest = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);
@@ -968,7 +973,7 @@ public class DAOResult {
 		tests.add(fwTest);
 		tests.add(obsTest);
 		tests.addAll(Measurement.getTests(study.getAllMeasurementsFromActions()));
-		attachOrCreateStudyResults(study, false, allBiosamples, tests, phaseFilter, createMissingOnes);
+		attachOrCreateStudyResults(study, false, allBiosamples, tests, phaseFilter, elbForCreatingMissingOnes);
 	}
 	
 	
@@ -980,7 +985,7 @@ public class DAOResult {
 	 * @param createMissingOnes
 	 * @throws Exception
 	 */
-	public static void attachOrCreateStudyResultsToSamples(Study study, Collection<Biosample> samples, Phase phaseFilter, boolean createMissingOnes) throws Exception  {
+	public static void attachOrCreateStudyResultsToSamples(Study study, Collection<Biosample> samples, Phase phaseFilter, String elbForCreatingMissingOnes) throws Exception  {
 		Test weighingTest = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
 		Test lengthTest = DAOTest.getTest(DAOTest.LENGTH_TESTNAME);
 		Test obsTest = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);		
@@ -991,7 +996,7 @@ public class DAOResult {
 		tests.add(lengthTest);
 		tests.add(obsTest);		
 		tests.addAll(Measurement.getTests(study.getAllMeasurementsFromSamplings()));		
-		attachOrCreateStudyResults(study, true, samples, tests, phaseFilter, createMissingOnes);
+		attachOrCreateStudyResults(study, true, samples, tests, phaseFilter, elbForCreatingMissingOnes);
 	}
 	
 	
@@ -1003,7 +1008,7 @@ public class DAOResult {
 	 * @param user
 	 * @throws Exception
 	 */
-	private static void attachOrCreateStudyResults(Study study, boolean skipEmptyPhase, Collection<Biosample> biosamples, Collection<Test> tests, Phase phaseFilter, boolean createMissingOnes) throws Exception  {
+	private static void attachOrCreateStudyResults(Study study, boolean skipEmptyPhase, Collection<Biosample> biosamples, Collection<Test> tests, Phase phaseFilter, String elbForCreatingMissingOnes) throws Exception  {
 		Set<Biosample> allBiosamples = new HashSet<Biosample>(biosamples);
 		//Clean previous data
 		if(phaseFilter!=null) {
@@ -1016,7 +1021,7 @@ public class DAOResult {
 		//Query all results associated to those samples		
 		ResultQuery q = new ResultQuery();
 		q.setQuality(null);
-		q.setElbs(study.getStudyId());
+//		q.setElbs(study.getStudyId());
 		q.setBids(JPAUtil.getIds(allBiosamples));
 		q.getTestIds().addAll(JPAUtil.getIds(tests));
 
@@ -1039,7 +1044,7 @@ public class DAOResult {
 		}
 		
 		//Create missing results		
-		if(createMissingOnes) {
+		if(elbForCreatingMissingOnes!=null) {
 			for (Biosample biosample : allBiosamples) {
 				Phase p = biosample.getInheritedPhase()!=null? biosample.getInheritedPhase(): phaseFilter;
 	
@@ -1049,7 +1054,7 @@ public class DAOResult {
 				for(Test test: tests) {
 					if(biosample.getAuxResult(test, p)==null) {
 						Result r = new Result(test);
-						r.setElb(study.getStudyId());
+						r.setElb(elbForCreatingMissingOnes);
 						r.setBiosample(biosample);
 						r.setPhase(biosample.getInheritedPhase()!=null? null: phaseFilter);
 						biosample.addAuxResult(r);

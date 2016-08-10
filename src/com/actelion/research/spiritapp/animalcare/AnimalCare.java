@@ -53,6 +53,8 @@ import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.util.ui.FastFont;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JStatusBar;
 import com.actelion.research.util.ui.SplashScreen2;
@@ -65,7 +67,7 @@ public class AnimalCare extends JFrame implements ISpiritChangeObserver, ISpirit
 
 	private static SplashConfig splashConfig = new SplashConfig(AnimalCare.class.getResource("animalcare.jpg"), "AnimalCare", "AnimalCare v" + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Actelion - J.Freyss");
 	
-	private final JTabbedPane centerPane = new JTabbedPane();
+	private final JTabbedPane centerPane = new JCustomTabbedPane();
 	private final AnimalCarePanel animalCarePanel = new AnimalCarePanel();
 	private final DashboardPanel dashboardPanel = new DashboardPanel();
 	private final JStatusBar statusBar = new JStatusBar();
@@ -97,6 +99,7 @@ public class AnimalCare extends JFrame implements ISpiritChangeObserver, ISpirit
 
 		statusBar.setCopyright("AnimalCare - (C) Joel Freyss - Actelion 2012");	
 
+		centerPane.setFont(FastFont.BOLD.deriveSize(14));
 		centerPane.add("Dashboard ", dashboardPanel);
 		centerPane.setIconAt(0, IconType.HOME.getIcon());
 

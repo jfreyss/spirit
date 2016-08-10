@@ -141,30 +141,30 @@ public class DashboardPanel extends JPanel {
 						if(Phase.isSameDay(p.getAbsoluteDate(), dashDate)) {
 							String d = p.getDescription();
 							if(d.length()>0) {
-								desc += "<b>" + p.getShortName() + ":</b><br> " + d.replace(" + ", " +<br>") + "<br>";
+								desc += "<br><b>" + p.getShortName() + ":</b><br><span style='font-size:8px'>" + d.replace(" + ", "+") + "</span>";
 							}
 						} else if(p.getAbsoluteDate().after(dashDate)) {
 							if(nextPhase==null || nextPhase.getAbsoluteDate()==null || nextPhase.getAbsoluteDate().after(p.getAbsoluteDate())) {
 								String d = p.getDescription();
 								if(d.length()>0) {
 									nextPhase = p;
-									nextDesc = "<b>" + p.getShortName() + ":</b><br> " + d.replace(" + ", " +<br>") + "<br>";
+									nextDesc = "<br><b>" + p.getShortName() + ":</b><br><span style='font-size:8px'>" + d.replace(" + ", "+") + "</span>";
 								}								
 							}
 							
 						}
 					}
 					StringBuilder sb = new StringBuilder();
-					sb.append("<td valign=top valign=center style='width:100px;color:#666; font-size:9px; margin:1px; padding:1px; background:#FFFFE0'>");
-					sb.append("<a href='stu:" + s.getId() + "' style='font-size:12px;font-weight:bold'>" + s.getStudyId() + "</a>");
+					sb.append("<td valign=top valign=center style='width:110px;color:#666; font-size:9px; margin:1px; padding:1px'>");
+					//sb.append("<a href='stu:" + s.getId() + "' style='font-size:12px;font-weight:bold'>" + s.getStudyId() + "</a>");
 					if(desc.length()>0) {
-						sb.append("<div style='background:#FFFF00'>");
-						sb.append("<u style='font-size:10px'>" + (dayOffset==0?"TODAY (" + Formatter.formatDate(dashDate)  + ")": "Day"+(dayOffset>0?"+":"")+dayOffset)+ "</u><br>" + desc);
+						sb.append("<div style='border:solid 1px #FFAAAA; background:#FFFAFA'>");
+						sb.append("<u>" + (dayOffset==0?"(" + Formatter.formatDate(dashDate)  + ")": "Day"+ (dayOffset>0?"+":"")+dayOffset) + "</u> - " + desc);
 						sb.append("</div");
 					}
 					if(nextPhase!=null && nextDesc.length()>0) {
-						sb.append("<div style='background:#EEEECC'>");
-						sb.append("<u style='font-size:10px'>(" + Formatter.formatDate(nextPhase.getAbsoluteDate())  + ")</u><br>" + nextDesc);
+						sb.append("<div>");
+						sb.append("<u>(" + Formatter.formatDate(nextPhase.getAbsoluteDate())  + ")</u> - " + nextDesc);
 						sb.append("</div");
 					}
 					sb.append("</td>");
@@ -172,7 +172,7 @@ public class DashboardPanel extends JPanel {
 				}
 				
 				String table = LastActivityEditorPane.getStudyTableRows(studies, false, extraColumn);
-				sb.append("<table>");
+				sb.append("<table style='background:#F5F5F50'>");
 				sb.append(table);				
 				sb.append("</table>");
 			}

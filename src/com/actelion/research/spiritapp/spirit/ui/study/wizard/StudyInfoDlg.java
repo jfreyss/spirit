@@ -55,8 +55,8 @@ import com.actelion.research.spiritapp.spirit.ui.lf.UserIdTextArea;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.PropertyKey;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
+import com.actelion.research.spiritcore.adapter.PropertyKey;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -154,8 +154,14 @@ public class StudyInfoDlg extends JEscapeDialog {
 				textField.setText(study.getMetadata().get(metadataKey));
 				comp = textField;
 			}
-			if(states.length>0 && !MiscUtils.contains(states, study.getState())) comp.setEnabled(false);
-			if(roles.length>0 && !MiscUtils.contains(roles, Spirit.getUser().getRoles())) comp.setEnabled(false);
+			if(states.length>0 && !MiscUtils.contains(states, study.getState())) {
+				comp.setToolTipText("Disabled "+name+" because study's state: "+study.getState()+" not in "+Arrays.toString(states));
+				comp.setEnabled(false);
+			}
+			if(roles.length>0 && !MiscUtils.contains(roles, Spirit.getUser().getRoles())) {
+				comp.setToolTipText("Disabled "+name+" because user's roles: "+Spirit.getUser().getRoles()+" not in "+Arrays.toString(roles));
+				comp.setEnabled(false);
+			}
 			if(req) comp.setBackground(LF.BGCOLOR_REQUIRED);
 			
 			comps.add(new JLabel(name+": " + (req?"(req.)":"")));				
@@ -185,9 +191,8 @@ public class StudyInfoDlg extends JEscapeDialog {
 		
 		
 		//Rights
-		JPanel studyRightsPanel = new JPanel(new BorderLayout());
+		JPanel studyRightsPanel = new JPanel();
 		if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && !ConfigProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY)) {
-			
 			blindNamesUsersField.setToolTipText("The group's name and the treatment's compounds are hidden. Those users can still see the group no (1A) and the treatment's name (blue) in AnimalCare");
 			blindAllUsersField.setToolTipText("The groups and the treatments compounds are completely hidden. Those users can only see the samples in AnimalCare");
 						
@@ -224,7 +229,6 @@ public class StudyInfoDlg extends JEscapeDialog {
 							readUsersPanel, 
 							blindPanel, 
 							Box.createHorizontalGlue()));
-			studyRightsPanel.setVisible(!"false".equals(ConfigProperties.getInstance().getValue(PropertyKey.RIGHT_ROLEONLY)));
 		}
 		
 		//NotesPanel
@@ -275,7 +279,7 @@ public class StudyInfoDlg extends JEscapeDialog {
 
 		synchroCheckbox.setSelected(study.isSynchronizeSamples());
 		
-		adminUsersTextArea.setText(study.getWriteUsers());
+		adminUsersTextArea.setText(study.getAdminUsers());
 		expertUsersTextArea.setText(study.getExpertUsers());
 		
 		notesTextArea.setText(study.getNotes());
@@ -340,10 +344,10 @@ public class StudyInfoDlg extends JEscapeDialog {
 		SpiritUser user = Spirit.askForAuthentication();
 		
 		//Users
-		if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && !"false".equals(ConfigProperties.getInstance().getValue(PropertyKey.RIGHT_ROLEONLY))) {
+		if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && !ConfigProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY)) {
 			//Check that the write-users are valid
-			String writeUsers = adminUsersTextArea.getText().trim();
-			if(writeUsers.length()==0) throw new Exception("One Write-User is required");
+			String adminUsers = adminUsersTextArea.getText().trim();
+			if(adminUsers.length()==0) throw new Exception("One admin is required");
 			
 			//Check that the read-users are valid
 			String expertUsers = expertUsersTextArea.getText().trim();
@@ -357,9 +361,8 @@ public class StudyInfoDlg extends JEscapeDialog {
 			String blindNamesUsers = blindNamesUsersField.getText().trim();
 			DBAdapter.getAdapter().checkValid(Arrays.asList(MiscUtils.split(blindAllUsers)));
 
-//			String owner = ownerComboBox.getText();
 			Set<String> setExpertUsers = new TreeSet<>(Arrays.asList(MiscUtils.split(expertUsers)));
-			Set<String> setAdminUsers = new TreeSet<>(Arrays.asList(MiscUtils.split(writeUsers)));
+			Set<String> setAdminUsers = new TreeSet<>(Arrays.asList(MiscUtils.split(adminUsers)));
 			Set<String> setBlindNames = new TreeSet<>(Arrays.asList(MiscUtils.split(blindNamesUsers)));
 			Set<String> setBlindAll = new TreeSet<>(Arrays.asList(MiscUtils.split(blindAllUsers)));
 			
@@ -372,21 +375,17 @@ public class StudyInfoDlg extends JEscapeDialog {
 			
 
 			Set<String> allUsers = new HashSet<>();
-//			if(owner!=null && owner.length()>0) allUsers.add(owner);
 			allUsers.addAll(setExpertUsers);
 			allUsers.addAll(setAdminUsers);
 			allUsers.addAll(setBlindNames);
 			allUsers.addAll(setBlindAll);
 			DBAdapter.getAdapter().checkValid(allUsers);
 
-//			study.setOwner(owner);
-			study.setWriteUsers(writeUsers);
+			study.setAdminUsers(adminUsers);
 			study.setExpertUsers(expertUsers);
-			study.setBlindAllUsers(setBlindAll);
-			study.setBlindDetailsUsers(setBlindNames);
+			study.setBlindUsers(setBlindAll, setBlindNames);
 		} else {
-//			study.setOwner("");
-			study.setWriteUsers("");
+			study.setAdminUsers("");
 			study.setExpertUsers("");
 			study.setBlindAllUsers(new HashSet<String>());
 			study.setBlindDetailsUsers(new HashSet<String>());	
@@ -420,22 +419,16 @@ public class StudyInfoDlg extends JEscapeDialog {
 		study.setStudyId(studyIdField.getText());
 		study.setState(stateComboBox.getSelection());
 		study.setIvv(ivvField.getText());
-//		study.setProject(projectComboBox.getText());
-//		study.setDiseaseArea(diseaseComboBox.getText());
-//		study.setType(typeComboBox.getText());
 		study.setTitle(titleField.getText());
 		study.setNotes(notesTextArea.getText());
 		study.setState(stateComboBox.getSelection());
-//		study.setClinicalStatus(clinicalComboBox.getSelection());
 		study.setSynchronizeSamples(synchroCheckbox.isSelected());
 		
 		List<EmployeeGroup> egs = new ArrayList<>();
 		if(eg1ComboBox.getSelection()!=null) egs.add(eg1ComboBox.getSelection());
 		if(eg2ComboBox.getSelection()!=null) egs.add(eg2ComboBox.getSelection());
-//		if(eg3ComboBox.getSelection()!=null) egs.add(eg3ComboBox.getSelection());
 		study.setEmployeeGroups(egs);
 		
-//		study.setSite(siteComboBox.getText());
 		study.setUpdUser(user.getUsername());
 		
 		
@@ -444,7 +437,7 @@ public class StudyInfoDlg extends JEscapeDialog {
 			try {
 				if(!inEditContext) JPAUtil.pushEditableContext(user);
 				int id = study.getId();
-				study = DAOStudy.persistStudy(study, user);
+				DAOStudy.persistStudies(Collections.singleton(study), user);
 				SpiritChangeListener.fireModelChanged(id<=0? SpiritChangeType.MODEL_ADDED: SpiritChangeType.MODEL_UPDATED, Study.class, study);
 			} finally {
 				if(!inEditContext) JPAUtil.popEditableContext();

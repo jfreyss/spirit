@@ -248,7 +248,7 @@ public class SummaryTab extends WizardPanel {
 
 		
 		//save
-		DAOStudy.persistStudy(study, Spirit.getUser());
+		DAOStudy.persistStudies(Collections.singleton(study), Spirit.getUser());
 		AttachBiosamplesHelper.attachSamples(study, randomization.getSamples(), saveWeights? dlg.getPhase(): null, saveWeights, user);
 
 	}

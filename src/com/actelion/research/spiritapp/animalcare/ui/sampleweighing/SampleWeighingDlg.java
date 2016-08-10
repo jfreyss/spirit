@@ -48,6 +48,7 @@ import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.animalcare.ui.monitor.MonitorTextField;
 import com.actelion.research.spiritapp.animalcare.ui.monitor.MonitoringAnimalPanel;
+import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleList;
 import com.actelion.research.spiritapp.spirit.ui.biosample.ContainerComboBox;
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdLabel;
@@ -106,11 +107,13 @@ public class SampleWeighingDlg extends JEscapeDialog {
 	private ListHashMap<Biosample, Biosample> animal2Samples = new ListHashMap<>();
 
 	private int push = 0;
+	private final String elb;
 
 	public SampleWeighingDlg(Study s) {
 		super(UIUtils.getMainFrame(), "Sample Weighing - " + s.getStudyId());
 
 		this.study = JPAUtil.reattach(s);
+		this.elb = DAOResult.suggestElb(Spirit.getUsername());
 
 		//Check creation of samples
 		if(study.isSynchronizeSamples()) {
@@ -343,7 +346,7 @@ public class SampleWeighingDlg extends JEscapeDialog {
 
 					
 					//Retrieve results to populate the fields
-					DAOResult.attachOrCreateStudyResultsToSamples(study, list, phase, true);
+					DAOResult.attachOrCreateStudyResultsToSamples(study, list, phase, elb);
 				} finally {
 					push--;
 				}
@@ -411,7 +414,7 @@ public class SampleWeighingDlg extends JEscapeDialog {
 							comps.add(label);
 						}
 					}
-					comps.add(new JLabel("Comments"));
+					comps.add(new JLabel("Observation"));
 					int cols = comps.size();
 					
 					for (Biosample sample : samples) {

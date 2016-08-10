@@ -83,7 +83,7 @@ public class DataTab extends WizardPanel {
 	private SpinnerNumberModel dataSpinnerModel = new SpinnerNumberModel(0, 0, 10, 1);
 	private JSpinner dataSpinner = new JSpinner(dataSpinnerModel);
 
-	private JButton reuseAnimalsButton = new JIconButton(IconType.STUDY, "Reuse Specimen (Crossover)");	
+	private JButton reuseButton = new JIconButton(IconType.STUDY, "Reuse samples (Crossover)");	
 	private JButton resetButton = new JIconButton(IconType.NEW, "Synchronize from current situation");	
 	private final BalanceDecorator balanceDecorator;
 	private final JPanel realPanel;
@@ -140,7 +140,7 @@ public class DataTab extends WizardPanel {
 			}
 		});
 		
-		reuseAnimalsButton.addActionListener(new ActionListener() {			
+		reuseButton.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				populateTables(true, false);
@@ -157,12 +157,13 @@ public class DataTab extends WizardPanel {
 			}
 		});
 		resetButton.setVisible(false);
-		realPanel = UIUtils.createTitleBox("Current Data (if groups have been changed)", new JScrollPane(realTable));
+		realPanel = UIUtils.createTitleBox("Current Data", 
+				UIUtils.createBox(new JScrollPane(realTable), new JInfoLabel("this is how the samples are currently attached")));
 		JSplitPane centerPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-				UIUtils.createTitleBox("Randomization Data",
-						UIUtils.createBox(new JScrollPane(dataTable), UIUtils.createHorizontalBox(resetLabel, reuseAnimalsButton, resetButton, Box.createHorizontalGlue()))),
+				UIUtils.createTitleBox("Saved Data",
+						UIUtils.createBox(new JScrollPane(dataTable), UIUtils.createVerticalBox(resetLabel, reuseButton, resetButton, Box.createHorizontalGlue()))),
 				realPanel);
-		centerPanel.setDividerLocation(350);
+		centerPanel.setDividerLocation(400);
 		realTable.setEnabled(false);
 		
 		
@@ -227,7 +228,7 @@ public class DataTab extends WizardPanel {
 		Set<Integer> usedNo = new HashSet<>(); 
 		int count = 0;
 		try {
-			DAOResult.attachOrCreateStudyResultsToSpecimen(study, study.getTopAttachedBiosamples(), dlg.getPhase(), false);
+			DAOResult.attachOrCreateStudyResultsToSpecimen(study, study.getTopAttachedBiosamples(), dlg.getPhase(), null);
 		} catch(Exception e) {
 			JExceptionDialog.showError(e);
 		}
@@ -354,17 +355,19 @@ public class DataTab extends WizardPanel {
 		
 		//Check the number of attached samples coming from the corresponding groups
 		int nAttached = 0;
-		boolean hasGroupSplitting = false;
+//		boolean hasGroupSplitting = false;
 		for(Group g: dlg.getStudy().getGroups()) {
 			if(!dlg.getPhase().equals( g.getFromPhase())) continue;
-			if(g.getFromGroup()!=null) hasGroupSplitting = true;
+//			if(g.getFromGroup()!=null) hasGroupSplitting = true;
 			nAttached += g.getTopAttachedBiosamples().size();
 			if(g.getFromGroup()!=null) nAttached += g.getFromGroup().getTopAttachedBiosamples().size();			
 		}
 		
 		//Update view
 		resetButton.setVisible(nAttached>0);
-		reuseAnimalsButton.setVisible(nAttached==0 && dlg.getStudy().getTopAttachedBiosamples().size()>0 && !hasGroupSplitting);		
+		
+		reuseButton.setVisible(false /*nAttached==0 && dlg.getStudy().getTopAttachedBiosamples().size()>0 && !hasGroupSplitting*/);
+		
 		realTable.getModel().setNData(dlg.getRandomization().getNData());
 		dataTable.getModel().setNData(dlg.getRandomization().getNData());
 		dataTable.setRows(samples);
@@ -379,7 +382,7 @@ public class DataTab extends WizardPanel {
 				resetLabel.setForeground(Color.BLUE);
 			}			
 		} else {
-			resetLabel.setText("Those samples are loaded from the last saved settings (and may not reflect the current situation)");
+			resetLabel.setText("Those samples are loaded from the last saved settings");
 			resetLabel.setForeground(Color.DARK_GRAY);
 		}
 			
