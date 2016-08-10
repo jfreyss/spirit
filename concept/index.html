@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Spirit: a study/biosample management software for drug discovery research">
+
+	<link rel="stylesheet" href="../css/bootstrap.min.css">
+	<!--link rel="stylesheet" href="../css/bootstrap-theme.min.css"-->
+    <link rel="stylesheet" href="../css/stylesheet.css">
+	<script src="../js/jquery-3.1.0.min.js"></script>
+	<script src="../js/bootstrap.min.js"></script>	
+	<script src="../js/main.js"></script>
+    <title>Spirit Biobank - Concept</title>
+  </head>
+
+  <body>
+
+    <div id="header_wrap">
+      <header class="container">
+		<nav class="navbar navbar-default navbar-static-top">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../index.html">Spirit</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="../concept/index.html">Concept</a></li>
+            <li><a href="../first/index.html">Installation</a></li>
+            <li><a href="../doc/index.html">Documentation</a></li>
+            <li><a href="../contact/index.html">Contact</a></li>
+			<li><a id="forkme_banner" href="https://github.com/jfreyss/spirit">View on GitHub</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+        </nav>
+      </header>
+    </div>
+
+	<div class="main container">
+	
+<section>
+<h1>What is SPIRIT?</h1>
+<p>SPIRIT is a Java-based software to handle complex life science research data. It was originally developed for internal use by Actelion Pharmaceuticals Ltd. (Switzerland).</p>
+<p>SPIRIT is used by more than hundred researchers in Actelion's Drug Discovery Departments. It is also used by the Actelion Research Biobank to manage its preclinical and clinical samples and data.</p>
+<p>SPIRIT's data concept is generic and sample-centric. It can be configured to handle any type of samples and their relationships, including animals or humans. Results
+can be linked to samples and have an unlimited number of input and output parameters. Physical storage locations are managed by a fully configurable inventory system. Finally, a graphical study editor allows to plan, display, and record the progress of experiments involving groups of samples and results over time.</p>
+</section>
+
+<section>
+<h1>Software Structure</h1>
+<p>SPIRIT presents four perspectives to the user. Each perspective has its own tab in the
+main program window, but they are all linked. In these tabs, the user can do the following:</p>
+<dl>
+<dt>Samples:</dd>
+<dd> Create samples, find and display them as well as all related samples,
+edit sample information, print labels
+(Administration: Define sample types and their parameters)</dd>
+<dt>Locations:</dt>
+<dd>Register the location of samples and containers, find and move them,
+display inventory lists, print container labels</dd>
+<dt>Results</dt>
+<dd>Store results, find and display them in pivoted tables, export results
+in spreadsheet format, visualize them in the DataWarrior software
+(Administration: Define tests)</dd>
+<dt>Studies</dd>
+<dd>Graphically design and monitor the evolution of a study (experiment).
+Studies consist of the following elements:
+<ul>
+<li>multiple <strong>samples</strong> (including animals or humans) that are attached</li>
+<li>to <strong>groups</strong> and subgroups (such as treated vs. control)</li>
+<li>in different <strong>phases</strong> (or time points) at which they are planned to</li>
+<li>undergo <strong>treatments</strong>,</li>
+<li><strong>samplings</strong> (generating new samples), and</li>
+<li><strong>measurements</strong> (generating results)</li>
+</ul>
+</dd>
+</dl>
+</section>
+	
+<section>
+<h1>Database</h1>
+<p>SPIRIT can be configured to access relational databases, such as MySQL, Oracle, Hypersonic.
+</section>
+
+<section>
+<h1>Configuration</h1>
+<p>Each instance of Spririt requires the definition of <strong>biotypes</strong> (such as animals,
+blood, organs, DNA, cells) with their metadata, storage <strong>locations</strong> (such as buildings, labs) and <strong>tests</strong> to store results.</p>
+<p>SPIRIT also requires the registration of <strong>users</strong>. Users may be part of a
+<strong>group</strong> with specific rights, or be assigned to a customized role (such as admin, readall, QA). SPIRIT is delivered with its own user database or it can be customized to connect to an existing system</p>
+</section>
+
+<section>
+<h1>Extensions</h1>
+<p>SPIRIT links directly with Actelion's <strong>DataWarrior</strong> software to filter and display complex, multidimensional data. DataWarrior is available for free from <a href="http://www.openmolecules.org">www.openmolecules.org</a>.</p>
+<p>The main SPIRIT software is accompanied by a suite of applications built to support specific
+users in dedicated tasks:</p>
+<dl>
+<dt>AnimalCare:</dt>
+<dd>Monitoring of animal studies (randomization, weighing, measuring, labeling)</dd>
+<dt>StockCare:</dt>
+<dd>Sample Inventory for cells, antibodies, etc.</dd>
+<dt>SlideCare:</dt>
+<dd>Generation of paraffin blocks and microscopy slides</dd>
+<dt>BioViewer:</dt>
+<dd>Simple sample information viewer with basic functionality (scanning, aliquoting)</dd>
+</dl>
+<p>
+At Actelion, SPIRIT also integrates seamlessly with the company's "Niobe" Electronic Lab
+Notebook (ELN) software, the "ORBIT" raw data file management system, and the "ORBIT
+Image Analysis" software.</p>
+</section>
+
+<section>
+<h1>Collaboration</h1>
+<p>SPIRIT is designed to provide many users a unified environment to manage their data, to
+collaborate, and to share their results. This is achieved by maintaining a single, system-wide
+configuration. Although users and groups have restricted rights, SPIRIT was not designed to
+completely isolate users from each other.</p>
+<p> The latter could, in principle, be achieved through independent SPIRIT implementations.
+This will inevitably lead to diverging configurations, at the expense of data interchangeability.</p>
+</section>
+
+<section>
+<h1>Audit trail, backup, data recovery</h1>
+<p>Every modification in the SPIRIT database is recorded (time stamp, user, change). For each
+entity, a revision history can be displayed. <strong>Audits</strong> can be displayed per date or per user. Rollbacks to previous state are possible.</p>
+<p>The database that SPIRIT connects with must be backed up, but no further backups are
+required.</p>
+<p>Although SPIRIT stores its data in a relational database, it is possible to export its complete
+content in a (potentially huge) flat spreadsheet file at once.</p>
+<p>SPIRIT can also <strong>import/export to its own exchange format</strong>, so data can be exchanged/merged between different instances of SPIRIT, in different organizations. If the settings are differents (missing or other biotypes/tests), an entity mapping can be configured.</p>
+</section>
+
+<section>
+<h1>Hardware integration</h1>
+<p>SPIRIT specifically supports this peripheral hardware:
+<ul>
+<li>Brother P-Touch label printers</li>
+<li>Barcode readers</li>
+<li>FluidX rack scanner</li>
+<li>Mettler-Toledo balances</li>
+</ul>
+</section>
+
+<section>
+<h1>Current users</h1>
+<ul>
+<li>Actelion Pharmaceuticals Ltd., Allschwil, Switzerland. Drug Discovery Departments, including Actelion Research Biobank</li>
+<li>University Hospital Basel, Switzerland. Departement Biomedicine</li>
+</ul>
+</section>
+
+Thanks to Oliver Peter for writing this <a href="SPIRIT Software Overview v-2-1.pdf">PDF document</a>
+
+    </div>
+	
+    <div id="footer_wrap">
+       <footer class="container">
+         <p class="copyright">Spirit Biobank maintained by <a href="https://github.com/jfreyss">Joel Freyss</a></p>
+       </footer>
+       <noscript><img class="statcounter" src="//c.statcounter.com/11069810/0/18a1847b/1/"></noscript>
+    </div>
+
+  </body>
+</html>

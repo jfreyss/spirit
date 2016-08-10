@@ -4,67 +4,89 @@
   <head>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Spirit : Spirit, a study/biosample management tool for research">
+    <meta name="description" content="Spirit: a study/biosample management software for drug discovery research">
 
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-
-    <title>Spirit Biobanking</title>
-    <script>
-	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<!--<link rel="stylesheet" href="css/bootstrap-theme.min.css">-->
+    <link rel="stylesheet" href="css/stylesheet.css">
+	<script src="js/jquery-3.1.0.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
 	
-	  ga('create', 'UA-81953907-1', 'auto');
-	  ga('send', 'pageview');
-    </script>
+	<script src="js/main.js"></script>
+    <title>Spirit Biobank</title>
   </head>
 
   <body>
 
-    <!-- HEADER -->
+
     <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/jfreyss/spirit">View on GitHub</a>
-
-          <h1 id="project_title">Spirit Biobanking</h1>
-          <h2 id="project_tagline">a study / biosample management software for drug discovery research</h2>
-          <a href="webstart/spirit.jnlp">Demo (webstart)</a>
-            <!--
-            <section id="downloads">
-		<a class="zip_download_link" href="https://github.com/jfreyss/spirit/zipball/master">Download this project as a .zip file</a>
-            </section>
-	    -->
-        </header>
+      <header class="container">
+		<nav class="navbar navbar-default navbar-static-top">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="index.html">Spirit</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="concept/index.html">Concept</a></li>
+            <li><a href="first/index.html">Installation</a></li>
+            <li><a href="doc/index.html">Documentation</a></li>
+            <li><a href="contact/index.html">Contact</a></li>
+			<li><a id="forkme_banner" href="https://github.com/jfreyss/spirit">View on GitHub</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+        </nav>
+      </header>
     </div>
 
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-	  
-<h3>Origin of the project</h3>
-<p>Spirit is a biobanking application, developed by and for Actelion Pharmaceuticals, Allschwil Switzerland. The primary objective was to help scientists/technicians doing their studies. It covers all aspects from study design to biosample management, location handling and result analysis.</p>
-
-<h3>Demo</h3>
-<p>Click <a href="webstart/spirit.jnlp">Spirit Biobank</a> to start the program as a Webstart application. Be sure to have Java1.7+ installed and to accept the certificate.</p>
-
-<h3>Repository</h3>
-Spirit Biobanking is released under the GPL.v3 license. As such, you can download the source and binaries of the latest release under <a href="https://github.com/jfreyss/spirit/releases">GitHub</a>
-
-
-<h3>Questions</h3>
-<p>Contact <a href="https://github.com/jfreyss" class="user-mention">Joel Freyss</a> at Actelion for questions or issues.</p>
-
-      </section>
+	
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron">
+      <div class="container">
+        <h1>Spirit Biobank</h1>
+        <p>An open source study / biosample management software for drug discovery research</p>
+        <p><a class="btn btn-primary btn-lg" href="webstart/spirit.jnlp" role="button">Demo &raquo;</a></p>
+      </div>
     </div>
-
-    <!-- FOOTER  -->
+	
+	
+	<div class="container">
+      <div class="row">
+        <div class="col-md-3">
+          <h2>Concept</h2>
+          <p>Spirit is a <strong>biobanking application</strong>, developed inhouse for Actelion Pharmaceuticals, Switzerland. The primary objective was to help scientists/technicians doing their studies. It covers all aspects from <strong>study</strong> design to <strong>biosample</strong> management, <strong>location</strong> handling and <strong>result</strong> analysis. </p>
+          <p><a class="btn btn-default" href="concept/index.html" role="button">View details &raquo;</a></p>
+        </div>
+        <div class="col-md-3">
+          <h2>Installation</h2>
+          <p>Spirit Biobanking is released under the GPL.v3 license. As such, you can download the source and binaries of the latest release under <a href="https://github.com/jfreyss/spirit/releases">GitHub</a>. </p>
+          <p><a class="btn btn-default" href="first/index.html" role="button">View details &raquo;</a></p>
+       </div>
+        <div class="col-md-3">
+          <h2>Documentation</h2>
+          <p>To come</p>
+          <p><a class="btn btn-default" href="doc/index.html" role="button">View details &raquo;</a></p>
+        </div>
+        <div class="col-md-3">
+          <h2>Contact</h2>
+          <p>For questions, help</p> 
+          
+		  <p><a class="btn btn-default" href="contact/index.html" role="button">View details &raquo;</a></p>
+        </div>
+      </div>
+    </div> <!-- /container -->
+	
     <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Spirit maintained by <a href="https://github.com/jfreyss">Joel Freyss</a></p>
-      </footer>
+       <footer class="inner container">
+         <p class="copyright">Spirit Biobank maintained by <a href="https://github.com/jfreyss">Joel Freyss</a></p>
+       </footer>
+       <noscript><img class="statcounter" src="//c.statcounter.com/11069810/0/18a1847b/1/"></noscript>
     </div>
-
     
 
   </body>
