@@ -7,3 +7,7 @@ var scJsHost = (("https:" == document.location.protocol) ?
 document.write("<sc"+"ript type='text/javascript' src='" +
 scJsHost+
 "statcounter.com/counter/counter.js'></"+"script>");
+
+$(document).ready(function() {
+	$(".fancybox").fancybox();
+});

@@ -6,9 +6,6 @@ by Jason Costello, @jsncostello
 @import url(github-light.css);
 
 /*******************************************************************************
-MeyerWeb Reset
-*******************************************************************************/
-
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -29,6 +26,7 @@ time, mark, audio, video {
   vertical-align: baseline;
   vertical-align: baseline;
 }
+*/
 
 /* HTML5 display-role reset for older browsers */
 article, aside, details, figcaption, figure,
@@ -59,18 +57,38 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h0, h1, h2, h3, h4, h5, h6 {
   margin: 10px 0;
-  font-weight: 700;
-  color:#222222;
-  font-family: 'Lucida Grande', 'Calibri', Helvetica, Arial, sans-serif;
-  letter-spacing: -1px;
-}
-
-h1 {
-  font-size: 36px;
+  padding:0px;
   font-weight: 700;
   color: #425088;
+  font-family: 'Lucida Grande', 'Calibri', Helvetica, Arial, sans-serif;
+  letter-spacing: -1px;
+  clear:both;
+}
+
+h0 {page-break-inside: avoid;}
+h0  {
+	page-break-before: always;
+	page-break-after: avoid;
+	margin-top:20px;
+	margin-bottom:20px;
+	background-color: #f6fc6a;
+	font-size: 44px;
+	padding: 5px;
+	display: block;
+	width:100%;
+	background-color: #f6fc6a;
+	background-image: linear-gradient(to top, rgba(255,255,255,.5) 15%, transparent 50%, rgba(255,255,255,.5) 85%);
+    background-size: 10px 8px;
+} 
+h1 {
+  padding-bottom: 0px;
+  margin-top:25px;
+  margin-bottom:10px;
+  font-size: 40px;
+  font-weight: 700;
+  border-bottom: solid 2px #425088;
 }
 
 .main h1:before {
@@ -85,11 +103,22 @@ h1 {
 }
 
 h2 {
-  padding-bottom: 10px;
+  padding-bottom: 0px;
+  margin-bottom:10px;
   font-size: 32px;
-  background: url('../images/bg_hr.png') repeat-x bottom;
-  color: #425088;
+  border-bottom: dashed 1px #425088;
 }
+.main h2:before {
+  content: "";
+  width: .25em;
+  height:.25em;
+  background: #f6fc6a;
+  background: linear-gradient(45deg, #212121, #f6fc6a);
+  display:inline-block;
+  content: "";
+  margin-right: 10px;
+}
+
 
 h3 {
   font-size: 24px;
@@ -97,16 +126,11 @@ h3 {
 }
 
 h4 {
-  font-size: 21px;
+  font-size: 20px;
   color: #425088;
 }
 
 h5 {
-  font-size: 18px;
-  color: #425088;
-}
-
-h6 {
   font-size: 16px;
   color: #425088;
 }
@@ -121,7 +145,7 @@ footer p {
 
 a {
   text-decoration: none;
-  color: #007edf;
+  color: #595cb3;
   text-shadow: none;
 
   transition: color 0.5s ease;
@@ -149,7 +173,6 @@ em {
 
 strong {
   font-weight: bold;
-  color:#595cb3
 }
 
 img {
@@ -272,12 +295,11 @@ Full-Width Styles
   margin-left:20px;
   padding: 10px 50px 10px 10px;
   color: #fff;
-  background-color:red;
-  background: url('../images/blacktocat.png') #3175b0 no-repeat 95% 50%;
+  background: url('../images/blacktocat.png') #3175b0  no-repeat 95% 50%;
   font-weight: 700;
-  box-shadow: 0 0 10px rgba(200,0,0,.5);
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
+  box-shadow: inset 0px -5px 6px 2px #425088;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 #header_wrap {
@@ -306,20 +328,24 @@ Full-Width Styles
 }
 
 dt {
-	margin-left:20px;
-	font-weight:700;
+	margin-left:60px;
+	font-weight:600;
+    color: #595cb3;
 }
 dd {
-	font-weight:100;
-	margin-left:40px;
-	margin-bottom:10px;
+	margin-left:80px;
+	margin-bottom:15px;
 	font-style:normal;
 }
 
 .jumbotron {
 	background-color: #f6fc6a;
-	background-image: linear-gradient(transparent 30%, rgba(255,255,255,.2) 50%);
-	background-size: 50px 8px;
+	background-image: linear-gradient(to top, rgba(255,255,255,.5) 15%, transparent 50%, rgba(255,255,255,.5) 85%);
+	background-size: 10px 8px;
+}
+
+.navbar-default .navbar-nav>li>a {
+    color: #AAA;
 }
 .navbar-default {
     background-color: inherit;
@@ -336,7 +362,7 @@ dd {
 }
 .navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.active>a:focus, .navbar-default .navbar-nav>.active>a:hover {
 	color: white;
-	background-color: #474737;
+	background-color: #555555;
 }
 .navbar-default .navbar-nav>li>a:focus, .navbar-default .navbar-nav>li>a:hover {
 	color: white;
@@ -365,5 +391,101 @@ dd {
     border-color: #245580;
 }
 .navbar {
-	margin-bottom:5px;
+	margin-bottom:1px;
+}
+
+
+@media (min-width: 544px) {
+  .pull-sm-left {
+    float: left !important;
+  }
+  .pull-sm-right {
+    float: right !important;
+  }
+  .pull-sm-none {
+    float: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .pull-md-left {
+    float: left !important;
+  }
+  .pull-md-right {
+    float: right !important;
+  }
+  .pull-md-none {
+    float: none !important;
+  }
+}
+
+@media (min-width: 992px) {
+  .pull-lg-left {
+    float: left !important;
+  }
+  .pull-lg-right {
+    float: right !important;
+  }
+  .pull-lg-none {
+    float: none !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .pull-xl-left {
+    float: left !important;
+  }
+  .pull-xl-right {
+    float: right !important;
+  }
+  .pull-xl-none {
+    float: none !important;
+  }
+}
+
+.fancybox >img {
+    max-width:100%;
+    display:block;
+}
+
+fieldset {
+    min-width: 0; 
+    padding: 5px; 
+    margin: 0;
+    border: solid 1px gray;
+}
+
+.sidebar  .nav {
+    padding-left: 0px;
+}
+.sidebar  .nav > li > a {
+    padding: 3px;
+    border-left: 0px rgba(0,0,0,0);
+}
+ .sidebar .nav li >  a {
+    padding-left: 10px;
+}
+.sidebar  .nav .nav li >  a {
+    padding-left: 20px;
+    font-size:.9em;
+}
+.sidebar  .nav .nav .nav li >  a {
+    padding-left: 30px;
+    font-size:.8em;
+}
+.sidebar  .nav .nav .nav .nav li >  a {
+    padding-left: 40px;
+}
+.sidebar  .nav .nav .nav .nav .nav li >  a {
+    padding-left: 50px;
+}
+.sidebar  li.active > a {
+    font-weight:bold;
+    border-left: 2px solid gray;
+}
+.sidebar  .nav .nav {
+    display:none;
+}
+.sidebar  .nav > .active > .nav {
+    display: block;
 }

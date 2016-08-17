@@ -5,11 +5,14 @@
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="description" content="Spirit: a study/biosample management software for drug discovery research">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 	<link rel="stylesheet" href="../css/bootstrap.min.css">
-	<!--link rel="stylesheet" href="../css/bootstrap-theme.min.css"-->
+    <link rel="stylesheet" href="../css/jquery.fancybox.css?v=2.1.5" media="screen" />
+	<link rel="stylesheet" href="../css/docs.css">
     <link rel="stylesheet" href="../css/stylesheet.css">
 	<script src="../js/jquery-3.1.0.min.js"></script>
+	<script src="../js/jquery.fancybox.pack.js?v=2.1.5"></script>
 	<script src="../js/bootstrap.min.js"></script>	
 	<script src="../js/main.js"></script>
     <title>Spirit Biobank - Concept</title>
@@ -37,7 +40,7 @@
             <li><a href="../contact/index.html">Contact</a></li>
 			<li><a id="forkme_banner" href="https://github.com/jfreyss/spirit">View on GitHub</a></li>
           </ul>
-        </div><!--/.nav-collapse -->
+        </div>
         </nav>
       </header>
     </div>
@@ -46,6 +49,7 @@
 	
 <section>
 <h1>What is SPIRIT?</h1>
+<div class="pull-md-right"><a class="fancybox" rel="group" href="principle.png"><img width="400" src="principle.png" alt="Spirit's entity relationships" /></a></div>
 <p>SPIRIT is a Java-based software to handle complex life science research data. It was originally developed for internal use by Actelion Pharmaceuticals Ltd. (Switzerland).</p>
 <p>SPIRIT is used by more than hundred researchers in Actelion's Drug Discovery Departments. It is also used by the Actelion Research Biobank to manage its preclinical and clinical samples and data.</p>
 <p>SPIRIT's data concept is generic and sample-centric. It can be configured to handle any type of samples and their relationships, including animals or humans. Results
@@ -53,15 +57,15 @@ can be linked to samples and have an unlimited number of input and output parame
 </section>
 
 <section>
-<h1>Software Structure</h1>
+<h1>User perspectives</h1>
 <p>SPIRIT presents four perspectives to the user. Each perspective has its own tab in the
-main program window, but they are all linked. In these tabs, the user can do the following:</p>
+main program window, but they are all linked. In these tabs, the user can do the following:
 <dl>
-<dt>Samples:</dd>
+<dt>Biosamples</dd>
 <dd> Create samples, find and display them as well as all related samples,
 edit sample information, print labels
 (Administration: Define sample types and their parameters)</dd>
-<dt>Locations:</dt>
+<dt>Locations</dt>
 <dd>Register the location of samples and containers, find and move them,
 display inventory lists, print container labels</dd>
 <dt>Results</dt>
@@ -69,6 +73,7 @@ display inventory lists, print container labels</dd>
 in spreadsheet format, visualize them in the DataWarrior software
 (Administration: Define tests)</dd>
 <dt>Studies</dd>
+<div class="pull-md-right"><a class="fancybox" rel="group" href="study-concept.png"><img width="500" src="study-concept.png" alt="Study's concept" /></a></div>
 <dd>Graphically design and monitor the evolution of a study (experiment).
 Studies consist of the following elements:
 <ul>
@@ -81,11 +86,12 @@ Studies consist of the following elements:
 </ul>
 </dd>
 </dl>
+</p>
 </section>
 	
 <section>
 <h1>Database</h1>
-<p>SPIRIT can be configured to access relational databases, such as MySQL, Oracle, Hypersonic.
+<p>SPIRIT can be configured to access relational databases, such as MySQL, Oracle, Hypersonic. Once configured, SPIRIT initializes the database structure and populate it with some predefined data. The system is design to scale with the future major updates, through a built-in migration procedure. 
 </section>
 
 <section>
@@ -97,8 +103,9 @@ blood, organs, DNA, cells) with their metadata, storage <strong>locations</stron
 </section>
 
 <section>
-<h1>Extensions</h1>
+<h1>Satelite applications</h1>
 <p>SPIRIT links directly with Actelion's <strong>DataWarrior</strong> software to filter and display complex, multidimensional data. DataWarrior is available for free from <a href="http://www.openmolecules.org">www.openmolecules.org</a>.</p>
+<div class="pull-md-right"><a class="fancybox" rel="group" href="satelite.png"><img width="400" src="satelite.png" alt="Spirit's satelite applications" /></a></div>
 <p>The main SPIRIT software is accompanied by a suite of applications built to support specific
 users in dedicated tasks:</p>
 <dl>
@@ -157,7 +164,7 @@ content in a (potentially huge) flat spreadsheet file at once.</p>
 </ul>
 </section>
 
-Thanks to Oliver Peter for writing this <a href="SPIRIT Software Overview v-2-1.pdf">PDF document</a>
+Thanks to Oliver Peter for the <a href="SPIRIT Software Overview v-2-1.pdf">PDF document</a>
 
     </div>
 	
@@ -165,8 +172,25 @@ Thanks to Oliver Peter for writing this <a href="SPIRIT Software Overview v-2-1.
        <footer class="container">
          <p class="copyright">Spirit Biobank maintained by <a href="https://github.com/jfreyss">Joel Freyss</a></p>
        </footer>
-       <noscript><img class="statcounter" src="//c.statcounter.com/11069810/0/18a1847b/1/"></noscript>
     </div>
 
-  </body>
+    <!-- Start of StatCounter Code for Default Guide -->
+    <script type="text/javascript">
+    var sc_project=11069810; 
+    var sc_invisible=1; 
+    var sc_security="18a1847b"; 
+    var scJsHost = (("https:" == document.location.protocol) ?
+    "https://secure." : "http://www.");
+    document.write("<sc"+"ript type='text/javascript' src='" +
+    scJsHost+
+    "statcounter.com/counter/counter.js'></"+"script>");
+    </script>
+    <noscript><div class="statcounter"><a title="hit counter"
+    href="http://statcounter.com/free-hit-counter/"
+    target="_blank"><img class="statcounter"
+    src="//c.statcounter.com/11069810/0/18a1847b/1/" alt="hit
+    counter"></a></div></noscript>
+    <!-- End of StatCounter Code for Default Guide -->
+
+    </body>
 </html>
