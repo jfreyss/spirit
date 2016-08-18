@@ -362,49 +362,51 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
 </p>
 
 <h1>Study Tab</h1>
-<p><a class="fancybox md-pull-right" rel="group" href="sc_study1.png"><img src="sc_study1.png" title="Study Page"/></a>
-The study tab shows the study centric view of Spirit. This is where the user can query studies and work on the design.
-</p>
-
-<h2>Study Visualisation</h2>
 <p>
-On the study tab, you can query all the studies of the system, provided you have read access on the studies. By default and before making any search, Spirit will show you all the studies where your name is explicitely written in the list of users.</p>
+    The study tab shows the study centric view of Spirit. This is where the user can query studies and work on the design.
+</p>
+
+<h2>Visualisation</h2>
 <p>
-To query for a study, you can either:
-<ul>
-<li>browse through the list of studies by clicking on the studyIds popup: several studies can be selected by keeping the button "Ctrl" pressed.
-<li>type some keywords in the "Study Search" field: Spirit will search all studies for the matching keywords in the title or in any of the other metadata. Complex queries such as "Example and (stratification or splitting)" are possible.
-</ul>
-</p>
-
-<h3 id="studydesign">Study Design</h3>
-<p>The bottom left part shows the visual design of the study. The visualization may change a lot depending of the type of study. The following studies are given as examples in the system:
-
-<dl>
-<dt>Basic study
-<dd><a class="fancybox" rel="group" href="sc_study2.png"><img src="sc_study2.png"/></a>This is a basic study with 3 groups, lasting 7 phases. At day0, 5 animals are assigned to each group, and the treatment is given. From day1 to day6, a blood sampling is performed and at day 7, the animals are necropsied. The "w" signs shows that the animals have to be weighted every day.
-<dt>Study with group splitting
-<dd><a class="fancybox" rel="group" href="sc_study3.png"><img src="sc_study3.png"/></a>At day0, the animals are split into 2 groups (healthy, sick), but it is only at day2 that the animals are split again (Treated, NonTreated), based on some criteria like the weight.
-<dt>Study wih subgroups
-<dd><a class="fancybox" rel="group" href="sc_study4.png"><img src="sc_study4.png"/></a>When a lot of work has to be done, subgroups or stratification helps to split the work on several phases. Here, each group of 9 animals is split into 3 subgroups.  
-</dl>
-</p>
-<h3>Study Details</h3>
+    <a class="fancybox md-pull-right" rel="group" href="sc_study1.png"><img src="sc_study1.png" title="Study Page"/></a>
+    On the study tab, you can query all the studies of the system, provided you have read access on the studies. By default and before making any search, Spirit will show you all the studies where your name is explicitely written in the list of users.</p>
 <p>
-The bottom-right of the study tab shows the other details of the study. There are 3 tabs there:
-<dl>
-<dt>Samples:
-<dd><a class="fancybox" rel="group" href="sc_study5.png"><img src="sc_study5.png" title="Study Samples"/></a>This tab shows the list of biosamples attached to the study. The <strong>attached samples</strong> are the samples, that are follow the actions from the study design. If those samples have some children, it is possible to double-click to view all the samples, that have been collected.
-<dt>Samplings:
-<dd><a class="fancybox" rel="group" href="sc_study6.png"><img src="sc_study6.png" title="Study Samplings"/></a>This tab shows the <strong>sampling templates</strong> associated to the study. The sampling templates describes the samples the samples, that should be taken and how they should be taken. This example shows that the "blood sampling" consists of 2 aliquots of 5ml stored in Micronics, and that the "Necropsy" consists of the heart, the lung (left and right stored in one bottle), all of which have to be weighted ("w").
-<dt>Infos
-<dd><a class="fancybox" rel="group" href="sc_study7.png"><img src="sc_study7.png" title="Study Infos"/></a>This is the default tab, which shows the title, the infos, the workflow state, the user rights and all the data coming from this study. You can click on the "biosamples" link to be redirected to the biosample tab, or on the "results" link to be redirected to the result tab.
-</dl>
+    To query for a study, you can either:
+    <ul>
+    <li>browse through the list of studies by clicking on the studyIds popup: several studies can be selected by keeping the button "Ctrl" pressed.
+    <li>type some keywords in the "Study Search" field: Spirit will search all studies for the matching keywords in the title or in any of the other metadata. Complex queries such as "Example and (stratification or splitting)" are possible.
+    </ul>
 </p>
 
-<h2>Study Editing</h2>
+<h3 id="studydesign">Design</h3>
+<p>
+    The bottom left part shows the visual design of the study. The visualization may change a lot depending of the type of study. The following studies are given as examples in the system:
+    <dl>
+    <dt>Basic study
+    <dd><a class="fancybox" rel="group" href="sc_study2.png"><img src="sc_study2.png"/></a>This is a basic study with 3 groups, lasting 7 phases. At day0, 5 animals are assigned to each group, and the treatment is given. From day1 to day6, a blood sampling is performed and at day 7, the animals are necropsied. The "w" signs shows that the animals have to be weighted every day.
+    <dt>Study with group splitting
+    <dd><a class="fancybox" rel="group" href="sc_study3.png"><img src="sc_study3.png"/></a>At day0, the animals are split into 2 groups (healthy, sick), but it is only at day2 that the animals are split again (Treated, NonTreated), based on some criteria like the weight.
+    <dt>Study wih subgroups
+    <dd><a class="fancybox" rel="group" href="sc_study4.png"><img src="sc_study4.png"/></a>When a lot of work has to be done, subgroups or stratification helps to split the work on several phases. Here, each group of 9 animals is split into 3 subgroups.  
+    </dl>
+</p>
 
-<h3 id="studyInfos">Study Infos</h3>
+<h3>Infos</h3>
+<p>
+    The bottom-right of the study tab shows the other infos of the study. There are 3 tabs there:
+    <dl>
+    <dt>Samples:
+    <dd><a class="fancybox" rel="group" href="sc_study5.png"><img src="sc_study5.png" title="Study Samples"/></a>This tab shows the list of biosamples attached to the study. The <strong>attached samples</strong> are the samples, that are follow the actions from the study design. If those samples have some children, it is possible to double-click to view all the samples, that have been collected.
+    <dt>Samplings:
+    <dd><a class="fancybox" rel="group" href="sc_study6.png"><img src="sc_study6.png" title="Study Samplings"/></a>This tab shows the <strong>sampling templates</strong> associated to the study. The sampling templates describes the samples the samples, that should be taken and how they should be taken. This example shows that the "blood sampling" consists of 2 aliquots of 5ml stored in Micronics, and that the "Necropsy" consists of the heart, the lung (left and right stored in one bottle), all of which have to be weighted ("w").
+    <dt>Infos
+    <dd><a class="fancybox" rel="group" href="sc_study7.png"><img src="sc_study7.png" title="Study Infos"/></a>This is the default tab, which shows the title, the infos, the workflow state, the user rights and all the data coming from this study. You can click on the "biosamples" link to be redirected to the biosample tab, or on the "results" link to be redirected to the result tab.
+    </dl>
+</p>
+
+<h2>Editing</h2>
+
+<h3 id="studyInfos">Infos</h3>
 <p>
     <a class="fancybox md-pull-right" rel="group" href="sc_study8.png"><img src="sc_study8.png" title="Study Popup"/></a>
     To create/edit a new study, you can either go the menu or <strong>right-click on a study to open the contextual menu</strong>. Right-click works on almost everything in Spirit, and will make the appropriate popup menu open. If some options are grayed out, it means you don't have sufficient right, and you should contact one of the responsible person to add you on the list.
@@ -439,7 +441,7 @@ The bottom-right of the study tab shows the other details of the study. There ar
     </dl>
 </p>
 
-<h3>Study Design</h3>
+<h3>Design</h3>
 <p>
     <a class="fancybox md-pull-right" rel="group" href="sc_study10.png"><img src="sc_study10.png" title="Study Design"/></a>
     Go to the study design by right-clicking on the study and selecting "Edit->Study Design".
@@ -634,13 +636,14 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
     In this dialog, you can directly type or copy/paste the samples with their group assignment. At any time, you can open the dialog to change the groups/subgroups, attach a new sample, or detach a sample from the study. 
 </p>
 
-<h2>Live Monitoring</h2>
+<h2>Monitoring</h2>
+<h3>Live Monitoring</h3>
 <p>
     <a class="fancybox md-pull-right" rel="group" href="sc_study24.png"><img src="sc_study24.png" title="Live Monitoring popup"/></a>
     Right-click on a study and select "Live Monitoring", to monitor the actions to be done on each attached sample of the study.
 </p>
 
-<h3>Live Monitoring Overview</h3>
+<h4>Overview</h4>
 <p>
     <a class="fancybox md-pull-right" rel="group" href="sc_study25.png"><img src="sc_study25.png" title="Live Monitoring overview"/></a>
     The left pane of the overview dialog shows all the actions to be performed on the attached samples: group assignment, weighing, treatments as defined in the <a href="#studydesign">study design</a>.
@@ -661,130 +664,122 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
     </ul>
     It is also possible to configure the display and export the data to DataWarrior, Excel or as CSV, as explained in the "Working with Results" paragraph.
 </p>
-<h1>WORK IN PROGRESS</h1>
+<h4>Live Measurements</h4>
+<p>
+    <a class="fancybox md-pull-right" rel="group" href="sc_study26.png"><img src="sc_study26.png" title="Live Monitoring measurement"/></a>
+    After clicking a phase, the Live Monitoring dialogs shows up. Spirit shows the required measurements specified in the study design, by default.
+</p>
+<p>
+    There are no "Save" button in this dialog because the data is saved just after being entered, with the exact time. By saving the data on the fly, Spirit avoids any possible errors due to network errors or human errors (such as closing the dialog without saving).
+<p>
+</p>
+    All yellow fields are required and automatically get the focus of the user. After entering each value, a popup dialog will show up to inform the experimenter about the treatment to be given, together with the calculated dose. For documentation purpose, the experimenter can also enter the formulation.
+    Next to each value, Spirit displays the last measured value, and the percentage increase.
+<p>
+<p>
+    By hovering the mouse cursor over a field, it is possible to view when the experimenter entered the last value. To enter a new value, click on the field and confirm you want to enter a new value.
+</p>
+<p>    
+    If the user is among the <b>blind-details</b> users, he will not be able to visualize the group description and the compounds, but only the group abbreviation and the treatment's name.<br>
+    If the user is among the <b>blind-all</b> users, he will not be able to visualize anything related to the group or the treatment. The users that are fully blinded cannot see if the specimen belongs to a group or not, nor if the specimen have to be treated ot not.
+</p>
+
+
+
+<h3>Replace / Set Living Status</h3>
+<p>
+    <a class="fancybox md-pull-right" rel="group" href="sc_study31.png"><img src="sc_study31.png" title="Replace / Set Living Status"/></a>
+    The "Replace / Set Living Status" is a convenient dialog to set the status of an attached biosample and/or to replace it by an other sample from the reserve.
+    <dl>
+    <dd>
+        <ul>
+        <li><b>Move To Reserve: </b> this function will remove the group assignment at the given phase.
+        <li><b>Change Status to Alive: </b> You can use this function, to cancel a previous change of status.
+        <li><b>Change Status to Necropsied: </b> This will update the date of death, and mark the animal as necropsied. This step is not required when the planned date of death is already in the study design (ie. when there is sampling template marked as necropsy)
+        <li><b>Change Status to Found Dead: </b> You can use this function, to mark the animal as Found Dead. All samples already generated at the expected necropsy's phase are moved to the indicated phase.
+        <li><b>Change Status to Killed: </b> You can use this function, to mark the animal as Killed. All samples already generated at the expected necropsy's phase are moved to the indicated phase.
+        </ul>
+    <dt>When
+    <dd><ul>
+        <li><b>Phase:</b> enter a phase to remove all generated samples after this phase (the samples marked at the necropsy are always kept).
+        <li><b>DateOfDeatch:</b> to update the metadata called "DateOfDeath"
+        <li><b>Observation:</b> to add some comments to the biosample.
+        </ul>
+    <dt>Replacement
+    <dd>You can replace a sample by an other from the reserve, provided you have some samples attached to study, that are not attached to a group.
+    </dl>
+</p>
+
+
+
+<h3>Manage / Print Samples</h3>
+<h4>Sample Synchronization</h4>
+<p>
+    <a class="fancybox md-pull-right" rel="group" href="sc_study27.png"><img src="sc_study27.png" title="Sample Synchronization"/></a>
+    When you select the <b>"Manage / Print Samples"</b> option, Spirit checks that all the samples have been created (as defined in the study's sampling template). The first time you call this option, or if the sampling's template have been modifier, Spirit shows you this dialog and asks you to synchronize the samples to match the study's design. Please check and confirm by clicking "Synchronize".<br>
+    This automatic creation can be disabled, if you uncheck the box "Generate Samples automatically" in the <a href="#studyInfos">study design</a>.
+</p>
+
+<h4>Manage Samples</h4>
+<p>
+    <a class="fancybox md-pull-right" rel="group" href="sc_study28.png"><img src="sc_study28.png" title="Manage Samples"/></a>
+    This dialog shows the generated samples from the study, which you can filter by container's type, group, phase, biotype, or some keywords.
+</p>
+
+<h5>Change Ownership</h5>
+<p>
+    If you want to give the samples to a specific user, you can change the ownership of the samples. By default, the samples are owned by the user who created/generated them and they are editable by all the administrators of the study. By using this option, you can assign the samples to any user, who may not have rights otherwise.
+</p>
+<p>
+    To change the ownership, select the samples, click <b>"Change Ownership"</b> and enter the username of the new owner.
+</p>
+
+<h5>Print Labels</h5>
+<p>
+    <a class="fancybox md-pull-right" rel="group" href="screenshot_study16.png"><img src="screenshot_study16.png" title="Print Labels"/></a>
+    To print the labels, you first select the samples to print in the "Managing Samples" dialog, and then click "print labels". 
+    For each type of container, the printing view shows the list of containers, and a preview of the label. The preview is rendered directly from the printers based on the entered settings (printer, media, left or right labels).
+</p>
+
+<h3>Sample Measurement</h3>
+<p>
+    <a class="fancybox md-pull-right" rel="group" href="sc_study30.png"><img src="sc_study30.png" title="Print Labels"/></a>
+    Right-clicking on the study and select "Sample Measurement" to perform the weighing or the other measurement on the generated samples, as defined in the study's sampling templates
+</p>
+<p>
+    The experimenter can select some filter to view only the samples generated at a given phase, from a given group or he can also uncheck the "Show only samples with required measurements" to view all samples, including those without required measurements.<br>
+</p>
+<p>
+    Each entered value is automatically saved to the database. If there a network error, the experimenter is immediately informed. Once values are entered, you can hover the mouse on the values to view who entered it and when. To enter a new value, you will be prompted for a confirmation. It is also possible to edit the samples in batch-mode and copy/paste from an Excel sheet.
+</p>
+
+<h3>Advanced</h3>
+<h4>Delete Study</h4>
+<p>
+    To be allowed to delete a study, the user need to be an administ or the creator of the study. <br>
+    If the study is deleted, it is still possible to restore through the Last Changes from the audit trail.
+</p>
+<h4>Change Ownership</h4>
+<p>
+    The owner of the study is also the creator of the study. To change it, open the study popup menu and select "Advanced"->"Change Ownership"
+</p>
+<h4>Study History</h4>
+<p>
+    <a class="fancybox md-pull-right" rel="group" href="sc_study33.png"><img src="sc_study33.png" title="Study History"/></a>
+    Spirit contains an audit trail of all entities, including studies. To view the history of a study, open the study popup menu and select "Advanced"->"View Change History"<br>
+</p>
+
+<h1 id="2_biosamples">Biosample Tab</h1>
+<p>
+    The <b>Biosample Tab</b> shows the biosample centric view of Spirit, which should be used to query/edit biosamples
+</p>
+<h2>Visualization</h2>
+<p>
+    <a class="fancybox md-pull-right" rel="group" href="sc_bio1.png"><img src="sc_bio1.png" title="Biosamples Visualization"/></a>
+    Once you click the Biosample Tab on Spirit, you get a view centered on the biosamples. The view is split into 3 parts: the search pane at the top-left, the table view at the right, and the biosample detail at the bottom-left.
+</p>
+
 <!--
-<h3>Live Monitoring Dialog</h3>
-After clicking a phase, the Live Monitoring dialogs shows up. There are filters to quickly go to a specific cage or treatment to be applied, but by default Spirit shows everything that is required by the study design.<br>
-<br>
-The Live Monitoring dialog is very different from the other dialog, in the way that there is no save button: the data is saved just after being entered, with the exact time. By saving the data on the fly, Spirit avoids any possible errors due to network errors or human errors (such as closing the dialog without saving).<br>
-<br>
-All yellow fields are required and automatically get the focus of the user. After entering each value, a popup dialog will show up to inform the experimenter about the treatment to be given, together with the calculated dose. For documentation purpose, the experimenter can also enter the formulation.
-Next to each value, Spirit displays the last measured value, and the percentage increase.<br>
-<br>
-By moving the cursor over a field, it is possible to view when the experimenter entered the last value. It is always possible to enter a new measurement, but to avoid mistakes a popup dialog asks for a confirmations (the old and newest values are audited).<br>
-<br>
-<table><tr><td><img src="screenshot_study12.png"/><br><i>Screenshot of the Live Monitoring</i></td></tr></table>
-<br>
-If the user is among the blind-details list of users, he will not be able to visualize the group description but only "Group A", or the compounds used in the treatments.<br>
-If the user is among the blind-all list of users, he will not be able to visualize anything related to the group or the treatment. The users that are fully blinded cannot see if the specimen belongs to a group or not, or if the specimen have to be treated ot not.
-
-
-<h2>Replace / Set Living Status</h2>
-The "Replace / Set Living Status" is a convenient dialog to replace a specimen by an other from the reserve (ie, not assigned to a group).<br>
-<br>
-This feature could also be achieved through the use of "assign samples" and "edit biosamples" but this dialog is more straighforward. The user must select a specimen, and an action. A phase could also be selected to say when this happened.
-<br>
-<ul>
-<li><b>Move To Reserve: </b> this function will remove the group assignment at the given phase.
-<li><b>Change Status to Alive: </b> You can use this function, to cancel a previous change of status.
-<li><b>Change Status to Necropsied: </b> This will update the date of death, and mark the animal as necropsied. This step is not required when the planned date of death is already in the study design (ie. when there is sampling template marked as necropsy)
-<li><b>Change Status to Found Dead: </b> You can use this function, to mark the animal as Found Dead. All samples already generated at the expected necropsy's phase are moved to the indicated phase.
-<li><b>Change Status to Killed: </b> You can use this function, to mark the animal as Killed. All samples already generated at the expected necropsy's phase are moved to the indicated phase.
-</ul>
-<br>
-It is also possible to replace a specimen by an other. For this, you need to have some specimen attached to the study but without any group (ie.: if you specified more specimen than needed in the group assignment wizard or if you added some more specimen in the manual group assignment).
-If the user selects something in "Replace By", then the selected specimen will be assigned to the same group/subgroup as the marked specimen.<br>
-
-<br>
-<table><tr><td><img src="screenshot_study13.png"/><br><i>Screenshot of the Replace / Set Living Status</i></td></tr></table>
-
-
-<h2>Manage Samples</h2>
-If you right-click on a study, and select the Manage Samples option, Spirit suggests to create the samples for each specimen, at the groups and phases where a specific sampling action is defined.
-This creation can either be done automatically if the study design says that samples are synchronized (which is the default), or by applying a sampling template only to some specimen if samples are not synchronized.<br>
-<br>
-This dialog shows all samples that are created from the study design. For simplicity, only samples with a container (most likely those that are kept) are shown by default. Filters are available to show all samples, or to reduce the selection for a given container's type, group, phase or biotype.<br>
-
-<br>
-<table><tr><td><img src="screenshot_study15.png"/><br><i>Screenshot of the Manage Samples</i></td></tr></table>
-
-<h3>Sample Synchronization</h3>
-Defining sampling templates does not create any concrete biosamples. Those biosamples are only created when needed, ie. when you click the option "Manage Samples" or before doing any operations on the samples.
-Spirit will always check that the samples are properly synchronized. <br>
-If they are yet to be created or if there are some discrepancies, Spirit will show the following dialog asking to synchronize the samples:<br>
-<br>
-<table><tr><td><img src="screenshot_study11.png"/><br><i>Screenshot of the Synchronization Dialog</i></td></tr></table>
-<br>
-In the normal scenario, there will only be new samples to be created but in some occasions, it is possible to move an animal from one group to an other group, where a different sampling may be needed. In that case, the system may ask the user to delete the samples which were already in the first group: this will also be reflected in this dialog (highlighted in red)<br>
-<br>
-It is important to note, that samples can always be retrieved and restored from the audit trail by an administrator<br>
-<br>
-
-<h3>Change Ownership</h3>
-Everybody assigned to the study with write access can edit the samples of the study. There are cases however, where the user may want to give the samples to someone else, in order to make some experiments (aliquots, results).
-To do this, he needs to select the samples on which he wants to change the ownership, select "Change Ownership" and enter the name of the new owner as displayed in the following screenshot:<br>
-<br>
-<table><tr><td><img src="screenshot_study14.png"/><br><i>Screenshot of the Change Ownership</i></td></tr></table>
-
-
-<h3>Print Labels</h3>
-To print the labels, you first select the samples to print in the "Managing Samples" dialog, and then click "print labels". <br>
-For each type of container, the printing view shows the list of containers, and a preview of the label. The preview is rendered directly from the printers based on the entered settings (printer, media, left or right labels).<br>
-<br>
-There is some help on the printer's configuration in the annex.<br>
-
-<br>
-<table><tr><td><img src="screenshot_study16.png"/><br><i>Screenshot of the Print Labels</i></td></tr></table>
-
-<h2>Sample Weighing</h2>
-After right-clicking on the study and selecting "Sample Measurements", the user is led to this dialog used to perform live weighing of the samples.<br>
-<br>
-To be able to perform sample measurements, the experimenter must first define a "sampling" template with the samples to be extracted.
-It is in this template that he needs to select the checkboxes "measure weight", "measure length" or "observation":<br>
-
-<br>
-<table><tr><td><img src="screenshot_study19.png"/><br><i>Screenshot of the Study - Edit Sampling Template</i></td></tr></table>
-<br>
-
-The study design shows then on which group, subgroup and phase, this sampling template has to be performed.<br>
-<br>
-As explained in the Sample Synchronization part, Spirit may ask you create those samples if they are not already created, when going to the "Sampling Weighing" Dialog.<br>
-<br>
-The Sample Measurements dialogs show all the samples, on which a measurement has to be performed as described in the sampling template.<br>
-<br>
-To optimize the view, the experimenter can select some filter to view only the samples generated at a given phase, from a given group or he can also uncheck the "Show only samples with required measurements" to view all samples.<br>
-<br>
-<table><tr><td><img src="screenshot_study17.png"/><br><i>Screenshot of the Sample Measurements</i></td></tr></table>
-<br>
-Each entered value is automatically saved to the database, so that if a network error occurs, the experimenter is immediately informed and nothing is lost.
-If a value has already been entered, this value will be shown in the appropriate box. It is then possible to hover the mouse on the field to view who and when entered this value. It is still possible to enter a new value, but the experimenter will be asked for a confirmation.<br>
-<br>
-This dialog works exactly like the Live Monitoring and as in everything in Spirit, there is an audit trail that keeps track of all changes.<br>
-<br>
-
-<h2>Advanced</h2>
-<h3>Delete Study</h3>
-To be allowed to delete a study, the user need to be the owner of the study and the study must be void of any biosamples or results (these must be deleted first, if needed). <br>
-If the study is deleted, it is still possible to restore through the Last Changes from the audit trail.
-
-<h3>Change Ownership</h3>
-The owner of the study is the same as the creator of the study. To change it, open the study popup menu and select "Advanced"->"Change Ownership"
-
-<h3>Study History</h3>
-Spirit contains an audit trail of all entitied (Studies, Biosample, Location, Result). To view the history of all the changes, open the study popup menu and select "Advanced"->"View Change History"<br>
-<br>
-<table><tr><td><img src="screenshot_study18.png"/><br><i>Screenshot of the Study - Change History</i></td></tr></table>
-
-<h1 id="2_biosamples">Biosamples</h1>
-In the first section of this chapter, we will explain the visualization of biosamples and in the next sections, we will explain the different biosample popup actions, that could be taken when one right-click on a biosample:
-<table><tr><td><img src="popup_biosample.png"/><br><i>Screenshot of the Biosample Popup</i></td></tr></table>
-<br>
-
-<h2>Biosamples Visualization</h2>
-Once you click the Biosample Tab on Spirit, you get a view centered on the biosamples. The view is split into 3 parts: the search pane at the top-left, the table view at the right, and the biosample detail at the bottom-left.
-<table><tr><td><img src="screenshot_biosample1.png"/><br><i>Screenshot of the Biosample Tab</i></td></tr></table>
-
-
 <h3>Biosample Search</h3>
 In this search pane, enter the criteria for making the search. By default, the user can see the following criteria:
 <ul>
