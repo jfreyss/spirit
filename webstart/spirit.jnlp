@@ -41,7 +41,6 @@
 		<jar href="itextpdf-5.2.1.jar" download="lazily"/>
 		<jar href="jandex-2.0.0.Final.jar" download="lazily"/>
 		<jar href="javassist-3.20.0-GA.jar" download="lazily"/>
-		<!--<jar href="javaws.jar" download="lazily"/>-->
 		<jar href="jboss-logging-3.3.0.Final.jar" download="lazily"/>
 		<jar href="mysql-connector-java-5.1.22-bin.jar" download="lazily"/>
 		<jar href="ojdbc6.jar" download="lazily"/>
