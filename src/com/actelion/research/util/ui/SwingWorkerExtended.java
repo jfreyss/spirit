@@ -62,8 +62,8 @@ public abstract class SwingWorkerExtended  {
 	public static final int FLAG_ASYNCHRONOUS = 0;
 	public static final int FLAG_CANCELABLE = 1;
 	public static final int FLAG_SYNCHRONOUS = 2;
-	public static final int FLAG_ASYNCHRONOUS50MS = 4;
-	public static final int FLAG_ASYNCHRONOUS200MS = 8;
+	public static final int FLAG_ASYNCHRONOUS20MS = 4;
+	public static final int FLAG_ASYNCHRONOUS100MS = 8;
 	
 	private final String name;	
 	private JFrame frame = null;
@@ -220,7 +220,7 @@ public abstract class SwingWorkerExtended  {
 	private final static Map<Component, Map<String, Thread>> currentThreads = new HashMap<>();
 	
 	public SwingWorkerExtended() {
-		this(null, null, FLAG_ASYNCHRONOUS50MS);
+		this(null, null, FLAG_ASYNCHRONOUS20MS);
 	}
 	
 	public SwingWorkerExtended(Component myComp, final boolean cancellable) {
@@ -228,7 +228,7 @@ public abstract class SwingWorkerExtended  {
 	}
 	
 	public SwingWorkerExtended(final String title, Component myComp) {
-		this(title, myComp, FLAG_ASYNCHRONOUS50MS);
+		this(title, myComp, FLAG_ASYNCHRONOUS20MS);
 	}
 	public SwingWorkerExtended(final String title, Component myComp, final boolean cancellable) {
 		this(title, myComp, cancellable? FLAG_CANCELABLE: FLAG_ASYNCHRONOUS);
@@ -243,7 +243,10 @@ public abstract class SwingWorkerExtended  {
 	public SwingWorkerExtended(final String title, final Component myComp, final int flags) {
 		final long started = System.currentTimeMillis();
 		this.name = (instances++) + "-" + (title==null?"SwingWorker":title);
-		final Component comp = (myComp==null || myComp.getWidth()==0) && UIUtils.getMainFrame()!=null? ((JFrame)UIUtils.getMainFrame()).getContentPane(): myComp;
+		final Component comp = (myComp==null || myComp.getWidth()==0) && UIUtils.getMainFrame()!=null? ((JFrame)UIUtils.getMainFrame()).getContentPane():
+			(myComp instanceof JFrame)? ((JFrame)myComp).getContentPane():
+			(myComp instanceof JDialog)? ((JDialog)myComp).getContentPane():
+			myComp;
 		
 //		boolean fromEventDispatcher = SwingUtilities.isEventDispatchThread();
 //		boolean fromPool = SwingWorkerExecutor.isFromPool(Thread.currentThread());
@@ -292,8 +295,8 @@ public abstract class SwingWorkerExtended  {
 						return;
 					}
 					
-					if(comp!=null && (flags & (FLAG_ASYNCHRONOUS50MS | FLAG_ASYNCHRONOUS200MS))>0) {
-						try {Thread.sleep((flags & FLAG_ASYNCHRONOUS50MS)>0?50:200);} catch(Exception e) {
+					if(comp!=null && (flags & (FLAG_ASYNCHRONOUS20MS | FLAG_ASYNCHRONOUS100MS))>0) {
+						try {Thread.sleep((flags & FLAG_ASYNCHRONOUS20MS)>0?20:100);} catch(Exception e) {
 							endBgProcess();
 							if(DEBUG) System.out.println("SwingWorkerExtended "+name+" -STOP- " +callingThread);
 							return;
@@ -335,7 +338,7 @@ public abstract class SwingWorkerExtended  {
 			
 
 			//Interrupt threads with the same name if start was delayed 
-			if(comp!=null && (flags & (FLAG_ASYNCHRONOUS50MS | FLAG_ASYNCHRONOUS200MS))>0) {				
+			if(comp!=null && (flags & (FLAG_ASYNCHRONOUS20MS | FLAG_ASYNCHRONOUS100MS))>0) {				
 				//ASynchronous, but wait 50ms and make sure nobody executed it during that delay
 				if(currentThreads.get(comp)==null) currentThreads.put(comp, new HashMap<String, Thread>());
 				Thread t2 = currentThreads.get(comp).get(title);
@@ -359,8 +362,8 @@ public abstract class SwingWorkerExtended  {
 		}
 	}
 	
-	private ExecutorService threadPool = Executors.newCachedThreadPool();	
-	private ExecutorService bgPool = Executors.newFixedThreadPool(1);	
+	private static ExecutorService threadPool = Executors.newCachedThreadPool();	
+	private static ExecutorService bgPool = Executors.newFixedThreadPool(1);	
 	
 	
 	public void cancel() {

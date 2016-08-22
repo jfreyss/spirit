@@ -23,6 +23,7 @@ package com.actelion.research.spiritcore.services.exchange;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -104,7 +105,7 @@ public class ExchangeMapping {
 	//Study
 	private final Map<String, MappingAction> studyId2action = new HashMap<>();
 	private final Map<String, Study> studyId2mappedStudy = new HashMap<>();
-
+//	private final Map<Integer, Sampling> id2sampling = new HashMap<>();
 
 	//Location
 	private final Map<String, MappingAction> location2action = new HashMap<>();
@@ -484,20 +485,21 @@ public class ExchangeMapping {
 					g.getDividingSampling().setId(0);
 				}
 			}
-			for (Phase g : inputStudy.getPhases()) {
-				g.setId(0);
+			for (Phase p : inputStudy.getPhases()) {
+				p.setId(0);
 			}
-			for (NamedTreatment g : inputStudy.getNamedTreatments()) {
-				g.setId(0);
+			for (NamedTreatment t : inputStudy.getNamedTreatments()) {
+				t.setId(0);
 			}
-			for (NamedSampling g : inputStudy.getNamedSamplings()) {				
-				g.setId(0);
-				for(Sampling s: g.getAllSamplings()) {
+			for (NamedSampling ns : inputStudy.getNamedSamplings()) {				
+				ns.setId(0);
+				for(Sampling s: ns.getAllSamplings()) {
+//					id2sampling.put(s.getId(), s);
 					s.setId(0);
 				}
 			}
-			for (StudyAction g : inputStudy.getStudyActions()) {
-				g.setId(0);
+			for (StudyAction a : inputStudy.getStudyActions()) {
+				a.setId(0);
 			}
 		}
 				
@@ -639,6 +641,7 @@ public class ExchangeMapping {
 			if(inputBiosample.getAttachedSampling()!=null) inputBiosample.getAttachedSampling().setId(0);
 		}
 		
+		Set<String> seenSamplingParentPhase = new HashSet<>();
 		Map<String, Biosample> sampleId2existing = DAOBiosample.getBiosamplesBySampleIds(Biosample.getSampleIds(exchange.getBiosamples()));
 		biosampleLoop: for (Biosample inputBiosample : exchange.getBiosamples()) {
 			String inputSampleId = inputBiosample.getSampleId();
@@ -690,19 +693,35 @@ public class ExchangeMapping {
 					inputBiosample.setInheritedPhase(mappedPhase);
 				}
 				if(inputBiosample.getAttachedSampling()!=null) {
-					Sampling mappedSampling = mappedStudy.getSampling(inputBiosample.getAttachedSampling().getNamedSampling().getName(), inputBiosample.getAttachedSampling().getDetailsLong());
+					//Find the mapped sampling (there should be max on sample by sampling/parent/phase)
+					List<Sampling>  mappedSamplings = mappedStudy.getSamplings(inputBiosample.getAttachedSampling().getNamedSampling().getName(), inputBiosample.getAttachedSampling().getDetailsLong());
+					Sampling mappedSampling = null;
+					for (int i = 0; i < mappedSamplings.size(); i++) {
+						Sampling s = mappedSamplings.get(i);
+						String key = s.getDetailsLong()
+								+ "_" +(inputBiosample.getParent()==null?"":inputBiosample.getParent().getSampleId())
+								+ "_" + (inputBiosample.getInheritedPhase()==null?"":inputBiosample.getInheritedPhase().getName())
+								+ "_" + i;
+						System.out.println("ExchangeMapping.computeMappedBiosamples() "+inputBiosample+" "+key+" "+seenSamplingParentPhase.contains(key));
+						if(seenSamplingParentPhase.contains(key)) continue;
+						mappedSampling = s;
+						seenSamplingParentPhase.add(key);
+						break;
+					}
+					assert mappedSampling!=null;
+					
 					//if the mappedSampling is null, we continue without setting it, no need to throw an exception
 					inputBiosample.setAttachedSampling(mappedSampling);
 				}					
 			}
 			
-			//Remap the parent (! after the study)
+			//Remap the parent
 			if(inputBiosample.getParent()!=null) {
 				Biosample b = sampleId2mappedBiosample.get(inputBiosample.getParent().getSampleId());
 				if(b!=null) {
 					logger.debug("Map "+inputBiosample+" to parent "+b);
 					inputBiosample.setParent(b, false);
-				}					
+				}
 			}
 
 			//Remap the metadata

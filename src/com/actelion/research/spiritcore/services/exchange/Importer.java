@@ -153,6 +153,7 @@ public class Importer {
 	public Exchange convertExchange(ExchangePojo c) throws Exception {
 		Exchange res = new Exchange();
 		res.setName(c.getName());
+		res.setVersion(c.getVersion());
 		
 		res.setBiotypes(convertBiotypes(c.getBiotypes()));
 		res.setTests(convertTests(c.getTests()));

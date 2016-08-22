@@ -52,7 +52,6 @@ public class UsageLog {
 			public void run() {
 				try {
 					
-
 					String userId2 = userId == null? System.getProperty("user.name"): userId;
 					String pcName2;
 					if(pcName==null) {

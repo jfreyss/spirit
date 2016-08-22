@@ -162,7 +162,8 @@ public class AnimalCare extends JFrame implements ISpiritChangeObserver, ISpirit
 			@Override
 			protected void doInBackground() throws Exception {
 				try {
-					Spirit.preLoadDAO();
+					SpiritAction.logUsage("AnimalCare");					
+					JPAUtil.getManager();
 				} catch(Exception e) {
 					JExceptionDialog.showError(e);
 					System.exit(1);	

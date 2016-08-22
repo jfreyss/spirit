@@ -112,6 +112,7 @@ public class Exporter {
 
 		ExchangePojo res = new ExchangePojo();
 		res.setName(c.getName());
+		res.setVersion(c.getVersion());
 		res.setBiotypes(convertBiotype(c.getBiotypes()));
 		res.setBiosamples(convertBiosamples(c.getBiosamples()));
 		res.setLocations(convertLocations(c.getLocations()));

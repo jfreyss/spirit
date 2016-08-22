@@ -80,7 +80,7 @@ public class DashboardPanel extends JPanel {
 	}
 	
 	public void refresh() {
-		new SwingWorkerExtended("Loading...", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+		new SwingWorkerExtended("Loading...", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			private StringBuilder sb; 
 			
 			@Override

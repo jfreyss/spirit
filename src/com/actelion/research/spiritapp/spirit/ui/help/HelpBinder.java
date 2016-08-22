@@ -23,11 +23,14 @@ package com.actelion.research.spiritapp.spirit.ui.help;
 
 import java.awt.AWTEvent;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.net.URI;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -70,6 +73,7 @@ import com.actelion.research.spiritapp.spirit.ui.study.wizard.group.StudyGroupDl
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.phase.PhaseDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.treatment.StudyTreatmentDlg;
 import com.actelion.research.spiritapp.stockcare.StockCare;
+import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
@@ -80,7 +84,7 @@ public class HelpBinder {
 	
 	static {
 		if(class2Ref==null) {
-			class2Ref = new HashMap<Class<?>, String>();
+			class2Ref = new HashMap<>();
 			class2Ref.put(Spirit.class, null);
 			class2Ref.put(StudyTab.class, "Studies Visualization");
 			class2Ref.put(BiosampleTab.class, "Biosamples Visualization");
@@ -164,8 +168,18 @@ public class HelpBinder {
 			source = source.getParent();
 		}
 		String ref = class2Ref.get(source==null? null: source.getClass());
-		new HelpDlg(ref);
+		showHelp(ref);
 
+	}
+	
+	public static void showHelp(String ref) {
+		try { 
+			String url = "https://jfreyss.github.io/spirit/doc/index.html#"+URLEncoder.encode(ref, "UTF-8");
+			Desktop.getDesktop().browse(new URI(url));
+		} catch(Exception e) {
+			JExceptionDialog.showError(e);
+		}
+		
 	}
 
 }

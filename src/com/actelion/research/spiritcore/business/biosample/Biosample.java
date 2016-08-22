@@ -1321,10 +1321,6 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		attachedStudy = null;
 		inheritedStudy = null;
 		
-//		if(container!=null) {
-//			container.getBiosamples().remove(this);
-//			container = null;
-//		}
 		setContainer(null);
 		
 		//remove children
@@ -1522,6 +1518,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	public static Study getStudy(Collection<Biosample> biosamples) {
 		if(biosamples==null) return null;
 		Set<Study> res = getStudies(biosamples);
+		System.out.println("Biosample.getStudy() "+biosamples+">"+res);
 		if(res.size()==1) return res.iterator().next();
 		return null;
 	}	
@@ -2513,36 +2510,38 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	
 	
 	//Don't use preupdate because this function would not be called before a merge (hibernate bug?)
-	@PreUpdate @PrePersist
+	//@PreUpdate @PrePersist
 	public void preSave() {		
-		Map<Integer, String> res = new LinkedHashMap<>();
-		for (Entry<BiotypeMetadata, Metadata> entry : metadataMap.entrySet()) {
-			Metadata m = entry.getValue();
-			res.put(entry.getKey().getId(), m.getValue());
-			if(entry.getKey().getDataType()==DataType.BIOSAMPLE) {
-				if(m.getLinkedBiosample()!=null) {				
-					linkedBiosamples.put(entry.getKey(), m.getLinkedBiosample());
-				} else {
-					linkedBiosamples.remove(entry.getKey());
-				}
-			}			
-			if(entry.getKey().getDataType()==DataType.D_FILE) {
-				if(m.getLinkedDocument()!=null) {			
-					linkedDocuments.put(entry.getKey(), m.getLinkedDocument());
-				} else {
-					linkedDocuments.remove(entry.getKey());
+		if(metadataMap!=null) {
+			Map<Integer, String> res = new LinkedHashMap<>();
+			for (Entry<BiotypeMetadata, Metadata> entry : metadataMap.entrySet()) {
+				Metadata m = entry.getValue();
+				res.put(entry.getKey().getId(), m.getValue());
+				if(entry.getKey().getDataType()==DataType.BIOSAMPLE) {
+					if(m.getLinkedBiosample()!=null) {				
+						linkedBiosamples.put(entry.getKey(), m.getLinkedBiosample());
+					} else {
+						linkedBiosamples.remove(entry.getKey());
+					}
+				}			
+				if(entry.getKey().getDataType()==DataType.D_FILE) {
+					if(m.getLinkedDocument()!=null) {			
+						linkedDocuments.put(entry.getKey(), m.getLinkedDocument());
+					} else {
+						linkedDocuments.remove(entry.getKey());
+					}
 				}
 			}
+	
+			for (BiotypeMetadata bm : new HashSet<>(linkedBiosamples.keySet())) {
+				if(!metadataMap.containsKey(bm)) linkedBiosamples.remove(bm);
+			}
+			for (BiotypeMetadata bm : new HashSet<>(linkedDocuments.keySet())) {
+				if(!metadataMap.containsKey(bm)) linkedDocuments.remove(bm);
+			}
+			
+			setSerializedMetadata(MiscUtils.serializeIntegerMap(res));
 		}
-
-		for (BiotypeMetadata bm : new HashSet<>(linkedBiosamples.keySet())) {
-			if(!metadataMap.containsKey(bm)) linkedBiosamples.remove(bm);
-		}
-		for (BiotypeMetadata bm : new HashSet<>(linkedDocuments.keySet())) {
-			if(!metadataMap.containsKey(bm)) linkedDocuments.remove(bm);
-		}
-		
-		setSerializedMetadata(MiscUtils.serializeIntegerMap(res));
 	}
 	
 	protected void setSerializedMetadata(String serializedMetadata) {

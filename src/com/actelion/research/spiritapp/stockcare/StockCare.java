@@ -214,7 +214,6 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		if(user==null) {
 			userStatus = "No user logged in";
 		} else {
-			SpiritAction.logUsage("StockCare");
 			userStatus = user.getUsername() + " ("+ (user.getMainGroup()==null?"NoDept":user.getMainGroup().getName())+ ") logged in";
 		}
 		statusBar.setUser(userStatus);
@@ -492,7 +491,8 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		new SwingWorkerExtended() {			
 			@Override
 			protected void doInBackground() throws Exception {
-				Spirit.preLoadDAO();
+				SpiritAction.logUsage("StockCare");					
+				JPAUtil.getManager();
 			}
 			@Override
 			protected void done() {

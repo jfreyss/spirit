@@ -55,7 +55,7 @@ public abstract class LongTaskDlg extends JDialog {
 		pack();
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		new SwingWorkerExtended(title, centerPane, SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+		new SwingWorkerExtended(title, centerPane, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			@Override
 			protected void doInBackground() throws Exception {
 				try {

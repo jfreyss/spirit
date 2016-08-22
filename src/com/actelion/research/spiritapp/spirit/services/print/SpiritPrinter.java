@@ -89,11 +89,13 @@ public class SpiritPrinter {
 	}
 	
 	public static PrintService[] getPrintServices(String name, String media) {
-		List<PrintService> printServices = new ArrayList<PrintService>();
+		List<PrintService> printServices = new ArrayList<>();
 		PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
 		loop: for (PrintService p : services) {
 			if(name==null || p.getName().contains(name) ) {
-				if(media!=null) {
+				if(media==null) {
+					printServices.add(p);
+				} else {
 					Media[] mps = (Media[]) p.getSupportedAttributeValues(Media.class, null, null);
 					for (Media m : mps) {
 						if(m.toString().toUpperCase().contains(media.toUpperCase())) {
@@ -101,8 +103,6 @@ public class SpiritPrinter {
 							continue loop;
 						}
 					}
-				} else {				
-					printServices.add(p);
 				}
 			}
 		}
@@ -115,12 +115,11 @@ public class SpiritPrinter {
 				} 
 				if(!o1.getName().startsWith("\\\\") && o2.getName().startsWith("\\\\")) {
 					return -1;
-				} 
-				
+				} 				
 				return o1.getName().compareToIgnoreCase(o2.getName());
 			}
 		});
-		return printServices.toArray(new PrintService[0]);
+		return printServices.toArray(new PrintService[printServices.size()]);
 		
 	}
 

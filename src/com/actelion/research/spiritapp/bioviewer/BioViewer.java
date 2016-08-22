@@ -70,10 +70,10 @@ import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritChangeObserver;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritContextObserver;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
+import com.actelion.research.spiritapp.spirit.ui.util.POIUtils.ExportMode;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
-import com.actelion.research.spiritapp.spirit.ui.util.POIUtils.ExportMode;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Container;
@@ -85,15 +85,14 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.CSVUtils;
-import com.actelion.research.util.UsageLog;
 import com.actelion.research.util.ui.EasyClipboard;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JStatusBar;
 import com.actelion.research.util.ui.SplashScreen2;
+import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
-import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
@@ -261,84 +260,51 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 	public void createMenu() {
 		final JMenuBar menuBar = new JMenuBar();
 
-//		JMenu login = new JMenu("Login");
-//		{
-//			login.setMnemonic('l');
-//			bar.add(login);
-//			
-//		}
-
 		JMenu edit = new JMenu("Edit");
-		{
-			edit.setMnemonic('e');
-			menuBar.add(edit);
-			JMenuItem selectAll = new JMenuItem("Select All");
-			selectAll.setAccelerator(KeyStroke.getKeyStroke("ctrl released A"));
-			selectAll.setMnemonic('a');
-			selectAll.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					biosampleTab.getBiosampleTable().selectAll();
-					selectionChanged();
-				}
-			});
-			edit.add(selectAll);
+		edit.setMnemonic('e');
+		menuBar.add(edit);
+		JMenuItem selectAll = new JMenuItem("Select All");
+		selectAll.setAccelerator(KeyStroke.getKeyStroke("ctrl released A"));
+		selectAll.setMnemonic('a');
+		selectAll.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				biosampleTab.getBiosampleTable().selectAll();
+				selectionChanged();
+			}
+		});
+		edit.add(selectAll);
 
-			JMenuItem clearAll = new JMenuItem(new ClearAction());
-			clearAll.setMnemonic('c');
-			edit.add(clearAll);
-			JMenuItem refreshAll = new JMenuItem("Refresh", IconType.REFRESH.getIcon());
-			refreshAll.setMnemonic('r');
-			refreshAll.setAccelerator(KeyStroke.getKeyStroke("F5"));
-			refreshAll.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					refresh();
-				}
-			});
-			edit.add(refreshAll);
-			edit.add(new JSeparator());
-			edit.add(new BiosampleActions.Action_NewBatch());
-			edit.add(new ResultActions.Action_New());
-		}
+		JMenuItem clearAll = new JMenuItem(new ClearAction());
+		clearAll.setMnemonic('c');
+		edit.add(clearAll);
+		JMenuItem refreshAll = new JMenuItem("Refresh", IconType.REFRESH.getIcon());
+		refreshAll.setMnemonic('r');
+		refreshAll.setAccelerator(KeyStroke.getKeyStroke("F5"));
+		refreshAll.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				refresh();
+			}
+		});
+		edit.add(refreshAll);
+		edit.add(new JSeparator());
+		edit.add(new BiosampleActions.Action_NewBatch());
+		edit.add(new ResultActions.Action_New());
 		
 		menuBar.add(SpiritMenu.getToolsMenu());
 		menuBar.add(SpiritMenu.getHelpMenu(splashConfig));
 
-//		JMenu help = new JMenu("Help");
-//		help.setMnemonic('h');
-//		menuBar.add(help);
-//		help.add(LOGIN_ACTION);
-//		help.add(new JSeparator());
-//		help.add(SplashScreen2.createAboutAction(splashConfig));
-
 		setJMenuBar(menuBar);
-
-		SpiritAction.logUsage("BioViewer");
 	}
 
 	private void selectionChanged() {
-		System.out.println("BioViewer.selectionChanged()");
-//		if (biosampleTab.isBiosampleTabSelected()) {
-			Collection<Biosample> selBiosamples = biosampleTab.getSelection(Biosample.class);
-			List<Container> selContainers = Biosample.getContainers(selBiosamples);
-			statusBar.setInfos(selContainers.size() + "/" + biosampleTab.getBiosampleTable().getRowCount() + " Biosamples");
-			Collection<Biosample> highlighted = biosampleTab.getBiosampleTable().getHighlightedSamples();
-			biosampleEditorPane.setBiosamples(highlighted);
-			biosampleDetailPane.setBiosamples(highlighted, false);
-//		} else {
-//			List<Container> selContainers = biosampleTab.getContainerTable().getSelection();
-//			statusBar.setInfos(selContainers.size() + "/" + biosampleTab.getContainerTable().getRowCount() + " Containers");
-//			
-//			
-//			Collection<Biosample> selBiosamples = Container.getBiosamples(selContainers);
-//			biosampleEditorPane.setBiosamples(selBiosamples);
-//			biosampleDetailPane.setBiosamples(selBiosamples);
-//			
-////			biosampleEditorPane.setBiosamples(selContainers.size() == 1 ? selContainers.get(0).getBiosamples() : null);
-////			biosampleDetailPane.setContainer(selContainers.size() == 1 ? selContainers.get(0) : null);
-//		}
-
+		Collection<Biosample> selBiosamples = biosampleTab.getSelection(Biosample.class);
+		List<Container> selContainers = Biosample.getContainers(selBiosamples);
+		statusBar.setInfos(selContainers.size() + "/" + biosampleTab.getBiosampleTable().getRowCount() + " Biosamples");
+		Collection<Biosample> highlighted = biosampleTab.getBiosampleTable().getHighlightedSamples();
+		biosampleEditorPane.setBiosamples(highlighted);
+		biosampleDetailPane.setBiosamples(highlighted, false);
 	}
 
 	private void newScan(Location rack) {
@@ -630,7 +596,8 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 		new SwingWorkerExtended() {
 			@Override
 			protected void doInBackground() throws Exception {
-				Spirit.preLoadDAO();				
+				SpiritAction.logUsage("BioViewer");					
+				JPAUtil.getManager();
 			}
 			@Override
 			protected void done() {

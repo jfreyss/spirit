@@ -38,13 +38,13 @@ import com.actelion.research.spiritcore.services.migration.MigrationScript;
 
 public class SchemaCreator {
 
-	private static final String CREATE_BEFORE = "CREATE SCHEMA SPIRIT;";
+	private static final String CREATE_BEFORE = "create schema spirit;";
 	private static final String CREATE_AFTER = "" 
-			+ "CREATE INDEX AUD_1_IDX ON SPIRIT.ASSAY_RESULT_AUD (BIOSAMPLE_ID);\n "
-			+ "CREATE INDEX AUD_2_IDX ON SPIRIT.ASSAY_RESULT_VALUE_AUD (ASSAY_RESULT_ID);\n "
-			+ "CREATE INDEX AUD_3_IDX ON SPIRIT.BIOSAMPLE_AUD (ATTACHEDSTUDY_ID);\n "
-			+ "CREATE INDEX AUD_4_IDX ON SPIRIT.BIOSAMPLE_AUD (PARENT_ID);\n "
-			+ "CREATE INDEX AUD_5_IDX ON SPIRIT.BIOSAMPLE_ACTION_AUD (BIOSAMPLE_ID);\n"
+			+ "create index aud_1_idx on spirit.assay_result_aud (biosample_id);\n "
+			+ "create index aud_2_idx on spirit.assay_result_value_aud (assay_result_id);\n "
+			+ "create index aud_3_idx on spirit.biosample_aud (attachedstudy_id);\n "
+			+ "create index aud_4_idx on spirit.biosample_aud (parent_id);\n "
+			+ "create index aud_5_idx on spirit.biosample_action_aud (biosample_id);\n"
 			+ "";
 	
 	public static void recreateTables(DBAdapter adapter) throws Exception {

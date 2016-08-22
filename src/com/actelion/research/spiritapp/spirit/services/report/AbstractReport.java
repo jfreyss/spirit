@@ -65,8 +65,12 @@ public abstract class AbstractReport {
 
 	public static enum ReportCategory {
 		STUDY,
-		SPECIMEN,
-		SAMPLES		
+		TOP,
+		SAMPLES,
+		ADMIN;
+		public String getName() {
+			return name().substring(0, 1) + name().substring(1).toLowerCase();
+		}
 	}
 	
 	public enum Style {
@@ -876,4 +880,5 @@ public abstract class AbstractReport {
 		}
 		return UIUtils.createTable(comps.toArray(new Component[0]));
 	}
+	
 }

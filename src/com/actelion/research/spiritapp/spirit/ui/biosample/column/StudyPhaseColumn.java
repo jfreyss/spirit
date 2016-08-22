@@ -54,7 +54,7 @@ public class StudyPhaseColumn extends Column<Biosample, Phase> {
 	
 	@Override
 	public void paste(Biosample row, String value) throws Exception {
-		if(/*editTableModel==null ||*/ value==null || value.length()==0) {setValue(row, null); return; }
+		if(value==null || value.length()==0) {setValue(row, null); return; }
 		
 		if(row.getInheritedStudy()==null) throw new Exception("You must select a study to enter a phase");
 		Phase phase = row.getInheritedStudy().getPhase(value);
@@ -70,11 +70,7 @@ public class StudyPhaseColumn extends Column<Biosample, Phase> {
 	
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
-		if(!isEditable(row)) {
-			phaseLabel.setPhase(null, row.getInheritedGroup());
-		} else {
-			phaseLabel.setPhase(row.getInheritedPhase(), row.getInheritedGroup());
-		}
+		phaseLabel.setPhase(row.getInheritedPhase(), row.getInheritedGroup());
 		phaseLabel.setToolTipText(row==null || row.getInheritedPhase()==null? null: row.getInheritedPhase().getName());
 		return phaseLabel;
 	}

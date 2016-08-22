@@ -47,7 +47,7 @@ import com.actelion.research.spiritcore.util.MiscUtils;
 public class StudyDesignReport extends AbstractReport {
 	
 	public StudyDesignReport() {
-		super(ReportCategory.STUDY, "Design", "Export the Study Design, the samplings and the treatments");
+		super(ReportCategory.STUDY, "Design", "<ul><li>Study design,<li>Sampling templates<li>Treatment descriptions");
 	}
 	
 	@Override

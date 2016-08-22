@@ -74,9 +74,7 @@ import com.actelion.research.util.CompareUtils;
 		@Index(name="assay_result_elb_idx", columnList = "elb"),
 		@Index(name="assay_result_biosample_idx", columnList = "biosample_id"),
 		@Index(name="result_test_idx", columnList = "assay_id"),
-		@Index(name="assay_result_phase_idx", columnList = "phase_id"),
-		@Index(name="", columnList = ""),
-		@Index(name="", columnList = "")})
+		@Index(name="assay_result_phase_idx", columnList = "phase_id")})
 @SequenceGenerator(name="assay_result_seq", sequenceName="assay_result_seq", allocationSize=1)
 @Audited
 @AuditTable(value="assay_result_aud")
@@ -493,14 +491,11 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 	
 	public String getDetailsWithoutSampleId() {
 		return (getTest()==null?"": getTest().getName()+" ")
-				+ toString();		
+				+ (phase==null?"": " " + phase.getShortName() + " ")
+				+ getInputResultValuesAsString()
+				+ ": " + getOutputResultValuesAsString();		
 	}
 	
-	public String getDetailsWithoutTest() {
-		return  ( biosample!=null? biosample.getSampleId()+" ": "")
-				+ toString();		
-	}
-
 	
 	/**
 	 * @param creDate the creDate to set

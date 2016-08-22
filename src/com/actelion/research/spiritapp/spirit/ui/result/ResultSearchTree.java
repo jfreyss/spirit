@@ -289,7 +289,7 @@ public class ResultSearchTree extends FormTree {
 		final SpiritUser user = Spirit.getUser();
 		if(user==null || studyNode==null) return;
 		
-		new SwingWorkerExtended("Updating Filters", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+		new SwingWorkerExtended("Updating Filters", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			ResultFilters inputKeywords;
 			List<Study> studies;
 			@Override

@@ -227,7 +227,7 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 	
 	public void query(final boolean refreshFromDB) {
 		if(push>0) return;
-		new SwingWorkerExtended("Loading", getContentPane(), SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+		new SwingWorkerExtended("Loading", getContentPane(), SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			List<Biosample> tmp;
 			@Override
 			protected void doInBackground() throws Exception {

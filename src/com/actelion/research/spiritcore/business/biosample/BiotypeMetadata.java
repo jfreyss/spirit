@@ -262,9 +262,13 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 		IntegerMap map = new IntegerMap(metadataString);
 		Map<BiotypeMetadata, String> res = new HashMap<>();
 		for (int id : map.keySet()) {
-			if(id<=0) throw new RuntimeException("Cannot deserialize "+metadataString);
-			if(biotype.getMetadata(id)==null) throw new RuntimeException(id+" not in "+biotype+" "+biotype.getMetadataIds());
-			res.put(biotype.getMetadata(id), map.get(id));				
+			assert id>0 && biotype.getMetadata(id)!=null;
+//			if(id<=0) throw new RuntimeException("Cannot deserialize "+metadataString);
+//			if(biotype.getMetadata(id)==null) throw new RuntimeException(id+" not in "+biotype+" "+biotype.getMetadataIds());
+			
+			if(id>0 && biotype.getMetadata(id)!=null) {
+				res.put(biotype.getMetadata(id), map.get(id));
+			}
 		}
 		return res;		
 	}

@@ -72,6 +72,14 @@ public class ConfigProperties {
 		return v;
 	}
 	
+	public int getValueInt(PropertyKey p) {
+		try {
+			return Integer.parseInt(getValue(p));
+		} catch(Exception e) {
+			return Integer.parseInt(p.getDefaultValue());
+		}
+	}
+	
 	/**
 	 * Gets the value of a simple property or the default value
 	 * The result is splitted by ','

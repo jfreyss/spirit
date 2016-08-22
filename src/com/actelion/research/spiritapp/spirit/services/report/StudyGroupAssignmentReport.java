@@ -31,24 +31,34 @@ import org.apache.poi.ss.usermodel.Sheet;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.Biotype;
+import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.study.AttachedBiosample;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Randomization;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.HtmlUtils;
 
 public class StudyGroupAssignmentReport extends AbstractReport {
 
 	public StudyGroupAssignmentReport() {
-		super(ReportCategory.STUDY, "Group Assignment", "Group Assignment done through the Group Assignment Wizard, showing the data before and after the randomization");
+		super(ReportCategory.STUDY, 
+				"Group Assignment", 
+				"Group Assignment done through the Group Assignment Wizard, showing the data before and after the randomization.<ul>"
+				+ "<li>Each tab shows the assignment done at one given phase</ul>"
+				+ HtmlUtils.convert2Html("No\tBW\tTopId\tNewNo\tContainerId\tGroup\tMetadata\tTreatment\n"
+						+ "\t\tTopId1\n"
+						+ "\t\tTopId2\n"));
 	}
 
 
 	@Override
 	protected void populateWorkBook() throws Exception {
-		
-		List<Phase> phases = new ArrayList<Phase>();
+		List<Biosample> topBiosamples = new ArrayList<>(study.getAttachedBiosamples());
+		Biotype biotype = Biosample.getBiotype(topBiosamples);
+		List<Phase> phases = new ArrayList<>();
 		phases.addAll(study.getPhases());
 		phases.add(null);
 		
@@ -63,7 +73,7 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 				nData = 0;
 				samples = new ArrayList<>();
 				int count = 0;
-				for (Biosample biosample : study.getAttachedBiosamples()) {
+				for (Biosample biosample : topBiosamples) {
 					AttachedBiosample sample = new AttachedBiosample();
 					sample.setBiosample(biosample);
 					sample.setContainerId(biosample.getContainerId());
@@ -75,7 +85,7 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 					samples.add(sample);
 				}
 			} else {
-				//Intermaediate phase
+				//Intermediate phase
 				if(!phase.hasRandomization()) continue;
 	
 				//Load data
@@ -117,7 +127,11 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 			set(sheet, 5, col++, "Cage", Style.S_TH_CENTER);
 			set(sheet, 5, col++, "Group", Style.S_TH_CENTER);
 			set(sheet, 5, col++, "St.", Style.S_TH_CENTER);
-			set(sheet, 5, col++, "Gender", Style.S_TH_CENTER);
+			if(biotype!=null) {
+				for (BiotypeMetadata bm : biotype.getMetadata()) {
+					set(sheet, 5, col++, bm.getName(), Style.S_TH_CENTER);
+				}
+			}
 			set(sheet, 5, col++, "Treatment", Style.S_TH_CENTER);
 			set(sheet, 4, 2, "After Rando.", Style.S_TH_CENTER, 1, col-2);
 			int maxCol = col-1;
@@ -146,7 +160,11 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 				set(sheet, line, col++, r.getContainerId(), Style.S_TD_CENTER);
 				set(sheet, line, col++, g==null?"": g.getBlindedName(Spirit.getUsername()) , Style.S_TD_LEFT);
 				set(sheet, line, col++, g==null || g.getNSubgroups()<=1?"": (r.getSubGroup()+1), Style.S_TD_CENTER);
-				set(sheet, line, col++, b==null || b.getMetadata("Sex")==null?"": b.getMetadata("Sex").getValue(), Style.S_TD_CENTER);
+				if(biotype!=null) {
+					for (BiotypeMetadata bm : biotype.getMetadata()) {
+						set(sheet, line, col++, b.getMetadataString(bm), Style.S_TH_CENTER);
+					}
+				}
 				set(sheet, line, col++, g==null?"": g.getTreatmentDescription() , Style.S_TD_LEFT);
 
 				cageBefore = r.getContainerId();

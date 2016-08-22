@@ -216,7 +216,7 @@ public class StudyDetailPanel extends JPanel {
 			refreshSameThread();
 		} else {
 			if(t!=null) t.cancel();
-			t = new SwingWorkerExtended("Loading Study", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+			t = new SwingWorkerExtended("Loading Study", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 				@Override
 				protected void done() {
 					study = JPAUtil.reattach(study);

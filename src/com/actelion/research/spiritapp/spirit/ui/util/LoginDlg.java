@@ -72,7 +72,6 @@ public class LoginDlg extends JEscapeDialog {
 	private Config config = Spirit.getConfig();
 	private boolean askForSpecificRole; 
 	private boolean hasDept; 
-//	private SpiritUser user = null;
 	private JTextField userTextField = new JTextField(28);
 	private JPasswordField passwordTextField = new JPasswordField(28);
 	private JLabel roleLabel = new JLabel("Role");

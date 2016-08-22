@@ -32,6 +32,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.print.PrintService;
+import javax.print.attribute.standard.Media;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
@@ -43,14 +45,18 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextArea;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.services.print.SpiritPrinter;
+import com.actelion.research.spiritapp.spirit.services.print.PrintableOfContainers.Model;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JFileBrowser;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.spiritcore.business.biosample.Container;
-import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
+import com.actelion.research.spiritcore.business.biosample.Container;
+import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.util.IOUtils;
+import com.actelion.research.util.ui.JGenericComboBox;
+import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.UIUtils;
 
 public class CassettePrinterAdapter extends PrintAdapter {
@@ -59,12 +65,17 @@ public class CassettePrinterAdapter extends PrintAdapter {
 	private JCheckBox printStudyIdCheckBox = new JCheckBox("Print StudyId", false);
 	private JCheckBox printBlocNoCheckBox = new JCheckBox("Print BlocNo", false);
 		
+	private JRadioButton cassetteMateRadioButton = new JRadioButton("Print to SlideMate", true); 	
+	private JRadioButton ptouchRadioButton = new JRadioButton("Print to PTouch Printer"); 
+
 	private JFileBrowser fileBrowser = new JFileBrowser();
 	private JRadioButton defaultRadioButton = new JRadioButton("Auto", true); 
 	private JRadioButton multipleAnimalsRadioButton = new JRadioButton("Multiple Animals", false); 
 	private JRadioButton oneAnimalRadioButton = new JRadioButton("One Animal ", false); 
 			
-	
+	private JGenericComboBox<PrintService> printerComboBox;
+	private JGenericComboBox<Media> mediaComboBox = new JGenericComboBox<>();
+
 	public CassettePrinterAdapter(final PrintingTab tab, final ContainerType containerType) {
 		super(tab);
 		
@@ -75,12 +86,32 @@ public class CassettePrinterAdapter extends PrintAdapter {
 		buttonGroup.add(oneAnimalRadioButton);
 		
 		
+		//Ptouch
+		PrintService[] services = SpiritPrinter.getPrintServices();		
+		printerComboBox = new JGenericComboBox<PrintService>(services, true);
+		for(PrintService service: services) {
+			if(service.getName().toLowerCase().contains("brother")){
+				printerComboBox.setSelection(service);
+				break;
+			}
+		}
+		
+		
+		JPanel ptouchPanel = UIUtils.createTable(
+				new JLabel("Brother Printer: "), printerComboBox,
+				new JLabel("Media: "), mediaComboBox
+				);
+		
+		
+		
 		ActionListener refreshActionListener = new ActionListener() {		
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				fireConfigChanged();
 			}
 		};
+		ptouchRadioButton.addActionListener(refreshActionListener);
+		cassetteMateRadioButton.addActionListener(refreshActionListener);
 		defaultRadioButton.addActionListener(refreshActionListener);
 		multipleAnimalsRadioButton.addActionListener(refreshActionListener);
 		oneAnimalRadioButton.addActionListener(refreshActionListener);
@@ -92,18 +123,56 @@ public class CassettePrinterAdapter extends PrintAdapter {
 		fileBrowser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		fileBrowser.setFile(Spirit.getConfig().getProperty("printer.cassette", "Y:\\LABUSER (PorthaS)\\PrintMateCache(BOURQUG)"));
 		
-		//PrintPanel
-		
-		
+		//configPanel
 		configPanel = UIUtils.createVerticalBox(
 				UIUtils.createHorizontalBox(printStudyIdCheckBox, printBlocNoCheckBox, Box.createHorizontalGlue()),
-				Box.createVerticalStrut(10),
-				new JLabel("Path to the cassette printing directory: "),
-				UIUtils.createHorizontalBox(fileBrowser, Box.createHorizontalGlue()),
-				Box.createVerticalStrut(10),
-				UIUtils.createHorizontalBox(new JLabel("Label type: "), Box.createHorizontalStrut(10), defaultRadioButton, Box.createHorizontalStrut(10), oneAnimalRadioButton, Box.createHorizontalStrut(10), multipleAnimalsRadioButton, Box.createHorizontalGlue())
-				);
+				
+				Box.createVerticalStrut(15),
+				
+				UIUtils.createHorizontalBox(cassetteMateRadioButton, Box.createHorizontalGlue()),
+				UIUtils.createHorizontalBox(Box.createHorizontalStrut(20), new JLabel("Path to the cassette printing directory: "), Box.createHorizontalGlue()),
+				UIUtils.createHorizontalBox(Box.createHorizontalStrut(20), fileBrowser, Box.createHorizontalGlue()),
+				Box.createVerticalStrut(5),
+				UIUtils.createHorizontalBox(Box.createHorizontalStrut(20), new JLabel("Label type: "), Box.createHorizontalStrut(10), defaultRadioButton, Box.createHorizontalStrut(10), oneAnimalRadioButton, Box.createHorizontalStrut(10), multipleAnimalsRadioButton, Box.createHorizontalGlue()),
+				
+				Box.createVerticalStrut(15),
+				
+				UIUtils.createHorizontalBox(ptouchRadioButton, new JInfoLabel("You need a 'Brother' printer with a media '" + containerType.getBrotherFormat()+ "'"), Box.createHorizontalGlue()),
+				UIUtils.createHorizontalBox(Box.createHorizontalStrut(20), ptouchPanel, Box.createHorizontalGlue()),
+				Box.createVerticalGlue());
 		 
+		ButtonGroup gr = new ButtonGroup();
+		gr.add(ptouchRadioButton);
+		gr.add(cassetteMateRadioButton);
+
+		
+		ptouchRadioButton.setSelected(Spirit.getConfig().getProperty("printer.cassette.type", "").equals("ptouch")) ;
+		
+		printerComboBox.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent ev) {
+				List<Media> media = SpiritPrinter.loadMedias(printerComboBox.getSelection(), containerType.getName());
+				mediaComboBox.setValues(media, false);
+				
+				for (Media m : media) {
+					if(m.toString().equalsIgnoreCase(containerType.getName())) {
+						mediaComboBox.setSelection(m);
+						break;
+					}
+				}
+				fireConfigChanged();
+			}
+		});
+		mediaComboBox.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent ev) {
+				fireConfigChanged();
+			}
+		});
+		
+		if(services.length>0) {
+			printerComboBox.getActionListeners()[0].actionPerformed(null);			
+		}
 		
 	}
 	
@@ -114,11 +183,32 @@ public class CassettePrinterAdapter extends PrintAdapter {
 
 	@Override
 	public JComponent getPreviewPanelForList(List<Container> containers) {
-		JTextArea textarea = new JTextArea();
-		textarea.setText(getPrint(containers));
-		textarea.setEditable(false);
-		return textarea;
+		
+		if(cassetteMateRadioButton.isSelected()) {
+			JTextArea textarea = new JTextArea();
+			textarea.setText(getPrint(containers));
+			textarea.setEditable(false);
+			return textarea;
+		} else {
+			return null;
+		}
 	}
+	
+	@Override
+	public JComponent getPreviewPanel(Container container) {
+		if(cassetteMateRadioButton.isSelected()) {
+			return null;
+		} else {
+			PrintService ps = printerComboBox.getSelection();
+			Media media = mediaComboBox.getSelection();
+			return BrotherPrinterAdapter.getPreviewPanel(container, ps, media, false, getModel());
+		}
+	}
+	
+	private Model getModel() {
+		return printBlocNoCheckBox.isSelected()? Model.LINES_BLOCNO: Model.LINES_METADATA;
+	}
+	
 	
 	private String getPrint(List<Container> containers) {
 		if(containers==null) return "";
@@ -170,50 +260,37 @@ public class CassettePrinterAdapter extends PrintAdapter {
 				sb.append("$" + studyId);
 				sb.append("$" + c.getContainerOrBiosampleId());
 				sb.append("$" + (metaLabel.length()==0?" ":metaLabel));
-				sb.append("$" + (tops.size()<1?" ": tops.get(0).getSampleIdName()));
+				sb.append("$" + (tops.size()<1?" ": tops.get(0).getSampleIdName() + " " + tops.get(0).getInheritedGroupString(Spirit.getUsername())));
 				sb.append("$");
 				sb.append("\r\n");
-			}
-			
-//			sb.append("$" + studyId);
-//			sb.append("$" + (group==null?"": group.getName()));
-//			sb.append("$" + c.getContainerOrBiosampleId());
-//			
-//			String metaLabel;
-//			if(organRadioButton.isSelected()) {
-//				metaLabel = Biosample.getInfos(c.getBiosamples(), EnumSet.of(InfoFormat.METATADATA, InfoFormat.AMOUNT_COMMENTS), InfoSize.ONELINE);
-//			} else if(animalIdsRadioButton.isSelected()) {
-//				metaLabel = Biosample.getInfos(c.getBiosamples(), EnumSet.of(InfoFormat.TOPIDNAMES), InfoSize.COMPACT);
-//			} else {//Default
-//				metaLabel = c.getPrintMetadataLabel();
-//			}
-//			sb.append("$" + metaLabel);
-//			sb.append("$" + (top==null? "": top.getSampleId()));
-//			sb.append("$" + (top==null || top.getName()==null?"": top.getName()));
-//			sb.append("$");
-//			sb.append("\r\n");
+			}			
 		}
 		return sb.toString();
 	}
 	@Override
 	public void print(List<Container> containers) throws Exception {
-		
 		if(containers==null || containers.size()==0) throw new Exception("No containers");
-		if(fileBrowser.getFile().length()==0) throw new Exception("The directory for printing is not filled");
-		
-		File destDir = new File(fileBrowser.getFile());
-		if(!destDir.exists() || !destDir.isDirectory()) throw new Exception("The directory "+destDir+" does not exist or is not a directory");
-		
-		Spirit.getConfig().setProperty("printer.cassette", fileBrowser.getFile());
-		
-		File archiveDir = new File(destDir, "Archive");
-		if(!archiveDir.exists()) archiveDir.mkdirs();
-		
-		String fileName = Spirit.getUser()+"-" + new SimpleDateFormat("yyyyMMDD-HHmmss").format(new Date())+ ".txt";
-		
-		String content = getPrint(containers).toString();
-		IOUtils.stringToFile(content, new File(destDir, fileName));
-		if(archiveDir.exists())IOUtils.stringToFile(content, new File(archiveDir, fileName));
+		if(cassetteMateRadioButton.isSelected()) {
+			if(fileBrowser.getFile().length()==0) throw new Exception("The directory for printing is not filled");
+			
+			File destDir = new File(fileBrowser.getFile());
+			if(!destDir.exists() || !destDir.isDirectory()) throw new Exception("The directory "+destDir+" does not exist or is not a directory");
+			
+			Spirit.getConfig().setProperty("printer.cassette", fileBrowser.getFile());
+			
+			File archiveDir = new File(destDir, "Archive");
+			if(!archiveDir.exists()) archiveDir.mkdirs();
+			
+			String fileName = Spirit.getUser()+"-" + new SimpleDateFormat("yyyyMMDD-HHmmss").format(new Date())+ ".txt";
+			
+			String content = getPrint(containers).toString();
+			IOUtils.stringToFile(content, new File(destDir, fileName));
+			if(archiveDir.exists())IOUtils.stringToFile(content, new File(archiveDir, fileName));
+		} else {
+			PrintService ps = printerComboBox.getSelection();
+			Media media = mediaComboBox.getSelection();
+			BrotherPrinterAdapter.print(containers, ps, media, false, getModel());
+		}
 				
 	}
 }

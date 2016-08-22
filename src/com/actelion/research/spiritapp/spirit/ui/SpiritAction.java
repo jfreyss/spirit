@@ -24,7 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.net.URL;
-import java.net.URLEncoder;
 
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
@@ -36,7 +35,7 @@ import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.admin.ChangePasswordDlg;
 import com.actelion.research.spiritapp.spirit.ui.admin.database.DatabaseSettingsDlg;
 import com.actelion.research.spiritapp.spirit.ui.config.ConfigDlg;
-import com.actelion.research.spiritapp.spirit.ui.help.HelpDlg;
+import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.print.BrotherLabelsDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.LoginDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
@@ -115,6 +114,7 @@ public class SpiritAction {
 			this.msg = msg;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('o'));
 		}
+		
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			//Open dialog
@@ -129,35 +129,28 @@ public class SpiritAction {
 			} else {
 				SpiritContextListener.setStatus(Spirit.getUser().getUsername() +" logged");								
 				SpiritContextListener.setUser(user.getUsername() + " ("+ (user.getMainGroup()==null?"NoDept":user.getMainGroup().getName())+ ") " + (user.getRolesString().length()>0? " - " + user.getRolesString():""));								
-			}
-			
-			//Log usage
-			logUsage("Spirit");
+			}			
 		}
 	}
 	
 	public static void logUsage(final String app) {
-		if(Spirit.getUser()!=null) {
-			if(DBAdapter.getAdapter().isInActelionDomain()) {
-				UsageLog.logUsage("Spirit", Spirit.getUser().getUsername(), null, UsageLog.ACTION_LOGON, "app=" + app + ";v="+Spirit.class.getPackage().getImplementationVersion());
-			} else {
-				new Thread() {
-					public void run() {
-						try {
-							String os = System.getProperty("os.name");
-							String home = System.getProperty("java.home");
-							new URL("https://ssl.google-analytics.com/collect?v=1&"
-									+ "t=" + URLEncoder.encode(app, "UTF-8") + "&ec=Launch&tid=UA-81953907-3&"
-									+ "z=1111&cid=100&ea="+URLEncoder.encode(Spirit.class.getPackage().getImplementationVersion(), "UTF-8")
-									+ "&el=" + URLEncoder.encode("os="+os+";home="+home, "UTF-8")).getContent();							
-						} catch(Exception e) {
-							e.printStackTrace();
-						}
-						
-					};
-				}.start();
-				
-			}
+		String version = Spirit.class.getPackage().getImplementationVersion();
+		if(version==null) return;
+		if(DBAdapter.getAdapter().isInActelionDomain()) {
+			UsageLog.logUsage("Spirit", Spirit.getUsername(), null, UsageLog.ACTION_LOGON, "app=" + app + ";v="+version);
+		} else {
+			new Thread() {
+				public void run() {
+					try {
+						//Log to StatCounter
+						Object o = new URL("http://c.statcounter.com/11069822/0/f9288463/1/").getContent();
+						System.out.println("SpiritAction.logUsage(...).new Thread() {...}.run() "+o);
+					} catch(Exception e) {
+						e.printStackTrace();
+					}
+					
+				};
+			}.start();
 		}
 		
 		
@@ -194,7 +187,8 @@ public class SpiritAction {
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			new HelpDlg();
+			HelpBinder.showHelp("");
+//			new HelpDlg();
 		}		
 	}
 	

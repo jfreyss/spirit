@@ -79,7 +79,7 @@ public class AdminActions {
 		private Revision revision;
 		
 		public Action_Revert(Revision revision) {
-			super("Revert those changes");
+			super("Cancel these chhnages");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('v'));
 			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()));
 			this.revision = revision;
@@ -87,7 +87,7 @@ public class AdminActions {
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			final String reason = JOptionPane.showInputDialog(UIUtils.getMainFrame(), "If you are sure to revert those changes and return to the previous version?. Please give a reason!", "Reason", JOptionPane.QUESTION_MESSAGE);
+			final String reason = JOptionPane.showInputDialog(UIUtils.getMainFrame(), "Do you want to restore the entities to the previous state?\nPlease give a reason!", "Reason", JOptionPane.QUESTION_MESSAGE);
 			if(reason!=null) {
 				new SwingWorkerExtended("Revert", UIUtils.getMainFrame()) {
 					@Override
@@ -194,7 +194,7 @@ public class AdminActions {
 			super("Recent Connections (Admin)");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('c'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
-			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()));
+			setEnabled(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && (Spirit.getUser()==null || SpiritRights.isSuperAdmin(Spirit.getUser())));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {

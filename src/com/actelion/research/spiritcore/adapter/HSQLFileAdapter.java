@@ -102,4 +102,5 @@ import com.actelion.research.spiritcore.services.migration.MigrationScript;
 	public String getHelp() {
 		return "Simple Database used for testing and/or working with files. No installation needed, no user rights, and backup can be done by moving the selected directory.";
 	}
+	
 }

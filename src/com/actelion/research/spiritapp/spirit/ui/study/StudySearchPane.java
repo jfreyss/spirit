@@ -26,7 +26,6 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -62,7 +61,7 @@ public class StudySearchPane extends JPanel {
 		
 		setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));	
 		
-		add(BorderLayout.NORTH, UIUtils.createHorizontalBox(new JButton(new Action_ViewAll()), new JButton(new Action_ViewMine()), Box.createHorizontalGlue()));
+//		add(BorderLayout.NORTH, UIUtils.createHorizontalBox(new JButton(new Action_ViewAll()), new JButton(new Action_ViewMine()), Box.createHorizontalGlue()));
 		add(BorderLayout.CENTER, new JScrollPane(studySearchTree));
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), resetButton, searchButton));
 		
@@ -91,7 +90,7 @@ public class StudySearchPane extends JPanel {
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			search(studySearchTree.getQuery());
+			query(studySearchTree.getQuery());
 		}
 	}
 	
@@ -103,16 +102,20 @@ public class StudySearchPane extends JPanel {
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			studySearchTree.setQuery(new StudyQuery());
-			table.setRows(new ArrayList<Study>());
+			reset();
 			table.getSelectionModel().clearSelection();
 		}
 	}
 	
-	public void search(final StudyQuery query) {
+	public void reset() {
+		StudyQuery q = new StudyQuery();
+		q.setUser(Spirit.getUser()==null? null: Spirit.getUser().getUsername());
+		query(q);
+	}
+	
+	public void query(final StudyQuery query) {
 		
-
-		new SwingWorkerExtended("Querying Studies", table, SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+		new SwingWorkerExtended("Querying Studies", table, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			List<Study> studies;
 			@Override
 			protected void doInBackground() throws Exception {
@@ -124,7 +127,7 @@ public class StudySearchPane extends JPanel {
 				studySearchTree.setQuery(query);
 				table.setRows(studies);
 				if(studies.size()==1) {
-					table.getSelectionModel().addSelectionInterval(0, 0);
+					table.setSelection(studies);
 				}
 				SpiritContextListener.setStatus(studies.size() + " Studies");
 			}
@@ -135,31 +138,6 @@ public class StudySearchPane extends JPanel {
 		
 	}
 	
-	
-	public class Action_ViewAll extends AbstractAction {
-		public Action_ViewAll() {
-			super("View All");
-			setToolTipText("Query and display all studies (provided I have READ-access)");
-		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			search(new StudyQuery());
-		}
-	}
-
-	public class Action_ViewMine extends AbstractAction {
-		public Action_ViewMine() {
-			super("MyStudies");
-			setToolTipText("Query and display all studies (provided I have WRITE-access)");
-		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			StudyQuery q = new StudyQuery();
-			q.setUser(Spirit.getUser()==null? null: Spirit.getUser().getUsername());
-			search(q);
-		}
-	}
-
 	public JButton getSearchButton() {
 		return searchButton;
 	}

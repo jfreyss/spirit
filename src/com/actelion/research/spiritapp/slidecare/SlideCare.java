@@ -70,6 +70,7 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -117,14 +118,11 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		
 		//TopPanel
 		JPanel studySelecterPanel = UIUtils.createHorizontalBox(new JLabel("Study: "), studyComboBox);
-//		studySelecterPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.BLACK), BorderFactory.createEmptyBorder(5,5,5,5)));
 		studySelecterPanel.setOpaque(true);
-//		studySelecterPanel.setBackground(Color.LIGHT_GRAY);
 		
 			
 		JPanel topPane = new JPanel(new BorderLayout());
 		topPane.add(BorderLayout.WEST, studySelecterPanel);
-//		topPane.add(BorderLayout.CENTER, UIUtils.createHorizontalBox(Box.createHorizontalStrut(40), createCassetteButton, createSlideButton, Box.createHorizontalGlue()));
 		topPane.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(), BorderFactory.createEmptyBorder(5,5,5,5)));
 		
 		
@@ -132,8 +130,6 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		tabbedPane.setFont(FastFont.BOLD);
 		tabbedPane.add("Study Design", studyDetailPanel);
 		tabbedPane.setIconAt(0, IconType.STUDY.getIcon());
-//		tabbedPane.add("Trimming", UIUtils.createVerticalBox(new JLabel("<html>The organs have to be sampled in AnimalCare or Spirit, until further development"), Box.createHorizontalGlue()));
-//		tabbedPane.setIconAt(1, new ImageIcon(ImageFactory.getImage("Organ", 20)));
 		tabbedPane.add("Embedding", cassettePanel);
 		tabbedPane.setIconAt(1, new ImageIcon(ContainerType.K7.getImageThumbnail()));
 		tabbedPane.add("Sectioning", slidePanel);
@@ -318,7 +314,8 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 			
 			@Override
 			protected void doInBackground() throws Exception {
-				Spirit.preLoadDAO();
+				SpiritAction.logUsage("SlideCare");					
+				JPAUtil.getManager();
 			}
 			
 			@Override

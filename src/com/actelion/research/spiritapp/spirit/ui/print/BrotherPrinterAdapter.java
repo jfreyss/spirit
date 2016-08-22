@@ -291,16 +291,10 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 		}
 		try {
 			
-			if(ps==null) throw new Exception("You must install a 'Brother' printer");
+			if(ps==null) throw new Exception("You must select a 'Brother' printer");
 			PrintRequestAttributeSet attr = new HashPrintRequestAttributeSet();
 			if(media!=null) attr.add(media);
 
-//			attr.add(OrientationRequested.LANDSCAPE);				
-//			attr.add(SheetCollate.UNCOLLATED);
-//			attr.add(Fidelity.FIDELITY_TRUE);
-//			attr.add(Chromaticity.MONOCHROME);
-	
-			
 			PrinterJob job = PrinterJob.getPrinterJob();
 			job.setPrintable(printable);
 			job.setPrintService(ps);

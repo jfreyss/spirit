@@ -123,7 +123,7 @@ public class LogEntryDlg extends JEscapeDialog {
 
 	
 	private void filter() {
-		new SwingWorkerExtended("Querying", getContentPane(), SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+		new SwingWorkerExtended("Querying", getContentPane(), SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			List<LogEntry> logs;
 			@Override
 			protected void doInBackground() throws Exception {

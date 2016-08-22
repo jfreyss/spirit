@@ -228,12 +228,11 @@ public class PhaseAddPanel extends JPanel {
 					}
 				}
 			});
-			add(BorderLayout.CENTER, UIUtils.createBox(
-					new JScrollPane(textarea),
-					UIUtils.createVerticalBox(
-							UIUtils.createHorizontalTitlePanel("Enter Phases"),
-							new JLabel("Format: '1', '1. Beginning'")),
-					UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton)));
+			add(BorderLayout.CENTER, UIUtils.createTitleBox("Enter Phases",
+				UIUtils.createBox(
+					new JScrollPane(textarea), 
+					new JLabel("Format: '1', '1. Beginning'"),
+					UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton))));
 		}
 		setBorder(BorderFactory.createEtchedBorder());
 

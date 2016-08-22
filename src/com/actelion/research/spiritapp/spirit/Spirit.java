@@ -77,14 +77,14 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.SchemaCreator;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
 import com.actelion.research.spiritcore.adapter.HSQLFileAdapter;
+import com.actelion.research.spiritcore.adapter.SchemaCreator;
 import com.actelion.research.spiritcore.business.Exchange;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
-import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
@@ -112,15 +112,14 @@ import com.actelion.research.spiritcore.services.migration.MigrationScript.Fatal
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.Config;
 import com.actelion.research.util.ui.ApplicationErrorLog;
-import com.actelion.research.util.ui.CustomTabbedPaneUI;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JStatusBar;
 import com.actelion.research.util.ui.SplashScreen2;
+import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
-import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 /**
@@ -131,7 +130,7 @@ import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
  */
 public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritContextObserver {
 
-	private static SplashConfig splashConfig = new SplashScreen2.SplashConfig(Spirit.class.getResource("spirit.jpg"), "Spirit", "Spirit v" + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Actelion - J.Freyss"); 
+	private static SplashConfig splashConfig = new SplashScreen2.SplashConfig(Spirit.class.getResource("spirit.jpg"), "Spirit", "Spirit v." + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Actelion - J.Freyss"); 
 
 	private JStatusBar statusBar;
 	private final JTabbedPane tabbedPane;
@@ -191,128 +190,20 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		setVisible(true);
 
 
-		//Check DB Version
-		LoggerFactory.getLogger(Spirit.class).debug("check dbVersion");
-		try {
-			String dbVersion = MigrationScript.getDBVersion();
-			if(dbVersion==null) {
-				SchemaCreator.recreateTables(DBAdapter.getAdapter());
-			} else if(!dbVersion.equals(MigrationScript.getExpectedDBVersion())) {
-				new DatabaseMigrationDlg();			
-			}
-		} catch(Exception e) {
-			JExceptionDialog.showError(e);
-			new DatabaseSettingsDlg(false);
-		}
+		SpiritDB.check();
 		
-		final StringBuilder msg = new StringBuilder();
-		try {						
-			LoggerFactory.getLogger(Spirit.class).debug("check Users");
-			if(DBAdapter.getAdapter().isInActelionDomain()) {
-				//Login freyssj automatically 
-				if(System.getProperty("user.name").equals("freyssj")) {
-					try {
-						SpiritUser user = DAOSpiritUser.loadUser("freyssj");
-						if(user==null) throw new Exception("Could not load user freyssj");
-						Spirit.setUser(user);
-									
-					} catch (Exception e) {
-						System.err.println(e);
-					}
-				}
-			} else if(DBAdapter.getAdapter().getUserManagedMode()==UserAdministrationMode.READ_WRITE) {
-				List<Employee> employees = DBAdapter.getAdapter().getEmployees();
-				boolean admins = false;
-				
-				for (Employee emp : employees) {
-					if(emp.getRoles().contains(SpiritUser.ROLE_ADMIN)) {admins=true; continue;}
-				}
-				if(!admins) {						
-					JOptionPane.showMessageDialog(null, "There are no admins in the system, you must create some users and give them admin rights", "User Admin Error", JOptionPane.ERROR_MESSAGE);
-					new UserAdminDlg();
-				} else if(employees.size()==1 && employees.get(0).getUserName().equals("admin")) {
-					msg.append("Note: To connect use 'admin' without any password");
-				}
-			} else if(DBAdapter.getAdapter().getUserManagedMode()==UserAdministrationMode.UNIQUE_USER) {
-				SpiritUser user = new SpiritUser(System.getProperty("user.name"));
-				user.setRole(SpiritUser.ROLE_ADMIN, true);
-				Spirit.setUser(user);				
-			} 
-			
-			//Check emptyness?
-			try {
-				if(SpiritRights.isSuperAdmin(getUser())) {
-					try (InputStream is = DBAdapter.class.getResourceAsStream("demo.spirit")) {
-						if(is==null) {
-							throw new Exception("The system could not find the default configuration. The system is therefore empty");
-						}
-						
-						Exchange exchange = Importer.read(new InputStreamReader(is));
-						List<Study> exampleStudies = DAOStudy.queryStudies(StudyQuery.createForState("EXAMPLE"), null);
-						if(exampleStudies.size()==0) exampleStudies = DAOStudy.queryStudies(StudyQuery.createForState("TEST"), null);
-						boolean importDemo = DAOTest.getTests().size()==0;
-						boolean askToRewrite = !importDemo && DBAdapter.getAdapter().getClass()==HSQLFileAdapter.class && exampleStudies.size()<exchange.getStudies().size();
-						if(askToRewrite) {
-							int res = JOptionPane.showConfirmDialog(this, "There are new examples available!\nDo you want to update the current examples with the new ones?", "Examples", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-							if(res==JOptionPane.YES_OPTION) {
-								importDemo = true;
-							}
-						}
-						if(importDemo) {
-							try {
-								JPAUtil.pushEditableContext(getUser());
-								ExchangeMapping mapping = new ExchangeMapping(exchange);
-								DAOExchange.persist(mapping, getUser());
-							} catch(Throwable e2) {
-								e2.printStackTrace();
-								//Clean
-								EntityManager session = JPAUtil.getManager();
-								try {
-									LoggerFactory.getLogger(getClass()).error("Could not persist examples: replace old examples", e2);
-									session.getTransaction().begin();
-									DAOResult.deleteResults(session, DAOResult.queryResults(session, ResultQuery.createQueryForSids(JPAUtil.getIds(exampleStudies)), user), user);
-									DAOBiosample.deleteBiosamples(session, DAOBiosample.queryBiosamples(session, BiosampleQuery.createQueryForSids(JPAUtil.getIds(exampleStudies)), user), user);
-									DAOStudy.deleteStudies(session, exampleStudies, user);
-									LoggerFactory.getLogger(getClass()).info("examples deleted: "+exampleStudies);
-									session.getTransaction().commit();									
-								} catch(Throwable e3) {
-									e3.printStackTrace();
-									session.getTransaction().rollback();
-								} finally {
-									JPAUtil.popEditableContext();
-								}								
-							}
-						}
-					}
-				}
-			} catch(Exception e) {
-				JExceptionDialog.showError(this, e);
-			}
-			
-		} catch(Throwable e) {
-			e.printStackTrace();
-			StringWriter w = new StringWriter(); 
-			e.printStackTrace(new PrintWriter(w));
-			JTextArea ta = new JTextArea(w.getBuffer().toString());
-			ta.setEditable(false);
-			JScrollPane sp = new JScrollPane(ta);
-			sp.setPreferredSize(new Dimension(600, 350));
-			JOptionPane.showMessageDialog(this, UIUtils.createBox(sp, new JLabel("<html><b>Database Error</b><br>The tables may not be up to dates, please contact support with the following trace!"), null, null, null), "DB Error", JOptionPane.ERROR_MESSAGE);
-		}
-		
-		
-		//Login
-		if(Spirit.getUser()==null) {
-			SwingUtilities.invokeLater(new Runnable() {				
-				@Override
-				public void run() {
-					new SpiritAction.Action_Relogin(Spirit.this, "Spirit", msg.toString()).actionPerformed(null);
-					if(Spirit.getUser()==null) System.exit(1);
-				}
-			});
-		} else {
+//		//Login
+//		if(Spirit.getUser()==null) {
+//			SwingUtilities.invokeLater(new Runnable() {				
+//				@Override
+//				public void run() {
+//					new SpiritAction.Action_Relogin(Spirit.this, "Spirit", msg.toString()).actionPerformed(null);
+//					if(Spirit.getUser()==null) System.exit(1);
+//				}
+//			});
+//		} else {
 			recreateUI();	
-		}
+//		}
 	
 		toFront();
 		
@@ -612,7 +503,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		
 	@Override
 	public <T> void actionModelChanged(final SpiritChangeType action, final Class<T> w, final List<T> details) {
-		new SwingWorkerExtended("Refreshing", this,  SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+		new SwingWorkerExtended("Refreshing", this,  SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			@Override
 			protected void done() {
 				if(action==SpiritChangeType.LOGIN) {					
@@ -675,10 +566,9 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 					
 			@Override
 			protected void doInBackground() throws Exception {				
-				try {
-					LoggerFactory.getLogger(Spirit.class).debug("starting");
+				try {					
+					SpiritAction.logUsage("Spirit");					
 					JPAUtil.getManager();
-					LoggerFactory.getLogger(Spirit.class).debug("preloading");
 				} catch(Throwable e) {
 					throwable = e; 
 				}

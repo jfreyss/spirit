@@ -40,31 +40,28 @@ import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
-import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
-import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.util.ListHashMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.SetHashMap;
+import com.actelion.research.util.HtmlUtils;
 
 public class SamplesMeasurementReport extends AbstractReport {
 
 	private static ReportParameter SKIP_EMPTY_ANIMAL_PARAMETER = new ReportParameter("Skip samples without any measurements", Boolean.TRUE);
 	private static ReportParameter MAX_PER_SHEET_PARAMETER = new ReportParameter("Maximum of 16 measurements / sheet", Boolean.TRUE);
 
-//	private Map<Group, Group> compareGroup2Groups = new HashMap<Group, Group>();
-
 	public SamplesMeasurementReport() {
 		super(ReportCategory.SAMPLES, 
-				"Measurements", 
-				"Reports all other measurements per tests and per animal.<br> (Only the tests with one output value per animal-input are shown)",
-				new ReportParameter[] {SKIP_EMPTY_ANIMAL_PARAMETER, MAX_PER_SHEET_PARAMETER});
+			"Results", 
+			"<ul><li> Each test (weighing, LCMS) is shown on a separate tab"
+			+ "<li> Only the tests with one output value per animal-input are shown"
+			+ "</ul>"+HtmlUtils.convert2Html(
+					"\tTopId1\tTopId2\tTopId3\n"
+					+ "Sample1\t\t\t\n"
+					+ "Sample2\t\t\t\n"),
+			new ReportParameter[] {SKIP_EMPTY_ANIMAL_PARAMETER, MAX_PER_SHEET_PARAMETER});
 	}
-
-//	@Override
-//	public JPanel getExtraParameterPanel(Study study) {
-//		return createCompareGroupsPanel(study, compareGroup2Groups);
-//	}
 
 	@SuppressWarnings("unused")
 	@Override
@@ -88,7 +85,7 @@ public class SamplesMeasurementReport extends AbstractReport {
 			if(DAOTest.LENGTH_TESTNAME.equals(test.getName())) continue;
 			if(DAOTest.OBSERVATION_TESTNAME.equals(test.getName())) continue;
 			if(DAOTest.WEIGHING_TESTNAME.equals(test.getName())) continue;
-			Set<Biosample> hasData = new HashSet<Biosample>();
+			Set<Biosample> hasData = new HashSet<>();
 			
 			///////////////////////////////////////////////////////////////////////////
 			//Precalculate inputs
@@ -110,7 +107,6 @@ public class SamplesMeasurementReport extends AbstractReport {
 						System.err.println("Skip test "+test);
 						continue loopTest;					
 					}
-					System.out.println("MeasurementReport.populateWorkBook() add "+key+" > "+rv);
 					key2results.add(key, rv);
 				}
 			}
@@ -130,7 +126,7 @@ public class SamplesMeasurementReport extends AbstractReport {
 				
 				// Create sheet
 				Sheet sheet = createSheet(wb, "Test "+test.getName() + (nPages>1?"("+(page+1)+")":""));
-				createHeadersWithTitleSubtitle(sheet , study, "Measurement", test.getName());
+				createHeadersWithTitleSubtitle(sheet , study, "Resultss", test.getName());
 	
 				//////////////////////////////////////////////////////////////////////////////////////////
 				//Display animals at the row level
@@ -242,20 +238,5 @@ public class SamplesMeasurementReport extends AbstractReport {
 		} //end-sheet
 		if(wb.getNumberOfSheets()==0) throw new Exception("The study does not have appropriate measurements to report.");
 
-	}
-
-	
-
-	public static void main(String[] args)  {
-		try {
-			Spirit.setUser(DAOSpiritUser.loadUser("freyssj"));
-			SamplesMeasurementReport wg = new SamplesMeasurementReport();
-			wg.populateReport(DAOStudy.getStudyByStudyId("S-00197"));
-//			wg.populateReport(DAOStudy.getStudyById("S-00442"));
-			wg.export(null);
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-		System.exit(1);
 	}
 }

@@ -300,7 +300,7 @@ public class LocationTab extends JPanel implements ISpiritTab {
 
 	public void setBioLocation(final Location location, final int pos) {
 		first = false;
-		new SwingWorkerExtended("Set Location", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+		new SwingWorkerExtended("Set Location", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			@Override
 			protected void done() {
 				//Add location in table if needed

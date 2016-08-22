@@ -156,7 +156,7 @@ public class BiosampleTab extends JPanel implements ISpiritTab {
 				}
 				//Load my samples in stockcare (forcedbiotype is not null)
 				if(first && searchPane.getForcedBiotypes()!=null) {
-					new SwingWorkerExtended("Loading my Samples", BiosampleTab.this, SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+					new SwingWorkerExtended("Loading my Samples", BiosampleTab.this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 						protected void done() {
 							if(first) {
 								first = false;

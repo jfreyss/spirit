@@ -133,7 +133,7 @@ public class CagePrinterPDF {
 				img.setAbsolutePosition(tileW*(col+1) - 33, doc.getPageSize().getHeight() - (tileH*row+12+margin));
 				doc.add(img);
 			}
-			if(group!=null && group.getColor()!=null && !study.isBlind() && !whiteBackground) {
+			if(group!=null && group.getColor()!=null && (study!=null && !study.isBlind()) && !whiteBackground) {
 				Color c = group.getColor();
 				canvas.saveState();
 				canvas.setRGBColorFill(c.getRed()/3+170, c.getGreen()/3+170, c.getBlue()/3+170);
@@ -167,8 +167,8 @@ public class CagePrinterPDF {
 	        y+=86; canvas.showTextAligned(Element.ALIGN_LEFT, "Delivery date: ", x, doc.getPageSize().getHeight() - y , 0);
 	        y+=13; canvas.showTextAligned(Element.ALIGN_LEFT, "PO Number: ", x, doc.getPageSize().getHeight() - y , 0);
 	        y+=22; canvas.showTextAligned(Element.ALIGN_LEFT, "Study: ", x, doc.getPageSize().getHeight() - y , 0);
-	        y+=14; if(!study.isBlind() && printGroupsTreatments)canvas.showTextAligned(Element.ALIGN_LEFT, "Group: ", x, doc.getPageSize().getHeight() - y , 0);
-	        y+=23; if(!study.isBlind() && printGroupsTreatments)canvas.showTextAligned(Element.ALIGN_LEFT, "Treatment: ", x, doc.getPageSize().getHeight() - y , 0);
+	        y+=14; if(study!=null && !study.isBlind() && printGroupsTreatments)canvas.showTextAligned(Element.ALIGN_LEFT, "Group: ", x, doc.getPageSize().getHeight() - y , 0);
+	        y+=23; if(study!=null && !study.isBlind() && printGroupsTreatments)canvas.showTextAligned(Element.ALIGN_LEFT, "Treatment: ", x, doc.getPageSize().getHeight() - y , 0);
 	        y+=50; canvas.showTextAligned(Element.ALIGN_LEFT, "License: ", x, doc.getPageSize().getHeight() - y , 0);
 	        y+=13; canvas.showTextAligned(Element.ALIGN_LEFT, "Experimenter: ", x, doc.getPageSize().getHeight() - y , 0);
 	        canvas.endText();

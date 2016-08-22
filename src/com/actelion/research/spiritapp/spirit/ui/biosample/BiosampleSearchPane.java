@@ -109,7 +109,7 @@ public class BiosampleSearchPane extends JPanel {
 		
 		try {
 			final SpiritUser user = Spirit.askForAuthentication();
-			new SwingWorkerExtended("Querying Biosamples", tab, SwingWorkerExtended.FLAG_CANCELABLE | SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+			new SwingWorkerExtended("Querying Biosamples", tab, SwingWorkerExtended.FLAG_CANCELABLE | SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 				private List<Biosample> biosamples; 
 				private long s = System.currentTimeMillis();
 				

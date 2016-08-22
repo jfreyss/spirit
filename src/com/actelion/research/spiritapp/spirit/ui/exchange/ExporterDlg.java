@@ -27,6 +27,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
+import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
@@ -134,10 +135,10 @@ public class ExporterDlg extends JEscapeDialog {
 				panel, 
 				UIUtils.createTitleBox("Query",
 					UIUtils.createVerticalBox(
-						exportCurrentViewRadioButton,
-						UIUtils.createHorizontalBox(exportStudyRadioButton, studyComboBox, Box.createHorizontalGlue()),
-						exportAdminRadioButton,
-						exportAllRadioButton)),						
+						UIUtils.createHorizontalBox(exportCurrentViewRadioButton, Box.createHorizontalStrut(26), Box.createHorizontalGlue()),
+						UIUtils.createHorizontalBox(exportStudyRadioButton, studyComboBox, Box.createHorizontalStrut(26), Box.createHorizontalGlue()),
+						UIUtils.createHorizontalBox(exportAdminRadioButton, Box.createHorizontalStrut(26), Box.createHorizontalGlue()),
+						UIUtils.createHorizontalBox(exportAllRadioButton, Box.createHorizontalStrut(26), Box.createHorizontalGlue()))),						
 				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), new JLabel("Destination File: "), fileBrowser, okButton)));
 		UIUtils.adaptSize(this, 1000, 750);
 		eventButtonClicked();
@@ -145,7 +146,7 @@ public class ExporterDlg extends JEscapeDialog {
 	}
 	
 	private void eventButtonClicked() {
-		new SwingWorkerExtended("Loading", getContentPane(), SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS | SwingWorkerExtended.FLAG_CANCELABLE) {
+		new SwingWorkerExtended("Loading", getContentPane(), SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS | SwingWorkerExtended.FLAG_CANCELABLE) {
 			private Exchange tmpExchange = null;			
 			@Override
 			protected void doInBackground() throws Exception {
@@ -182,7 +183,9 @@ public class ExporterDlg extends JEscapeDialog {
 				} else if(exportAllRadioButton.isSelected()) {
 					fileBrowser.setFile(new File(parent, System.currentTimeMillis()+".spirit").getAbsolutePath());
 					this.tmpExchange = new Exchange();
-					tmpExchange.addStudies(DAOStudy.queryStudies(new StudyQuery(), user));
+					List<Study> studies = DAOStudy.queryStudies(new StudyQuery(), user);
+					if(studies.size()>10) throw new Exception("The number of studies to be exported is limited to 10");
+					tmpExchange.addStudies(studies);
 					tmpExchange.addBiosamples(DAOBiosample.queryBiosamples(new BiosampleQuery(), user));
 					tmpExchange.addLocations(DAOLocation.queryLocation(new LocationQuery(), user));
 					tmpExchange.addResults(DAOResult.queryResults(new ResultQuery(), user));					
@@ -202,6 +205,8 @@ public class ExporterDlg extends JEscapeDialog {
 	
 	
 	private void export() throws Exception {
+		//Check non emptyness
+		if(exchange.isEmpty()) throw new Exception("The exchange file is empty");
 		
 		//Check Rights
 		for(Study s: exchange.getStudies()) {
@@ -209,6 +214,8 @@ public class ExporterDlg extends JEscapeDialog {
 				throw new Exception("You must have admin rights on "+s+" to export it");
 			}
 		}
+		
+		
 		if(fileBrowser.getFile().length()==0) throw new Exception("You must enter a file");
 		Writer writer = new BufferedWriter(new FileWriter(fileBrowser.getFile()));
 		Exporter.write(exchange, writer);

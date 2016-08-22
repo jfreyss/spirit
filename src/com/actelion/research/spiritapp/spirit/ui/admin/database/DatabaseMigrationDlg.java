@@ -215,20 +215,13 @@ public class DatabaseMigrationDlg extends JDialog {
 		} catch(Exception e) {
 			
 			e.printStackTrace();
-			int res = JOptionPane.showConfirmDialog(null, e+".\r\n\r\nDo you want to try to fix the errors automatically", "Error", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+			int res = JOptionPane.showConfirmDialog(null, "There were some errors (" + e.getCause() + ").\n\nDo you want Spirit to fix the errors?", "Error", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 			if(res==JOptionPane.YES_OPTION) {
-				try {
-					JPAUtil.initFactory(adapter, "update");
-					ok = true;
-				} catch(Exception e2) {	
-					e2.printStackTrace();
-					throw e2;
-				}
+				JPAUtil.initFactory(adapter, "update");
+				ok = true;
 			} else {
 				ok = false;
 			}
-//		} catch(Exception e) {
-//			throw e;
 		}
 		if(ok && adapter==DBAdapter.getAdapter()) {
 			ConfigProperties.getInstance().setDBVersion(MigrationScript.getExpectedDBVersion());

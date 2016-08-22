@@ -34,11 +34,6 @@ public class HSQLMemoryAdapter extends HSQLFileAdapter {
 	}
 	
 	@Override
-	public void preInit() throws Exception {
-		super.preInit();
-	}
-
-	@Override
 	public String getDBConnectionURL() {
 		return "jdbc:hsqldb:mem:spirit";
 	}

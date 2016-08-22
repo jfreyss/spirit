@@ -299,7 +299,7 @@ public class SampleWeighingDlg extends JEscapeDialog {
 		
 		
 		final List<Biosample> list = new ArrayList<Biosample>();		
-		new SwingWorkerExtended("Loading", templatePanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+		new SwingWorkerExtended("Loading", templatePanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			@Override
 			protected void doInBackground() throws Exception {
 				try {

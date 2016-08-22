@@ -42,6 +42,7 @@ import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.FormatterUtils;
+import com.actelion.research.util.HtmlUtils;
 
 public class SamplesLocationReport extends AbstractReport {
 	
@@ -51,8 +52,11 @@ public class SamplesLocationReport extends AbstractReport {
 	
 	public SamplesLocationReport() {		
 		super(ReportCategory.SAMPLES, 
-				"Samples Location", 
-				"Show the location of each sample in the study", 
+				"Inventory", 
+				"Show the location of each sample in the study: " + HtmlUtils.convert2Html(
+						"\tLocation\tContainer\tGroup\tPhase\tTopId\tBiotype\tMetadata\n"
+						+ "SampleId1\t\n"
+						+ "SampleId2\t\n"), 
 				new ReportParameter[]{SHOW_WITHOUT_LOCATION_PARAMETER, SHOW_RESULTS_PARAMETER});
 	}
 
@@ -65,11 +69,6 @@ public class SamplesLocationReport extends AbstractReport {
 		
 		//Load the samples and their results
 		List<Biosample> allSamples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForStudyIds(study.getStudyId()), user);		
-//		for(Biosample topAnimal: study.getTopAttachedBiosamples()) {				
-//			allSamples.addAll(topAnimal.getSamplesFromStudyDesign(null, true));
-//		}
-//		
-//		DAOResult.attachOrCreateStudyResultsToSpecimen(study, study.getTopAttachedBiosamples(), null, false);
 		Map<Biosample, List<Result>> sample2results = new HashMap<Biosample, List<Result>>();
 		if(showResults){
 			List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForBiosampleIds(JPAUtil.getIds(allSamples)), user);

@@ -36,31 +36,25 @@ public class PropertyKey {
 	
 	public static enum Tab {
 		INTERNAL,
-		USER,
+		SYSTEM,
 		STUDY
 	}
 	
 	
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// USER PROPERTIES
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 	/**
 	 * Contains the DB version. This property is required, otherwise it assumed to be the latest
 	 */
 	public static final PropertyKey DB_VERSION = new PropertyKey(Tab.INTERNAL, "DB Version", "", "db.version", null);
 	
-	/**
-	 * user.roles contains the list of user configurable roles (csv)
-	 */
-	public static final PropertyKey USER_ROLES = new PropertyKey(Tab.USER, "Roles", "comma separated list of roles (in addition to admin, readall)", "user.roles", "");
-	
-	public static final PropertyKey USER_LOGIN_ROLE = new PropertyKey(Tab.USER, "Login with one specific role:", "Are users requested to login with a specic role?<br>(if true, the user will be asked for a role upon login instead of having all roles simultaneously)", "user.login.role", "false", "true,false");
-	public static final PropertyKey RIGHT_ROLEONLY = new PropertyKey(Tab.USER, "Are user-rights role-based only:", "Are the rights only role based??<br>(if true, the rights are purely role based and not user/dept specific)", "user.login.dept", "false", "true,false");
-	/**
-	 * user.mode defines if the system is open (ie open=everything is readable or restricted=restricted to department (default))
-	 */
-	public static final PropertyKey RIGHTS_MODE = new PropertyKey(Tab.USER, "Data Separation", "open=all study designs are viewable, all biosamples and their results are readable.<br>restricted=biosamples and their results are limited to department", "rights.mode", "restricted", "open, restricted");
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// SYSTEM PROPERTIES
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	public static final PropertyKey LAST_CHANGES = new PropertyKey(Tab.SYSTEM, "Last changes", "Home page shows changes from the last n. days", "system.home.days", "7", "1,3,7,15,31,90,365");	
+	public static final PropertyKey USER_ROLES = new PropertyKey(Tab.SYSTEM, "Roles", "comma separated list of roles (in addition to admin, readall)", "user.roles", "");	
+	public static final PropertyKey USER_LOGIN_ROLE = new PropertyKey(Tab.SYSTEM, "Login with one specific role:", "Are users requested to login with a specic role?<br>(if true, the user will be asked for a role upon login instead of having all roles simultaneously)", "user.login.role", "false", "true,false");
+	public static final PropertyKey RIGHT_ROLEONLY = new PropertyKey(Tab.SYSTEM, "Are user-rights role-based only:", "Are the rights only role based??<br>(if true, the rights are purely role based and not user/dept specific)", "user.login.dept", "false", "true,false");
+	public static final PropertyKey RIGHTS_MODE = new PropertyKey(Tab.SYSTEM, "Data Separation", "open=all study designs are viewable, all biosamples and their results are readable.<br>restricted=biosamples and their results are limited to department", "rights.mode", "restricted", "open, restricted");
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// STUDY PROPERTIES
@@ -79,7 +73,7 @@ public class PropertyKey {
 
 	
 	
-	public static final PropertyKey STUDY_METADATA_NAME = new PropertyKey(STUDY_METADATA, "Name", "", "study.metadata.name", "") {
+	public static final PropertyKey STUDY_METADATA_NAME = new PropertyKey(STUDY_METADATA, "Name", "Display for the end user", "study.metadata.name", "") {
 		@Override public String getDefaultValue(String nestedValue) {
 			return
 				"CLINICAL".equals(nestedValue)?"Clinical Status":
@@ -97,7 +91,7 @@ public class PropertyKey {
 					"EXPERIMENTER".equals(nestedValue)? DataType.ALPHA.name(): 
 						DataType.ALPHA.name();};
 	};
-	public static final PropertyKey STUDY_METADATA_PARAMETERS = new PropertyKey(STUDY_METADATA, "Parameters", "", "parameters", "") {
+	public static final PropertyKey STUDY_METADATA_PARAMETERS = new PropertyKey(STUDY_METADATA, "Parameters", "list of choices if datatype is LIST", "parameters", "") {
 		@Override public String getDefaultValue(String nestedValue) {return "CLINICAL".equals(nestedValue)?"PRECLINICAL, CLINICAL": DataType.AUTO.name();};		
 	};
 	public static final PropertyKey STUDY_METADATA_ROLES = new PropertyKey(STUDY_METADATA, "Roles", "Who is allowed to change it?<br>Leave empty if not concerned.", "roles", "", USER_ROLES);

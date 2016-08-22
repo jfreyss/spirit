@@ -23,4 +23,5 @@ package com.actelion.research.spiritcore.business;
 
 public interface IObject extends Cloneable {
 	public int getId();	
+	public void setId(int id);
 }

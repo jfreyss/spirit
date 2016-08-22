@@ -269,6 +269,7 @@ public final class UIUtils {
 	
 	public static JPanel createGrid(Component... components) {
 		JPanel res = new JPanel(new GridLayout(1, components.length));
+		res.setOpaque(false);
 		for (Component component : components) {
 			res.add(component);
 		}
@@ -339,6 +340,12 @@ public final class UIUtils {
 	}
 	
 	public static JPanel createVerticalBox(Border border, Component... comps) {
+		JPanel res = createVerticalBox(comps);
+		res.setBorder(border);
+		return res;
+	}
+	
+	public static JPanel createVerticalBox(Border border, List<? extends Component> comps) {
 		JPanel res = createVerticalBox(comps);
 		res.setBorder(border);
 		return res;

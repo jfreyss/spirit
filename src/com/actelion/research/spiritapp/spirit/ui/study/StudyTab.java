@@ -43,6 +43,7 @@ import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
+import com.actelion.research.util.ui.SwingWorkerExtended;
 
 public class StudyTab extends JPanel implements ISpiritTab {
 	private final StudyTable studyTable = new StudyTable();
@@ -100,20 +101,18 @@ public class StudyTab extends JPanel implements ISpiritTab {
 			public void componentShown(ComponentEvent e) {
 				if(getRootPane()!=null && searchPane!=null){
 					getRootPane().setDefaultButton(searchPane.getSearchButton());		
-					if(!shown && getRootPane()!=null && getStudyIds().length()==0) {
-						searchPane.new Action_ViewMine().actionPerformed(null);
-						shown=true;
+					if(!shown && getRootPane()!=null /*&& getStudyIds().length()==0*/) {
+						searchPane.reset();
+						shown = true;
 					}
 				}
 			}
-		});
-		
+		});		
 	}	
 
 	@Override
 	public<T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
 		if(!isShowing()) return;
-		
 		if(action==SpiritChangeType.MODEL_DELETED && what==Study.class) {
 			studyTable.getModel().getRows().removeAll(details);
 			studyTable.getModel().fireTableDataChanged();
@@ -157,22 +156,30 @@ public class StudyTab extends JPanel implements ISpiritTab {
 		if(studyIds==null || studyIds.length()==0) return;
 		
 		if(studyIds.equals(getStudyIds())) return; //no need to refresh
+		searchPane.setStudyIds(studyIds);
 		
-		StudyQuery q = new StudyQuery();
-		q.setStudyIds(studyIds);
-		try {
-			List<Study> studies = DAOStudy.queryStudies(q, Spirit.getUser());
-			studyTable.setRows(studies);
-			studyTable.setSelection(studies);
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-		
+		//Execute this thread after the others		
+		new SwingWorkerExtended("Loading Studies", studyTable, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
+			List<Study> studies;
+			@Override
+			protected void doInBackground() throws Exception {
+				StudyQuery q = new StudyQuery();
+				q.setStudyIds(studyIds);
+				
+				studies = DAOStudy.queryStudies(q, Spirit.getUser());
+			}
+			@Override
+			protected void done() {
+				if(!studyTable.getRows().containsAll(studies)) {
+					studyTable.setRows(studies);
+				}
+				studyTable.setSelection(studies);
+			}
+		};
 	}
 	
 	
 	public List<Study> getStudies() {
-//		return studyTable.getRows();
 		return studyDetailPanel.getStudy()==null? new ArrayList<Study>(): Collections.singletonList(studyDetailPanel.getStudy());
 	}
 	

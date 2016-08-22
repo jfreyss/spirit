@@ -46,6 +46,7 @@ import java.util.Set;
  */
 public class ExchangePojo implements Serializable {
 	private String name;
+	private String version;
 	private Set<BiotypePojo> biotypes;
 	private Set<TestPojo> tests;
 	
@@ -60,10 +61,19 @@ public class ExchangePojo implements Serializable {
 	public String getName() {
 		return name;
 	}
+	
 	public void setName(String name) {
 		this.name = name;
 	}
 	
+	public String getVersion() {
+		return version;
+	}
+	
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
 	public Set<BiotypePojo> getBiotypes() {
 		return biotypes;
 	}

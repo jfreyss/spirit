@@ -67,7 +67,9 @@ public class HomeTab extends JPanel implements ISpiritTab {
 	
 	@Override
 	public <T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
-		if(isShowing()) editorPane.updateRecentChanges();
+		if(isShowing()) {
+			editorPane.updateRecentChanges();
+		}
 	}
 
 	@Override

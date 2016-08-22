@@ -23,33 +23,31 @@ package com.actelion.research.spiritapp.spirit.ui.study;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Vector;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport;
 import com.actelion.research.spiritapp.spirit.services.report.MixedReport;
 import com.actelion.research.spiritapp.spirit.services.report.ReportFactory;
-import com.actelion.research.spiritapp.spirit.services.report.SpecimenFoodWaterReport;
-import com.actelion.research.spiritapp.spirit.services.report.AbstractReport.ReportCategory;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
-import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
+import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
@@ -57,8 +55,9 @@ import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 public class ReportDlg extends JEscapeDialog {
 	
 	private final Study s;
-	private final Map<AbstractReport, JCheckBox> report2checkboxes = new LinkedHashMap<AbstractReport, JCheckBox>();
-	private final JPanel centerPanel = new JPanel(new GridLayout(1,1));
+	private final ReportFactory reportFactory = ReportFactory.getInstance();
+	private JList<AbstractReport> reportList;
+	private final JPanel detailPanel = new JPanel(new BorderLayout());
 	private final JButton createReportsButton = new JIconButton(IconType.EXCEL, "Create Report");
 
 	public ReportDlg(Study s) {		
@@ -88,35 +87,36 @@ public class ReportDlg extends JEscapeDialog {
 			}
 		});
 		
-		//create checkboxes
-		for(ReportCategory cat: ReportCategory.values()) {
-			for(final AbstractReport report: ReportFactory.get(cat)) {
-				final JCheckBox cb = new JCheckBox();
-				cb.addActionListener(new ActionListener() {					
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						refresh();
-						cb.requestFocusInWindow();
-						for (JCheckBox c : report2checkboxes.values()) {
-							if(c.isSelected()) {
-								createReportsButton.setEnabled(true);
-								return;
-							}
-						}
-						createReportsButton.setEnabled(false);
-					}
-				});
-				report2checkboxes.put(report, cb);
+		
+		//Layout
+		reportList = new JList<>(new Vector<AbstractReport>(reportFactory.getReports()));
+		reportList.setCellRenderer(new DefaultListCellRenderer() {
+			@Override
+			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {				
+				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+				AbstractReport rep = (AbstractReport) value;
+				setText((index+1)+". "+rep.getCategory().getName() + " - " + rep.getName());
+				return this;
 			}
-		}
-		
-		
+		});
+		reportList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		reportList.addListSelectionListener(new ListSelectionListener() {			
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				createReportsButton.setEnabled(reportList.getSelectedValuesList().size()>0);
+				refresh();
+			}
+		});
 		refresh();
 		
-
-		//Layout
 		JPanel contentPane = new JPanel(new BorderLayout());
-		contentPane.add(BorderLayout.CENTER, centerPanel);		
+		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, 
+				UIUtils.createTitleBox("Reports", UIUtils.createBox(
+						new JScrollPane(reportList),
+						new JInfoLabel("<html>Please select one or several reports from the list.<br>(Reports are configurable)"))),
+				detailPanel);
+		splitPane.setDividerLocation(300);
+		contentPane.add(BorderLayout.CENTER, splitPane);		
 		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), createReportsButton));
 		setContentPane(contentPane);
 		
@@ -126,54 +126,20 @@ public class ReportDlg extends JEscapeDialog {
 	}
 	
 	private void refresh() {
-		//mainPanel
-		List<Component> comps = new ArrayList<Component>();
-		for(ReportCategory cat: ReportCategory.values()) {
-			List<JPanel> panels = new ArrayList<JPanel>();
-			for(final AbstractReport report: ReportFactory.get(cat)) {
-				JCheckBox cb = report2checkboxes.get(report);
-				panels.add(ReportFactory.createReportPanel(report, s, cb));
-			}
-			comps.add(UIUtils.createBox(BorderFactory.createRaisedBevelBorder(), 
-					UIUtils.createVerticalBox(panels.toArray(new JPanel[0])), 
-					null, null, UIUtils.createVerticalTitlePanel(cat.toString()),null));
-
+		detailPanel.removeAll();
+		if(reportList.getSelectedValuesList().size()==1) {
+			AbstractReport rep = reportList.getSelectedValuesList().get(0);
+			detailPanel.add(ReportFactory.createReportPanel(rep, s));
+		} else {
 		}
-		centerPanel.removeAll();
-		centerPanel.add(new JScrollPane(
-				UIUtils.createBox(Box.createVerticalGlue(), UIUtils.createVerticalBox(comps.toArray(new Component[0])), null),
-				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER)
-				);
-		centerPanel.validate();
-		
+		detailPanel.validate();
 		
 	}
 
-	private void createReports() throws Exception {
-		List<AbstractReport> reports = new ArrayList<AbstractReport>();
-		for(AbstractReport report: report2checkboxes.keySet()) {
-			if(!report2checkboxes.get(report).isSelected()) continue;
-			reports.add(report);
-		}
-		MixedReport rep = new MixedReport(reports);
+	private void createReports() throws Exception {		
+		MixedReport rep = new MixedReport(reportList.getSelectedValuesList());
 		rep.populateReport(s);
 		rep.export(null);
 	}
 	
-	
-	public static void main(String[] args) throws Exception {
-		Spirit.initUI();
-		Spirit.setUser(DAOSpiritUser.loadUser("freyssj"));
-		Study s = DAOStudy.getStudyByStudyId("S-00515");
-//		new ReportDlg(s);
-		
-		
-		List<AbstractReport> reports = new ArrayList<AbstractReport>();
-		reports.add(new SpecimenFoodWaterReport());
-
-		MixedReport rep = new MixedReport(reports);
-		rep.populateReport(s);
-		rep.export(null);
-
-	}
 }

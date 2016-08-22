@@ -149,8 +149,8 @@ public class BiosampleCreationHelper {
 	 */
 	public static List<Biosample> processTemplateInStudy(Study study, NamedSampling ns, Collection<Phase> phases, ContainerType containerFilter, List<Biosample> animalFilters) {
 		assert study!=null;
-		List<Biosample> biosamples = new ArrayList<Biosample>();		
-		if(phases==null) phases = new ArrayList<Phase>(study.getPhases());
+		List<Biosample> biosamples = new ArrayList<>();		
+		if(phases==null) phases = new ArrayList<>(study.getPhases());
 				
 		//Be sure, the objects belong to the session.
 		animalFilters = JPAUtil.reattach(animalFilters);
@@ -183,7 +183,7 @@ public class BiosampleCreationHelper {
 			}
 		}
 		//Filter Samples
-		List<Biosample> res = new ArrayList<Biosample>();
+		List<Biosample> res = new ArrayList<>();
 		for (Biosample biosample : biosamples) {
 			if(containerFilter!=null && !containerFilter.equals(biosample.getContainerType())) {
 				//Don't add
@@ -198,7 +198,7 @@ public class BiosampleCreationHelper {
 		}
 		
 		//generateContainers
-		List<Biosample> filtered = new ArrayList<Biosample>();
+		List<Biosample> filtered = new ArrayList<>();
 		for (Biosample b : res) {
 			if(b.getContainerType()==null) continue; 
 			filtered.add(b);
@@ -219,7 +219,7 @@ public class BiosampleCreationHelper {
 	public static List<Biosample> processTemplateOutsideStudy(NamedSampling ns, List<Biosample> parents, boolean generateContainers) throws Exception {
 		
 		//Create samples
-		List<Biosample> biosamples = new ArrayList<Biosample>();	
+		List<Biosample> biosamples = new ArrayList<>();	
 		for (Biosample parent : parents) {
 			biosamples.add(parent);		
 			for (Sampling topSampling : ns.getTopSamplings()) {
@@ -313,7 +313,7 @@ public class BiosampleCreationHelper {
 
 	
 	/**
-	 * Get existing samples or create new biosample from the phase, animal and given sampling
+	 * Adds the existing sample (or create new one), matching the given phase, parent and sampling definition
 	 * @param phase - null if outside a study, not null if within a study
 	 * @param parent - the parent from which we create the samples
 	 * @param sampling - the current sampling to be applied
@@ -334,14 +334,13 @@ public class BiosampleCreationHelper {
 			phaseOfSample = isNecropsy && endPhase!=null? endPhase: phase;
 		}
 		
-		//Do we have an existing biosample (with the same hierarchy)
-		List<Biosample> samples = new ArrayList<Biosample>();
+		//Find compatible biosamples
+		List<Biosample> samples = new ArrayList<>();
 		if(phase!=null) {
 			for (Biosample biosample : parent.getChildren()) {
-				if(res.contains(biosample)) continue;
-				
+				System.out.println("BiosampleCreationHelper.retrieveOrCreateSamplesRec() SEARCH for " + phase+" "+sampling+" "+parent+" > " +biosample+" > " + sampling.getId()+" "+biosample.getAttachedSampling().getId()+" > " +  res.contains(biosample)+" "+!phaseOfSample.equals(biosample.getInheritedPhase())+" "+!sampling.equals(biosample.getAttachedSampling()));
+				if(res.contains(biosample)) continue;				
 				if(!phaseOfSample.equals(biosample.getInheritedPhase())) continue;
-
 				if(!sampling.equals(biosample.getAttachedSampling())) continue;
 					
 				//We found a compatible one
@@ -349,8 +348,8 @@ public class BiosampleCreationHelper {
 			}
 		}
 		
-		//if there is no biosample, create a new compatible one
 		if(samples.size()==0) {
+			//Create a compatible biosample
 			Biosample created = sampling.createCompatibleBiosample();			
 			created.setAttachedSampling(sampling);
 			created.setParent(parent);
@@ -363,6 +362,7 @@ public class BiosampleCreationHelper {
 		} 
 		
 		Biosample b = samples.get(0);
+		System.out.println("BiosampleCreationHelper.retrieveOrCreateSamplesRec() FIND FOR  " + phase+" "+sampling+" "+parent+" > "+b);
 		res.add(b);
 		for (Sampling s : sampling.getChildren()) {
 			retrieveOrCreateSamplesRec(phase, b, s, res);

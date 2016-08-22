@@ -25,9 +25,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -43,7 +41,6 @@ import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
-import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
@@ -87,11 +84,11 @@ public class DAOExchangeTest {
 					throw new Exception("The system could not find the default configuration. The system is therefore empty");
 				}
 				Exchange exchange = Importer.read(new InputStreamReader(is));
-				Assert.assertTrue(exchange.getStudies().size()>=2);
+				Assert.assertTrue("The demo file has only " + exchange.getStudies().size() + " studies", exchange.getStudies().size()>=2);
 	
 				Study s = exchange.getStudies().iterator().next();
 				Assert.assertEquals(2, s.getNamedSamplings().size());
-				Assert.assertNotNull(s.getSampling("Blood Sampling", "Blood: EDTA; Alive"));
+				Assert.assertEquals(2, s.getSamplings("Blood Sampling", "Blood: EDTA; Alive").size());
 				
 				Biotype blood = Biotype.mapName(exchange.getBiotypes()).get("Blood");
 				Assert.assertNotNull(blood);
@@ -119,16 +116,17 @@ public class DAOExchangeTest {
 			int nref2 = DAOStudy.getStudies().size()-2;
 			Assert.assertEquals("IVV2016-1", DAOStudy.getStudies().get(nref1).getIvv());
 			Assert.assertEquals("IVV2016-2", DAOStudy.getStudies().get(nref2).getIvv());
-			Study s = DAOStudy.getStudies().get(nref1);
-			Set<NamedSampling> samplings = s.getNamedSamplings();
-			List<NamedSampling> ns = new ArrayList<>(samplings);
-			Assert.assertTrue(ns.size()==2);
-			Sampling sampling = s.getSampling("Blood Sampling", "Blood: EDTA; Alive");
-			Assert.assertNotNull("Cannot find Blood: EDTA; Dead among " + ns.get(1).getAllSamplings(), sampling);
+			Study s2016_1 = DAOStudy.getStudies().get(nref1);
+			Assert.assertEquals(2, s2016_1.getNamedSamplings().size());
 			
+			List<Sampling> samplings = s2016_1.getSamplings("Blood Sampling", "Blood: EDTA; Alive");
+			Assert.assertEquals(2, samplings.size());
+			Assert.assertTrue(samplings.get(0).getSamples().size()>0);
+			Assert.assertTrue(samplings.get(1).getSamples().size()>0);
+			Assert.assertEquals(samplings.get(0).getSamples().size(), samplings.get(1).getSamples().size());
+
 			
-			
-			
+			//
 			//Check the biosamples
 			BiosampleQuery q1 = new BiosampleQuery();
 			q1.setStudyIds(DAOStudy.getStudies().get(nref1).getStudyId());
@@ -143,6 +141,14 @@ public class DAOExchangeTest {
 					Assert.assertTrue(b.getAttachedSampling()!=null);
 				}
 			}
+			BiosampleQuery q2 = new BiosampleQuery();
+			q2.setStudyIds(s2016_1.getStudyId());
+			q2.setBiotype(DAOBiotype.getBiotype("Blood"));
+			List<Biosample> bloods = DAOBiosample.queryBiosamples(q2, user);
+			Assert.assertTrue(bloods.size()>0);
+			System.out.println(bloods.get(0).getMetadataAsString());
+			Assert.assertEquals("EDTA Alive", bloods.get(0).getMetadataAsString());
+			
 			
 			//Check the locations
 			Location loc = DAOLocation.getCompatibleLocation("Office/Lab 2/Tank A/Tower 1/Box 1", user);
@@ -154,9 +160,9 @@ public class DAOExchangeTest {
 			Assert.assertTrue(loc.getBiosamples().size()>0);
 			
 			//Check the results
-			ResultQuery q = new ResultQuery();
-			q.setStudyIds(DAOStudy.getStudies().get(nref1).getStudyId());
-			List<Result> results = DAOResult.queryResults(q, user);
+			ResultQuery qr = new ResultQuery();
+			qr.setStudyIds(DAOStudy.getStudies().get(nref1).getStudyId());
+			List<Result> results = DAOResult.queryResults(qr, user);
 			Assert.assertTrue(results.size()>0);
 			for (Result r : results) {			
 				Assert.assertTrue(r.getOutputResultValuesAsString().length()>0);

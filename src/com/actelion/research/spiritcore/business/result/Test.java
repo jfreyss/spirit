@@ -73,9 +73,6 @@ public class Test implements Comparable<Test>, IEntity {
 	@Column(name="assay_name", length=50, unique=true, nullable=false)
 	private String name;	
 	
-//	@Column(name="description", length=1000)
-//	private String description;
-	
 	@Column(name="upd_user", nullable=false)
 	private String updUser;
 	

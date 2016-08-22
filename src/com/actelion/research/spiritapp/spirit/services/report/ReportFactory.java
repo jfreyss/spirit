@@ -21,15 +21,18 @@
 
 package com.actelion.research.spiritapp.spirit.services.report;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.List;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -38,8 +41,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import org.slf4j.LoggerFactory;
+
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport.ReportCategory;
 import com.actelion.research.spiritcore.business.study.Study;
+import com.actelion.research.util.ui.FastFont;
+import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.UIUtils;
 
 
@@ -50,36 +57,53 @@ import com.actelion.research.util.ui.UIUtils;
  */
 public class ReportFactory {
 
-	public static AbstractReport[] REPORTS = new AbstractReport[] {
-		new StudyDesignReport(),
-		new StudyGroupAssignmentReport(),
-		new SpecimenStatusReport(),
-		
-		new SpecimenWeighingToxicologyReport(),
-		new SpecimenWeighingInVivoReport(),
-		new SpecimenFoodWaterReport(),
-		
-		new SamplesToxicologyReport(),
-		new SamplesInVivoReport(),
-		new SamplesMeasurementReport(),		
-		new SamplesLocationReport()
-	};
+	private static ReportFactory instance = null;
+	private List<AbstractReport> reports = new ArrayList<>();
 	
-	public static List<AbstractReport> get(ReportCategory cat){
-		List<AbstractReport> res = new ArrayList<AbstractReport>();
-		for (AbstractReport r : REPORTS) {
+	public ReportFactory() {
+		reports.add(new StudyDesignReport());
+		reports.add(new StudyGroupAssignmentReport());
+		reports.add(new SamplesLocationReport());
+		reports.add(new SamplesMeasurementReport());
+		try {
+			reports.addAll(getAbstractReports("com.actelion.research.spiritapp.spirit.services.report.custom"));
+		} catch(Exception e) {
+			LoggerFactory.getLogger(getClass()).error("Could not retrieve custom reports", e);
+		}		
+		Collections.sort(reports, new Comparator<AbstractReport>() {
+			@Override
+			public int compare(AbstractReport o1, AbstractReport o2) {
+				return o1.getCategory().compareTo(o2.getCategory());
+			}
+		});
+	}
+	
+	public static ReportFactory getInstance() {
+		if(instance==null) {
+			instance = new ReportFactory();
+		}
+		return instance;
+	}
+	
+	public List<AbstractReport> getReports() {
+		return reports;
+	}
+	
+	public List<AbstractReport> getReports(ReportCategory cat) {
+		List<AbstractReport> res = new ArrayList<>();
+		for (AbstractReport r : reports) {
 			if(r.getCategory()==cat) res.add(r);
 		}
 		return res;
 	}
 	
-	public static JPanel createReportPanel(final AbstractReport report, final Study study, final JCheckBox checkBox) {
+	public static JPanel createReportPanel(final AbstractReport report, final Study study) {
 		
 		JPanel extraPanel = report.getExtraParameterPanel(study);
 
 		
 		ReportParameter[] parameters = report.getReportParameters();
-		List<Component> reportPanels = new ArrayList<Component>();
+		List<Component> reportPanels = new ArrayList<>();
 		
 		//Create the Panel for the different options
 		for (int j = 0; j < parameters.length; j++) {
@@ -112,10 +136,9 @@ public class ReportFactory {
 		
 		//Add the custom parameters
 		if(extraPanel!=null) {
-			JScrollPane sp = new JScrollPane(extraPanel);			
-			sp.setPreferredSize(new Dimension(Math.min(extraPanel.getPreferredSize().width+10, 208), Math.min(extraPanel.getPreferredSize().height+10, 200)));
-			reportPanels.add(sp);				
+			reportPanels.add(extraPanel);				
 		}
+		reportPanels.add(Box.createVerticalGlue());
 				
 		//Add the description
 		final JEditorPane editorPane = new JEditorPane("text/html", report.getDescription()==null?"":report.getDescription());
@@ -123,17 +146,54 @@ public class ReportFactory {
 		editorPane.setCaretPosition(0);
 		editorPane.setOpaque(false);
 		editorPane.setVisible(report.getDescription()!=null);
-		
+		JScrollPane sp = new JScrollPane(editorPane);
+		sp.setPreferredSize(new Dimension(500, 170));
 		//Create the ReportPanel (open only if selected)
-		JPanel panel = UIUtils.createBox(editorPane, UIUtils.createHorizontalTitlePanel(checkBox, report.getName(), checkBox.isSelected()? UIUtils.getColor(114, 160, 193): Color.LIGHT_GRAY));
-		if(checkBox.isSelected()) {
-			panel = UIUtils.createBox(BorderFactory.createEtchedBorder(), reportPanels.size()==0? null: UIUtils.createVerticalBox(BorderFactory.createEmptyBorder(2, 1, 1, 10), UIUtils.createVerticalBox(reportPanels.toArray(new Component[0]))), panel);		
-		} else{
-			panel = UIUtils.createBox(BorderFactory.createEtchedBorder(), panel);
-		}
-		
-		
-		return panel;
+		return UIUtils.createBox(
+					new JScrollPane(UIUtils.createVerticalBox(reportPanels)), 
+					UIUtils.createVerticalBox(
+							new JCustomLabel(report.getCategory().getName() + " - " + report.getName(), FastFont.BIGGER),
+							sp));		
+	}
+
+
+	private static List<AbstractReport> getAbstractReports(String packageName) throws Exception {
+	    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+	    assert classLoader != null;
+	    String path = packageName.replace('.', '/');
+	    Enumeration<URL> resources = classLoader.getResources(path);
+	    List<File> dirs = new ArrayList<>();
+	    while (resources.hasMoreElements()) {
+	        URL resource = resources.nextElement();
+	        dirs.add(new File(resource.getFile()));
+	    }
+	    List<AbstractReport> res = new ArrayList<>();
+	    for (File directory : dirs) {
+	        for(Class<?> claz: findClasses(directory, packageName)) {
+	        	if(AbstractReport.class.isAssignableFrom(claz)) {
+	        		res.add((AbstractReport) claz.newInstance());
+	        	}
+	        }
+	    }
+	    LoggerFactory.getLogger(ReportFactory.class).info("Loaded "+res.size()+" custom reports.");
+	    return res;
+	}
+	
+	private static List<Class<?>> findClasses(File directory, String packageName) throws ClassNotFoundException {
+	    List<Class<?>> classes = new ArrayList<Class<?>>();
+	    if (!directory.exists()) {
+	        return classes;
+	    }
+	    File[] files = directory.listFiles();
+	    for (File file : files) {
+	        if (file.isDirectory()) {
+	            assert !file.getName().contains(".");
+	            classes.addAll(findClasses(file, packageName + "." + file.getName()));
+	        } else if (file.getName().endsWith(".class")) {
+	            classes.add(Class.forName(packageName + '.' + file.getName().substring(0, file.getName().length() - 6)));
+	        }
+	    }
+	    return classes;
 	}
 	
 }

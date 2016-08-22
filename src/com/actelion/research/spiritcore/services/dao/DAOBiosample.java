@@ -696,11 +696,14 @@ public class DAOBiosample {
 		if (ids.size()>0 && DAOResult.queryResults(ResultQuery.createQueryForBiosampleIds(ids), null).size() > 0) {
 			throw new Exception("Some biosamples already contains results. Please delete the results first");
 		}
-		//Reload the samples
-		biosamples = getBiosamplesByIds(ids).values();
+//		//Reload the samples
+//		biosamples = getBiosamplesByIds(ids).values();
 				
 		//Delete
 		for (Biosample biosample : biosamples) {
+			if(!session.contains(biosample)) {
+				biosample = session.merge(biosample);
+			}
 			session.remove(biosample);
 		}
 		
@@ -956,7 +959,7 @@ public class DAOBiosample {
 		//Update the upddate/upduser
 		Date now = JPAUtil.getCurrentDateFromDatabase();
 		for (Biosample b : biosamples) {
-
+			b.preSave();
 			if(user==null) {
 				//Make sure the date and user were set by the programmer (import mode?)
 				if(b.getUpdUser()==null || b.getUpdDate()==null) {

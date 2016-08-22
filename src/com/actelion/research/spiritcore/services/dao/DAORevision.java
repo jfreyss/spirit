@@ -25,8 +25,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import javax.persistence.EntityManager;
@@ -74,14 +76,16 @@ public class DAORevision {
 			List<Location> locations = getLocations();
 			List<Biotype> biotypes = getBiotypes();
 			
-			return revId + ". " + user + 
-			(studies.size()==0? "": studies.size()==1? " > " + studies.get(0).getStudyId(): " > " + studies.size() + " Studies") +
-			(biosamples.size()==0? "": " > " + biosamples.size() + " Biosamples") +
-			(locations.size()==0? "": locations.size()==1? " > " + locations.get(0).getName(): " > " + locations.size() + " Locations") +
-			(results.size()>0? " > " + results.size() + " Results": "") +
-			(biotypes.size()==0? "": biotypes.size()==1? " > " + biotypes.get(0).getName(): " > " + biotypes.size() + " Biotypes") +
-			(tests.size()==0? "": tests.size()==1? " > " + tests.get(0).getName(): " > " + tests.size() + " Tests " ) +
-			 " (" + Formatter.formatDateTime(date) + ")";
+			StringBuilder sb = new StringBuilder();
+			sb.append(revId + ". " + user + ": " + (type==RevisionType.ADD?"Add": type==RevisionType.DEL?"Del": "Upd"));
+			sb.append((studies.size()==0? "": studies.size()==1? " " + studies.get(0).getStudyId(): " " + studies.size() + " Studies") +
+			(biosamples.size()==0? "": " " + biosamples.size() + " Biosamples") +
+			(locations.size()==0? "": locations.size()==1? " " + locations.get(0).getName(): " " + locations.size() + " Locations") +
+			(results.size()>0? " " + results.size() + " Results": "") +
+			(biotypes.size()==0? "": biotypes.size()==1? " " + biotypes.get(0).getName(): " " + biotypes.size() + " Biotypes") +
+			(tests.size()==0? "": tests.size()==1? " " + tests.get(0).getName(): " " + tests.size() + " Tests " ));
+			sb.append(" (" + Formatter.formatDateTime(date) + ")");
+			return sb.toString();
 		}
 
 		public Date getDate() {
@@ -149,13 +153,35 @@ public class DAORevision {
 		AuditQuery query = reader.createQuery().forRevisionsOfEntity(obj.getClass(), false, true).add(AuditEntity.id().eq(obj.getId()));
 		List<Object[]> res = query.getResultList();
 		
-		Map<String, Revision> map = parseResultQuery(res, obj.getClass());
+		Map<String, Revision> map = mapRevisions(res, obj.getClass());
 		List<Revision> revisions = new ArrayList<>(map.values());
 		Collections.sort(revisions);
 		LoggerFactory.getLogger(DAORevision.class).debug("Loaded revisions for " + obj+" in "+(System.currentTimeMillis()-s)+"ms");
 		return revisions;
 	}
 	
+	
+	public static Revision getRevision(int revId) {
+		long s = System.currentTimeMillis();
+		EntityManager session = JPAUtil.getManager();
+		AuditReader reader = AuditReaderFactory.get(session);	
+		
+		List<Class<? extends IObject>> entityClasses = new ArrayList<>();
+		entityClasses.add(Study.class);
+		entityClasses.add(Biosample.class);
+		entityClasses.add(Result.class);
+		entityClasses.add(Location.class);
+		entityClasses.add(Biotype.class);
+		entityClasses.add(Test.class);
+		
+		List<Object[]> objects = queryForRevisions(reader, entityClasses, revId, revId, null);
+		
+		Map<String, Revision> map = mapRevisions(objects, null);
+		assert map.values().size()==1;
+		Revision rev = map.values().iterator().next();
+		LoggerFactory.getLogger(DAORevision.class).debug("Loaded revisions " + revId + " in "+(System.currentTimeMillis()-s)+"ms");
+		return rev;
+	}
 	
 	public static List<Revision> getRevisions(String userFilter, Date untilDate, int daysBefore, boolean studies, boolean samples, boolean results, boolean locations, boolean admin) {
 		if(untilDate==null) untilDate = new Date();
@@ -194,7 +220,7 @@ public class DAORevision {
 		if(admin) entityClasses.add(Test.class);
 		
 		List<Object[]> objects = queryForRevisions(reader, entityClasses, rev1, rev2, userFilter);
-		Map<String, Revision> map = parseResultQuery(objects, null);
+		Map<String, Revision> map = mapRevisions(objects, null);
 
 		List<Revision> revisions = new ArrayList<>(map.values());
 		Collections.sort(revisions);
@@ -217,17 +243,22 @@ public class DAORevision {
 	
 
 	@SuppressWarnings("unchecked")
-	private static Map<String, Revision> parseResultQuery(List<Object[]> objects, Class<?> claz){
+	private static Map<String, Revision> mapRevisions(List<Object[]> objects, Class<?> claz){
 		Map<String, Revision> res = new TreeMap<>();
+		Set<Integer> addAndDelRevIds = new HashSet<>();
 		for (Object[] a: objects) {
 			if(claz!=null && !claz.isInstance(a[0])) continue;
 			
 			IObject entity = (IObject) a[0];
 			SpiritRevisionEntity rev = (SpiritRevisionEntity) a[1];
 			RevisionType type = (RevisionType) a[2];
-			String key = rev.getId()+"";//+"_"+type;
-			Revision r = res.get(key);
 			
+			if(type==RevisionType.ADD || type==RevisionType.DEL) {
+				addAndDelRevIds.add(rev.getId());
+			}
+			
+			String key = rev.getId() + "." + type.name();
+			Revision r = res.get(key);
 			if(r==null) {
 				r = new Revision();
 				r.date = rev.getRevisionDate();
@@ -235,14 +266,18 @@ public class DAORevision {
 				r.user = rev.getUserId();
 				r.type = type;
 				res.put(key, r);
-
-			}			
-//			if(a[0] instanceof Study) {
-//			DAOStudy.fullLoad((Study) a[0]);
-//			}
-			r.getEntities().add(entity);
-			
+			}		
+			r.getEntities().add(entity);			
 		}
+		
+		//Clean revisions:
+		// - Hide MOD for ADD revisions
+		// - Hide MOD for DEL revisions
+		// - ADD and DEL in one revision should not be possible
+		for (Integer id : addAndDelRevIds) {
+			res.remove(id + "." + RevisionType.MOD.name());
+		}
+		
 		return res;
 	}
 	
@@ -321,36 +356,39 @@ public class DAORevision {
 			
 			for (Object[] a : res) {
 				IObject entity = (IObject) a[0];
-//				SpiritRevisionEntity rev = (SpiritRevisionEntity) a[1];
 				RevisionType type = (RevisionType) a[2];
-				
-				if(type==RevisionType.ADD) {
-					toDelete.add(entity);
-				} else if(type==RevisionType.DEL) {
-					toInsert.add(entity);
-				} else if(type==RevisionType.MOD) {
-					//Find previous version
+				if(revision.type==type) {
 					IObject obj = reader.find(entity.getClass(), entity.getId(), revId-1);
-					if(obj==null) {
-						System.err.println("The obj "+entity.getClass()+" id="+entity.getId()+" could not be restored at rev="+(revId-1));
-					} else{
+					if(obj==null) throw new Exception("The "+entity.getClass().getSimpleName()+" "+entity.getId()+" could not be restored at rev="+(revId-1));
+					if(type==RevisionType.ADD) {
+						toDelete.add(obj);
+					} else if(type==RevisionType.DEL) {
+						toInsert.add(obj);
+					} else if(type==RevisionType.MOD) {
 						toUpdate.add(obj);
 					}
 				}
 			}
 			
+			LoggerFactory.getLogger(DAORevision.class).debug("toInsert="+toInsert.size()+" toDelete="+toDelete.size()+" toUpdate="+toUpdate.size());
 			for (IObject o : toInsert) {
 				updateUpd(o, now, user, comments);
-				session.persist(o);
-			}
-			for (IObject o : toDelete) {
-				updateUpd(o, now, user, comments);
-				o = session.merge(o);
-				session.remove(o);
+				LoggerFactory.getLogger(DAORevision.class).debug("persist "+o.getClass().getSimpleName()+" "+o.getId()+":"+o);
+				if(o.getId()<0) {
+					session.persist(o);
+				} else {
+					session.merge(o);
+				}
 			}
 			for (IObject o : toUpdate) {
 				updateUpd(o, now, user, comments);
+				LoggerFactory.getLogger(DAORevision.class).debug("merge "+o.getClass().getSimpleName()+" "+o.getId()+":"+o);
 				session.merge(o);
+			}
+			for (IObject o : toDelete) {
+				updateUpd(o, now, user, comments);
+				LoggerFactory.getLogger(DAORevision.class).debug("remove "+o.getClass().getSimpleName()+" "+o.getId()+":"+o);
+				session.remove(o);
 			}
 			
 			txn.commit();		

@@ -407,20 +407,30 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		return null;
 	}
 	
+		
 	/**
-	 * Return one sampling from this study, that matches the NamedSampling.name and the sampling.detailslong
+	 * Return the first sampling from this study, that matching the sampling.namedSampling.name and the sampling.detailslong
 	 */
 	public Sampling getSampling(String namedSamplingName, String samplingDetailsLong) {
+		List<Sampling> samplings = getSamplings(namedSamplingName, samplingDetailsLong);
+		return samplings.size()>0? samplings.get(0): null;
+	}
+	
+	/**
+	 * Return all samplings from this study, matching the sampling.namedSampling.name and the sampling.detailslong
+	 */
+	public List<Sampling> getSamplings(String namedSamplingName, String samplingDetailsLong) {
+		List<Sampling> res = new ArrayList<>();
 		for (NamedSampling p : getNamedSamplings()) {
 			if(p.getName().equalsIgnoreCase(namedSamplingName)) {
 				for (Sampling s : p.getAllSamplings()) {
 					if(s.getDetailsLong().equalsIgnoreCase(samplingDetailsLong)) {
-						return s;
+						res.add(s);
 					}
 				}				
 			}	
 		}
-		return null;
+		return res;
 	}
 	
 	/**
@@ -592,8 +602,8 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	public boolean equals(Object obj) {
 		if(obj==this) return true;
 		if(!(obj instanceof Study)) return false;
-		String sid2 = ((Study)obj).getStudyId();
-		return getStudyId()==null? (sid2==null): getStudyId().equals(sid2);
+		int id2 = ((Study)obj).getId();
+		return id == id2;
 	}
 		
 	public Set<NamedTreatment> getNamedTreatments() {

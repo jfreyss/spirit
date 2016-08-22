@@ -49,7 +49,9 @@ public class StudySearchTree extends FormTree {
 		}
 		@Override
 		public void onChange() {
-			StudySearchTree.this.firePropertyChange(FormTree.PROPERTY_SUBMIT_PERFORMED, "", null);
+			if(getModel().length()>0) {
+				StudySearchTree.this.firePropertyChange(FormTree.PROPERTY_SUBMIT_PERFORMED, "", null);
+			}
 		}
 	});
 	

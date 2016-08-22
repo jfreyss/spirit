@@ -86,7 +86,7 @@ public class JPAUtil {
     private static class MyThreadLocal extends ThreadLocal<EntityManager> {
     	
 		public long lastTestQuery = 0;
-    	private List<EntityManager> all = new ArrayList<EntityManager>();
+    	private List<EntityManager> all = Collections.synchronizedList(new ArrayList<EntityManager>());
     	
 		@Override
 		public void remove() {
@@ -178,13 +178,12 @@ public class JPAUtil {
 //    	initialize();
     }
     
-    private static void initialize() {
-    	
+    private static void initialize() {    	
     	LoggerFactory.getLogger(JPAUtil.class).debug("JPA Factory Initialized");
     	assert factory == null;
         try {
         	
-            initFactory();
+            init();
             getCurrentDateFromDatabase();
             
             Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -193,7 +192,6 @@ public class JPAUtil {
             		close();
             	}
             });
-            
             
         } catch (RuntimeException ex) {
         	throw ex;
@@ -220,19 +218,19 @@ public class JPAUtil {
     
     public static void refresh() throws Exception {
     	close();
-    	initFactory();
+    	init();
     }
     
     /**
      * Inits the JPA factory
      * @throws Exception
      */
-	public static void initFactory() throws Exception {
-	    DBAdapter dbAdapter = DBAdapter.getAdapter();
+	public static void init() throws Exception {
+	    DBAdapter adapter = DBAdapter.getAdapter();
 		if(factory!=null) close();
-	    dbAdapter.preInit();
-		initFactory(dbAdapter, "");
-	    dbAdapter.postInit();
+		adapter.preInit();
+		initFactory(adapter, "");
+		adapter.postInit();
 	    assert factory!=null;
 	}
 	
@@ -247,12 +245,12 @@ public class JPAUtil {
 
 		LoggerFactory.getLogger(JPAUtil.class).debug("initFactory on "+adapter.getClass().getName()+" url="+adapter.getDBConnectionURL()+" mode="+mode);
 		Map properties = new HashMap();
-		properties.put("current_session_context_class", "thread");
+//		properties.put("current_session_context_class", "thread");
 		properties.put("hibernate.dialect", adapter.getHibernateDialect());
 		properties.put("hibernate.connection.driver_class", adapter.getDriverClass());
 		properties.put("hibernate.connection.username", adapter.getDBUsername());
 		properties.put("hibernate.connection.password", new String(new StringEncrypter("program from joel").decrypt(adapter.getDBPassword())));
-		properties.put("hibernate.default_schema", "spirit");
+//		properties.put("hibernate.default_schema", "spirit");
 		properties.put("hibernate.show_sql", "true".equalsIgnoreCase(System.getProperty("show_sql")));
 		properties.put("hibernate.hbm2ddl.auto", mode);
 		properties.put("hibernate.connection.url", adapter.getDBConnectionURL());
@@ -267,6 +265,7 @@ public class JPAUtil {
 	        readEntityManager = new MyThreadLocal();
 	        writeEntityManager = null; 
 		}		
+		
 	}
 
 
@@ -274,7 +273,7 @@ public class JPAUtil {
 		assert jpaMode!=JPAMode.REQUEST;
 		
 		if(readEntityManager==null) try {
-			initFactory();
+			init();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

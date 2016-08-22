@@ -86,6 +86,7 @@ import com.actelion.research.spiritcore.services.dao.DAOTest;
 public class Exchange {
 	
 	private String name;
+	private String version;
 	
 	private final Set<Biotype> biotypes = new TreeSet<>();
 	private final Set<Test> tests = new TreeSet<>();
@@ -97,6 +98,7 @@ public class Exchange {
 	
 	
 	public Exchange() {
+		this.version = getClass().getPackage().getImplementationVersion();
 	}
 	
 	public Exchange(String name) {
@@ -209,7 +211,12 @@ public class Exchange {
 		}
 		
 	}
-	
+	public String getVersion() {
+		return version;
+	}
+	public void setVersion(String version) {
+		this.version = version;
+	}
 	public String getName() {
 		return name;
 	}	
@@ -258,6 +265,10 @@ public class Exchange {
 	public void setResults(Set<Result> results) {
 		this.results.clear();
 		this.results.addAll(results);
+	}
+	
+	public boolean isEmpty() {
+		return studies.size()==0 && biosamples.size()==0 && results.size()==0 && locations.size()==0 && biotypes.size()==0 && tests.size()==0;
 	}
 	
 	@Override

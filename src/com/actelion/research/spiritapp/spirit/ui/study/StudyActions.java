@@ -47,7 +47,6 @@ import com.actelion.research.spiritapp.spirit.ui.SpiritAction;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions.Action_SetLivingStatus;
 import com.actelion.research.spiritapp.spirit.ui.lf.StudyComboBox;
 import com.actelion.research.spiritapp.spirit.ui.lf.UserIdComboBox;
-import com.actelion.research.spiritapp.spirit.ui.study.depictor.Selection;
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.StudyDepictor;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachAnimalsManuallyDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.StudyDiscardDlg;
@@ -65,10 +64,10 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.ConfigProperties;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
+import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
@@ -523,7 +522,7 @@ public class StudyActions {
 		comp.addMouseListener(new PopupAdapter() {
 			@Override
 			protected void showPopup(MouseEvent e) {
-				StudyActions.createPopup((Study)null, new Selection()).show(comp, e.getX(), e.getY());				
+				StudyActions.createPopup((Study)null).show(comp, e.getX(), e.getY());				
 			}
 		});
 	}	
@@ -543,7 +542,7 @@ public class StudyActions {
 				} else {
 					study = null;
 				}
-				StudyActions.createPopup(study, new Selection()).show(table, e.getX(), e.getY());				
+				StudyActions.createPopup(study).show(table, e.getX(), e.getY());				
 			}
 		});
 	}	
@@ -557,7 +556,7 @@ public class StudyActions {
 		panel.getStudyPane().addMouseListener(new PopupAdapter() {			
 			@Override
 			protected void showPopup(MouseEvent e) {
-				StudyActions.createPopup(panel.getStudy(), null).show(panel.getStudyPane(), e.getX(), e.getY());								
+				StudyActions.createPopup(panel.getStudy()).show(panel.getStudyPane(), e.getX(), e.getY());								
 			}
 		});
 	}
@@ -565,12 +564,12 @@ public class StudyActions {
 		panel.addMouseListener(new PopupAdapter() {			
 			@Override
 			protected void showPopup(MouseEvent e) {
-				StudyActions.createPopup(panel.getStudy(), null).show(panel, e.getX(), e.getY());								
+				StudyActions.createPopup(panel.getStudy()).show(panel, e.getX(), e.getY());								
 			}
 		});		
 	}
 	
-	public static JPopupMenu createPopup(Study study, Selection sel) {
+	public static JPopupMenu createPopup(Study study) {
 		//Reload the study to make sure the object is accurate
 		study = JPAUtil.reattach(study);
 		

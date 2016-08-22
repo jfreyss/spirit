@@ -21,7 +21,9 @@
 
 package com.actelion.research.spiritapp.spirit.ui.home;
 
+import java.awt.Component;
 import java.awt.Image;
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -30,25 +32,34 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import javax.swing.JLabel;
+import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkEvent.EventType;
 import javax.swing.event.HyperlinkListener;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
+import com.actelion.research.spiritapp.spirit.ui.study.StudyActions;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyEditorPane;
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.StudyDepictor;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.HSQLFileAdapter;
+import com.actelion.research.spiritcore.adapter.PropertyKey;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
+import com.actelion.research.spiritcore.services.dao.ConfigProperties;
 import com.actelion.research.spiritcore.services.dao.DAORecentChanges;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
@@ -63,10 +74,9 @@ import com.actelion.research.util.ui.SwingWorkerExtended;
 
 public class LastActivityEditorPane extends ImageEditorPane {
 
-//	private Date now = JPAUtil.getCurrentDateFromDatabase(); 
 	private boolean showDesign = false;
 	private boolean showExpertOnly = true;
-	private int days = DBAdapter.getAdapter().getPropertyLastActivityDays();
+	private int days;
 	private final static Hashtable<String, Image> imageCache = new Hashtable<>();
 	
 	public LastActivityEditorPane(final Spirit spirit) {
@@ -74,8 +84,44 @@ public class LastActivityEditorPane extends ImageEditorPane {
 		setOpaque(false);
 		setEditable(false);
 
-		
-		
+		days = ConfigProperties.getInstance().getValueInt(PropertyKey.LAST_CHANGES);
+		final JPopupMenu popupMenu = new JPopupMenu();
+		popupMenu.add(new JLabel("TEST"));
+		popupMenu.addPopupMenuListener(new PopupMenuListener() {			
+			@Override
+			public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+		    	popupMenu.removeAll();
+				Point pt = getMousePosition();
+			    int pos = viewToModel(pt);
+			    try {
+				    String s = getDocument().getText(Math.max(0, pos-30), 60);
+				    //Find study
+				    Matcher m = Pattern.compile("S-\\d{5}").matcher(s);
+				    if(m.find()) {
+				    	String studyId = m.group();
+				    	Study study = DAOStudy.getStudyByStudyId(studyId);
+				    	if(study!=null) {
+				    		JPopupMenu menu = StudyActions.createPopup(study);
+					    	System.out.println("LastActivityEditorPane "+studyId);
+				    		for(Component comp : menu.getComponents()) {
+						    	System.out.println(comp);
+				    			popupMenu.add(comp);
+				    		}
+				    	}
+				    }
+			    } catch(Exception ex) {
+			    	//Ignore
+			    }
+			    
+			}
+			
+			@Override
+			public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {}
+			
+			@Override
+			public void popupMenuCanceled(PopupMenuEvent e) {}
+		});		
+		setComponentPopupMenu(popupMenu);
 		addHyperlinkListener(new SpiritHyperlinkListener());
 		addHyperlinkListener(new HyperlinkListener() {			
 			@Override
@@ -100,7 +146,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 						updateRecentChanges();
 					} else if(e.getDescription().startsWith("refresh:")) {
 						if(spirit!=null) {
-							new SwingWorkerExtended("Refreshing", LastActivityEditorPane.this, SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+							new SwingWorkerExtended("Refreshing", LastActivityEditorPane.this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 								@Override
 								protected void done() {
 									try {
@@ -143,7 +189,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 		recentChanges = "Analyzing your last activity...<br>";
 		updateEditorPane();
 		
-		new SwingWorkerExtended("Loading Activity...", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+		new SwingWorkerExtended("Loading Activity...", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			@Override
 			protected void doInBackground() throws Exception {
 				recentChanges = getRecentChangesFromDatabase();

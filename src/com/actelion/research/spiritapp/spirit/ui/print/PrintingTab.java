@@ -223,7 +223,7 @@ public class PrintingTab extends JPanel {
 		final Container container = containerTable.getSelection().size()>0? containerTable.getSelection().get(0): 
 			containerTable.getModel().getRows().size()>0? containerTable.getModel().getRows().get(0): null;
 
-		previewThread = new SwingWorkerExtended("Preview", previewPanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+		previewThread = new SwingWorkerExtended("Preview", previewPanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			private JComponent prev;
 			@Override
 			protected void doInBackground() throws Exception {

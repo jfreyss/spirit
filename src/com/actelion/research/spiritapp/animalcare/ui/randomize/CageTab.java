@@ -42,9 +42,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JToggleButton;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.study.AttachedBiosample;
 import com.actelion.research.spiritcore.business.study.Group;
+import com.actelion.research.spiritcore.services.dao.DAOBiosample;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
@@ -144,12 +147,23 @@ public class CageTab extends WizardPanel {
 		//Create new cageNames
 		{
 			int cageNo = 1;
-			while(cageNamesPool.size()<samples.size()) {
+			while(cageNamesPool.size()<samples.size()*2+10) {
 				String cageName = Container.suggestNameForCage(dlg.getStudy(), cageNo++);
 				if(nonreusableCageNames.contains(cageName)) continue;
 				if(!cageNamesPool.contains(cageName)) cageNamesPool.add(cageName);
 			}
 		}
+		//Filter out cages used in other studies
+		BiosampleQuery q = new BiosampleQuery();
+		q.setContainerIds(MiscUtils.flatten(cageNamesPool));
+		List<Biosample> occupied = DAOBiosample.queryBiosamples(q, null);
+		for (Biosample b : occupied) {
+			if(b.getInheritedStudy()==null || !b.getInheritedStudy().equals(dlg.getStudy())) {
+				cageNamesPool.remove(b.getContainerId());
+			}
+		}
+		
+		
 		
 		//Sort by cageNo
 		Collections.sort(cageNamesPool, new Comparator<String>() {

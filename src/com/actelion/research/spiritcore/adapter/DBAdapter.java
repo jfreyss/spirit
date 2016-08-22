@@ -287,11 +287,6 @@ public abstract class DBAdapter {
 		}
 	}
 	
-	public int getPropertyLastActivityDays() {
-		return 1;
-	}
-
-
 	public List<EmployeeGroup> getEmployeeGroups() {
 		return DAOEmployee.getEmployeeGroups();
 	}

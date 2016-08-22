@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -60,6 +59,7 @@ import com.actelion.research.spiritcore.adapter.PropertyKey;
 import com.actelion.research.spiritcore.adapter.PropertyKey.Tab;
 import com.actelion.research.spiritcore.services.StringEncrypter;
 import com.actelion.research.spiritcore.services.dao.ConfigProperties;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.migration.MigrationScript;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.FastFont;
@@ -68,7 +68,6 @@ import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
-import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
@@ -92,8 +91,8 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 
 	private final Map<DBProperty, JComponent> dbproperty2comp = new HashMap<>();
 	private final JLabel label = new JLabel();
-	private JPanel userPanel = new JPanel();
-	private JPanel studyPanel = new JPanel();
+	private JPanel userPanel = new JPanel(new GridLayout());
+	private JPanel studyPanel = new JPanel(new GridLayout());
 
 	
 	
@@ -113,7 +112,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 		okButton.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				new SwingWorkerExtended("Test Connection", specificConfigPane, SwingWorkerExtended.FLAG_CANCELABLE | SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+				new SwingWorkerExtended("Test Connection", specificConfigPane, SwingWorkerExtended.FLAG_CANCELABLE | SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 					@Override
 					protected void doInBackground() throws Exception {
 						try {
@@ -130,7 +129,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 		testConnectionButton.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				new SwingWorkerExtended("Test Connection", getContentPane(), SwingWorkerExtended.FLAG_CANCELABLE | SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+				new SwingWorkerExtended("Test Connection", getContentPane(), SwingWorkerExtended.FLAG_CANCELABLE | SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 					@Override
 					protected void doInBackground() throws Exception {
 						System.out.println("DatabaseSettingsDlg.DatabaseSettingsDlg(...).new ActionListener() {...}.actionPerformed() 1");
@@ -152,7 +151,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 		testSchemaButton.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				new SwingWorkerExtended("Test/Create Schema", getContentPane(), SwingWorkerExtended.FLAG_CANCELABLE | SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+				new SwingWorkerExtended("Test/Create Schema", getContentPane(), SwingWorkerExtended.FLAG_CANCELABLE | SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 					@Override
 					protected void doInBackground() throws Exception {
 						try {
@@ -232,7 +231,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 	}
 	
 	private void refreshConfigPanels() {
-		createPropertyPanel(userPanel, "", "", PropertyKey.getPropertyKey(Tab.USER), new String[0]);
+		createPropertyPanel(userPanel, "", "", PropertyKey.getPropertyKey(Tab.SYSTEM), new String[0]);
 		createPropertyPanel(studyPanel, "", "", PropertyKey.getPropertyKey(Tab.STUDY), new String[0]);
 	}
 	
@@ -281,19 +280,8 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 						propertyMap.put(propertyPrefix + p.getKey(), c.getText());
 					}
 				});
-//			} else if(toPropertyKeys.size()>0) {
-//				final JTextArea c = new JTextArea(2, 30);
-//				c.setLineWrap(true);
-//				parentComp = c;
-//				c.setText(val);
-//				c.addKeyListener(new KeyAdapter() {
-//					@Override
-//					public void keyPressed(KeyEvent e) {
-//						propertyMap.put(propertyPrefix + p.getKey(), c.getText());
-//					}
-//				});					
 			} else {
-				final JCustomTextField c = new JCustomTextField(JCustomTextField.ALPHANUMERIC, toPropertyKeys.size()>0? 38: 22);
+				final JCustomTextField c = new JCustomTextField(JCustomTextField.ALPHANUMERIC, toPropertyKeys.size()>0? 38: 16);
 				parentComp = c;
 				c.setText(val);
 				c.addTextChangeListener(new TextChangeListener() {
@@ -321,8 +309,11 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 				});
 			}
 			//components
-			JLabel labelComp = new JLabel(labelPrefix + (labelPrefix.length()>0?".":"") + p.getLabel() + ": ");
-			JLabel tooltipComp = new JInfoLabel(p.getTooltip()==null?"": "<html>" + p.getTooltip());
+			JLabel labelComp = new JLabel(" " + p.getLabel() + ": ");
+			JLabel tooltipComp = p.getTooltip()==null? new JLabel(): new JLabel(IconType.HELP.getIcon());
+			labelComp.setToolTipText(p.getTooltip()==null? null: "<html>" + p.getTooltip());
+			parentComp.setToolTipText(p.getTooltip()==null? null: "<html>" + p.getTooltip());
+			tooltipComp.setToolTipText(p.getTooltip()==null? null: "<html>" + p.getTooltip());
 			
 			//Are there derived properties?
 			if(toPropertyKeys.size()>0) {
@@ -348,32 +339,45 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 
 					//create a nested panel
 					JPanel nestedPanel = new JPanel();
-					nestedPanel.setBorder(BorderFactory.createLoweredSoftBevelBorder());
+					nestedPanel.setOpaque(false);
 					createPropertyPanel(nestedPanel, propertyPrefix + p.getKey() + "." + token +".", token, toPropertyKeys, nestedValues2);
 					nestedPanels.add(nestedPanel);
 				}
 				
-				panels.add(UIUtils.createTitleBox(p.getLabel(), UIUtils.createBox(UIUtils.createHorizontalBox(labelComp, new JScrollPane(parentComp), tooltipComp, Box.createHorizontalGlue()), null, UIUtils.createVerticalBox(nestedPanels))));
+				panels.add(UIUtils.createTitleBox(p.getLabel(), 
+						UIUtils.createBox(UIUtils.createHorizontalBox(labelComp, parentComp, tooltipComp, Box.createHorizontalGlue()), 
+								null, UIUtils.createVerticalBox(nestedPanels))));
 			} else {
 				
-				
 				//Standard components: add them to the table
+				tableComps.add(tooltipComp);
 				tableComps.add(labelComp);
 				tableComps.add(parentComp);
-				tableComps.add(tooltipComp);
 			}
 		}
 		if(tableComps.size()>0) {
 			if(labelPrefix.length()>0) {
-				panels.add(UIUtils.createTable(3, 0, 5, tableComps));
+				//Nested panel
+				JPanel nestedPanel;
+				if(tableComps.size()>=3*6) {
+					int n = (tableComps.size()/3+1)/2;
+					
+					nestedPanel =  UIUtils.createGrid(
+									UIUtils.createTable(3, 5, 0, tableComps.subList(0, n*3)),
+									UIUtils.createTable(3, 5, 0, tableComps.subList(n*3, tableComps.size())));					
+				} else {
+					nestedPanel = UIUtils.createTable(3, 5, 0, tableComps);
+				}
+				panels.add(UIUtils.createBox(UIUtils.createBox(nestedPanel, null, null, Box.createHorizontalStrut(10), Box.createHorizontalGlue()),
+						new JCustomLabel(labelPrefix, FastFont.BOLD)));
 			} else {
-				panels.add(UIUtils.createTitleBox(UIUtils.createTable(3, 2, 5, tableComps)));
+				//Main Panel
+				panels.add(UIUtils.createTitleBox(UIUtils.createTable(3, 5, 3, tableComps)));
 			}
 		}
 		panels.add(Box.createVerticalGlue());
 		
 		panel.removeAll();
-		panel.setLayout(new GridLayout());		
 		panel.add(UIUtils.createVerticalBox(panels));
 		panel.validate();
 	}
@@ -527,6 +531,11 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 		ConfigProperties.getInstance().setValues(propertyMap);
 		ConfigProperties.getInstance().saveValues();
 		dispose();
+		SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
+		
+		//Reset Spirit
+		DBAdapter.setAdapter(null);
+		JPAUtil.refresh();
 		SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
 	}
 	

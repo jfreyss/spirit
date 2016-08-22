@@ -80,6 +80,7 @@ import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class RecentChancesDlg extends JSpiritEscapeDialog {
 	
+	
 	private final DefaultListModel<Revision> revisionModel = new DefaultListModel<Revision>();
 	private final JList<Revision> revisionList = new JList<Revision>(revisionModel);
 	
@@ -162,9 +163,9 @@ public class RecentChancesDlg extends JSpiritEscapeDialog {
 				Revision rev = (Revision) value;
 				if(!isSelected) {					
 					if(rev.getRevisionType()==RevisionType.ADD) {
-						setForeground(new Color(0, 100, 0));
+						setForeground(new Color(0, 80, 0));
 					} else if(rev.getRevisionType()==RevisionType.DEL) {
-						setForeground(new Color(150, 0, 0));
+						setForeground(new Color(170, 0, 0));
 					} else {						
 						setForeground(new Color(150, 100, 0));						
 					}
@@ -181,14 +182,9 @@ public class RecentChancesDlg extends JSpiritEscapeDialog {
 				} else {
 					setIcon(IconType.ADMIN.getIcon());
 				}
-
-
-				
 				return this;
 			}
 		});
-		
-		
 		
 		
 		//ContentPanel
@@ -201,10 +197,6 @@ public class RecentChancesDlg extends JSpiritEscapeDialog {
 		setSize(1500, 850);		
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
-		
-
-
-		
 	}
 	
 	
@@ -219,7 +211,7 @@ public class RecentChancesDlg extends JSpiritEscapeDialog {
 		}
 		final Date date = d;
 		
-		new SwingWorkerExtended("Revisions", getContentPane(), true) {
+		new SwingWorkerExtended("Loading recent revisions", getContentPane(), true) {
 			List<Revision> revisions;
 			
 			@Override
@@ -259,94 +251,91 @@ public class RecentChancesDlg extends JSpiritEscapeDialog {
 			@Override
 			protected void doInBackground() throws Exception {
 				rev = (Revision) revisionList.getSelectedValue();
-			
 				
-				if(rev!=null) {	
-					if(rev.getTests().size()>0) {
-						Box panel = Box.createVerticalBox();
-						for (Test t : rev.getTests()) {
-							TestDocumentPane doc = new TestDocumentPane();
-							panel.add(doc);							
+				if(rev==null) return;
+				
+				
+				rev = DAORevision.getRevision(rev.getRevId());
+				if(rev.getTests().size()>0) {
+					Box panel = Box.createVerticalBox();
+					for (Test t : rev.getTests()) {
+						TestDocumentPane doc = new TestDocumentPane();
+						panel.add(doc);							
 
-							doc.setTest(t);
-						}
-						detailPanel.addTab(rev.getTests().size()+ " Tests", new JScrollPane(panel));
+						doc.setTest(t);
 					}
-					if(rev.getBiotypes().size()>0) {
-						Box panel = Box.createVerticalBox();
-						for (Biotype t : rev.getBiotypes()) {
-							BioTypeDocumentPane doc = new BioTypeDocumentPane();
-							panel.add(doc);				
+					detailPanel.addTab(rev.getTests().size()+ " Tests", new JScrollPane(panel));
+				}
+				if(rev.getBiotypes().size()>0) {
+					Box panel = Box.createVerticalBox();
+					for (Biotype t : rev.getBiotypes()) {
+						BioTypeDocumentPane doc = new BioTypeDocumentPane();
+						panel.add(doc);				
 
-							doc.setBiotype(t);
-						}
-						detailPanel.addTab(rev.getBiotypes().size()+ " Biotypes", new JScrollPane(panel));
+						doc.setBiotype(t);
 					}
-					
-					if(rev.getStudies().size()>0) {
-						
-						
-						if(rev.getStudies().size()==1) {
-							rev.getStudies().get(0).getAttachedBiosamples();
-							final StudyDetailPanel detail = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT, true);
-							detailPanel.addTab(rev.getStudies().get(0).getStudyId(), detail);			
-
-							detail.setStudy(rev.getStudies().get(0));
-						} else {
-							final StudyTable table = new StudyTable();
-							detailPanel.addTab(rev.getStudies().size()+ " Studies", new JScrollPane(table));			
-							Collections.sort(rev.getStudies());
-							table.setRows(rev.getStudies());
-							
-						}
-					}
-					if(rev.getBiosamples().size()>0) {
-						final BiosampleTable table = new BiosampleTable();
-						final BiosampleTabbedPane detail = new BiosampleTabbedPane(true);
-						BiosampleActions.attachRevisionPopup(table);
-						table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {							
-							@Override
-							public void valueChanged(ListSelectionEvent e) {
-								detail.setBiosamples(table.getSelection());
-							}
-						});
-						
-						JSplitPane panel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(table), detail);
-						panel.setDividerLocation(420);
-						
-						detailPanel.addTab(rev.getBiosamples().size()+ " Biosample", panel);
-						Collections.sort(rev.getBiosamples());
-						table.setRows(rev.getBiosamples());
-
-					}
-					if(rev.getLocations().size()>0) {
-						Box panel = Box.createVerticalBox();
-						LocationTable table = new LocationTable();
-						panel.add(new JScrollPane(table));		
-						table.setRows(rev.getLocations());
-						detailPanel.addTab(rev.getLocations().size()+ " Locations", new JScrollPane(panel));
-					}
-					if(rev.getResults().size()>0) {
-						ResultTable table = new ResultTable();
-						ResultActions.attachRevisionPopup(table);
-						detailPanel.addTab(rev.getResults().size()+ " Results", new JScrollPane(table));
-
-						Collections.sort(rev.getResults());
-						table.setRows(rev.getResults());
-						
-					}
-					
-					
+					detailPanel.addTab(rev.getBiotypes().size()+ " Biotypes", new JScrollPane(panel));
 				}
 				
+				if(rev.getStudies().size()>0) {
+					
+					
+					if(rev.getStudies().size()==1) {
+						rev.getStudies().get(0).getAttachedBiosamples();
+						final StudyDetailPanel detail = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT, true);
+						detailPanel.addTab(rev.getStudies().get(0).getStudyId(), detail);			
+
+						detail.setStudy(rev.getStudies().get(0));
+					} else {
+						final StudyTable table = new StudyTable();
+						detailPanel.addTab(rev.getStudies().size()+ " Studies", new JScrollPane(table));			
+						Collections.sort(rev.getStudies());
+						table.setRows(rev.getStudies());
+						
+					}
+				}
+				if(rev.getBiosamples().size()>0) {
+					final BiosampleTable table = new BiosampleTable();
+					final BiosampleTabbedPane detail = new BiosampleTabbedPane(true);
+					BiosampleActions.attachRevisionPopup(table);
+					table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {							
+						@Override
+						public void valueChanged(ListSelectionEvent e) {
+							detail.setBiosamples(table.getSelection());
+						}
+					});
+					
+					JSplitPane panel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(table), detail);
+					panel.setDividerLocation(420);
+					
+					detailPanel.addTab(rev.getBiosamples().size()+ " Biosample", panel);
+					Collections.sort(rev.getBiosamples());
+					table.setRows(rev.getBiosamples());
+
+				}
+				if(rev.getLocations().size()>0) {
+					Box panel = Box.createVerticalBox();
+					LocationTable table = new LocationTable();
+					panel.add(new JScrollPane(table));		
+					table.setRows(rev.getLocations());
+					detailPanel.addTab(rev.getLocations().size()+ " Locations", new JScrollPane(panel));
+				}
+				if(rev.getResults().size()>0) {
+					ResultTable table = new ResultTable();
+					ResultActions.attachRevisionPopup(table);
+					detailPanel.addTab(rev.getResults().size()+ " Results", new JScrollPane(table));
+
+					Collections.sort(rev.getResults());
+					table.setRows(rev.getResults());
+				}
 			}
 			
 			@Override
 			protected void done() {
 				contentPanel.removeAll();
 				contentPanel.add(detailPanel);
-				detailPanel.validate();
-				detailPanel.repaint();
+				contentPanel.validate();
+				contentPanel.repaint();
 			}
 			
 			

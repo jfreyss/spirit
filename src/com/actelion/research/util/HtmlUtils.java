@@ -49,7 +49,7 @@ public class HtmlUtils {
 					
 				} else {
 					inTable = true;
-					sb.append("<table>");
+					sb.append("<table style='border:solid 1px gray'>");
 					sb.append("<tr><th>" + line.replaceAll("\t", "</th><th>") + "</th></tr>");
 					
 				}

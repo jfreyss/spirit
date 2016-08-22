@@ -302,7 +302,7 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 		final Node info = getModel().getNode(obj);
 		if(info==null || info.leaf==Boolean.TRUE) return;
 		
-		new SwingWorkerExtended("Expand", ExtendTable.this, SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+		new SwingWorkerExtended("Expand", ExtendTable.this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			@Override
 			protected void done() {				
 				expandRow(obj, !info.expanded, 1, true);

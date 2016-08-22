@@ -109,12 +109,7 @@ class CustomAdapter extends DBAdapter {
     @Override
     public UserAdministrationMode getUserManagedMode() {
     	return UserAdministrationMode.READ_WRITE;
-    }
-	
-	@Override
-	public int getPropertyLastActivityDays() {
-    	return 31;
-	}
+    }	
 	
 	@Override
 	public String getHelp() {

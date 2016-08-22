@@ -30,11 +30,13 @@ import org.junit.Test;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.HSQLMemoryAdapter;
 import com.actelion.research.spiritcore.adapter.PropertyKey;
+import com.actelion.research.spiritcore.adapter.SchemaCreator;
 import com.actelion.research.spiritcore.business.LogEntry;
 import com.actelion.research.spiritcore.business.LogEntry.Action;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.ConfigProperties;
 import com.actelion.research.spiritcore.services.dao.DAOLog;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 
 public class DAOMiscTest {
 	
@@ -44,6 +46,7 @@ public class DAOMiscTest {
 	public static void initDB() throws Exception {
 		//Set properties
 		System.setProperty("show_sql", "true");
+		
 		//Init user
 		user = SpiritUser.getFakeAdmin();
 		
@@ -52,6 +55,14 @@ public class DAOMiscTest {
 
 	}
 	
+	@Test
+	public void validateDB() throws Exception {
+		System.out.println("DAOMiscTest.validateDB()");
+		DBAdapter.getAdapter().preInit();
+//		JPAUtil.init();
+//		SchemaCreator.displayTables(DBAdapter.getAdapter());
+		JPAUtil.initFactory(DBAdapter.getAdapter(), "update");
+	}
 	@Test
 	public void testLog() {
 		List<LogEntry> entries = DAOLog.getLogs(null, null, -1);

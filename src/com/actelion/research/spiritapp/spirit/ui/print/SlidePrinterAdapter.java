@@ -21,8 +21,6 @@
 
 package com.actelion.research.spiritapp.spirit.ui.print;
 
-import java.awt.Font;
-import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -46,20 +44,20 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextArea;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritapp.spirit.services.print.SpiritPrinter;
 import com.actelion.research.spiritapp.spirit.services.print.PrintableOfContainers.Model;
+import com.actelion.research.spiritapp.spirit.services.print.SpiritPrinter;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JFileBrowser;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
+import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
-import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
-import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.util.IOUtils;
-import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JGenericComboBox;
+import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.UIUtils;
 
 public class SlidePrinterAdapter extends PrintAdapter {
@@ -69,17 +67,17 @@ public class SlidePrinterAdapter extends PrintAdapter {
 	private JCheckBox printBlocNoCheckBox = new JCheckBox("Print BlocNo", false);
 	
 	private JRadioButton slideMateRadioButton = new JRadioButton("Print to SlideMate", true); 	
+	private JRadioButton ptouchRadioButton = new JRadioButton("Print to PTouch Printer"); 
+	private JRadioButton tsvRadioButton = new JRadioButton("Export to Comma Separated"); 	
+
 	private JFileBrowser slideMateBrowser = new JFileBrowser();
 
-	private JRadioButton tsvRadioButton = new JRadioButton("Export to Comma Separated", true); 	
 	private JFileBrowser tsvBrowser = new JFileBrowser();
 
-	private JRadioButton ptouchRadioButton = new JRadioButton("Print to External Printer"); 
 	
 
 	private JGenericComboBox<PrintService> printerComboBox;
-	private JGenericComboBox<Media> mediaComboBox = new JGenericComboBox<Media>();
-//	private JComboBox<String> marginCombobox = new JComboBox<String>(new String[] { "Use top margin (older PTouch)", "No Top margin"});
+	private JGenericComboBox<Media> mediaComboBox = new JGenericComboBox<>();
 	
 	public SlidePrinterAdapter(final PrintingTab tab, final ContainerType containerType) {
 		super(tab);
@@ -92,9 +90,7 @@ public class SlidePrinterAdapter extends PrintAdapter {
 		tsvBrowser.setFile(Spirit.getConfig().getProperty("printer.slidecsv.path", ""));
 		if(tsvBrowser.getFile().length()==0) slideMateBrowser.setFile("Y:\\SlideMateCache (BOURQUG)\\labels.csv");
 		
-		JPanel ptouchPanel = new JPanel(new GridBagLayout());
-		PrintService[] services = SpiritPrinter.getPrintServices();
-		
+		PrintService[] services = SpiritPrinter.getPrintServices();		
 		printerComboBox = new JGenericComboBox<PrintService>(services, true);
 		for(PrintService service: services) {
 			if(service.getName().contains("AW-S")){
@@ -104,10 +100,9 @@ public class SlidePrinterAdapter extends PrintAdapter {
 		}
 		
 		
-		ptouchPanel = UIUtils.createTable(
+		JPanel ptouchPanel = UIUtils.createTable(
 				new JLabel("Brother Printer: "), printerComboBox,
 				new JLabel("Media: "), mediaComboBox
-//				null, marginCombobox
 				);
 		
 		
@@ -127,7 +122,7 @@ public class SlidePrinterAdapter extends PrintAdapter {
 				
 				Box.createVerticalStrut(15),
 				
-				UIUtils.createHorizontalBox(ptouchRadioButton, new JCustomLabel("You need a 'Brother' printer with a media '" + containerType.getBrotherFormat()+ "'", Font.ITALIC), Box.createHorizontalGlue()),
+				UIUtils.createHorizontalBox(ptouchRadioButton, new JInfoLabel("You need a 'Brother' printer with a media '" + containerType.getBrotherFormat()+ "'"), Box.createHorizontalGlue()),
 				UIUtils.createHorizontalBox(Box.createHorizontalStrut(20), ptouchPanel, Box.createHorizontalGlue()),
 				Box.createVerticalGlue()
 				);
@@ -156,8 +151,6 @@ public class SlidePrinterAdapter extends PrintAdapter {
 		printBlocNoCheckBox.addActionListener(refreshActionListener);
 		
 
-		
-		
 		printerComboBox.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent ev) {
@@ -167,9 +160,10 @@ public class SlidePrinterAdapter extends PrintAdapter {
 				for (Media m : media) {
 					if(m.toString().equalsIgnoreCase(containerType.getName())) {
 						mediaComboBox.setSelection(m);
-						fireConfigChanged();
+						break;
 					}
 				}
+				fireConfigChanged();
 			}
 		});
 		mediaComboBox.addActionListener(new ActionListener() {			

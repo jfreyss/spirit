@@ -144,7 +144,7 @@ public class LocationSearchPane extends JPanel {
 		query(getLocationQuery());
 	}
 	public void query(final LocationQuery query) {
-		new SwingWorkerExtended("Querying...", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+		new SwingWorkerExtended("Querying...", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			private List<Location> res;
 			@Override
 			protected void doInBackground() throws Exception {

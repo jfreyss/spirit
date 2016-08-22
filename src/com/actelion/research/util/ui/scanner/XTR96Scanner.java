@@ -189,7 +189,7 @@ public class XTR96Scanner {
 			p = Runtime.getRuntime().exec(new File(directory, "xtr-96.exe").getAbsolutePath());
 			//Wait until ready
 			long time = System.currentTimeMillis();
-			while(System.currentTimeMillis()-time<120000) {
+			while(System.currentTimeMillis()-time<600000) {
 				try {
 					sock = new Socket("127.0.0.1", 201);
 					os = sock.getOutputStream();

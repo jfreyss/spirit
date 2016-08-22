@@ -254,7 +254,7 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 		} else if(biosamples==null) {
 			refreshTab();
 		} else {
-			new SwingWorkerExtended("Loading Metadata", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS50MS) {
+			new SwingWorkerExtended("Loading Metadata", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 				@Override
 				protected void done() {
 					biosamples = JPAUtil.reattach(biosamples);

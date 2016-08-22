@@ -157,7 +157,6 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 				parentTypes.add(b.getParent().getBiotype());
 			}
 		}
-		System.out.println("BiosampleTableModel.initColumns() topBiotypes="+topBiotypes+" parentTypes="+parentTypes+" types="+types);
 
 		List<Column<Biosample, ?>> columns = new ArrayList<>();
 
@@ -375,7 +374,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 
 	public Set<BiosampleLinker> getLinkers() {
 		if (linkers == null) {
-			linkers = new HashSet<BiosampleLinker>();
+			linkers = new HashSet<>();
 			for (Column<Biosample, ?> col : getColumns()) {
 				if (col instanceof AbstractLinkerColumn<?>) {
 					linkers.add(((AbstractLinkerColumn<?>) col).getLinker());
