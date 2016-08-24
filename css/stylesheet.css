@@ -58,7 +58,7 @@ body {
 }
 
 h0, h1, h2, h3, h4, h5, h6 {
-  margin: 10px 0;
+  margin: 25px 0px 10px 0px ;
   padding:0px;
   font-weight: 700;
   color: #425088;
@@ -93,8 +93,8 @@ h1 {
 
 .main h1:before {
   content: "";
-  width: .5em;
-  height:.5em;
+  width: 25px;
+  height:25px;
   background: #f6fc6a;
   background: linear-gradient(45deg, #212121, #f6fc6a);
   display:inline-block;
@@ -110,8 +110,8 @@ h2 {
 }
 .main h2:before {
   content: "";
-  width: .25em;
-  height:.25em;
+  width: 15px;
+  height:15px;
   background: #f6fc6a;
   background: linear-gradient(45deg, #212121, #f6fc6a);
   display:inline-block;

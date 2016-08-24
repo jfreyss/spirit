@@ -54,7 +54,7 @@
 <h0 id="1_introduction">Part 1: Principle</h0>
 <p>
 Spirit is an applicattion, which brings a new concept to manage biosamples, covering the process from the <strong>study</strong> design, to the <strong>biosample</strong> creation, the <strong>location</strong> inventory, and the analysis of <strong>results</strong>.</p>
-<a class="fancybox md-pull-right" rel="group" href="principle.png"><img src="principle.png" title="Spirit entities and their relationships"/></a>
+<a class="fancybox pull-md-right" rel="group" href="principle.png"><img src="principle.png" title="Spirit entities and their relationships"/></a>
 
 <h1 id="1_biosamples">About biosamples</h1>
 <p>Spirit being a biobank software, biosamples are at the center of the system. The represent all biological entities in the system, whether it is a human, an organ, a bacteria, or even a formulation</p>
@@ -62,7 +62,7 @@ Spirit is an applicattion, which brings a new concept to manage biosamples, cove
 <p>Each biosample is defined by a unique <strong>sampleId</strong>, a container, and some metadata.</p>
 <p>A unique aspect of Spirit, is that it keeps a complete hierarchy of each biosample, meaning that there is no limitation in the number of children or the hierarchy level</p> 
 <h2 id="1_biotypes">Biotype Definition</h2>
-<a class="fancybox md-pull-right" rel="group" href="1_biotype.png"><img src="1_biotype.png"  title="Biotype definition"/></a>
+<a class="fancybox pull-md-right" rel="group" href="1_biotype.png"><img src="1_biotype.png"  title="Biotype definition"/></a>
 <p>
 Each biotype belongs to one of those <strong>categories</strong>.  
 <ul>
@@ -129,7 +129,7 @@ Check this box, if you want the end-user to select this biotype. If checked, onl
 
 <h2 id="1_hierarchy">Sample's hierarchy</h2>
 <p>
-<a class="fancybox md-pull-right" rel="group" href="chain.png"><img src="chain.png" title="Sample's hierarchy"/></a><br>
+<a class="fancybox pull-md-right" rel="group" href="chain.png"><img src="chain.png" title="Sample's hierarchy"/></a><br>
 Contrarely to other LIMS systems, Spirit does not only remember the patientId from which the biosample originates, but the complete hierarchy between the sample and its parents.
 It is therefore possible to maintain a hierarchy of biosamples such as:
 <ul>
@@ -200,7 +200,7 @@ User rights can be configured for any location. The rights can be:
 <h1 id="1_studies">About Studies</h1>
 <p>A study consists of one or more groups of samples, on which we perform actions at specific phases</p>
 <p>
-<a class="fancybox md-pull-right" rel="group" href="study1.png"><img src="study1.png" title="Basic study design"/></a><br>
+<a class="fancybox pull-md-right" rel="group" href="study1.png"><img src="study1.png" title="Basic study design"/></a><br>
 This figure shows the principle of a basic study, where we have 2 groups of animals and 4 different phases. At phase 1, we apply treatment1 to the first group and treatment2 to the second group. Then we perform the same blood sampling on the 2 groups at phase 1 and at phase 3.
 </p>
 <h2>Study Design</h2>
@@ -228,7 +228,7 @@ We consider 3 types of groups assignments:
 <li><b>Group Splitting:</b> Sometimes it is necessary to make an observation phase and to decide later how samples will be split into new groups. The next figure shows such an example, where we first do an initial group assignment to decide which animals will stay healthy and which animals will become sick. After an observation time, each group is then splitted into 2 new groups, based on some observation criteria. In the case of group splitting, the samples is moved from one group to the other.<br>
 
 <br>
-<a class="fancybox md-pull-right" rel="group" href="study2.png"><img src="study2.png" title="Group splitting"/></a>
+<a class="fancybox pull-md-right" rel="group" href="study2.png"><img src="study2.png" title="Group splitting"/></a>
 
 <li><b>Group Dividing:</b> In advanced scenarios, it is possible to create other samples from the assigned specimen and that those samples are themselves assigned to groups. This is similar to the group splitting, except that the specimen stays in its group, but we create new samples, which will be assigned to new groups. For example, we may take blood samples from sick animals, and apply different treatments directly to those blood samples. Those blood samples belong then to their own group. <br>
 Next figure shows an other example, where we have animals exposed to UV.  On each animal, we will consider 2 patches of skin on which we will apply a placebo and a sunscreen to see how the animal reacts.<br><br>
@@ -353,7 +353,7 @@ The Spirit interface is divided into five tabs. Each tab gives a different view 
 
 <h1>Home</h1>
 <p>
-<a class="fancybox md-pull-right" rel="group" href="home.png"><img src="home.png" title="Home Page"/></a>
+<a class="fancybox pull-md-right" rel="group" href="home.png"><img src="home.png" title="Home Page"/></a>
 The <b>Home</b> tab is the first thing you see when starting Spirit. It shows the latest changes and allows the user to have a quick overview of the studies being worked on. For each study, it shows the data, that was generated and who did the latest modifications and when.  
 <ul>
 <li>Clicking on a study will redirect the user to the study visualization tab and open the clicked study.
@@ -369,7 +369,7 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
 
 <h2>Visualisation</h2>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study1.png"><img src="sc_study1.png" title="Study Page"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study1.png"><img src="sc_study1.png" title="Study Page"/></a>
     On the study tab, you can query all the studies of the system, provided you have read access on the studies. By default and before making any search, Spirit will show you all the studies where your name is explicitely written in the list of users.</p>
 <p>
     To query for a study, you can either:
@@ -409,11 +409,11 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
 
 <h3 id="studyInfos">Infos</h3>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study8.png"><img src="sc_study8.png" title="Study Popup"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study8.png"><img src="sc_study8.png" title="Study Popup"/></a>
     To create/edit a new study, you can either go the menu or <strong>right-click on a study to open the contextual menu</strong>. Right-click works on almost everything in Spirit, and will make the appropriate popup menu open. If some options are grayed out, it means you don't have sufficient right, and you should contact one of the responsible person to add you on the list.
 </p>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study9.png"><img src="sc_study9.png" title="Study Infos"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study9.png"><img src="sc_study9.png" title="Study Infos"/></a>
     On the study info dialog, it is possible to enter the fundamental information about the study:
     <dl>
     <dt>Parameters
@@ -444,7 +444,7 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
 
 <h3>Design</h3>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study10.png"><img src="sc_study10.png" title="Study Design"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study10.png"><img src="sc_study10.png" title="Study Design"/></a>
     Go to the study design by right-clicking on the study and selecting "Edit->Study Design".
 </p>
 
@@ -461,7 +461,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h4>3. Phases</h3>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study11.png"><img src="sc_study11.png" title="Study Design - Phases"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study11.png"><img src="sc_study11.png" title="Study Design - Phases"/></a>
     The phases define the timeline of the study. Phases can be formatted as: 
     <dl>
     <dt>d0, d1, d3:
@@ -492,7 +492,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h4 id="editGroups">4. Groups</h4>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study12.png"><img src="sc_study12.png" title="Study Design - Groups"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study12.png"><img src="sc_study12.png" title="Study Design - Groups"/></a>
     When similar actions (same treatment, same sampling, same measurements) take place on several biosamples, those biosampes should be put together in a group. 
 </p>
 <p>
@@ -518,7 +518,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 </p>
 <h4>5. Treatments</h4>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study13.png"><img src="sc_study13.png" title="Study Design - Treatments"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study13.png"><img src="sc_study13.png" title="Study Design - Treatments"/></a>
     Treatment are identified by:
     <ul>
     <li><b>Name: </b> short and selft explanatory name to describe the treatment. 
@@ -530,14 +530,14 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h4>6. Sampling Templates</h4>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study14.png"><img src="sc_study14.png" title="Study Design - Sampling Template"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study14.png"><img src="sc_study14.png" title="Study Design - Sampling Template"/></a>
     The sampling templates describes the samples to be taken. When you click the button "Add Sampling", you can either decide to start from an empty template or to import a template from a previous study and modify it.
 </p>
 <p>
     You should name the template with a self-explanatory name, and specify if it is a necropsy sampling. After a necropsy, the animal's status becomes unavailable.
 </p>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study15.png"><img src="sc_study15.png" title="Study Design - Sampling"/></a>In each template, you may define any number of samples. To add a new sample, you can either click on "Add Sample" or click on the button next to each sample, and select "duplicate". For each sample, you must specify:
+    <a class="fancybox pull-md-right" rel="group" href="sc_study15.png"><img src="sc_study15.png" title="Study Design - Sampling"/></a>In each template, you may define any number of samples. To add a new sample, you can either click on "Add Sample" or click on the button next to each sample, and select "duplicate". For each sample, you must specify:
     <ul>
     <li>the <b>biotype</b>
     <li>the <b>metadata, amount, comments </b> The metadata depends of the selected biotype.
@@ -548,7 +548,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h4>7. Actions</h4>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study16.png"><img src="sc_study16.png" title="Study Design - Actions"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study16.png"><img src="sc_study16.png" title="Study Design - Actions"/></a>
     Once the treatments, sampling templates are defined, the user can specify on which groups and when those actions have to be performed.
 </p>
 <p>
@@ -564,7 +564,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h3>Group Assignment</h3>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study17.png"><img src="sc_study17.png" title="Study Design - Actions"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study17.png"><img src="sc_study17.png" title="Study Design - Actions"/></a>
     To attach biosamples to the study, right-click on the study, and select "Edit->Automatic Assignment" or "Edit->Manual Assignment".
     <ul>
     <li><b>Automatic Assignment: </b> The automatic assignment guides the user through a wizard to randomize the assignment based on some criteria like the weight or on some other data. This option is only valid on the phases, where groups are set to be assigned as defined in the <a href="#editGroups">group</a> section. 
@@ -573,7 +573,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 </p>
 <p>
     Samples can only be attached to one study and to one group. To reuse the same sample across 2 studies or groups, the trick is to clone the samples. Example: to use ANL0001 in 2 studies, it is cloned to ANL0001A and ANL0001B (both inheriting from ANL00001). This process is automatically performed by Spirit.
-    <a class="fancybox md-pull-right" rel="group" href="cloning.png"><img src="cloning.png" title="Cloning"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="cloning.png"><img src="cloning.png" title="Cloning"/></a>
 </p>
 
 <h4 id="automaticassignment">Automatic Assignment</h4>
@@ -583,13 +583,13 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h5>1. Parameters</h5>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study18.png"><img src="sc_study18.png" title="Automatic Assignment - Parameters"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study18.png"><img src="sc_study18.png" title="Automatic Assignment - Parameters"/></a>
     The first part of the wizard gives overview of the groups to be assigned. You can enter the biotype of the samples to be randomized.
 </p>
 
 <h5>2. Randomization Data</h5>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study19.png"><img src="sc_study19.png" title="Automatic Assignment - Randomization data"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study19.png"><img src="sc_study19.png" title="Automatic Assignment - Randomization data"/></a>
     The second part of the wizard is where you enter the randomization data.
     <ul>
     <li><b>Number of attached samples: </b>By default, this number shows the number of samples to be randomized. You can increase this number to start with more samples. Extra samples will not be assigned to a group (reserve).
@@ -600,7 +600,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 </p>
 <h5>3. Group Assignment</h5>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study20.png"><img src="sc_study20.png" title="Automatic Assignment - Group Assignment"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study20.png"><img src="sc_study20.png" title="Automatic Assignment - Group Assignment"/></a>
     The third part of the wizard is where the user makes the group assignment. 
     <ul>
     <li><b>Put Lightest / Heaviest to Reserve: </b> If you have more samples than needed, checking those boxes will put the extrema (compared to the average) in the reserve. Uncheck them if you want to consider all specimen in the randomization
@@ -610,7 +610,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 <p>
     Spirit uses a simulated annealing algorithm to tests thousands of permutations until each group share similar characteristics (mean, standard deviation). The optimal randomization is the randomization, minimizing the following formula:
     <br>
-    <a class="fancybox md-pull-right" rel="group" href="formula.png"><img src="formula.png" title="Automatic Assignment - Group Assignment formula"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="formula.png"><img src="formula.png" title="Automatic Assignment - Group Assignment formula"/></a>
 </p>
 <p>
     The group assignment can be done manually partly of fully, by dragging the sample from group to groups. You can also right-click on the sample and select <strong>"Fix group"</strong>, so that the randomization keeps those samples untouched.
@@ -618,7 +618,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h5>4. Cage Assignment</h5>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study21.png"><img src="sc_study21.png" title="Automatic Assignment - Cage Assignment"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study21.png"><img src="sc_study21.png" title="Automatic Assignment - Cage Assignment"/></a>
     To set cages automatically, click on the maximum number of samples per cages. Spirit will still try to average the number of animals per cages. If you have 12 animals and select a max of 5, Spirit will assign 4 animals in each cage instead of 5,5 and 2.
 </p>
 <p>
@@ -627,26 +627,26 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h5>5. Saving</h5>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study22.png"><img src="sc_study22.png" title="Automatic Assignment - Saving"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study22.png"><img src="sc_study22.png" title="Automatic Assignment - Saving"/></a>
     The last step of the wizard is where you review the group assignment, update the subgroups, renumber, enter the metadata, comments. If everything is fine, click the "Make the assignments" button to update the database to match this randomization. The "automatic renumbering" button is used to renumber the samples sequentially as displayed in this table.
 </p>
 
 <h4>Manual Assigment</h4>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study23.png"><img src="sc_study23.png" title="Manual Assigment"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study23.png"><img src="sc_study23.png" title="Manual Assigment"/></a>
     In this dialog, you can directly type or copy/paste the samples with their group assignment. At any time, you can open the dialog to change the groups/subgroups, attach a new sample, or detach a sample from the study. 
 </p>
 
 <h2>Monitoring</h2>
 <h3>Live Monitoring</h3>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study24.png"><img src="sc_study24.png" title="Live Monitoring popup"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study24.png"><img src="sc_study24.png" title="Live Monitoring popup"/></a>
     Right-click on a study and select "Live Monitoring", to monitor the actions to be done on each attached sample of the study.
 </p>
 
 <h4>Overview</h4>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study25.png"><img src="sc_study25.png" title="Live Monitoring overview"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study25.png"><img src="sc_study25.png" title="Live Monitoring overview"/></a>
     The left pane of the overview dialog shows all the actions to be performed on the attached samples: group assignment, weighing, treatments as defined in the <a href="#studydesign">study design</a>.
 </p> 
 <p>
@@ -667,7 +667,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 </p>
 <h4>Live Measurements</h4>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study26.png"><img src="sc_study26.png" title="Live Monitoring measurement"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study26.png"><img src="sc_study26.png" title="Live Monitoring measurement"/></a>
     After clicking a phase, the Live Monitoring dialogs shows up. Spirit shows the required measurements specified in the study design, by default.
 </p>
 <p>
@@ -689,7 +689,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h3>Replace / Set Living Status</h3>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study31.png"><img src="sc_study31.png" title="Replace / Set Living Status"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study31.png"><img src="sc_study31.png" title="Replace / Set Living Status"/></a>
     The "Replace / Set Living Status" is a convenient dialog to set the status of an attached biosample and/or to replace it by an other sample from the reserve.
     <dl>
     <dd>
@@ -716,14 +716,14 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 <h3>Manage / Print Samples</h3>
 <h4>Sample Synchronization</h4>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study27.png"><img src="sc_study27.png" title="Sample Synchronization"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study27.png"><img src="sc_study27.png" title="Sample Synchronization"/></a>
     When you select the <b>"Manage / Print Samples"</b> option, Spirit checks that all the samples have been created (as defined in the study's sampling template). The first time you call this option, or if the sampling's template have been modifier, Spirit shows you this dialog and asks you to synchronize the samples to match the study's design. Please check and confirm by clicking "Synchronize".<br>
     This automatic creation can be disabled, if you uncheck the box "Generate Samples automatically" in the <a href="#studyInfos">study design</a>.
 </p>
 
 <h4>Manage Samples</h4>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study28.png"><img src="sc_study28.png" title="Manage Samples"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study28.png"><img src="sc_study28.png" title="Manage Samples"/></a>
     This dialog shows the generated samples from the study, which you can filter by container's type, group, phase, biotype, or some keywords.
 </p>
 
@@ -737,14 +737,14 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h5>Print Labels</h5>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="screenshot_study16.png"><img src="screenshot_study16.png" title="Print Labels"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="screenshot_study16.png"><img src="screenshot_study16.png" title="Print Labels"/></a>
     To print the labels, you first select the samples to print in the "Managing Samples" dialog, and then click "print labels". 
     For each type of container, the printing view shows the list of containers, and a preview of the label. The preview is rendered directly from the printers based on the entered settings (printer, media, left or right labels).
 </p>
 
 <h3>Sample Measurement</h3>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study30.png"><img src="sc_study30.png" title="Print Labels"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study30.png"><img src="sc_study30.png" title="Print Labels"/></a>
     Right-clicking on the study and select "Sample Measurement" to perform the weighing or the other measurement on the generated samples, as defined in the study's sampling templates
 </p>
 <p>
@@ -766,7 +766,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 </p>
 <h4>Study History</h4>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_study33.png"><img src="sc_study33.png" title="Study History"/></a>
+    <a class="fancybox pull-md-right" rel="group" href="sc_study33.png"><img src="sc_study33.png" title="Study History"/></a>
     Spirit contains an audit trail of all entities, including studies. To view the history of a study, open the study popup menu and select "Advanced"->"View Change History"<br>
 </p>
 
@@ -776,142 +776,144 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 </p>
 <h2>Visualization</h2>
 <p>
-    <a class="fancybox md-pull-right" rel="group" href="sc_bio1.png"><img src="sc_bio1.png" title="Biosamples Visualization"/></a>
-    Once you click the Biosample Tab on Spirit, you get a view centered on the biosamples. The view is split into 3 parts: the search pane at the top-left, the table view at the right, and the biosample detail at the bottom-left.
+    <a class="fancybox pull-md-right" rel="group" href="sc_bio1.png"><img src="sc_bio1.png" title="Biosamples Visualization"/></a>
+    Once you click the Biosample Tab on Spirit, you get the biosample centric view of Spirit, with the search panel at the top-left, the detail panel at the bottom-left and the biosample table at the center.
 </p>
 
-<!--
-<h3>Biosample Search</h3>
-In this search pane, enter the criteria for making the search. By default, the user can see the following criteria:
-<ul>
-<li><b>Scan Button: </b>if you have a FluidX scanner installed, you can click this button to scan a rack. The program will ask you for the rack configuration (containerType and RackSize) and will scan the rack.
-<li><b>QuickScan: </b>if you have a 2D tube scanner installed, you can go on this field and scan. You can also tyoe the 2D barcode and click Enter to search
-<li><b>Study: </b>if a study is entered, the other filters are automatically updated to reflect the available groups/phases/containers/biotypes in this study. It is possible to enter more than one study by separating them with spaces.
-<li><b>Container: </b>you can further filter by container's type. The list is prepopulated with the containers of the accessible samples.
-<li><b>Biosample: </b>You can filter by biotype or by using the univeral biosample search.<br>
-The biosample search will query all fields with the entered criteria. "Rat Dry Eyes" will returns all biosamples having the properties "Rat" (from the animal) and "Dry" and "Eyes" (from the organ metadata). It is possible there to enter complex queries such as
-"Eyes and (left or right)". The seached properties include the group/phase/specimen/parentSample/user/comments/location. You can check the Exact checkbox to return only the biosamples having an exact match.
-<li><b>Location: </b>To limit the result to the entered location and its children location
-<li><b>More Filters: </b>In more filters, you can enter more precise criteria on any of the biosample's metadata and comments, or on the owner, the creation date, department and so on.. You can also filter biosamples to have only those in a known container or in a known location.
-<li><b>Hide trashed/used up: </b>as implied by the name, checking this will not return trashed or used up samples
-</ul>
-
-<table><tr><td><img src="screenshot_biosample2.png"/><br><i>Screenshot of the Biosample Tab - Search</i></td></tr></table>
-
+<h3>Search Panel</h3>
+<p>
+    <a class="fancybox pull-md-right" rel="group" href="sc_bio2.png"><img src="sc_bio2.png" title="Biosamples Search Panel"/></a>
+	In this search pane, enter the filters for making the search:
+	<dl>
+		<dt>StudyId:
+		<dd>if a studyId is given, the filters for the groups and phases are automatically shown. It is possible to enter more than one studyId by separating them with spaces, or by selecting them in the popup menu with ctrl-click.
+		<dt>Container:
+		<dd>This popup contains the available container types available in the system, or used in the selected study.
+		<dd>Biosample:
+		<dd>
+			<ul>
+				<li><b>Biotype:</b> select one of the available biotype used in the selected study. If you select a biotype, the filters for each of the possible metadata are shown.
+				<li><b>Keywords:</b> The keywords search will query all the related attributes of the biosample (metadata, comments, location, user, group, phase), and the attributes of all the parent biosamples.
+				<p>Spirit's seach is case insensitive and ignores the special characters (.-_/:#), so that searching "Anti12" will also return the samples containing "anti#1_2"</p>
+				<p>Complex queries with and/or/()/*/"" are possibles. You can click on "Exact Match" to disable the complex query behaviour and find the samples containing exactly what is entered.</p>
+				<p>
+				Examples:<br> 
+				The query <i>Rat Dry Eyes</i> will return the biosamples having the metadata "Rat" (on the parent animal), "Dry" and "Eyes" (on the organ). <br>
+				The query <i>Eyes (left or right) Box1</i> will return all left or right eyes located in a location called Box1<br>
+				The query <i>"Left Lung"</i> will return the samples where one of the field is exactly "Left Lung". <br>
+				The query <i>Ey*</i>	will return the biosamples having a field starting with Ey.
+				</p>
+				<li><b>SampleIds/ContainerIds:</b> will return the samples matching exactly the containers. It is possible to enter several ids separated by spaces.
+			</ul>
+		<dt>Filters</dt>
+		<dd><ul>
+			<li><b>Biotype: </b> shows the specific filters for the selected biotype. You can query any of the metadata, prefiltered with the possible values.
+			<li><b>Location:</b> to filter the biosamples under this location and all its children location.
+			<li><b>Advanced:</b> to filter based on the user, date of creation/update, the department owned by the biosample or:
+				<ul>
+					<li><b>Select one sample per topParent:</b> This is a useful feature if you want to retrieve one sample per human/animal based on some simple criteria
+					<li><b>Only in Containers:</b>to return only the samples with a defined containerType
+					<li><b>Only in Location:</b>to return only the samples with a defined location
+				</ul>
+			<li><b>Hide trashed/used up: </b>to return only the available samples
+			</ul>
+	</dl>
+</p>
+	
 <h3>Biosample Table</h3>
-After hitting the search button, the biosample table shows the list of biosamples matching your criteria.
-This table is dynamically rendered according to your criteria, and the width of each column is resized to fit the data into the screen as well as possible.
-A wider screen gives the best results.<br>
+<p>
+    <a class="fancybox pull-md-right" rel="group" href="sc_bio3.png"><img src="sc_bio3.png" title="Biosamples Table"/></a>	
+	The biosample table shows the list of biosamples matching your criteria. It is dynamically rendered according to your criteria, and the width of each column is resized to fit the data into the screen as much as possible. Smaller monitors may lead to data displayed on 2 rows or to truncated data.<br>
+<p>
+<p>
+	The columns displayed are:
+	<dl>
+		<dt>Container
+		<dd>The container information (containerType, containerId, Amount, Location) is shown either in 1 combined or in 4 separated columns. You can switch between the "1 column" and the "4 columns" views by either double clicking on the header, or by right-clicking the header and selecting "Container" under "Expanded Columns".
+		<dt>Study
+		<dd>The studyId, group and phase are displayed. The StudyId is only shown if biosamples come from different studies.
+		<dt>TopId
+		<dd>This column is shown only if the biosamples have a parent (not shown on the table). The topId shows the sampleId and sampleName of the top biosample in the hierarchy, together with the group's abbreviation. You can expand the column to view the related metadata by double-clicking on the headr.
+		<dt>Parent
+		<dd>This column is shown only if the biosamples have a parent, which is different from the topId. This column can also be expanded
+		<dt>SampleId
+		<dd><p>The Sample identifier (sampleId, SampleName) is shown either in 1 or 2 columns. You can switch between the "1 column" and the "2 columns" by double clicking on the header or by expanding the column on the header popup. The group of the sample and its phase is also shown for a quick overview</p>
+		<p>If the sample has some children, a [+] sign is displayed next to the sampleId. You can double-click to show/hide the children. The same can be done from the header popup menu, by clicking the appropriate option under "Hierarchy"
+		<dt>Metadata</dt>
+		<dd>The metadata are shown either in one unstructed column (if the table contains biosamples from different biotypes) or in multiple columns, showing each metadata. By default, only the main metadata are displayed (as configured in the biotype administration), but it is possible to add other columns by opening the header popup menu. The columns to be added are the following:
+			<ul>
+			<li><b>Quality:</b>The quality is normally shown on the sampleId by setting a red (bad quality) to green (good quality) background on the id of this column (if any).<br>
+			For exporting and sorting purpose it is possible to add the Quality column.
+			<li><b>Status:</b>The quality is shown on the sampleId by setting a specific background on the icon of column.
+			<li><b>Items/Children:</b>This option counts the number of children per biosample.<br>
+			Those biosamples are then counted by biotype/location. This is useful to check the number of available blood/organs per animals.
+			<li><b>Results:</b>This option counts or display the results linked to the biosamples.<br>
+			If there is one result available, the value of this result is displayed. Otherwise, the table displays the number of tests and results per biosample.
+			<li><b>Ownership Change:</b>This option shows if the biosample had a change of ownership, and to whom it was given.
+			</ul>
+		<dt>Owner:		
+		<dd><p>This column shown the date of creation, the user who created the sample and the owned department (if any). The user who created the sample is defined as the owner.</p>
+	</dl>
 
-<h4>Sorting</h4>
-You can sort by right-clicking on the table's header. The first click will sort in ascending order, and a second one will sort in descending order. If you need to sort on multiple columns (group, phase), you should first sort on the phase and then on the group.<br>
-It is important to note that sorting in Spirit does not work like a traditional lexigographic sort.<br>
+	<p>Sorting is possible by clicking on the table's header (depending of the selected column, you can select the type of sorting: position by row or by columns). The first sort is done in ascending order, and the second in descending order. If you need to sort on multiple columns (group, phase), you should first sort on the phase and then on the group.<br>
+	The sort algorithm is case insensitive and numbers are compared as numbers when they are not mixed with the text. ie. "Box 2" comes before "Box 10", but "Box2Top" comes after "Box10Top"
+</p>
+
+<h3>Detail Panel</h3>
+	<p>The detail panel shows the detailled information related to the selected biosample.
+	<div class="row">
+		<div class="col-md-3">
+			<a class="fancybox pull-md-right" rel="group" href="sc_bio4.png"><img src="sc_bio4.png" title="Biosample Detail 1"/></a>	
+			<b>Metadata</b><br>
+			This tab show the details related to the selected biosample and its parents. If some metadata were hidden from the biosample table, those would be shown here. Click on the study/location/attached files to open those links.
+		</div>
+		<div class="col-md-3">
+			<a class="fancybox pull-md-right" rel="group" href="sc_bio5.png"><img src="sc_bio5.png" title="Biosample Detail 2"/></a>	
+			<b>History</b><br>
+			This view shows the importand actions related to the biosample: sample creation, container change, treatment.
+		</div>
+		<div class="col-md-3">
+			<a class="fancybox pull-md-right" rel="group" href="sc_bio6.png"><img src="sc_bio6.png" title="Biosample Detail 3"/></a>	
+			<b>Hierarchy</b><br>
+			To view the hierarchy of the biosample, ie. all parents and children.
+		</div>
+		<div class="col-md-3">
+			<a class="fancybox pull-md-right" rel="group" href="sc_bio7.png"><img src="sc_bio7.png" title="Biosample Detail 4"/></a>	
+			<b>Results</b><br>
+			To view the results.
+		</div>
+	</div>
+
+
+<h3>Pivot Biosamples</h3>
+<p>
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio8.png"><img src="sc_bio8.png" title="Pivot Biosample"/></a>	
+	An alternative visualization is to pivot the biosample table, to count the number of biosamples based on some criteria. The attached figure shows the number of samples, where the group is shown on the rows, and the phase, biotypes are shown on the columns.
+</p>
+<p>To open this view, click on "Pivot Data". Upon checking this box, Spirit displays the number of biosamples currently in your table and a new dialog opens to configure the information to be shown. In this dialog, you can then drag and drop those items at the rows/columns/cells level to start counting the biosamples based on those criteria.
+</p>
+<p>
+Use this function to count the number of organs per animal, to count the types of plasma samples taken at different timepoint per group in a study, or to count the number of animals used per year from each provider.
 <br>
-Whereas a traditional lexigographic sort would sort like:
-<ul><li>1, 10, 11, 2, 21, 21, A, B, C, a, b, c</ul>
-Spirit's sort is case insensitive and treat numbers as one would expect like:
-<ul><li>1, 2, 11, 12, 21, 22, A, a, B, b, C, c.</ul>
-
-
-<h4>Hierarchy</h4>
-If a biosample has some children biosamples, you can simply double-click on the [+] sign to expand it, or double-click on the [-] to collapse the children. To expand or collapse all, you can also right-click on the header and select the appropriate option.
-
-<h4>Expand Columns</h4>
-<ul>
-<li><b>If the rows share all the same biotype (ex: animals only): </b> The table shows the SampleId and SampleName of the Top (Animal, Human, CellLine), of the parent and all metadata of the queried biosamples. <br>
-This means that a search on organ will display everything directly linked to the organ (type, staining, comments in separate columns) but only the id and name of the top animals (to keep the view compact, the metadata of the parents are hidden by default). <br>
-Empty columns are also hidden from the view (for example, the Staining column is not shown if the organs have no staining)<br><br>
-It is however possible to view all information related to the parent biosample (animal's type, species, ...) by expanding the animal column.
-For doing so, you can either double-click on the animal column, or right click and select "Animal>Expand" in the popup menu. The result of this operation is shown on the screenshot below.
-The expanded columns are shown with a yellowish color.
-<table><tr><td><img src="screenshot_biosample3.png"/><br><i>Screenshot of the Biosample Tab - Table view with one Organs Biotype (linked to animals)</i></td></tr></table>
-
-<li><b>If the rows share several biotypes (ex: mix of animals, blood, organs): </b> the table shows a generic column "Sample Metadata", which summarizes all attributes of the samples as shown in the next screenshot:
-<table><tr><td><img src="screenshot_biosample4.png"/><br><i>Screenshot of the Biosample Tab - Table view with hierarchy and several biotypes</i></td></tr></table>
-
-<li><b>If the results are aggregated to an other biotype (ex: antibody linked to a fluorophore): </b> In the following example, the table only displays the fluorophore Id and Name to keep the table compact, but it is possible to retrieve all the fluorophore information by double clicking the fluorophore column or by selecting the "Fluorophore > Expand" in the popup menu after right-clicking on the header.
-<table><tr><td><img src="screenshot_biosample5.png"/><br><i>Screenshot of the Biosample Tab - Table view with one Antibody Biotype (aggregated to fluorophore) </i></td></tr></table>
-
-</ul>
-<br>
-
-<h4>Add Columns</h4>
-The columns, configured as secundary columns in the biotype's definition are hidden from the table view. This is done to make the table more compact by not displaying the less important fields.<br>
-It is however possible to query on those fields and to add those columns in the table view. For this, right-click on the header to open the popup menu and select the column to display.<br>
-<br>
-Those fields are however always displayed in the detail view.<br>
-<br>
-
-<table><tr><td><img src="screenshot_study20.png"/><br><i>Screenshot of the Biosample - Add Columns Popup </i></td></tr></table>
-<br>
-<br>
-The columns to be added are the following:
-<ul>
-<li><b>Quality:</b>The quality is normally shown on the sampleId by setting a red (bad quality) to green (good quality) background on the id of this column (if any).<br>
-For exporting and sorting purpose it is possible to add the Quality column.
-<li><b>Status:</b>The quality is shown on the sampleId by setting a specific background on the icon of column.
-<li><b>Items/Children:</b>This option counts the number of children per biosample.<br>
-Those biosamples are then counted by biotype/location. This is useful to check the number of available blood/organs per animals.
-<li><b>Results:</b>This option counts or display the results linked to the biosamples.<br>
-If there is one result available, the value of this result is displayed. Otherwise, the table displays the number of tests and results per biosample.
-<li><b>Ownership Change:</b>This option shows if the biosample had a change of ownership, and to whom it was given.
-</ul>
-
-
-<h3>Biosample Detail</h3>
-The biosample detail shows all the information related to the selected biosample or container in the table above. The biosample detail is split into different tabs:
-<ul>
-<li><b>Content: </b> In this view, you view all the details related to the selected biosample, including its parents, its study and its container. There you can click on the location (if any), to be redirected to the location view, showing where the sample is located. You can also click on a file (if one metadata is linked to a file) to open the file.
-<table><tr><td><img src="screenshot_biosample7.png"/><br><i>Screenshot of the Biosample Detail - Content </i></td></tr></table>
-
-<li><b>History: </b> In this view, you view all important actions, which took place on the selected sample, such as the creation, group assignment, container assignment, live measurement, live treatment,...
-<table><tr><td><img src="screenshot_biosample8.png"/><br><i>Screenshot of the Biosample Detail - History </i></td></tr></table>
-
-<li><b>Hierarchy: </b> In this view, you view the hierarchy of the biosample, ie. all parents and children.
-<table><tr><td><img src="screenshot_biosample9.png"/><br><i>Screenshot of the Biosample Detail - Hierarchy </i></td></tr></table>
-
-<li><b>Results: </b> In this view, you view all results directly attached to this biosamples.
-<table><tr><td><img src="screenshot_biosample10.png"/><br><i>Screenshot of the Biosample Detail - Results </i></td></tr></table>
-
-</ul>
-
-
-<h3>Analyze Data / Pivot Biosamples</h3>
-If you have a lot of data on your table, it is not always easy to check the number of biosamples of a specific type, stored in the database. For this purpose, you can click the "Analyze Data" on top of
-the biosample table. This will pivot your data in a new table, where you can configure the items you want to display.<br>
-<br>
-After checking this box, Spirit will display the number of biosamples currently in your table and a a new dialog will open to let you setup the information you want to show.
-As shown in next screenshot, you start with an empty template, but the dialog will analyze your data and show you all possible items, that can discriminate your data. For example, there will be an item "StudyId" only if the samples come from more than 2 studies.<br>
-In this dialog, you can then drag and drop those items at the rows/columns/cells level to start counting the biosamples based on those criteria.<br>
-<br>
-As shown in the next screenshot, we dragged the StudyId to the row level, the Human.Gender to the column level and the fluid's type to the the cell level. As a result, we get a table, with the number of biosamples per study/gender and fluid type. <br>
-<br>
-With this pivoting feature, you can easily make any combination to count for example the number of organs per animal, to count the types of plasma samples taken at different timepoint per group in a study, or to count the number of animals used per year from each provider.
-<br>
-To activate the advanced items (biotypes, units, positions), you must check the "expert mode" at the bottom-left of the dialog.
-
-<table><tr><td><img src="screenshot_biosample11.png"/><br><i>Screenshot of the Pivot Biosamples </i></td></tr></table>
 
 <h3>Exporting Data</h3>
-On the top-right of the biosample table, you can see the three exporting options:
+<p>
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio9.png"><img src="sc_bio9.png" title="Exporting Data"/></a>	
+	On the top-right of the biosample table, you can see the three exporting options:
+	<dl>
+		<dt>DataWarrior
+		<dd><a href="http://www.openmolecules.org/datawarrior/index.html">DataWarrior</a> is an open source visualization and analysis program, developed at Actelion and integrated in Spirit.
+		<dt>CSV
+		<dd>
+		This option will export your table to a Comma Separated Value file, and open it with the software linked to the csv extension. This option is the best if you don't want any formatting, or if you don't have a program like Excel or Open Office, which can open the xlsx files.
+		<dt>Excel
+		<dd>This option will export the same table as for the csv option, with some formatting. 
+	</dl>
+</p>
 
-<h4>DataWarrior</h4>
-DataWarrior is an open source visualization and analysis program, developed by Actelion and integrated in Spirit.<br>
-<br>
-By clicking the DataWarrior button, Spirit converts the table into the DataWarrior proprietary format and open DataWarrior.
-<br>
-<table><tr><td><img src="screenshot_dw1.png"/><br><i>Screenshot of Export Biosamples to DataWarrior </i></td></tr></table>
-<br>
-Read the DataWarrior's documentation to learn more about this:<br>
-
-<h4>CSV</h4>
-This option will export your table to a Comma Separated Value file, and open it with the software linked to the csv extension. This option is the best if you don't want any formatting, or if you don't have a program like Excel or Open Office, which can open the xlsx files.
-
-<h4>Excel</h4>
-This option will export the same table as for the csv option, but it will add some formatting. The headers will be highlighted and the columns will be resized to autofit the data.
-
-
-<h2>Editing Biosamples</h2>
+<h2>Editing</h2>
+Work in progress
+<!--
 To create new biosample, go to the menu "Edit->New Biosamples".<br>
 <br>
 To edit one or more biosamples, select the biosamples from the biosample table (use shift-click or control-click to select more than one), right-click to open the biosample popup menu, and select the option "Edit".
