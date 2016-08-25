@@ -110,19 +110,29 @@ h2 {
 }
 .main h2:before {
   content: "";
-  width: 15px;
-  height:15px;
+  width: 20px;
+  height:20px;
   background: #f6fc6a;
   background: linear-gradient(45deg, #212121, #f6fc6a);
   display:inline-block;
   content: "";
-  margin-right: 10px;
+  margin-right: 8px;
 }
 
 
 h3 {
   font-size: 24px;
   color: #425088;
+}
+.main h3:before {
+  content: "";
+  width: 10px;
+  height:10px;
+  background: #f6fc6a;
+  background: linear-gradient(45deg, #212121, #f6fc6a);
+  display:inline-block;
+  content: "";
+  margin-right: 5px;
 }
 
 h4 {
@@ -497,4 +507,12 @@ fieldset {
 }
 .sidebar  .nav > .active > .nav {
     display: block;
+}
+.pull-md-right {
+	padding-left:10px;
+	padding-bottom:10px;
+}
+p {
+	clear:left;
+	clear:right;
 }

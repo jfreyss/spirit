@@ -367,7 +367,7 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
     The study tab shows the study centric view of Spirit. This is where the user can query studies and work on the design.
 </p>
 
-<h2>Visualisation</h2>
+<h2 id="study_visualization">Visualization</h2>
 <p>
     <a class="fancybox pull-md-right" rel="group" href="sc_study1.png"><img src="sc_study1.png" title="Study Page"/></a>
     On the study tab, you can query all the studies of the system, provided you have read access on the studies. By default and before making any search, Spirit will show you all the studies where your name is explicitely written in the list of users.</p>
@@ -379,7 +379,7 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
     </ul>
 </p>
 
-<h3 id="studydesign">Design</h3>
+<h3 id="study_design">Design</h3>
 <p>
     The bottom left part shows the visual design of the study. The visualization may change a lot depending of the type of study. The following studies are given as examples in the system:
     <dl>
@@ -774,7 +774,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 <p>
     The <b>Biosample Tab</b> shows the biosample centric view of Spirit, which should be used to query/edit biosamples
 </p>
-<h2>Visualization</h2>
+<h2 id="biosample_visualization">Visualization</h2>
 <p>
     <a class="fancybox pull-md-right" rel="group" href="sc_bio1.png"><img src="sc_bio1.png" title="Biosamples Visualization"/></a>
     Once you click the Biosample Tab on Spirit, you get the biosample centric view of Spirit, with the search panel at the top-left, the detail panel at the bottom-left and the biosample table at the center.
@@ -911,81 +911,104 @@ Use this function to count the number of organs per animal, to count the types o
 	</dl>
 </p>
 
-<h2>Editing</h2>
-Work in progress
-<!--
-To create new biosample, go to the menu "Edit->New Biosamples".<br>
-<br>
-To edit one or more biosamples, select the biosamples from the biosample table (use shift-click or control-click to select more than one), right-click to open the biosample popup menu, and select the option "Edit".
-This option is grayed out if you don't have sufficient.<br>
-<br>
-There are two ways to edit the biosamples:<br>
-<ul>
-<li><b>Batch Mode: </b> this option is selected by default if you selected more than one biosample, or if you selected a biosample, which is often edited as batch (living biotype, composite biotype).
-<li><b>Form Mode: </b> this option is selected by default if you selected one biosample of type component (cell definition, antibody)
-</ul>
+<h2 id="biosample_editing">Editing</h2>
+<p>
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio10.png"><img src="sc_bio10.png" title="Biosample popup menu"/></a>
+	To edit, select the biosamples to be edited, right-click to open the <b>biosample popup menu</b> and select the Edit option.
+</b>	
+<p>
+	Editing is only enabled if you have sufficient rights (the biosample's owner is shown in green in that case). To have sufficient rights, you must be either one of the study's admin or experimenters if the sample belongs to a study, be in the same department if the sample has no study or be the owner of the sample.
+</p>	
 
-<h3>Editing in Batch Mode</h3>
-In Batch Mode, editing works typically as working with Excel. This dialog shows you the biosamples as you would see them in Excel. You can copy/paste, undo/redo, but also insert new rows or delete rows.<br>
-<br>
-<table><tr><td><img src="screenshot_biosample12.png"/><br><i>Screenshot of Edit Biosample in Batch Mode</i></td></tr></table>
+<h3 id="biosample_batch">Batch Editing</h3>
+<p>
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio11.png"><img src="sc_bio11.png" title="Biosample Batch Mode Editing"/></a>
+	In batch editing, editing works like any spreadsheet (Excel). You can copy/paste from the clipboard, undo/redo your last actions.	The columns to be edited are similar to the ones described in the <a href="biosample_visualization">biosample visualization</a>, at the exception that all columns are expanded to be easily editable. <br>
+	The "batch editing" is the default dialog for the edition of living/solid/liquid samples, but it is possible to switch to the <a href="biosample_form">"Form Editing"</a> if there is only one sample to edit.
+</p>
+<p>
+	<dl>
+		<dt>Container
+		<dd>There are up to 4 columns to edit the container's information, depending of the biotype configuration. The containerId is only editable after entering a containerType. For the location, you can either enter the full path like "Lab2 / Tank A / Tower 2 / Box 1 : A/04", a partial path like "Tower 2 / Box 1 : A/04", or browse the location by clicking the "Set" button. The user needs to have write access on the location. The amount column is displayed only if the biotype is set to have an amount. Those columns can be condensed in one column by double clicking the header (as shown in the <a href="biosample_visualization">biosample visualization</a>) 
+		<dt>Study
+		<dd>There are up to 3 columns to edit the study's information. Those columns are shown by default for the living/solid/liquid samples, but they can be added manually (right click on the header's table to hide/show those columns if needed). The studyId/group can only be edited for the samples, whose parents are not in a study. The phase can only be edited if the parent does not have a phase. The studyId/group/phase is always inherited from the parent, and therefore cannot be changed if breaking this rule.
+		<dt>ParentId
+		<dd>In this column you can enter the parent of the sampleId. You need to have read access on the parent sample.
+		<dt>SampleId
+		<dd>You can keep the sampleId empty as it will be automatically generated, if you don't enter it. 
+		<dt>Metadata
+		<dd>The metadata columns depends of the biotype. Each column may show a different editor (alphanumerical, numerical, autocompletion, list, multi-list, file, link to an other sample) based on the biotype's configuration. A yellow background shows the mandatory fields. If the biosamples in the table have more than one biotype, there will be just one editable column with all the metadata, but copy/paste won't work.
+	</dl>
+</p>	
+<p>
+	To add more rows, you can simply go down with the arrow key and new rows will automatically created.
+	You can also right-click on the table, select "Insert Rows" and the number of rows you wamt to insert.<br>
+	It is important to know, that deleting a row from the table will not delete the sample but actually remove this biosample from the editing. If you right-click on the column, you can also sort the columns and add extra columns: ELB, quality, last update.
+</p>
+<p>
+	
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio12.png"><img src="sc_bio12.png" width="250" title="Biosample Batch Mode Editing"/></a>
+	Validation is done when you click the button "Save".<br>
+	A red color shows erroneous fields (unknown value for a list metadata or text for a numerical value) and will give the "invalid choice" error upon saving. 
+</p>
+<p>
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio14.png"><img src="sc_bio14.png" width="450" title="Metadata correction"/></a>
+	An orange color shows a warning (new entered value for an autocompletion metadata) and will lead to the "typo correction" dialog upon saving. In this dialog, each new value is checked and compared to the existing ones to suggest a replacement. In the next example: "Lung / RIGHT" should be replaced by "Lung/Right" and "Brain" is a new value with no suggestion. Click "Replace All" to accept the suggestions and leave keep the new values.
+	<br>
+	
+	
+</p>
+<p>	
+	<a class="fancybox " rel="group" href="sc_bio13.png"><img src="sc_bio13.png" title="Biosample Set Location"/></a>
+	The <b>Set Location</b> button allows the user to set the location for all the samples in a visual way, as described in the Location section. Select the samples and click or drag them to their new positions.
+</p>
+<p>
+	It is possible at
+</p>
 
-Here are the following columns to be edited:<br>
-<ul>
-<li><b>ContainerType/ContainerId:</b> After entering a containerType, you can scan or type the containerId. Those columns are only shown if the biotype is not marked abstract.
-<li><b>Location:</b> If the biotype is not abstract, you can either browse (by clicking on "Set") the appropriate location and position or you can enter it by hand.<br>
-Ideally the full path of the location should be entered such as "Building/Lab/Freezer/MyBox:1", but if MyBox is unique it is sufficient to enter "MyBox:1". The user needs of course to have write access over that location to enter it.
-<li><b>Amount:</b> If the biotype is configured to have an amount, a amount column showing the appropriate unit will be displayed.
-<li><b>StudyId/Group/Phase:</b> those columns are only shown if you edit samples coming from more than 1 study. <br>
-The study columns are only shown for living and composite biotypes
-<li><b>ParentId:</b> In this column you can edit the parent of the sampleId. You need to have write access on the parent sample.
-<li><b>SampleId</b> is required, but if you don't enter it, it will be generated automatically.
-If the biotype was configured to prevent the user from entering the sampleId himself, this sampleId will always be generated.
-
-</ul>
-Yellow fields are mandatories. You cannot save the biosamples, without entering a value<br>
-<br>
-The number of columns depends of the biotype: for each metadata, a new column is created with its specific editor based on its datatype: numeric, alphanumeric, date, file, combobox, autocompletion, multiple choices, link to an other sample...<br>
-<br>
-Validation of the data is done on the fly or by clicking the button "Check Errors": all fields, that may be incorrect are shown in orange.<br>
-<br>
-<br>
-The ContainerType/ContainerId/Location/Amount columns can be collapsed into 1 column by double-clicking on the appropriate header, if you want a more compact view.<br>
-<br>
-To edit more samples, you can simply go down with the arrow key: new rows will automatically created.
-You can also right-click on the table, select "Insert Rows" and the number of rows you wamt to insert.<br>
-It is important to know, that deleting a row from the table will not delete the sample but actually remove this biosample from the editing.<br>
-<br>
-If you right-click on the column, you can also sort the columns and add extra columns: ELB, quality, last update.
-<br>
-
-<h3>Editing in Form Mode</h3>
-If you edit one biosample of type component, you will go to the Edit in Form Mode. This view is more appropriate if the biosample to be edited contains a lot of metadata, and you can immediately see the datatype of those metadata.<br>
-<br>
-It is always possible to switch between the Batch Mode and the Form Mode by clicking the button "Switch to Batch Mode"<br>
-
-<table><tr><td><img src="screenshot_biosample13.png"/><br><i>Screenshot of Edit Biosample in Form Mode</i></td></tr></table>
-
-<h3>Autocompletion errors</h3>
-If you click the button check for errors or if you save, Spirit will check the uniqueness of sampleId, the correctness of the location and parentId, the required fields and the autocompletion fields.
-If a metadata is defined as autocomplete, Spirit will check all already entered data. If a new value is entered, Spirit will evaluate the proximity to the other entered values and suggest a correction as shown in the next dialog. To replace the values, simply click "Replace". If the distance of a value is too high compared to the already entered values, Spirit will continue without any warnings.<br>
-<table><tr><td><img src="screenshot_biosample14.png"/><br><i>Screenshot of Edit Biosample in Form Mode</i></td></tr></table>
-
-<h2>Create Aliquots</h2>
-With the option of creating aliquots, you can select one or more biosample and then specifies the aliquot you want to create:
-<ul>
-<li><b>Create aliquots by type: </b>Use this option to specify the biotype and the number of aliquots.
-<li><b>Use a sampling's template: </b>If you create regularly the same aliquots, the best is to save a sampling's template (as shown in the edit study design) and reapply it. Through this option you can select an existing template or recreate one, and then apply this template to all the selected biosamples.
-</ul>
-<br>
-
-When you click the "Create Aliquots" button, you will be redirected to a new dialog to let you edit the biosamples in batch mode.<br>
-
-<table><tr><td><img src="screenshot_biosample17.png"/><br><i>Screenshot of the Create Aliquots dialog</i></td></tr></table>
+<h3 id="biosample_form">Form Editing</h3>
+<p>
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio15.png"><img src="sc_bio15.png" title="Biosample Form Editing"/></a>
+	The "Form Editing" shows an expanded view of the sample to edit. It is the default editing mode for components (bacteria, cell line, antibody), due to the higher number of metadata for these biotypes. To switch to the <a href="biosample_batch">"Batch Mode"</a>, click on the Switch button.
+</p>
+<p>
+	The edition in this view is very similar to the <a href="biosample_batch">"Batch mode"</a> and the same type validation applies here.
+	
+	
+<h2 id="biosample_children">Add children/aliquots</h2>
+<p>
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio16.png"><img src="sc_bio16.png" title="Add Children"/></a>
+	To create children (aliquots) of biosamples, query and select the parent biosamples and then right-click on them to select the <b>"Add Children"</b> menu in the "New" section of the popup menu
+</p>
+<div class="row">
+	<div class="col-md-6">
+		<a class="fancybox" rel="group" href="sc_bio17.png"><img src="sc_bio17.png" title="Manual Creation"/></a>
+		<b>Manual creation</b><br>
+		Use this option if the children you want to create have all the same biotype.
+	</div>
+	<div class="col-md-6">
+		<a class="fancybox" rel="group" href="sc_bio18.png"><img src="sc_bio18.png" title="Use a template"/></a>
+		<b>User a sampling's tamplate</b><br>
+		Use this option if the children you want to create have different biotypes or if you want to reuse a previous template. You can choose any template from a study where you have read access, or any custom you created here. 
+	</div>
+</div>	
+<p>
+	When you click the "Create Aliquots" button, you will be redirected to a new dialog to let you edit the biosamples in batch mode.<br>
+	<a class="fancybox" rel="group" href="sc_bio19.png"><img src="sc_bio19.png" title="Use a template"/></a>
+</p>
 
 <h2>Checkin / Relocate / Checkout</h2>
-Checkin is the action of giving a new location to a biosample. We use relocation if the biosample had already a location. To unset the location, we use checkout.
+<p>
+	<a class="fancybox" rel="group" href="sc_bio20.png"><img src="sc_bio20.png" title="Use a template"/></a>
+	<ul>
+		<li><b>Checkin</b> is giving a new location to a biosample
+		<li><b>Relocate</b> is moving the sample to a new location
+		<li><b>Checkout</b> is removing the location
+	</ul>
+</p>
 
+TODO
+<!--
 <h3>Checkin / Relocate</h3>
 You can select one or more biosamples and then select the "Checkin" option from the biosample popup dialog. This option is grayed out if you don't have write access on the biosamples or on the locations or if the biosamples are abstract.<br>
 <br>
@@ -1640,7 +1663,7 @@ Spirit comes already installed with some biotypes and tests, which could be used
 -->
 
             </div>
-            <div class="sidebar col-md-3" role="complementary">
+            <div class="sidebar col-md-3 hidden-print" role="complementary">
                 <nav id="sidebar">
                 </nav>
             </div>
