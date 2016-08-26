@@ -382,27 +382,41 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
 <h3 id="study_design">Design</h3>
 <p>
     The bottom left part shows the visual design of the study. The visualization may change a lot depending of the type of study. The following studies are given as examples in the system:
-    <dl>
-    <dt>Basic study
-    <dd><a class="fancybox" rel="group" href="sc_study2.png"><img src="sc_study2.png"/></a>This is a basic study with 3 groups, lasting 7 phases. At day0, 5 animals are assigned to each group, and the treatment is given. From day1 to day6, a blood sampling is performed and at day 7, the animals are necropsied. The "w" signs shows that the animals have to be weighted every day.
-    <dt>Study with group splitting
-    <dd><a class="fancybox" rel="group" href="sc_study3.png"><img src="sc_study3.png"/></a>At day0, the animals are split into 2 groups (healthy, sick), but it is only at day2 that the animals are split again (Treated, NonTreated), based on some criteria like the weight.
-    <dt>Study wih subgroups
-    <dd><a class="fancybox" rel="group" href="sc_study4.png"><img src="sc_study4.png"/></a>When a lot of work has to be done, subgroups or stratification helps to split the work on several phases. Here, each group of 9 animals is split into 3 subgroups.  
-    </dl>
+	
+	<div class="row">
+		<div class="col-md-4">
+			<b>Basic study:</b><br>
+			<a class="fancybox" rel="group" href="sc_study2.png"><img src="sc_study2.png"/></a>This is a basic study with 3 groups, lasting 7 phases. At day0, 5 animals are assigned to each group, and the treatment is given. From day1 to day6, a blood sampling is performed and at day 7, the animals are necropsied. The "w" signs shows that the animals have to be weighted every day.
+		</div>
+		<div class="col-md-4">
+			<b>Study wih subgroups:</b><br>
+			<a class="fancybox" rel="group" href="sc_study3.png"><img src="sc_study3.png"/></a>At day0, the animals are split into 2 groups (healthy, sick), but it is only at day2 that the animals are split again (Treated, NonTreated), based on some criteria like the weight.
+		</div>
+		<div class="col-md-4">
+			<b>Study wih subgroups</b><br>
+			<a class="fancybox" rel="group" href="sc_study4.png"><img src="sc_study4.png"/></a>When a lot of work has to be done, subgroups or stratification helps to split the work on several phases. Here, each group of 9 animals is split into 3 subgroups.  
+		</div>
+	</div>
+		
 </p>
 
 <h3>Infos</h3>
 <p>
     The bottom-right of the study tab shows the other infos of the study. There are 3 tabs there:
-    <dl>
-    <dt>Samples:
-    <dd><a class="fancybox" rel="group" href="sc_study5.png"><img src="sc_study5.png" title="Study Samples"/></a>This tab shows the list of biosamples attached to the study. The <strong>attached samples</strong> are the samples, that are follow the actions from the study design. If those samples have some children, it is possible to double-click to view all the samples, that have been collected.
-    <dt>Samplings:
-    <dd><a class="fancybox" rel="group" href="sc_study6.png"><img src="sc_study6.png" title="Study Samplings"/></a>This tab shows the <strong>sampling templates</strong> associated to the study. The sampling templates describes the samples the samples, that should be taken and how they should be taken. This example shows that the "blood sampling" consists of 2 aliquots of 5ml stored in Micronics, and that the "Necropsy" consists of the heart, the lung (left and right stored in one bottle), all of which have to be weighted ("w").
-    <dt>Infos
-    <dd><a class="fancybox" rel="group" href="sc_study7.png"><img src="sc_study7.png" title="Study Infos"/></a>This is the default tab, which shows the title, the infos, the workflow state, the user rights and all the data coming from this study. You can click on the "biosamples" link to be redirected to the biosample tab, or on the "results" link to be redirected to the result tab.
-    </dl>
+	<div class="row">
+		<div class="col-md-4">
+			<b>Samples:</b><br>
+			<a class="fancybox" rel="group" href="sc_study5.png"><img src="sc_study5.png" title="Study Samples"/></a>This tab shows the list of biosamples attached to the study. The <strong>attached samples</strong> are the samples, that are follow the actions from the study design. If those samples have some children, it is possible to double-click to view all the samples, that have been collected.
+		</div>
+		<div class="col-md-4">
+			<b>Samplings:</b><br>
+			<a class="fancybox" rel="group" href="sc_study6.png"><img src="sc_study6.png" title="Study Samplings"/></a>This tab shows the <strong>sampling templates</strong> associated to the study. The sampling templates describes the samples the samples, that should be taken and how they should be taken. This example shows that the "blood sampling" consists of 2 aliquots of 5ml stored in Micronics, and that the "Necropsy" consists of the heart, the lung (left and right stored in one bottle), all of which have to be weighted ("w").
+		</div>
+		<div class="col-md-4">
+			<b>Infos</b><br>
+			<a class="fancybox" rel="group" href="sc_study7.png"><img src="sc_study7.png" title="Study Infos"/></a>This is the default tab, which shows the title, the infos, the workflow state, the user rights and all the data coming from this study. You can click on the "biosamples" link to be redirected to the biosample tab, or on the "results" link to be redirected to the result tab.
+		</div>
+    </div>
 </p>
 
 <h2>Editing</h2>
@@ -973,6 +987,49 @@ Use this function to count the number of organs per animal, to count the types o
 </p>
 <p>
 	The edition in this view is very similar to the <a href="biosample_batch">"Batch mode"</a> and the same type validation applies here.
+</p>
+
+	
+<h3>Set Status</h3>
+<p>
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio23.png"><img src="sc_bio23.png" title="Set Status"/></a>
+	The status is a flag added to the sample. The status are the following:
+	<ul>
+	<li><b>Available: </b>default
+	<li><b>Low Volume: </b>
+	<li><b>Used Up: </b>
+	<li><b>Trashed: </b>If you trash a biosample, it is automatically checked out from its current location.
+	</ul>	
+</p>
+<p>
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio24.png"><img src="sc_bio24.png" title="SampleId Status"/></a>
+	The status of the biosample can be seen visually by inspecting the sampleId. A different background on the icon is shown for each status. Yellow for low volume, pink for used up, and red for trashed.	
+</p>
+<p>
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio25.png"><img src="sc_bio25.png" title="Status Change"/></a>
+	The status change can be seen in the <a href="#biosample_detail">biosample detail</a> or in the audit trail of the sample.
+</p>
+
+
+<h3>Set Quality</h3>
+<p>
+	The quality can be changed in a similar way to Bogus, Questionable, Valid (default), Confirmed.<br>
+	If you set a biosample to bogus or questionable, the system will ask you to change the quality of all linked results
+</p>
+<p>
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio26.png"><img src="sc_bio26.png" title="SampleId Quality"/></a>
+	The quality is shown on the sampleId. Red, orange, transparent, green are respectively used for Bogus, Questionable, Valid, Confirmed.
+</p>
+
+<h3>Set Expiry Date</h3>
+<p>
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio27.png"><img src="sc_bio27.png" title="Set Expiry Date"/></a>
+	You can add an expiry date to a set of samples. Samples with an expiry date will be displayed in the biosample table and the biosample detail.
+</p>
+<p>
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio28.png"><img src="sc_bio28.png" title="Set Expiry Date"/></a>
+	To retrieve the list of expired biosamples and the list of biosamples that are going to expire. You can go to the Menu and select "Tools->Query Expired Samples". You can right-click on the samples to perform any needed operations
+</p>
 	
 	
 <h2 id="biosample_children">Add children/aliquots</h2>
@@ -997,57 +1054,43 @@ Use this function to count the number of organs per animal, to count the types o
 	<a class="fancybox" rel="group" href="sc_bio19.png"><img src="sc_bio19.png" title="Use a template"/></a>
 </p>
 
-<h2>Checkin / Relocate / Checkout</h2>
+<h2 id="biosample_checkin">Checkin / Checkout</h2>
 <p>
-	<a class="fancybox" rel="group" href="sc_bio20.png"><img src="sc_bio20.png" title="Use a template"/></a>
+	<a class="fancybox pull-md-right" rel="group" href="sc_bio20.png"><img src="sc_bio20.png" title="Checkin / Checkout popup"/></a>
+	To change the location of biosample, select them and open the "biosample popup menu" using right-click:
 	<ul>
-		<li><b>Checkin</b> is giving a new location to a biosample
-		<li><b>Relocate</b> is moving the sample to a new location
+		<li><b>Checkin</b> is giving a new location to a biosample and <b>Relocate</b> is moving the sample to a new location
 		<li><b>Checkout</b> is removing the location
 	</ul>
+	To set the locations, write access rights are required, and the samples should not be abstract.
 </p>
 
-TODO
-<!--
-<h3>Checkin / Relocate</h3>
-You can select one or more biosamples and then select the "Checkin" option from the biosample popup dialog. This option is grayed out if you don't have write access on the biosamples or on the locations or if the biosamples are abstract.<br>
-<br>
-On the left-hand side of the dialog you see the selected biosamples, and on the right-hand side of the dialog, you have to browse through the desired location. Once you selected the good location, you have either to double-click on the appropriate position to set the biosamples to their new location or you can drag and drop them with the mouse. <br>
-<br>
-By default, all biosamples are selected so that selecting the position will update the location for all of them. You can set the direction from left to right or from top to bottom to give a direction on how to fill the location.<br>
-<br>
-<table><tr><td><img src="screenshot_biosample18.png"/><br><i>Screenshot of the Checkin/Relocate</i></td></tr></table>
-<br>
+<h3>Checkin</h3>
+<p>
+	<a class="fancybox" rel="group" href="sc_bio21.png"><img src="sc_bio21.png" title="Checkin / Relocate"/></a>
+	The selected biosamples are shown on the left panel of the checkin/relocate dialog. The destination location is shown on the right side.
+	To enter a location, you can either type it by clicking on the location field and entering "Tower 2 / Box 1" or browse to the desired location. 
+</p>
+<p>
+	To set the samples to the desired location you can:
+	<ul>
+		<li><b>Drag them</b> and move them to the new location. It is possible to change the location of any biosample in the box (provided you have the rights). To move several samples, use ctrl-click or shift-click to select several biosamples before dragging them
+		<li><b>Double-Click</b> on the new position. The first click gives a preview of the new location, while the second click moves the samples. The way that samples are moved depends of the "direction". You can decide to assign the positions from "left to right", from "top to bottom" or to keep the same order/pattern (default) if the samples already has a position..
+	</ul>
+</p>
+<p>
+	A new location can also be created directly from this dialog.
+</p>
 
 <h3>Checkout</h3>
-If the selected biosamples have a location, you can select the "Checkout" option to unset the location. If you have sufficient right, Spirit will ask you for a confirmation and apply the changes.<br>
-<br>
-<table><tr><td><img src="screenshot_biosample19.png"/><br><i>Screenshot of the Checkin/Relocate</i></td></tr></table>
-<br>
-
-<h2>Trash / Set Status / Set Quality / Set Expiry Date</h2>
-
-<h4>Trash / Set Status</h4>
-The default status of all biosamples is available but you can change the status to:
-<ul>
-<li><b>Available: </b>default
-<li><b>Low Volume: </b>default
-<li><b>Used Up: </b>you still have the biosample but it is empty. The location (if any) is kept
-<li><b>Trashed: </b>you throw away the biosample. The location is unset.
-</ul>
-<br>
-
-<h4>Set Quality</h4>
-In addition to the status, it is possible to change the quality to Bogus / Questionable / Valid / Confirmed. All samples are Valid by default
-
-<h4>Set Expiry Date</h4>
-You can add an expiry date to a set of samples. If the retrieved samples have an expiry date, this date will be displayed in the biosample table and the biosample detail.<br>
-<br>
-To retrieve the list of expired biosamples and the list of biosamples that are going to expire next month. You can go to the Menu and select "Tools->Query Expired Samples"<br>
+<p>
+	<a class="fancybox" rel="group" href="sc_bio22.png"><img src="sc_bio22.png" title="Checkout"/></a>
+	To checkout biosamples, select them and click "checkout" from the popup menu. Click "Checkout" in the confirmation dialog to remove them from the location.
+	
 
 
 <h2>Advanced</h2>
-
+<!--
 <h3>Delete Batch</h3>
 Delete Batch is used when biosamples should be deleted from the database. Use this function to delete the physical sample as well as the virtual sample. After a biosample has been deleted, there will be no retrieved it except by going through the audit trail. From the audit trail, it is always possible to restore a biosample, which was mistakenly deleted.
 Because Delete Batch is a very powerful feature, only the owner of the biosample or an admin can delete.<br>
