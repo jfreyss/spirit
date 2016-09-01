@@ -54,82 +54,11 @@
 <h0 id="1_introduction">Part 1: Principle</h0>
 <p>
 Spirit is an applicattion, which brings a new concept to manage biosamples, covering the process from the <strong>study</strong> design, to the <strong>biosample</strong> creation, the <strong>location</strong> inventory, and the analysis of <strong>results</strong>.</p>
-<a class="fancybox pull-md-right" rel="group" href="principle.png"><img src="principle.png" title="Spirit entities and their relationships"/></a>
-
-<h1 id="1_biosamples">About biosamples</h1>
-<p>Spirit being a biobank software, biosamples are at the center of the system. The represent all biological entities in the system, whether it is a human, an organ, a bacteria, or even a formulation</p>
-<p>The different type of biosamples are called <strong>biotypes</strong>. The biotype defines specific fields such as the containerType, the amountType, or the metadata that are used to represent the entity. For example, an "Animal" biosample is defined as being a "living" biotype, with no amount, and is defined through metadata "Species", "Sex", "DateOfBirth"; while a "Blood" biosample is defined as a "liquid" biotype, with a volume and metadata such as "Fixative"</p>
-<p>Each biosample is defined by a unique <strong>sampleId</strong>, a container, and some metadata.</p>
-<p>A unique aspect of Spirit, is that it keeps a complete hierarchy of each biosample, meaning that there is no limitation in the number of children or the hierarchy level</p> 
-<h2 id="1_biotypes">Biotype Definition</h2>
-<a class="fancybox pull-md-right" rel="group" href="1_biotype.png"><img src="1_biotype.png"  title="Biotype definition"/></a>
-<p>
-Each biotype belongs to one of those <strong>categories</strong>.  
-<ul>
-<li><strong>Living</strong>
-The "Human" and the "Animal" biotypes are the 2 strong representants of this category. They are essentially used to be attached to studies, and as parent of other samples
-<li><strong>Solid sample</strong>
-Non purified solid samples coming are in this category. They typically have a living sample as a parent and a weight. Examples: "Tumor", "Organ"
-<li><strong>Liquid sample</strong>
-Non purified solid samples coming are in this category. They typically have a living sample or an other non purified sample as parent and they have a volume. Examples: "Blood", "Plasma", "Serum", "Homogenate"
-<li><strong>Purified sample</strong>
-Purified samples, such as "Antibody", "Bacteria", "Primer", "Cell Definition". They don't necessarily come from a specific living sample or have a parent. They are usually not used in studies, but used to keep an inventory of available components.
-<li><strong>Library:</strong>
-Libraries consist of all abstract samples, which could be referenced by other samples. Example: "Fluorophore", referenced by "Antibody".
-</ul>
-</p>
-
-<p>
-In addition to the name and the category, the biotype can then be configured with the following options:
-<dl>
-<dt>Biotype</dt>
-<dd>
-<ul>
-<li><strong>Inherited from:</strong>
-Expert feature to force a given biotype to have a specific parent. Example: "Cells" inherit from "Cell Batch", which inherit themselves from "Cell Definition". It should only be used if you can say that the child biotype inherits all properties from his parent. Leave empty in all other cases.
-<li><strong>Prefix:</strong>
-The sampleId can be prefix by an prefix (letters or digits). It is optional, but recommended.<li><strong>The sampleId is editable by the user:</strong>
-Check this box if the sampleId should be editable, ie if it is meaningfull to the user. Example, the patientId or animalId should be editable by the user, whereas an organId has no meaning and should be generated
-<li><strong>Hidden</strong>
-Check this box, if you want the end-user to select this biotype. If checked, only an administrator would be able to create new samples of this type. However, existing samples are still searchable.
-</ul>
-</dd>
-<dt>Container</dt>
-<dd>
-<ul>
-<li><strong>Abstract:</strong>Check this box to prevent biosamples to have a container or a location.
-<li><strong>No ContainerId:</strong>Check this box, if the biosample can have a container and a location, but to prevent the user from entering a containerId.
-<li><strong>ContainerType:</strong>Select a containerType if you want to force all biosamples from this biotype to have a specific type of container. Example: all animals in a cage.
-<li><strong>AmountUnit:</strong>Select a unit of volume or a unit of weight if the amount of the biosamples can be measured. It is not possible to mix the units within a biotype. 
-</ul>
-</dd>
-<dt>Main Metadata:</dt>
-<dd>The main metadata is the metadata, that is always displayed. It is the field that identify the biosample the best in its context. For example, the animal No is sufficient to identify the animal in the context of a study. The organ type is sufficient to identify the organ in the context of the animal,... The main metadata is optional. Uncheck the box, if there is no field to clearly describe a biosample.
-<ul>
-<li><strong>Label:</strong> is the label used to describe this metadata
-<li><strong>Autocomplete:</strong>Check this box if you want the system to do a typo check and suggest similar entries. Check this box to avoid having an organ called "Left Lung" and an other called "Lung/Left".
-<li><strong>Required:</strong>If checked, the user will not be able to save the biosamples if the field is empty
-</ul>
-<dt>Other Metdata</dt>
-<dd>Each metadata describes commonly used piece of information. Each metadata can be mandatory, so that the user cannot save without entering this information. Each metadata can also be marked as secondary, so that they won't be displayed on the standard table view. A maximum of 6 primary metadata is advised. Then the metadata can be configured with a specific datatype:
-	<ul>
-		<li>Numeric
-		<li>Alphanumeric
-		<li>Autocomplete: the system will check for typos by suggesting closely matching entries
-		<li>Date / Time
-		<li>File
-		<li>Choice: One: the user can select one value from a predefined list, such as male / female
-		<li>Choice: Multiple: the user can select several values from a predefined list. Other values from the list are also possible
-		<li>Linked: Biosample: the user can select an other biosample from the specified biotype (ie: a fluorophore for an antibody)
-	</ul>
-</ul>
-</dl>
-</p>
-<br>
+<a class="fancybox pull-md-right" href="principle.png"><img src="principle.png" title="Spirit entities and their relationships"/></a>
 
 <h2 id="1_hierarchy">Sample's hierarchy</h2>
 <p>
-<a class="fancybox pull-md-right" rel="group" href="chain.png"><img src="chain.png" title="Sample's hierarchy"/></a><br>
+<a class="fancybox pull-md-right" href="chain.png"><img src="chain.png" title="Sample's hierarchy"/></a><br>
 Contrarely to other LIMS systems, Spirit does not only remember the patientId from which the biosample originates, but the complete hierarchy between the sample and its parents.
 It is therefore possible to maintain a hierarchy of biosamples such as:
 <ul>
@@ -200,7 +129,7 @@ User rights can be configured for any location. The rights can be:
 <h1 id="1_studies">About Studies</h1>
 <p>A study consists of one or more groups of samples, on which we perform actions at specific phases</p>
 <p>
-<a class="fancybox pull-md-right" rel="group" href="study1.png"><img src="study1.png" title="Basic study design"/></a><br>
+<a class="fancybox pull-md-right" href="study1.png"><img src="study1.png" title="Basic study design"/></a><br>
 This figure shows the principle of a basic study, where we have 2 groups of animals and 4 different phases. At phase 1, we apply treatment1 to the first group and treatment2 to the second group. Then we perform the same blood sampling on the 2 groups at phase 1 and at phase 3.
 </p>
 <h2>Study Design</h2>
@@ -228,7 +157,7 @@ We consider 3 types of groups assignments:
 <li><b>Group Splitting:</b> Sometimes it is necessary to make an observation phase and to decide later how samples will be split into new groups. The next figure shows such an example, where we first do an initial group assignment to decide which animals will stay healthy and which animals will become sick. After an observation time, each group is then splitted into 2 new groups, based on some observation criteria. In the case of group splitting, the samples is moved from one group to the other.<br>
 
 <br>
-<a class="fancybox pull-md-right" rel="group" href="study2.png"><img src="study2.png" title="Group splitting"/></a>
+<a class="fancybox pull-md-right" href="study2.png"><img src="study2.png" title="Group splitting"/></a>
 
 <li><b>Group Dividing:</b> In advanced scenarios, it is possible to create other samples from the assigned specimen and that those samples are themselves assigned to groups. This is similar to the group splitting, except that the specimen stays in its group, but we create new samples, which will be assigned to new groups. For example, we may take blood samples from sick animals, and apply different treatments directly to those blood samples. Those blood samples belong then to their own group. <br>
 Next figure shows an other example, where we have animals exposed to UV.  On each animal, we will consider 2 patches of skin on which we will apply a placebo and a sunscreen to see how the animal reacts.<br><br>
@@ -346,14 +275,14 @@ There are few principles to understand about Spirit:<br>
 </ul>
 <br>
 -->
-<h0 id="2_interface">Spirit User guide</h0>
+<h0 id="2_interface">User guide</h0>
 <p>
 The Spirit interface is divided into five tabs. Each tab gives a different view of the same data, but with a different presentation.
 </p>
 
 <h1>Home</h1>
 <p>
-<a class="fancybox pull-md-right" rel="group" href="home.png"><img src="home.png" title="Home Page"/></a>
+<a class="fancybox pull-md-right" href="home.png"><img src="home.png" title="Home Page"/></a>
 The <b>Home</b> tab is the first thing you see when starting Spirit. It shows the latest changes and allows the user to have a quick overview of the studies being worked on. For each study, it shows the data, that was generated and who did the latest modifications and when.  
 <ul>
 <li>Clicking on a study will redirect the user to the study visualization tab and open the clicked study.
@@ -362,14 +291,14 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
 </ul>
 </p>
 
-<h1>Study Tab</h1>
+<h1>Study</h1>
 <p>
     The study tab shows the study centric view of Spirit. This is where the user can query studies and work on the design.
 </p>
 
 <h2 id="study_visualization">Visualization</h2>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study1.png"><img src="sc_study1.png" title="Study Page"/></a>
+    <a class="fancybox pull-md-right" href="sc_study1.png"><img src="sc_study1.png" title="Study Page"/></a>
     On the study tab, you can query all the studies of the system, provided you have read access on the studies. By default and before making any search, Spirit will show you all the studies where your name is explicitely written in the list of users.</p>
 <p>
     To query for a study, you can either:
@@ -386,15 +315,15 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
 	<div class="row">
 		<div class="col-md-4">
 			<b>Basic study:</b><br>
-			<a class="fancybox" rel="group" href="sc_study2.png"><img src="sc_study2.png"/></a>This is a basic study with 3 groups, lasting 7 phases. At day0, 5 animals are assigned to each group, and the treatment is given. From day1 to day6, a blood sampling is performed and at day 7, the animals are necropsied. The "w" signs shows that the animals have to be weighted every day.
+			<a class="fancybox" href="sc_study2.png"><img src="sc_study2.png"/></a>This is a basic study with 3 groups, lasting 7 phases. At day0, 5 animals are assigned to each group, and the treatment is given. From day1 to day6, a blood sampling is performed and at day 7, the animals are necropsied. The "w" signs shows that the animals have to be weighted every day.
 		</div>
 		<div class="col-md-4">
 			<b>Study wih subgroups:</b><br>
-			<a class="fancybox" rel="group" href="sc_study3.png"><img src="sc_study3.png"/></a>At day0, the animals are split into 2 groups (healthy, sick), but it is only at day2 that the animals are split again (Treated, NonTreated), based on some criteria like the weight.
+			<a class="fancybox" href="sc_study3.png"><img src="sc_study3.png"/></a>At day0, the animals are split into 2 groups (healthy, sick), but it is only at day2 that the animals are split again (Treated, NonTreated), based on some criteria like the weight.
 		</div>
 		<div class="col-md-4">
 			<b>Study wih subgroups</b><br>
-			<a class="fancybox" rel="group" href="sc_study4.png"><img src="sc_study4.png"/></a>When a lot of work has to be done, subgroups or stratification helps to split the work on several phases. Here, each group of 9 animals is split into 3 subgroups.  
+			<a class="fancybox" href="sc_study4.png"><img src="sc_study4.png"/></a>When a lot of work has to be done, subgroups or stratification helps to split the work on several phases. Here, each group of 9 animals is split into 3 subgroups.  
 		</div>
 	</div>
 		
@@ -406,15 +335,15 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
 	<div class="row">
 		<div class="col-md-4">
 			<b>Samples:</b><br>
-			<a class="fancybox" rel="group" href="sc_study5.png"><img src="sc_study5.png" title="Study Samples"/></a>This tab shows the list of biosamples attached to the study. The <strong>attached samples</strong> are the samples, that are follow the actions from the study design. If those samples have some children, it is possible to double-click to view all the samples, that have been collected.
+			<a class="fancybox" href="sc_study5.png"><img src="sc_study5.png" title="Study Samples"/></a>This tab shows the list of biosamples attached to the study. The <strong>attached samples</strong> are the samples, that are follow the actions from the study design. If those samples have some children, it is possible to double-click to view all the samples, that have been collected.
 		</div>
 		<div class="col-md-4">
 			<b>Samplings:</b><br>
-			<a class="fancybox" rel="group" href="sc_study6.png"><img src="sc_study6.png" title="Study Samplings"/></a>This tab shows the <strong>sampling templates</strong> associated to the study. The sampling templates describes the samples the samples, that should be taken and how they should be taken. This example shows that the "blood sampling" consists of 2 aliquots of 5ml stored in Micronics, and that the "Necropsy" consists of the heart, the lung (left and right stored in one bottle), all of which have to be weighted ("w").
+			<a class="fancybox" href="sc_study6.png"><img src="sc_study6.png" title="Study Samplings"/></a>This tab shows the <strong>sampling templates</strong> associated to the study. The sampling templates describes the samples the samples, that should be taken and how they should be taken. This example shows that the "blood sampling" consists of 2 aliquots of 5ml stored in Micronics, and that the "Necropsy" consists of the heart, the lung (left and right stored in one bottle), all of which have to be weighted ("w").
 		</div>
 		<div class="col-md-4">
 			<b>Infos</b><br>
-			<a class="fancybox" rel="group" href="sc_study7.png"><img src="sc_study7.png" title="Study Infos"/></a>This is the default tab, which shows the title, the infos, the workflow state, the user rights and all the data coming from this study. You can click on the "biosamples" link to be redirected to the biosample tab, or on the "results" link to be redirected to the result tab.
+			<a class="fancybox" href="sc_study7.png"><img src="sc_study7.png" title="Study Infos"/></a>This is the default tab, which shows the title, the infos, the workflow state, the user rights and all the data coming from this study. You can click on the "biosamples" link to be redirected to the biosample tab, or on the "results" link to be redirected to the result tab.
 		</div>
     </div>
 </p>
@@ -423,11 +352,11 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
 
 <h3 id="studyInfos">Infos</h3>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study8.png"><img src="sc_study8.png" title="Study Popup"/></a>
+    <a class="fancybox pull-md-right" href="sc_study8.png"><img src="sc_study8.png" title="Study Popup"/></a>
     To create/edit a new study, you can either go the menu or <strong>right-click on a study to open the contextual menu</strong>. Right-click works on almost everything in Spirit, and will make the appropriate popup menu open. If some options are grayed out, it means you don't have sufficient right, and you should contact one of the responsible person to add you on the list.
 </p>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study9.png"><img src="sc_study9.png" title="Study Infos"/></a>
+    <a class="fancybox pull-md-right" href="sc_study9.png"><img src="sc_study9.png" title="Study Infos"/></a>
     On the study info dialog, it is possible to enter the fundamental information about the study:
     <dl>
     <dt>Parameters
@@ -458,7 +387,7 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
 
 <h3>Design</h3>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study10.png"><img src="sc_study10.png" title="Study Design"/></a>
+    <a class="fancybox pull-md-right" href="sc_study10.png"><img src="sc_study10.png" title="Study Design"/></a>
     Go to the study design by right-clicking on the study and selecting "Edit->Study Design".
 </p>
 
@@ -475,7 +404,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h4>3. Phases</h3>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study11.png"><img src="sc_study11.png" title="Study Design - Phases"/></a>
+    <a class="fancybox pull-md-right" href="sc_study11.png"><img src="sc_study11.png" title="Study Design - Phases"/></a>
     The phases define the timeline of the study. Phases can be formatted as: 
     <dl>
     <dt>d0, d1, d3:
@@ -506,7 +435,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h4 id="editGroups">4. Groups</h4>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study12.png"><img src="sc_study12.png" title="Study Design - Groups"/></a>
+    <a class="fancybox pull-md-right" href="sc_study12.png"><img src="sc_study12.png" title="Study Design - Groups"/></a>
     When similar actions (same treatment, same sampling, same measurements) take place on several biosamples, those biosampes should be put together in a group. 
 </p>
 <p>
@@ -532,7 +461,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 </p>
 <h4>5. Treatments</h4>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study13.png"><img src="sc_study13.png" title="Study Design - Treatments"/></a>
+    <a class="fancybox pull-md-right" href="sc_study13.png"><img src="sc_study13.png" title="Study Design - Treatments"/></a>
     Treatment are identified by:
     <ul>
     <li><b>Name: </b> short and selft explanatory name to describe the treatment. 
@@ -544,14 +473,14 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h4>6. Sampling Templates</h4>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study14.png"><img src="sc_study14.png" title="Study Design - Sampling Template"/></a>
+    <a class="fancybox pull-md-right" href="sc_study14.png"><img src="sc_study14.png" title="Study Design - Sampling Template"/></a>
     The sampling templates describes the samples to be taken. When you click the button "Add Sampling", you can either decide to start from an empty template or to import a template from a previous study and modify it.
 </p>
 <p>
     You should name the template with a self-explanatory name, and specify if it is a necropsy sampling. After a necropsy, the animal's status becomes unavailable.
 </p>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study15.png"><img src="sc_study15.png" title="Study Design - Sampling"/></a>In each template, you may define any number of samples. To add a new sample, you can either click on "Add Sample" or click on the button next to each sample, and select "duplicate". For each sample, you must specify:
+    <a class="fancybox pull-md-right" href="sc_study15.png"><img src="sc_study15.png" title="Study Design - Sampling"/></a>In each template, you may define any number of samples. To add a new sample, you can either click on "Add Sample" or click on the button next to each sample, and select "duplicate". For each sample, you must specify:
     <ul>
     <li>the <b>biotype</b>
     <li>the <b>metadata, amount, comments </b> The metadata depends of the selected biotype.
@@ -562,7 +491,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h4>7. Actions</h4>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study16.png"><img src="sc_study16.png" title="Study Design - Actions"/></a>
+    <a class="fancybox pull-md-right" href="sc_study16.png"><img src="sc_study16.png" title="Study Design - Actions"/></a>
     Once the treatments, sampling templates are defined, the user can specify on which groups and when those actions have to be performed.
 </p>
 <p>
@@ -578,7 +507,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h3>Group Assignment</h3>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study17.png"><img src="sc_study17.png" title="Study Design - Actions"/></a>
+    <a class="fancybox pull-md-right" href="sc_study17.png"><img src="sc_study17.png" title="Study Design - Actions"/></a>
     To attach biosamples to the study, right-click on the study, and select "Edit->Automatic Assignment" or "Edit->Manual Assignment".
     <ul>
     <li><b>Automatic Assignment: </b> The automatic assignment guides the user through a wizard to randomize the assignment based on some criteria like the weight or on some other data. This option is only valid on the phases, where groups are set to be assigned as defined in the <a href="#editGroups">group</a> section. 
@@ -587,7 +516,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 </p>
 <p>
     Samples can only be attached to one study and to one group. To reuse the same sample across 2 studies or groups, the trick is to clone the samples. Example: to use ANL0001 in 2 studies, it is cloned to ANL0001A and ANL0001B (both inheriting from ANL00001). This process is automatically performed by Spirit.
-    <a class="fancybox pull-md-right" rel="group" href="cloning.png"><img src="cloning.png" title="Cloning"/></a>
+    <a class="fancybox pull-md-right" href="cloning.png"><img src="cloning.png" title="Cloning"/></a>
 </p>
 
 <h4 id="automaticassignment">Automatic Assignment</h4>
@@ -597,13 +526,13 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h5>1. Parameters</h5>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study18.png"><img src="sc_study18.png" title="Automatic Assignment - Parameters"/></a>
+    <a class="fancybox pull-md-right" href="sc_study18.png"><img src="sc_study18.png" title="Automatic Assignment - Parameters"/></a>
     The first part of the wizard gives overview of the groups to be assigned. You can enter the biotype of the samples to be randomized.
 </p>
 
 <h5>2. Randomization Data</h5>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study19.png"><img src="sc_study19.png" title="Automatic Assignment - Randomization data"/></a>
+    <a class="fancybox pull-md-right" href="sc_study19.png"><img src="sc_study19.png" title="Automatic Assignment - Randomization data"/></a>
     The second part of the wizard is where you enter the randomization data.
     <ul>
     <li><b>Number of attached samples: </b>By default, this number shows the number of samples to be randomized. You can increase this number to start with more samples. Extra samples will not be assigned to a group (reserve).
@@ -614,7 +543,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 </p>
 <h5>3. Group Assignment</h5>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study20.png"><img src="sc_study20.png" title="Automatic Assignment - Group Assignment"/></a>
+    <a class="fancybox pull-md-right" href="sc_study20.png"><img src="sc_study20.png" title="Automatic Assignment - Group Assignment"/></a>
     The third part of the wizard is where the user makes the group assignment. 
     <ul>
     <li><b>Put Lightest / Heaviest to Reserve: </b> If you have more samples than needed, checking those boxes will put the extrema (compared to the average) in the reserve. Uncheck them if you want to consider all specimen in the randomization
@@ -624,7 +553,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 <p>
     Spirit uses a simulated annealing algorithm to tests thousands of permutations until each group share similar characteristics (mean, standard deviation). The optimal randomization is the randomization, minimizing the following formula:
     <br>
-    <a class="fancybox pull-md-right" rel="group" href="formula.png"><img src="formula.png" title="Automatic Assignment - Group Assignment formula"/></a>
+    <a class="fancybox pull-md-right" href="formula.png"><img src="formula.png" title="Automatic Assignment - Group Assignment formula"/></a>
 </p>
 <p>
     The group assignment can be done manually partly of fully, by dragging the sample from group to groups. You can also right-click on the sample and select <strong>"Fix group"</strong>, so that the randomization keeps those samples untouched.
@@ -632,7 +561,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h5>4. Cage Assignment</h5>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study21.png"><img src="sc_study21.png" title="Automatic Assignment - Cage Assignment"/></a>
+    <a class="fancybox pull-md-right" href="sc_study21.png"><img src="sc_study21.png" title="Automatic Assignment - Cage Assignment"/></a>
     To set cages automatically, click on the maximum number of samples per cages. Spirit will still try to average the number of animals per cages. If you have 12 animals and select a max of 5, Spirit will assign 4 animals in each cage instead of 5,5 and 2.
 </p>
 <p>
@@ -641,26 +570,26 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h5>5. Saving</h5>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study22.png"><img src="sc_study22.png" title="Automatic Assignment - Saving"/></a>
+    <a class="fancybox pull-md-right" href="sc_study22.png"><img src="sc_study22.png" title="Automatic Assignment - Saving"/></a>
     The last step of the wizard is where you review the group assignment, update the subgroups, renumber, enter the metadata, comments. If everything is fine, click the "Make the assignments" button to update the database to match this randomization. The "automatic renumbering" button is used to renumber the samples sequentially as displayed in this table.
 </p>
 
 <h4>Manual Assigment</h4>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study23.png"><img src="sc_study23.png" title="Manual Assigment"/></a>
+    <a class="fancybox pull-md-right" href="sc_study23.png"><img src="sc_study23.png" title="Manual Assigment"/></a>
     In this dialog, you can directly type or copy/paste the samples with their group assignment. At any time, you can open the dialog to change the groups/subgroups, attach a new sample, or detach a sample from the study. 
 </p>
 
 <h2>Monitoring</h2>
 <h3>Live Monitoring</h3>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study24.png"><img src="sc_study24.png" title="Live Monitoring popup"/></a>
+    <a class="fancybox pull-md-right" href="sc_study24.png"><img src="sc_study24.png" title="Live Monitoring popup"/></a>
     Right-click on a study and select "Live Monitoring", to monitor the actions to be done on each attached sample of the study.
 </p>
 
 <h4>Overview</h4>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study25.png"><img src="sc_study25.png" title="Live Monitoring overview"/></a>
+    <a class="fancybox pull-md-right" href="sc_study25.png"><img src="sc_study25.png" title="Live Monitoring overview"/></a>
     The left pane of the overview dialog shows all the actions to be performed on the attached samples: group assignment, weighing, treatments as defined in the <a href="#studydesign">study design</a>.
 </p> 
 <p>
@@ -681,7 +610,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 </p>
 <h4>Live Measurements</h4>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study26.png"><img src="sc_study26.png" title="Live Monitoring measurement"/></a>
+    <a class="fancybox pull-md-right" href="sc_study26.png"><img src="sc_study26.png" title="Live Monitoring measurement"/></a>
     After clicking a phase, the Live Monitoring dialogs shows up. Spirit shows the required measurements specified in the study design, by default.
 </p>
 <p>
@@ -703,7 +632,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h3>Replace / Set Living Status</h3>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study31.png"><img src="sc_study31.png" title="Replace / Set Living Status"/></a>
+    <a class="fancybox pull-md-right" href="sc_study31.png"><img src="sc_study31.png" title="Replace / Set Living Status"/></a>
     The "Replace / Set Living Status" is a convenient dialog to set the status of an attached biosample and/or to replace it by an other sample from the reserve.
     <dl>
     <dd>
@@ -730,14 +659,14 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 <h3>Manage / Print Samples</h3>
 <h4>Sample Synchronization</h4>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study27.png"><img src="sc_study27.png" title="Sample Synchronization"/></a>
+    <a class="fancybox pull-md-right" href="sc_study27.png"><img src="sc_study27.png" title="Sample Synchronization"/></a>
     When you select the <b>"Manage / Print Samples"</b> option, Spirit checks that all the samples have been created (as defined in the study's sampling template). The first time you call this option, or if the sampling's template have been modifier, Spirit shows you this dialog and asks you to synchronize the samples to match the study's design. Please check and confirm by clicking "Synchronize".<br>
     This automatic creation can be disabled, if you uncheck the box "Generate Samples automatically" in the <a href="#studyInfos">study design</a>.
 </p>
 
 <h4>Manage Samples</h4>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study28.png"><img src="sc_study28.png" title="Manage Samples"/></a>
+    <a class="fancybox pull-md-right" href="sc_study28.png"><img src="sc_study28.png" title="Manage Samples"/></a>
     This dialog shows the generated samples from the study, which you can filter by container's type, group, phase, biotype, or some keywords.
 </p>
 
@@ -751,14 +680,14 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h5>Print Labels</h5>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="screenshot_study16.png"><img src="screenshot_study16.png" title="Print Labels"/></a>
+    <a class="fancybox pull-md-right" href="screenshot_study16.png"><img src="screenshot_study16.png" title="Print Labels"/></a>
     To print the labels, you first select the samples to print in the "Managing Samples" dialog, and then click "print labels". 
     For each type of container, the printing view shows the list of containers, and a preview of the label. The preview is rendered directly from the printers based on the entered settings (printer, media, left or right labels).
 </p>
 
 <h3>Sample Measurement</h3>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study30.png"><img src="sc_study30.png" title="Print Labels"/></a>
+    <a class="fancybox pull-md-right" href="sc_study30.png"><img src="sc_study30.png" title="Print Labels"/></a>
     Right-clicking on the study and select "Sample Measurement" to perform the weighing or the other measurement on the generated samples, as defined in the study's sampling templates
 </p>
 <p>
@@ -780,23 +709,23 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 </p>
 <h4>Study History</h4>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_study33.png"><img src="sc_study33.png" title="Study History"/></a>
+    <a class="fancybox pull-md-right" href="sc_study33.png"><img src="sc_study33.png" title="Study History"/></a>
     Spirit contains an audit trail of all entities, including studies. To view the history of a study, open the study popup menu and select "Advanced"->"View Change History"<br>
 </p>
 
-<h1 id="2_biosamples">Biosample Tab</h1>
+<h1 id="biosample">Biosample</h1>
 <p>
     The <b>Biosample Tab</b> shows the biosample centric view of Spirit, which should be used to query/edit biosamples
 </p>
 <h2 id="biosample_visualization">Visualization</h2>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_bio1.png"><img src="sc_bio1.png" title="Biosamples Visualization"/></a>
+    <a class="fancybox pull-md-right" href="sc_bio1.png"><img src="sc_bio1.png" title="Biosamples Visualization"/></a>
     Once you click the Biosample Tab on Spirit, you get the biosample centric view of Spirit, with the search panel at the top-left, the detail panel at the bottom-left and the biosample table at the center.
 </p>
 
 <h3>Search Panel</h3>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_bio2.png"><img src="sc_bio2.png" title="Biosamples Search Panel"/></a>
+    <a class="fancybox pull-md-right" href="sc_bio2.png"><img src="sc_bio2.png" title="Biosamples Search Panel"/></a>
 	In this search pane, enter the filters for making the search:
 	<dl>
 		<dt>StudyId:
@@ -836,7 +765,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 	
 <h3>Biosample Table</h3>
 <p>
-    <a class="fancybox pull-md-right" rel="group" href="sc_bio3.png"><img src="sc_bio3.png" title="Biosamples Table"/></a>	
+    <a class="fancybox pull-md-right" href="sc_bio3.png"><img src="sc_bio3.png" title="Biosamples Table"/></a>	
 	The biosample table shows the list of biosamples matching your criteria. It is dynamically rendered according to your criteria, and the width of each column is resized to fit the data into the screen as much as possible. Smaller monitors may lead to data displayed on 2 rows or to truncated data.<br>
 <p>
 <p>
@@ -877,22 +806,22 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 	<p>The detail panel shows the detailled information related to the selected biosample.
 	<div class="row">
 		<div class="col-md-3">
-			<a class="fancybox pull-md-right" rel="group" href="sc_bio4.png"><img src="sc_bio4.png" title="Biosample Detail 1"/></a>	
+			<a class="fancybox pull-md-right" href="sc_bio4.png"><img src="sc_bio4.png" title="Biosample Detail 1"/></a>	
 			<b>Metadata</b><br>
 			This tab show the details related to the selected biosample and its parents. If some metadata were hidden from the biosample table, those would be shown here. Click on the study/location/attached files to open those links.
 		</div>
 		<div class="col-md-3">
-			<a class="fancybox pull-md-right" rel="group" href="sc_bio5.png"><img src="sc_bio5.png" title="Biosample Detail 2"/></a>	
+			<a class="fancybox pull-md-right" href="sc_bio5.png"><img src="sc_bio5.png" title="Biosample Detail 2"/></a>	
 			<b>History</b><br>
 			This view shows the importand actions related to the biosample: sample creation, container change, treatment.
 		</div>
 		<div class="col-md-3">
-			<a class="fancybox pull-md-right" rel="group" href="sc_bio6.png"><img src="sc_bio6.png" title="Biosample Detail 3"/></a>	
+			<a class="fancybox pull-md-right" href="sc_bio6.png"><img src="sc_bio6.png" title="Biosample Detail 3"/></a>	
 			<b>Hierarchy</b><br>
 			To view the hierarchy of the biosample, ie. all parents and children.
 		</div>
 		<div class="col-md-3">
-			<a class="fancybox pull-md-right" rel="group" href="sc_bio7.png"><img src="sc_bio7.png" title="Biosample Detail 4"/></a>	
+			<a class="fancybox pull-md-right" href="sc_bio7.png"><img src="sc_bio7.png" title="Biosample Detail 4"/></a>	
 			<b>Results</b><br>
 			To view the results.
 		</div>
@@ -901,7 +830,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 <h3>Pivot Biosamples</h3>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio8.png"><img src="sc_bio8.png" title="Pivot Biosample"/></a>	
+	<a class="fancybox pull-md-right" href="sc_bio8.png"><img src="sc_bio8.png" title="Pivot Biosample"/></a>	
 	An alternative visualization is to pivot the biosample table, to count the number of biosamples based on some criteria. The attached figure shows the number of samples, where the group is shown on the rows, and the phase, biotypes are shown on the columns.
 </p>
 <p>To open this view, click on "Pivot Data". Upon checking this box, Spirit displays the number of biosamples currently in your table and a new dialog opens to configure the information to be shown. In this dialog, you can then drag and drop those items at the rows/columns/cells level to start counting the biosamples based on those criteria.
@@ -912,7 +841,7 @@ Use this function to count the number of organs per animal, to count the types o
 
 <h3>Exporting Data</h3>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio9.png"><img src="sc_bio9.png" title="Exporting Data"/></a>	
+	<a class="fancybox pull-md-right" href="sc_bio9.png"><img src="sc_bio9.png" title="Exporting Data"/></a>	
 	On the top-right of the biosample table, you can see the three exporting options:
 	<dl>
 		<dt>DataWarrior
@@ -927,7 +856,7 @@ Use this function to count the number of organs per animal, to count the types o
 
 <h2 id="biosample_editing">Editing</h2>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio10.png"><img src="sc_bio10.png" title="Biosample popup menu"/></a>
+	<a class="fancybox pull-md-right" href="sc_bio10.png"><img src="sc_bio10.png" title="Biosample popup menu"/></a>
 	To edit, select the biosamples to be edited, right-click to open the <b>biosample popup menu</b> and select the Edit option.
 </b>	
 <p>
@@ -936,7 +865,7 @@ Use this function to count the number of organs per animal, to count the types o
 
 <h3 id="biosample_batch">Batch Editing</h3>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio11.png"><img src="sc_bio11.png" title="Biosample Batch Mode Editing"/></a>
+	<a class="fancybox pull-md-right" href="sc_bio11.png"><img src="sc_bio11.png" title="Biosample Batch Mode Editing"/></a>
 	In batch editing, editing works like any spreadsheet (Excel). You can copy/paste from the clipboard, undo/redo your last actions.	The columns to be edited are similar to the ones described in the <a href="#biosample_visualization">biosample visualization</a>, at the exception that all columns are expanded to be easily editable. <br>
 	The "batch editing" is the default dialog for the edition of living/solid/liquid samples, but it is possible to switch to the <a href="biosample_form">"Form Editing"</a> if there is only one sample to edit.
 </p>
@@ -961,19 +890,19 @@ Use this function to count the number of organs per animal, to count the types o
 </p>
 <p>
 	
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio12.png"><img src="sc_bio12.png" width="250" title="Biosample Batch Mode Editing"/></a>
+	<a class="fancybox pull-md-right" href="sc_bio12.png"><img src="sc_bio12.png" width="250" title="Biosample Batch Mode Editing"/></a>
 	Validation is done when you click the button "Save".<br>
 	A red color shows erroneous fields (unknown value for a list metadata or text for a numerical value) and will give the "invalid choice" error upon saving. 
 </p>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio14.png"><img src="sc_bio14.png" width="450" title="Metadata correction"/></a>
+	<a class="fancybox pull-md-right" href="sc_bio14.png"><img src="sc_bio14.png" width="450" title="Metadata correction"/></a>
 	An orange color shows a warning (new entered value for an autocompletion metadata) and will lead to the "typo correction" dialog upon saving. In this dialog, each new value is checked and compared to the existing ones to suggest a replacement. In the next example: "Lung / RIGHT" should be replaced by "Lung/Right" and "Brain" is a new value with no suggestion. Click "Replace All" to accept the suggestions and leave keep the new values.
 	<br>
 	
 	
 </p>
 <p>	
-	<a class="fancybox " rel="group" href="sc_bio13.png"><img src="sc_bio13.png" title="Biosample Set Location"/></a>
+	<a class="fancybox " href="sc_bio13.png"><img src="sc_bio13.png" title="Biosample Set Location"/></a>
 	The <b>Set Location</b> button allows the user to set the location for all the samples in a visual way, as described in the Location section. Select the samples and click or drag them to their new positions.
 </p>
 <p>
@@ -982,7 +911,7 @@ Use this function to count the number of organs per animal, to count the types o
 
 <h3 id="biosample_form">Form Editing</h3>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio15.png"><img src="sc_bio15.png" title="Biosample Form Editing"/></a>
+	<a class="fancybox pull-md-right" href="sc_bio15.png"><img src="sc_bio15.png" title="Biosample Form Editing"/></a>
 	The "Form Editing" shows an expanded view of the sample to edit. It is the default editing mode for components (bacteria, cell line, antibody), due to the higher number of metadata for these biotypes. To switch to the <a href="biosample_batch">"Batch Mode"</a>, click on the Switch button.
 </p>
 <p>
@@ -991,36 +920,36 @@ Use this function to count the number of organs per animal, to count the types o
 
 <h3 id="biosample_children">Add children/aliquots</h2>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio16.png"><img src="sc_bio16.png" title="Add Children"/></a>
+	<a class="fancybox pull-md-right" href="sc_bio16.png"><img src="sc_bio16.png" title="Add Children"/></a>
 	To create children (aliquots) of biosamples, query and select the parent biosamples and then right-click on them to select the <b>"Add Children"</b> menu in the "New" section of the popup menu
 </p>
 <div class="row">
 	<div class="col-md-6">
-		<a class="fancybox" rel="group" href="sc_bio17.png"><img src="sc_bio17.png" title="Manual Creation"/></a>
+		<a class="fancybox" href="sc_bio17.png"><img src="sc_bio17.png" title="Manual Creation"/></a>
 		<b>Manual creation</b><br>
 		Use this option if the children you want to create have all the same biotype.
 	</div>
 	<div class="col-md-6">
-		<a class="fancybox" rel="group" href="sc_bio18.png"><img src="sc_bio18.png" title="Use a template"/></a>
+		<a class="fancybox" href="sc_bio18.png"><img src="sc_bio18.png" title="Use a template"/></a>
 		<b>User a sampling's tamplate</b><br>
 		Use this option if the children you want to create have different biotypes or if you want to reuse a previous template. You can choose any template from a study where you have read access, or any custom you created here. 
 	</div>
 </div>	
 <p>
 	When you click the "Create Aliquots" button, you will be redirected to a new dialog to let you edit the biosamples in batch mode.<br>
-	<a class="fancybox" rel="group" href="sc_bio19.png"><img src="sc_bio19.png" title="Use a template"/></a>
+	<a class="fancybox" href="sc_bio19.png"><img src="sc_bio19.png" title="Use a template"/></a>
 </p>
 
 <h3 id="biosample_results">Add results</h2>
 <p>
-	<a class="fancybox" rel="group" href="sc_bio29.png"><img src="sc_bio29.png" title="Add Results"/></a>
+	<a class="fancybox" href="sc_bio29.png"><img src="sc_bio29.png" title="Add Results"/></a>
 	To add results to one or more biosamples, you can select them and select the option "New" and "Add Results" from the popup menu. Read more about this in the <a href="result">Result</a> section
 </p>
 
 	
 <h3>Set Status</h3>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio23.png"><img src="sc_bio23.png" title="Set Status"/></a>
+	<a class="fancybox pull-md-right" href="sc_bio23.png"><img src="sc_bio23.png" title="Set Status"/></a>
 	The status is a flag added to the sample. The status are the following:
 	<ul>
 	<li><b>Available: </b>default
@@ -1030,11 +959,11 @@ Use this function to count the number of organs per animal, to count the types o
 	</ul>	
 </p>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio24.png"><img src="sc_bio24.png" title="SampleId Status"/></a>
+	<a class="fancybox pull-md-right" href="sc_bio24.png"><img src="sc_bio24.png" title="SampleId Status"/></a>
 	The status of the biosample can be seen visually by inspecting the sampleId. A different background on the icon is shown for each status. Yellow for low volume, pink for used up, and red for trashed.	
 </p>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio25.png"><img src="sc_bio25.png" title="Status Change"/></a>
+	<a class="fancybox pull-md-right" href="sc_bio25.png"><img src="sc_bio25.png" title="Status Change"/></a>
 	The status change can be seen in the <a href="#biosample_detail">biosample detail</a> or in the audit trail of the sample.
 </p>
 
@@ -1045,23 +974,23 @@ Use this function to count the number of organs per animal, to count the types o
 	If you set a biosample to bogus or questionable, the system will ask you to change the quality of all linked results
 </p>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio26.png"><img src="sc_bio26.png" title="SampleId Quality"/></a>
+	<a class="fancybox pull-md-right" href="sc_bio26.png"><img src="sc_bio26.png" title="SampleId Quality"/></a>
 	The quality is shown on the sampleId. Red, orange, transparent, green are respectively used for Bogus, Questionable, Valid, Confirmed.
 </p>
 
 <h3>Set Expiry Date</h3>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio27.png"><img src="sc_bio27.png" title="Set Expiry Date"/></a>
+	<a class="fancybox pull-md-right" href="sc_bio27.png"><img src="sc_bio27.png" title="Set Expiry Date"/></a>
 	You can add an expiry date to a set of samples. Samples with an expiry date will be displayed in the biosample table and the biosample detail.
 </p>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio28.png"><img src="sc_bio28.png" title="Set Expiry Date"/></a>
+	<a class="fancybox pull-md-right" href="sc_bio28.png"><img src="sc_bio28.png" title="Set Expiry Date"/></a>
 	To retrieve the list of expired biosamples and the list of biosamples that are going to expire. You can go to the Menu and select "Tools->Query Expired Samples". You can right-click on the samples to perform any needed operations
 </p>
 	
 <h3 id="biosample_checkin">Checkin / Checkout</h3>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_bio20.png"><img src="sc_bio20.png" title="Checkin / Checkout popup"/></a>
+	<a class="fancybox pull-md-right" href="sc_bio20.png"><img src="sc_bio20.png" title="Checkin / Checkout popup"/></a>
 	To change the location of biosample, select them and open the "biosample popup menu" using right-click:
 	<ul>
 		<li><b>Checkin</b> is giving a new location to a biosample and <b>Relocate</b> is moving the sample to a new location
@@ -1072,7 +1001,7 @@ Use this function to count the number of organs per animal, to count the types o
 
 <h4>Checkin</h4>
 <p>
-	<a class="fancybox" rel="group" href="sc_bio21.png"><img src="sc_bio21.png" title="Checkin / Relocate"/></a>
+	<a class="fancybox" href="sc_bio21.png"><img src="sc_bio21.png" title="Checkin / Relocate"/></a>
 	The selected biosamples are shown on the left panel of the checkin/relocate dialog. The destination location is shown on the right side.
 	To enter a location, you can either type it by clicking on the location field and entering "Tower 2 / Box 1" or browse to the desired location. 
 </p>
@@ -1089,41 +1018,43 @@ Use this function to count the number of organs per animal, to count the types o
 
 <h4>Checkout</h4>
 <p>
-	<a class="fancybox" rel="group" href="sc_bio22.png"><img src="sc_bio22.png" title="Checkout"/></a>
+	<a class="fancybox" href="sc_bio22.png"><img src="sc_bio22.png" title="Checkout"/></a>
 	To checkout biosamples, select them and click "checkout" from the popup menu. Click "Checkout" in the confirmation dialog to remove them from the location.
 </p>
-<!--
-<h2>Advanced</h2>
-<h3>Delete Batch</h3>
-Delete Batch is used when biosamples should be deleted from the database. Use this function to delete the physical sample as well as the virtual sample. After a biosample has been deleted, there will be no retrieved it except by going through the audit trail. From the audit trail, it is always possible to restore a biosample, which was mistakenly deleted.
-Because Delete Batch is a very powerful feature, only the owner of the biosample or an admin can delete.<br>
 
-<h3>Help Me Select Some Biosamples</h3>
-This is an advanced feature, to help you select biosamples based on some criteria. <br>
-<br>
-For example, let's say you want to make an experiment using several antibodies on different target, and you want to make sure that each antibody has a fluorophore working on a different wavelength. In this case, you should set the query criteria on the antibody's target and you should set the discriminator to the fluorophore's wavelength. Then after entering each antibody's target, Spirit will give you all the matching antibodies and let you select one antibody per target. After you select an antibody, Spirit will gray out the antibody with the same fluorophore's type (as set in the discriminating criteria).<br>
-
-<table><tr><td><img src="screenshot_biosample16.png"/><br><i>Screenshot of the Help Me Select Some Biosamples dialog</i></td></tr></table>
-
-<h3>Change Ownership</h3>
-As already explained in the study section, it is possible to change the owner of a biosample through this function.
-
-<h3>Change History</h3>
-Through the change history, the user can browse the audit trail and see all changes. After clicking on a version, you can still change the tab of the biosample detail pane to visualize its hierarchy, results at this given timepoint. To restore a version, right click on the version and select "Restore"
-
-<table><tr><td><img src="screenshot_biosample15.png"/><br><i>Screenshot of the Biosample Change History</i></td></tr></table>
-
--->
-<h1 id="location">Location Tab</h1>
+<h3>Advanced</h3>
+<h4>Delete Batch</h4>
 <p>
-	<a class="fancybox" rel="group" href="sc_loc1.png"><img src="sc_loc1.png" title="Location"/></a>
+	Delete Batch is used when biosamples should be deleted from the database. Use this function to delete the physical sample as well as the virtual sample. After deletion, the only way to restore it is from the audit trail. Only the owner of the biosample or an admin can delete.<br>
+</p>
+<h4>Help Me Select Some Biosamples</h4>
+<p>
+	This is an advanced feature, to help you select biosamples based on some criteria. <br>
+	<br>
+	For example, let's say you want to make an experiment using several antibodies on different target, and you want to make sure that each antibody has a fluorophore working on a different wavelength. In this case, you should set the query criteria on the antibody's target and you should set the discriminator to the fluorophore's wavelength. Then after entering each antibody's target, Spirit will give you all the matching antibodies and let you select one antibody per target. After you select an antibody, Spirit will gray out the antibody with the same fluorophore's type (as set in the discriminating criteria).
+</p>
+
+<h4>Change Ownership</h4>
+<p>
+	<a class="fancybox pull-md-right" href="sc_bio31.png"><img src="sc_bio31.png" title="Biosample history"/></a>
+	It is possible to change the owner/department of a biosample through this function.
+</p>
+<h4>Change History</h4>
+<p>
+	<a class="fancybox" href="sc_bio30.png"><img src="sc_bio30.png" title="Biosample history"/></a>
+	Through the change history, the user can browse the audit trail and see all changes. After clicking on a version, you can still change the tab of the biosample detail pane to visualize its hierarchy, results at this given timepoint. To restore a version, right click on the version and select "Restore"
+</p>
+
+<h1 id="location">Location</h1>
+<p>
+	<a class="fancybox" href="sc_loc1.png"><img src="sc_loc1.png" title="Location"/></a>
 	The location Tab allows you to browse through the locations in the system, to view the organisation of the labs and to preview the content of each box.
 </p>
 
 <h2>Visualization</h2>
 <h3>Search Pane</h3>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_loc2.png"><img src="sc_loc2.png" title="Location Search Pane"/></a>
+	<a class="fancybox pull-md-right" href="sc_loc2.png"><img src="sc_loc2.png" title="Location Search Pane"/></a>
 	The location search pane on the top right is where you enter the criteria for finding a location:
 	<ul>
 	<li>the <b>studyIds</b> to find where samples from a study are stored
@@ -1135,22 +1066,22 @@ Through the change history, the user can browse the audit trail and see all chan
 </p>
 <h3>Location Table</h3>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_loc3.png"><img src="sc_loc3.png" title="Location Table"/></a>
+	<a class="fancybox pull-md-right" href="sc_loc3.png"><img src="sc_loc3.png" title="Location Table"/></a>
 	The location table shows by default the root locations of types building or labs. If you make a query, the table will also display the results from the query. You can expand or collapse the content of the location by double clicking on the "+"/"-" signs.
 </p>
 <p>
 	It is also possible to add some extra information by clicking on the header to display the <b>free</b> space available, the <b>size</b> of each box and the <b>studies</b> linked to each box.
 </p>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_loc4.png"><img src="sc_loc4.png" title="Location Table"/></a>
+	<a class="fancybox pull-md-right" href="sc_loc4.png"><img src="sc_loc4.png" title="Location Table"/></a>
 	Selection one location will display the location on the <b>location depictor</b>. It is also possible to select several of those locations and right-click on them to open the <b>location popup</b> to perform editing operations.
 </p>
 <h3>Location Browser</h3>
 <p>
-	<a class="fancybox pull-md-right" rel="group" href="sc_loc7.png"><img src="sc_loc7.png" title="Location Browser"/></a>
+	<a class="fancybox pull-md-right" href="sc_loc7.png"><img src="sc_loc7.png" title="Location Browser"/></a>
 	The location browser is a component you see in many places across the applications and it is used to provide a quick access through the locations.
 	It works like the explorer file of Windows: you can either click on the comboboxes to select a location or you click on the side and edit the location yourself by copy/paste:<br>
-	<a class="fancybox pull-md-right" rel="group" href="sc_loc7.png"><img src="sc_loc8.png" title="Location Browser"/></a>
+	<a class="fancybox pull-md-right" href="sc_loc7.png"><img src="sc_loc8.png" title="Location Browser"/></a>
 	You don't need to enter a full path: "Office/Lab 2/Tank A/Tower 2/Box 2" can be retrieved by typing "Tower 2/Box 2", if this location is not ambiguous
 </p>
 <h3>Location Depictor</h3>
@@ -1158,11 +1089,11 @@ Through the change history, the user can browse the audit trail and see all chan
 	The location depictor shows the location in a graphical way. The type of display depends of the selected location.
 	<div class="row">
 		<div class="col-md-6">
-			<a class="fancybox" rel="group" href="sc_loc5.png"><img src="sc_loc5.png" title="Location Depictor 1"/></a>
+			<a class="fancybox" href="sc_loc5.png"><img src="sc_loc5.png" title="Location Depictor 1"/></a>
 			Selection a building/lab type of location will display its children. You can click further to open the appropriate location.
 		</div>
 		<div class="col-md-6">
-			<a class="fancybox" rel="group" href="sc_loc6.png"><img src="sc_loc6.png" title="Location Depictor 2"/></a>
+			<a class="fancybox" href="sc_loc6.png"><img src="sc_loc6.png" title="Location Depictor 2"/></a>
 			Selection a rack location will display the biosamples it contains. You can select those biosamples with the mouse or the directions key of the keyboards and pressing shift or control to select several of them.<br>
 		</div>
 	</div>
@@ -1180,7 +1111,7 @@ Through the change history, the user can browse the audit trail and see all chan
 </p>
 <h3>Edit Table</h3>
 <p>
-	<a class="fancybox" rel="group" href="sc_loc9.png"><img src="sc_loc9.png" title="Location - Edit"/></a>	
+	<a class="fancybox" href="sc_loc9.png"><img src="sc_loc9.png" title="Location - Edit"/></a>	
 	The edition of locations is done through this table:
 	<ul>
 	<li><b>Parent: </b> The parent container, which is optional.
@@ -1204,210 +1135,430 @@ Through the change history, the user can browse the audit trail and see all chan
 	</ul>
 	To add new locations, you can add rows by moving down with your mouse.
 </p>
-
 <h3>Print</h3>
 <p>
-	<a class="fancybox" rel="group" href="sc_loc9.png"><img src="sc_loc10.png" title="Location - Edit"/></a>	
+	<a class="fancybox" href="sc_loc10.png"><img src="sc_loc10.png" title="Location - Edit"/></a>	
 	To print the label of a location, right click on them and select "Print"
 </p>
+<h3>Advanced</h3>
+<h4>Delete Batch</h4>
+<p>
+	<a class="fancybox pull-md-right" href="sc_loc12.png"><img src="sc_loc12.png" title="Location - Delete"/></a>	
+	To delete a location, you must have edit rights on the location (if the location is public or if you are a member of the assigned group) and you must have edit rights on all the samples inside the location.
+</p>
+<p>
+	If the location is not empty, Spirit will not delete the samples. A dialog will popup to ask you what to do with the samples: "Mark as Trashed" or "Mark as Used Up".
+	<a class="fancybox" href="sc_loc13.png"><img src="sc_loc13.png" title="Location - Delete"/></a>	
+</p>	
 
-<h2>Relocate / Relocation</h2>
+<h4>View Change History</h4>
+<p>
+	<a class="fancybox" href="sc_loc11.png"><img src="sc_loc11.png" title="Location - History"/></a>	
+	All changes on the location (checking/checkout of biosamples, editing the location) is recorded. To see the changes, click on the "Advanced" > "View Change History".
+</p>
+
+<h2>Relocate / Checkout samples</h2>
 <p>
 	You can select biosamples directly from the biosample table or from the graphical view of the location. Right-clicking will then open the biosample popup menu, from which you can update the location.
 	This feature was already explained in the <a href="#biosample_checkin">Biosample section</a>
 </p>
 
-Work in progress
+
+<h1 id="result">Results</h1>
+<p>
+	<a class="fancybox" href="sc_res1.png"><img src="sc_res1.png" title="Results"/></a>	
+	On the result's tab of Spirit, the results become the main focus of your work. There you can query, manipulate and export your data how you like. The left side of the screen is used to enter the query, and the right side is used to display and manipulate the results.<br>
+</p>
+
+<h2 id="result_visualization">Visualization</h2>
+<h3 id="result_search">Search Pane</h3>
+<p>
+	<div class="row">
+		<div class="col-md-6">
+			<a class="fancybox pull-md-right" href="sc_res2.png"><img src="sc_res2.png" style="width:170px" title="Results"/></a>	
+			The <b>result search pane</b> allows you to query by studyId, topId, keywords and tests.
+			Before entering any study, Spirit shows an overview of the results already entered in Spirit. Next to each test, the number of entered results is shown in braces.
+		</div>
+		<div class="col-md-6">
+			<a class="fancybox pull-md-right" href="sc_res3.png"><img src="sc_res3.png" style="width:170px" title="Results"/></a>	
+			After entering one or several studyIds, Spirit shows the list of results in those studies. New filters for the biotype and the analytes become available once you select a test. 
+		</div>
+	</div>
+</p>
+<p>
+	Complex queries are possible through the <b>keywords</b> search. The following operators are possible AND, OR, (, ), * and ".<br>
+	Examples:
+	<ul>
+		<li><i>Healthy</i>: to query results on biosamples on groups containing Healthy
+		<li><i>Lung</i>: to query results on biosamples on lung, lungs/left, lung/right
+		<li><i>Mesoscale Fluid IL-15</i>: to query Mesoscale results on Fluid with the IL-15 analyte. <b>AND is used as the default operator</b>
+		<li><i>Plasma France</i>: to query results linked to plasma from patients in France.
+		<li><i>Mesoscale (Organ or Fluid)</i>: to query Mesoscale results done on organs or fluid.. <b>You can combine () and OR operators</b>
+		<li><i>"Lung"</i>: to query results on biosamples on lung. <b>Quotes are used for exact matches</b>.
+	</ul>
+</p>
+<p>
+	The keywords searches all the related fields of the result: study, group, phase, topId, topName, topMetadata, parentId, parentName, parentMetadata, sampleId, sampleName, sampleMetadata, sampleBiotype, test, testInput, comments, user, electronic lab notebook, ...<br>
+	The search is case-incensitive and ignore the special characters (.;/_-,#), so that searches on "IL15" will find all result on "IL 15", "IL-15", ...
+</p>
+
+<h3 id="result_table">Result Table</h3>
+<p>
+	After clicking search, the retrieved results are displayed on the <b>result table</b>. There are many ways to present the results and the biosample information linked to those results. Select a predefined <b>template</b> on top to choose between these views:
+	<div class="row">
+		<div class="col-md-6">
+			<a class="fancybox" href="sc_res4.png"><img src="sc_res4.png" title="Results Compact"/></a>	
+			The <b>Compact</b> template shows all the result in a compacted form, to have a quick visualization of the type of results.<br>
+			If the results are heterogeneous (several tests, done on different biotypes and different analytes), this template displays the different conditions of the test in each cell. In that case, exporting to Excel is troublesome<br>
+			If the results are homogeneous (one test on different analytes), this template is similar to the <b>Column</b> template and the analytes are displayed at the columns level.
+		</div>
+		<div class="col-md-6">
+			<a class="fancybox" href="sc_res5.png"><img src="sc_res5.png" title="Results Column"/></a>	
+			The <b>Column</b> template is the preferred template for exporting to third party analysis tools. Each column displays a different test condition.
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-6">
+			<a class="fancybox" href="sc_res6.png"><img src="sc_res6.png" title="Results Flat"/></a>	
+			The <b>Flat</b> template shows one datapoint per row. 
+		</div>
+		<div class="col-md-6">
+			<a class="fancybox" href="sc_res7.png"><img src="sc_res7.png" title="Results Customize Template"/></a>	
+			The <b>Customize</b> button allows to configure the template to your taste
+		</div>
+	</div>
+</p>
+<p>
+	
+</p>
+
+<h4 id="result_customize">Customize</h4>
+<p>
+	To add more information on the result table or to display this information differently, click on the <b>Customize</b> button to open the customization dialog.
+</p>
+<p>
+	In this dialog, you can see all available items. Each is a (non-empty) piece of information linked to the result. Items like the "Location", "Animal Sex", "Plasma State" can be added to the display by dragging them with the mouse to the "Rows", "Columns" or "Cells" level. Changes to the template are shown in real time.
+</p>
+<p>
+	<a class="fancybox" href="sc_res8.png"><img src="sc_res8.png" title="Results Customize Template"/></a>	
+	In this example, we display for each Group ("GroupName", "Animal.Type", "Animal.Sex", "ELB" displayed as Row) and for each test's condition ("TestName", "Input" displayed as Columns), the average of the values, the coefficient of variation and the number of values, used for the calculation.<br>
+</p>
+
+<h4 id="result_detail">Result Detail</h4>
+<p>
+	<a class="fancybox " href="sc_res9.png"><img src="sc_res9.png" title="Results Detail"/></a>	
+	To have more information on a calculation, click on the cell to view each datapoints linked to this calculation. 
+	One of the possible use of this function, is to find outliers within a group. Displaying the coeff. of variation immediately shows if the values within a group are comparable or not, and looking at the individual datapoints points out to the possible outlier.
+</p>
+
+<h3 id="result_export">Export to DataWarrior / Excel / CSV</h3>
+<p>
+	<a class="fancybox pull-md-right" href="sc_res10.png"><img src="sc_res10.png" title="Result Export"/></a>	
+	Simply click Excel to export your data to Excel (xslx format), or click CSV to export it in the csv format.	
+</p>
+<p>
+	DataWarrior is an other open-source program, which works with Spirit. It can be downloaded at <a href="http://www.openmolecules.org/datawarrior/">http://www.openmolecules.org/datawarrior/</a>. After the installation, you will be able to open the <b>dwar</b> files created by Spirit. Please read the documentation to learn more about this tool.
+</p>
+<p>
+	<b>Export</b> will export the table, as displayed to the appropriate program.
+</p>
+
+<h3 id="result_analysis">Analysis</h2>
+<p>
+	<a class="fancybox pull-md-right" href="sc_res11.png"><img src="sc_res11.png" title="Analyze"/></a>	
+	To get an automated analysis of your data, click the <b>Analyze</b> button after querying your results. 
+</p>
+<p>
+	<a class="fancybox" href="sc_res12.png"><img src="sc_res12.png" style="width:inherit" title="Analyze"/></a>	
+	Each test condition (test, biotype and input) is analyzed. For each condition, Spirit calculates:
+	<ul>
+		<li><b>the number of groups</b>
+		<li><b>the number of values</b>
+		<li><b>the distribution</b>: from the distribution displayed in the histogram, Spirit assess the type of distribution: "Normal", "Log Normal" or "Uniform". A log-normal distribution will be displayed using a logarithmic scale.
+		<li><b>the Kruskal-Wallis (KW) value</b>: The KW value shows how significant our test is. The lower this value is, the more significant the test is to differentiate two groups from our dataset.
+	</ul>
+</p>
+<p>
+	The different conditions are sorted by the KW value. A green background is shown when the groups are well differentiated (KW&lt;0.05) and a red background is used when groups cannot be differentiated (KW&gt;0.2)
+</p>
+
+<h4>Export to DataWarrior</h4>
+<p>
+	<a class="fancybox pull-md-right" href="sc_res13.png"><img src="sc_res13.png" title="DataWarrior"/></a>	
+	From the analysis dialog, click on "All" or "KW&lt;0.01" to export your data to DataWarrior for a quick visualization.
+</p>
+<p>	
+	Based on the nature of the data, Spirit will either display:
+	<ul>
+	<li>a <b>Line Chart</b>: when results are phase dependant (ex: weight increase)
+	<li>a <b>BoxPlot</b>: when results are not phase dependant (ex: weight of an organ)
+	</ul>
+
+	<div class="row">
+		<div class="col-md-6">
+			<a class="fancybox pull-md-right" href="sc_res14.png"><img src="sc_res14.png" title="DataWarrior"/></a>	
+		</div>
+		<div class="col-md-6">
+			<a class="fancybox pull-md-right" href="sc_res15.png"><img src="sc_res15.png" title="DataWarrior"/></a>	
+		</div>
+	</div>
+</p>	
+<h4 id="result_pca">Principal Component Analysis </h4>
+<p>
+	You can export your data from Spirit to DataWarrior and perform a Principal Component Analysis (PCA). PCA are great to reduce the dimensions of your data and do a projection on 2 or 3 axis.
+	<ul>
+		<li>After retrieving the results, click the "Analyse" button.<br>
+		<li>In a PCA, it is important to have a full dataset without any missing datapoints. For this purpose, the Analyze dialog highlights the biggest dataset that could be used to perform a PCA (columns in blue). To export those in DataWarrior, just click the link "PCA".
+		<li>In DataWarrior, select Data->Add Principal Components: select 2 or 3 components to be calculated and select the columns on which you want to calculate the PCA
+	</ul>
+	<a class="fancybox pull-md-right" href="sc_res16.gif"><img src="sc_res16.gif" title="DataWarrior PCA"/></a>	
+</p>
+
+<h4 id="result_som">Self Organizing Map</h4>
+<p>
+	The procedure for a Self Organizing Map (SOM) is very similar to the PCA, except that in DataWarrior, you must select Data->Self Organizing Map->Apply
+	<a class="fancybox pull-md-right" href="sc_res17.gif"><img src="sc_res17.gif" title="DataWarrior PCA"/></a>	
+</p>
+
+<h2>Editing</h2>
+<p>
+	<a class="fancybox pull-md-right" href="sc_res18.png"><img src="sc_res18.png" title="DataWarrior PCA"/></a>	
+	To create/edit a new experiment you can:
+	<ul>
+		<li>Go to the menu and select "Edit -> New Results". There you will asked to enter your Electronic Lab Biological (ELB) number to define the results of your experience. The ELB defines a set of results made in one experiment and must be unique.
+		<li>Go to "Edit -> New Results", and enter an existing ELB. The experiment will then be loaded and you will be able to add / update / delete results. 
+		<li>Right-click on some results, and select the option Edit -> Edit ELB.
+		<li>Right-click on some results and select Edit -> Edit Selected Results. This is recommended way to edit results, knowing that you cannot add or delete results in this approach
+	</ul>
+</p>
+
+<p>
+	<a class="fancybox pull-md-right" href="sc_res19.png"><img src="sc_res19.png" title="Result ELB"/></a>	
+	If you selected the option "New Results" from the Spirit menu, you will be prompted to enter an Biological Electronic Lab Journal number (ELB). 
+</p>
+<p>		
+	<a class="fancybox pull-md-right" href="sc_res20.png"><img src="sc_res20.png" title="Result ELB"/></a>	
+	<dl>
+		<dt>Tests
+		<dd>An ELB can contain results from different tests, each test being shown in its own tab. To add an other test, click on the "+" tab. To remove the test, click the "X" of the tab.
+		<dt>Result Table
+		<dd><ul>
+			<li>The <b>SampleId</b> is required for each result and it is sufficient to link the result to the topId (animal/human), to the study and its group. 
+			<li>The <b>phase</b> is optional and can only be entered if the sample is not already associated to a phase.
+			<li>The <b>attributes</b> depends of the test. For the LCMS, the analyte and the concentration are mandatory. A unit can be specified by putting into braces or brackets. ie write "IL-4 [nM]" instead of "IL-4"
+			<li>The <b>comments</b>
+			<li>If you right-click on the headers, it is also possible to add the ELB, the quality.
+			</ul>
+		<dt>Pivot
+		<dd>When importing data from an other tool, the data format may differ from the format of the result table. Spirit gives the possibility to pivot the data based on the phase (ex: weight increase) or based on the test's input (ex: LCMS). T
+		<div class="row">
+			<div class="col-md-6">
+				<a class="fancybox pull-md-right" href="sc_res21.png"><img src="sc_res21.png" title="Pivot per Phase"/></a>	
+			</div>
+			<div class="col-md-6">
+				<a class="fancybox pull-md-right" href="sc_res22.png"><img src="sc_res22.png" title="Pivot per Input"/></a>	
+			</div>
+		</div>
+	</dl>
+</p>	
+		
+
+<h3>Advanced</h3>
+	<h4>Delete Selected Results</h4>
+	<p>
+		Only the owner (or an admin) can delete results. To delete results, right-click on those results and select "Advanced -> Delete Selected Results" from the popup menu.
+	</p>
+	<h4>Change Ownership</h4>
+	<p>
+		In the same way, you can assign the results to someone else by right-clicking on those and selecting "Advanced -> Change Ownership"
+	<p>
+
+	<h4>Change History</h4>
+	<p>
+		The option is used to changes to the seected result.
+	</p>
+
+
+
+
+
+
+
+
+<h0>Administration guide</h0>
+<p>
+	<a class="fancybox pull-md-right" href="sc_admin1.png"><img src="sc_admin1.png" title="Admin Popup"/></a>		
+	The "Admin" menu in Spirit is only accessible by an administrator.
+</p>
+
+<h1>Database Settings</h1>
+<p>
+	Go to the "Menu" > "Database Setting" to change the database configuration. This dialog is only visible if Spirit is started without any specific Database Adapter.
+<p>
+<h2>Database Connection</h2>
+<p>
+	<a class="fancybox pull-md-right" href="sc_admin8.png"><img src="sc_admin8.png"  title="Recent Changes"/></a>
+	In this dialog, you can configure how Spirit connects to the database. There are 3 available configurations:
+	<dl>
+		<dt>HSQL Local database for 1 user
+		<dd>This is default configuration. With this configuration, Spirit can be tested without any other installation any other user settings. Spirit runs without any user management, and the logged in user is the administrator of the system. The HSQL database is file based, and you can specify or change the file to create/reuse an old database.
+		<dt>HSQL Server database
+		<dd>You can use this configuration to run Spirit in a multi-user environment. User accounts will need to be created.
+			<ul>
+				<li><b>Mode:</b>Server/Client. You need to setup one computer as server, and this server must always be running for the client to connect to it
+				<li><b>Path (server only):</b> directory where the HSQL database should store the file (files are only stored on the server)
+				<li><b>Server (client only): </b> IP address or computer name of the server to connect to
+			</ul>
+		<dt>Production database
+		<dd>To work with productive data, you need to install a database server with proper administration and backup. Spirit works with MySQL and Oracle
+			<ul>
+				<li><b>Vendor: </b>MySQL / Oracle
+				<li><b>Connection URL: </b>path to the database server, which is a URL like jdbc:mysql://server:3306/spirit or jdbc:oracle:thin:@server:1521:test
+				<li><b>UserId: </b>the user to be used to connect to the database (spirit if you created the user through "create user spirit identified by 'PASSWORD')
+				<li><b>Password: </b>You can type the Spirit encrypted password given by an administrator or you type the "..." to encrypt the connection password given to the UserId				
+			</ul>
+	</dl>
+	
+</p>
+<h2>User Settings</h2>
+<p>
+	<a class="fancybox pull-md-right" href="sc_admin9.png"><img src="sc_admin9.png"  title="Recent Changes"/></a>
+</p>
+<h2>Study Settings</h2>
+<p>
+	<a class="fancybox pull-md-right" href="sc_admin10.png"><img src="sc_admin10.png"  title="Recent Changes"/></a>
+</p>
+<h1>Edit Biotypes</h1>
+<p>
+	<a class="fancybox pull-md-right" href="sc_admin2.png"><img src="sc_admin2.png" title="Biotype overview"/></a>		
+	Spirit comes preconfigured with some biotypes, which can be extended by an administrator. Click "Admin" > "Edit Biotypes" on the menu to have an overview of the biotypes.
+</p>
+<p>
+	<a class="fancybox pull-md-right" href="sc_admin3.png"><img src="sc_admin3.png"  title="Biotype definition"/></a>
+	Clicking "Edit" or "New Biotype" brings the "biotype edition dialog"
+	<dl>
+	<dt>Biotype</dt>
+	<dd>
+	<ul>
+	<li><strong>Name:</strong> must be unique
+	<li><strong>Category:</strong>
+	<ul>
+		<li><strong>Living</strong>
+		The "Human" and the "Animal" biotypes are the 2 strong representants of this category. They are essentially used to be attached to studies, and as parent of other samples
+		<li><strong>Solid sample</strong>
+		Non purified solid samples coming are in this category. They typically have a living sample as a parent and a weight. Examples: "Tumor", "Organ"
+		<li><strong>Liquid sample</strong>
+		Non purified solid samples coming are in this category. They typically have a living sample or an other non purified sample as parent and they have a volume. Examples: "Blood", "Plasma", "Serum", "Homogenate"
+		<li><strong>Purified sample</strong>
+		Purified samples, such as "Antibody", "Bacteria", "Primer", "Cell Definition". They don't necessarily come from a specific living sample or have a parent. They are usually not used in studies, but used to keep an inventory of available components.
+		<li><strong>Library:</strong>
+		Libraries consist of all abstract samples, which could be referenced by other samples. Example: "Fluorophore", referenced by "Antibody".
+	</ul>
+	<li><strong>Inherited from:</strong>
+	Expert feature to force a given biotype to have a specific parent. Example: "Cells" inherit from "Cell Batch", which inherit themselves from "Cell Definition". It should only be used if you can say that the child biotype inherits all properties from his parent. Leave empty in all other cases.
+	<li><strong>Prefix:</strong>
+	The sampleId can be prefix by an prefix (letters or digits). It is optional, but recommended.<li><strong>The sampleId is editable by the user:</strong>
+	Check this box if the sampleId should be editable, ie if it is meaningfull to the user. Example, the patientId or animalId should be editable by the user, whereas an organId has no meaning and should be generated
+	<li><strong>Hidden</strong>
+	Check this box, if you want the end-user to select this biotype. If checked, only an administrator would be able to create new samples of this type. However, existing samples are still searchable.
+	</ul>
+	</dd>
+	<dt>Container</dt>
+	<dd>
+	<ul>
+	<li><strong>Abstract:</strong>Check this box to prevent biosamples to have a container or a location.
+	<li><strong>No ContainerId:</strong>Check this box, if the biosample can have a container and a location, but to prevent the user from entering a containerId.
+	<li><strong>ContainerType:</strong>Select a containerType if you want to force all biosamples from this biotype to have a specific type of container. Example: all animals in a cage.
+	<li><strong>AmountUnit:</strong>Select a unit of volume or a unit of weight if the amount of the biosamples can be measured. It is not possible to mix the units within a biotype. 
+	</ul>
+	</dd>
+	<dt>Main Metadata:</dt>
+	<dd>The main metadata is the metadata, that is always displayed. It is the field that identify the biosample the best in its context. For example, the animal No is sufficient to identify the animal in the context of a study. The organ type is sufficient to identify the organ in the context of the animal,... The main metadata is optional. Uncheck the box, if there is no field to clearly describe a biosample.
+	<ul>
+	<li><strong>Name:</strong> is the label used to describe this metadata
+	<li><strong>Autocomplete:</strong>Check this box if you want the system to do a typo check and suggest similar entries. Check this box to avoid having an organ called "Left Lung" and an other called "Lung/Left".
+	<li><strong>Required:</strong>If checked, the user will not be able to save the biosamples if the field is empty
+	<li><strong>View Entered:</strong>Click there to view the options already entered by the user and to rename possible typos.
+	<li><strong>Convert to Metadata:</strong>Click to convert the main metadata to a regular metadata. This change requires to update all related biosamples in the system, thus creating a new version.
+	</ul>
+	<dt>Other Metadata</dt>	
+	<dd>Metadata are used to describe precisely each instance of the bioype. Each one is define by:
+		<ul>
+			<li><b>Name:</b> unique 
+			<li><b>Datatype:</b> One of:
+				<ul>
+					<li>Numeric
+					<li>Alphanumeric
+					<li>Autocomplete: the system will check for typos by suggesting closely matching entries
+					<li>Date / Time
+					<li>File
+					<li>Choice: One: the user can select one value from a predefined list, such as male / female
+					<li>Choice: Multiple: the user can select several values from a predefined list. Other values from the list are also possible
+					<li>Linked: Biosample: the user can select an other biosample from the specified biotype (ie: a fluorophore for an antibody)
+				</ul>
+			<li><b>Edit:</b> if the datatype is of type "Choice", you can edit the list of acceptable values. If the datatype is of type "Autocomplete", you can view the list of entered values and correct possible typos from the user. If the datatype is of type "Biosample", you can specify a biotype.
+			<li><b>Req.:</b> check this box if the field should be required
+			<li><b>Sec.:</b> check this box if the field is secundary. Secundary fields are not initially displayed on the main table but only the detail pane. It is advised to have a maximum of 6 primary metadata and to set all the long fields as secundary.
+			<li><b>"+":</b>To insert/add a new metadata
+			<li><b>"-":</b>To remove a metadata. This is only possible if the metadata is empty for all linked biosamples.
+			<li><b>"Move..":</b>To Change the order of the metadata, or to move one as the main metadata.
+		</ul>
+	</dl>
+	</p>
+	<br>
+
+<h1>Edit Tests</h1>
+<p>
+	<a class="fancybox pull-md-right" href="sc_admin4.png"><img src="sc_admin4.png" title="Test overview"/></a>		
+	Spirit comes preconfigured with some tests, which can be extended by an administrator. Click "Admin" > "Edit Test" on the menu to have an overview of the tests.
+</p>
+<p>
+	<div class="row">
+		<div class="col-md-6">
+			<a class="fancybox pull-md-right" href="sc_admin5.png"><img src="sc_admin5.png"  title="Test definition 1"/></a>	
+		</div>
+		<div class="col-md-6">
+			<a class="fancybox pull-md-right" href="sc_admin6.png"><img src="sc_admin6.png"  title="Test definition 2"/></a>	
+		</div>
+	</div>
+	Clicking "Edit" or "New Test" brings the "test edition dialog":
+	<dl>
+		<dt>Test Name
+		<dd><ul>
+			<li><b>Category: </b>Tests are classified in categories for easier retrieval. It is advised to have categories such as Physiology, Proteinomics, Genomics, Histology. You can select an existing category or type a new one.
+			<li><b>Name: </b>must be unique
+			</ul>
+		<dt>Attributes
+		<dd>Attributes are split in <b>Input</b>, <b>Output</b> and <b>Info</b> attibutes. The input attributes define the protocol conditions of the tests (analyte, normalization, method), the output attributes define the outcome of the test (concentration, score), and the info attributes are extra data to be stored in Spirit but not analyzed (plate number). At least one output is required.<br>
+		Each attribute is then defined as:
+			<ul>
+				<li><b>Name [Unit]: </b>Enter the name of the attribute and the unit in braces/brackets if needed.
+				<li><b>Datatype: </b>The datatype is similar to the metadata's datatype in biosample. It is also possible to enter formula, that depends of other attributes (formula are automatically calculated when the user enters the value)
+				<li><b>Req.:</b>Check this box if a value is required.
+				<li><b>"+": </b> To add/insert an attribute
+				<li><b>"-": </b> To remove an attribute: this is only possible if all results have an empty value for this attribute.
+			</ul>
+	</dl>
+				
+
+<h1>Recent Changes</h1>
+<p>
+	<a class="fancybox pull-md-right" href="sc_admin7.png"><img src="sc_admin7.png"  title="Recent Changes"/></a>
+	The <b>recent changed dialog</b> can be open in the Menu "Admin" > "Recent Changes". From this dialog, you can query all entity changes made into the Spirit database. All revisions linked to studies/biosamples/results/locations/biotypes/tests are recorded.  Everytime a user clicks "Save", a new revision is created.
+	
+</p>
+<p>
+	You can filter by userId, date and type of changes. Each revision shows the unique revision number, the user who did the change and when the change happened. Spirit shows the deleted entities in red, the created entities in green and the updates in orange
+</p>
+<p>
+	There are 2 ways to restore entities from a previous revision:
+	<ul>
+		<li>Right-click on the revision number on the left pane and click <b>"Cancel this change"</b>: the modified entities will be reverted to the exact same state they were before this revision. ie. canceling a creation will actually delete those entities; canceling a deletion will actually recreate them.
+		<li>Right-click on the entities on the center pane and click <b>"Restore this version"</b>: the entities you see will be restored to this state.
+	</ul>
+	To restore an entity, you will prompted for a reason, which will be stored in the comments of the restored entities, and new revision will be added.
+</p>
 <!--
-
-
-<h1 id="2_results">Results</h1>
-
-On the result's tab of Spirit, the results become the main focus of your work. There you can query, manipulate and export your data how you like. The left side of the screen is used to enter the query, and the right side is used to display and manipulate the results.<br>
-
-<table><tr><td><img src="screenshot_result1.png"/><br><i>Screenshot of the Result Tab</i></td></tr></table>
-
-<h2>Retrieve Results</h2>
-By default, the search pane shows you the list of tests and the total number or results by tests. <br>
-After entering some studyIds or some ELBs, Spirit analyzes the available results and reduce automatically the filters, to show only tests, biotypes where results are available.
-Spirit makes it also possible to filter by biotypes, and by the analytes of the selected tests.<br>
-
-<br>
-<table><tr>
-<td><img src="screenshot_result3.png"/><br><i>Screenshot of the Result Search Pane - Filtered by study </i></td>
-</tr></table>
-<br>
-
-<br>
-The universal search enables you to enter complex queries such as:<br>
-<ul>
-<li>"Plasma France": to retrieve all the results linked to plasma from patients in France
-<li>"Mesoscale Fluid IL-15": to retrieve all the Mesoscale results on Fluid with the IL-15 analyte
-<li>"Mesoscale (Organ or Fluid) (IL-15 or IL-16)"
-<li>"*Lung*": to find all results linked to some (Right/Left/...) Lung
-</ul>
-The universal search works on the fields: study, group, phase, topid, topname, parentBiosample, biosample, metadata, test, input Attribute, ...
-
-
-After clicking search, the results are retrieved and shown in a compact view: one row per specimen and one column per test. Each cell contains a nested table of all the results measured on that specimen / test: in the cell we add extra information like the phase, the biotype, the sampling and the analyte.
-This view gives the best overview, when retrieving a lot of results, but because of the nested tables, it is better to start manipulating the data, through pivoting, as explained in the next chapter.
-<br>
-<table><tr><td><img src="screenshot_result4.png"/><br><i>Screenshot of the Result Search Table</i></td></tr></table>
-
-<br>
-
-To have more detailed information about the results, it is possible to click on them and view the details.
-
-<h3>Pivoting Results</h3>
-<h4>Default Templates</h4>
-Spirit comes with 3 default pivoting templates. You can quickly switch from one to the next, by pressing the appropriate button. Here are the 3 default templates together with the items shown and their location.
-<ul>
-<li><b>Compact:</b><br> this default view gives the best overview and it is a good starting template for customizing the view.
-<table class=grid>
-<tr><td></td><th width=170>TestName</th></tr>
-<tr><th width=500>Group / SpecimenId / SpecimenName</th><th><span style='color:black'>Phase / Sampling / Biomarker[unit]</span></th></tr>
-</table>
-<br>
-<table><tr><td><img src="screenshot_result5.png"/><br><i>Screenshot of the Compact View</i></td></tr></table>
-
-<li><b>Column:</b><br> this template gives the Excel representation of data, where each column shows a result measured at a different condition.
-<table class=grid>
-<tr><td></td><th width=170><span style='color:black'>Phase<br>Sampling</span><br>TestName<br><span style='color:black'>Biomarker[unit]</span></th></tr>
-<tr><th width=500>Group / SpecimenId / SpecimenName</th><th></th></tr>
-</table>
-<br>
-<table><tr><td><img src="screenshot_result6.png"/><br><i>Screenshot of the Column View (Excel)</i></td></tr></table>
-
-<li><b>Flat:</b><br> this template gives a flat representation of data, where one row shows one result.
-<table class=grid>
-<tr><td></td><th width=170></th></tr>
-<tr><th width=500>Group / <span style='color:black'>Phase</span> / SpecimenId / SpecimenName / <span style='color:black'>Sampling / TestName / Biomarker[unit]</span></th><th></th></tr>
-</table>
-<br>
-<table><tr><td><img src="screenshot_result7.png"/><br><i>Screenshot of the Flat View</i></td></tr></table>
-
-</ul>
-
-<h4>Customizing View</h4>
-Even though the 3 default proposed templates (Compact, Column, Flat) provide a good working base for most cases, it is sometimes necessary to add some data in the view or it is sometimes necessary to display it differently.
-If you click the button "Customize View", you have the option to reorganize the results how you want.<br>
-<br>
-In this dialog, you can see all available items at the top. Those items are all the pieces of information which are not currently displayed but which could be added to differentiate the data currently in your table. The field "Study.hours" is shown because the results are not measured at the same hours, the field "Blood.Type" is shown because we have more than one blood type. However we don't show "Human.Gender" because they all have the same gender, and it would not help to categorize the results. By default, only the most commonly used items are shown. To display the expert items, you should check the "Expert mode" checkbox<br>
-<br>
-At the bottom, you can see the current configured template as described in the previous section. In the next screenshot, you can see the basic for the compact view: the groupName / TopId / TopName is displayed at the row level, the Biotype/TestName at the columns and the Phase / Sampling / Comments / Biomarker / OutputValue as a nested table in each cell. <br>
-<br>
-To modify this template, drag the items with your mouse and drop them either at the top to remove them from the display, or somewhere at the table to add them to the display. After dropping an item, you can see the changes in real-time.
-
-
-<table><tr><td><img src="screenshot_result8.png"/><br><i>Screenshot of Customize View</i></td></tr></table>
-
-
-<h3>Export to DataWarrior / Excel / CSV</h3>
-
-
-Simply click Excel to export your data to Excel (xslx format), or click CSV to export it in the csv format.
-
-<h2>Analysis</h2>
-
-To get an automated analysis of your data, click the "Analyze" button after querying your results. The retrieved results will then be analyzed as displayed in the following window:
-<br>
-<table><tr><td><img src="screenshot_analysis1.png"/><br><i>Screenshot Analysis</i></td></tr></table>
-<br>
-The data is analyzed column-wise. For each combination of test, biotype and input, the program calculates the number of groups and the number of values, measured for each of those conditions.<br>
-<br>
-This function also analyzes the distributions and based on the displayed histogram, shows if the distributions looks Normal, LogNormal or unknown. Any distribution, which is LogNormal will be displayed on the logarithmic scale.<br>
-<br>
-The last displayed value shows the Kruskal-Wallis (KW) value. This KW value shows how significant our test is. The lowest this value is, the more significant the test is to differentiate at least two groups from our dataset.
-<br>
-
-
-
-<h4>Export Complete Datasets for PCA </h4>
-You can export your data from Spirit to DataWarrior and perform a Principal Component Analysis (PCA). PCA are great if you want to reduce the dimension of your data and do a projection on 2 or 3 axis. It is then useful to see the specimen in the study which behave similarly, or to see which groups which behave similarly.<br>
-<br>
-<ul>
-<li>To do a PCA, you must first retrieve the results you are interested in, and then click "Analysis".<br>
-<br>
-<li>In a PCA, it is important to have a full dataset without any missing datapoints. For this purpose, the dialog highlights (columns in blue) the biggest dataset that could be used to perform a PCA. To export those in DataWarrior, just click the link "PCA".
-
-
-<li>In DataWarrior, select Data->Add Principal Components: select 2 or 3 components to be calculated and select the columns on which you want to calculate the PCA
-<br>
-<table><tr><td><img src="screenshot_dw4.png"/><br><i>Screenshot of DW for making PCA</i></td></tr></table>
-<br>
-<table><tr><td><img src="screenshot_dw5.png"/><br><i>Screenshot of the selection of used parameters</i></td></tr></table>
-<br>
-
-<li>Look at your PCA: you can right-click on your graph to color the markers by group, change the shape of the marker by subgroup,... From the PCA, you can observe if the groups are clearly separated or not.
-<br>
-<table><tr><td><img src="screenshot_dw6.png"/><br><i>Screenshot of DW: PCA</i></td></tr></table>
-<br>
-</ul>
-
-
-<h4>Self Organizing Map</h4>
-The procedure for a Self Organizing Map (SOM) is very similar to the PCA, except that in DataWarrior, you must select Data->Self Organizing Map->Apply
-
-<br>
-<table><tr><td><img src="screenshot_dw7.png"/><br><i>Screenshot of DW: SOM</i></td></tr></table>
-<br>
-
-<h2>Editing Results</h2>
-To create a new experience and insert new results, go to the menu and select "Edit -> New Results". There you will asked to enter your Electronic Lab Biological (ELB) number to define the results of your experience. The ELB defines a set of results made in one experiment and must be unique.
-<br>
-<br>
-To edit an experiment, you can either go to "Edit -> New Results", and enter an existing ELB. The experiment will then be loaded and you will be able to add / update / delete results. An other solution is to right-click on a result, and select the option "Edit ELB".
-<br>
-An alternative way to update some results is to right-click on those results and select "Edit Selected Results". This is more useful when a limited number of results have to updated to add some comments for example.
-<br>
-<table><tr><td><img src="screenshot_result10.png"/><br><i>Screenshot of the right-click popup menu on results</i></td></tr></table>
-<br>
-
-
-<h3>Edit Result Dialog</h3>
-The standard view for editing results in shown in the following screening. It is possible to have results from several tests in one experiment: in that case, the results are split per test and each test is shown in its own tab. To add results from an other test, click on the "+" tab and then select the test. To remove the test, click the "X" sign of the tab.<br>
-<br>
-In this dialog, the table shows as many rows as datapoint: each row contains the phase, the sampleId, all the specific attributes of the test (analyte, concentration) and the comments. If a unit is needed for the analyte, it should be put in brackets (ex: "cAMP [nM]"), so Spirit can recognize it. <br>
-
-<br>
-<table><tr><td><img src="screenshot_result11.png"/><br><i>Screenshot of the Edit Results Dialog</i></td></tr></table>
-<br>
-
-<h3>Pivot per Phase</h3>
-The standard view (one row per datapoint) does not always match the typical format used by the experimenter in Excel or in other tools. If the data was originally entered with the phases as columns (ex: weight increase over time), it is nevertheless possible to paste it in this format.
-If the user paste it directly into the standard view, Spirit will understand that the data comes from a pivoted table and suggest to transform the data. As an alternative, the experimenter can click on "Paste per Phase" and have a preview of the expected format and paste data in this table.
-<br>
-<table><tr><td><img src="screenshot_result12.png"/><br><i>Screenshot of the Edit Results Dialog - Pivot per Phase</i></td></tr></table>
-<br>
-
-<h3>Pivot per Input</h3>
-Instead of having the phase as columns, sometimes the data is formatted with the input (analyte / biomarker) as columns. If you have at least one input attribute in your test, you can click "Pivot per Input", to pivot around the first input attribute.
-
-<br>
-<table><tr><td><img src="screenshot_result13.png"/><br><i>Screenshot of the Edit Results Dialog - Pivot per Input</i></td></tr></table>
-<br>
-
-<h2>Advanced</h2>
-<h4>Delete Selected Results</h4>
-Only the owner (or an admin) can delete its results. To delete results, right-click on those results and select "Advanced -> Delete Selected Results" from the popup menu.
-
-<h4>Change Ownership</h4>
-In the same way, you can assign the results to someone else by right-clicking on those and selecting "Advanced -> Change Ownership"
-
-<h4>Change History</h4>
-The option is used to view who and when the selected result has been modified.
-
-
-
-
-
-
-
-
-<h0><div>Part 3: Advanced Topics</div></h0>
-
-<h1>Administration</h1>
-The "Admin" menu in Spirit is only accessible by an administrator of the system.
 <br>
 <table><tr><td><img src="screenshot_admin1.png"/><br><i>Screenshot of the Admin Menu</i></td></tr></table>
 <br>

@@ -84,7 +84,7 @@ h0  {
 } 
 h1 {
   padding-bottom: 0px;
-  margin-top:25px;
+  margin-top:30px;
   margin-bottom:10px;
   font-size: 40px;
   font-weight: 700;
@@ -103,6 +103,7 @@ h1 {
 }
 
 h2 {
+  margin-top:20px;
   padding-bottom: 0px;
   margin-bottom:10px;
   font-size: 32px;
@@ -463,6 +464,7 @@ dd {
 }
 
 .fancybox >img {
+	width:inherit;
 	width:100%;
     max-width:100%;
     display:block;
