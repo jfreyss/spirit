@@ -136,7 +136,7 @@ This figure shows the principle of a basic study, where we have 2 groups of anim
 
 To understand the concept of study in Spirit, it is important to first understand the nomenclature that is used:<br>
 <ul>
-<li><b>Study Design:</b> The study design consists of the diagram depicted above and all the related information.
+<li><b>Study Design:</b> The sign consists of the diagram depicted above and all the related information.
 <li><b>Phase:</b> A phase is used to express a point of time in the lifespan a sample. In can be expressed as an absolute date, as a relative date, or simply as a description.
 <li><b>Group:</b> A study's group is used to gather samples. It shows that those samples should and will be analyzed together. As a consequence it is expected that similar actions will happen to all those samples: treatments, measurements and samplings done at the sample phase.
 <li><b>Subgroup:</b> Even though the samples of a group should be analyzed and treated in a similar way, there are cases where the actions on those biosamples happen somewhat differently. In animal studies, it is for example often necessary to reduce the workload by stratifying the necropsy over several days; in this case, the user should create a new subgroup for each necropsy days (an example follows).
@@ -280,7 +280,7 @@ There are few principles to understand about Spirit:<br>
 The Spirit interface is divided into five tabs. Each tab gives a different view of the same data, but with a different presentation.
 </p>
 
-<h1>Home</h1>
+<h1 id="home">Home</h1>
 <p>
 <a class="fancybox pull-md-right" href="home.png"><img src="home.png" title="Home Page"/></a>
 The <b>Home</b> tab is the first thing you see when starting Spirit. It shows the latest changes and allows the user to have a quick overview of the studies being worked on. For each study, it shows the data, that was generated and who did the latest modifications and when.  
@@ -348,9 +348,9 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
     </div>
 </p>
 
-<h2>Editing</h2>
+<h2 id="study_edit">Editing</h2>
 
-<h3 id="studyInfos">Infos</h3>
+<h3 id="study_infos">Infos</h3>
 <p>
     <a class="fancybox pull-md-right" href="sc_study8.png"><img src="sc_study8.png" title="Study Popup"/></a>
     To create/edit a new study, you can either go the menu or <strong>right-click on a study to open the contextual menu</strong>. Right-click works on almost everything in Spirit, and will make the appropriate popup menu open. If some options are grayed out, it means you don't have sufficient right, and you should contact one of the responsible person to add you on the list.
@@ -385,7 +385,7 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
     </dl>
 </p>
 
-<h3>Design</h3>
+<h3 id="study_design">Design</h3>
 <p>
     <a class="fancybox pull-md-right" href="sc_study10.png"><img src="sc_study10.png" title="Study Design"/></a>
     Go to the study design by right-clicking on the study and selecting "Edit->Study Design".
@@ -393,7 +393,7 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
 
 <h4>1. Infos</h4>
 <p>
-Please look at the section <a href="#studyInfos">above</a> to have an explanation of this
+Please look at the section <a href="#study_infos">above</a> to have an explanation of this
 </p>
 
 <h4>2. Documents</h4>
@@ -402,7 +402,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
     The <strong>consent form</strong> is a special type of document. By adding a document, all samples from the study are highlighted in red, with a link to the consent form.
 </p>
 
-<h4>3. Phases</h3>
+<h4 id="study_phase">3. Phases</h3>
 <p>
     <a class="fancybox pull-md-right" href="sc_study11.png"><img src="sc_study11.png" title="Study Design - Phases"/></a>
     The phases define the timeline of the study. Phases can be formatted as: 
@@ -433,7 +433,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
     -->
 </p>
 
-<h4 id="editGroups">4. Groups</h4>
+<h4 id="study_group">4. Groups</h4>
 <p>
     <a class="fancybox pull-md-right" href="sc_study12.png"><img src="sc_study12.png" title="Study Design - Groups"/></a>
     When similar actions (same treatment, same sampling, same measurements) take place on several biosamples, those biosampes should be put together in a group. 
@@ -459,7 +459,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
     <dd>This indicate the number of subgroups and the number of samples expected to be attached to each of them. The subgroups are used for samples, that should be compared together, but where each subgroup show some changes in the actions. Example: stratification.
     </dl>
 </p>
-<h4>5. Treatments</h4>
+<h4 id="study_treatment">5. Treatments</h4>
 <p>
     <a class="fancybox pull-md-right" href="sc_study13.png"><img src="sc_study13.png" title="Study Design - Treatments"/></a>
     Treatment are identified by:
@@ -471,7 +471,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
     </ul>
 </p>
 
-<h4>6. Sampling Templates</h4>
+<h4 id="study_sampling">6. Sampling Templates</h4>
 <p>
     <a class="fancybox pull-md-right" href="sc_study14.png"><img src="sc_study14.png" title="Study Design - Sampling Template"/></a>
     The sampling templates describes the samples to be taken. When you click the button "Add Sampling", you can either decide to start from an empty template or to import a template from a previous study and modify it.
@@ -519,7 +519,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
     <a class="fancybox pull-md-right" href="cloning.png"><img src="cloning.png" title="Cloning"/></a>
 </p>
 
-<h4 id="automaticassignment">Automatic Assignment</h4>
+<h4 id="study_auto">Automatic Assignment</h4>
 <p>
     The <strong>automatic assigment wizard</strong> guide you through the steps of attaching the samples to the groups.<br>
 </p>
@@ -574,7 +574,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
     The last step of the wizard is where you review the group assignment, update the subgroups, renumber, enter the metadata, comments. If everything is fine, click the "Make the assignments" button to update the database to match this randomization. The "automatic renumbering" button is used to renumber the samples sequentially as displayed in this table.
 </p>
 
-<h4>Manual Assigment</h4>
+<h4 id="study_manual">Manual Assigment</h4>
 <p>
     <a class="fancybox pull-md-right" href="sc_study23.png"><img src="sc_study23.png" title="Manual Assigment"/></a>
     In this dialog, you can directly type or copy/paste the samples with their group assignment. At any time, you can open the dialog to change the groups/subgroups, attach a new sample, or detach a sample from the study. 
@@ -587,7 +587,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
     Right-click on a study and select "Live Monitoring", to monitor the actions to be done on each attached sample of the study.
 </p>
 
-<h4>Overview</h4>
+<h4 id="study_overview">Overview</h4>
 <p>
     <a class="fancybox pull-md-right" href="sc_study25.png"><img src="sc_study25.png" title="Live Monitoring overview"/></a>
     The left pane of the overview dialog shows all the actions to be performed on the attached samples: group assignment, weighing, treatments as defined in the <a href="#studydesign">study design</a>.
@@ -608,7 +608,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
     </ul>
     It is also possible to configure the display and export the data to DataWarrior, Excel or as CSV, as explained in the "Working with Results" paragraph.
 </p>
-<h4>Live Measurements</h4>
+<h4 id="study_monitoring">Live Measurements</h4>
 <p>
     <a class="fancybox pull-md-right" href="sc_study26.png"><img src="sc_study26.png" title="Live Monitoring measurement"/></a>
     After clicking a phase, the Live Monitoring dialogs shows up. Spirit shows the required measurements specified in the study design, by default.
@@ -630,7 +630,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 
 
-<h3>Replace / Set Living Status</h3>
+<h3 id="study_living">Replace / Set Living Status</h3>
 <p>
     <a class="fancybox pull-md-right" href="sc_study31.png"><img src="sc_study31.png" title="Replace / Set Living Status"/></a>
     The "Replace / Set Living Status" is a convenient dialog to set the status of an attached biosample and/or to replace it by an other sample from the reserve.
@@ -656,12 +656,12 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 
 
 
-<h3>Manage / Print Samples</h3>
+<h3 id="study_manage">Manage / Print Samples</h3>
 <h4>Sample Synchronization</h4>
 <p>
     <a class="fancybox pull-md-right" href="sc_study27.png"><img src="sc_study27.png" title="Sample Synchronization"/></a>
     When you select the <b>"Manage / Print Samples"</b> option, Spirit checks that all the samples have been created (as defined in the study's sampling template). The first time you call this option, or if the sampling's template have been modifier, Spirit shows you this dialog and asks you to synchronize the samples to match the study's design. Please check and confirm by clicking "Synchronize".<br>
-    This automatic creation can be disabled, if you uncheck the box "Generate Samples automatically" in the <a href="#studyInfos">study design</a>.
+    This automatic creation can be disabled, if you uncheck the box "Generate Samples automatically" in the <a href="#study_infos">study design</a>.
 </p>
 
 <h4>Manage Samples</h4>
@@ -685,7 +685,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
     For each type of container, the printing view shows the list of containers, and a preview of the label. The preview is rendered directly from the printers based on the entered settings (printer, media, left or right labels).
 </p>
 
-<h3>Sample Measurement</h3>
+<h3 id="study_measure">Sample Measurement</h3>
 <p>
     <a class="fancybox pull-md-right" href="sc_study30.png"><img src="sc_study30.png" title="Print Labels"/></a>
     Right-clicking on the study and select "Sample Measurement" to perform the weighing or the other measurement on the generated samples, as defined in the study's sampling templates
@@ -707,7 +707,7 @@ Please look at the section <a href="#studyInfos">above</a> to have an explanatio
 <p>
     The owner of the study is also the creator of the study. To change it, open the study popup menu and select "Advanced"->"Change Ownership"
 </p>
-<h4>Study History</h4>
+<h4 id="study_history">Study History</h4>
 <p>
     <a class="fancybox pull-md-right" href="sc_study33.png"><img src="sc_study33.png" title="Study History"/></a>
     Spirit contains an audit trail of all entities, including studies. To view the history of a study, open the study popup menu and select "Advanced"->"View Change History"<br>
@@ -988,7 +988,7 @@ Use this function to count the number of organs per animal, to count the types o
 	To retrieve the list of expired biosamples and the list of biosamples that are going to expire. You can go to the Menu and select "Tools->Query Expired Samples". You can right-click on the samples to perform any needed operations
 </p>
 	
-<h3 id="biosample_checkin">Checkin / Checkout</h3>
+<h3>Checkin / Checkout</h3>
 <p>
 	<a class="fancybox pull-md-right" href="sc_bio20.png"><img src="sc_bio20.png" title="Checkin / Checkout popup"/></a>
 	To change the location of biosample, select them and open the "biosample popup menu" using right-click:
@@ -999,7 +999,7 @@ Use this function to count the number of organs per animal, to count the types o
 	To set the locations, write access rights are required, and the samples should not be abstract.
 </p>
 
-<h4>Checkin</h4>
+<h4 id="biosample_checkin">Checkin</h4>
 <p>
 	<a class="fancybox" href="sc_bio21.png"><img src="sc_bio21.png" title="Checkin / Relocate"/></a>
 	The selected biosamples are shown on the left panel of the checkin/relocate dialog. The destination location is shown on the right side.
@@ -1016,7 +1016,7 @@ Use this function to count the number of organs per animal, to count the types o
 	A new location can also be created directly from this dialog.
 </p>
 
-<h4>Checkout</h4>
+<h4 id="biosample_checkout">Checkout</h4>
 <p>
 	<a class="fancybox" href="sc_bio22.png"><img src="sc_bio22.png" title="Checkout"/></a>
 	To checkout biosamples, select them and click "checkout" from the popup menu. Click "Checkout" in the confirmation dialog to remove them from the location.
@@ -1051,7 +1051,7 @@ Use this function to count the number of organs per animal, to count the types o
 	The location Tab allows you to browse through the locations in the system, to view the organisation of the labs and to preview the content of each box.
 </p>
 
-<h2>Visualization</h2>
+<h2 id="location_visualization">Visualization</h2>
 <h3>Search Pane</h3>
 <p>
 	<a class="fancybox pull-md-right" href="sc_loc2.png"><img src="sc_loc2.png" title="Location Search Pane"/></a>
@@ -1099,7 +1099,7 @@ Use this function to count the number of organs per animal, to count the types o
 	</div>
 	Click the "CSV" or the "XLS" button to export the layout of the location.
 </p>
-<h2>Editing</h2>
+<h2 id="location_edit">Editing</h2>
 <p>
 	To edit locations, you can either:
 	<ul>
@@ -1320,7 +1320,7 @@ Use this function to count the number of organs per animal, to count the types o
 	<a class="fancybox pull-md-right" href="sc_res17.gif"><img src="sc_res17.gif" title="DataWarrior PCA"/></a>	
 </p>
 
-<h2>Editing</h2>
+<h2 id="result_edit">Editing</h2>
 <p>
 	<a class="fancybox pull-md-right" href="sc_res18.png"><img src="sc_res18.png" title="DataWarrior PCA"/></a>	
 	To create/edit a new experiment you can:
@@ -1428,7 +1428,7 @@ Use this function to count the number of organs per animal, to count the types o
 <p>
 	<a class="fancybox pull-md-right" href="sc_admin10.png"><img src="sc_admin10.png"  title="Recent Changes"/></a>
 </p>
-<h1>Edit Biotypes</h1>
+<h1 id="admin_biotypes">Edit Biotypes</h1>
 <p>
 	<a class="fancybox pull-md-right" href="sc_admin2.png"><img src="sc_admin2.png" title="Biotype overview"/></a>		
 	Spirit comes preconfigured with some biotypes, which can be extended by an administrator. Click "Admin" > "Edit Biotypes" on the menu to have an overview of the biotypes.
@@ -1507,7 +1507,7 @@ Use this function to count the number of organs per animal, to count the types o
 	</p>
 	<br>
 
-<h1>Edit Tests</h1>
+<h1 id="admin_tests">Edit Tests</h1>
 <p>
 	<a class="fancybox pull-md-right" href="sc_admin4.png"><img src="sc_admin4.png" title="Test overview"/></a>		
 	Spirit comes preconfigured with some tests, which can be extended by an administrator. Click "Admin" > "Edit Test" on the menu to have an overview of the tests.
