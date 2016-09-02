@@ -70,7 +70,7 @@ public class DAOBarcode {
 			EntityTransaction txn = null;
 			EntityManager session = null;
 			try {
-				session = JPAUtil.createRequest();//Be careful to create a new session, or we may commit all other changes (open request must be followed by JPAUtil.closerequest in the finally close)
+				session = JPAUtil.createManager();//Be careful to create a new session, or we may commit all other changes (open request must be followed by JPAUtil.closerequest in the finally close)
 				int lastBarcodeN1 = -1;
 				if(newPrefix) {
 					String lastBarcode; 

@@ -31,14 +31,13 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.table.TableCellEditor;
 
-import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTableModel;
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdLabel;
 import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
-import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
+import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.ui.JCustomLabel;
@@ -135,7 +134,7 @@ public class SampleIdColumn extends AbstractLinkerColumn<String> {
 		popupMenu.add(new JSeparator());
 		popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
 		
-		Biotype biotype = (table.getModel() instanceof BiosampleTableModel) ? ((BiosampleTableModel)table.getModel()).getType(): null;
+		Biotype biotype = linker.getBiotypeForLabel();
 		popupMenu.add(new AbstractAction("Sort by SampleId") {
 			@Override
 			public void actionPerformed(ActionEvent e) {

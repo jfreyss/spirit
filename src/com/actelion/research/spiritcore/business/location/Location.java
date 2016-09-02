@@ -60,7 +60,6 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.envers.RevisionTimestamp;
 
 import com.actelion.research.spiritcore.business.IEntity;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -90,6 +89,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		
 	private String name = "";
 	
+	@Column(name="description", length=256)
 	private String description = "";	
 	
 	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY, optional=true)
@@ -139,7 +139,6 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 	private String updUser;
 	
 	@Temporal(TemporalType.TIMESTAMP)
-	@RevisionTimestamp
 	private Date updDate;
 	
 	private String creUser;
@@ -203,7 +202,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 			if(loc.getLocationType().getCategory()==LocationCategory.ADMIN) break;
 
 			loc = loc.getParent();
-			if(++depth>=4 || loc==null) break;
+			if(++depth>=2 || loc==null) break;
 		}
 		return res.toString();
 	}
@@ -254,15 +253,27 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 
 	@Override
 	public int hashCode() {
-		return (int) (id%Integer.MAX_VALUE);
+		return id;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		if(obj==this) return true;
 		if(!(obj instanceof Location)) return false;		
-		return getId()>0 && (getId()==((Location)obj).getId());
+		return getId() == ((Location)obj).getId();
 	}
+	
+	@Override
+	public int compareTo(Location o2) {
+		if(o2==null) return -1;
+		if(equals(o2)) return 0;
+		
+		if((getParent()==null && o2.getParent()==null) || (getParent()!=null && o2.getParent()!=null && getParent().getId()>0 && getParent().getId()==o2.getParent().getId())) {
+			return CompareUtils.compare(getName(), o2.getName());			
+		}
+		return CompareUtils.compare(this.getHierarchyFull(), o2.getHierarchyFull());
+	}
+	
 	public void setChildren(Set<Location> children) {
 		this.children = children;
 	}
@@ -298,18 +309,18 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 	 * @param parent
 	 */
 	public void setParent(Location parent) {
-		if(parent==getParent()) return;
+		if(this.parent==parent) return;
 		
 		//update the double relationship
-		if(getParent()!=null) {
-			getParent().getChildren().remove(this);
+		if(this.parent!=null) {
+			this.parent.getChildren().remove(this);
 		}
 		
 		this.parent = parent;
 		
 		//update the double relationship
-		if(getParent()!=null) {
-			getParent().getChildren().add(this);
+		if(parent!=null) {
+			parent.getChildren().add(this);
 		}
 		
 	}
@@ -348,44 +359,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		return rows;
 	}
 
-	@Override
-	public int compareTo(Location o2) {
-		if(o2==null) return -1;
-		if((getParent()==null && o2.getParent()==null) || (getParent()!=null && o2.getParent()!=null && getParent().getId()>0 && getParent().getId()==o2.getParent().getId())) {
-			return CompareUtils.compare(getName(), o2.getName());			
-		}
-		return CompareUtils.compare(this.getHierarchyFull(), o2.getHierarchyFull());
-		
-		
-		/*
-		if(o2==null) return -1;		
-		if(this==o2) return 0;			
-		if(this.getId()>0 && this.getId()==o2.getId()) return 0;
-		
-		//Compare Parents (ie type, date)
-		Location p1 = this.getParent();
-		Location p2 = o2.getParent();
-		
-		if(p1==null && p2==null) {
-			//ok
-		} else if(p1==null && p2!=o2) {
-			int c = this.compareTo(p2);
-			if(c!=0) return c;
-			return -1;
-		} else if(p2==null && p1!=this) {
-			int c = p1.compareTo(o2);
-			if(c!=0) return c;
-			return 1;
-		} else if(p1!=null && p2!=null) {
-			int c = p1.compareTo(p2);
-			if(c!=0) return c;
-		}
-		int c = getLocationType()==null? (o2.getLocationType()==null?0:1): (o2.getLocationType()==null?-1: getLocationType().compareTo(o2.getLocationType()));
-		if(c!=0) return c;
-		
-		return CompareUtils.compare(getName(), o2.getName());
-		*/
-	}
+	
 	/**
 	 * @param privacy the privacy to set
 	 */
@@ -595,14 +569,6 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 	public boolean wasUpdated() {
 		return wasUpdated;
 	}	
-
-//
-//	public Container getScannedContainer(int row, int col) {
-//		for(Biosample b: getBiosamples()) {
-//			if(getPositionType().formatPosition(this, row, col).equals(b.getScannedPosition())) return b.getContainer();
-//		}
-//		return null;
-//	}
 
 	public boolean isEmpty() {
 		return getBiosamples().isEmpty();

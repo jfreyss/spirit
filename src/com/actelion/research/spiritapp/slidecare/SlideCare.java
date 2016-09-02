@@ -86,7 +86,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	private static SplashConfig splashConfig = new SplashConfig(SlideCare.class.getResource("slidecare.jpg"), "SlideCare", "SlideCare v" + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Actelion - J.Freyss");
 	private StudyComboBox studyComboBox = new StudyComboBox(RightLevel.ADMIN);
 	
-	private StudyDetailPanel studyDetailPanel = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT, false);
+	private StudyDetailPanel studyDetailPanel = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT);
 	private JButton createCassetteButton = new JButton(new Action_CreateCassette());
 	private JButton createSlideButton = new JButton(new Action_CreateSlide());
 	

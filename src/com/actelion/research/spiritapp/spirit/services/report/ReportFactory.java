@@ -44,6 +44,13 @@ import javax.swing.JScrollPane;
 import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport.ReportCategory;
+import com.actelion.research.spiritapp.spirit.services.report.custom.SamplesInVivoReport;
+import com.actelion.research.spiritapp.spirit.services.report.custom.SamplesToxicologyReport;
+import com.actelion.research.spiritapp.spirit.services.report.custom.SpecimenFoodWaterReport;
+import com.actelion.research.spiritapp.spirit.services.report.custom.SpecimenStatusReport;
+import com.actelion.research.spiritapp.spirit.services.report.custom.SpecimenWeighingInVivoReport;
+import com.actelion.research.spiritapp.spirit.services.report.custom.SpecimenWeighingToxicologyReport;
+import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
@@ -66,7 +73,7 @@ public class ReportFactory {
 		reports.add(new SamplesLocationReport());
 		reports.add(new SamplesMeasurementReport());
 		try {
-			reports.addAll(getAbstractReports("com.actelion.research.spiritapp.spirit.services.report.custom"));
+			reports.addAll(getAbstractReports());
 		} catch(Exception e) {
 			LoggerFactory.getLogger(getClass()).error("Could not retrieve custom reports", e);
 		}		
@@ -157,6 +164,24 @@ public class ReportFactory {
 	}
 
 
+
+	private static List<AbstractReport> getAbstractReports() throws Exception {
+		List<AbstractReport> res = new ArrayList<>();
+		if(DBAdapter.getAdapter().isInActelionDomain()) {
+			res.add(new SamplesInVivoReport());
+			res.add(new SamplesToxicologyReport());
+			res.add(new SpecimenFoodWaterReport());
+			res.add(new SpecimenStatusReport());
+			res.add(new SpecimenWeighingInVivoReport());
+			res.add(new SpecimenWeighingToxicologyReport());
+		} else {
+			res.addAll(getAbstractReports("com.actelion.research.spiritapp.spirit.services.report.custom"));
+		}
+		return res;
+		
+	}
+	
+	
 	private static List<AbstractReport> getAbstractReports(String packageName) throws Exception {
 	    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 	    assert classLoader != null;

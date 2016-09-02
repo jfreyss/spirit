@@ -44,7 +44,7 @@ public class GraphpadPivotTemplate extends PivotTemplate {
 //		setWhere(PivotItemFactory.BIOSAMPLE_SAMPLENAME, Where.ASROW);
 //		setWhere(PivotItemFactory.BIOSAMPLE_FULLTYPE, Where.ASROW);
 		setWhere(PivotItemFactory.BIOSAMPLE_BIOTYPE, Where.ASROW);
-		setWhere(PivotItemFactory.BIOSAMPLE_SAMPLENAME, Where.ASROW);
+		setWhere(PivotItemFactory.BIOSAMPLE_NAME, Where.ASROW);
 
 	}
 

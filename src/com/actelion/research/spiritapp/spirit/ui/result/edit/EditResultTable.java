@@ -46,7 +46,6 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
-import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.util.ui.EasyClipboard;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.exceltable.Column;
@@ -56,15 +55,15 @@ import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 public class EditResultTable extends SpiritExcelTable<Result>  {
 	
 	private EditResultDlg dlg;
-	private EditResultTab tab;
+//	private EditResultTab tab;
 	
 	/**
 	 * Constructor
 	 */
-	public EditResultTable(EditResultDlg dlg, EditResultTab tab) {
+	public EditResultTable(EditResultDlg dlg) {
 		super(new EditResultTableModel());
 		this.dlg = dlg;
-		this.tab = tab;		
+//		this.tab = tab;		
 	}
 	
 	@Override
@@ -101,9 +100,7 @@ public class EditResultTable extends SpiritExcelTable<Result>  {
 			
 			columns.add(new TopIdColumn().setHideable(!differentParent));
 			columns.add(new SampleIdColumn());
-			if(tab==null || tab.getStudyId().length()>0) {
-				columns.add(new PhaseColumn(getModel()));
-			}
+			columns.add(new PhaseColumn());
 			
 			for (final TestAttribute att : test.getAttributes()) {
 				columns.add(new AttributeColumn(att));	
@@ -139,17 +136,17 @@ public class EditResultTable extends SpiritExcelTable<Result>  {
 		}		
 	}
 	
-	/**
-	 * @param study the study to set
-	 */
-	public void setStudy(Study study) {
-		getModel().setStudy(study);
-	}
+//	/**
+//	 * @param study the study to set
+//	 */
+//	public void setStudy(Study study) {
+//		getModel().setStudy(study);
+//	}
 	
 	@Override
 	protected void pasteSelection() {
 		Test test = getModel().getTest();
-		Study study = getModel().getStudy();
+//		Study study = getModel().getStudy();
 		
 		//Check if we paste a pivot table
 		String paste = EasyClipboard.getClipboard();
@@ -175,7 +172,7 @@ public class EditResultTable extends SpiritExcelTable<Result>  {
 				if(res==JOptionPane.YES_OPTION) {
 					//Pivot table
 					try {
-						List<Result> results = PivotDlg.parse(test, table, study);
+						List<Result> results = PivotDlg.parse(test, table);
 						dlg.addResults(results, false);
 					} catch (Exception e) {
 						JExceptionDialog.showError(EditResultTable.this, e);

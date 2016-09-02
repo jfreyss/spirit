@@ -97,13 +97,15 @@ public class DefaultRackDepictorRenderer implements RackDepictorRenderer {
 			//Draw biosample or containerid
 			g.setColor(Color.DARK_GRAY);
 			g.setFont(FastFont.SMALL);
-			g.drawString(c.getContainerOrBiosampleId(), r.height>50? r.x+24: r.x+1, r.y+13);
+			if(c.getContainerOrBiosampleId().length()>0) {
+				g.drawString(c.getContainerOrBiosampleId(), r.height>50? r.x+24: r.x+1, r.y+13);
+			}
 
 			//Print Study info from container
 			g.setColor(Color.BLACK);
 			String info = c.getPrintStudyLabel(Spirit.getUsername());
 			int x = r.x + (r.height>50? Math.min(24, Math.max(0, (r.width-50)/5)): 2);
-			int y = r.y + (Math.min(32, Math.max(22, 22+(r.height-22)/4)));
+			int y = r.y + (r.height>50? Math.min(28, Math.max(22, 22+(r.height-22)/4)): 20);
 			if(info.length()>0) {
 				g.setFont(FastFont.MEDIUM);
 				for (String line: info.split("\n")) {

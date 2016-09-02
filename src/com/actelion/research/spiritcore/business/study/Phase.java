@@ -65,11 +65,7 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 	@Column(name="name", length=64, nullable=false)
 	private String name;
 	
-	private transient int days = 0; //any positive or negative, or null value is allowed
-	private transient int hours = 0; // should always be >0
-	private transient int minutes = -1; //-1 means not yet calculated, should always be >0
-	
-	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY)
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
 	private Study study = null;
 	
 	
@@ -77,6 +73,10 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 	private String serializedRandomization = "";
 
 	private transient Randomization randomization = null;
+	private transient int days = 0; //any positive or negative, or null value is allowed
+	private transient int hours = 0; // should always be >0
+	private transient int minutes = -1; //-1 means not yet calculated, should always be >0
+	
 	
 	public Phase() {}
 	
@@ -99,7 +99,17 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 	}
 	
 	public void setStudy(Study study) {
+		if(this.study==study) return;
+
+		if(this.study!=null) {
+			this.study.getPhases().remove(this);
+		}
+		
 		this.study = study;
+		
+		if(this.study!=null) {
+			this.study.getPhases().add(this);
+		}
 	}
 	
 	public String getShortName() {

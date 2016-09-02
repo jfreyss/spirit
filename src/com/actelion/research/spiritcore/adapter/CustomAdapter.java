@@ -116,10 +116,8 @@ class CustomAdapter extends DBAdapter {
 		return "The CustomAdapter is the most versatile way to connect to a server database. The steps to install it are:"
 				+ "<ul>"
 				+ "<li>Install an Oracle or a MySql database (download at http://dev.mysql.com/)"
-				+ "<li>Create a new schema: <i>create schema spirit;</i>"
 				+ "<li>Create a new user: <i>create user spirit identified by 'PASSWORD';</i>"
-				+ "<li>Grants all rights: <i>grant create,insert,select,update,delete on spirit.* to 'spirit'@'%';</i>"
-				+ "<li>Test the connection and create the schema using those buttons...</i>"
+				+ "<li>Test the connection and create the schema through this dialog</i>"
 				+ "</ul>"				
 				;
 	}

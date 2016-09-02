@@ -204,9 +204,6 @@ public class Importer {
 			studyId2study.put(study.getStudyId(), study);
 			res.add(study);
 			
-//			System.out.println("Importer.convertStudies() "+study);
-//			System.out.println("Importer.convertStudies() getNamedSamplings="+study.getNamedSamplings());
-//			System.out.println("Importer.convertStudies() getStudyActions="+study.getStudyActions());
 		}
 		
 		return res;
@@ -469,7 +466,6 @@ public class Importer {
 			Biotype parent = name2biotype.get(b.getParentBiotype());
 			if(parent==null) throw new Exception("The biotype "+b.getParentBiotype()+" was not exported");
 			biotype.setParent(parent);			
-			System.out.println("Importer.convertBiotypes() set parent biotype: "+biotype+" to "+parent);
 		}
 
 		return biotypes;
@@ -494,7 +490,6 @@ public class Importer {
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	public Set<Biosample> convertBiosamples(Collection<BiosamplePojo> list) throws Exception {
-		System.out.println("SpiritImporter.convertBiosamples() "+list );
 		if(list==null) return null;
 		Set<Biosample> biosamples = new HashSet<>();
 		for (BiosamplePojo b : list) {
@@ -632,7 +627,6 @@ public class Importer {
 			fullName2location.put(l.getFullName(), r);
 		}
 		
-		System.out.println("SpiritImporter.convertLocations() "+fullName2location.keySet());
 		//Reestablish links between locations
 		for (LocationPojo l : list) {
 			if(l.getParent()==null) continue;
@@ -765,12 +759,6 @@ public class Importer {
 			
 			results.add(res);
 		}
-		System.out.println("Importer.convertResults() "+results);	
 		return results;
-	}
-	
-	public static void main(String[] args) throws Exception {
-		Exchange res = Importer.read(new FileReader(new File("c:/tmp/export.spirit")));
-		System.out.println("Importer.main() "+res);
-	}
+	}	
 }

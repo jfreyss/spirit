@@ -81,7 +81,7 @@ public abstract class CorrectionDlg<ATTRIBUTE, DATA> extends JEscapeDialog {
 		});
 		
 		JButton replaceButton = new JButton("Replace All");
-		getRootPane().setDefaultButton(skipButton);
+		getRootPane().setDefaultButton(replaceButton);
 		replaceButton.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {

@@ -29,7 +29,7 @@ import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
 /**
- * 
+ * Metadata represents a unserialized biosample's metadata. All metadata are serialized in one database column.
  */
 public class Metadata implements Serializable {
 
@@ -42,11 +42,9 @@ public class Metadata implements Serializable {
 	
 	private Biosample biosample;
 	
-
 	private Biosample linkedBiosample;
 	
 	private Document linkedDocument;
-	
 	
 	public Metadata() {}
 	
@@ -76,13 +74,6 @@ public class Metadata implements Serializable {
 			Arrays.sort(v);
 			this.value = MiscUtils.unsplit(v, ";");
 		}
-
-		/*
-		//Be sure to call preSave (hibernate Bug Hack <5.0, which prevents preSave from being called before updates)
-		if(getBiosample()!=null) {
-			getBiosample().preSave();
-		}
-		*/
 	}
 
 

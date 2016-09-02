@@ -49,6 +49,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.text.JTextComponent;
 
+import com.actelion.research.spiritapp.spirit.SpiritDB;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
@@ -132,7 +133,6 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 				new SwingWorkerExtended("Test Connection", getContentPane(), SwingWorkerExtended.FLAG_CANCELABLE | SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 					@Override
 					protected void doInBackground() throws Exception {
-						System.out.println("DatabaseSettingsDlg.DatabaseSettingsDlg(...).new ActionListener() {...}.actionPerformed() 1");
 						try {
 							label.setText("<html><div style='color:blue'>Testing Connection...</div></html>");
 							updateDBProperties();
@@ -167,6 +167,29 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 				};
 			}
 		});
+		JButton examplesButton = new JButton("Recreate Examples");
+		examplesButton.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int res = JOptionPane.showConfirmDialog(DatabaseSettingsDlg.this, "Are you sure you want to delete the existing examples and reimport the original ones?", "Recreate examples", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+				if(res==JOptionPane.YES_OPTION) {
+					new SwingWorkerExtended("Recreate Examples", getContentPane(), SwingWorkerExtended.FLAG_CANCELABLE | SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+						@Override
+						protected void doInBackground() throws Exception {
+							try {
+								label.setText("<html><div style='color:blue'>Recreate Examples...</div></html>");
+								SpiritDB.importExamples(true);
+								label.setText("<html><div style='color:green'>Successful</div></html>");
+								SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
+							} catch(Exception ex) {
+								label.setText("<html><div style='color:red'>Error</div></html>");
+								throw ex;
+							}
+						}
+					};
+				}
+			}
+		});
 		
 		
 		//generalConfigPane
@@ -188,8 +211,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 						JExceptionDialog.showError(DatabaseSettingsDlg.this, ex); 
 						adapter = new HSQLFileAdapter();							
 					}
-					initUISpecificProperties();
-					pack();
+					initUISpecificProperties();					
 				}
 			});
 		} else {
@@ -212,7 +234,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 		tabbedPane.add("Database", UIUtils.createBox(
 				UIUtils.createTitleBox("DB Connection",specificConfigPane), 
 				UIUtils.createTitleBox("DB Type", UIUtils.createTable(comps)),
-				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), testConnectionButton, testSchemaButton)));
+				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), testConnectionButton, testSchemaButton, examplesButton)));
 		tabbedPane.add("User Settings", new JScrollPane(userPanel));
 		tabbedPane.add("Study Settings", new JScrollPane(studyPanel));
 		

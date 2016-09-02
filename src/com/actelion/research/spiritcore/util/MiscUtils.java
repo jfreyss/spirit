@@ -37,8 +37,6 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.actelion.research.spiritcore.business.result.Test;
-
 
 
 public class MiscUtils {

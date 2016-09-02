@@ -57,7 +57,7 @@ public class AnimalCarePanel extends JPanel {
 	private final JButton editDesignButton = new JIconButton(IconType.STUDY, "Edit Design");
 	
 	private final StudyComboBox studyComboBox;
-	private final StudyDetailPanel studyDetailPanel = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT, false);
+	private final StudyDetailPanel studyDetailPanel = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT);
 
 	private final JButton groupAssignButton;	
 	private final JButton cageButton = new JIconButton(IconType.PRINT, "", "Print cage labels ");
@@ -83,7 +83,7 @@ public class AnimalCarePanel extends JPanel {
 		});
 		groupAssignButton = new JBigButton(new StudyActions.Action_GroupAssignmentSelecter(studyComboBox));	
 		JPanel studyPanel = UIUtils.createTitleBox("", UIUtils.createHorizontalBox(studyComboBox, Box.createHorizontalGlue()));
-		studyDetailPanel.showSpecimen();
+		studyDetailPanel.showAttached();
 		
 		StudyActions.attachPopup(studyDetailPanel);
 		

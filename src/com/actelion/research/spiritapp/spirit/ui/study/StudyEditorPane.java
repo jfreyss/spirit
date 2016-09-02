@@ -70,6 +70,7 @@ public class StudyEditorPane extends JEditorPane {
 	private boolean displayResults = true;
 	private final String NIOBE_LINK = "\\\\actelch02\\PGM\\ActelionResearch\\Niobe\\Niobe.lnk";
 	private String sort = "date";
+	private boolean forRevision;
 	
 	public StudyEditorPane() {
 		super("text/html", "");
@@ -145,7 +146,9 @@ public class StudyEditorPane extends JEditorPane {
 	
 	
 	
-	
+	public void setForRevision(boolean forRevision) {
+		this.forRevision = forRevision;
+	}
 		
 	public void setDisplayResults(boolean displayResults) {
 		this.displayResults = displayResults;
@@ -174,6 +177,7 @@ public class StudyEditorPane extends JEditorPane {
 			}
 			
 			//Display metadata
+			sb.append("<hr>");
 			sb.append("<table style='font-size:8px'>");
 			for(Entry<String, String> entry: study.getMetadata().entrySet()) {
 				String name = ConfigProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, entry.getKey());
@@ -214,17 +218,19 @@ public class StudyEditorPane extends JEditorPane {
 				
 				if(study.getBlindDetailsUsersAsSet().size()>0) sb.append("<tr><td>Blind-Names:</td><td><b>" + MiscUtils.flatten(study.getBlindDetailsUsersAsSet(), ", ") + "</b></td></tr>");
 				if(study.getBlindAllUsersAsSet().size()>0) sb.append("<tr><td>Blind-All:</td><td><b>" + MiscUtils.flatten(study.getBlindAllUsersAsSet(), ", ") + "</b></td></tr>");
+				sb.append("<tr><td>Samples:</td><td><b>" + (study.isSynchronizeSamples()? "are automatically generated": "are created manually") + "</b></td></tr>");
+
 			}
 			sb.append("</table>");
 			sb.append("<hr>");
 
-			if(displayResults) {
+			if(displayResults && !forRevision) {
 				
 				//Display Documents
 				Map<DocumentType, List<Document>> docs = Document.mapDocumentTypes(study.getDocuments());
 				if(study.getDocuments().size()>0) {
 					for (DocumentType docType : docs.keySet()) {
-						sb.append("<div style='margin-top:5px'><b>"+(docType!=null? docType: null)+"</b>:<br>");
+						sb.append("<div style='margin-top:5px'><b>"+(docType!=null? docType: "")+"</b>:<br>");
 						for (Document doc : docs.get(docType)) {
 							String name = doc.getFileName();
 							if(name.length()>40) name = name.substring(0, 30) + "..." + name.substring(name.length()-8);

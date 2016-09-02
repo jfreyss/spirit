@@ -45,7 +45,6 @@ import javax.persistence.UniqueConstraint;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.envers.RevisionTimestamp;
 
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.util.Formatter;
@@ -100,7 +99,6 @@ public class FoodWater implements Comparable<FoodWater> {
 	@Column(length=20, nullable=false)
 	private String updUser;
 	
-	@RevisionTimestamp
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(nullable=false)
 	private Date updDate;

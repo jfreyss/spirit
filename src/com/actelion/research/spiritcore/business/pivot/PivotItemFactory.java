@@ -305,7 +305,7 @@ public class PivotItemFactory {
 		}
 	};
 
-	public static final PivotItem BIOSAMPLE_SAMPLENAME = new PivotItem(PivotItemClassifier.BIOSAMPLE, "SampleName") {
+	public static final PivotItem BIOSAMPLE_NAME = new PivotItem(PivotItemClassifier.BIOSAMPLE, "SampleName") {
 		@Override
 		public String getTitle(ResultValue rv) {
 			Result r = rv.getResult();
@@ -419,7 +419,7 @@ public class PivotItemFactory {
 //		}
 //	};
 
-	public static final PivotItem RESULT_INPUT = new PivotItem(PivotItemClassifier.RESULT, "AllInput") {
+	public static final PivotItem RESULT_INPUT = new PivotItem(PivotItemClassifier.RESULT, "Input") {
 		@Override
 		public String getTitle(ResultValue rv) {
 			Result r = rv.getResult();
@@ -666,7 +666,7 @@ public class PivotItemFactory {
 		BIOSAMPLE_TOPNAME,
 		BIOSAMPLE_BIOTYPE,
 		BIOSAMPLE_SAMPLEID,
-		BIOSAMPLE_SAMPLENAME,
+		BIOSAMPLE_NAME,
 		BIOSAMPLE_NAMEDSAMPLING,
 		BIOSAMPLE_SAMPLING,
 		BIOSAMPLE_METADATA,

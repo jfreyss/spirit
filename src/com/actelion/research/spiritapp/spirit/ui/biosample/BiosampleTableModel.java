@@ -384,7 +384,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		return linkers;
 	}
 
-	public Biotype getType() {
+	public Biotype getBiotype() {
 		return type;
 	}
 

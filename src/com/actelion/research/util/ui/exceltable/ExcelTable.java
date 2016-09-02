@@ -468,6 +468,7 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 	public class Paste_Action extends AbstractAction {
 		public Paste_Action() {			
 			putValue(AbstractAction.NAME, "Paste");
+			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke('V', InputEvent.CTRL_DOWN_MASK));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -482,6 +483,7 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 	public class Copy_Action extends AbstractAction {
 		public Copy_Action() {			
 			putValue(AbstractAction.NAME, "Copy");
+			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke('Z', InputEvent.CTRL_DOWN_MASK));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {

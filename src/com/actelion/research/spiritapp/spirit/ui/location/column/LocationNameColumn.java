@@ -37,10 +37,16 @@ import com.actelion.research.util.ui.exceltable.AlphaNumericalCellEditor;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class LocationNameColumn extends Column<Location, String> {
+	
+	private LocationLabel label = new LocationLabel(false);	
+
 	public LocationNameColumn() {
-		super("LocationName", String.class, 140);
+		super("Name", String.class, 140);
 	}
 	
+	public void setDiplayIcon(boolean displayIcon) {
+		label.setDisplayIcon(displayIcon);
+	}
 	@Override
 	public String getValue(Location row) {
 		return row.getHierarchyFull();
@@ -56,7 +62,6 @@ public class LocationNameColumn extends Column<Location, String> {
 		}
 	}
 	
-	private LocationLabel label = new LocationLabel(false);	
 	
 	
 	@Override

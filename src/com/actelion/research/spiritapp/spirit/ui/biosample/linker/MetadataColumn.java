@@ -51,12 +51,11 @@ import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.AlphaNumericalCellEditor;
 import com.actelion.research.util.ui.exceltable.ExtendTableModel;
-import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 
 public class MetadataColumn extends AbstractLinkerColumn<String> {
 	
 //	private DicoLabel dicoLabel = new DicoLabel();
-	private JLabelNoRepaint defaultLabel = new JLabelNoRepaint();
+//	private JLabelNoRepaint defaultLabel = new JLabelNoRepaint();
 	
 	protected MetadataColumn(final BiosampleLinker linker) {
 		super(linker, String.class, 30, 400);
@@ -75,16 +74,16 @@ public class MetadataColumn extends AbstractLinkerColumn<String> {
 		row.setMetadata(getType(), value);
 	}
 	
-	@Override
-	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {	
+//	@Override
+//	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {	
 //		if(getType().getDataType()==DataType.DICO) {
 //			dicoLabel.setText((String) value);
 //			return dicoLabel;
 //		} else {
-			defaultLabel.setText((String) value);
-			return defaultLabel;
+//			defaultLabel.setText((String) value);
+//			return defaultLabel;
 //		}
-	}
+//	}
 	
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {

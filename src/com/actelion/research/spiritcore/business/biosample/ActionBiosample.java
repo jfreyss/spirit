@@ -44,7 +44,6 @@ import javax.persistence.TemporalType;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.RevisionNumber;
-import org.hibernate.envers.RevisionTimestamp;
 
 import com.actelion.research.spiritcore.business.study.Phase;
 
@@ -82,7 +81,6 @@ public abstract class ActionBiosample implements Comparable<ActionBiosample> {
 	protected String comments;
 
 		
-	@RevisionTimestamp
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(nullable=false)
 	protected Date updDate = new Date();

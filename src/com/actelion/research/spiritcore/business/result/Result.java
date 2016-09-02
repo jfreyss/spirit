@@ -28,6 +28,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,7 +58,6 @@ import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.RevisionNumber;
-import org.hibernate.envers.RevisionTimestamp;
 
 import com.actelion.research.spiritcore.business.IEntity;
 import com.actelion.research.spiritcore.business.Quality;
@@ -99,7 +99,6 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 	
 	@Column(name="upd_date", nullable=false)
 	@Temporal(TemporalType.TIMESTAMP)
-	@RevisionTimestamp
 	private Date updDate;
 	
 	@Column(name="cre_date", nullable=false)
@@ -563,7 +562,7 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 
 	@Override
 	public int hashCode() {
-		return (int)(getId()%Integer.MAX_VALUE + (getBiosample()==null?0: (getBiosample().getId()%Integer.MAX_VALUE)));
+		return id;
 	}
 
 	@Override
@@ -660,10 +659,9 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 	}
 	
 	public static Map<Test, List<Result>> mapTest(Collection<Result> col) {
-		Map<Test, List<Result>> map = new HashMap<>();
+		Map<Test, List<Result>> map = new LinkedHashMap<>();
 		if(col==null) return map;
 		for (Result b : col) {			
-//			if(b.getTest()==null) continue;
 			List<Result> l = map.get(b.getTest());
 			if(l==null) {
 				l = new ArrayList<>();
@@ -756,5 +754,9 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 				+ "_" + (getPhase()==null?"": getPhase().getShortName())
 				+ "_" + getInputResultValuesAsString();
 	}
-	
+
+	public String debugInfo() {
+		return "[Res:"+id+(biosample==null?"":",biosample="+biosample.debugInfo())+(phase==null || phase.getStudy()==null?"":",study="+phase.getStudy().getId())+"]";
+	}
+
 }

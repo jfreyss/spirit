@@ -34,10 +34,8 @@ import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdLabel;
-import com.actelion.research.spiritapp.spirit.ui.result.edit.EditResultTable;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.Result;
-import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.util.CompareUtils;
@@ -84,13 +82,13 @@ public final class SampleIdColumn extends Column<Result, String> {
 				if(value.length()>3) {
 					b = DAOBiosample.getBiosample(value);					
 				} 
-				if(b==null) {
-					//Load the bisoamples from the study/sampleNo, if it is not found
-					Study study = ((EditResultTable) getTable()).getModel().getStudy();
-					if(study!=null) {
-						b = DAOBiosample.getBiosample(study, value);
-					}
-				}
+//				if(b==null) {
+//					//Load the bisoamples from the study/sampleNo, if it is not found
+//					Study study = ((EditResultTable) getTable()).getModel().getStudy();
+//					if(study!=null) {
+//						b = DAOBiosample.getBiosample(study, value);
+//					}
+//				}
 				
 				if(b==null) {
 					//If not found, create a fake biosample

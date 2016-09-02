@@ -92,7 +92,7 @@ public class EditResultSelectElbDlg extends JEscapeDialog {
 				try {
 					String res = (String) comboBox.getSelectedItem();
 					
-					if(DBAdapter.getAdapter().isInActelionDomain() && res.startsWith("EL") && !recentElbs.contains(res)) {
+					if(DBAdapter.getAdapter().isInActelionDomain() && res.startsWith("ELB") && !recentElbs.contains(res)) {
 						if(res.length()<12) throw new Exception("The ELB is not well formatted");
 					}
 					

@@ -156,12 +156,17 @@ public class ConfigProperties {
 	//////////////////////////////////////////////////////////////////////////////////////
 	private static Map<String, String> getProperties() {
 		Map<String, String> keyValuePairs = new HashMap<>();
-		EntityManager em = JPAUtil.getManager();
-		for(ConfigProperty p: (List<ConfigProperty>) em.createQuery("from ConfigProperty").getResultList()) {
-			if(p==null) continue;
-			keyValuePairs.put(p.getKey(), p.getValue());			
+		EntityManager em = null;
+		try {
+			em = JPAUtil.createManager();
+			for(ConfigProperty p: (List<ConfigProperty>) em.createQuery("from ConfigProperty").getResultList()) {
+				if(p==null) continue;
+				keyValuePairs.put(p.getKey(), p.getValue());			
+			}
+			LoggerFactory.getLogger(ConfigProperties.class).debug("properties="+keyValuePairs);
+		} finally {
+			if(em!=null) em.close();
 		}
-		LoggerFactory.getLogger(ConfigProperties.class).debug("properties="+keyValuePairs);
 		return keyValuePairs;
 	}	
 	/**
@@ -181,7 +186,7 @@ public class ConfigProperties {
 				em.merge(p);
 			}		
 			txn.commit();
-			
+			txn = null;
 		} catch(Exception e) {
 			if (txn != null) try {txn.rollback();} catch (Exception e2) {}
 			txn = null;

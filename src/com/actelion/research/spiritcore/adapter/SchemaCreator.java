@@ -26,6 +26,8 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Collections;
 
+import javax.swing.JPanel;
+
 import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritcore.business.employee.Employee;
@@ -55,23 +57,21 @@ public class SchemaCreator {
 			
 			//Use JPA system to recreate the tables
 			JPAUtil.initFactory(adapter, "update");
-			
-			
+						
 			//Create one group
+			SpiritUser admin = SpiritUser.getFakeAdmin();
 			EmployeeGroup group = new EmployeeGroup("Group");
-			DAOEmployee.persistEmployeeGroup(group, SpiritUser.getFakeAdmin());
+			DAOEmployee.persistEmployeeGroup(group, admin);
 
 			Employee employee = new Employee("admin");
 			employee.getEmployeeGroups().add(group);
 			employee.setRoles(Collections.singleton("admin"));
-			DAOEmployee.persistEmployee(employee, SpiritUser.getFakeAdmin());
-			
+			DAOEmployee.persistEmployee(employee, admin);			
 			
 			//The version is now the latest: update the version
 			String version = MigrationScript.getExpectedDBVersion();
 			ConfigProperties.getInstance().setDBVersion(version);
 			ConfigProperties.getInstance().saveValues();
-			
 			adapter.executeScripts(CREATE_AFTER, false);
 			LoggerFactory.getLogger(HSQLFileAdapter.class).debug("DB UPDATED");
 		} catch(Exception e2) {

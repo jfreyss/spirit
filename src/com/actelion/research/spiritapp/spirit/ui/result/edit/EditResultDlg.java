@@ -442,7 +442,6 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 					EditResultTab resultsTab = resultsTabs.size()>0? resultsTabs.get(resultsTabs.size()-1): null;
 					EditResultTab newPanel = new EditResultTab(EditResultDlg.this);
 					newPanel.getTestChoice().setSelection(resultsTab==null? null: resultsTab.getTestChoice().getSelection());					
-					newPanel.setStudyId(resultsTab.getStudyId());
 					resultsTabs.add(newPanel);
 					newPanel.setResults(new ArrayList<Result>());
 					tabbedPane.addTab("Select Test", newPanel);
@@ -487,20 +486,16 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		Map<EditResultTab, List<Result>> tab2results = new HashMap<>();
 		Map<Test, List<Result>> mapTest = Result.mapTest(results);
 		List<Test> tests = new ArrayList<>(mapTest.keySet());
-//		MiscUtils.removeNulls(tests);
-		System.out.println("EditResultDlg.addResults() "+mapTest);
-		Collections.sort(tests);
 		for (Test test : tests) {
-//			if(test==null) continue;
-			Map<Study, List<Result>> map = Result.mapStudy(mapTest.get(test));
-			List<Study> studies = new ArrayList<>(map.keySet());
-			Collections.sort(studies);
-			Collections.reverse(studies);
-			for (Study study : studies) {
+//			Map<Study, List<Result>> map = Result.mapStudy(mapTest.get(test));
+//			List<Study> studies = new ArrayList<>(map.keySet());
+//			Collections.sort(studies);
+//			Collections.reverse(studies);
+//			for (Study study : studies) {
 				EditResultTab tab = new EditResultTab(this);
-				tab2results.put(tab, map.get(study));
+				tab2results.put(tab, mapTest.get(test));
 				resultsTabs.add(tab);			
-			}
+//			}
 		}
 
 		if(emptyCurrentTab) {
@@ -519,9 +514,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		
 
 		//Set the results
-		System.out.println("EditResultDlg.addResults(1) > "+resultsTabs.size()+" tabs");
 		for(EditResultTab tab: tab2results.keySet()) {
-			System.out.println("EditResultDlg.addResults(1) > tab > "+tab2results.get(tab).size()+" results");
 			tab.setResults(tab2results.get(tab));
 		}
 				

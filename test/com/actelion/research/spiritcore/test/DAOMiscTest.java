@@ -30,7 +30,6 @@ import org.junit.Test;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.HSQLMemoryAdapter;
 import com.actelion.research.spiritcore.adapter.PropertyKey;
-import com.actelion.research.spiritcore.adapter.SchemaCreator;
 import com.actelion.research.spiritcore.business.LogEntry;
 import com.actelion.research.spiritcore.business.LogEntry.Action;
 import com.actelion.research.spiritcore.services.SpiritUser;
@@ -40,6 +39,8 @@ import com.actelion.research.spiritcore.services.dao.JPAUtil;
 
 public class DAOMiscTest {
 	
+	
+	@SuppressWarnings("unused")
 	private static SpiritUser user;
 	
 	@BeforeClass
@@ -57,11 +58,12 @@ public class DAOMiscTest {
 	
 	@Test
 	public void validateDB() throws Exception {
+		JPAUtil.close();
 		System.out.println("DAOMiscTest.validateDB()");
 		DBAdapter.getAdapter().preInit();
-//		JPAUtil.init();
-//		SchemaCreator.displayTables(DBAdapter.getAdapter());
-		JPAUtil.initFactory(DBAdapter.getAdapter(), "update");
+		System.out.println("DAOMiscTest.validateDB2()");
+		JPAUtil.initFactory(DBAdapter.getAdapter(), "validate");
+		System.out.println("DAOMiscTest.validateDB3()");
 	}
 	@Test
 	public void testLog() {

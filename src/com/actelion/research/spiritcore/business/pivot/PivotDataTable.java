@@ -59,7 +59,7 @@ public class PivotDataTable {
 	private List<PivotColumn> pivotColumns = new ArrayList<>();
 	private List<Result> results;
 
-	public static PivotDataTable createPivotDataTable(List<Result> results, Set<TestAttribute> skippedAttributes, PivotTemplate template) throws Exception {
+	public static PivotDataTable createPivotDataTable(List<Result> results, Set<TestAttribute> skippedAttributes, PivotTemplate template) {
 		if(template==null) throw new IllegalArgumentException("Template cannot be null");
 		
 		if(template.getComputed()!=null) {
@@ -75,9 +75,8 @@ public class PivotDataTable {
 	 * @param skippedAttributes
 	 * @param template
 	 */
-	private PivotDataTable(List<Result> results, Set<TestAttribute> skippedAttributes, PivotTemplate template) throws Exception {
+	private PivotDataTable(List<Result> results, Set<TestAttribute> skippedAttributes, PivotTemplate template) {
 		
-//		long s = System.currentTimeMillis();
 		this.template = template;
 		this.skippedAttributes = skippedAttributes;
 		this.results = results;

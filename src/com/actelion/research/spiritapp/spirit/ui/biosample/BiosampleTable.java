@@ -25,6 +25,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -37,12 +38,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.swing.AbstractAction;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
-import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.table.TableColumn;
 
@@ -60,9 +60,9 @@ import com.actelion.research.spiritapp.spirit.ui.lf.SpiritExtendTable;
 import com.actelion.research.spiritcore.business.biosample.BarcodeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
-import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerMethod;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
+import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.pivot.PivotRow;
 import com.actelion.research.spiritcore.util.ListHashMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
@@ -254,7 +254,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 	public static void expandContainerLocation(AbstractExtendTable<Biosample> table, boolean expand) {
 		//Initialize variables
 		final ExtendTableModel<Biosample> model = table.getModel();
-		final Biotype biotype = (model instanceof EditBiosampleTableModel)? ((EditBiosampleTableModel) model).getBiotype():  ((BiosampleTableModel) model).getType();
+		final Biotype biotype = (model instanceof EditBiosampleTableModel)? ((EditBiosampleTableModel) model).getBiotype():  ((BiosampleTableModel) model).getBiotype();
 		final Set<BiosampleLinker> linkers = getPresentLinkers(table);
 		
 		if(biotype!=null && biotype.isHideContainer()) return;
@@ -363,7 +363,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		if(model instanceof EditBiosampleTableModel) {
 			linkers = null; //never show the expand biotype in edit
 		} else if(model instanceof BiosampleTableModel) {
-			Biotype biotype = ((BiosampleTableModel) model).getType();
+			Biotype biotype = ((BiosampleTableModel) model).getBiotype();
 			if(biotype==null) {
 				linkers = ((BiosampleTableModel) model).getLinkers();				
 			} else {				
@@ -415,7 +415,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 			biotype = ((EditBiosampleTableModel) model).getBiotype();
 			presentLinkers = null; //never show the expand biotype for edittable
 		} else if(model instanceof BiosampleTableModel) {
-			biotype = ((BiosampleTableModel) model).getType();
+			biotype = ((BiosampleTableModel) model).getBiotype();
 			presentLinkers = biotype==null? null: ((BiosampleTableModel) model).getLinkers(); //show the expand biotype when the table shows only one type
 		} else {
 			throw new IllegalArgumentException("Invalid model: "+model);
@@ -433,7 +433,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		final ExtendTableModel<Biosample> model = table.getModel();
 
 		//Initialize variables
-		final Biotype biotype = (model instanceof EditBiosampleTableModel)? ((EditBiosampleTableModel) model).getBiotype():  ((BiosampleTableModel) model).getType();
+		final Biotype biotype = (model instanceof EditBiosampleTableModel)? ((EditBiosampleTableModel) model).getBiotype():  ((BiosampleTableModel) model).getBiotype();
 		final Set<BiosampleLinker> presentLinkers = getPresentLinkers(table);
 
 		
@@ -454,19 +454,18 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		//Go through each linkers and check what are the available fields that could be proposed to expand/collapse
 		//Create a map of bioTypeString->list of linkers
 		
-		final ListHashMap<String, BiosampleLinker> keys = new ListHashMap<String, BiosampleLinker>();
-		final Set<String> toExpand = new HashSet<String>();
+		final ListHashMap<String, BiosampleLinker> keys = new ListHashMap<>();
+		final Set<String> toExpand = new HashSet<>();
 		if(presentLinkers!=null) {
 			
 			//Get a list of all Linkers
 			final List<Biosample> toExplore = MiscUtils.subList(table.getRows(), model.getMaxRowsToExplore());
-			final Set<BiosampleLinker> allLinkers = new TreeSet<BiosampleLinker>(); 
+			final Set<BiosampleLinker> allLinkers = new TreeSet<>(); 
 			allLinkers.addAll(BiosampleLinker.getLinkers(toExplore, LinkerMethod.INDIRECT_LINKS));
 			allLinkers.addAll(BiosampleLinker.getLinkers(toExplore, LinkerMethod.DIRECT_LINKS));
-			
 			for(BiosampleLinker linker: allLinkers) {
 		
-				if(!linker.isLinked() && linker.getType()!=LinkerType.SAMPLENAME) continue;
+				if(/*!linker.isLinked() &&*/ linker.getType()!=LinkerType.SAMPLENAME) continue;
 				
 				String key = linker.getHierarchyBiotype()!=null? linker.getHierarchyBiotype().getName(): 
 					linker.getAggregatedMetadata()!=null? linker.getAggregatedMetadata().getName():
@@ -487,49 +486,31 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		//Expand
 		if(keys.size()>0 || (hasContainer && (biotype==null || !biotype.isHideContainer()))) {
 			menu.add(new JSeparator());
-			menu.add(new JCustomLabel("Columns", Font.BOLD));
+			menu.add(new JCustomLabel("Expanded Columns", Font.BOLD));
 			
 			//Expand-Location menu
 			if(hasContainer && (biotype==null || !biotype.isHideContainer())) {
-				if(hasFullContainer) {
-					AbstractAction a = new AbstractAction("Container > Expand") {						
-						@Override
-						public void actionPerformed(ActionEvent e) {
-							expandContainerLocation(table, true);
-						}
-					};
-					a.putValue(AbstractAction.SELECTED_KEY, true);					
-					menu.add(a);
-				} else {
-					AbstractAction a = new AbstractAction("Container > Collapse") {
-						@Override
-						public void actionPerformed(ActionEvent e) {
-							expandContainerLocation(table, false);
-						}
-					};
-					a.putValue(AbstractAction.ACCELERATOR_KEY, KeyStroke.getKeyStroke("dbl-click"));		
-					menu.add(a);
-				}
+				final JCheckBoxMenuItem m = new JCheckBoxMenuItem("Container", !hasFullContainer);
+				m.addActionListener(new ActionListener() {					
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						expandContainerLocation(table, m.isSelected());
+					}
+				});
+				menu.add(m);
 			}
 			
 			
 			//Expand-Biotype menu
 			for (final String key : keys.keySet()) {
-				if(toExpand.contains(key)) {
-					menu.add(new AbstractAction(key+" > Expand") {
-						@Override
-						public void actionPerformed(ActionEvent arg0) {
-							expandBiotype(table, key, true);
-						}
-					});					
-				} else {
-					menu.add(new AbstractAction(key + " > Collapse") {
-						@Override
-						public void actionPerformed(ActionEvent arg0) {
-							expandBiotype(table, key, false);
-						}
-					});
-				}
+				final JCheckBoxMenuItem m = new JCheckBoxMenuItem(key, !toExpand.contains(key));
+				m.addActionListener(new ActionListener() {					
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						expandBiotype(table, key, m.isSelected());
+					}
+				});
+				menu.add(m);				
 			}
 		}		
 	

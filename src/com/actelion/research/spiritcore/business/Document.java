@@ -48,7 +48,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.RevisionTimestamp;
 
 import com.actelion.research.spiritcore.util.IOUtils;
 
@@ -117,7 +116,6 @@ public class Document {
 
 	private String creUser;
 	
-	@RevisionTimestamp
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date creDate;
 	

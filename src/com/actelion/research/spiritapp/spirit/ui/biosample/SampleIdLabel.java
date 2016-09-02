@@ -247,7 +247,6 @@ public class SampleIdLabel extends JComponentNoRepaint {
 			Font font3 = FastFont.REGULAR_CONDENSED.increaseSize(sizeIncrement);
 			
 			String s1 = biosample.getInheritedGroup().getShortName();
-			if(s1.length()>3) s1 = s1.substring(0,3); 
 			String s2 = biosample.getInheritedGroup().getNSubgroups()>1? "'" + (biosample.getInheritedSubGroup()+1): "";
 			
 			String s3 = biosample.getInheritedPhase()!=null? " "+biosample.getInheritedPhase().getShortName(): "";

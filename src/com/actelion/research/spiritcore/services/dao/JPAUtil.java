@@ -140,10 +140,15 @@ public class JPAUtil {
 		    		try {
 		    			//Begin / Rollback transaction to force clear on MySQL
 		    			//This should not be needed but I believe there is a bug on MySQL here (it can be commented out under Oracle)
-		    			if(!em.getTransaction().isActive()) {
-		    				em.getTransaction().begin();
+//		    			em.getTransaction().rollback();
+//		    			if(!em.getTransaction().isActive()) {
+//		    				em.getTransaction().begin();
+//		    			}
+//		    			em.getTransaction().rollback();
+		    			if(em.getTransaction().isActive()) {
+		    				LoggerFactory.getLogger(JPAUtil.class).warn("Rollback unfinished transaction");
+		    				em.getTransaction().rollback();
 		    			}
-		    			em.getTransaction().rollback();
 		    			
 		    			//Then clear the cache
 		    			em.clear();
@@ -358,19 +363,7 @@ public class JPAUtil {
      * Create a new EntityManager - be ABSOLUTELY SURE to close it
      * @return
      */
-    protected static EntityManager createManager() {
-    	if(factory==null) {
-    		initialize();
-    	}
-    	return factory.createEntityManager();
-    }
-
-       
-    /**
-     * Be sure to close it after using it
-     * @return
-     */
-    public static EntityManager createRequest() {
+    public static EntityManager createManager() {
     	if(factory==null) {
     		initialize();
     	}
@@ -445,7 +438,6 @@ public class JPAUtil {
     			continue;
     		} else if( o.getId()>0 && !entityManager.contains(o) ) {
 				//The entity is in the DB but is not attached
-				System.out.println("JPAUtil.reattach() "+o.getId());
 				assert id2index.get(o.getId())==null: "Object " + o.getClass() + " id: " + o.getId()+" is present 2 times" ;
 				toBeReloadedIds.add(o.getId());
 				id2index.put(o.getId(), i);
@@ -501,18 +493,22 @@ public class JPAUtil {
    
     public static void close() {
     	if(factory!=null) {
-			LoggerFactory.getLogger(JPAUtil.class).debug("close factory");			
-	    	try {
-		    	clear();
-	    	} catch(Exception e) {
-	    		LoggerFactory.getLogger(JPAUtil.class).warn("Could not clear factory: "+e);
-	    	}
-	    	try {
-	    		factory.close();
-	    	} catch(Exception e) {
-	    		LoggerFactory.getLogger(JPAUtil.class).warn("Could not close factory: "+e);
-	    	}
-	    	factory = null;
+    		synchronized (factory) {
+    			if(factory!=null) {
+					LoggerFactory.getLogger(JPAUtil.class).debug("close factory");			
+			    	try {
+				    	clear();
+			    	} catch(Exception e) {
+			    		LoggerFactory.getLogger(JPAUtil.class).warn("Could not clear factory: "+e);
+			    	}
+			    	try {
+			    		factory.close();
+			    	} catch(Exception e) {
+			    		LoggerFactory.getLogger(JPAUtil.class).warn("Could not close factory: "+e);
+			    	}
+			    	factory = null;
+    			}
+    		}
     	}
     }
     

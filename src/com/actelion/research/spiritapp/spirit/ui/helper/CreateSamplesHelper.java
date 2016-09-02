@@ -40,6 +40,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import org.slf4j.LoggerFactory;
+
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.NamedSamplingColumn;
@@ -189,6 +191,8 @@ public class CreateSamplesHelper {
 			toAdd.removeAll(toUpdate);
 			toDelete.removeAll(toQuestionable);
 			toDelete.removeAll(toUpdate);
+			
+			LoggerFactory.getLogger(CreateSamplesHelper.class).debug("toAdd="+toAdd.size()+" toDelete="+toDelete.size()+" questionable="+toQuestionable.size());
 			
 			if(toAdd.size()==0 && toUpdate.size()==0 && toDelete.size()==0)  return true;
 

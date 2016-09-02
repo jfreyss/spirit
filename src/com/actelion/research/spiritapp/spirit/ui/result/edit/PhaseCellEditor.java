@@ -29,6 +29,7 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 
+import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.util.ui.JTextComboBox;
@@ -39,16 +40,17 @@ import com.actelion.research.util.ui.JTextComboBox;
  *
  */
 public class PhaseCellEditor extends AbstractCellEditor implements TableCellEditor {
-	private EditResultTableModel myModel;
-	private JTextComboBox cb = new JTextComboBox(false);		
 	
-	public PhaseCellEditor(EditResultTableModel myModel) {
-		this.myModel = myModel;
+	private JTextComboBox cb = new JTextComboBox(false);
+	private Study study;
+	
+	public PhaseCellEditor() {
 	}
 	
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-		Study study = myModel.getStudy();
+		Result r = ((EditResultTable) table).getRows().get(row);
+		this.study = r.getBiosample()==null?null:r.getBiosample().getInheritedStudy();
 		List<String> choices = new ArrayList<String>();
 		if(study!=null) {
 			for (Phase phase : study.getPhases()) {
@@ -64,7 +66,6 @@ public class PhaseCellEditor extends AbstractCellEditor implements TableCellEdit
 
 	@Override
 	public Object getCellEditorValue() {
-		Study s = myModel.getStudy();
-		return s.getPhase(cb.getText());
+		return study==null? null: study.getPhase(cb.getText());
 	}				
 }

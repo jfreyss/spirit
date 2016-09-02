@@ -63,7 +63,6 @@ import com.actelion.research.util.SQLConverter.SQLVendor;
  */
 public abstract class DBAdapter {
 
-
 	public static enum UserAdministrationMode {
 		READ_ONLY, 
 		READ_WRITE, 
@@ -338,14 +337,16 @@ public abstract class DBAdapter {
 	}
 	
 	protected void executeScripts(String scripts, boolean failOnError) throws Exception {
-		Connection conn = getConnection();		
+		Connection conn = null;		
 		try {
+			conn = getConnection();
 			//Convert the script to the appropriate DB
 			scripts = SQLConverter.convertScript(scripts, getVendor());
 			
 			//Execute the script in batch mode
 			Statement stmt =  conn.createStatement();
 			for (String script : scripts.split(";")) {
+				script = script.replaceAll("[\r\n]", "").trim();
 				if(script.trim().length()==0) continue;
 				LoggerFactory.getLogger(DBAdapter.class).debug("execute script: "+script);
 				stmt.addBatch(script);					
@@ -358,7 +359,7 @@ public abstract class DBAdapter {
 			try {conn.rollback();} catch(Exception e2) {}
 			if(failOnError) throw e;
 		} finally {
-			conn.close();
+			if(conn!=null) conn.close();
 		}			
 	}
 		

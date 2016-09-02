@@ -50,7 +50,6 @@ import javax.persistence.TemporalType;
 import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.envers.RevisionTimestamp;
 
 import com.actelion.research.spiritcore.business.IEntity;
 import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
@@ -81,7 +80,6 @@ public class Test implements Comparable<Test>, IEntity {
 	
 	@Column(name="upd_date", nullable=false)
 	@Temporal(TemporalType.DATE)
-	@RevisionTimestamp
 	private Date updDate;
 	
 	@Column(name="cre_date", nullable=false)

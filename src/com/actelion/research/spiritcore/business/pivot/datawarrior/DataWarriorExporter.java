@@ -293,7 +293,7 @@ public class DataWarriorExporter {
 		sb.append("<filter1=\"#category#\t" + PivotItemFactory.RESULT_INPUT.getFullName() + "\">\n");
 		sb.append("<filter2=\"#category#\t" + PivotItemFactory.BIOSAMPLE_BIOTYPE.getFullName() + "\">\n");
 		sb.append("<filter3=\"#category#\t" + PivotItemFactory.BIOSAMPLE_BIOTYPE.getFullName() + "\">\n");
-		sb.append("<filter4=\"#category#\t" + PivotItemFactory.BIOSAMPLE_SAMPLENAME.getFullName() + "\">\n");
+		sb.append("<filter4=\"#category#\t" + PivotItemFactory.BIOSAMPLE_NAME.getFullName() + "\">\n");
 
 		//Log scale
 		if(config.isLogScale()) {

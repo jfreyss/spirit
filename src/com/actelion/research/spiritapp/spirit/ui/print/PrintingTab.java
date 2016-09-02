@@ -57,7 +57,7 @@ import com.itextpdf.text.Font;
 public class PrintingTab extends JPanel {
 
 	private final PrintingDlg dlg;
-	private final ContainerTable containerTable = new ContainerTable(ContainerTableModelType.COMPRESSED);
+	private final ContainerTable containerTable = new ContainerTable(ContainerTableModelType.PRINT);
 
 	private JComponent containerPanel, printerPanel, previewPanel;
 	private PrintAdapter printAdapter;

@@ -63,6 +63,7 @@ import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDia
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
+import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Measurement;
@@ -131,7 +132,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		//Create a proxy, to avoid changing the object when the user closes the window
 		this.namedSamplingProxy = new NamedSampling();
 		namedSamplingProxy.copyFrom(this.namedSamplingToEdit);
-		
+		necropsyCheckbox.setEnabled(st!=null);
 
 		
 		//TopPanel
@@ -506,10 +507,10 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 	private class Action_AddSample extends AbstractAction {
 		private Sampling sampling;
 		public Action_AddSample(Sampling sampling) {
-			super("Add an aliquot");
+			super("Add a child");
 			this.sampling = sampling;
 			putValue(AbstractAction.SMALL_ICON, IconType.ADD_ROW.getIcon());
-			putValue(AbstractAction.SHORT_DESCRIPTION, "Add an aliquot, which will be derived from this sample");
+			putValue(AbstractAction.SHORT_DESCRIPTION, "Add a child, derived from this sample");
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -521,6 +522,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			SamplingDlg dlg = new SamplingDlg(NamedSamplingDlg.this, study, s, true);
 			if(dlg.isSuccess() && s.getBiotype()!=null) {
 				namedSamplingProxy.getAllSamplings().add(s);
+				s.setNamedSampling(namedSamplingProxy);
 				s.setParent(sampling);
 				sampling.getChildren().add(s);
 				refresh();
@@ -709,16 +711,17 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			}
 			
 			//Check that the user didn't forget to click necropsy
-			if(!necropsyCheckbox.isSelected()) {
-				boolean hasOrgan = false;
+			if(necropsyCheckbox.isEnabled() && !necropsyCheckbox.isSelected()) {
+				boolean hasSolid = false;
 				for(Sampling s: namedSamplingProxy.getAllSamplings()) {
-					if(Biotype.ORGAN.equals(s.getBiotype().getName())) {
-						hasOrgan = true;
+					if(s.getBiotype().getCategory()==BiotypeCategory.SOLID) {
+						hasSolid = true;
+						break;
 					}
 				}
-				//If there is an organ, and the user didn't click necropsy, gives a warning
-				if(hasOrgan) {
-					int res = JOptionPane.showConfirmDialog(this, "This template contains Organs. Do you want to set it as Necropsy?", "Necropsy", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+				//If there is a solid sample, and the user didn't click necropsy, gives a warning
+				if(hasSolid) {
+					int res = JOptionPane.showConfirmDialog(this, "This template contains solid samples. Do you want to set it as Necropsy?", "Necropsy", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 					if(res==JOptionPane.YES_OPTION) {
 						//set to necropsy
 						necropsyCheckbox.setSelected(true);

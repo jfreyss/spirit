@@ -63,7 +63,6 @@ import org.hibernate.annotations.SortNatural;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.RevisionNumber;
-import org.hibernate.envers.RevisionTimestamp;
 
 import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.Document.DocumentType;
@@ -127,7 +126,6 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	private String updUser = "";
 	private String creUser = "";
 
-	@RevisionTimestamp
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date updDate = new Date();
 		
@@ -214,7 +212,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	private transient Set<String> expertUsersSet;
 	private transient Set<String> blindAllUsersSet;
 	private transient Set<String> blindDetailsUsersSet;
-	private transient Map<Pair<Group, Integer>, Phase> phaseFirstTreatments = new HashMap<Pair<Group,Integer>, Phase>();
+	private transient Map<Pair<Group, Integer>, Phase> phaseFirstTreatments = new HashMap<>();
 
 	
 	/**
@@ -518,8 +516,6 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		study.setSynchronizeSamples(isSynchronizeSamples());
 		study.serializedMetadata = serializedMetadata;
 		
-		
-
 		//Clone Phases
 		CorrespondanceMap<Phase, Phase> phaseClones = new CorrespondanceMap<Phase, Phase>();
 		study.setPhases(new TreeSet<Phase>());
@@ -1115,7 +1111,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	}
 	
 	public Set<Phase> getPhasesWithGroupAssignments() {
-		Set<Phase> res = new TreeSet<Phase>();
+		Set<Phase> res = new TreeSet<>();
 		
 		//Iterate through the groups to find the randophases
 		for (Group g : getGroups()) {
@@ -1339,24 +1335,30 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	
 	public  void setMetadata(Map<String, String> metadataMap) {
 		this.metadataMap = metadataMap;
-//		preSave();
 	}
 	
 	/**
-	 * PreSave serializes the data. However this function must be called from within the DAO because session.merge does not call this function even with @PreUpdate
+	 * PreSave serializes the data. However this function must be called from within the DAO because setters do not call this function
 	 */
-//	@PrePersist @PreUpdate
 	public void preSave() {
 		//Serialize Metadata
 		if(metadataMap!=null) {
 			this.serializedMetadata = MiscUtils.serializeStringMap(metadataMap);
 		}
+		
 		//Serialize Sampling
 		for (NamedSampling ns : getNamedSamplings()) {
 			for (Sampling s : ns.getAllSamplings()) {
 				s.preSave();
-			}
-			
+			}			
+		}
+		
+		//Update relations
+		for (Phase p : new ArrayList<>(getPhases())) {
+			p.setStudy(this);
+		}
+		for (Group g : new ArrayList<>(getGroups())) {
+			g.setStudy(this);
 		}
 	}
 	
@@ -1367,6 +1369,32 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		if(getBlindDetailsUsers().contains(user)) return true;
 		if(getCreUser().equals(user)) return true;
 		return false;
+	}
+	
+	public void resetIds() {
+		for (Phase a : phases) {
+			a.setId(0);
+		}
+		for (Group a : groups) {
+			System.out.println("Study.resetIds() "+a+" "+a.getId());
+			a.setId(0);
+		}
+		for (Group a : groups) {
+			System.out.println("Study.resetIds() "+a+" "+a.getFromGroup()+" -  "+  a.getId()+ "/"+(a.getFromGroup()==null?"":+a.getFromGroup().getId()));
+		}
+		for (NamedTreatment a : namedTreatments) {
+			a.setId(0);
+		}
+		for (NamedSampling a : namedSamplings) {
+			a.setId(0);
+			for (Sampling s : a.getAllSamplings()) {
+				s.setId(0);
+			}
+		}
+		for (StudyAction a : actions) {
+			a.setId(0);
+		}
+		id = 0;
 	}
 
 }

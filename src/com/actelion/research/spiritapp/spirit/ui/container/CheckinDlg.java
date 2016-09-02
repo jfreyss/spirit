@@ -23,7 +23,6 @@ package com.actelion.research.spiritapp.spirit.ui.container;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -40,7 +39,6 @@ import java.util.Set;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -84,7 +82,7 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 
 	/** Biosample to set location */
 	private Location currentLocation;
-	private final ContainerTable containerTable = new ContainerTable(ContainerTableModelType.COMPRESSED);
+	private final ContainerTable containerTable = new ContainerTable(ContainerTableModelType.CHECKIN);
 
 	private LocationBrowser locationBrowser = new LocationBrowser();
 	private LocationDepictor locationDepictor = new LocationDepictor();
@@ -226,11 +224,15 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 				
 				List<Location> locs = dlg.getSavedLocations();
 				if(locs!=null && locs.size()>0) {
+					//link location
 					Location loc = locs.get(0);
 					loc = JPAUtil.reattach(loc);
 					locationBrowser.setBioLocation(loc);
 					locationDepictor.setBioLocation(loc);
 					eventChangeLocation();
+				} else {
+					//unset the parent
+					location.setParent(null);
 				}
 			}
 		});
@@ -319,8 +321,7 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 		JSplitPane centerPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, 
 				UIUtils.createTitleBox("Containers", containerPanel), 
 				locationPanel);
-		int width = Math.min(1200, Toolkit.getDefaultToolkit().getScreenSize().width-100);
-		centerPane.setDividerLocation(width/3);		
+		centerPane.setDividerLocation(340);		
 		setContentPane(centerPane);
 				
 		if(currentLocation!=null) {
@@ -336,9 +337,7 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 		
 		eventChangeLocation();
 		
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setSize(width, 720);
-		setLocationRelativeTo(UIUtils.getMainFrame());
+		UIUtils.adaptSize(this, 1200, 760);
 		setVisible(true);
 	}
 	

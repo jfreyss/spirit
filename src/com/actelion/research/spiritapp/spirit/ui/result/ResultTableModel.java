@@ -122,7 +122,7 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 		columns.add(new StudyGroupColumn());
 		columns.add(new StudySubGroupColumn());
 		columns.add(new TopIdColumn().setHideable(!differentParents));
-		columns.add(new PhaseColumn(null));
+		columns.add(new PhaseColumn());
 		columns.add(new SampleIdColumn());
 		columns.add(new MetadataColumn());
 		columns.add(new TestNameColumn());

@@ -48,6 +48,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritcore.business.pivot.PivotItem;
+import com.actelion.research.spiritcore.business.pivot.PivotItemClassifier;
 import com.actelion.research.spiritcore.business.pivot.PivotItemFactory;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Aggregation;
@@ -105,10 +106,14 @@ public class PivotTemplateDlg extends JEscapeDialog {
 	
 	private void init(final Set<PivotItem> set, final boolean forResults) {
 		
-		this.pivotItems = new ArrayList<PivotItem>(set);
+		this.pivotItems = new ArrayList<PivotItem>();
 		this.itemControler.clear();
+		
+		for (PivotItem item : set) {
+			if(!forResults && item.getClassifier()==PivotItemClassifier.RESULT) continue;
+			pivotItems.add(item);
+		}
 		Collections.sort(pivotItems);
-
 
 		//itemControler
 		mergeItems = new DropZonePanel("", itemControler, new Color(240,240,240));

@@ -76,11 +76,12 @@ public class Group implements Comparable<Group>, Cloneable {
 	/**
 	 * Unique within each study
 	 */
-	@Column(nullable = false)
+	@Column(nullable = false, name="name")
 	private String name = "";
 	
 
-	@ManyToOne(fetch=FetchType.LAZY)
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
+	@JoinColumn(name="study_id")
 	private Study study = null;
 		
 	/**
@@ -94,7 +95,7 @@ public class Group implements Comparable<Group>, Cloneable {
 	 * - a "sick" group is splitted into "sick treated" and "sick untreated"
 	 * - samples are created from a group and assigned to this new subgroup  
 	 */
-	@ManyToOne(cascade=CascadeType.PERSIST, fetch=FetchType.LAZY, optional=true)
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL, optional=true)
 	@JoinColumn(name="randofromgroup_id")
 	private Group fromGroup;
 	
@@ -102,11 +103,11 @@ public class Group implements Comparable<Group>, Cloneable {
 	 * Used when this group comes from another group, and when the animal is divided into samples.
 	 * For example, at d7, we treat 4 fragments of skin and extract cells over several days
 	 */
-	@OneToOne(cascade=CascadeType.ALL, fetch=FetchType.LAZY, optional=true) //bug with orphanRemoval = true (http://stackoverflow.com/questions/15167911/orphanremoval-true-bidirectional-onetoone)
+	@OneToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL, optional=true) //bug with orphanRemoval = true (http://stackoverflow.com/questions/15167911/orphanremoval-true-bidirectional-onetoone)
 	@JoinColumn(name="dividingsample_id")
 	private Sampling dividingSampling;
 
-	@ManyToOne(cascade=CascadeType.PERSIST, fetch=FetchType.LAZY, optional=true)
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL, optional=true)
 	@BatchSize(size=100)
 	@JoinColumn(name="randophase_id")	
 	private Phase fromPhase;
@@ -116,8 +117,7 @@ public class Group implements Comparable<Group>, Cloneable {
 	 * This column gives therefore the number of subgroup and the number of specimen per subgroup (0=not defined)*/
 	@Column(name="stratificationgroups", length=64)
 	private String subgroupSizeFlat;	
-	
-	
+		
 	/**
 	 * Naive, Sham, Disease:###
 	 */
@@ -254,7 +254,7 @@ public class Group implements Comparable<Group>, Cloneable {
 	
 	@Override
 	public int hashCode() {
-		return (int)(getId()%Integer.MAX_VALUE);
+		return id;
 	}
 
 	
@@ -703,7 +703,7 @@ public class Group implements Comparable<Group>, Cloneable {
 		String sSamplings = "";
 		
 		//Find the actions, including the actions from the parent
-		List<StudyAction> actions = new ArrayList<StudyAction>();
+		List<StudyAction> actions = new ArrayList<>();
 		actions.addAll(getStudy().getStudyActions(this, subgroup));
 		
 		Group g = getFromGroup();
@@ -726,20 +726,22 @@ public class Group implements Comparable<Group>, Cloneable {
 			}
 		}
 
-		if(nWeighings>0) sMeasurements.append((sMeasurements.length()>0?", ":"") + nWeighings + "weigh.");
-		if(nFoods>0) sMeasurements.append((sMeasurements.length()>0?", ":"") +  + nFoods + "Food");
-		if(nWaters>0) sMeasurements.append((sMeasurements.length()>0?", ":"") +  + nWaters + "Water");
+		if(nWeighings>1) sMeasurements.append((sMeasurements.length()>0?", ":"") + nWeighings + "weigh.");
+		if(nFoods>1) sMeasurements.append((sMeasurements.length()>0?", ":"") +  + nFoods + "Food");
+		if(nWaters>1) sMeasurements.append((sMeasurements.length()>0?", ":"") +  + nWaters + "Water");
 		
 		for(Measurement t: measurementCounter.getKeys()) {
-			sTreatments = "+ " + (measurementCounter.getCount(t)>1? measurementCounter.getCount(t)+"x ":"") + t.getDescription();
+			if(measurementCounter.getCount(t)>1) sMeasurements.append("+ " + (measurementCounter.getCount(t)>1? measurementCounter.getCount(t)+"x ":"") + t.getDescription());
 		}
-		for(NamedTreatment t: treatmentCounter.getKeys()) {
-			sTreatments = "+ " + (treatmentCounter.getCount(t)>1? treatmentCounter.getCount(t)+"x ":"") + t.getName();
+		for(NamedTreatment t: treatmentCounter.getKeySorted()) {
+			if(treatmentCounter.getCount(t)>1) sTreatments = "+ " + (treatmentCounter.getCount(t)>1? treatmentCounter.getCount(t)+"x ":"") + t.getName();
+			break;
 		}
-		for(NamedSampling s: samplingCounter.getKeys()) {
-			sSamplings = "- " + (samplingCounter.getCount(s)>1? samplingCounter.getCount(s)+"x ":"") + s.getName();
+		for(NamedSampling s: samplingCounter.getKeySorted()) {
+			if(samplingCounter.getCount(s)>1) sSamplings = "- " + (samplingCounter.getCount(s)>1? samplingCounter.getCount(s)+"x ":"") + s.getName();
+			break;
 		}
-		
+		System.out.println("Group.getDescriptionLines() "+this+" "+subgroup+" "+sMeasurements.toString()+" "+sTreatments+" "+sSamplings);
 		return new String[] {sMeasurements.toString(), sTreatments, sSamplings};
 	}	
 

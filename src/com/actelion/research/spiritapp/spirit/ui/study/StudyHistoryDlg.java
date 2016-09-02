@@ -55,8 +55,9 @@ public class StudyHistoryDlg extends JEscapeDialog {
 		super(UIUtils.getMainFrame(), "Study - History");
 		
 		final RevisionList revisionList = new RevisionList(revisions);
-		final StudyDetailPanel detailPanel = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT, true);
+		final StudyDetailPanel detailPanel = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT);
 
+		detailPanel.setForRevision(true);
 		revisionList.addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {

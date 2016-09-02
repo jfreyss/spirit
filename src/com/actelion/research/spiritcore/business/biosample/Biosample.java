@@ -59,14 +59,11 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyJoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.PostLoad;
-import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
-import javax.persistence.PreUpdate;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.persistence.Transient;
 
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.OnDelete;
@@ -75,7 +72,6 @@ import org.hibernate.annotations.SortNatural;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.RevisionNumber;
-import org.hibernate.envers.RevisionTimestamp;
 
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Document;
@@ -164,28 +160,24 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 */
 	@ManyToOne(fetch=FetchType.LAZY)	
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-	@OnDelete(action=OnDeleteAction.CASCADE)
 	@JoinColumn(name="topparent_id")
 	private Biosample topParent;
 	
 	/**
 	 * Parent 
 	 */
-	@ManyToOne(fetch=FetchType.LAZY, optional=true)	
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.REFRESH,optional=true)	
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
-	@OnDelete(action=OnDeleteAction.CASCADE)
 	@JoinColumn(name="parent_id")
 	private Biosample parent;
 	
 	/**
 	 * Children, mapped by the parent biosample
 	 */
-	@OneToMany(fetch=FetchType.LAZY, mappedBy="parent")
+	@OneToMany(fetch=FetchType.LAZY, cascade=CascadeType.REFRESH, mappedBy="parent")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
 	@BatchSize(size=32)
 	private Set<Biosample> children = new TreeSet<>();	
-	
-	private transient Map<BiotypeMetadata, Metadata> metadataMap = null;
 	
 	/**
 	 * Serialized metadata Spirit v2
@@ -194,7 +186,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	private String serializedMetadata;
 	
 	
-	@ManyToMany(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY)
+	@ManyToMany(fetch=FetchType.LAZY, cascade=CascadeType.REFRESH)
 	@JoinTable(name="biosample_biosample", joinColumns=@JoinColumn(name="biosample_id"), inverseJoinColumns=@JoinColumn(name="linkedbiosample_id"))
 	@MapKeyJoinColumn(name="biotypemetadata_id")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
@@ -202,7 +194,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	private Map<BiotypeMetadata, Biosample> linkedBiosamples = new HashMap<>();
 	
 	
-	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY)
+	@OneToMany(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
 	@JoinTable(name="biosample_document", joinColumns=@JoinColumn(name="biosample_id"), inverseJoinColumns=@JoinColumn(name="linkeddocument_id"))
 	@MapKeyJoinColumn(name="biotypemetadata_id")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
@@ -316,14 +308,12 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date creDate;
 
-	@RevisionTimestamp
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date updDate;
 	
 	
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date expiryDate;
-
 	
 	@Column(length=20)
 	private String elb;
@@ -342,8 +332,6 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	@Enumerated(EnumType.STRING)
 	private Status status = Status.INLAB;
 	
-
-		
 	/**Container, to be specified when the containertype is multiple only, it should be null otherwise*/
 	@Embedded
 	private Container container;
@@ -354,12 +342,13 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	/**If there was a scan */
 	private transient String scannedPosition;
 	
+	private transient Map<BiotypeMetadata, Metadata> metadataMap = null;
+	
 	
 	/**Auxiliary infos that can be used for internal code
 	 * This field is transient, meaning that the developer is responsible for the storage
 	 * The values can be null
 	 */
-	@Transient
 	private transient final Map<String, Object> infos = new HashMap<>();
 		
 	public static enum HierarchyMode {
@@ -403,7 +392,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 
 	@Override
 	public String toString() {
-		return sampleId  /*+ "(se="+serializedMetadata+")"*/; 
+		return sampleId ; 
 	}
 	
 	@Override
@@ -510,10 +499,11 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	public void setParent(Biosample parent) {		
 		setParent(parent, true);
 	}	
+	
 	public void setParent(Biosample parent, boolean updateDoubleRelationship) {
 		if(parent==this.parent) return;
 		
-		if(parent==this) {
+		if(this==parent) {
 			System.err.println("Cannot set the parent to itself");
 			return;
 		}
@@ -523,14 +513,14 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		}
 		
 		this.parent = parent;
-		if(parent!=null && parent.getInheritedStudy()!=null && getAttachedStudy()==null) {
-			this.inheritedStudy = parent.getInheritedStudy();
+		if(this.parent!=null && this.parent.getInheritedStudy()!=null && getAttachedStudy()==null) {
+			this.inheritedStudy = this.parent.getInheritedStudy();
 		}
 		
 		if(updateDoubleRelationship) {
-			if(parent!=null) {
-				parent.getChildren().add(this);
-				setTopParent(parent.getTopParent());
+			if(this.parent!=null) {
+				this.parent.getChildren().add(this);
+				setTopParent(this.parent.getTopParent());
 			} else {
 				setTopParent(this);
 			}
@@ -554,11 +544,12 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	public Metadata getMetadata(BiotypeMetadata mType) {
 		assert mType!=null;
 		assert biotype!=null;
-		assert biotype.equals(mType.getBiotype()): "The biotype of this object does not match the given input: "+biotype+"<>"+mType.getBiotype();
+		assert biotype.equals(mType.getBiotype()): "The biotype of this object does not match the given input: "+biotype+"("+biotype.getId()+")<>"+mType.getBiotype()+"("+mType.getBiotype().getId()+")";
 		Metadata m = getMetadataMap().get(mType);
 		if(m==null) {
-			//Hack, if map hashcode is not valid
-			for (BiotypeMetadata m2 : getMetadataMap().keySet()) {
+			
+			//Hack, if map's hashcode is not valid
+			for (BiotypeMetadata m2 : metadataMap.keySet()) {
 				if(mType.equals(m2)) {
 					metadataMap = new HashMap<>(metadataMap);
 					m = metadataMap.get(mType);
@@ -604,6 +595,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	
 	public void setMetadata(String metadataName, String value) {
 		for (BiotypeMetadata mType : biotype.getMetadata()) {
+			assert mType.getBiotype().getId()==biotype.getId(): "Id mismatch in "+mType+" > "+mType.getBiotype()+":"+mType.getBiotype().getId()+" <> "+ biotype+":"+biotype.getId();
 			if(mType.getName().equals(metadataName)) {
 				setMetadata(mType, value);
 				return;
@@ -625,6 +617,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		} else {			
 			throw new IllegalArgumentException("Invalid metadatatype: "+bType);
 		}
+		preSave();
 	}
 	
 	public Location getLocation() {
@@ -1321,19 +1314,21 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		attachedStudy = null;
 		inheritedStudy = null;
 		
+		
 		setContainer(null);
 		
-		//remove children
+		//remove link from children
 		for (Biosample b : new ArrayList<>(getChildren())) {
-			b.setParent(getParent());
+			b.setParent(parent==this? null: parent);
 		}
 
 		//remove link from the parent
-		if(getParent()!=null) {
-			getParent().getChildren().remove(this);
+		if(parent!=null) {
+			parent.children.remove(this);
 		}
-		setParent(null);
-		setTopParent(null);
+		this.parent = null;
+		this.topParent = null;
+		this.children.clear();
 	}
 	
 	
@@ -1451,7 +1446,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		String newCid = container==null? null: container.getContainerId();
 		ContainerType newCType = container==null? null: container.getContainerType();
 		
-		//Return if there is no change
+		//Return if there are no change
 		if(container!=null) {
 			container.setCreatedFor(this);
 		}
@@ -1467,7 +1462,6 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		
 		//And add it to the new one
 		if(container!=null) {
-			container.setCreatedFor(this);
 			container.addBiosample(this);
 		}
 		
@@ -1482,7 +1476,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			addAction(new ActionContainer(this, null));			
 		}
 		
-		//Update the biosample
+		//Update the container
 		this.container = container;
 		
 	}
@@ -1518,7 +1512,6 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	public static Study getStudy(Collection<Biosample> biosamples) {
 		if(biosamples==null) return null;
 		Set<Study> res = getStudies(biosamples);
-		System.out.println("Biosample.getStudy() "+biosamples+">"+res);
 		if(res.size()==1) return res.iterator().next();
 		return null;
 	}	
@@ -2010,9 +2003,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 					//(biosample->container is not kept because we don't want it to become persistant)
 					c = new Container();
 					b.setContainer(c);
-					res.add(c);
-					
-					System.out.println("Biosample.getContainers() created "+c+" for "+b);
+					res.add(c);					
 				}
 			} else if(!seen.contains(c)) {
 				res.add(c);		
@@ -2508,9 +2499,9 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		}
 	}
 	
-	
-	//Don't use preupdate because this function would not be called before a merge (hibernate bug?)
-	//@PreUpdate @PrePersist
+	/**
+	 * Never use preSave because of bugs
+	 */
 	public void preSave() {		
 		if(metadataMap!=null) {
 			Map<Integer, String> res = new LinkedHashMap<>();
@@ -2539,9 +2530,10 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			for (BiotypeMetadata bm : new HashSet<>(linkedDocuments.keySet())) {
 				if(!metadataMap.containsKey(bm)) linkedDocuments.remove(bm);
 			}
-			
+		
 			setSerializedMetadata(MiscUtils.serializeIntegerMap(res));
 		}
+		
 	}
 	
 	protected void setSerializedMetadata(String serializedMetadata) {
@@ -2596,4 +2588,8 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		return map;
 	}
 
+	public String debugInfo() {
+		return "[Bio:"+id+(parent==null?"":",parent="+parent.debugInfo())+(topParent==null || topParent==this || topParent==parent?"":",top="+topParent.debugInfo())+(inheritedStudy==null?"":",study="+inheritedStudy.getId())+"]";
+	}
+	
 }

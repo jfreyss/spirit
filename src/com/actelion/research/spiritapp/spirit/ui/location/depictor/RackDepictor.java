@@ -89,7 +89,7 @@ public class RackDepictor extends JPanel {
 	private Set<Integer> highlightPoses = new HashSet<>();
 	private Set<Container> highlightContainers = new HashSet<>();
 	
-	private List<RackDepictorListener> listeners = new ArrayList<RackDepictorListener>();
+	private List<RackDepictorListener> listeners = new ArrayList<>();
 
 	public RackDepictor() {
 		this(null);
@@ -255,13 +255,13 @@ public class RackDepictor extends JPanel {
 					int pos;
 					try {
 						pos = location.parsePosition(b.getScannedPosition());
-						if(pos2Containers.get(pos)!=null) System.err.println("The pos "+pos+" is taken 2 times");
+						if(pos2Containers.get(pos)!=null) System.err.println("The pos "+pos+" is taken 2 times in "+location);
 						pos2Containers.put(pos, c);
 					} catch(Exception e) {
 						e.printStackTrace();
 					}
 				} else if(b.getPos()>=0) {
-					if(pos2Containers.get(b.getPos())!=null) System.err.println("The pos "+b.getPos()+" is taken 2 times");
+					if(pos2Containers.get(b.getPos())!=null) System.err.println("The pos "+b.getPos()+" is taken 2 times "+location);
 					pos2Containers.put(b.getPos(), c);
 				} else {
 					System.err.println("The pos of "+b+" is null!?");
@@ -437,6 +437,7 @@ public class RackDepictor extends JPanel {
 	
 	
 	public String[][] getLocationLayout() {
+		if(location.getSize()<=0 && location.getBiosamples().isEmpty()) return null;
 		String[][] res = new String[rows+1][cols+1];
 		for (int r = 0; r < rows; r++) {
 			res[r+1][0] = location.getLabeling()==LocationLabeling.ALPHA? "" + ((char) ('A' + r)): location.getLabeling()==LocationLabeling.NUM? "" + (1+r): "";

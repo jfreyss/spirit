@@ -54,23 +54,29 @@ public class CompactPivotTemplate extends PivotTemplate {
 		}
 
 		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_SAMPLING, results)) {
-			setWhere(PivotItemFactory.BIOSAMPLE_SAMPLING, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
-		} else if(isDiscriminating(PivotItemFactory.BIOSAMPLE_SAMPLENAME, results)) {
-			setWhere(PivotItemFactory.BIOSAMPLE_SAMPLENAME, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
+			if(isDiscriminating(PivotItemFactory.RESULT_INPUT, results)) {
+				setWhere(PivotItemFactory.BIOSAMPLE_SAMPLING, Where.ASCELL);
+				setWhere(PivotItemFactory.RESULT_INPUT, Where.ASCELL);				
+			} else {
+				setWhere(PivotItemFactory.BIOSAMPLE_SAMPLING, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
+				setWhere(PivotItemFactory.RESULT_INPUT, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
+			}
+		} else if(isDiscriminating(PivotItemFactory.BIOSAMPLE_NAME, results)) {
+			setWhere(PivotItemFactory.BIOSAMPLE_NAME, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
+			setWhere(PivotItemFactory.RESULT_INPUT, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
+		} else {
+			setWhere(PivotItemFactory.RESULT_INPUT, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
 		}
 		
-		setWhere(PivotItemFactory.RESULT_INPUT, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
-		setWhere(PivotItemFactory.RESULT_TEST, Where.ASCOL);
 
+		setWhere(PivotItemFactory.RESULT_TEST, Where.ASCOL);
+		setWhere(PivotItemFactory.RESULT_OUTPUT, getWhere(PivotItemFactory.RESULT_INPUT));
 		
 
 		if(isDiscriminating(PivotItemFactory.RESULT_COMMENTS, results)) {
 			setWhere(PivotItemFactory.RESULT_COMMENTS, Where.ASCELL);
 		}
-		
-		
-		
-		
+		simplify(results);
 	}
 
 }

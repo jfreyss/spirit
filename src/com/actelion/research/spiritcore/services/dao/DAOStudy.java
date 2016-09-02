@@ -276,6 +276,10 @@ public class DAOStudy {
 				clause.append(" and (" + QueryTokenizer.expandOrQuery("s.studyId = ?", q.getStudyIds()) + ")");
 			}
 			
+			if(q.getLocalIds()!=null && q.getLocalIds().length()>0) {				
+				clause.append(" and (" + QueryTokenizer.expandOrQuery("s.ivv = ?", q.getLocalIds()) + ")");
+			}
+			
 			if(q.getKeywords()!=null && q.getKeywords().length()>0) {
 				String expr = "lower(s.studyId) like lower(?)" +
 								" or lower(s.ivv) like lower(?)" +
@@ -447,12 +451,6 @@ public class DAOStudy {
 				}
 			}
 			
-			for (NamedSampling ns : study.getNamedSamplings()) {
-				for (Sampling n : ns.getAllSamplings()) {
-					System.out.println("DAOStudy.persistStudy() "+study+" "+ns+" "+n.getDetailsLong());
-					
-				}
-			}
 			//Now save the study
 			study.preSave();
 			if(study.getId()>0) {				
@@ -475,19 +473,27 @@ public class DAOStudy {
 
 		Cache.getInstance().remove("studies_"+user);
 		Cache.getInstance().remove("allstudies");
-
-//		return study;
 		
 	}
 
+	/**
+	 * Delete the study without cascading results, biosamples
+	 * @param study
+	 * @param user
+	 * @throws Exception
+	 */
 	public static void deleteStudy(Study study, SpiritUser user) throws Exception {
+		deleteStudies(Collections.singleton(study), false, user);
+	}
+	
+	public static void deleteStudies(Collection<Study> studies, boolean forceCascade, SpiritUser user) throws Exception {
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {
 			txn = session.getTransaction();
 			txn.begin();
 
-			deleteStudy(session, study, user);
+			deleteStudies(session, studies, forceCascade, user);
 			
 			txn.commit();
 			txn = null;
@@ -496,31 +502,45 @@ public class DAOStudy {
 		}
 	}
 		
-	public static void deleteStudies(EntityManager session, Collection<Study> studies, SpiritUser user) throws Exception {
-		for (Study study : studies) {
-			deleteStudy(session, study, user);
-		}
-	}
-	public static void deleteStudy(EntityManager session, Study study, SpiritUser user) throws Exception {
-		if(!SpiritRights.canDelete(study, user)) throw new Exception("You are not allowed to delete the study");
-		
+	public static void deleteStudies(EntityManager session, Collection<Study> studies, boolean forceCascade, SpiritUser user) throws Exception {
 		assert session!=null;
 		assert session.getTransaction().isActive();
-
-		study = session.merge(study);
-
-		//Make sure that there are no attached results
-		ResultQuery q = ResultQuery.createQueryForStudyIds(study.getStudyId());
-		List<Result> l = DAOResult.queryResults(session, q, null);
-		if(l.size()>0) throw new Exception("You cannot delete a study if there are " + l.size() + " results linked to it");
-				
-		//Make sure that there are no attached animals
-		BiosampleQuery q2 = BiosampleQuery.createQueryForStudyIds(study.getStudyId());
-		List<Biosample> l2 = DAOBiosample.queryBiosamples(session, q2, null);
-		if(l2.size()>0) throw new Exception("You cannot delete this study because there are " + l2.size() +" biosamples linked to it");
-		
-		//Remove
-		session.remove(study);
+		for (Study study : studies) {
+			
+			if(!SpiritRights.canDelete(study, user)) throw new Exception("You are not allowed to delete the study");
+			
+	
+			if(!session.contains(study)) {
+				study = session.merge(study);
+			}
+	
+			//Make sure that there are no attached results
+			ResultQuery q = ResultQuery.createQueryForStudyIds(study.getStudyId());
+			List<Result> l = DAOResult.queryResults(session, q, null);
+			if(l.size()>0) {
+				if(forceCascade) {
+					DAOResult.deleteResults(session, l, user);
+					session.flush();
+				} else {
+					throw new Exception("You cannot delete a study if there are " + l.size() + " results linked to it");
+				}
+			}
+					
+			//Make sure that there are no attached animals
+			BiosampleQuery q2 = BiosampleQuery.createQueryForStudyIds(study.getStudyId());
+			List<Biosample> l2 = DAOBiosample.queryBiosamples(session, q2, null);
+			if(l2.size()>0) {
+				if(forceCascade) {
+					DAOBiosample.deleteBiosamples(session, l2, user);
+					session.flush();
+				} else {
+					throw new Exception("You cannot delete this study because there are " + l2.size() +" biosamples linked to it");
+				}
+			}
+			
+			//Remove
+			session.remove(study);
+		}
 		
 		Cache.getInstance().remove("studies_"+user);
 		Cache.getInstance().remove("allstudies");

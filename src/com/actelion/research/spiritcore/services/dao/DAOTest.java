@@ -91,14 +91,14 @@ public class DAOTest {
 	
 	public static Test getTest(int id) {
 		getTests();
-		Map<Integer, Test> id2Test = (Map<Integer, Test>) Cache.getInstance().get("id2Test");
+		Map<Integer, Test> id2Test = (Map<Integer, Test>) Cache.getInstance().get("id2Test_"+JPAUtil.getManager());
 		return id2Test.get(id);
 	}
 	
 	public static List<Test> getTests(Collection<Integer> ids) {
 		List<Test> res = new ArrayList<Test>();
 		getTests();
-		Map<Integer, Test> id2Test = (Map<Integer, Test>) Cache.getInstance().get("id2Test");
+		Map<Integer, Test> id2Test = (Map<Integer, Test>) Cache.getInstance().get("id2Test_"+JPAUtil.getManager());
 		for (int id : ids) {
 			Test t = id2Test.get(id);
 			if(t!=null) res.add(t);			
@@ -127,7 +127,7 @@ public class DAOTest {
 	public static List<Test> getTestsFromStudies(List<Study> studies, Set<Test> outIntersection) {
 		EntityManager session = JPAUtil.getManager();
 		boolean first = true;
-		Set<Test> res = new TreeSet<Test>();
+		Set<Test> res = new TreeSet<>();
 		
 		for(Study study: studies) {
 			List<Test> list = (List<Test>) session.createQuery(
@@ -160,17 +160,17 @@ public class DAOTest {
 	
 	public static Test getTest(String name) {
 		getTests();
-		Map<String, Test> name2Test = (Map<String, Test>) Cache.getInstance().get("name2Test");
+		Map<String, Test> name2Test = (Map<String, Test>) Cache.getInstance().get("name2Test_"+JPAUtil.getManager());
 		return name2Test.get(name);
 	}
 
 	public static List<Test> getTests() {
-		List<Test> res = (List<Test>) Cache.getInstance().get("allTests");
+		List<Test> res = (List<Test>) Cache.getInstance().get("allTests_"+JPAUtil.getManager());
 		if(res==null) {
 			
 			EntityManager session = JPAUtil.getManager();
 			res = (List<Test>) session.createQuery(
-					"SELECT distinct(t) FROM Test t  left join fetch t.attributes").getResultList();
+					"SELECT distinct(t) FROM Test t left join fetch t.attributes").getResultList();
 			Collections.sort(res);
 			
 			
@@ -181,9 +181,9 @@ public class DAOTest {
 				id2Test.put(test.getId(), test);
 			}
 			
-			Cache.getInstance().add("allTests", res, 180);
-			Cache.getInstance().add("name2Test", name2Test, 180);
-			Cache.getInstance().add("id2Test", id2Test, 180);
+			Cache.getInstance().add("allTests_"+JPAUtil.getManager(), res, 180);
+			Cache.getInstance().add("name2Test_"+JPAUtil.getManager(), name2Test, 180);
+			Cache.getInstance().add("id2Test_"+JPAUtil.getManager(), id2Test, 180);
 		}
 		return res;
 	}
@@ -291,5 +291,13 @@ public class DAOTest {
 		}
 		return res;
 	}
+	
+	public static int countRelations(TestAttribute testAttribute) {
+		if (testAttribute == null || testAttribute.getId() <= 0) return 0;
+		int id = testAttribute.getId();
+		EntityManager session = JPAUtil.getManager();
+		return ((Long) session.createQuery("select count(*) from ResultValue rv where rv.attribute.id = " + id + " and rv.value is not null and length(rv.value)>0").getSingleResult()).intValue();
+	}
+
 
 }

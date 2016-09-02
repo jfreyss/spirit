@@ -524,7 +524,7 @@ public class PivotCardPanel extends JPanel {
 
 	private void pivot(final boolean shouldOpenEditTemplateDlg) {
 		if (results == null || results.size() == 0) {
-			pivotTable.setRows(null);
+			pivotTable.setPivotDataTable(PivotDataTable.createPivotDataTable(results, null, currentPivotTemplate));
 		} else {
 			// Make it asynchronous, but don't specify a time, because we can
 			// have more than 2 instances of this class (AnimalCare)

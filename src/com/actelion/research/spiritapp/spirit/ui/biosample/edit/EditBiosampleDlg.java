@@ -471,9 +471,4 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 		infoLabel.setText(html);
 	}
 	
-	
-	public void setModelForNewRecords(Biosample b) {
-		editPanel.getTable().getModel().setModelForNewRecords(b);
-	}
-	
 }

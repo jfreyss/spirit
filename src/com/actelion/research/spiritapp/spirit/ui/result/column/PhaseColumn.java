@@ -24,7 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui.result.column;
 import javax.swing.JComponent;
 import javax.swing.table.TableCellEditor;
 
-import com.actelion.research.spiritapp.spirit.ui.result.edit.EditResultTableModel;
 import com.actelion.research.spiritapp.spirit.ui.result.edit.PhaseCellEditor;
 import com.actelion.research.spiritapp.spirit.ui.study.PhaseLabel;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -33,10 +32,8 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class PhaseColumn extends Column<Result, Phase> {
-	private EditResultTableModel model;
-	public PhaseColumn(EditResultTableModel model) {
+	public PhaseColumn() {
 		super("Result\nPhase", Phase.class, 30);
-		this.model  = model;
 	}
 	
 	@Override
@@ -64,10 +61,10 @@ public class PhaseColumn extends Column<Result, Phase> {
 	@Override
 	public void paste(Result row, String value) throws Exception {
 		if(value==null || value.length()==0) setValue(row, null);
-		else if(model.getStudy()==null) throw new Exception("You must select a study first");
+		else if(row.getBiosample()==null || row.getBiosample().getInheritedStudy()==null) throw new Exception("You must enter a biosample with a study first");
 		else {
-			Phase phase = model.getStudy().getPhase(value);
-			if(phase==null) throw new Exception("The phase " +model.getStudy().getTitle() + " / " + value + " is invalid");
+			Phase phase = row.getBiosample().getInheritedStudy().getPhase(value);
+			if(phase==null) throw new Exception("The phase " + row.getBiosample().getInheritedStudy().getStudyId() + " / " + value + " is invalid");
 			setValue(row, phase);
 		}
 		
@@ -75,12 +72,12 @@ public class PhaseColumn extends Column<Result, Phase> {
 	
 	@Override
 	public boolean isEditable(Result row) {
-		return model!=null && model.getStudy()!=null && row.getBiosample()!=null && row.getBiosample().getInheritedPhase()==null;
+		return row.getBiosample()!=null && row.getBiosample().getInheritedStudy()!=null && row.getBiosample().getInheritedPhase()==null;
 	}
 	
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Result> table) {
-		return new PhaseCellEditor((EditResultTableModel) table.getModel());
+		return new PhaseCellEditor();
 	}
 	
 }

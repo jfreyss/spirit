@@ -448,6 +448,7 @@ public class BiosampleActions {
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			if(study==null) return;
 			try {
 				new SetLivingStatusDlg(study, biosamples);
 			} catch (Exception ex) {
@@ -481,7 +482,6 @@ public class BiosampleActions {
 				List<Biosample> children = dlg.getChildren();
 				if(children!=null) {
 					EditBiosampleDlg dlg2 = EditBiosampleDlg.createDialogForEditInTransactionMode(null, children);
-					dlg2.setModelForNewRecords(children.isEmpty()? null: children.iterator().next());
 					dlg2.setTopParentReadOnly(true);
 					dlg2.setVisible(true);							
 				}
@@ -899,6 +899,34 @@ public class BiosampleActions {
 		editMenu.add(new JSeparator());
 		editMenu.add(new Action_Amount(biosamples));
 		
+		//Status
+		if(hasUnknown) {
+			//SetStatus is disabled
+			JMenu statusMenu = new JMenu("Trash / Set Status"); 
+			statusMenu.setIcon(IconType.STATUS.getIcon());
+			statusMenu.setEnabled(false);
+			editMenu.add(statusMenu);
+		} else if(hasLiving) {
+			//SetStatus for living
+			editMenu.add(new Action_SetLivingStatus(biosamples));
+		} else if(hasCompositeOrComponents) {
+			//SetStatus for samples
+			JMenu statusMenu = new JMenu("Trash / Set Status"); 
+			statusMenu.setIcon(IconType.STATUS.getIcon());
+			statusMenu.add(new Action_SetStatus(biosamples, Status.INLAB));
+			statusMenu.add(new JSeparator());
+			statusMenu.add(new Action_SetStatus(biosamples, Status.LOWVOL));
+			statusMenu.add(new Action_SetStatus(biosamples, Status.USEDUP));
+			statusMenu.add(new Action_SetStatus(biosamples, Status.TRASHED));
+			editMenu.add(statusMenu);				
+		} else {
+			JMenu statusMenu = new JMenu("Trash / Set Status"); 
+			statusMenu.setIcon(IconType.STATUS.getIcon());
+			statusMenu.setEnabled(false);
+			editMenu.add(statusMenu);
+		}
+		
+		
 		JMenu qualityMenu = new JMenu("Set Quality"); 
 		qualityMenu.setIcon(IconType.QUALITY.getIcon());
 		for (Quality quality : Quality.values()) {
@@ -914,32 +942,6 @@ public class BiosampleActions {
 		menu.add(new JMenuItem(new BiosampleActions.Action_Checkin(biosamples)));
 		menu.add(new JMenuItem(new BiosampleActions.Action_Checkout(biosamples)));
 
-		//Status
-		if(hasUnknown) {
-			//SetStatus is disabled
-			JMenu statusMenu = new JMenu("Trash / Set Status"); 
-			statusMenu.setIcon(IconType.STATUS.getIcon());
-			statusMenu.setEnabled(false);
-			menu.add(statusMenu);
-		} else if(hasLiving) {
-			//SetStatus for living
-			menu.add(new Action_SetLivingStatus(biosamples));
-		} else if(hasCompositeOrComponents) {
-			//SetStatus for samples
-			JMenu statusMenu = new JMenu("Trash / Set Status"); 
-			statusMenu.setIcon(IconType.STATUS.getIcon());
-			statusMenu.add(new Action_SetStatus(biosamples, Status.INLAB));
-			statusMenu.add(new JSeparator());
-			statusMenu.add(new Action_SetStatus(biosamples, Status.LOWVOL));
-			statusMenu.add(new Action_SetStatus(biosamples, Status.USEDUP));
-			statusMenu.add(new Action_SetStatus(biosamples, Status.TRASHED));
-			menu.add(statusMenu);				
-		} else {
-			JMenu statusMenu = new JMenu("Trash / Set Status"); 
-			statusMenu.setIcon(IconType.STATUS.getIcon());
-			statusMenu.setEnabled(false);
-			menu.add(statusMenu);
-		}
 		
 
 

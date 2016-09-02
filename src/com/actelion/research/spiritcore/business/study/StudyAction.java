@@ -69,7 +69,7 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 
 	
 	@JoinColumn(name="study_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=16)
@@ -77,7 +77,7 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	
 	/** (null possible only for deletion) */
 	@JoinColumn(name="phase_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=64)
@@ -85,7 +85,7 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	
 	/** (null possible only for deletion) */
 	@JoinColumn(name="group_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)	
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)	
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=16)
@@ -99,21 +99,21 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	private String label;
 	
 	@JoinColumn(name="namedtreatment_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)	
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)	
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=16)
 	private NamedTreatment namedTreatment;	
 	
 	@JoinColumn(name="namedsampling_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)	
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)	
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=16)
 	private NamedSampling namedSampling1;
 
 	@JoinColumn(name="namedsampling2_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)	
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)	
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=16)

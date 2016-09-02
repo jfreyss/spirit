@@ -253,7 +253,7 @@ public class MetadataFormPanel extends JPanel {
 			
 			//Metadata
 			for(BiotypeMetadata bm: biotype.getMetadata()) { //Metadata		
-				if(multicolumns && biotype.getMetadata().size()>=2 && (n++)==(biotype.getMetadata().size())/2) {
+				if(multicolumns && biotype.getMetadata().size()>=2 && (n++)==(biotype.getMetadata().size()+1)/2) {
 					c.gridy = offsetY;
 					c.gridx = offsetX+2;	
 					offsetX+=3;

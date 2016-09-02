@@ -61,7 +61,8 @@ public class ReportDlg extends JEscapeDialog {
 	private final JButton createReportsButton = new JIconButton(IconType.EXCEL, "Create Report");
 
 	public ReportDlg(Study s) {		
-		super(UIUtils.getMainFrame(), "Reports - " + s.getStudyId(), true);
+		super(UIUtils.getMainFrame(), "Reports - " + (s==null?"":s.getStudyId()), true);
+		if(s==null) throw new IllegalArgumentException("The study cannot be null");
 		s = DAOStudy.getStudy(s.getId());
 		this.s = s;
 		

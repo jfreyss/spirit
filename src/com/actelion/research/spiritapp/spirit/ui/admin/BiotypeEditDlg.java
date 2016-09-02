@@ -73,6 +73,7 @@ import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.JInfoLabel;
+import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
@@ -80,123 +81,126 @@ import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 public class BiotypeEditDlg extends JSpiritEscapeDialog {
 
 
-	private class MetadataRow {
-		private final BiotypeMetadata model;
-		JCustomTextField nameTextField = new JCustomTextField(10, "");
-		JButton paramButton = new JButton("View/Edit");
-		JGenericComboBox<DataType> dataTypeComboBox = new JGenericComboBox<DataType>(DataType.valuesForBiotype(), false);		
-		JCheckBox requiredCheckBox = new JCheckBox("Req.");
-		JCheckBox hideCheckBox = new JCheckBox("Sec.");
-		final JLabel nCountDataLabel = new JLabel();
-		int countData;
-		
-		public MetadataRow(final BiotypeMetadata t) {
-			this.model = t;
-			nameTextField.setText(t.getName());
-			dataTypeComboBox.setSelection(t.getDataType());
-			requiredCheckBox.setSelected(t.isRequired());
-			hideCheckBox.setSelected(t.isSecundary());
-			dataTypeComboBox.addItemListener(new ItemListener() {
-				@Override
-				public void itemStateChanged(ItemEvent e) {
-					refresh();
-				}
-			});
-			countData = -1;// DAOBiosample.countRelations(t);
-			
-			new Thread() {
-				public void run() {
-					try {Thread.sleep(50);} catch(Exception e) {}
-					countData = DAOBiosample.countRelations(t);
-					nCountDataLabel.setText(countData+" filled");
-				};
-			}.start();
-			
-			paramButton.addActionListener(new ActionListener() {				
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					eventClickParam();
-					refresh();
-				}
-			});
-			
-			
-			requiredCheckBox.setToolTipText("Required");
-			hideCheckBox.setToolTipText("Hide in the table display");
-		}
-		
-		private void eventClickParam() {
-			if(dataTypeComboBox.getSelection()==DataType.BIOSAMPLE) {
-				//Biosample -> select biotype
-				BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
-				biotypeComboBox.setSelectionString(model.getParameters());
-				int res = JOptionPane.showOptionDialog(BiotypeEditDlg.this, biotypeComboBox, "Select Linked Biotype", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
-				if(res==JOptionPane.YES_OPTION) {
-					model.setParameters(biotypeComboBox.getSelectionString());
-				}
-	
-//			} else if(dataTypeComboBox.getSelection()==DataType.DICO) {
-//				JGenericComboBox<NomenclatureDomain> nomenclatureComboBox = new JGenericComboBox<>(NomenclatureDomain.values(), true);
-//				try {
-//					nomenclatureComboBox.setSelection(NomenclatureDomain.valueOf(model.getParameters()));
-//				} catch(Exception e) {
-//					JExceptionDialog.showError(e);
-//				}
-//				
-//				int res = JOptionPane.showOptionDialog(BiotypeEditDlg.this, nomenclatureComboBox, "Select Dictionary", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
-//				if(res==JOptionPane.YES_OPTION) {
-//					model.setParameters(nomenclatureComboBox.getSelection().name());
-//				}
-//				
-			} else {
-				openEditParametersDlg(false, model, dataTypeComboBox.getSelection()!=DataType.AUTO);
-			}
-		}
-		
-		public void refresh() {
-			paramButton.setToolTipText(null);
-			if(dataTypeComboBox.getSelection()==DataType.AUTO) {
-				paramButton.setText("View Entered");
-				paramButton.setVisible(true);
-			} else if(dataTypeComboBox.getSelection()==DataType.MULTI || dataTypeComboBox.getSelection()==DataType.LIST) {				
-				paramButton.setText("Edit Choices ("+model.getParametersArray().length+")");				
-				paramButton.setVisible(true);
-			} else if(dataTypeComboBox.getSelection()==DataType.BIOSAMPLE) {
-				paramButton.setText(model.getParameters()==null || model.getParameters().length()==0? "Select": model.getParameters());				
-				paramButton.setVisible(true);
-//			} else if(dataTypeComboBox.getSelection()==DataType.FORMULA) {
-//				paramButton.setText(model.getParameters()==null || model.getParameters().length()==0? "Select": (model.getParameters()+"            ").substring(0, 10));
-//				paramButton.setToolTipText(model.getParameters());
-//				paramButton.setEnabled(false);
-//				paramButton.setVisible(true);
-//			} else if(dataTypeComboBox.getSelection()==DataType.DICO) {
-//				paramButton.setText("Set ("+(model.getParameters()==null?"N/A":model.getParameters())+")");				
-//				paramButton.setVisible(true);
-			} else if(dataTypeComboBox.getSelection().getParametersDescription()!=null) {
-				paramButton.setText("Edit");				
-				paramButton.setVisible(true);
-			} else {
-				paramButton.setVisible(false);
-			}
-			
-			metadataPanel.validate();
-		}
-		public BiotypeMetadata updateModel() {
-			model.setName(nameTextField.getText());
-			model.setDataType(dataTypeComboBox.getSelection());
-			model.setRequired(requiredCheckBox.isSelected());
-			model.setSecundary(hideCheckBox.isSelected());
-			if(dataTypeComboBox.getSelection().getParametersDescription()==null) {
-				model.setParametersArray(null);
-			}
-			return model;
-		}
-		
-	}
-	
 	private class MetadataPanel extends JPanel {
 		private Collection<BiotypeMetadata> metadataTypes;
 		private List<MetadataRow> rows = new ArrayList<>();
+		
+
+		private class MetadataRow {
+			private final BiotypeMetadata model;
+			int index;
+			JButton addButton = new JButton("+");
+			JButton delButton = new JButton("-");
+
+			JCustomTextField nameTextField = new JCustomTextField(10, "");
+			JButton paramButton = new JButton("View/Edit");
+			JGenericComboBox<DataType> dataTypeComboBox = new JGenericComboBox<DataType>(DataType.valuesForBiotype(), false);		
+			JCheckBox requiredCheckBox = new JCheckBox("Req.");
+			JCheckBox hideCheckBox = new JCheckBox("Sec.");
+			final JLabel nCountDataLabel = new JLabel();
+			int countData;
+			
+			public MetadataRow(final BiotypeMetadata t) {
+				this.model = t;
+				nameTextField.setText(t.getName());
+				dataTypeComboBox.setSelection(t.getDataType());
+				requiredCheckBox.setSelected(t.isRequired());
+				hideCheckBox.setSelected(t.isSecundary());
+				dataTypeComboBox.addItemListener(new ItemListener() {
+					@Override
+					public void itemStateChanged(ItemEvent e) {
+						refresh();
+					}
+				});
+				
+				delButton.setEnabled(false);
+				new SwingWorkerExtended() {
+					@Override
+					protected void doInBackground() throws Exception {
+						countData = DAOBiosample.countRelations(t);
+					}
+					@Override
+					protected void done() {
+						nCountDataLabel.setText(countData+" filled");
+						delButton.setEnabled(countData==0);
+					};
+				};
+				
+				paramButton.addActionListener(new ActionListener() {				
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						eventClickParam();
+						refresh();
+					}
+				});
+
+				addButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						rows.add(index, new MetadataRow(new BiotypeMetadata()));
+						update();
+					}
+				});
+				delButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						rows.remove(index);
+						update();
+					}
+				});
+				
+				
+				requiredCheckBox.setToolTipText("Required");
+				hideCheckBox.setToolTipText("Hide in the table display");
+			}
+			
+			private void eventClickParam() {
+				if(dataTypeComboBox.getSelection()==DataType.BIOSAMPLE) {
+					//Biosample -> select biotype
+					BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
+					biotypeComboBox.setSelectionString(model.getParameters());
+					int res = JOptionPane.showOptionDialog(BiotypeEditDlg.this, biotypeComboBox, "Select Linked Biotype", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+					if(res==JOptionPane.YES_OPTION) {
+						model.setParameters(biotypeComboBox.getSelectionString());
+					}	
+				} else {
+					openEditParametersDlg(false, model, dataTypeComboBox.getSelection()!=DataType.AUTO);
+				}
+			}
+			
+			public void refresh() {
+				paramButton.setToolTipText(null);
+				if(dataTypeComboBox.getSelection()==DataType.AUTO) {
+					paramButton.setText("View Entered");
+					paramButton.setVisible(true);
+				} else if(dataTypeComboBox.getSelection()==DataType.MULTI || dataTypeComboBox.getSelection()==DataType.LIST) {				
+					paramButton.setText("Edit Choices ("+model.getParametersArray().length+")");				
+					paramButton.setVisible(true);
+				} else if(dataTypeComboBox.getSelection()==DataType.BIOSAMPLE) {
+					paramButton.setText(model.getParameters()==null || model.getParameters().length()==0? "Select": model.getParameters());				
+					paramButton.setVisible(true);
+				} else if(dataTypeComboBox.getSelection().getParametersDescription()!=null) {
+					paramButton.setText("Edit");				
+					paramButton.setVisible(true);
+				} else {
+					paramButton.setVisible(false);
+				}
+				
+				metadataPanel.validate();
+			}
+			public BiotypeMetadata updateModel() {
+				model.setName(nameTextField.getText());
+				model.setDataType(dataTypeComboBox.getSelection());
+				model.setRequired(requiredCheckBox.isSelected());
+				model.setSecundary(hideCheckBox.isSelected());
+				if(dataTypeComboBox.getSelection().getParametersDescription()==null) {
+					model.setParametersArray(null);
+				}
+				return model;
+			}
+			
+		}
+		
 		
 		public MetadataPanel() {			
 		}
@@ -217,9 +221,8 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 			c.insets = new Insets(0, 0, 0, 1);
 			
 			int index = 0;
-			for (final MetadataRow row : rows) {
-				JButton addButton = new JButton("+");
-				JButton delButton = new JButton("-");
+			for (; index<rows.size(); index++) {
+				final MetadataRow row = rows.get(index);
 				java.util.Vector<String> moveToVector = new java.util.Vector<String>();
 				moveToVector.add("Move>>>");
 				for(int i=1; i<=rows.size(); i++) moveToVector.add("to #"+i); 
@@ -239,30 +242,14 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 				c.gridx = 3; c.gridy = 3*index+2; c.gridheight = 1; add(row.paramButton, c);
 				c.gridx = 5; c.gridy = 3*index+2; c.gridheight = 1; add(row.requiredCheckBox, c);
 				c.gridx = 6; c.gridy = 3*index+2; c.gridheight = 1; add(row.hideCheckBox, c);
-				c.gridx = 7; c.gridy = 3*index+2; c.gridheight = 1; add(addButton, c);
-				c.gridx = 8; c.gridy = 3*index+2; c.gridheight = 1; add(delButton, c);
+				c.gridx = 7; c.gridy = 3*index+2; c.gridheight = 1; add(row.addButton, c);
+				c.gridx = 8; c.gridy = 3*index+2; c.gridheight = 1; add(row.delButton, c);
 				c.gridx = 9; c.gridy = 3*index+2; c.gridwidth = 1; c.gridheight = 1; add(moveTo, c);					
 				c.gridx = 10; c.gridy = 3*index+2; c.gridwidth = 1; c.gridheight = 1; add(row.nCountDataLabel, c);
 				
 				
-				delButton.setToolTipText(row.countData+" non empty fields");
 				final int indexCopy = index;
-				addButton.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						rows.add(indexCopy, new MetadataRow(new BiotypeMetadata()));
-						update();
-					}
-				});
-				delButton.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						rows.remove(indexCopy);
-						update();
-					}
-				});
-				moveTo.addActionListener(new ActionListener() {
-					
+				moveTo.addActionListener(new ActionListener() {					
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						int idx = moveTo.getSelectedIndex();
@@ -275,8 +262,8 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 						}
 					}
 				});
-				index++;
 			}
+			
 			JButton addButton = new JButton("+");
 			addButton.addActionListener(new ActionListener() {
 				@Override

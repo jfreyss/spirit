@@ -260,7 +260,7 @@ public class CassettePrinterAdapter extends PrintAdapter {
 				sb.append("$" + studyId);
 				sb.append("$" + c.getContainerOrBiosampleId());
 				sb.append("$" + (metaLabel.length()==0?" ":metaLabel));
-				sb.append("$" + (tops.size()<1?" ": tops.get(0).getSampleIdName() + " " + tops.get(0).getInheritedGroupString(Spirit.getUsername())));
+				sb.append("$" + (tops.size()<1?" ": tops.get(0).getSampleIdName() + " " + (tops.get(0).getInheritedGroup()==null?"": "Gr."+tops.get(0).getInheritedGroup().getShortName())));
 				sb.append("$");
 				sb.append("\r\n");
 			}			

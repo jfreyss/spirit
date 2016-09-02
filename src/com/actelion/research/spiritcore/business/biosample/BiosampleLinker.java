@@ -276,6 +276,9 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		return hierarchyBiotype != null || aggregatedMetadata != null;
 	}
 	
+	/**
+	 * Not null, to link to a parent of the given biotype
+	 */
 	public Biotype getHierarchyBiotype() {
 		return hierarchyBiotype;
 	}
@@ -287,13 +290,15 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 	public BiotypeMetadata getBiotypeMetadata() {
 		return biotypeMetadata;
 	}
+	
+	/**
+	 * Never null, the expected biotype linked to this display.
+	 */
 	public Biotype getBiotypeForLabel() {
 		return biotypeForLabel;
 	}
 	/**
 	 * Returns the linked biosample
-	 * @param biosample
-	 * @return
 	 */
 	public Biosample getLinked(Biosample biosample) {
 		if(biosample==null) return null;
@@ -318,6 +323,10 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		}
 		return null;
 	}
+
+	/**
+	 * Not null, to link to an other biosample through the metadata
+	 */
 	public BiotypeMetadata getAggregatedMetadata() {
 		return aggregatedMetadata;
 	}

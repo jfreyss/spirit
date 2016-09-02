@@ -58,7 +58,6 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.envers.RevisionTimestamp;
 
 import com.actelion.research.spiritcore.business.IEntity;
 
@@ -82,9 +81,6 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	@Column(name="name", unique=true)
 	private String name = "";
 	
-//	@Column(name="description")
-//	private String description;
-	
 	@ManyToOne(fetch=FetchType.LAZY)	
 	@JoinColumn(name="parent_id")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
@@ -98,7 +94,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	@Enumerated(EnumType.STRING)
 	private BiotypeCategory category = null;
 	
-	@OneToMany(cascade = CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="biotype")
+	@OneToMany(fetch=FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval=true, mappedBy="biotype")
 	@OrderBy("index, name")
 	@BatchSize(size=200) //to load all of them when needed (if not in cache)
 	@Audited(targetAuditMode=RelationTargetAuditMode.AUDITED)
@@ -154,7 +150,6 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date creDate = new Date();
 
-	@RevisionTimestamp
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date updDate = new Date();
 	

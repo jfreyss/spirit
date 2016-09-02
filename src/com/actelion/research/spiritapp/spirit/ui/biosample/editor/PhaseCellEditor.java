@@ -34,6 +34,7 @@ import javax.swing.table.TableCellEditor;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleTable;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.study.Phase;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JTextComboBox;
 import com.actelion.research.util.ui.exceltable.AlphaNumericalCellEditor;
 
@@ -84,6 +85,7 @@ public class PhaseCellEditor extends AbstractCellEditor implements TableCellEdit
 
 	@Override
 	public Phase getCellEditorValue() {
+		Biosample b = JPAUtil.reattach(this.b);
 		Phase phase = b==null || b.getInheritedStudy()==null? null: b.getInheritedStudy().getPhase(textComboBox.getText());
 		return phase;
 	}				

@@ -59,8 +59,6 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 
 	private Biotype type;	
 	
-	private Biosample modelForNewRecords = null;
-	
 	private boolean compactView = false; 
 	
 	public EditBiosampleTableModel() {
@@ -116,13 +114,12 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 			defaultColumns.add(new ScannedPosColumn());
 		}
 		
+		//StudyId
+		if(hasStudiedSamples) {
+			defaultColumns.add(new StudyIdColumn());
+		}
 
 		//Container Elements
-//		if(type!=null && type.getName().equals(Biotype.ANIMAL) && !type.isHideContainer()) {
-//			defaultColumns.add(new ContainerCageColumn());				
-//		} else if(type!=null && type.getCategory()==BiotypeCategory.LIVING) {
-//			//No container
-//		} else 
 		if(type!=null && type.isAbstract()) {
 			//No container
 		} else if(type!=null && type.isHideContainer()) {
@@ -142,12 +139,11 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 		
 		//Study Elements
 		if(type!=null && type.getCategory()==BiotypeCategory.LIVING || hasAttachedSamples) {
-			defaultColumns.add(new StudyIdColumn());
 			defaultColumns.add(new StudyGroupColumn(this));
 			defaultColumns.add(new StudySubGroupColumn());
-		} else if(type==null || type.getCategory()==BiotypeCategory.SOLID || type.getCategory()==BiotypeCategory.LIQUID || hasStudiedSamples) {
-			defaultColumns.add(new StudyIdColumn());
-			defaultColumns.add(new StudyPhaseColumn());				
+		} 
+		if(type==null || type.getCategory()==BiotypeCategory.SOLID || type.getCategory()==BiotypeCategory.LIQUID) {
+			defaultColumns.add(new StudyPhaseColumn());
 		}
 		
 
@@ -160,8 +156,8 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 				defaultColumns.add(new StudyTopSampleIdColumn());
 			}
 			
-			//Parent (must always be displayed)
-			if(type!=null && type.getCategory()!=BiotypeCategory.LIVING) {
+			//Parent (must always be displayed except for living)
+			if(type==null || type.getCategory()!=BiotypeCategory.LIVING) {
 				defaultColumns.add(new ParentBiosampleColumn(this));			
 			}
 		}
@@ -186,7 +182,7 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 		} else {
 			defaultColumns.add(new CombinedColumn());						
 		}
-
+System.out.println("EditBiosampleTableModel.initColumns() "+defaultColumns);
 		setColumns(defaultColumns);
 		
 	}
@@ -217,26 +213,9 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 
 	@Override
 	public Biosample createRecord() {
-		Biosample b;
-		if(modelForNewRecords==null) {
-			b = new Biosample();			
-		} else {
-			b = modelForNewRecords.clone();
-		}
-		b.setBiotype(type);
-		return b;		
+		if(type==null) return null;
+		return new Biosample(type);			
 	}
-	
-//	@Override
-//	public Study getStudy() {
-//		return study;
-//	}
-//	
-//	@Override
-//	public void setStudy(Study study) {
-//		this.study = study;
-//	}
-
 	
 	@Override
 	public List<Biosample> getTreeChildren(Biosample row) {
@@ -273,13 +252,6 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 			}
 		}
 		return col;
-	}
-
-	public void setModelForNewRecords(Biosample modelForNewRecords) {
-		this.modelForNewRecords = modelForNewRecords;
-	}
-	public Biosample getModelForNewRecords() {
-		return modelForNewRecords;
 	}
 	
 }

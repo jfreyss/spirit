@@ -382,6 +382,15 @@ public class ExchangeMapping {
 			}
 		}
 		
+		
+		//Reset biosample.ids
+		for (Biosample b : exchange.getBiosamples()) {
+			b.setId(0);
+			for (BiotypeMetadata mt : b.getMetadataMap().keySet()) {
+				assert mt.getId()==0;
+			}
+		}
+		
 
 	}
 	private void computeMappedBiotypes() throws Exception {
@@ -419,6 +428,7 @@ public class ExchangeMapping {
 						//Nothing
 					} else if(action2==MappingAction.CREATE) {
 						mappedBiotype.getMetadata().add(m);
+						m.setBiotype(mappedBiotype);
 						biotypeMetadata2mappedBiotypeMetadata.put(new Pair<String, String>(inputBiotype.getName(), m.getName()), m);
 						mappedBiotypes.add(mappedBiotype);
 						System.out.println("ExchangeMapping.computeMappedBiotypes() CREATE="+mappedBiotype+" "+m.getName());
@@ -731,19 +741,11 @@ public class ExchangeMapping {
 			for (BiotypeMetadata mt : inputBiotype.getMetadata()) {
 				Metadata m = inputMap.get(mt);
 				
-				MappingAction action2 = biotypeMetadata2action.get(new Pair<String, String>(inputBiotype.getName(), mt.getName()));
-
-				if(action2==MappingAction.SKIP) {
-					//ignore this metadata
-				} else if(action2==null || action2==MappingAction.CREATE) {
-					inputBiosample.setMetadata(mt.getName(), m.getValue());
-				} else if(action2==MappingAction.MAP_REPLACE) {
-					BiotypeMetadata mappedMt = biotypeMetadata2mappedBiotypeMetadata.get(new Pair<String, String>(inputBiotype.getName(), mt.getName()));
-//					if(mappedMt!=null) inputBiosample.setMetadata(mappedMt.getName(), m.getValue());
-					if(mappedMt==null) throw new Exception(inputBiotype.getName()+"."+ mt.getName()+" is not mapped");
-					inputBiosample.setMetadata(mappedMt, m.getValue());
-				}
-			}	
+				BiotypeMetadata mappedMt = biotypeMetadata2mappedBiotypeMetadata.get(new Pair<String, String>(inputBiotype.getName(), mt.getName()));
+				if(mappedMt==null) continue;
+				assert mappedMt.getBiotype().getId()==biotype.getId();
+				inputBiosample.setMetadata(mappedMt, m.getValue());
+			}
 			
 			
 			//SampleId overlap?
@@ -850,20 +852,21 @@ public class ExchangeMapping {
 				//Map the resultvalues
 				for (TestAttribute ta : inputTest.getAttributes()) {
 					ResultValue rv = inputMap.get(ta);
-					MappingAction action2 = testAttribute2action.get(new Pair<String, String>(inputTest.getName(), ta.getName()));
-					if(action2==null || action2==MappingAction.SKIP) {
-						//ignore this metadata
-						inputResult.getResultValueMap().remove(ta);
-					} else if(action2==MappingAction.CREATE) {
-						//will be done in persistBiosample
-						TestAttribute mappedTa = test.getAttribute(ta.getName());
-						if(mappedTa==null) throw new RuntimeException(inputTest.getName()+"."+ ta.getName()+" could not be created");
-						inputResult.setValue(mappedTa, rv==null?"": rv.getValue());
-					} else if(action2==MappingAction.MAP_REPLACE) {
+//					MappingAction action2 = testAttribute2action.get(new Pair<String, String>(inputTest.getName(), ta.getName()));
+//					if(action2==null || action2==MappingAction.SKIP) {
+//						//ignore this metadata
+//						inputResult.getResultValueMap().remove(ta);
+//					} else if(action2==MappingAction.CREATE) {
+//						//will be done in persistBiosample
+//						TestAttribute mappedTa = test.getAttribute(ta.getName());
+//						if(mappedTa==null) throw new RuntimeException(inputTest.getName()+"."+ ta.getName()+" could not be created");
+//						inputResult.setValue(mappedTa, rv==null?"": rv.getValue());
+//					} else if(action2==MappingAction.MAP_REPLACE) {
 						TestAttribute mappedTa = testAttribute2mappedTestAttribute.get(new Pair<String, String>(inputTest.getName(), ta.getName()));
-						if(mappedTa==null) throw new Exception(inputTest.getName()+"."+ ta.getName()+" is not mapped");
-						inputResult.setValue(mappedTa, rv==null?"": rv.getValue());
-					}
+						if(mappedTa!=null) {
+							inputResult.setValue(mappedTa, rv==null?"": rv.getValue());
+						}
+//					}
 				}
 			}
 			

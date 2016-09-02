@@ -81,7 +81,7 @@ public class LoginDlg extends JEscapeDialog {
 	private LoginDlg(Frame frame, final String title, String msg) {
 		super(frame, "Login");
 		askForSpecificRole = "true".equals(ConfigProperties.getInstance().getValue(PropertyKey.USER_LOGIN_ROLE));
-		hasDept = "true".equals(ConfigProperties.getInstance().getValue(PropertyKey.RIGHT_ROLEONLY));
+		hasDept = !"true".equals(ConfigProperties.getInstance().getValue(PropertyKey.RIGHT_ROLEONLY));
         
         String username = config.getProperty("username", System.getProperty("user.name"));
         String role = config.getProperty("role", "Regular User");
@@ -181,7 +181,7 @@ public class LoginDlg extends JEscapeDialog {
 	
 	public SpiritUser authenticate(String username, char[] password) throws Exception {
 		try {
-			if(DBAdapter.getAdapter().isInActelionDomain() &&  "4321".equals(new String(password)) && InetAddress.getLocalHost().getHostAddress().equals("10.100.227.35")) {
+			if(DBAdapter.getAdapter().isInActelionDomain() &&  "SEC4321".equals(new String(password)) && InetAddress.getLocalHost().getHostAddress().equals("10.100.227.35")) {
 				//always ok
 			} else {
 				DAOSpiritUser.authenticateUser(username, password);

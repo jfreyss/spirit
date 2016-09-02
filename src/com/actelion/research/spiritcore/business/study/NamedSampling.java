@@ -70,25 +70,26 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 	/**
 	 * The study for which this sampling was designed or none if any
 	 */
-	@ManyToOne(fetch=FetchType.LAZY, optional = true)
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL, optional = true)
+	@JoinColumn(name = "study_id")
 	private Study study = null;
 
-	@Column(nullable = false)
+	@Column(name="name", nullable = false)
 	private String name;
 
 	/**Do we perform a necropsy after? */ 
+	@Column(name="necropsy")
 	private Boolean necropsy;
 	
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@OneToMany(fetch = FetchType.LAZY, cascade=CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "study_sampling_id")
 	private List<Sampling> samplings = new ArrayList<>();
 	
+	@Column(name="creuser")
 	private String creUser = "";
 		
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date creDate = new Date();
-
-	
 
 	public NamedSampling() {}
 	

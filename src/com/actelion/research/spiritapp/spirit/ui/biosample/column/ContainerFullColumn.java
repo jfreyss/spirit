@@ -145,7 +145,7 @@ public class ContainerFullColumn extends Column<Biosample, String> {
 	
 	@Override
 	public void populateHeaderPopup(final AbstractExtendTable<Biosample> table, JPopupMenu popupMenu) {
-		Biotype type = table.getModel() instanceof BiosampleTableModel? ((BiosampleTableModel) table.getModel()).getType():null;
+		Biotype type = table.getModel() instanceof BiosampleTableModel? ((BiosampleTableModel) table.getModel()).getBiotype():null;
 		
 		popupMenu.add(new JSeparator());
 		popupMenu.add(new JCustomLabel("Sort", Font.BOLD));

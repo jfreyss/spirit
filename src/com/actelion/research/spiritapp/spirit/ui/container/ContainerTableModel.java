@@ -49,7 +49,7 @@ import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 public class ContainerTableModel extends ExtendTableModel<Container> {
 
 	public static enum ContainerTableModelType {
-		COMPRESSED, EXPANDED
+		PRINT, CHECKIN, EXPANDED
 	}
 
 	private final ContainerTableModelType type;
@@ -101,6 +101,8 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 	}
 
 	public static class StudyGroupColumn extends Column<Container, String> {
+		private GroupLabel groupLabel = new GroupLabel();
+
 		public StudyGroupColumn() {
 			super("Group", String.class);
 		}
@@ -118,8 +120,6 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 		public boolean isEditable(Container row) {
 			return false;
 		}
-
-		private GroupLabel groupLabel = new GroupLabel();
 
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<Container> table, Container row, int rowNo, Object value) {
@@ -154,6 +154,8 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 	}
 
 	public static class ContainerIdColumn extends Column<Container, String> {
+		private static ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.CONTAINERID_OR_BIOSAMPLEID);
+
 		public ContainerIdColumn() {
 			super("ContainerId", String.class, 55);
 		}
@@ -162,8 +164,6 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 		public String getValue(Container row) {
 			return row.getContainerOrBiosampleId();
 		}
-
-		private static ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.CONTAINERID_OR_BIOSAMPLEID);
 
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<Container> table, Container row, int rowNo, Object value) {
@@ -177,16 +177,16 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 	}
 
 	public static class ContainerFullColumn extends Column<Container, String> {
+		private static ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.FULL);
+
 		public ContainerFullColumn() {
-			super("ContainerId", String.class, 55);
+			super("Container", String.class, 55);
 		}
 
 		@Override
 		public String getValue(Container row) {
 			return row == null ? null : row.getContainerOrBiosampleId();
 		}
-
-		private static ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.FULL);
 
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<Container> table, Container row, int rowNo, Object value) {
@@ -201,6 +201,8 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 	}
 
 	public static class LocationColumn extends Column<Container, String> {
+		private static ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.FULL);
+
 		public LocationColumn() {
 			super("Location", String.class, 95);
 		}
@@ -209,8 +211,6 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 		public String getValue(Container row) {
 			return row == null || row.getFirstBiosample() == null ? null : row.getFirstBiosample().getLocationString(LocationFormat.MEDIUM_POS, Spirit.getUser());
 		}
-
-		private static ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.FULL);
 
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<Container> table, Container row, int rowNo, Object value) {
@@ -295,17 +295,6 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 			return row.getBlocDescription();
 		}
 	}
-
-//	public static class TopColumn extends Column<Container, String> {
-//		public TopColumn() {
-//			super("TopIds", String.class, 100, 500);
-//		}
-//
-//		@Override
-//		public String getValue(Container row) {
-//			return row.getTopParents();
-//		}
-//	}
 
 	public static class SamplesColumn extends Column<Container, String> {
 		public SamplesColumn() {
@@ -392,12 +381,16 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 		cols.add(new ScannedPosColumn());
 
 		if (type == ContainerTableModelType.EXPANDED) {
+			cols.add(new StudyIdColumn());
 			cols.add(new StudyGroupColumn());
 			cols.add(new TopParentColumn());
-			cols.add(new ContainerFullColumn());
+			cols.add(new LocationColumn());
 			cols.add(new PrintLabelColumn());
 			cols.add(new SamplesColumn());
-		} else if (type == ContainerTableModelType.COMPRESSED) {
+		} else if (type == ContainerTableModelType.CHECKIN) {
+			cols.add(new LocationColumn());
+			cols.add(new PrintLabelColumn());
+		} else if (type == ContainerTableModelType.PRINT) {
 			cols.add(new ContainerFullColumn());
 			cols.add(new PrintLabelColumn());
 			cols.add(new SamplesColumn());

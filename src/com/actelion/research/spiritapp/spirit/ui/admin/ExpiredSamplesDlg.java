@@ -33,8 +33,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTableModel.Mode;
+import com.actelion.research.spiritapp.spirit.ui.util.ISpiritChangeObserver;
+import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
+import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
@@ -43,26 +47,25 @@ import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 
-public class ExpiredSamplesDlg extends JEscapeDialog {
+public class ExpiredSamplesDlg extends JEscapeDialog implements ISpiritChangeObserver {
 	
 	private BiosampleTable expiredTable = new BiosampleTable();
 	private BiosampleTable goingToExpireTable = new BiosampleTable();
+	private final JSplitPane centerPane;
 	
 	public ExpiredSamplesDlg() {
 		super(UIUtils.getMainFrame(), "Expired & Going to Expire Samples");
 		
-		
+		SpiritChangeListener.register(this);
 		expiredTable.getModel().setCanExpand(false);
 		expiredTable.getModel().setMode(Mode.COMPACT);
-
 		
 		goingToExpireTable.getModel().setCanExpand(false);
 		goingToExpireTable.getModel().setMode(Mode.COMPACT);
 
-		final JSplitPane centerPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, 
-				UIUtils.createBox(new JScrollPane(expiredTable), UIUtils.createHorizontalTitlePanel("Expired Biosamples"), null, null, null),
-				UIUtils.createBox(new JScrollPane(goingToExpireTable), UIUtils.createHorizontalTitlePanel("Biosamples going to expire next month"), null, null, null)
-			);		
+		centerPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+				UIUtils.createTitleBox("Expired Biosamples", new JScrollPane(expiredTable)),
+				UIUtils.createTitleBox("Biosamples going to expire in the next 90 days", new JScrollPane(goingToExpireTable)));		
 		
 		JPanel contentPane = new JPanel(new BorderLayout());
 		contentPane.add(BorderLayout.CENTER, centerPane);
@@ -70,7 +73,16 @@ public class ExpiredSamplesDlg extends JEscapeDialog {
 		setSize(1000, 800);
 		setLocationRelativeTo(UIUtils.getMainFrame());		
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		BiosampleActions.attachPopup(expiredTable);
+		BiosampleActions.attachPopup(goingToExpireTable);
+		refresh();
+		
+		centerPane.setDividerLocation(.5);
+		setVisible(true);
 
+	}
+	
+	public void refresh() {
 		new SwingWorkerExtended() {			
 			List<Biosample> alreadyExpired;
 			List<Biosample> goingtoExpire;
@@ -80,15 +92,15 @@ public class ExpiredSamplesDlg extends JEscapeDialog {
 				Date now = JPAUtil.getCurrentDateFromDatabase();
 				
 				Calendar cal = GregorianCalendar.getInstance();
-				cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH) + 31);
-				Date inOneMonth = cal.getTime();
+				cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH) + 90);
+				Date in3Months = cal.getTime();
 				
 				BiosampleQuery alreadyExpiredQuery = new BiosampleQuery();
 				alreadyExpiredQuery.setExpiryDateMax(now);
 				
 				BiosampleQuery goingtoExpireQuery = new BiosampleQuery();
 				goingtoExpireQuery.setExpiryDateMin(now);
-				goingtoExpireQuery.setExpiryDateMax(inOneMonth);
+				goingtoExpireQuery.setExpiryDateMax(in3Months);
 
 				
 				alreadyExpired = DAOBiosample.queryBiosamples(alreadyExpiredQuery, Spirit.getUser());
@@ -97,19 +109,19 @@ public class ExpiredSamplesDlg extends JEscapeDialog {
 			
 			@Override
 			protected void done() {
-				centerPane.setDividerLocation(.5);
+				centerPane.setDividerLocation(
+						alreadyExpired.size()==0 && goingtoExpire.size()==0? .5:
+						alreadyExpired.size()>0 && goingtoExpire.size()>0? .5:
+						alreadyExpired.size()>0? .75: .25);
 				expiredTable.setRows(alreadyExpired);
 				goingToExpireTable.setRows(goingtoExpire);
 			}
 		};
-		
-		centerPane.setDividerLocation(.5);
-		setVisible(true);
-
 	}
-	
-	public static void main(String[] args) throws Exception {
-		
+
+	@Override
+	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
+		refresh();
 	}
 
 }

@@ -285,14 +285,14 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		return sb.toString();
 	}
 		
-	/**
-	 * Return a generic print Label (used in SpiritWeb)
-	 * If the study is blinded, the group is shown as blinded
-	 * @return
-	 */
-	public String getPrintLabel() {
-		return getPrintStudyLabel(null) + "\n" + getPrintMetadataLabel();
-	}
+//	/**
+//	 * Return a generic print Label (used in SpiritWeb)
+//	 * If the study is blinded, the group is shown as blinded
+//	 * @return
+//	 */
+//	public String getPrintLabel() {
+//		return getPrintStudyLabel(null) + "\n" + getPrintMetadataLabel();
+//	}
 	
 		
 	public String getPrintStudyLabel(String user) {
@@ -300,19 +300,21 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		Study study = Biosample.getStudy(getBiosamples());
 		if(study!=null) {
 			//Add the study
-			sb.append(study.getStudyId() + (study.getIvv()!=null && study.getIvv().length()>0?" (" + study.getIvv() + ")":"") + "\n");
+			sb.append(study.getStudyId() + "\n");
 
 			//Add the group
 			Group g = Biosample.getGroup(getBiosamples());
-			if(g!=null) {
-				sb.append(g.getBlindedName(user)  + "\n");
-			}			
-
+			if(user==null || study.getBlindAllUsers().contains(user)) {
+				sb.append("");
+			} else if(g!=null) {
+				sb.append("Gr." + g.getShortName());
+			}
 			//Add the phase		
 			Phase phase = Biosample.getPhase(getBiosamples());
 			if(phase!=null) {	
-				sb.append(phase.getAbsoluteDateAndName() + "\n");
+				sb.append(" / " +phase.getShortName());
 			}
+			sb.append("\n");
 		}
 			
 		return sb.toString();

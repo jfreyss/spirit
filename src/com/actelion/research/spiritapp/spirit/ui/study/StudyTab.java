@@ -49,7 +49,7 @@ public class StudyTab extends JPanel implements ISpiritTab {
 	private final StudyTable studyTable = new StudyTable();
 	private final StudySearchPane searchPane = new StudySearchPane(studyTable);
 	
-	private final StudyDetailPanel studyDetailPanel = new StudyDetailPanel(JSplitPane.HORIZONTAL_SPLIT, false);
+	private final StudyDetailPanel studyDetailPanel = new StudyDetailPanel(JSplitPane.HORIZONTAL_SPLIT);
 
 	private final JSplitPane northPane;
 	private final JSplitPane contentPane;

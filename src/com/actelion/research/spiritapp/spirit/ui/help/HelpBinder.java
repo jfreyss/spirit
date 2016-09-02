@@ -174,12 +174,11 @@ public class HelpBinder {
 	
 	public static void showHelp(String ref) {
 		try { 
-			String url = "https://jfreyss.github.io/spirit/doc/index.html#"+URLEncoder.encode(ref, "UTF-8");
+			String url = "https://jfreyss.github.io/spirit/doc/index.html" + (ref==null? "": "#"+URLEncoder.encode(ref, "UTF-8"));
 			Desktop.getDesktop().browse(new URI(url));
 		} catch(Exception e) {
 			JExceptionDialog.showError(e);
-		}
-		
+		}		
 	}
 
 }

@@ -31,11 +31,25 @@ import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 
 public class LocationLabel extends JLabelNoRepaint {
 	
-	private final boolean fullName;
+	private boolean displayFullName;
+	private boolean displayIcon = true;
 	
-	public LocationLabel(boolean fullName) {
+	public LocationLabel(boolean displayFullName) {
 		setOpaque(true);
-		this.fullName = fullName;
+		this.displayFullName = displayFullName;
+	}
+	
+	public void setDisplayFullName(boolean displayFullName) {
+		this.displayFullName = displayFullName;
+	}
+	public boolean isDisplayFullName() {
+		return displayFullName;
+	}
+	public void setDisplayIcon(boolean displayIcon) {
+		this.displayIcon = displayIcon;
+	}
+	public boolean isDisplayIcon() {
+		return displayIcon;
 	}
 	
 	public void setLocation(Location location) {
@@ -46,8 +60,8 @@ public class LocationLabel extends JLabelNoRepaint {
 			Privacy privacy = location.getInheritedPrivacy();
 			Color foreground = privacy==Privacy.PRIVATE?Color.RED: privacy==Privacy.PROTECTED?Color.ORANGE: privacy==Privacy.PUBLIC?Color.GREEN: Color.ORANGE;
 			setForeground(foreground.darker());
-			setText(fullName? location.getHierarchyFull(): location.getName());
-			setIcon(location.getLocationType()==null? null: new ImageIcon(location.getLocationType().getImageThumbnail()));
+			setText(displayFullName? location.getHierarchyFull(): location.getName());
+			setIcon(!displayIcon ||location.getLocationType()==null? null: new ImageIcon(location.getLocationType().getImageThumbnail()));
 		}
 	}
 

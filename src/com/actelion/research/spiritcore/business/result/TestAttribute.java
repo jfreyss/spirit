@@ -149,7 +149,7 @@ public class TestAttribute implements Comparable<TestAttribute> {
 	
 	@Override
 	public int compareTo(TestAttribute o) {
-		int c = getTest().compareTo(o.getTest());
+		int c = getTest()==null? (o.getTest()==null?0:1): getTest().compareTo(o.getTest());
 		if(c!=0) return c;
 		
 		c = getOutputType().compareTo(o.getOutputType());

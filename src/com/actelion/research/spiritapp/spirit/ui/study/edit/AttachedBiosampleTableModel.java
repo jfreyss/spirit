@@ -171,6 +171,25 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 		}
 	}
 	
+	public class SampleNameColumn extends Column<AttachedBiosample, String> {
+		public SampleNameColumn() {
+			super((biotype==null?"":biotype.getName()) + "\n" + (biotype==null || biotype.getSampleNameLabel()==null? "": biotype.getSampleNameLabel()), String.class, 120, 120);
+		}
+		@Override
+		public String getValue(AttachedBiosample row) {
+			return row.getSampleName();
+		}
+		@Override
+		public void setValue(AttachedBiosample row, String value) {
+			row.setSampleName(value);
+		}
+		@Override
+		public boolean isEditable(AttachedBiosample row) {
+			return biotype.getSampleNameLabel()!=null && biotype.getSampleNameLabel().length()>0;
+		}
+		
+	}
+	
 	public class WeightColumn extends Column<AttachedBiosample, Double> {
 		private final boolean editable;
 		public WeightColumn(boolean editable) {
@@ -587,7 +606,7 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 			columns.add(new SampleIdColumn(true));	
 			
 			if(myBiotype!=null && myBiotype.getSampleNameLabel()!=null) {
-				columns.add(new TextFieldLinkerColumn(new BiosampleLinker(LinkerType.SAMPLENAME, myBiotype)));
+				columns.add(new SampleNameColumn());
 			}
 
 			//Weight

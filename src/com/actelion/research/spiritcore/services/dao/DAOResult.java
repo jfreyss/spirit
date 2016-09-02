@@ -230,17 +230,7 @@ public class DAOResult {
 		if(q.getElbs()!=null && q.getElbs().length()>0) {
 			clause.append(" and (" + QueryTokenizer.expandOrQuery("r.elb = ?", q.getElbs()) + ")");	
 		}
-		
-//		if(q.getActNoOrElns()!=null && q.getActNoOrElns().length()>0) {
-//			clause.append(" and ((r in (select v.result from ResultValue v where v.attribute.dataType = '" +DataType.ELN.name() + "' and ("
-//					+ QueryTokenizer.expandQuery("v.linkedCompound.actNo like ?", q.getActNoOrElns(), false, false)
-//					+ " or "
-//					+ QueryTokenizer.expandQuery("v.linkedCompound.eln like ?", q.getActNoOrElns(), false, false)
-//					+ ")))"
-//					+ " or (r in (select v.result from ResultValue v where v.attribute.dataType = '" +DataType.ELN.name() + "' and "
-//					+ QueryTokenizer.expandQuery("replace(replace(replace(replace(replace(replace(replace(lower(v.value), '.', ''), ' ', ''), '-', ''), '_', ''), '/', ''), ':', ''), '#', '') like replace(replace(replace(replace(replace(replace(replace(lower(?), '.', ''), ' ', ''), '-', ''), '_', ''), '/', ''), ':', ''), '#', '')", q.getActNoOrElns(), false, false)
-//					+ ")))");
-//		}
+
 		if(q.getQuality()!=null) {
 			if(q.getQuality().getId()<=Quality.VALID.getId()) {
 				clause.append(" and (r.quality is null or r.quality >= " + q.getQuality().getId() + ")");
@@ -335,7 +325,9 @@ public class DAOResult {
 			expr.append(" or (r.test IN (SELECT t from Test t WHERE LOWER(t.name) like LOWER(?)))"); 
 			expr.append(" or r.elb like ?");
 			expr.append(" or LOWER(b.name) like LOWER(?)");
-			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE b2.topParent.sampleId like ?))");
+			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.inheritedGroup.name) like LOWER(?)))");
+			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.inheritedPhase.name) like LOWER(?)))");
+			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.topParent.sampleId) like LOWER(?)))");
 			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.topParent.name) like LOWER(?)))");
 			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2, IN(b2.location) l WHERE LOWER(l.name) like LOWER(?)))");				
 			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 JOIN b2.linkedBiosamples b3 WHERE LOWER(b3.serializedMetadata) like LOWER(?)))");
@@ -362,9 +354,6 @@ public class DAOResult {
 		for (int i = 0; i < parameters.size(); i++) {
 			jpaQuery.setParameter(i+1, parameters.get(i));
 		}
-
-//		jpaQuery.setHint("org.hibernate.readOnly", !JPAUtil.isEditableContext());
-		
 		
 		List<Result> results = jpaQuery.getResultList();
 		
@@ -373,7 +362,7 @@ public class DAOResult {
 		
 			Set<String> set = new HashSet<String>(Arrays.asList(MiscUtils.split(q.getPhases(), MiscUtils.SPLIT_SEPARATORS_WITH_SPACE)));
 			if(set.size()>0) {
-				List<Result> filtered = new ArrayList<Result>();
+				List<Result> filtered = new ArrayList<>();
 				for (Result r : results) {
 					if(r.getBiosample()==null) continue;
 					if(r.getBiosample().getInheritedPhase()==null) continue;
@@ -399,6 +388,7 @@ public class DAOResult {
 			txn.begin();
 			deleteResults(session, results, user);
 			txn.commit();
+			txn = null;
 		} finally {
 			if(txn!=null) if(txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
 		}
@@ -408,15 +398,15 @@ public class DAOResult {
 		if(results==null || results.size()==0) return;
 		assert session!=null;
 		assert session.getTransaction().isActive();
-
-		Date now = JPAUtil.getCurrentDateFromDatabase();
+		
 		for (Result result : results) {
-
 			if(!SpiritRights.canDelete(result, user)) throw new Exception(user+" is not allowed to delete "+result);
-			result.setUpdUser(user.getUsername());
-			result.setUpdDate(now);
-			result = session.merge(result);
-			session.flush(); //flush to update the user,date
+		}
+
+		for (Result result : results) {
+			if(!session.contains(result)) {
+				result = session.merge(result);
+			}
 			session.remove(result);
 		}			
 	}
@@ -501,11 +491,12 @@ public class DAOResult {
 
 	
 	public static void testConcurrentModification(Collection<Biosample> biosamples) throws Exception {
+		Map<Integer, Biosample> id2biosample = JPAUtil.mapIds(biosamples);
+		if(id2biosample.size()==0) return;
 		EntityManager session = null;
 		try {
 			session = JPAUtil.createManager();
 			// Test that nobody else modified the biosamples
-			Map<Integer, Biosample> id2biosample = JPAUtil.mapIds(biosamples);
 			String jpql = "select b.updDate, b.updUser, b.id from Biosample b where " + QueryTokenizer.expandForIn("b.id", id2biosample.keySet());
 			List<Object[]> lastUpdates = (List<Object[]>) session.createQuery(jpql).getResultList();
 			for (Object[] lastUpdate : lastUpdates) {

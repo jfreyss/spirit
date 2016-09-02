@@ -85,9 +85,8 @@ public class LocationBatchEditDlg extends JSpiritEscapeDialog {
 		}
 		
 		return new LocationBatchEditDlg(locations, true, true);
-		
-		
 	}
+	
 	public static LocationBatchEditDlg edit(List<Location> locations) {
 		return new LocationBatchEditDlg(locations, false, true);
 	}
@@ -109,7 +108,11 @@ public class LocationBatchEditDlg extends JSpiritEscapeDialog {
 		JButton printButton = new JButton(new LocationActions.Action_Print(locations) {
 			@Override
 			public List<Location> getLocations() {
-				return table.getRows();
+				List<Location> locs = new ArrayList<>();
+				for(Location l: table.getRows()) {
+					if(l.getId()>0) locs.add(l);
+				}
+				return locs;
 			}
 		});
 
@@ -140,7 +143,7 @@ public class LocationBatchEditDlg extends JSpiritEscapeDialog {
 		
 		//Panel Layout
 		JPanel contentPanel = new JPanel(new BorderLayout());
-		contentPanel.add(BorderLayout.CENTER, new JScrollPane(table));
+		contentPanel.add(BorderLayout.CENTER, UIUtils.createTitleBox("Locations", new JScrollPane(table)));
 		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), printButton, saveButton));
 		
 		setContentPane(contentPanel);

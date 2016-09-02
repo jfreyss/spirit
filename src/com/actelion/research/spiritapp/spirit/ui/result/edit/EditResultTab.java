@@ -29,29 +29,21 @@ import java.awt.event.ActionListener;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import javax.swing.Box;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritapp.spirit.ui.lf.StudyComboBox;
 import com.actelion.research.spiritapp.spirit.ui.result.TestChoice;
 import com.actelion.research.spiritapp.spirit.ui.util.closabletab.JClosableTabbedPane.IClosableTab;
-import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.services.SpiritRights;
-import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
-import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
@@ -72,31 +64,14 @@ public class EditResultTab extends JPanel implements IClosableTab {
 	private JButton pivotPhases = new JIconButton(IconType.PIVOT, "Pivot by Phase");
 	private JButton pivotInput = new JIconButton(IconType.PIVOT, "Pivot by Input");
 	
-	private final StudyComboBox studyComboBox = new StudyComboBox(RightLevel.WRITE);
+//	private final StudyComboBox studyComboBox = new StudyComboBox(RightLevel.WRITE);
 
 
 	public EditResultTab(EditResultDlg editResultDlg) {			
 		super(new BorderLayout());
 		dlg = editResultDlg;		
 		
-		table = new EditResultTable(dlg, this) {
-			
-			@Override
-			protected void pasteSelection() {
-				super.pasteSelection();
-				
-				//Try to select a study automatically
-				if(studyComboBox.getText().length()==0) {
-					Set<Biosample> biosamples = Result.getBiosamples(table.getRows());
-					Set<Study> studies = Biosample.getStudies(biosamples);
-					if(studies.size()==1) {
-						studyComboBox.setText(studies.iterator().next().getStudyId());
-						eventStudyChanged();
-					}
-				}
-
-			}
-		};
+		table = new EditResultTable(dlg);
 		table.setCanAddRow(editResultDlg.isEditExperimentMode());
 
 		testChoice = new TestChoice();
@@ -105,22 +80,22 @@ public class EditResultTab extends JPanel implements IClosableTab {
 //		pivotEln.setToolTipText("Enter the results using a pivoted table, with the eln as header");
 		pivotPhases.setToolTipText("Enter the results using a pivoted table, with the phase as header");
 		pivotInput.setToolTipText("Enter the results using a pivoted table, with one input parameter as header");
-	
-		studyComboBox.addTextChangeListener(new TextChangeListener() {
-			@Override
-			public void textChanged(JComponent src) {
-				eventStudyChanged();
-			}
-		});
-		
+//	
+//		studyComboBox.addTextChangeListener(new TextChangeListener() {
+//			@Override
+//			public void textChanged(JComponent src) {
+//				eventStudyChanged();
+//			}
+//		});
+//		
 
 
 		
 		//top results panel
 		add(BorderLayout.NORTH, UIUtils.createHorizontalBox(
 				new JLabel("Test:"), testChoice,
-				Box.createHorizontalStrut(15),
-				new JLabel("Study: (opt.)"), studyComboBox, 
+//				Box.createHorizontalStrut(15),
+//				new JLabel("Study: (opt.)"), studyComboBox, 
 				Box.createHorizontalGlue(), 
 				pivotPhases, pivotInput));
 		
@@ -157,25 +132,25 @@ public class EditResultTab extends JPanel implements IClosableTab {
 
 	}
 	
-	private Study previous;
-	public void eventStudyChanged() {
-		Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
-		if(study==null || !SpiritRights.canExpert(study, Spirit.getUser())) study = null;			
-		
-		if(previous!=study) {
-			for (Result r : table.getRows()) {
-				if(r.getPhase()!=null && !r.getPhase().equals(study)) {
-					JExceptionDialog.showWarning(EditResultTab.this, "You must first delete the phases to change the study");
-					studyComboBox.setText(r.getPhase().getStudy()==null? null: r.getPhase().getStudy().getStudyId());
-					return;
-				}
-			}
-			previous = study;
-			table.setStudy(study);
-			resetTabName();
-			eventTestChanged();
-		}
-	}
+//	private Study previous;
+//	public void eventStudyChanged() {
+//		Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
+//		if(study==null || !SpiritRights.canExpert(study, Spirit.getUser())) study = null;			
+//		
+//		if(previous!=study) {
+//			for (Result r : table.getRows()) {
+//				if(r.getPhase()!=null && !r.getPhase().equals(study)) {
+//					JExceptionDialog.showWarning(EditResultTab.this, "You must first delete the phases to change the study");
+//					studyComboBox.setText(r.getPhase().getStudy()==null? null: r.getPhase().getStudy().getStudyId());
+//					return;
+//				}
+//			}
+//			previous = study;
+//			table.setStudy(study);
+//			resetTabName();
+//			eventTestChanged();
+//		}
+//	}
 	
 	public void pivot(PivotDlg.PivotMode mode) {
 		try {
@@ -205,11 +180,11 @@ public class EditResultTab extends JPanel implements IClosableTab {
 				title = "<br>Select Test...<br>";
 			} else {
 				title =  test.getFullName().replace(" - ", "<br><b>") + "</b><br>";
-				if(studyComboBox.getText().length()>0) {
-					title += "<i style='font-size:9px'>" + studyComboBox.getText();
-				} else {
-					title += "<br>";
-				}
+//				if(studyComboBox.getText().length()>0) {
+//					title += "<i style='font-size:9px'>" + studyComboBox.getText();
+//				} else {
+//					title += "<br>";
+//				}
 			}
 			
 			title = "<html>" + title + "</html>";
@@ -249,7 +224,7 @@ public class EditResultTab extends JPanel implements IClosableTab {
 			pivotPhases.setVisible(false);
 			pivotInput.setVisible(false);
 		} else {
-			pivotPhases.setVisible(studyComboBox.getText().length()>0 && test.getInputAttributes().size()<=1);
+			pivotPhases.setVisible(true);
 			pivotInput.setVisible(test.getInputAttributes().size()>=1);
 		}
 	}
@@ -293,11 +268,6 @@ public class EditResultTab extends JPanel implements IClosableTab {
 			testChoice.setSelection(test);
 		}
 		
-		//Set the study
-		if(study!=null) {
-			setStudyId(study.getStudyId());
-		}
-				
 		//Update the model
 		table.getModel().setRows(results);
 		table.updateModel(test);			
@@ -344,14 +314,6 @@ public class EditResultTab extends JPanel implements IClosableTab {
 			return true;
 		}
 		return false;		
-	}
-	
-	public String getStudyId() {
-		return studyComboBox.getText();
-	}
-	public void setStudyId(String studyId) {
-		studyComboBox.setText(studyId);
-		eventStudyChanged();
 	}
 	
 	public EditResultTable getTable() {

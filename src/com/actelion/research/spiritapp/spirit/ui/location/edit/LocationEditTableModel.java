@@ -34,6 +34,8 @@ import com.actelion.research.spiritapp.spirit.ui.location.column.LocationParentC
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationPrivacyColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationRowsColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationTypeColumn;
+import com.actelion.research.spiritcore.adapter.DBAdapter;
+import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.util.ui.exceltable.Column;
@@ -42,17 +44,20 @@ import com.actelion.research.util.ui.exceltable.ExcelTableModel;
 public class LocationEditTableModel extends ExcelTableModel<Location> {
 	public LocationEditTableModel() {
 		LocationNameColumn nameColumn = new LocationNameColumn();
+		nameColumn.setDiplayIcon(false);
 		nameColumn.setBold(true);
 		
-		List<Column<Location, ?>> columns = new ArrayList<Column<Location, ?>>();
+		List<Column<Location, ?>> columns = new ArrayList<>();
 		columns.add(new LocationParentColumn());
-		columns.add(nameColumn);
 		columns.add(new LocationTypeColumn());
+		columns.add(nameColumn);
 		columns.add(new LocationLabelingColumn());
 		columns.add(new LocationRowsColumn());
 		columns.add(new LocationColsColumn());
-		columns.add(new LocationPrivacyColumn());
-		columns.add(new LocationDepartmentColumn());
+		if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER) {
+			columns.add(new LocationPrivacyColumn());
+			columns.add(new LocationDepartmentColumn());
+		}
 		
 		columns.add(new LocationDescriptionColumn());
 		

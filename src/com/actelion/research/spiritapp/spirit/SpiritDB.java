@@ -140,14 +140,14 @@ public class SpiritDB {
 				public void run() {
 					new SpiritAction.Action_Relogin(UIUtils.getMainFrame(), "Spirit", msg.toString()).actionPerformed(null);
 					if(Spirit.getUser()==null) System.exit(1);
-					checkExamples();
+					importExamples(false);
 				}
 			});
 		}
-		checkExamples();
+		importExamples(false);
 	}
 	
-	public static void checkExamples() {
+	public static void importExamples(boolean force) {
 		//Check emptyness?
 		SpiritUser user = Spirit.getUser();
 		if(user==null || DBAdapter.getAdapter().isInActelionDomain() || !SpiritRights.isSuperAdmin(user)) return;
@@ -162,7 +162,7 @@ public class SpiritDB {
 			
 			
 			
-			boolean importDemo = DAOTest.getTests().size()==0;
+			boolean importDemo = force || DAOTest.getTests().size()==0;
 			boolean askToRewrite = !importDemo && DBAdapter.getAdapter().getClass()==HSQLFileAdapter.class && exampleStudies.size()<exchange.getStudies().size();
 			if(askToRewrite) {
 				int res = JOptionPane.showConfirmDialog(UIUtils.getMainFrame(), "There are new examples available!\nDo you want to update the current examples with the new ones?", "Examples", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
@@ -171,29 +171,41 @@ public class SpiritDB {
 				}
 			}
 			if(importDemo) {
-				try {
-					JPAUtil.pushEditableContext(user);
-					ExchangeMapping mapping = new ExchangeMapping(exchange);
-					DAOExchange.persist(mapping, user);
-				} catch(Throwable e2) {
-					e2.printStackTrace();
+				
+				if(force) {
 					//Clean
-					EntityManager session = JPAUtil.getManager();
+					EntityManager session = null;
 					try {
-						LoggerFactory.getLogger(SpiritDB.class).error("Could not persist examples: replace old examples", e2);
+						JPAUtil.pushEditableContext(user);
+						session = JPAUtil.getManager();
 						session.getTransaction().begin();
-						DAOResult.deleteResults(session, DAOResult.queryResults(session, ResultQuery.createQueryForSids(JPAUtil.getIds(exampleStudies)), user), user);
-						DAOBiosample.deleteBiosamples(session, DAOBiosample.queryBiosamples(session, BiosampleQuery.createQueryForSids(JPAUtil.getIds(exampleStudies)), user), user);
-						DAOStudy.deleteStudies(session, exampleStudies, user);
-						LoggerFactory.getLogger(SpiritDB.class).info("examples deleted: "+exampleStudies);
+//						DAOResult.deleteResults(session, DAOResult.queryResults(session, ResultQuery.createQueryForSids(JPAUtil.getIds(exampleStudies)), user), user);
+//						DAOBiosample.deleteBiosamples(session, DAOBiosample.queryBiosamples(session, BiosampleQuery.createQueryForSids(JPAUtil.getIds(exampleStudies)), user), user);
+						DAOStudy.deleteStudies(session, exampleStudies, true, user);
+						LoggerFactory.getLogger(SpiritDB.class).info("examples deleted: "+exampleStudies);						
 						session.getTransaction().commit();									
 					} catch(Throwable e3) {
 						e3.printStackTrace();
-						session.getTransaction().rollback();
+						if(session!=null && session.getTransaction().isActive()) session.getTransaction().rollback();
 					} finally {
 						JPAUtil.popEditableContext();
 					}								
 				}
+				
+				try {
+					JPAUtil.pushEditableContext(user);
+					ExchangeMapping mapping = new ExchangeMapping(exchange);
+					DAOExchange.persist(mapping, user);
+					LoggerFactory.getLogger(SpiritDB.class).info("examples persisted: "+exampleStudies);
+				} catch(Throwable e2) {
+					LoggerFactory.getLogger(SpiritDB.class).error("Could not persist examples: replace old examples", e2);
+					e2.printStackTrace();
+					force=true;
+				} finally {
+					JPAUtil.popEditableContext();
+				}
+				
+				
 			}
 		} catch(Exception e) {
 			JExceptionDialog.showError(UIUtils.getMainFrame(), e);

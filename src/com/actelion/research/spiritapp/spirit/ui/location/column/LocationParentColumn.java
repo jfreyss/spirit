@@ -34,9 +34,11 @@ import com.actelion.research.util.ui.exceltable.Column;
 public class LocationParentColumn extends Column<Location, Location> {
 	
 	private LocationCellEditor editor = new LocationCellEditor();
-	
-	public LocationParentColumn() {
+	private static LocationLabel label = new LocationLabel(true);	
+
+	public LocationParentColumn() {		
 		super("Parent", Location.class, 110);
+		label.setDisplayIcon(false);
 	}
 	@Override
 	public Location getValue(Location row) {
@@ -65,7 +67,6 @@ public class LocationParentColumn extends Column<Location, Location> {
 		row.setParent(loc);
 	}
 	
-	private static LocationLabel label = new LocationLabel(true);	
 	
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Location> table, Location row, int rowNo, Object value) {

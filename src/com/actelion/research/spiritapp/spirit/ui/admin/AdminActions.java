@@ -79,7 +79,7 @@ public class AdminActions {
 		private Revision revision;
 		
 		public Action_Revert(Revision revision) {
-			super("Cancel these chhnages");
+			super("Cancel this change");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('v'));
 			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()));
 			this.revision = revision;
@@ -92,7 +92,7 @@ public class AdminActions {
 				new SwingWorkerExtended("Revert", UIUtils.getMainFrame()) {
 					@Override
 					protected void doInBackground() throws Exception {
-						DAORevision.revert(revision, Spirit.getUsername(), "Revert" + (reason.length()==0?"":"(" + reason + ")"));
+						DAORevision.revert(revision, Spirit.getUser(), "Revert" + (reason.length()==0?"":"(" + reason + ")"));
 					}
 					@Override
 					protected void done() {
@@ -140,7 +140,7 @@ public class AdminActions {
 				new SwingWorkerExtended("Rollback", UIUtils.getMainFrame()) {
 					@Override
 					protected void doInBackground() throws Exception {
-						DAORevision.restore(objects, Spirit.getUsername(), "Rollback" + (reason.length()==0?"":"(" + reason + ")"));
+						DAORevision.restore(objects, Spirit.getUser(), "Rollback" + (reason.length()==0?"":"(" + reason + ")"));
 					}
 					protected void done() {
 						JExceptionDialog.showInfo(UIUtils.getMainFrame(), objects.size()+" objects rollbacked");

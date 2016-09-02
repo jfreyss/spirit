@@ -78,27 +78,29 @@ public class DAOLocation {
 		
 		
 		// Test that nobody else modified the location
-		Map<Integer, Integer> id2rows = new HashMap<Integer, Integer>();
-		Map<Integer, Integer> id2cols = new HashMap<Integer, Integer>();
+		Map<Integer, Integer> id2rows = new HashMap<>();
+		Map<Integer, Integer> id2cols = new HashMap<>();
 		Map<Integer, Location> id2location = JPAUtil.mapIds(locations);
-		List<Object[]> lastUpdates = (List<Object[]>) session.createQuery("select l.id, l.rows, l.cols, l.updDate, l.updUser from Location l where " + QueryTokenizer.expandForIn("l.id",  JPAUtil.getIds(locations))).getResultList();
-		for (Object[] lastUpdate : lastUpdates) {
-			Location l = id2location.get((Integer) lastUpdate[0]);
-			Integer rows = (Integer) lastUpdate[1];
-			Integer cols = (Integer) lastUpdate[2];
-			Date lastDate = (Date) lastUpdate[3];
-			String lastUser = (String) lastUpdate[4];
-			
-			if (l == null) {
-				throw new Exception("The location " + l + " has just been deleted. Please refresh your data");
-			}  
-			if (l.getUpdDate() != null && lastDate != null) {
-				int diffSeconds = (int) ((lastDate.getTime() - l.getUpdDate().getTime()) / 1000L);
-				if (diffSeconds > 0)
-					throw new Exception("The location " + l + " has just been updated by " + lastUser + " [" + diffSeconds + "seconds ago].\nYou cannot overwrite those changes unless you reopen the newest version.");
+		if(id2location.size()>0) {
+			List<Object[]> lastUpdates = (List<Object[]>) session.createQuery("select l.id, l.rows, l.cols, l.updDate, l.updUser from Location l where " + QueryTokenizer.expandForIn("l.id", id2location.keySet())).getResultList();
+			for (Object[] lastUpdate : lastUpdates) {
+				Location l = id2location.get((Integer) lastUpdate[0]);
+				Integer rows = (Integer) lastUpdate[1];
+				Integer cols = (Integer) lastUpdate[2];
+				Date lastDate = (Date) lastUpdate[3];
+				String lastUser = (String) lastUpdate[4];
+				
+				if (l == null) {
+					throw new Exception("The location " + l + " has just been deleted. Please refresh your data");
+				}  
+				if (l.getUpdDate() != null && lastDate != null) {
+					int diffSeconds = (int) ((lastDate.getTime() - l.getUpdDate().getTime()) / 1000L);
+					if (diffSeconds > 0)
+						throw new Exception("The location " + l + " has just been updated by " + lastUser + " [" + diffSeconds + "seconds ago].\nYou cannot overwrite those changes unless you reopen the newest version.");
+				}
+				id2rows.put(l.getId(), rows);
+				id2cols.put(l.getId(), cols);
 			}
-			id2rows.put(l.getId(), rows);
-			id2cols.put(l.getId(), cols);
 		}
 
 	

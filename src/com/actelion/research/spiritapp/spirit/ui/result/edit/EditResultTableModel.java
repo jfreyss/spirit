@@ -25,14 +25,13 @@ import java.util.Collections;
 
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
-import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.util.ui.exceltable.ExcelTableModel;
 
 public class EditResultTableModel extends ExcelTableModel<Result> {
 
 	private Test test;
-	private Study study;
+//	private Study study;
 
 	public EditResultTableModel() {
 		super();
@@ -53,13 +52,13 @@ public class EditResultTableModel extends ExcelTableModel<Result> {
 		this.test = test;
 	}
 
-	public Study getStudy() {
-		return study;
-	}
-
-	public void setStudy(Study study) {
-		this.study = study;
-	}
+//	public Study getStudy() {
+//		return study;
+//	}
+//
+//	public void setStudy(Study study) {
+//		this.study = study;
+//	}
 	
 	@Override
 	public void setValueAt(Object newValue, int rowIndex, int columnIndex) {

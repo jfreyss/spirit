@@ -73,13 +73,13 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="sampling_sequence")
 	private int id = 0;
 	
-	@ManyToOne(cascade=CascadeType.ALL, fetch=FetchType.LAZY, optional=true)
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@JoinColumn(name="parent_sampling_id")
 	private Sampling parent = null;
 	
-	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, mappedBy="parent")
+	@OneToMany(fetch=FetchType.LAZY, mappedBy="parent", cascade=CascadeType.ALL)
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
 	@SortNatural
 	@BatchSize(size=32)
@@ -95,7 +95,7 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	@Column(name="locindex", nullable=true)
 	private Integer blocNo;
 
-	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY, optional=false)
+	@ManyToOne(fetch=FetchType.LAZY, optional=false)
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	private Biotype biotype = null;
@@ -645,11 +645,9 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	public void preSave() {
 		if(extraMeasurementList!=null) {
 			extraMeasurement = Measurement.serialize(extraMeasurementList);
-			System.out.println("Sampling.preSave() Serializes "+extraMeasurementList+" to "+extraMeasurement);
 		}
 		if(metadataMap!=null) {
 			this.metadata = BiotypeMetadata.serialize(metadataMap);
-			System.out.println("Sampling.preSave() Serializes "+metadataMap+" to "+metadata);
 		}
 	}
 	

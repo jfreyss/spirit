@@ -36,25 +36,18 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.xml.bind.ValidationException;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritapp.spirit.ui.lf.StudyComboBox;
-import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.business.study.Phase;
-import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
-import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
@@ -66,7 +59,6 @@ public class PivotDlg extends JEscapeDialog {
 	private GridInputTable gridTable = new GridInputTable();
 	private EditResultTab tab;
 	private List<Result> results;
-	private StudyComboBox studyComboBox = new StudyComboBox(RightLevel.WRITE);
 	private final TestAttribute inputAtt;
 	private PivotMode pivotMode;
 	
@@ -86,7 +78,7 @@ public class PivotDlg extends JEscapeDialog {
 		if(pivotMode==PivotMode.ANIMAL_PHASE) {
 			for (Result r : tab.getTable().getRows()) {
 				if(r.getBiosample().getInheritedPhase()!=null) {
-					throw new ValidationException("Pivot by phase is only possible when the samples don't have a phase");
+					throw new ValidationException("Pivot by phase is only possible when the samples don't already have a phase");
 				}
 			}
 		}
@@ -98,18 +90,13 @@ public class PivotDlg extends JEscapeDialog {
 		populateTextArea();
 		
 		
-		studyComboBox.setText(tab.getStudyId());
-		
 		JButton importButton = new JButton("Import");
 		importButton.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
-					if(study==null || !SpiritRights.canExpert(study, Spirit.getUser())) study = null;		
-
 					String[][] table = gridTable.getTable();
-					results = parse(test, table, study, pivotMode);
+					results = parse(test, table, pivotMode);
 					dispose();
 				} catch (Exception ex) {
 					JExceptionDialog.showError(ex);
@@ -138,9 +125,6 @@ public class PivotDlg extends JEscapeDialog {
 		contentPane.add(BorderLayout.CENTER, new JScrollPane(gridTable));
 		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(
 				Box.createHorizontalGlue(),
-				new JLabel("Study (opt.):"), 
-				studyComboBox, 
-				Box.createHorizontalStrut(20), 
 				importButton));
 		setContentPane(contentPane);
 		setSize(1150, 650);
@@ -157,7 +141,7 @@ public class PivotDlg extends JEscapeDialog {
 	 * @return
 	 * @throws Exception
 	 */
-	public static List<Result> parse(Test test, String[][] table, Study study) throws Exception {
+	public static List<Result> parse(Test test, String[][] table) throws Exception {
 		PivotMode pivotMode;
 		if(test.getInputAttributes().size()==0) {
 			pivotMode = PivotMode.ANIMAL_PHASE;
@@ -165,17 +149,17 @@ public class PivotDlg extends JEscapeDialog {
 			pivotMode =  PivotMode.ANIMAL_INPUT;
 			if(table.length<2) throw new ValidationException("You need to paste at least 2 lines");
 
-			//Assess pivot mode
-			for (int i = 2; i < table[0].length; i++) {
-				String phaseName = table[0][i].split("\\s")[0];				
-				if(study!=null && study.getPhase(phaseName)!=null) {
-					pivotMode =  PivotMode.ANIMAL_PHASE;
-					break;
-				}
-			}
+//			//Assess pivot mode
+//			for (int i = 2; i < table[0].length; i++) {
+//				String phaseName = table[0][i].split("\\s")[0];				
+//				if(study!=null && study.getPhase(phaseName)!=null) {
+//					pivotMode =  PivotMode.ANIMAL_PHASE;
+//					break;
+//				}
+//			}
 		}
 		
-		return parse(test, table, study, pivotMode);
+		return parse(test, table, pivotMode);
 	}
 	
 	/**
@@ -188,7 +172,7 @@ public class PivotDlg extends JEscapeDialog {
 	 * @return
 	 * @throws Exception
 	 */
-	public static List<Result> parse(Test test, String[][] table, Study study, PivotMode mode) throws Exception {
+	public static List<Result> parse(Test test, String[][] table, PivotMode mode) throws Exception {
 		if(table.length<2) throw new ValidationException("You need to paste at least 2 lines");
 
 		
@@ -280,10 +264,7 @@ public class PivotDlg extends JEscapeDialog {
 					ids.add(table[i][sampleIdIndex]);
 				}
 			}
-			for(Biosample b: DAOBiosample.getBiosamples(study, ids)) {
-				map.put(b.getSampleId(), b);
-				map.put(b.getSampleName(), b);
-			}
+			map = DAOBiosample.getBiosamplesBySampleIds(ids);
 		}
 		
 		//Extract the data
@@ -314,9 +295,9 @@ public class PivotDlg extends JEscapeDialog {
 			if(mode!=PivotMode.ANIMAL_PHASE && phaseIndex>=0) {
 				String phaseName = data[phaseIndex].split("\\s")[0];
 				if(phaseName.trim().length()>0) {
-					if(study==null) throw new Exception("You must select a study");
-					phase = study.getPhase(phaseName);
-					if(phase==null && phaseName.length()>0) throw new Exception("The phase '"+phaseName+"' does not exist in "+study.getStudyId());
+					if(b.getInheritedStudy()==null) throw new Exception("The biosample does not belong to a study");
+					phase = b.getInheritedStudy().getPhase(phaseName);
+					if(phase==null && phaseName.length()>0) throw new Exception("The phase '"+phaseName+"' does not exist in "+b.getInheritedStudy().getStudyId());
 				}
 			}
 			
@@ -339,10 +320,10 @@ public class PivotDlg extends JEscapeDialog {
 				if(mode==PivotMode.ANIMAL_INPUT) {
 					input = header;					
 				} else if(mode==PivotMode.ANIMAL_PHASE) {
-					if(study==null) throw new Exception("You must select a study");
+					if(b.getInheritedStudy()==null) throw new Exception("You must select a study");
 					String phaseName = header.split("\\s")[0];
-					phase = study.getPhase(phaseName);
-					if(phase==null && phaseName.length()>0) throw new Exception("The phase '"+phaseName+"' does not exist in "+study.getStudyId());				
+					phase = b.getInheritedStudy().getPhase(phaseName);
+					if(phase==null && phaseName.length()>0) throw new Exception("The phase '"+phaseName+"' does not exist in "+b.getInheritedStudy().getStudyId());				
 				} else {
 					throw new Exception("Invalid mode: "+mode);
 				}
@@ -365,8 +346,6 @@ public class PivotDlg extends JEscapeDialog {
 	
 	private void populateTextArea() throws Exception {
 		Test test = tab.getTestChoice().getSelection();
-		Study study = DAOStudy.getStudyByStudyId(tab.getStudyId());
-		if(study==null || !SpiritRights.canExpert(study, Spirit.getUser())) throw new Exception("The study is invalid");
 		List<Result> export = new ArrayList<>(tab.getTable().getRows());
 
 		//Remove empty results
@@ -384,7 +363,12 @@ public class PivotDlg extends JEscapeDialog {
 			//Create Example
 			//
 			export.clear();
-			List<Phase> phases = study==null? new ArrayList<Phase>(): new ArrayList<>(study.getPhases());
+			List<Phase> phases = new ArrayList<>();
+			phases.add(new Phase("d0"));
+			phases.add(new Phase("d1"));
+			phases.add(new Phase("d2"));
+			phases.add(new Phase("d3"));
+					
 			for (int i = 0; i < 40; i++) {
 				Result r = new Result(test);
 				r.setBiosample(new Biosample("Sample " + new DecimalFormat("00").format(i/12+1)));

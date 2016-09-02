@@ -21,6 +21,7 @@
 
 package com.actelion.research.spiritapp.spirit.ui.study.edit;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -69,9 +70,9 @@ public class StudyDiscardDlg {
 					txn = session.getTransaction();
 					txn.begin();
 
-					DAOResult.deleteResults(session, results, user);
-					DAOBiosample.deleteBiosamples(session, biosamples, user);
-					DAOStudy.deleteStudy(session, study, user);
+//					DAOResult.deleteResults(session, results, user);
+//					DAOBiosample.deleteBiosamples(session, biosamples, user);
+					DAOStudy.deleteStudies(session, Collections.singleton(study), true, user);
 					
 					txn.commit();					
 					SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_DELETED, Study.class, study);

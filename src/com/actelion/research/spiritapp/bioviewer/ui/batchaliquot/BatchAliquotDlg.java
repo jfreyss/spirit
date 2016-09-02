@@ -98,7 +98,7 @@ public class BatchAliquotDlg extends JEscapeDialog {
 		}); 
 		
 		//SAVE Button
-		JButton okButton = new JIconButton(IconType.SAVE, "Create Aliquots");
+		JButton okButton = new JIconButton(IconType.SAVE, "Create");
 		okButton.addActionListener(new ActionListener() {
 			
 			@Override
@@ -211,7 +211,7 @@ public class BatchAliquotDlg extends JEscapeDialog {
 		}
 		
 		
-		EditBiosampleDlg dlg = EditBiosampleDlg.createDialogForEditInTransactionMode("Create Aliquots", aliquotsToSave);
+		EditBiosampleDlg dlg = EditBiosampleDlg.createDialogForEditInTransactionMode("Add Children", aliquotsToSave);
 		dlg.setVisible(true);
 		if(dlg.getSaved().size()>0) {
 //			DAOBiosample.persistBiosamples(parentsToSave, Spirit.getUser());

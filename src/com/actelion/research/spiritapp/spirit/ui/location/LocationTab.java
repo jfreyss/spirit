@@ -139,7 +139,9 @@ public class LocationTab extends JPanel implements ISpiritTab {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					if(tabbedPane.getSelectedIndex()==0) {
-						POIUtils.exportToExcel(locationDepictor.getLocationLayout(), POIUtils.ExportMode.HEADERS_TOPLEFT);
+						String[][] layout = locationDepictor.getLocationLayout();
+						if(layout==null) throw new Exception("You cannot export the layout if there are biosamples");
+						POIUtils.exportToExcel(layout, POIUtils.ExportMode.HEADERS_TOPLEFT);
 					} else {
 						POIUtils.exportToExcel(biosampleTable.getTabDelimitedTable(), POIUtils.ExportMode.HEADERS_TOP);
 					}
@@ -174,6 +176,7 @@ public class LocationTab extends JPanel implements ISpiritTab {
 		searchPane.addPropertyChangeListener(LocationSearchPane.PROPERTY_QUERIED, new PropertyChangeListener() {			
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
+				detailPane.setBiosamples(null);
 				locationDepictor.setAcceptedAdminLocations(searchPane.getLocationQuery().isEmpty()? null: searchPane.getAcceptedAdminLocations());
 			}
 		});

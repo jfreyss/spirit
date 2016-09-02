@@ -76,7 +76,7 @@ public class LocationTypeComboBox extends JGenericComboBox<LocationType> {
 	public Component processCellRenderer(JLabel comp, LocationType type, int index) {
 		comp.setIcon(type==null? null: new ImageIcon(type.getImageThumbnail()));
 		comp.setIconTextGap(0);
-		comp.setBackground(UIUtils.getDilutedColor(comp.getBackground(), type.getCategory()==LocationCategory.ADMIN?Color.RED: type.getCategory()==LocationCategory.CONTAINER?Color.CYAN:  Color.WHITE));
+		comp.setBackground(UIUtils.getDilutedColor(comp.getBackground(), type==null? Color.WHITE: type.getCategory()==LocationCategory.ADMIN?Color.RED: type.getCategory()==LocationCategory.CONTAINER?Color.CYAN:  Color.WHITE));
 		return comp;
 	}
 

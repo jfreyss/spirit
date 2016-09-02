@@ -38,6 +38,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.management.MXBean;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -247,9 +248,6 @@ public abstract class SwingWorkerExtended  {
 			(myComp instanceof JFrame)? ((JFrame)myComp).getContentPane():
 			(myComp instanceof JDialog)? ((JDialog)myComp).getContentPane():
 			myComp;
-		
-//		boolean fromEventDispatcher = SwingUtilities.isEventDispatchThread();
-//		boolean fromPool = SwingWorkerExecutor.isFromPool(Thread.currentThread());
 
 		String last = "";
 		StackTraceElement[] t = Thread.currentThread().getStackTrace();
@@ -354,7 +352,7 @@ public abstract class SwingWorkerExtended  {
 				@Override
 				public void run() {
 					try{Thread.sleep(200);} catch(Exception e) {return;}
-					startBgProcess(title, myComp, (flags & FLAG_CANCELABLE)>0);
+					startBgProcess(title, comp, (flags & FLAG_CANCELABLE)>0);
 				}
 			};
 			delayVisibleThread.setDaemon(true);

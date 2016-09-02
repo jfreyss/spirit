@@ -22,9 +22,11 @@
 package com.actelion.research.spiritcore.services.dao;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,14 +44,15 @@ import org.hibernate.envers.query.AuditQuery;
 import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritcore.business.IObject;
-import com.actelion.research.spiritcore.business.biosample.ActionComments;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
+import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRevisionEntity;
+import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.Formatter;
 
 public class DAORevision {
@@ -148,7 +151,7 @@ public class DAORevision {
 	@SuppressWarnings("unchecked")
 	public static List<Revision> getRevisions(IObject obj) {
 		long s = System.currentTimeMillis();
-		EntityManager session = JPAUtil.getManager();
+		EntityManager session = JPAUtil.createManager();
 		AuditReader reader = AuditReaderFactory.get(session);	
 		AuditQuery query = reader.createQuery().forRevisionsOfEntity(obj.getClass(), false, true).add(AuditEntity.id().eq(obj.getId()));
 		List<Object[]> res = query.getResultList();
@@ -166,7 +169,7 @@ public class DAORevision {
 		EntityManager session = JPAUtil.getManager();
 		AuditReader reader = AuditReaderFactory.get(session);	
 		
-		List<Class<? extends IObject>> entityClasses = new ArrayList<>();
+		List<Class<?>> entityClasses = new ArrayList<>();
 		entityClasses.add(Study.class);
 		entityClasses.add(Biosample.class);
 		entityClasses.add(Result.class);
@@ -210,8 +213,7 @@ public class DAORevision {
 		} catch (Exception e) {
 			rev2 = 0;
 		}
-		
-		List<Class<? extends IObject>> entityClasses = new ArrayList<>();
+		List<Class<?>> entityClasses = new ArrayList<>();
 		if(studies) entityClasses.add(Study.class);
 		if(samples) entityClasses.add(Biosample.class);
 		if(results) entityClasses.add(Result.class);
@@ -228,7 +230,7 @@ public class DAORevision {
 		return revisions;
 	}
 	
-	private static List<Object[]> queryForRevisions(AuditReader reader, List<Class<? extends IObject>> entityClasses, int minRev, int maxRev, String userFilter) {
+	private static List<Object[]> queryForRevisions(AuditReader reader, List<Class<?>> entityClasses, int minRev, int maxRev, String userFilter) {
 		List<Object[]> res = new ArrayList<>();
 		
 		for(Class<?> claz: entityClasses ) {
@@ -247,7 +249,8 @@ public class DAORevision {
 		Map<String, Revision> res = new TreeMap<>();
 		Set<Integer> addAndDelRevIds = new HashSet<>();
 		for (Object[] a: objects) {
-			if(claz!=null && !claz.isInstance(a[0])) continue;
+			
+			System.out.println("DAORevision.mapRevisions() "+Arrays.toString(a)+" "+(claz!=null && !claz.isInstance(a[0]))+" "+claz+" "+a[0].getClass());
 			
 			IObject entity = (IObject) a[0];
 			SpiritRevisionEntity rev = (SpiritRevisionEntity) a[1];
@@ -289,7 +292,7 @@ public class DAORevision {
 	 * @param comments
 	 * @throws Exception
 	 */
-	public static void restore(List<? extends IObject> objects, String user, String comments) throws Exception {
+	public static void restore(List<? extends IObject> objects, SpiritUser user, String comments) throws Exception {
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn =  session.getTransaction();
 		
@@ -300,7 +303,7 @@ public class DAORevision {
 
 			for (Object object : objects) {
 				IObject clone = ((IObject) object);
-				updateUpd(clone, now, user, comments);
+				remap(session, clone, now, user, comments, null);
 				
 				
 				session.merge(clone);
@@ -327,76 +330,77 @@ public class DAORevision {
 	 * @param comments
 	 * @throws Exception
 	 */
-	public static void revert(Revision revision, String user, String comments) throws Exception {
+	public static void revert(Revision revision, SpiritUser user, String comments) throws Exception {
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn =  session.getTransaction();
 		
 		try {
-			txn.begin();
 			Date now = JPAUtil.getCurrentDateFromDatabase();
 			int revId = revision.getRevId();
 			
 			AuditReader reader = AuditReaderFactory.get(session);
 			
-			
 			//Query modified entities during this revision
-			List<Class<? extends IObject>> entityClasses = new ArrayList<>();
-			entityClasses.add(Study.class);
-			entityClasses.add(Biosample.class);
-			entityClasses.add(Result.class);
-			entityClasses.add(Location.class);
-			entityClasses.add(Biotype.class);
-			entityClasses.add(Test.class);						
-			List<Object[]> res = queryForRevisions(reader, entityClasses, revId, revId, null);
+			Map<String, IObject> mapMerged = new HashMap<>();
+			txn.begin();
 			
-			
-			List<IObject> toDelete = new ArrayList<>();
-			List<IObject> toInsert = new ArrayList<>();
-			List<IObject> toUpdate = new ArrayList<>();
-			
-			for (Object[] a : res) {
-				IObject entity = (IObject) a[0];
-				RevisionType type = (RevisionType) a[2];
-				if(revision.type==type) {
-					IObject obj = reader.find(entity.getClass(), entity.getId(), revId-1);
-					if(obj==null) throw new Exception("The "+entity.getClass().getSimpleName()+" "+entity.getId()+" could not be restored at rev="+(revId-1));
-					if(type==RevisionType.ADD) {
-						toDelete.add(obj);
-					} else if(type==RevisionType.DEL) {
-						toInsert.add(obj);
-					} else if(type==RevisionType.MOD) {
-						toUpdate.add(obj);
+			for(Class<IObject> claz : new Class[]{Biotype.class, Test.class, Study.class, Location.class, Biosample.class, Result.class}) {
+				List<Class<?>> entityClasses = new ArrayList<>();
+				entityClasses.add(claz);
+				List<Object[]> res = queryForRevisions(reader, entityClasses, revId, revId, null);
+				
+				
+				List<IObject> toDelete = new ArrayList<>();
+				List<IObject> toMerge = new ArrayList<>();
+				
+				for (Object[] a : res) {
+					IObject entity = (IObject) a[0];
+					RevisionType type = (RevisionType) a[2];
+					if(revision.type==type) {
+						if(type==RevisionType.ADD) {
+							//Attach the entity to be deleted
+							IObject obj = session.merge(entity);
+							toDelete.add(obj);
+						} else {
+							//Attach the revision to be restored 
+							IObject obj = reader.find(entity.getClass(), entity.getId(), revId-1);
+							if(obj==null) throw new Exception("The "+entity.getClass().getSimpleName()+" "+entity.getId()+" could not be found at rev="+(revId-1));
+							toMerge.add(obj);
+						}
+						mapMerged.put(entity.getClass() + "_" + entity.getId(), null);
 					}
 				}
-			}
-			
-			LoggerFactory.getLogger(DAORevision.class).debug("toInsert="+toInsert.size()+" toDelete="+toDelete.size()+" toUpdate="+toUpdate.size());
-			for (IObject o : toInsert) {
-				updateUpd(o, now, user, comments);
-				LoggerFactory.getLogger(DAORevision.class).debug("persist "+o.getClass().getSimpleName()+" "+o.getId()+":"+o);
-				if(o.getId()<0) {
-					session.persist(o);
-				} else {
-					session.merge(o);
+						
+				LoggerFactory.getLogger(DAORevision.class).debug(claz+" >  toMerge="+toMerge.size()+" toDelete="+toDelete.size());
+				int step = 0;
+				while(toMerge.size()>0 && step++<6) {
+					for (IObject o : new ArrayList<>(toMerge)) {
+						int id = o.getId();
+						boolean success = remap(session, o, now, user, comments, mapMerged);
+						System.out.println("DAORevision.revert() "+o+" > "+success);
+						if(!success) continue;
+						toMerge.remove(o);
+						
+						LoggerFactory.getLogger(DAORevision.class).debug("merge "+o.getClass().getSimpleName()+" "+o.getId()+":"+o);
+						mapMerged.put(o.getClass() + "_" + id, session.merge(o));
+						System.out.println("DAORevision.revert() mapMerged="+mapMerged);
+					}
 				}
-			}
-			for (IObject o : toUpdate) {
-				updateUpd(o, now, user, comments);
-				LoggerFactory.getLogger(DAORevision.class).debug("merge "+o.getClass().getSimpleName()+" "+o.getId()+":"+o);
-				session.merge(o);
-			}
-			for (IObject o : toDelete) {
-				updateUpd(o, now, user, comments);
-				LoggerFactory.getLogger(DAORevision.class).debug("remove "+o.getClass().getSimpleName()+" "+o.getId()+":"+o);
-				session.remove(o);
-			}
+				for (IObject o : toDelete) {
+					LoggerFactory.getLogger(DAORevision.class).debug("remove "+o.getClass().getSimpleName()+" "+o.getId()+":"+o);
+					session.remove(o);
+				}
 			
-			txn.commit();		
+				
+			}
+			txn.commit();
 			txn = null;
 		} catch (Exception e) {
-			if(txn!=null && txn.isActive()) txn.rollback();
+			e.printStackTrace();			
 			throw e;
-		} 
+		} finally {
+			if(txn!=null && txn.isActive()) txn.rollback();			
+		}
 	}
 
 	
@@ -408,34 +412,90 @@ public class DAORevision {
 	 * @param comments
 	 * @throws Exception
 	 */
-	private static void updateUpd(IObject clone, Date now, String user, String comments) throws Exception {
-		if(clone instanceof Biosample) {
-			((Biosample) clone).addAction(new ActionComments(((Biosample) clone), comments));
-			((Biosample) clone).setUpdDate(now);
-			((Biosample) clone).setUpdUser(user);
-		} else if(clone instanceof Study) {
-			((Study) clone).setNotes((((Study) clone).getNotes()==null?"": ((Study) clone).getNotes() + " - ") +  comments);
-			((Study) clone).setUpdDate(now);
-			((Study) clone).setUpdUser(user);
+	private static boolean remap(EntityManager session, IObject clone, Date now, SpiritUser user, String comments, Map<String, IObject> mapMerged) throws Exception {
+		boolean success = true;
+		if(clone instanceof Study) {
+			Study s = ((Study) clone); 
+			s.setNotes((s.getNotes()==null || s.getNotes().length()==0? "": s + " - ") +  comments);
+			s.setUpdDate(now);
+			s.setUpdUser(user.getUsername());
+			
+		} else if(clone instanceof Biosample) {
+			Biosample b = (Biosample) clone;
+			System.out.println("DAORevision.remap() "+b.debugInfo());
+			if(mapMerged!=null && b.getInheritedStudy()!=null && mapMerged.containsKey(Study.class+"_"+b.getInheritedStudy().getId())) {
+				Study s = (Study)mapMerged.get(Study.class+"_"+b.getInheritedStudy().getId());
+				if(s!=null) {
+					b.setInheritedStudy(s);
+					b.setAttachedStudy(b.getAttachedStudy()==null? null: s);
+					b.setInheritedGroup(b.getInheritedGroup()==null? null: s.getGroup(b.getInheritedGroup().getName()));
+					b.setInheritedPhase(b.getInheritedPhase()==null? null: s.getPhase(b.getInheritedPhase().getName()));
+				} else {
+					success = false;
+				}
+			}
+			if(mapMerged!=null && b.getParent()!=null && mapMerged.containsKey(Biosample.class+"_"+b.getParent().getId())) {
+				Biosample parentMerged = (Biosample) mapMerged.get(Biosample.class+"_"+b.getParent().getId());
+				if(parentMerged!=null) {
+					b.setParent(parentMerged);
+				} else {
+					success = false;
+				}
+			}
+			b.setChildren(new HashSet<Biosample>());
+			b.setUpdDate(now);
+			b.setUpdUser(user.getUsername());
 		} else if(clone instanceof Test) {
 			((Test) clone).setUpdDate(now);
 			((Test) clone).setUpdUser(comments);
 		} else if(clone instanceof Result) {
-			((Result) clone).setComments((((Result) clone).getComments()==null?"": ((Result) clone).getComments() + " - ") + comments);
-			((Result) clone).setUpdDate(now);
-			((Result) clone).setUpdUser(user);
+			Result r = (Result) clone;
+			if( r.getPhase()!=null && r.getPhase().getStudy()!=null) {
+				if(mapMerged!=null && mapMerged.containsKey(Study.class+"_"+r.getPhase().getStudy().getId())) {
+					Study s = (Study)mapMerged.get(Study.class+"_"+r.getPhase().getStudy().getId());
+					Phase p = s==null? null: s.getPhase(r.getPhase().getName());
+					if(s!=null) {
+						r.setPhase(p);
+					} else {
+						success = false;
+					}
+				} else if(!session.contains(r.getPhase())) {
+					Study s = DAOStudy.getStudyByStudyId(r.getPhase().getStudy().getStudyId());
+					Phase p = s.getPhase(r.getPhase().getName());
+					r.setPhase(p);
+				}
+			}
+			if(r.getBiosample()!=null) {
+				if(mapMerged!=null && mapMerged.containsKey(Biosample.class+"_"+r.getBiosample().getId())) {
+					//The linked object is also reverted
+					Biosample b = (Biosample)mapMerged.get(Biosample.class+"_"+r.getBiosample().getId());
+					if(b!=null) {
+						r.setBiosample(b);
+					} else {
+						success = false;
+					}
+				} else if(!session.contains(r.getBiosample())) {
+					//The linked object was not reverted. However its id may differ, if it was reverted before 
+					Biosample b = DAOBiosample.getBiosample(r.getBiosample().getSampleId());
+					r.setBiosample(b);
+				}
+			}
+			r.setComments((r.getComments()==null?"": r.getComments() + " - ") + comments);
+			r.setUpdDate(now);
+			r.setUpdUser(user.getUsername());
 		} else if(clone instanceof Location) {
 			((Location) clone).setUpdDate(now);
-			((Location) clone).setUpdUser(user);
+			((Location) clone).setUpdUser(user.getUsername());
 		} else if(clone instanceof Test) {
 			((Test) clone).setUpdDate(now);
-			((Test) clone).setUpdUser(user);
+			((Test) clone).setUpdUser(user.getUsername());
 		} else if(clone instanceof Biotype) {
 			((Biotype) clone).setUpdDate(now);
-			((Biotype) clone).setUpdUser(user);
+			((Biotype) clone).setUpdUser(user.getUsername());
 		} else {
 			throw new Exception("Invalid object "+clone);
 		}
+		return success;
 	}
 	
 

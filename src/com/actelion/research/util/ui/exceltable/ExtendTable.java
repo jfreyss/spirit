@@ -147,34 +147,14 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 				if(col>=0) {
 					column = model.getColumn(convertColumnIndexToModel(col));
 					
-					popupMenu.add(new JCustomLabel("Column: " + column.getName().replace("\n", ".").replaceAll("<.>|^\\.|\\.$", ""), Font.BOLD));
+					popupMenu.add(new JCustomLabel(column.getName().replace("\n", ".").replaceAll("<.>|^\\.|\\.$", ""), Font.BOLD));
 					popupMenu.add(new JSeparator());
 					
 					//Popup: Add sorting Columns
 					column.populateHeaderPopup(ExtendTable.this, popupMenu);
 
-					
 				}
-				
-				//Popup: Add Hierarchy menu
-				if(model.isTreeViewEnabled()) {
-					popupMenu.add(new JSeparator());
-					popupMenu.add(new JCustomLabel("Hierarchy", Font.BOLD));
-					boolean enabled = getModel().isTreeViewActive();
-					popupMenu.add(new TreeViewCheckBox(enabled));
-					if(enabled) {
-						JMenu expandMenu = new JMenu("Expand");
-						JMenu collapseMenu = new JMenu("Collapse");
-						popupMenu.add(expandMenu);
-						popupMenu.add(collapseMenu);
-						expandMenu.add(new TreeViewExpandAll(true, true));
-						expandMenu.add(new TreeViewExpandAll(true, false));
-						collapseMenu.add(new TreeViewExpandAll(false, true));
-						collapseMenu.add(new TreeViewExpandAll(false, false));
-					}
-				}
-				
-				//HeaderPopup
+
 				populateHeaderPopup(popupMenu, column);
 				
 				//Popup: Add possible columns
@@ -189,7 +169,7 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 				if(others!=null) addableColumns.addAll(others);
 				if(addableColumns.size()>0) {
 					popupMenu.add(new JSeparator());
-					popupMenu.add(new JCustomLabel("Add Columns", Font.BOLD));
+					popupMenu.add(new JCustomLabel("Extra Columns", Font.BOLD));
 
 					for (Column<ROW, ?> column2 : addableColumns) {
 						if(column2==null) {
@@ -200,7 +180,24 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 					}							
 				}
 				
+				//Popup: Add Hierarchy menu
+				if(model.isTreeViewEnabled()) {
+					popupMenu.add(new JSeparator());
+					popupMenu.add(new JCustomLabel("Hierarchy", Font.BOLD));
+					boolean enabled = getModel().isTreeViewActive();
+					popupMenu.add(new TreeViewCheckBox(enabled));
+					if(enabled) {
+						JMenu expandMenu = new JMenu("Expand/Collapse");
+						popupMenu.add(expandMenu);
+						expandMenu.add(new TreeViewExpandAll(true, true));
+						expandMenu.add(new TreeViewExpandAll(true, false));
+						expandMenu.add(new TreeViewExpandAll(false, true));
+						expandMenu.add(new TreeViewExpandAll(false, false));
+					}
+				}
 				
+				//HeaderPopup
+
 				if(popupMenu.getComponentCount()==0) return;
 				
 	            popupMenu.show(e.getComponent(), e.getX(), e.getY());

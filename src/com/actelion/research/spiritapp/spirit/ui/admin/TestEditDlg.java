@@ -176,29 +176,22 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 		}
 	}
 	
-	public TestEditDlg(Test test) {
+	public TestEditDlg(Test t) {
 		super(UIUtils.getMainFrame(), "Admin - Tests", TestEditDlg.class.getName());
-		this.test = JPAUtil.reattach(test);
+		this.test = JPAUtil.reattach(t);
 		testCategoryComboBox = new JGenericComboBox<String>(DAOTest.getTestCategories(), true);
 		testCategoryComboBox.setEditable(true);
 		
 		testNameTextField.setText(test.getName());
-		testCategoryComboBox.setSelection(test.getCategory());
-		
-		
-		
-		GridBagConstraints c = new GridBagConstraints();
+		testCategoryComboBox.setSelection(test.getCategory());		
+
 		//Test Panel
 		JPanel testPanel = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = GridBagConstraints.WEST;
 		c.insets = new Insets(1,1,1,1);
 		c.gridx = 0; c.gridy = 0; testPanel.add(new JLabel("Category: "), c);
 		c.gridx = 0; c.gridy = 2; testPanel.add(new JLabel("TestName: "), c);	
-
-		JLabel internalLbl = new JLabel("Internal Id: "+ (test.getId()>0?test.getId():"N/A"));
-		internalLbl.setForeground(Color.GRAY);
-		c.gridx = 3; c.gridy = 0; testPanel.add(internalLbl, c);		
-		
 		
 		c.weightx = 0;
 		c.gridx = 1; c.gridy = 0; testPanel.add(testCategoryComboBox, c);
@@ -219,8 +212,6 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			}
 		}
 
-		
-		
 		//Input Panel
 		JScrollPane inputScrollPane = new JScrollPane(inputPanel);
 		inputScrollPane.setPreferredSize(new Dimension(500, 190));
@@ -237,26 +228,12 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			refreshPanel(outputType);			
 		}
 		
-		
-		
 		JPanel centerPanel = UIUtils.createVerticalBox(
 				UIUtils.createTitleBox("Test Name", testPanel),
 				UIUtils.createTitleBox("Input Attributes", UIUtils.createBox(inputScrollPane, new JInfoLabel("Input attributes are optional and describe the test conditions (biomarker, method, ...)"))),
 				UIUtils.createTitleBox("Output Attributes", UIUtils.createBox(outputScrollPane, new JInfoLabel("You must have at least one output attribute"))),
 				UIUtils.createTitleBox("Info Attributes", UIUtils.createBox(infoScrollPane, new JInfoLabel("Info attributes are optional and are used to give extra information about a result (comments, raw value, ...)"))));
 		
-		JButton deleteButton = new JIconButton(IconType.DELETE, "Delete");
-		if(test.getId()>0) {
-			deleteButton.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					eventDelete();
-				}
-			});			
-		} else {
-			deleteButton.setEnabled(false);
-		}
-			
 		JButton okButton = new JIconButton(IconType.SAVE, "Save");
 		okButton.addActionListener(new ActionListener() {
 			@Override
@@ -273,7 +250,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 		
 		JPanel content = new JPanel(new BorderLayout());
 		content.add(BorderLayout.CENTER, centerPanel);
-		content.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), deleteButton, okButton));
+		content.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
 		setContentPane(content);
 		
 		UIUtils.adaptSize(this, 820, 770);
@@ -298,8 +275,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 		}
 	}
 	
-	public void refreshPanel(final OutputType outputType) {
-		
+	public void refreshPanel(final OutputType outputType) {		
 		final JPanel panel;
 		final List<AttributeRow> rows;
 		switch (outputType) {
@@ -341,8 +317,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 		c.weightx=1; c.gridx = 10; c.gridy = 0; panel.add(new JLabel(" "), c); c.weightx=0;
 		c.insets = new Insets(0,0,0,0);
 		for (int i = 0; i < rows.size(); i++) {
-			AttributeRow row = rows.get(i);
-			
+			final AttributeRow row = rows.get(i);			
 			final int index = i;
 			JButton addButton = new JButton("+");
 			addButton.addActionListener(new ActionListener() {
@@ -359,6 +334,11 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			delButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
+					int n = DAOTest.countRelations(row.model);
+					if(n>0) {
+						JExceptionDialog.showError("You must first delete the "+n+" results with a "+row.model.getName());
+						return;
+					}
 					AttributeRow r = rows.remove(index);
 					r.remove();
 					updateModel();
@@ -392,7 +372,6 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			c.gridx = 1; c.gridy = i+1; panel.add(row.name, c);
 			c.gridx = 2; c.gridy = i+1; panel.add(row.dataTypeComboBox, c);
 			c.gridx = 3; c.gridy = i+1; panel.add(row.paramButton, c);			
-//			c.gridx = 4; c.gridy = i+1; panel.add(row.unit, c);			
 			c.gridx = 5; c.gridy = i+1; panel.add(row.required, c);			
 			c.gridx = 6; c.gridy = i+1; panel.add(addButton, c);			
 			c.gridx = 7; c.gridy = i+1; panel.add(delButton, c);
@@ -410,22 +389,9 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 		c.gridx = 6; c.gridy = rows.size()+1; panel.add(addButton, c);			
 
 		c.weighty = 1;
-		c.gridx = 9; c.gridy = rows.size()+1; panel.add(new JLabel(" "), c);
+		c.gridx = 10; c.gridy = rows.size()+1; panel.add(new JLabel(" "), c);
 		panel.updateUI();
-	}
-	
-	public void eventDelete() {
-		try {
-			int res = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete " + test + "?", "Delete Test", JOptionPane.YES_NO_OPTION);
-			if(res!=JOptionPane.YES_OPTION) return;
-			DAOTest.removeTest(test, Spirit.askForAuthentication());
-//			JOptionPane.showMessageDialog(this, test + " deleted", "Success", JOptionPane.INFORMATION_MESSAGE);
-			dispose();
-			SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_DELETED, Test.class, test);			
-		} catch (Exception e) {
-			JExceptionDialog.showError(e);
-		}
-	}
+	}	
 	
 	public void eventOk() {
 		boolean create = test.getId()<=0;

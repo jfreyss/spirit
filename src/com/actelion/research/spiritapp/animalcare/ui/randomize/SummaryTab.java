@@ -138,7 +138,7 @@ public class SummaryTab extends WizardPanel {
 				}
 
 				if(needed==0) {
-					JOptionPane.showMessageDialog(SummaryTab.this, "To renumber the Nos, you should first clear the existing ones", "Renumbering", JOptionPane.WARNING_MESSAGE);
+					JOptionPane.showMessageDialog(SummaryTab.this, "Renumbering is not possible before clearing the existing numbers", "Renumbering", JOptionPane.WARNING_MESSAGE);
 					renumberEvent(-1);
 					return;
 				}

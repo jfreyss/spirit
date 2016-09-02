@@ -45,7 +45,6 @@ import javax.persistence.TemporalType;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.envers.RevisionTimestamp;
 
 import com.actelion.research.spiritcore.business.IEntity;
 
@@ -81,7 +80,6 @@ public class Order implements IEntity, Comparable<Order>, Serializable {
 	private String updUser;
 	
 	@Temporal(TemporalType.TIMESTAMP)
-	@RevisionTimestamp
 	@Audited(targetAuditMode = RelationTargetAuditMode.AUDITED)
 	private Date updDate;
 	

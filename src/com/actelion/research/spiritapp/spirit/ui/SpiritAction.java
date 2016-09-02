@@ -143,12 +143,10 @@ public class SpiritAction {
 				public void run() {
 					try {
 						//Log to StatCounter
-						Object o = new URL("http://c.statcounter.com/11069822/0/f9288463/1/").getContent();
-						System.out.println("SpiritAction.logUsage(...).new Thread() {...}.run() "+o);
+						new URL("https://jfreyss.github.io/spirit/webstart/").getContent();
 					} catch(Exception e) {
 						e.printStackTrace();
-					}
-					
+					}					
 				};
 			}.start();
 		}

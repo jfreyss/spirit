@@ -291,7 +291,7 @@ public class StudyActions {
 			super(phase.toString());
 			this.phase = phase;
 			putValue(AbstractAction.SMALL_ICON, IconType.LINK.getIcon());			
-			setEnabled(phase.getStudy().getPhasesWithGroupAssignments().size()>0 && SpiritRights.canBlind(phase.getStudy(), Spirit.getUser()));
+			setEnabled(phase.getStudy()!=null && phase.getStudy().getPhasesWithGroupAssignments().size()>0 && SpiritRights.canBlind(phase.getStudy(), Spirit.getUser()));
 		}
 		
 		@Override
@@ -335,6 +335,7 @@ public class StudyActions {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
+				if(study==null) return;
 				new MonitoringOverviewDlg(study);
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
@@ -357,7 +358,7 @@ public class StudyActions {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				if(study==null) throw new Exception("You must select a study");
+				if(study==null) return;
 				if(study.isSynchronizeSamples()) {
 					new AddExceptionalSamplingDlg(study);					
 				} else {
@@ -382,7 +383,7 @@ public class StudyActions {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				if(study==null) throw new Exception("You must select a study");
+				if(study==null) return;
 				new ManageSamplesDlg(study);
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
@@ -403,7 +404,7 @@ public class StudyActions {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				if(study==null) throw new Exception("You must select a study");
+				if(study==null) return;
 				new SampleWeighingDlg(study);
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
@@ -484,10 +485,11 @@ public class StudyActions {
 			super("Reports");
 			this.study = study;
 			putValue(Action.SMALL_ICON, IconType.EXCEL.getIcon());
-			setEnabled(SpiritRights.canExpert(study, Spirit.getUser()));
+			setEnabled(study!=null && SpiritRights.canExpert(study, Spirit.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			if(study==null) return;
 			new ReportDlg(study);
 		}
 	}
@@ -613,6 +615,7 @@ public class StudyActions {
 				Set<Phase> randoPhases = study.getPhasesWithGroupAssignments();
 				if(randoPhases.size()>0) {					
 					for (Phase phase : randoPhases) {
+						assert phase.getStudy()!=null;
 						attachMenu.add(new JMenuItem(new Action_GroupAssignment(phase)));
 					}
 				} else {

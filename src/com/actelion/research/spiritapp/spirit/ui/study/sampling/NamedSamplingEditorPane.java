@@ -69,7 +69,7 @@ public class NamedSamplingEditorPane extends JEditorPane {
 			StringBuilder sb = new StringBuilder();
 			sb.append("<html><body style='background:#FFFFFF;font-size:8px;white-space:nowrap'>");
 			if(ns.getName()!=null) sb.append("<b style='white-space:nowrap;font-size:12px; color:#990000'>" + ns.getName() + "</b><br>");
-			sb.append(ns.getHtmlByContainer());
+			sb.append(ns.getHtmlBySampling());
 			sb.append("</html>");
 			setText(sb.toString());
 		}

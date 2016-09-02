@@ -76,7 +76,7 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 	@Column(name="name", nullable=false)
 	private String name = "";
 	
-	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY, optional=false)
+	@ManyToOne( fetch=FetchType.LAZY, cascade=CascadeType.ALL, optional=false)
 	@JoinColumn(name="biotype_id")
 	@Audited(targetAuditMode=RelationTargetAuditMode.NOT_AUDITED)
 	private Biotype biotype = null;

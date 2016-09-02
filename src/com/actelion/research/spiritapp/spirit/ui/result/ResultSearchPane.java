@@ -73,14 +73,11 @@ public class ResultSearchPane extends JPanel {
 		this.cardPanel = cardPanel;
 		this.tree = new ResultSearchTree(forcedBiotype);
 
-		JButton reportButton = new JButton(new Action_Report());
 		JButton resetButton = new JButton(new Action_Reset());	
 
-		reportButton.setVisible(forcedBiotype==null);
-		
 		//Layout
 		add(BorderLayout.CENTER, new JScrollPane(tree));
-		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(reportButton, Box.createHorizontalGlue(), resetButton, searchButton));		
+		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), resetButton, searchButton));		
 		setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));		
 		setPreferredSize(new Dimension(200, 200));
 		

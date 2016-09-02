@@ -33,6 +33,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -108,10 +109,11 @@ public class NamedTreatment implements Comparable<NamedTreatment>, Cloneable {
 	@GeneratedValue(generator="treatment_sequence")
 	private int id = 0;
 	
-	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.REFRESH, optional=false)
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL, optional=false)
+	@JoinColumn(name="study_id")
 	private Study study = null;
 
-	@Column(nullable=false)
+	@Column(name="name", nullable=false)
 	private String name;
 	
 	@Column(name="color")	
@@ -127,8 +129,7 @@ public class NamedTreatment implements Comparable<NamedTreatment>, Cloneable {
 	@Column(name="unit")
 	@Enumerated(EnumType.STRING)
 	private TreatmentUnit unit;
-	
-	
+		
 	@Column(name="application")
 	private String application;
 
@@ -143,8 +144,7 @@ public class NamedTreatment implements Comparable<NamedTreatment>, Cloneable {
 	@Column(name="unit2")
 	@Enumerated(EnumType.STRING)
 	private TreatmentUnit unit2;
-	
-	
+		
 	@Column(name="application2")
 	private String application2;
 

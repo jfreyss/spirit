@@ -52,13 +52,13 @@ public class BiosampleCreationHelper {
 	 */
 	public static List<Biosample> processDividingSamples(Study study, List<Biosample> dividingBiosamplesToRemove) throws Exception {
 
-		List<Biosample> toSave = new ArrayList<Biosample>();
+		List<Biosample> toSave = new ArrayList<>();
 		
 		///////////////////////////////////////////////
 		//Create or update dividing samples
-		List<Biosample> dividingBiosamplesToAdd = new ArrayList<Biosample>();
-		List<Biosample> dividingBiosamplesToUpdate = new ArrayList<Biosample>();
-		if(dividingBiosamplesToRemove==null) dividingBiosamplesToRemove = new ArrayList<Biosample>();
+		List<Biosample> dividingBiosamplesToAdd = new ArrayList<>();
+		List<Biosample> dividingBiosamplesToUpdate = new ArrayList<>();
+		if(dividingBiosamplesToRemove==null) dividingBiosamplesToRemove = new ArrayList<>();
 		
 		Map<Group, int[]> group2left = new HashMap<Group, int[]>();
 		for(Group g: study.getGroups()) {
@@ -229,7 +229,7 @@ public class BiosampleCreationHelper {
 		
 		//generateContainers
 		if(generateContainers) {
-			List<Biosample> filtered = new ArrayList<Biosample>();
+			List<Biosample> filtered = new ArrayList<>();
 			for (Biosample b : biosamples) {
 				if(b.getContainer()!=null/* && b.getContainer().getId()>0*/) continue; 
 				filtered.add(b);
@@ -320,7 +320,7 @@ public class BiosampleCreationHelper {
 	 * @param res - list of retrieved or created samples 
 	 */
 	private static void retrieveOrCreateSamplesRec(Phase phase, Biosample parent, Sampling sampling, List<Biosample> res) {
-		boolean isNecropsy = sampling.getNamedSampling().isNecropsy();
+		boolean isNecropsy = sampling.getNamedSampling()!=null && sampling.getNamedSampling().isNecropsy();
 		
 		if(isNecropsy && (parent.getTopParentInSameStudy().getStatus()==Status.DEAD || parent.getTopParentInSameStudy().getStatus()==Status.KILLED)) {
 			return;
@@ -338,7 +338,6 @@ public class BiosampleCreationHelper {
 		List<Biosample> samples = new ArrayList<>();
 		if(phase!=null) {
 			for (Biosample biosample : parent.getChildren()) {
-				System.out.println("BiosampleCreationHelper.retrieveOrCreateSamplesRec() SEARCH for " + phase+" "+sampling+" "+parent+" > " +biosample+" > " + sampling.getId()+" "+biosample.getAttachedSampling().getId()+" > " +  res.contains(biosample)+" "+!phaseOfSample.equals(biosample.getInheritedPhase())+" "+!sampling.equals(biosample.getAttachedSampling()));
 				if(res.contains(biosample)) continue;				
 				if(!phaseOfSample.equals(biosample.getInheritedPhase())) continue;
 				if(!sampling.equals(biosample.getAttachedSampling())) continue;
@@ -362,7 +361,6 @@ public class BiosampleCreationHelper {
 		} 
 		
 		Biosample b = samples.get(0);
-		System.out.println("BiosampleCreationHelper.retrieveOrCreateSamplesRec() FIND FOR  " + phase+" "+sampling+" "+parent+" > "+b);
 		res.add(b);
 		for (Sampling s : sampling.getChildren()) {
 			retrieveOrCreateSamplesRec(phase, b, s, res);

@@ -55,6 +55,7 @@ import com.actelion.research.spiritcore.business.biosample.ActionBiosample;
 import com.actelion.research.spiritcore.business.biosample.ActionOwnership;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
+import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
@@ -63,7 +64,6 @@ import com.actelion.research.spiritcore.business.biosample.LocPos;
 import com.actelion.research.spiritcore.business.biosample.LocationFormat;
 import com.actelion.research.spiritcore.business.biosample.Metadata;
 import com.actelion.research.spiritcore.business.biosample.Status;
-import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationLabeling;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -185,10 +185,11 @@ public class DAOBiosample {
 	 * @param containerIds
 	 * @return
 	 */
-	public static List<Container> getContainersNewSession(Collection<String> containerIds) {
+	private static List<Container> getContainersNewSession(Collection<String> containerIds) {
 		EntityManager em = null;
 		try {
-			em = JPAUtil.createManager();
+//			em = JPAUtil.createManager();
+			em = JPAUtil.getManager();
 			List<Biosample> biosamples = queryBiosamples(em, BiosampleQuery.createQueryForContainerIds(containerIds), null);
 			for (Biosample b : biosamples) {
 				if(b.getInheritedStudy()!=null) b.getInheritedStudy().getId();
@@ -200,7 +201,7 @@ public class DAOBiosample {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		} finally {
-			if(em!=null) em.close();
+//			if(em!=null) em.close();
 		}
 	}
 
@@ -246,10 +247,10 @@ public class DAOBiosample {
 		
 			
 		StringBuilder clause = new StringBuilder();
-		List<Object> parameters = new ArrayList<Object>();
+		List<Object> parameters = new ArrayList<>();
 
 		long start = System.currentTimeMillis();
-		List<Entry<BiosampleLinker, String>> postprocessFilters = new ArrayList<Map.Entry<BiosampleLinker, String>>();
+		List<Entry<BiosampleLinker, String>> postprocessFilters = new ArrayList<>();
 
 		if (q.isSearchDiscardedOnly()) {
 			clause.append(" and b.discarded = 1");
@@ -670,13 +671,9 @@ public class DAOBiosample {
 	 * @throws Exception
 	 */
 	public static void deleteBiosamples(Collection<Biosample> biosamples, SpiritUser user) throws Exception {
-		for (Biosample biosample : biosamples) {
-			if (!SpiritRights.canDelete(biosample, user)) throw new Exception("You are not allowed to delete " + biosample);
-		}
-		
+		if(biosamples==null || biosamples.size()==0) return;
 		EntityManager session = JPAUtil.getManager();
-		EntityTransaction txn = null;
-		
+		EntityTransaction txn = null;		
 		try {
 			txn = session.getTransaction();
 			txn.begin();			
@@ -684,29 +681,33 @@ public class DAOBiosample {
 			txn.commit();
 			txn = null;
 		} finally {
-			if (txn != null)try {txn.rollback();} catch (Exception e) {}
+			if(txn!=null) if(txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
 		}
-	}
+	}	
 
 	public static void deleteBiosamples(EntityManager session, Collection<Biosample> biosamples, SpiritUser user) throws Exception {
 		assert session!=null;
 		assert session.getTransaction().isActive();
 
+		for (Biosample biosample : biosamples) {
+			if (!SpiritRights.canDelete(biosample, user)) throw new Exception("You are not allowed to delete " + biosample);
+		}
+
 		List<Integer> ids = JPAUtil.getIds(biosamples);
-		if (ids.size()>0 && DAOResult.queryResults(ResultQuery.createQueryForBiosampleIds(ids), null).size() > 0) {
+		if (ids.size()>0 && DAOResult.queryResults(session, ResultQuery.createQueryForBiosampleIds(ids), null).size() > 0) {
 			throw new Exception("Some biosamples already contains results. Please delete the results first");
 		}
-//		//Reload the samples
-//		biosamples = getBiosamplesByIds(ids).values();
-				
+		//Sort to delete first the children
+		List<Biosample> list = new ArrayList<>(biosamples);
+		Collections.sort(list, Collections.reverseOrder());
+		
 		//Delete
-		for (Biosample biosample : biosamples) {
+		for (Biosample biosample : list) {
 			if(!session.contains(biosample)) {
 				biosample = session.merge(biosample);
 			}
 			session.remove(biosample);
 		}
-		
 	}
 
 	public static void persistBiosamples(Collection<Biosample> biosamples, SpiritUser user) throws Exception {
@@ -739,11 +740,13 @@ public class DAOBiosample {
 	}
 
 	public static void testConcurrentModification(Collection<Biosample> biosamples) throws Exception {
+		Map<Integer, Biosample> id2biosample = JPAUtil.mapIds(biosamples);
+		if(id2biosample.size()==0) return;
 		EntityManager session = null;
 		try {
-			session = JPAUtil.createManager();
+//			session = JPAUtil.createManager();
+			session = JPAUtil.getManager();
 			// Test that nobody else modified the biosamples
-			Map<Integer, Biosample> id2biosample = JPAUtil.mapIds(biosamples);
 			String jpql = "select b.updDate, b.updUser, b.id from Biosample b where " + QueryTokenizer.expandForIn("b.id", id2biosample.keySet());
 			List<Object[]> lastUpdates = (List<Object[]>) session.createQuery(jpql).getResultList();
 			for (Object[] lastUpdate : lastUpdates) {
@@ -757,7 +760,7 @@ public class DAOBiosample {
 				}
 			}
 		} finally {
-			if(session!=null) session.close();
+//			if(session!=null) session.close();
 		}
 
 	}
@@ -779,12 +782,13 @@ public class DAOBiosample {
 		
 		//Create a map of actual locationId_pos to biosample, to make sure positions are unique
 		Map<String, String> locIdPos2container = new HashMap<>();
-		EntityManager newEm = null;
-		try {
-			newEm = JPAUtil.createManager();
-			Set<Integer> biosampleIdsToSave = new HashSet<>(JPAUtil.getIds(biosamples));
-			Set<Location> locations = Biosample.getLocations(biosamples);
-				List<Object[]> l = newEm.createQuery("select b.id, b.container.containerId, b.location.id, b.pos from Biosample b where b.pos>=0 and " + QueryTokenizer.expandForIn("b.location.id", JPAUtil.getIds(locations))).getResultList();
+		Set<Location> locations = Biosample.getLocations(biosamples);
+		if(locations.size()>0) {
+			EntityManager newEm = null;
+			try {
+				newEm = JPAUtil.createManager();
+				Set<Integer> biosampleIdsToSave = new HashSet<>(JPAUtil.getIds(biosamples));
+				List<Object[]> l = session.createQuery("select b.id, b.container.containerId, b.location.id, b.pos from Biosample b where b.pos>=0 and " + QueryTokenizer.expandForIn("b.location.id", JPAUtil.getIds(locations))).getResultList();
 				for (Object[] object : l) {
 					int biosampleId = (Integer) object[0];
 					String containerId = (String) object[1];
@@ -795,9 +799,10 @@ public class DAOBiosample {
 					assert !locIdPos2container.containsKey(key) || locIdPos2container.get(key).equals(containerId); 
 					locIdPos2container.put(key, containerId);
 				}
-		} finally {
-			if(newEm!=null) newEm.close();
-		}
+			} finally {
+				if(newEm!=null) newEm.close();
+			}
+	}
 
 		// ///////////////////////
 		// Validation				
@@ -1035,7 +1040,7 @@ public class DAOBiosample {
 
 //		System.out.println("DAOBiosample.persistBiosamples()11" + " > " + (System.currentTimeMillis() - s) + "ms");
 		
-		session.flush();
+//		session.flush();
 		
 		
 		// ///////////////////////////////////////////

@@ -77,14 +77,6 @@ public class MetadataComponentFactory {
 		case NUMBER:
 			res = new NumericalComponent();
 			break;
-//		case AUTO:
-//			res = new AutoCompleteComponent(metadataType.getName()) {
-//				@Override
-//				public Collection<String> getChoices() {
-//					return DAOBiotype.getAutoCompletionFields(metadataType, null);
-//				}
-//			};
-//			break;
 		case LIST:
 			res = new ComboComponent(parameters);
 			break;
@@ -115,7 +107,7 @@ public class MetadataComponentFactory {
 		public AlphaNumericalComponent() {
 			super(JCustomTextField.ALPHANUMERIC);
 			setMaxChars(255);
-			setColumns(16);			
+			setColumns(28);			
 		}		
 		@Override
 		public String getData() {
@@ -146,7 +138,7 @@ public class MetadataComponentFactory {
 	public static class BiosampleComponent extends SampleIdBrowser implements MetadataComponent {
 		public BiosampleComponent(String parameters) {
 			super();
-			setColumns(16);
+			setColumns(28);
 			if(parameters!=null && parameters.length()>0) {
 				try {
 					Biotype biotype = DAOBiotype.getBiotype(parameters);
@@ -183,39 +175,6 @@ public class MetadataComponentFactory {
 		}
 	}
 	
-/*
-	public static class CompoundComponent extends JCustomTextField implements MetadataComponent {
-		public CompoundComponent() {
-			super();
-			setColumns(16);
-		}
-		
-		@Override
-		public String getData() {
-			return getText();
-		}			
-
-		@Override
-		public void setData(String val) {
-			if(val==null) setText("");
-			else setText(val);
-		}		
-		
-		@Override
-		public void updateModel(Metadata m) {
-			if(m!=null) m.setValue(getData());
-		}
-		@Override
-		public void updateView(Metadata m) {
-			setData(m==null? null: m.getValue());
-		}
-	
-		@Override
-		public void addTextChangeListener(TextChangeListener listener) {
-			super.addTextChangeListener(listener);
-		}
-	}
-	*/
 	public static class FileComponent extends DocumentTextField implements MetadataComponent {		
 		public FileComponent() {
 			super();
@@ -248,7 +207,7 @@ public class MetadataComponentFactory {
 	public static class MultiComponent extends JComboCheckBox implements MetadataComponent {
 		public MultiComponent(String parameters) {	
 			super(Arrays.asList(MiscUtils.split(parameters)));
-			setColumns(16);
+			setColumns(28);
 		}
 
 		@Override
@@ -329,7 +288,7 @@ public class MetadataComponentFactory {
 		public AutoCompleteComponent(final String name) {			
 			super();			
 			setEditable(true);
-			setColumns(16);
+			setColumns(28);
 		}
 
 		@Override

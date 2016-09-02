@@ -99,8 +99,8 @@ public class StudyDetailPanel extends JPanel {
 	 * - JSplitPane.VERTICAL_SPLIT
 	 * @param orientation
 	 */
-	public StudyDetailPanel(final int orientation, final boolean forRevision) {
-		this.forRevision = forRevision;
+	public StudyDetailPanel(final int orientation) {
+		
 		//init depictor
 		studyDepictor.addPropertyChangeListener(new PropertyChangeListener() {
 			@Override
@@ -190,6 +190,11 @@ public class StudyDetailPanel extends JPanel {
 
 	}
 		
+	public void setForRevision(boolean forRevision) {
+		editorPane.setForRevision(forRevision);
+		this.forRevision = forRevision;
+	}
+	
 	public StudyDepictor getStudyDepictor() {
 		return studyDepictor;
 	}
@@ -200,23 +205,16 @@ public class StudyDetailPanel extends JPanel {
 	public void setStudy(final Study study) {
 		if(this.study==study) return;
 		this.study = study;
-		refreshInThread();
+		refresh();
 
 	}
 
-	private void refreshSameThread() {
-		studyDepictor.setStudy(study);
-		refreshTabbedPane();
-	}
-	
-	private SwingWorkerExtended t = null;
-	
-	private void refreshInThread() {
+	private void refresh() {
 		if(study==null || forRevision) {
-			refreshSameThread();
+			studyDepictor.setStudy(study);
+			refreshTabbedPane();
 		} else {
-			if(t!=null) t.cancel();
-			t = new SwingWorkerExtended("Loading Study", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+			new SwingWorkerExtended("Loading Study", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 				@Override
 				protected void done() {
 					study = JPAUtil.reattach(study);
@@ -232,7 +230,6 @@ public class StudyDetailPanel extends JPanel {
 			cardLayout.show(infoCardTabbedPane, "view");
 			infoLabel.setText("");
 		} else if(SpiritRights.canRead(study, Spirit.getUser())) {
-			study = JPAUtil.reattach(study);
 			if(infoTabbedPane.getSelectedIndex()==0) {
 				final List<Biosample> animals = study==null?new ArrayList<Biosample>(): new ArrayList<>(study.getAttachedBiosamples());
 				Collections.sort(animals);			
@@ -249,13 +246,13 @@ public class StudyDetailPanel extends JPanel {
 		}
 	}
 		
-	public void showSpecimen() {
+	public void showAttached() {
 		infoTabbedPane.setSelectedIndex(0);
-		refreshInThread();
+		refresh();
 	}
 	public void showInfos() {
 		infoTabbedPane.setSelectedIndex(2);
-		refreshInThread();
+		refresh();
 	}
 
 	

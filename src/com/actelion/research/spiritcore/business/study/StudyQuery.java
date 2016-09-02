@@ -23,6 +23,7 @@ package com.actelion.research.spiritcore.business.study;
 
 public class StudyQuery {
 	private String studyIds = "";
+	private String localIds = "";
 	private String keywords = "";
 	private String state = "";
 	private String user = "";
@@ -39,6 +40,11 @@ public class StudyQuery {
 		q.setStudyIds(studyIds);
 		return q;
 	}
+	public static StudyQuery createForLocalId(String localIds) {
+		StudyQuery q = new StudyQuery();
+		q.setLocalIds(localIds);
+		return q;
+	}
 	public static StudyQuery createForState(String state) {
 		StudyQuery q = new StudyQuery();
 		q.setState(state);
@@ -50,6 +56,12 @@ public class StudyQuery {
 	}
 	public void setStudyIds(String studyIds) {
 		this.studyIds = studyIds;
+	}
+	public String getLocalIds() {
+		return localIds;
+	}
+	public void setLocalIds(String localIds) {
+		this.localIds = localIds;
 	}
 	public String getKeywords() {
 		return keywords;

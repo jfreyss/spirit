@@ -39,21 +39,16 @@ public class AllColumnPivotTemplate extends PivotTemplate {
 	public void init(List<Result> results) {
 		clear();
 		setWhere(PivotItemFactory.STUDY_SUBGROUP, Where.ASROW);
-//		setWhere(PivotItemFactory.COMPOUND_ACTNO, Where.ASROW);
 		setWhere(PivotItemFactory.BIOSAMPLE_TOPID, Where.ASROW);
 		setWhere(PivotItemFactory.BIOSAMPLE_TOPNAME, Where.ASROW);
 
 		setWhere(PivotItemFactory.STUDY_STUDYID, Where.ASCOL);
 		setWhere(PivotItemFactory.STUDY_GROUP, Where.ASCOL);		
-//		setWhere(PivotItemFactory.BIOSAMPLE_BIOTYPE, Where.ASCOL);
-//		setWhere(PivotItemFactory.BIOSAMPLE_SUBTYPE, Where.ASCOL);
 		setWhere(PivotItemFactory.BIOSAMPLE_SAMPLING, Where.ASCOL);
-//		setWhere(PivotItemFactory.BIOSAMPLE_COMMENTS, Where.ASCOL);
 		setWhere(PivotItemFactory.RESULT_TEST, Where.ASCOL);
 		setWhere(PivotItemFactory.RESULT_INPUT, Where.ASCOL);
 		setWhere(PivotItemFactory.RESULT_OUTPUT, Where.ASCOL);
 		setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASCOL);
-//		setWhere(PivotItemFactory.RESULT_COMMENTS, Where.ASCOL);
 	}
 	
 	public void init(List<Result> results, DataWarriorConfig config, SpiritUser user) {

@@ -78,7 +78,7 @@ public class CreateChildrenDlg extends JEscapeDialog {
 	private List<Biosample> children;
 	
 	public CreateChildrenDlg(List<Biosample> parents) {		
-		super(UIUtils.getMainFrame(), "Create Aliquots", true);
+		super(UIUtils.getMainFrame(), "Add Children", true);
 		
 		this.parents = parents;
 		
@@ -124,8 +124,9 @@ public class CreateChildrenDlg extends JEscapeDialog {
 			centerPanel.add(UIUtils.createTitleBox("Use a sampling's template",
 					UIUtils.createBox(new JScrollPane(previewTemplate),
 						UIUtils.createTable(2, 
-								null, createTemplateButton,
-								new JLabel("Reuse:"), UIUtils.createHorizontalBox(namedSamplingComboBox, deleteTemplateButton, editTemplateButton)))), "panel2");
+								new JLabel("Template:"), UIUtils.createHorizontalBox(namedSamplingComboBox, Box.createHorizontalGlue()),
+								null, UIUtils.createHorizontalBox(deleteTemplateButton, editTemplateButton, createTemplateButton, Box.createHorizontalGlue()))
+						)), "panel2");
 			
 			refreshSamplings();
 			
@@ -185,10 +186,11 @@ public class CreateChildrenDlg extends JEscapeDialog {
 					NamedSampling sel = namedSamplingComboBox.getSelection();
 					previewTemplate.setNamedSampling(sel);
 					
-					deleteTemplateButton.setEnabled(sel!=null && sel.getStudy()==null && SpiritRights.canEdit(sel, Spirit.getUser()));
-					editTemplateButton.setEnabled(sel!=null && sel.getStudy()==null && SpiritRights.canEdit(sel, Spirit.getUser()));
-					
-					
+					boolean enable = sel!=null && sel.getStudy()==null && SpiritRights.canEdit(sel, Spirit.getUser());
+					deleteTemplateButton.setEnabled(enable);
+					editTemplateButton.setEnabled(enable);
+					editTemplateButton.setToolTipText(enable? null: "Edition is only possible if you are the creator of the template, and it is not associated to a study");
+					editTemplateButton.setToolTipText(enable? null: "Deletion is only possible if you are the creator of the template, and it is not associated to a study");
 				}
 			});
 			

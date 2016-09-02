@@ -70,7 +70,7 @@ public class StudyPhaseColumn extends Column<Biosample, Phase> {
 	
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
-		phaseLabel.setPhase(row.getInheritedPhase(), row.getInheritedGroup());
+		phaseLabel.setPhase(row==null? null: row.getInheritedPhase(), row==null? null: row.getInheritedGroup());
 		phaseLabel.setToolTipText(row==null || row.getInheritedPhase()==null? null: row.getInheritedPhase().getName());
 		return phaseLabel;
 	}

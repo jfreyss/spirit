@@ -547,7 +547,7 @@ public class BiosampleSearchTree extends FormTree {
 				for (final BiosampleLinker linker : linkers.get(key)) {
 					String label = linker.getLabelShort();
 					if(linker.getType()==LinkerType.SAMPLEID && biotype2.getCategory()==BiotypeCategory.LIBRARY) {
-						linkerNode.add(new TextComboBoxOneNode(this, label, true, new Strategy<String>() {
+						linkerNode.add(new TextComboBoxOneNode(this, label, false, new Strategy<String>() {
 							@Override public String getModel() {return query.getLinker2values().get(linker);}
 							@Override public void setModel(String modelValue) {
 								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
@@ -560,7 +560,7 @@ public class BiosampleSearchTree extends FormTree {
 							}
 						});
 					} else if(linker.getBiotypeMetadata()!=null && (linker.getBiotypeMetadata().getDataType()==DataType.AUTO || linker.getBiotypeMetadata().getDataType()==DataType.LIST /* || linker.getBiotypeMetadata().getDataType()==DataType.DICO*/)) {
-						linkerNode.add(new TextComboBoxOneNode(this, label, true, new Strategy<String>() {
+						linkerNode.add(new TextComboBoxOneNode(this, label, false, new Strategy<String>() {
 							@Override public String getModel() {return query.getLinker2values().get(linker);}
 							@Override public void setModel(String modelValue) {
 								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
@@ -581,7 +581,7 @@ public class BiosampleSearchTree extends FormTree {
 							}
 						}));							
 					} else if(linker.getType()==LinkerType.SAMPLENAME && biotype2.isNameAutocomplete()) {
-						linkerNode.add(new TextComboBoxOneNode(this, label, true, new Strategy<String>() {
+						linkerNode.add(new TextComboBoxOneNode(this, label, false, new Strategy<String>() {
 							@Override public String getModel() {return query.getLinker2values().get(linker);}
 							@Override public void setModel(String modelValue) {
 								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
@@ -594,7 +594,7 @@ public class BiosampleSearchTree extends FormTree {
 							}
 						});
 					} else if(linker.getType()==LinkerType.COMMENTS) {
-						linkerNode.add(new TextComboBoxOneNode(this, label, true, new Strategy<String>() {
+						linkerNode.add(new TextComboBoxOneNode(this, label, false, new Strategy<String>() {
 							@Override public String getModel() { return query.getLinker2values().get(linker);}
 							@Override public void setModel(String modelValue) {
 								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);

@@ -282,7 +282,8 @@ public class RecentChancesDlg extends JSpiritEscapeDialog {
 					
 					if(rev.getStudies().size()==1) {
 						rev.getStudies().get(0).getAttachedBiosamples();
-						final StudyDetailPanel detail = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT, true);
+						final StudyDetailPanel detail = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT);
+						detail.setForRevision(true);
 						detailPanel.addTab(rev.getStudies().get(0).getStudyId(), detail);			
 
 						detail.setStudy(rev.getStudies().get(0));

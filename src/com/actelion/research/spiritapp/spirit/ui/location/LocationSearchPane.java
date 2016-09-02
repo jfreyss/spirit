@@ -66,8 +66,8 @@ public class LocationSearchPane extends JPanel {
 	private final LocationTable locationTable = new LocationTable();
 	private final StudyComboBox studyComboBox;
 	private final BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
-	private final JCheckBox emptyCheckbox = new JCheckBox("Empty", true);
-	private final JCheckBox nonEmptyCheckbox = new JCheckBox("Non Empty", true);
+	private final JCheckBox emptyCheckbox = new JCheckBox("Empty", false);
+	private final JCheckBox nonEmptyCheckbox = new JCheckBox("Non Empty", false);
 	private final JButton viewMineButton = new JIconButton(new Action_ViewMine());
 	private final JButton resetButton = new JIconButton(new Action_Reset());
 	private final JButton searchButton = new JIconButton(new Action_Search());
@@ -111,6 +111,22 @@ public class LocationSearchPane extends JPanel {
 				query();
 			}
 		});
+		emptyCheckbox.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(emptyCheckbox.isSelected() && nonEmptyCheckbox.isSelected()) {
+					nonEmptyCheckbox.setSelected(false);
+				}
+			}
+		});
+		nonEmptyCheckbox.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(emptyCheckbox.isSelected() && nonEmptyCheckbox.isSelected()) {
+					emptyCheckbox.setSelected(false);
+				}
+			}
+		});
 	}
 	
 	public LocationQuery getLocationQuery() {
@@ -149,7 +165,7 @@ public class LocationSearchPane extends JPanel {
 			@Override
 			protected void doInBackground() throws Exception {
 				if(keywordsTextField.getText().length()>0) {
-					res = new ArrayList<Location>(DAOLocation.getCompatibleLocations(keywordsTextField.getText(), Spirit.getUser()));
+					res = new ArrayList<>(DAOLocation.getCompatibleLocations(keywordsTextField.getText(), Spirit.getUser()));
 					
 					if(res.size()>0) {					
 						locationTable.setRows(res);		
