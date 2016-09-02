@@ -281,13 +281,16 @@ table {
 th {
   font-family: 'Lucida Grande', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   padding: 10px;
-  background: #212121;
-  color: #fff;
+  background: #c8cc39;
+  color: black;
+  border: 1px solid #212121;
+  vertical-align: top;
  }
 
 td {
   padding: 10px;
   border: 1px solid #212121;
+  vertical-align: top;
  }
 
 form {
@@ -348,6 +351,15 @@ dd {
 	margin-bottom:15px;
 	font-style:normal;
 }
+
+td  > dl > dt {
+	margin-left:0px;
+}
+td  > dl > dd {
+	margin-left:20px;
+}
+
+
 
 .jumbotron {
 	background-color: #f6fc6a;
@@ -415,18 +427,6 @@ dd {
 }
 
 
-@media (min-width: 544px) {
-  .pull-sm-left {
-    float: left !important;
-  }
-  .pull-sm-right {
-    float: right !important;
-  }
-  .pull-sm-none {
-    float: none !important;
-  }
-}
-
 @media (min-width: 768px) {
   .pull-md-left {
     float: left !important;
@@ -438,27 +438,14 @@ dd {
     float: none !important;
   }
 }
-
-@media (min-width: 992px) {
-  .pull-lg-left {
+@media print {
+  .pull-md-left {
     float: left !important;
   }
-  .pull-lg-right {
+  .pull-md-right {
     float: right !important;
   }
-  .pull-lg-none {
-    float: none !important;
-  }
-}
-
-@media (min-width: 1200px) {
-  .pull-xl-left {
-    float: left !important;
-  }
-  .pull-xl-right {
-    float: right !important;
-  }
-  .pull-xl-none {
+  .pull-md-none {
     float: none !important;
   }
 }

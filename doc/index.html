@@ -1391,11 +1391,11 @@ Use this function to count the number of organs per animal, to count the types o
 	The "Admin" menu in Spirit is only accessible by an administrator.
 </p>
 
-<h1>Database Settings</h1>
+<h1 id="admin_database">Database Settings</h1>
 <p>
 	Go to the "Menu" > "Database Setting" to change the database configuration. This dialog is only visible if Spirit is started without any specific Database Adapter.
 <p>
-<h2>Database Connection</h2>
+<h2 id="admin_connection">Database Connection</h2>
 <p>
 	<a class="fancybox pull-md-right" href="sc_admin8.png"><img src="sc_admin8.png"  title="Recent Changes"/></a>
 	In this dialog, you can configure how Spirit connects to the database. There are 3 available configurations:
@@ -1417,20 +1417,97 @@ Use this function to count the number of organs per animal, to count the types o
 				<li><b>UserId: </b>the user to be used to connect to the database (spirit if you created the user through "create user spirit identified by 'PASSWORD')
 				<li><b>Password: </b>You can type the Spirit encrypted password given by an administrator or you type the "..." to encrypt the connection password given to the UserId				
 			</ul>
-	</dl>
-	
+	</dl>	
 </p>
-<h2>User Settings</h2>
+<p>
+	The 3 buttons below are used to initialize the database:
+	<ul>
+		<li><b>Test Connection:</b> to test if the user/password/dbUrl are correct. It is not possible to save if this not correct
+		<li><b>Test Schema:</b> to test if the tables of the spirit schema are well created. If unsuccessfull, Spirit will propose you to update those tables to match the expected schema. The update has to be done with care, please ensure the DB is well backed up before.
+		<li><b>Recreate Examples:</b> to delete the existing examples and recreate them, if the user modified them.		
+	</ul>
+</p>
+<h2 id="admin_usersettings">User Settings</h2>
 <p>
 	<a class="fancybox pull-md-right" href="sc_admin9.png"><img src="sc_admin9.png"  title="Recent Changes"/></a>
+	The user settings are stored on the database and are therefore shared by all users conencting to the system. Hover your mouse on the question mark to have an explanation of each configuration item.	
 </p>
-<h2>Study Settings</h2>
+<p>
+	The available settings are:
+	<ul>
+		<li><b>Last changes:</b> the <a href="#home">Home Tab</a> shows the changes from the last N days. Use this setting to change it
+		<li><b>Roles:</b> Enter a list of possible roles, that the user may have. Ex: FacilityManager, QA.
+		<li><b>Login with one specific role:</b> By default, each user is logged with all its role. if this box is checked, the user needs to select its role (it becomes impossible to be an admin and a normal user at the same time)
+		<li><b>Are user-rights role based only:</b> By default, the rights depends of the department. If this box is checked, the department is ignored and only the roles are used.
+		<li><b>Data separation: </b>by default, Spirit under an <b>"open"</b> environment where all study designs are "viewable" and where all samples outside studies is readable by everybody. It is however possible to restrict it per department by selecting <b>"restricted"</b>: ie. only the biosamples created by the department of the logged in user are readable
+	</ul>
+</p>
+<h2 id="admin_studysettings">Study Settings</h2>
 <p>
 	<a class="fancybox pull-md-right" href="sc_admin10.png"><img src="sc_admin10.png"  title="Recent Changes"/></a>
+	The study settings define the metadata of the study and the different workflow's state	
+	<dl>
+		<dt>Metadata
+		<dd>Metadata are extra information displayed on the study's table, which can be edited in the <a href="#study_infos">Study Infos</a> dialog. Enter the list of metadata in this field. For each metadata, you can configure
+		<ul>
+			<li><b>Name:</b> the name shown to the end user
+			<li><b>Datatype:</b> List, Alpha, Auto
+			<li><b>Parameters:</b> if the datatype is list, please enter the list of possible choces
+			<li><b>Roles:</b> if the edition of this field is restricted to specific roles, please enter these here. 
+			<li><b>States:</b> if the edition of this field is restricted to specific workflow states, please enter these here. 
+			<li><b>Required:</b> If this field is required and editable (appropriate state, user role), the user will be required to fill in this metadata
+		</ul>
+		<dt>States
+		<dd>States are the list of possible states the study can have. It is possible to build a workflow, by restricting the promotion rights to some users and by restricing the promotion from some specific states.
+		<ul>
+			<li><b>From:</b> are the previous allowed states to promote. If empty, there will be no restriction
+			<li><b>Promoters:</b> are the roles of the user allowed to promote. If empty, there will be no restriction
+			<li><b>Read:</b> to indicate the roles of those with read access to the study in this state
+			<li><b>Experimenter:</b> to indicate the roles of those with experimenter access (add biosamples, results) to the study in this state
+			<li><b>Admin:</b> to indicate the roles of those with admin access (edit design, infos) to the study in this state
+			<li><b>Sealed:</b> to indicate the study cannot be modified anymore in this state. All other rights are ignored
+		</ul>
+		It is important to not that the right's coming from the roles and those coming from the department are cumulative. 
+	</dl>
+		
 </p>
+
+<h1 id="admin_user">Edit User/Groups</h1>
+<p>
+	The menu "Admin" > "Edit User/Groups" is only active if Spirit runs under a user managed configuration.
+</p>
+<h2>Edit User</h2>
+<p>
+	<a class="fancybox pull-md-right" href="sc_admin11.png"><img src="sc_admin11.png"  title="Edit Users"/></a>
+	This dialog shows the list of user with their manager, their roles and their department. Use this interface to add a new user, delete one, edit or disactivate one.
+</p>
+<p>
+	<a class="fancybox pull-md-right" href="sc_admin12.png"><img src="sc_admin12.png"  title="Edit User"/></a>
+	
+	When adding or editing a user, you have the following options:
+	<ul>
+	<li><b>Username: </b> unique
+	<li><b>Password: </b> Click "Reset" to suggest a password, to be given to the user. The user is then responsible to change it.
+	<li><b>Manager: </b> If a manager is given, this manager will get all the read / edit rights of this user.
+	<li><b>Disabled: </b> If a user becomes inactive, check this box to prevents him from logging in into this system. The same could be achieved by deleting the user.
+	<li><b>Group: </b> If a group is mentioned, the biosamples created by this user will also be assigned and shared to this group.
+	<li><b>Roles: </b> You can specify if this user has "admin", "readall", or any other roles specified in the <a href="#admin_database">Database Settings</a> dialog
+	</ul>
+	When entering a new password (by clicking the button "Reset") to a user, the user should change his password through the menu "Database" -> "Change Password"
+</p>
+<h2>Edit Groups</h2>
+<p>
+	<a class="fancybox pull-md-right" href="sc_admin13.png"><img src="sc_admin13.png"  title="Edit User"/></a>	
+	The second tab of the user administration tab is used for managing the groups.
+</p>
+<p>	
+	It is possible to define groups in a hierarchical way: ie. Biology, Biology / Lab1, Biology / Lab2, ... This does not imply however that members of the Biology group have some access on data from Lab1 or that members of Lab1 have access on data from Biology. The hierarchy is only there for display, as each group is considered independant from the other.<br>
+</p>
+
+
 <h1 id="admin_biotypes">Edit Biotypes</h1>
 <p>
-	<a class="fancybox pull-md-right" href="sc_admin2.png"><img src="sc_admin2.png" title="Biotype overview"/></a>		
+	<a class="fancybox pull-md-right" href="sc_admin2.png"><img src="sc_admin2.png" style="width:400px" title="Biotype overview"/></a>		
 	Spirit comes preconfigured with some biotypes, which can be extended by an administrator. Click "Admin" > "Edit Biotypes" on the menu to have an overview of the biotypes.
 </p>
 <p>
@@ -1558,145 +1635,78 @@ Use this function to count the number of organs per animal, to count the types o
 	</ul>
 	To restore an entity, you will prompted for a reason, which will be stored in the comments of the restored entities, and new revision will be added.
 </p>
+
+<h0>Spirit Rights</h0>
+<p>
+	<table>
+	<tr>
+		<th>Studies</th>
+		<td>
+			<dl>
+				<dt>Edit Study Infos / Design / Attach samples
+				<dd>Only the <b>administrators</b> mentioned in the <a href="#study_infos">study infos</a>, or the users with the approved admin role in the <a href="#admin_studysettings">study configuration</a>
+				
+				<dt>Add/Edit Biosample/Results
+				<dd>Only the <b>experimenters</b> mentioned in the <a href="#study_infos">study infos</a>, or the users with the approved experimenter role in the <a href="#admin_studysettings">study configuration</a>
+				
+				<dt>Read Biosample/Results
+				<dd>Only the <b>read-users</b> mentioned in the <a href="#study_infos">study infos</a>, or the users with the approved read-users role in the <a href="#admin_studysettings">study configuration</a>
+				
+				<dt>View Design
+				<dd>Everybody if Spirit runs under the <a href="#admin_usersetting">"open"</a> mode, no-one otherwise. 
+			</dl>
+		</td>
+	</tr>
+	<tr>
+		<th>Biosamples (not in studies)</th>
+		<td>
+			<dl>
+				<dt>Edit
+				<dd>Only the users of the same department can edit the biosample.
+				<dt>Read
+				<dd>Everybody if Spirit runs under the <a href="#admin_usersetting">"open"</a> mode, no-one otherwise. 
+			</dl>
+		</td>
+	</tr>
+	<tr>
+		<th>Locations</th>
+		<td>
+			<dl>
+				<dt>Edit Building/Labs</dt>
+				<dd>Only an administrator can create/edit buildings
+				<dt>Edit / Read</dt>
+				<dd>
+					<ul>
+					<li> if location is public: everybody (samples are not shown if the user has no read rights on the samples)
+					<li> if location is protected: everybody can search the samples but only users who are member of the given group can see the location / position
+					<li> if location is private: only the users who are member of the given group
+					</ul>
+			</dl>
+		</td>
+	</tr>
+	<tr>
+		<th>Results</th>
+		<td>
+			Rights on the results are the same as for the biosamples
+		</td>
+	</tr>
+	</table>
+</p>
+<p>
+
+	The following rules also applies:<br>
+	<ul>
+	<li>the admin can do everything<br>
+	<li>To delete a result / biosample / study, the user has to be the owner
+	<li>the managers can read / edit / delete everything owned by the managed users<br>
+	<li>Changing the group of a user will not affect the samples' owner. The samples stay under the former user - group (see schema below for an explanation)<br>
+	</ul>
+</p>
+<p>
+<a class="fancybox pull-md-right" href="annex_right1.png"><img src="annex_right1.png"  title="User Rights"/></a>
+<a class="fancybox pull-md-right" href="annex_right2.png"><img src="annex_right2.png"  title="User Rights"/></a>
+</p>
 <!--
-<br>
-<table><tr><td><img src="screenshot_admin1.png"/><br><i>Screenshot of the Admin Menu</i></td></tr></table>
-<br>
-<h2>Edit Groups</h2>
-Users in Spirit can belong to a group, and groups are used for the following access-rights:
-<ul>
-<li>It is possible to give the read access of a study to a whole group
-<li>Members of the a group can read / edit the biosamples created by everybody in the group
-<li>It is possible to restrict the access location to one group
-</ul>
-<br>
-It is possible to define groups in a hierarchical way: ie. Biology, Biology / Lab1, Biology / Lab2, ... This does not imply however that members of the Biology group have some access on data from Lab1 or that members of Lab1 have access on data from Biology. The hierarchy is only there for display, as each group is considered independant from the other.<br>
-<br>
-To edit the groups, go to "Admin -> Edit Group". It is possible to delete / edit or create a new group by pressing the appropriate button. Deleting a group is only possible if there are no members attached to it.<br>
-<br>
-<table><tr><td><img src="screenshot_admin2.png"/><br><i>Screenshot of the User Groups Dialog</i></td></tr></table>
-<br>
-
-<h2>Edit Users</h2>
-After setting the groups, go to "Admin -> Edit User" to edit the users. The interface is very similar to the group administration, and it is possible to delete / edit / create users from this interface.
-
-<br>
-<table><tr><td><img src="screenshot_admin3.png"/><br><i>Screenshot of the User Dialog</i></td></tr></table>
-<br>
-
-When adding or editing a user, you have the following options:
-<ul>
-<li><b>Username: </b> must be unique
-<li><b>Password: </b> can be left empty, but it is strongly advised to enter one or click "Reset" to generate a password, which can then be changed by the user.
-<li><b>Manager: </b> If a manager is given, this manager will get all the read / edit rights of this user.
-<li><b>Disabled: </b> If a user becomes inactive, check this box to prevents him from logging in into this system. The same could be achieved by deleting the user.
-<li><b>Group: </b> If a group is mentioned, the biosamples created by this user will also be assigned and shared to this group.
-</ul>
-
-When creating a new user, it is advised to generate a random password (by clicking the button "Reset") and to ask him to change it through the "Account -> Change Password" menu
-
-<br>
-<table><tr><td><img src="screenshot_admin4.png"/><br><i>Screenshot of the User Dialog</i></td></tr></table>
-<br>
-
-<h2>Edit Biotypes</h2>
-Check the section "Principles > Biosample Definition" for more information about the biotypes
-
-<h2>Edit Tests</h2>
-Check the section "Principles > Result Definition" for more information about the biotypes
-
-<h2>Recent Changes</h2>
-
-The option "Admin > Recent Changes (admin)" allows an administrator to view all recent updates made into the system. A non-admin can only see his own updates last updates through the menu "Account > Recent Changes".<br>
-<br>
-In this dialog, the user can select who / when / what he wants to filter and view all the changes matching his criteria. Everything (Studies, Biosamples, Locations, Results, Biotypes, Tests) is audited in Spirit and from this dialog, it is possible to see the last changes, and to revert some changes.
-
-<br>
-<table><tr><td><img src="screenshot_admin5.png"/><br><i>Screenshot of the User Dialog</i></td></tr></table>
-<br>
-
-<h1>Annexes</h1>
-
-<h2>User Rights</h2>
-<table class=grid>
-<tr>
-	<th></th><th>Read</th><th>Edit</th>
-</tr>
-<tr>
-	<th>Studies</th>
-	<td>
-		<ul>
-		<li> in OPEN mode: if the study is published (default), everybody can view everything (design, biosamples, results); if it is private, only the specified "read" and "write" users,
-		<li> in RESTRICTED mode: if the study is published, everybody can view the design (biosamples, results are hidden); if it is private (default), only the specified "read" and "write" users,
-		</ul>
-	</td>
-	<td>
-		Users with "write" rights on the study
-	</td>
-</tr>
-<tr>
-	<th>Biosamples in studies</th>
-	<td>
-		Users with "read" rights on the study
-	</td>
-	<td>
-		Users with "write" rights on the study
-	</td>
-</tr>
-<tr>
-	<th>Biosamples outside studies</th>
-	<td>
-		<ul>
-		<li> in OPEN mode: Everybody can read (except if the sample is in a private location)<br>
-		<li> in RESTRICTED mode: Only the owner or the member of the same group.
-		</ul>
-	</td>
-	<td>
-		Only the owner, the owner's manager and the members of the same group can edit.
-	</td>
-</tr>
-<tr>
-	<th>Locations</th>
-	<td>
-		<ul>
-		<li> if public: everybody (samples are not shown if the user has no read rights on the samples)<br>
-	    <li> if protected: everybody can search the samples but only users who are member of the given group can see the location / position<br>
-	    <li> if private: only the users who are member of the given group
-	    </ul>
-	</td>
-	<td>
-		<ul>
-		<li> if the location is administrative (ie: building, lab), only an admin<br>
-		<li> otherwise, all users with "read" access can "write"
-		</ul>
-	</td>
-</tr>
-<tr>
-	<th>Results</th>
-	<td>
-		everybody with "read" rights on the linked biosample
-	</td>
-	<td>
-		everybody with "write" rights on the linked biosample
-	</td>
-</tr>
-</table>
-<br>
-
-The following rules also applies:<br>
-- the admin can do everything<br>
-- Only the owner can delete a result / biosample / study
-- the managers can read / edit / delete everything owned by the managed users<br>
-- the creator of a result / sample becomes automatically the owner<br>
-- Changing the group of a user will not affect the samples' owner. The samples stay under the former user - group (see schema below for an explanation)<br>
-<br>
-The OPEN or RESTRICTED mode can be set in the Spirit configuration file.
-
-<br>
-<table><tr><td><img src="annex_right1.png"/></td></tr></table>
-<br>
-<table><tr><td><img src="annex_right2.png"/></tr></table>
-
 
 <h2>Balance Configuration</h2>
 To add a balance for the Live Study Monitoring and the Sample Weighing, go to the Spirit Menu and select Config->Config(Balance). It is expected that the balance writes a tab or comma separated text file with the measured weighings.
