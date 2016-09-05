@@ -20,10 +20,9 @@
   </head>
 
   <body data-spy="scroll" data-target="#navbar">
-
-    <div id="header_wrap">
+    <div id="header_wrap" class="navbar navbar-default navbar-fixed-top">
       <header class="container">
-		<nav class="navbar navbar-default navbar-static-top">
+		<nav>
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
             <span class="sr-only">Toggle navigation</span>
@@ -35,263 +34,39 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li><a href="../concept/index.html">Concept</a></li>
-            <li><a href="../first/index.html">Installation</a></li>
+            <li><a href="../concept/concept.html">Concept</a></li>
+            <li><a href="../demo/demo.html">Demo</a></li>
             <li class="active"><a href="../doc/index.html">Documentation</a></li>
-            <li><a href="../contact/index.html">About</a></li>
+            <li><a href="../install/install.html">Installation</a></li>
+            <li><a href="../about/about.html">About</a></li>
 			<li><a id="forkme_banner" href="https://github.com/jfreyss/spirit">View on GitHub</a></li>
           </ul>
-        </div><!--/.nav-collapse -->
+        </div>
         </nav>
       </header>
     </div>
-
-	<div class="container ">
-    <div class="row">
-		<div class="main col-md-9">
-
-<!--
-<h0 id="1_introduction">Part 1: Principle</h0>
-<p>
-Spirit is an applicattion, which brings a new concept to manage biosamples, covering the process from the <strong>study</strong> design, to the <strong>biosample</strong> creation, the <strong>location</strong> inventory, and the analysis of <strong>results</strong>.</p>
-<a class="fancybox pull-md-right" href="principle.png"><img src="principle.png" title="Spirit entities and their relationships"/></a>
-
-<h2 id="1_hierarchy">Sample's hierarchy</h2>
-<p>
-<a class="fancybox pull-md-right" href="chain.png"><img src="chain.png" title="Sample's hierarchy"/></a><br>
-Contrarely to other LIMS systems, Spirit does not only remember the patientId from which the biosample originates, but the complete hierarchy between the sample and its parents.
-It is therefore possible to maintain a hierarchy of biosamples such as:
-<ul>
-<li>Animal 881234: Rat Wistar Male assigned to the <strong>healthy group</strong> in <strong>study 1</strong>
-	<ul>
-	<li>Blood Blo00001: EDTA collected at <strong>day 1</strong>
-		<ul>
-		<li>Plasma: Pla000001
-		<li>Plasma: Pla000002
-		</ul>
-	<li>Blood Sample: EDTA collected at <strong>day 7</strong>
-		<ul>
-		<li>Plasma Pla000003
-		<li>Plasma Pla000004
-		</ul>
-	<li>Organ Org000001: Lung collected at <strong>day 14</strong>
-		<ul>
-		<li>Organ Org00002: Lung / Left Lobe
-		<li>Organ Org00003: Lung / Middle Lobe
-		<li>Organ Org00004: Lung / Right Lobe
-		</ul>
-	</ul>
-</ul>
-</p>
-<p>
-The sample at the top of the hierarchy is called the <strong>TopSample</strong>. If sample belongs to a study or a group, all its children will belong to the same study or group. If a sample has been sampled at day 14, it is implied that all its children are also sampled at day 14.
-</p>
-<p>
-Biosamples cannot have more than one parent, but can be linked to as many samples as needed, through the use of metadata.
-</p>
-
-<h1 id="1_locations">About containers and locations</h1>
-<p>Biosamples can be associated to a container and/or a location, unless they are abstract.
-</p>
-<h2 id="1_container">Container Definition</h2>
-<p>The container is the single piece of labware, used to store biosamples. Containers can be moved from location to location. We distinguish the following types of containers:
-<ul>
-<li>Containers without barcodes: Ependorf, Micronics, Falcon
-<li>Containers with an optional barcode: Cryotube, Matrix, Fluidx.
-<li>Multiple Containers: Bottles, Cassette, Slide, Cage. They can have a barcode and can hold several biosamples.
-</ul>
-The barcode is also called "containerId" and it must be unique. It is possible to store several biosamples in "Multiple container", by simply reusing the same containerId<br>
-</p>
-<h2 id="1_location">Location Definition</h2>
-<p>The locations can be:
-<dl>
-<dt>Building / Labs:
-<dd>these are called administrative locations and can therefore only be edited by an administrator. They can contain other locations.
-<dt>Freezer / Drawer / Tank / Tower / Shelf:
-<dd>these can be edited by any user with write access. They can contain other locations.
-<dt>Box / Rack / Bag / SlideBox:
-<dd>those locations can be configured to have rows and columns and to have positions like A/01. They cannot have children location
-</dl>
-</p>
-<p>
-Biosamples can be contained in any of those locations, but only boxes and racks can be assigned positions such as A/01. These locations can be configured with the labelling
-type (A/01...H/12, 1...89) and the size of the box. Any number of biosamples can be in a location, but only one biosample is allowed per position.</p>
-</p>
-
-<p>
-User rights can be configured for any location. The rights can be:
-<ul>
-<li><b>Public:</b> everybody can see the location and its occupancy. However you still need read access to view the details of the location.
-<li><b>Protected to a department:</b> the location and the position of the samples are only visible to the specified department. In a protected location, samples are searchable but the location is hidden for users who are not member of the department.
-<li><b>Private to a department</b>: the location and the position of the samples are only visible to the specified department. In addition, samples in this location are not readable / searchable.
-</ul>
-</p>
-<h1 id="1_studies">About Studies</h1>
-<p>A study consists of one or more groups of samples, on which we perform actions at specific phases</p>
-<p>
-<a class="fancybox pull-md-right" href="study1.png"><img src="study1.png" title="Basic study design"/></a><br>
-This figure shows the principle of a basic study, where we have 2 groups of animals and 4 different phases. At phase 1, we apply treatment1 to the first group and treatment2 to the second group. Then we perform the same blood sampling on the 2 groups at phase 1 and at phase 3.
-</p>
-<h2>Study Design</h2>
-
-To understand the concept of study in Spirit, it is important to first understand the nomenclature that is used:<br>
-<ul>
-<li><b>Study Design:</b> The sign consists of the diagram depicted above and all the related information.
-<li><b>Phase:</b> A phase is used to express a point of time in the lifespan a sample. In can be expressed as an absolute date, as a relative date, or simply as a description.
-<li><b>Group:</b> A study's group is used to gather samples. It shows that those samples should and will be analyzed together. As a consequence it is expected that similar actions will happen to all those samples: treatments, measurements and samplings done at the sample phase.
-<li><b>Subgroup:</b> Even though the samples of a group should be analyzed and treated in a similar way, there are cases where the actions on those biosamples happen somewhat differently. In animal studies, it is for example often necessary to reduce the workload by stratifying the necropsy over several days; in this case, the user should create a new subgroup for each necropsy days (an example follows).
-<li><b>Action:</b> The following actions can be performed on a specific group, at a specific phase:
-<ul>
-	<li><b>Treatment:</b> A treatment consists of a substance and an optional dose that is given to the assigned samples.
-	<li><b>Measurement:</b> A measurement is the numerical or qualitative assessment of some properties, such as the weight of an animal, the food / water intake or some other observations.
-	<li><b>Sampling:</b> Samples, such as saliva, urine, etc. can be taken from the original biosample. For example, we can derivate some composite samples from animals, such as tubes of blood / plasma / serum or some organs coming from a necropsy. In the study design, it is possible to define "sampling templates".
-</ul>
+	<div class="container">
+		<div class="row">
+			<div class="main col-md-9">
 
 
-<h2>Group Assignment</h2>
-The group assignment is the process of assigning biosamples to the groups.<br>
-<br>
-We consider 3 types of groups assignments:
-<ul>
-<li><b>Initial Group Assignment:</b> This is the standard scenario when new samples have to be assigned. The user needs to enter the animalIds and the program will guide the experimenter to assign the animals to the different groups.
-<li><b>Group Splitting:</b> Sometimes it is necessary to make an observation phase and to decide later how samples will be split into new groups. The next figure shows such an example, where we first do an initial group assignment to decide which animals will stay healthy and which animals will become sick. After an observation time, each group is then splitted into 2 new groups, based on some observation criteria. In the case of group splitting, the samples is moved from one group to the other.<br>
-
-<br>
-<a class="fancybox pull-md-right" href="study2.png"><img src="study2.png" title="Group splitting"/></a>
-
-<li><b>Group Dividing:</b> In advanced scenarios, it is possible to create other samples from the assigned specimen and that those samples are themselves assigned to groups. This is similar to the group splitting, except that the specimen stays in its group, but we create new samples, which will be assigned to new groups. For example, we may take blood samples from sick animals, and apply different treatments directly to those blood samples. Those blood samples belong then to their own group. <br>
-Next figure shows an other example, where we have animals exposed to UV.  On each animal, we will consider 2 patches of skin on which we will apply a placebo and a sunscreen to see how the animal reacts.<br><br>
-
-<br>
-<table><tr><td><img src="study3.png"/><br><i>Example of a study with an initial group assignment and a group dividing</i></td></tr></table>
-<br>
-</ul>
-
-
-<h2>Sampling Template</h2>
-The sampling template describes what will be collected from the specimen assigned to the study. It is basically a hierarchical list of the samples to be taken.
-It catalogs the biosamples to be created, how to store them and what to do with them: weighing, observation. It is also possible to specify if a necropsy has to be done after this sampling.<br>
-<br>
-Each template is saved, so it can be reused in further studies.<br>
-<br>
-<br>
-
-
-<h1>About results</h1>
-Results are linked to the biosamples and indirectly to the study / group / phase of the samples. Each result must belong to a test.
-
-<h2>Test Definition</h2>
-Tests have a unique name and are classified in categories for easier retrieval. It is advised to have categories such as <b>Physiology</b>, <b>Proteinomics</b>, <b>Genomics</b>, <b>Histology</b>.<br>
-In each of those categories, it is advised to name the tests based on the technology of the test, such as "Genomics.miRNA-QPCR", "Proteinomics.SomaScan", "Proteinomics.Elisa" or on the type of measurement such as "Phyiology.Weighing", "Phyiology.Blood Pressure", "Phyiology.Observation".<br>
-
-<br>
-
-Each test can then be customized through its attributes. Each attribute is defined as:
-<ul>
-<li><b>Name:</b> as generic as possible. If a unit is necessary, it should be mentioned in the name (Analyte, Conc[mg/l], Weight[g])
-<li><b>Input / Output:</b>Attributes can be used as input if they provide information specific to the conditions of the experiment (such as a protein's name, an analyte, a normalization method, a dosage, ...) or as output if they provide the result of the measurement.
-<li><b>Datatype:</b> Alphanumeric, numeric, date, choice from a list, multiple choice, autocomplete (automatic suggestion of typos), or a link to an other biosample
-<li><b>Required flag: </b> to force the user to enter a value.
-</ul>
-
-<br>
-<table><tr><td><img src="screenshot_test.png"/><br><i>Screenshot of the page for creating tests</i></td></tr></table>
-<br>
-
-<h2>Multivariate Analysis</h2>
-Traditionaly, results are visualized as a 2D dimensional table from an Excel datasheet.
-This projection of data on a 2D table does not however give justice to the multiple dimensions of the biological data.
-<br>
-By linking the result to the sample, it becomes possible to analyze data on all possible dimensions:
-<ul>
-<li><b>Biosample Metadata:</b> such as the organ's type, the sample number, the containerType, the location
-<li><b>Specimen Metadata:</b> such as the sex, the species, the medical Observation
-<li><b>Study information:</b> such as the group, subgroup, phase
-<li><b>Result information:</b> such as the measured analyte, the normalization method
-</ul>
-<br>
-
-Since it is not possible to envision all possible ways of analyzing data, Spirit only provides a few automatically generated models and let the user design its own way of arranging the data.
-To design a template, the user can select the needed information from a pool of items and select where to display each of those items, ie the user can display the phase at the row level or the column level
- or even in a nested table at the cell level.
- <br>
- <br>
-By default, we always display the group, the phase, the specimen Id and name, the sample's type, the test name and the measured biomarker. The next figures show that even with this limited set of items, there are many ways to display data.<br>
-<br>
-
-<ul>
-<li>In the <b>Compact Template</b>, we limit the number the number of rows to the number of specimen and the number of columns to the number of tests and biotype. The rest of the data is displayed as nested tables at the cell level. While this view give a nice overview of the retrieved data, it is usually necessary to customize the template or use one of the 2 other predefined templates.
-<table><tr><td>
-<img src="pivot_compact.png"/><br><i>Compact Template:  the group / specimen are displayed at the row level, whereas the testName and sample's type are displayed at the column level.</i><br><br>
-</td></tr></table>
-
-<li>In the <b>Column Template</b>, we also limit the number the number of rows to the number of specimen. However for each biotype, biomarker, the system will add an extra column. This view is the closest of what one would expect in Excel.
-<table><tr><td>
-<img src="pivot_column.png"/><br><i>Column Template: the group / specimen are displayed at the row level, and everything at the column level.</i><br><br>
-</td></tr></table>
-
-<li>In the <b>Flat Template</b>, we have one row for each datapoint.
-<table><tr><td>
-<img src="pivot_flat.png"/><br><i>Flat Template: all items are displayed at the row level</i><br><br>
-</td></tr></table>
-
-</ul>
-
-
-
-
-<h2>Spirit Applications</h2>
-
-Spirit is the central application, which can do everything. Due to the complexity of the Spirit principles, some satelLite applications with a reduced number of functionalities, were developed to focus more closely on the needs of some users:
-<ul>
-<li><b>Spirit:</b>is the center application which can be used to do everything
-<li><b>AnimalCare:</b> is the application focused on the studies and the live monitoring of animals. It can be connected to an external balance
-<li><b>Stockcare:</b> is the application focused on handling components (antibodies, samples, bacteria). The interface is streamlined to remove all information related to studies.
-<li><b>BioViewer:</b> is the application focused on the handling of tubes and racks. It helps the user to register new racks, to create aliquots, and so on.
-<li><b>SlideCare:</b> is the application focused on the handling of slides and cassettes. It enables the user to create templates to insert several samples by cassette and then to create series of slides with different staining.
-</ul>
-<br>
-All those applications are of course talking to the same database.<br>
-
-<br>
-<table><tr><td><img src="spirit.png"/><br><i>Spirit and its satellite applications</i></td></tr></table>
-<br>
-
-The Spirit central interface is split into 4 tabs, focusing on one specific aspect of Spirit: <b>studies, biosamples, locations and results</b>. Each of those aspects will be described in the following sections.
-<br>
-After logging in into Spirit, the user is sent to the home page, which shows the last updates. For each study, the user can see the biosamples or the results which were recently updated. The changes from the last day are highlighted in red. <br>
-<br>
-<table><tr><td><img src="screenshot_spirit1.png"/><br><i>Spirit - The main application, showing here the last changes</i><br><br></td></tr></table>
-<br>
-To be consistent across all applications, the same UI components were reused whenever possible. It is important to know that in the main dialogs, all entities are open as read only. Editing objects are only done in dialogs, so it is possible to click everywhere without modifying anything in the database.
-There are few principles to understand about Spirit:<br>
-<ul>
-<li><b>Tables: </b>The User Interface uses a lot of tables. The tables in Spirit are optimized to make the rendering of data as nice as possible: columns without data are automatically removed, columns are automatically resized based on the length of the extracted data and the available space on the screen. It is possible to right-click on the table's headers to sort, add new columns, expand or collapse the hierarchy. It is also possible to right-click on the rows to perform any available operations: edit the item, change the status, ...
-<li><b>ComboBoxes:</b> Comboboxes enable the user to select most commonly used entries, but it is often possible to select more than one, by using Control-Click or it is often possible to enter any other value by just typing it in.
-
-<li><b>Copy/Paste/Undo:</b>We know that data comes from different applications, and can be exported. We use the standard way of copying through <b>CTRL-C</b>, pasting through <b>CTRL-P</b>, undoing in tables through <b>CTRL-Z</b>, redoing through <b>CTRL-Y</b>.
-<li><b>Right-Click: </b>To streamline the UI, a lot of possible actions are visible once you right-click on an item. Right-Clicking on a study will show the Study Popup, to edit a study, to assign specimen to it,... Right-Clicking on a sample will show the Biosample popup to edit the sample, to add aliquots, to set the location, ...
-<li><b>Auditing:</b> All entities, tables in Spirit are audited and it is always possible to view the last changes and rollback to a previous version.
-</ul>
-<br>
--->
-<h0 id="2_interface">User guide</h0>
+<h0 id="user">User guide</h0>
 <p>
 The Spirit interface is divided into five tabs. Each tab gives a different view of the same data, but with a different presentation.
 </p>
 
 <h1 id="home">Home</h1>
 <p>
-<a class="fancybox pull-md-right" href="home.png"><img src="home.png" title="Home Page"/></a>
-The <b>Home</b> tab is the first thing you see when starting Spirit. It shows the latest changes and allows the user to have a quick overview of the studies being worked on. For each study, it shows the data, that was generated and who did the latest modifications and when.  
-<ul>
-<li>Clicking on a study will redirect the user to the study visualization tab and open the clicked study.
-<li>Clicking on a biotype will redirect the user to the biosample tab and display those biosamples
-<li>Clicking on a test will redirect the user to the test tab and display the results of this test. The user can also click on "Analyze" to have a quick analysis of the results.
-</ul>
+	<a class="fancybox pull-md-right" href="home.png"><img src="home.png" title="Home Page"/></a>
+	The <b>Home</b> tab is the first thing you see when starting Spirit. It shows the latest changes and allows the user to have a quick overview of the studies being worked on. For each study, it shows the data, that was generated and who did the latest modifications and when.  
+	<ul>
+		<li>Clicking on a study will redirect the user to the study visualization tab and open the clicked study.</li>
+		<li>Clicking on a biotype will redirect the user to the biosample tab and display those biosamples</li>
+		<li>Clicking on a test will redirect the user to the test tab and display the results of this test. The user can also click on "Analyze" to have a quick analysis of the results.</li>
+	</ul>
 </p>
 
-<h1>Study</h1>
+<h1 id="study">Study</h1>
 <p>
     The study tab shows the study centric view of Spirit. This is where the user can query studies and work on the design.
 </p>
@@ -299,7 +74,8 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
 <h2 id="study_visualization">Visualization</h2>
 <p>
     <a class="fancybox pull-md-right" href="sc_study1.png"><img src="sc_study1.png" title="Study Page"/></a>
-    On the study tab, you can query all the studies of the system, provided you have read access on the studies. By default and before making any search, Spirit will show you all the studies where your name is explicitely written in the list of users.</p>
+    On the study tab, you can query all the studies of the system, provided you have read access on the studies. By default and before making any search, Spirit will show you all the studies where your name is explicitely written in the list of users.
+</p>
 <p>
     To query for a study, you can either:
     <ul>
@@ -308,7 +84,7 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
     </ul>
 </p>
 
-<h3 id="study_design">Design</h3>
+<h3 id="study_vis_design">Design</h3>
 <p>
     The bottom left part shows the visual design of the study. The visualization may change a lot depending of the type of study. The following studies are given as examples in the system:
 	
@@ -329,7 +105,7 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
 		
 </p>
 
-<h3>Infos</h3>
+<h3 id="study_vis_infos">Infos</h3>
 <p>
     The bottom-right of the study tab shows the other infos of the study. There are 3 tabs there:
 	<div class="row">
@@ -347,7 +123,6 @@ The <b>Home</b> tab is the first thing you see when starting Spirit. It shows th
 		</div>
     </div>
 </p>
-
 <h2 id="study_edit">Editing</h2>
 
 <h3 id="study_infos">Infos</h3>
@@ -414,23 +189,21 @@ Please look at the section <a href="#study_infos">above</a> to have an explanati
     <dt>1. Baseline, 2., 3. EOT: 
     <dd>Use this format when actions don't take place at exact dates, but at some point of time. The phases become markers for the baseline, end of treatment, first visit, ... 
     </dl>
-    <!--
-    <br>
-    The edit phase dialog is split into 3 different tabs:
 
-    <h4>Add Phases</h4>
-    Instead of adding phases one by one, this dialog helps the user to enter a sequence of phase at once.
+	<dl>
+    <dt>Add Phases
+    <dd>Instead of adding phases one by one, this dialog helps the user to enter a sequence of phase at once.
     The design can always be modified later to add additional phases.
 
-    <h4>Update Phases</h4>
-    After having added a phase, the user can add a label (for example: d7 necropsy) or simply change the name or change the day/hour.
+    <dt>Update Phases
+    <dd>After having added a phase, the user can add a label (for example: d7 necropsy) or simply change the name or change the day/hour.
     Phases can be moved, even if they have already biosamples or results. In that case, everything linked to that phase will follow.<br>
     <br>
     To move several phases at once, the user can select several phases, and specify the number of days to advance/delay. The phase is then renamed.
 
-    <h4>Remove Phases</h4>
-    There, it is possible to remove the phases, which have no actions, attached samples or results.
-    -->
+    <dt>Remove Phases
+    <dd>There, it is possible to remove the phases, which have no actions, attached samples or results.
+    </dl>
 </p>
 
 <h4 id="study_group">4. Groups</h4>
@@ -1385,7 +1158,7 @@ Use this function to count the number of organs per animal, to count the types o
 
 
 
-<h0>Administration guide</h0>
+<h0 id="admin">Administration guide</h0>
 <p>
 	<a class="fancybox pull-md-right" href="sc_admin1.png"><img src="sc_admin1.png" title="Admin Popup"/></a>		
 	The "Admin" menu in Spirit is only accessible by an administrator.
@@ -1618,7 +1391,7 @@ Use this function to count the number of organs per animal, to count the types o
 	</dl>
 				
 
-<h1>Recent Changes</h1>
+<h1 id="admin_changes">Recent Changes</h1>
 <p>
 	<a class="fancybox pull-md-right" href="sc_admin7.png"><img src="sc_admin7.png"  title="Recent Changes"/></a>
 	The <b>recent changed dialog</b> can be open in the Menu "Admin" > "Recent Changes". From this dialog, you can query all entity changes made into the Spirit database. All revisions linked to studies/biosamples/results/locations/biotypes/tests are recorded.  Everytime a user clicks "Save", a new revision is created.
@@ -1636,7 +1409,7 @@ Use this function to count the number of organs per animal, to count the types o
 	To restore an entity, you will prompted for a reason, which will be stored in the comments of the restored entities, and new revision will be added.
 </p>
 
-<h0>Spirit Rights</h0>
+<h0 id="rights">Annex: User Rights</h0>
 <p>
 	<table>
 	<tr>
@@ -1703,8 +1476,8 @@ Use this function to count the number of organs per animal, to count the types o
 	</ul>
 </p>
 <p>
-<a class="fancybox pull-md-right" href="annex_right1.png"><img src="annex_right1.png"  title="User Rights"/></a>
-<a class="fancybox pull-md-right" href="annex_right2.png"><img src="annex_right2.png"  title="User Rights"/></a>
+	<a class="fancybox pull-md-right" href="annex_right1.png"><img src="annex_right1.png"  title="User Rights"/></a>
+	<a class="fancybox pull-md-right" href="annex_right2.png"><img src="annex_right2.png"  title="User Rights"/></a>
 </p>
 <!--
 
@@ -1917,13 +1690,10 @@ Spirit comes already installed with some biotypes and tests, which could be used
 <li><b>Length: </b> The length test contains one output attribute with the length in mm. It is used by the sample measurement dialog
 </ul>
 -->
-
-            </div>
-            <div class="sidebar col-md-3 hidden-print" role="complementary">
-                <nav id="sidebar">
-                </nav>
-            </div>
-        </div>
+			</div>
+			<nav id="sidebar" class="sidebar col-md-3 hidden-print" role="complementary">
+			</nav>
+		</div>
     </div>
 
     <div id="footer_wrap">

@@ -6,24 +6,24 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="description" content="Spirit: a study/biosample management software for drug discovery research">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+	
 	<link rel="icon" href="../images/ico.png" type="images/png"/>
 	<link rel="stylesheet" href="../css/bootstrap.min.css">
-    <link rel="stylesheet" href="../css/jquery.fancybox.css?v=2.1.5" media="screen" />
-	<link rel="stylesheet" href="../css/docs.css">
+	<link rel="stylesheet" href="../css/jquery.fancybox.css?v=2.1.5" media="screen" />
+	
     <link rel="stylesheet" href="../css/stylesheet.css">
 	<script src="../js/jquery-3.1.0.min.js"></script>
 	<script src="../js/jquery.fancybox.pack.js?v=2.1.5"></script>
-	<script src="../js/bootstrap.min.js"></script>	
+	<script src="../js/bootstrap.min.js"></script>
 	<script src="../js/main.js"></script>
     <title>Spirit Biobank - Concept</title>
   </head>
 
   <body>
 
-    <div id="header_wrap">
+    <div id="header_wrap" class="navbar navbar-default navbar-fixed-top">
       <header class="container">
-		<nav class="navbar navbar-default navbar-static-top">
+		<nav>
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
             <span class="sr-only">Toggle navigation</span>
@@ -35,10 +35,11 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="../concept/index.html">Concept</a></li>
-            <li><a href="../first/index.html">Installation</a></li>
+			<li class="active"><a href="../concept/concept.html">Concept</a></li>
+            <li><a href="../demo/demo.html">Demo</a></li>
             <li><a href="../doc/index.html">Documentation</a></li>
-            <li><a href="../contact/index.html">About</a></li>
+            <li><a href="../install/install.html">Installation</a></li>
+            <li><a href="../about/about.html">About</a></li>
 			<li><a id="forkme_banner" href="https://github.com/jfreyss/spirit">View on GitHub</a></li>
           </ul>
         </div>
@@ -50,11 +51,13 @@
 	
 <section>
 <h1>What is SPIRIT?</h1>
-	<div class="pull-md-right"><a class="fancybox" rel="group" href="principle.png"><img width="300" src="principle.png" alt="Spirit's entity relationships" /></a></div>
-	<p>SPIRIT is a Java-based software to handle complex life science research data. It was originally developed for internal use by Actelion Pharmaceuticals Ltd. (Switzerland).</p>
-	<p>SPIRIT is used by more than hundred researchers in Actelion's Drug Discovery Departments. It is also used by the Actelion Research Biobank to manage its preclinical and clinical samples and data.</p>
-	<p>SPIRIT's data concept is generic and sample-centric. It can be configured to handle any type of samples and their relationships, including animals or humans. Results
-	can be linked to samples and have an unlimited number of input and output parameters. Physical storage locations are managed by a fully configurable inventory system. Finally, a graphical study editor allows to plan, display, and record the progress of experiments involving groups of samples and results over time.</p>
+	
+	<a class="fancybox pull-md-right" href="principle.png"><img width="300" src="principle.png" alt="Spirit's entity relationships" /></a>
+	<div>
+		<p>SPIRIT is a Java-based software to handle complex life science research data. It was originally developed for internal use by Actelion Pharmaceuticals Ltd. (Switzerland).</p>
+		<p>SPIRIT is used by more than hundred researchers in Actelion's Drug Discovery Departments. It is also used by the Actelion Research Biobank to manage its preclinical and clinical samples and data.</p>
+		<p>SPIRIT's data concept is generic and sample-centric. It can be configured to handle any type of samples and their relationships, including animals or humans. Results can be linked to samples and have an unlimited number of input and output parameters. Physical storage locations are managed by a fully configurable inventory system. Finally, a graphical study editor allows to plan, display, and record the progress of experiments involving groups of samples and results over time.</p>
+	</div>
 </section>
 
 <section>
@@ -63,7 +66,7 @@
 	main program window, but they are all linked. In these tabs, the user can do the following:
 	<row>
 		<div class="col-md-3">
-			<a class="fancybox" rel="group" href="study.png"><img width="100%" src="study.png" title="Studies" /></a>
+			<a class="fancybox" href="study.png"><img width="100%" src="study.png" title="Studies" /></a>
 			<h3>Studies</h3>	
 			Graphically design and monitor the evolution of a study (experiment).
 			Studies consist of the following elements:
@@ -77,22 +80,22 @@
 			</ul>
 		</div>
 		<div class="col-md-3">
-			<a class="fancybox" rel="group" href="biosample.png"><img width="100%" src="biosample.png" title="Biosamples" /></a>
+			<a class="fancybox" href="biosample.png"><img width="100%" src="biosample.png" title="Biosamples" /></a>
 			<h3>Biosamples</h3>
 			Create samples, find and display them as well as all related samples,
 			edit sample information, print labels
 		</div>
 		<div class="col-md-3">
-			<a class="fancybox" rel="group" href="location.png"><img width="100%" src="location.png" title="Locations" /></a>
+			<a class="fancybox" href="location.png"><img width="100%" src="location.png" title="Locations" /></a>
 			<h3>Locations</h3>
 			Scan and register the location of samples, check-in, check-out and relocate them, display inventory lists, print container labels
 		</div>
 		<div class="col-md-3">
-			<a class="fancybox" rel="group" href="result.png"><img width="100%" src="result.png" title="Results" /></a>
+			<a class="fancybox" href="result.png"><img width="100%" src="result.png" title="Results" /></a>
 			<h3>Results</h3>	
 			Store results, find and display them in pivoted tables, export results
 			in spreadsheet format, visualize them in the <a href="http://www.openmolecules.org/">DataWarrior software</a>
-			<a class="fancybox pull-md-right" rel="group" href="dw.png"><img width="100%" src="dw.png" title="DataWarrior" /></a>
+			<a class="fancybox pull-md-right" href="dw.png"><img width="100%" src="dw.png" title="DataWarrior" /></a>
 		</div>
 	</row>
 	</p>
@@ -105,7 +108,7 @@
 		<div class="col-md-6">
 			<div class="row">
 				<div class="col-xs-5">
-					<a class="fancybox" rel="group" href="install1.png"><img width="100%" src="install1.png" title="Client" /></a>
+					<a class="fancybox" href="install1.png"><img width="100%" src="install1.png" title="Client" /></a>
 				</div>
 				<div class="col-xs-7">
 					<p>
@@ -123,7 +126,7 @@
 		<div class="col-md-6">
 			<div class="row">
 				<div class="col-xs-5">
-					<a class="fancybox" rel="group" href="install2.png"><img width="100%" src="install2.png" title="Client/Server" /></a>
+					<a class="fancybox" href="install2.png"><img width="100%" src="install2.png" title="Client/Server" /></a>
 				</div>
 				<div class="col-xs-7">
 					<p>
@@ -151,7 +154,7 @@ blood, organs, DNA, cells) with their metadata, storage <strong>locations</stron
 <section>
 <h1>Satelite applications</h1>
 <p>SPIRIT links directly with Actelion's <strong>DataWarrior</strong> software to filter and display complex, multidimensional data. DataWarrior is available for free from <a href="http://www.openmolecules.org">www.openmolecules.org</a>.</p>
-<div class="pull-md-right"><a class="fancybox" rel="group" href="satelite.png"><img width="400" src="satelite.png" alt="Spirit's satelite applications" /></a></div>
+<a class="fancybox pull-md-right" href="satelite.png"><img style="width:400px" src="satelite.png" alt="Spirit's satelite applications" /></a>
 <p>The main SPIRIT software is accompanied by a suite of applications built to support specific
 users in dedicated tasks:</p>
 <dl>

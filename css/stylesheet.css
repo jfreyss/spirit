@@ -55,6 +55,7 @@ body {
   font-family: 'Myriad Pro', Calibri, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  padding-top:50px
 }
 
 h0, h1, h2, h3, h4, h5, h6 {
@@ -65,15 +66,13 @@ h0, h1, h2, h3, h4, h5, h6 {
   font-family: 'Lucida Grande', 'Calibri', Helvetica, Arial, sans-serif;
   letter-spacing: -1px;
   clear:both;
+  page-break-after: avoid;
 }
 
 h0 {page-break-inside: avoid;}
 h0  {
-	page-break-before: always;
-	page-break-after: avoid;
 	margin-top:20px;
 	margin-bottom:20px;
-	background-color: #f6fc6a;
 	font-size: 44px;
 	padding: 5px;
 	display: block;
@@ -82,6 +81,12 @@ h0  {
 	background-image: linear-gradient(to top, rgba(255,255,255,.5) 15%, transparent 50%, rgba(255,255,255,.5) 85%);
     background-size: 10px 8px;
 } 
+.yellow-bg {
+	background-color: #f6fc6a;
+	background-image: linear-gradient(to top, rgba(255,255,255,.5) 15%, transparent 50%, rgba(255,255,255,.5) 85%);
+    background-size: 10px 8px;
+}
+
 h1 {
   padding-bottom: 0px;
   margin-top:30px;
@@ -192,13 +197,8 @@ img {
   max-width: 739px;
   padding: 5px;
   margin: 10px 0 10px 0;
-  border: 1px solid #ebebeb;
-
-  box-shadow: 0 0 5px #ebebeb;
-  -webkit-box-shadow: 0 0 5px #ebebeb;
-  -moz-box-shadow: 0 0 5px #ebebeb;
-  -o-box-shadow: 0 0 5px #ebebeb;
-  -ms-box-shadow: 0 0 5px #ebebeb;
+  max-width:100%
+	
 }
 
 p img {
@@ -209,6 +209,20 @@ p img {
   text-align: center;
   border: none;
 }
+
+.fancybox >img {
+  width:100%;
+  max-width:100%;
+  display:block;
+  border: 1px solid #ebebeb;
+  box-shadow: 0 0 5px #ebebeb;
+  -webkit-box-shadow: 0 0 5px #ebebeb;
+  -moz-box-shadow: 0 0 5px #ebebeb;
+  -o-box-shadow: 0 0 5px #ebebeb;
+  -ms-box-shadow: 0 0 5px #ebebeb;
+}
+
+
 
 pre, code {
   width: 100%;
@@ -369,12 +383,6 @@ td  > dl > dd {
 	padding-bottom: 20px;
 }
 
-.jumbotron > div {
-	background-repeat:no-repeat;
-	background-image:url('../overview.png');
-	background-position:right top;
-	height:300px;
-}
 
 .navbar-default .navbar-nav>li>a {
     color: #AAA;
@@ -450,13 +458,6 @@ td  > dl > dd {
   }
 }
 
-.fancybox >img {
-	width:inherit;
-	width:100%;
-    max-width:100%;
-    display:block;
-}
-
 fieldset {
     min-width: 0; 
     padding: 5px; 
@@ -504,5 +505,12 @@ fieldset {
 }
 p {
 	clear:left;
-	clear:right;
+}
+
+.sidebar  > ul > li > a{
+	background-color: #f6fc6a;
+	background-image: linear-gradient(to top, rgba(255,255,255,.5) 15%, transparent 50%, rgba(255,255,255,.5) 85%);
+    background-size: 10px 8px;
+	margin-top:4px;
+	font-weight:600
 }
