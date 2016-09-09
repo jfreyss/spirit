@@ -179,7 +179,6 @@ Please look at the section <a href="#study_infos">above</a> to have an explanati
 
 <h4 id="study_phase">3. Phases</h3>
 <p>
-    <a class="fancybox pull-md-right" href="sc_study11.png"><img src="sc_study11.png" title="Study Design - Phases"/></a>
     The phases define the timeline of the study. Phases can be formatted as: 
     <dl>
     <dt>d0, d1, d3:
@@ -189,21 +188,14 @@ Please look at the section <a href="#study_infos">above</a> to have an explanati
     <dt>1. Baseline, 2., 3. EOT: 
     <dd>Use this format when actions don't take place at exact dates, but at some point of time. The phases become markers for the baseline, end of treatment, first visit, ... 
     </dl>
+</p>
+<p>
+    <a class="fancybox pull-md-right" href="sc_study11.png"><img src="sc_study11.png" title="Study Design - Phases"/></a>
+	To add phases, right click on the table and select "add rows". You can also use the up/down keyboard to add phases at the bottom/top of the table.<br>
+	To remove phases, right click on the table and select "delete rows". You can also click delete on the keyboard to remove the selected phase. Make sure you have no samples or results attached to that phase.<br>
+	To rename, simply select the phase and type the new name.<br>
+	
 
-	<dl>
-    <dt>Add Phases
-    <dd>Instead of adding phases one by one, this dialog helps the user to enter a sequence of phase at once.
-    The design can always be modified later to add additional phases.
-
-    <dt>Update Phases
-    <dd>After having added a phase, the user can add a label (for example: d7 necropsy) or simply change the name or change the day/hour.
-    Phases can be moved, even if they have already biosamples or results. In that case, everything linked to that phase will follow.<br>
-    <br>
-    To move several phases at once, the user can select several phases, and specify the number of days to advance/delay. The phase is then renamed.
-
-    <dt>Remove Phases
-    <dd>There, it is possible to remove the phases, which have no actions, attached samples or results.
-    </dl>
 </p>
 
 <h4 id="study_group">4. Groups</h4>
@@ -1154,8 +1146,30 @@ Use this function to count the number of organs per animal, to count the types o
 
 
 
-
-
+<h1 id="advanced">Advanced</h1>
+<h2>Import/Export</h2>
+<h2>Export</h2>
+<p>
+	It is possible to export Spirit data using the <b>Spirit File Format</b>. The Spirit File Format is a proprietary format which encapsulates the studies, biosamples, locations, results, biotypes and tests of the data you want to export. It is self-contained, meaning that the data exported contains everything to rebuild the exported data somewhere else (ie, if you export results, all the linked biosamples, biotypes and tests will also be exported). The file is a JSON text readable format (human readable), and it could actually by manipulated by the user or an other program.
+</p>
+<p>
+	<a class="fancybox pull-md-right" href="sc_adv1.png"><img src="sc_adv1.png" title="Export dlg"/></a>		
+	To Export data, go to the "Edit" menu of Spirit and select "Export Data". In this dialog, you must decide what you want to export:
+	<ul>
+		<li><b>Export data from the current view:</b> with this option, you can make a query in any of the Spirit perspective and Spirit will export only the data needed to reconstruct the result of your query.
+		<li><b>Export data from the following studies:</b>You can type the studyIds to export the study design, as well as all the associated biosamples (and their types), location, results (and their tests)
+		<li><b>Export all biotypes/tests:</b>This is to export the definition of your biotypes/tests
+		<li><b>Export everything:</b>This option is only possible if you have less than 10 studies, as the file may be potentially too big to export more data.		
+	</ul>
+	This dialog gives an overview of the data that will exported. Enter then the filename and click "Export" to export the data.
+</p>
+<h2>Import</h2>
+<p>
+	<a class="fancybox pull-md-right" href="sc_adv2.png"><img src="sc_adv2.png" title="Import dlg"/></a>		
+	To import a <b>Spirit file</b>, go to the "Edit" menu of Spirit and select "Import Data". Select a file to open the "Import Data" dialog.<br>
+	The "Import Data" dialog gives you different options to import the data, in case of conflict.
+	
+</p>
 
 
 <h0 id="admin">Administration guide</h0>
