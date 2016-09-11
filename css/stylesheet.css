@@ -211,8 +211,8 @@ p img {
 }
 
 .fancybox >img {
-  width:100%;
-  max-width:100%;
+  width: 100%;
+  max-width:inherit;
   display:block;
   border: 1px solid #ebebeb;
   box-shadow: 0 0 5px #ebebeb;
@@ -315,21 +315,6 @@ form {
 /*******************************************************************************
 Full-Width Styles
 *******************************************************************************/
-
-
-#forkme_banner {
-  display: block;
-  z-index: 10;
-  margin-left:20px;
-  padding: 10px 50px 10px 10px;
-  color: #fff;
-  background: url('../images/blacktocat.png') #3175b0  no-repeat 95% 50%;
-  font-weight: 700;
-  box-shadow: inset 0px -5px 6px 2px #425088;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
-}
-
 #header_wrap {
   background: #474737;
   background: -moz-linear-gradient(top, #212121, #474737);
@@ -337,16 +322,6 @@ Full-Width Styles
   background: -ms-linear-gradient(top, #212121, #474737);
   background: -o-linear-gradient(top, #212121, #474737);
   background: linear-gradient(top, #212121, #474737);
-}
-
-#downloads {
-  position: absolute;
-  width: 210px;
-  z-index: 10;
-  bottom: -40px;
-  right: 0;
-  height: 70px;
-  background: url('../images/icon_download.png') no-repeat 0% 90%;
 }
 
 #footer_wrap {
@@ -372,8 +347,6 @@ td  > dl > dt {
 td  > dl > dd {
 	margin-left:20px;
 }
-
-
 
 .jumbotron {
 	background-color: #f6fc6a;
@@ -432,6 +405,30 @@ td  > dl > dd {
 }
 .navbar {
 	margin-bottom:1px;
+}
+
+
+@media (min-width: 500px) {
+  .pull-xs-left {
+    float: left !important;
+  }
+  .pull-xs-right {
+    float: right !important;
+  }
+  .pull-xs-none {
+    float: none !important;
+  }
+}
+@media print {
+  .pull-xs-left {
+    float: left !important;
+  }
+  .pull-xs-right {
+    float: right !important;
+  }
+  .pull-xs-none {
+    float: none !important;
+  }
 }
 
 
