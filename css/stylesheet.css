@@ -502,6 +502,7 @@ fieldset {
 .pull-md-right {
 	padding-left:10px;
 	padding-bottom:10px;
+    clear:right;
 }
 p {
 	clear:left;
