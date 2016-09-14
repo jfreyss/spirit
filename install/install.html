@@ -84,7 +84,9 @@
 	There are different ways to install Spirit depending of your needs. Option 1 is best for trying, option 3 is best for productive settings.
 	<dl>
 		<dt>Option 1: Spirit from GitHub
-		<dd>It is possible to access Spirit without installing the program on your drive. The advantages is that you will always run the latest version, but the disadvantage is that you will have no control on the updates (this option is therefore not recommended).
+		<dd>
+        <a class="fancybox pull-md-right" href="../concept/install1.png"><img src="../concept/install1.png" title="Local Install"/></a>
+        It is possible to access Spirit without installing the program on your drive. The advantages is that you will always run the latest version, but the disadvantage is that you will have no control on the updates (this option is therefore not recommended).
 		<ul>
 			<li>Install <a href="https://www.java.com/en/download/"> Java JRE </a> if you don't have it already
 			<li>Execute the latest version on the <a href="../demo/demo.html"> Demo </a> page
@@ -92,7 +94,9 @@
 		</ul>
 			
 		<dt>Option 2: <b>local installation</b> of Spirit
-		<dd>To have a fixed version of Spirit, the best is to download the binaries and to run the program on those binaries. 
+		<dd>
+        <p>
+        To have a fixed version of Spirit, the best is to download the binaries and to run the program on those binaries. 
 		<ul>
 			<li>Install <a href="https://www.java.com/en/download/"> Java JRE </a> if you don't have it already
 			<li>Download the latest release of Spirit-bin from <a href="https://github.com/jfreyss/spirit/releases"> GitHub </a>
@@ -101,9 +105,11 @@
 			<li>Run spirit.jnlp by double clicking on it
 			<li>You can can configure an external database as shown in the next section.
 		</ul>
-
+        </p>
 		<dt>Option 3: <b>server installation</b> of Spirit
-		<dd>To have a fixed version of Spirit, the best is to download the binaries and to run the program on those binaries. You need the help of an IT specialist for the server installation.
+		<dd>
+        <a class="fancybox pull-md-right" href="../concept/install2.png"><img src="../concept/install2.png" title="Server Install"/></a>
+        To have a fixed version of Spirit, the best is to download the binaries and to run the program on those binaries. You need the help of an IT specialist for the server installation.
 		<ul>
 			<li>Install <a href="https://www.java.com/en/download/"> Java JRE </a> if you don't have it already
 			<li>Download the latest release of Spirit-bin from <a href="https://github.com/jfreyss/spirit/releases"> GitHub </a>
@@ -115,9 +121,45 @@
 </section>
 <section>
 	<h1>External Database</h1>
-	Work in progress
+    <h2>MySQL</h2>
+    <p>
+	<ol>
+        <li>Download MySQL on <a href="https://www.mysql.com/downloads/">https://www.mysql.com/downloads/</a>
+        <li>Connect to MySQL and and run the following script: <br>
+<code><pre>
+create schema spirit;
+create user spirit identified by 'PASSWORD';
+grant all ON spirit.* TO 'spirit';
+</pre></code>
+            <ul>
+                <li>The schema 'spirit' is mandatory
+                <li>The user 'spirit' can be changed and the password needs to be replaced by the password of your choice.
+                <li>All rights have to be granted on the spirit schema to the spirit user, at least until the tables are created.
+            </ul>       
+        <li><a class="fancybox pull-md-right" href="sc1.png"><img src="sc1.png" title="Database Config"/></a>Open Spirit and select "Database Settings" in the "Admin" menu, to open this dialog.<br>
+            <ul>
+            <li>Change the DB Adapter to use the "Production Database"
+            <li>Change the connection vendor to MySQL
+            <li>Replace the connection url to "jdbc:mysql://localhost:3306/spirit" (replace localhost to the IP/DNS of the MySQL server)
+            <li>Enter the userId and the password, you used to configure the 'spirit' schema. To enter the password, click the "..."  to encrypt it.
+        <li>Click 'Test Connection': this should be successful. If not make sure all previous steps were done correctly
+        <li>Click 'Save'.
+        <li>Since the database is empty, the tables will automatically be created, a set of biotypes/test and some examples will be imported. 
+       
+    </ol>
+    </p>
+    <h2>Oracle</h2>
+    Work in progress    
 </section>
-
+<section>
+    <h1>User configuration</h1>
+    <p><a class="fancybox pull-md-right" href="sc3.png"><img src="sc3.png" title="First login"/></a>
+        The first time you login, the only available user is "admin" without any password. The login dialog displays this warning until you create some new users.
+    </p>
+    <p>
+        To create new users, login as an administrator and select "Edit Users/Groups" in the "Admin" menu, as explained in the <a href="../doc/index.html#admin_user">admin guide</a>
+    </p>
+</section>
 
     </div>
 	
