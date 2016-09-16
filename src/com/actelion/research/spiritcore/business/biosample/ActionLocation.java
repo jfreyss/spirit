@@ -21,8 +21,6 @@
 
 package com.actelion.research.spiritcore.business.biosample;
 
-import java.awt.Color;
-
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
@@ -45,10 +43,5 @@ public class ActionLocation extends ActionBiosample {
 	@Override
 	public String getDetails() {
 		return "Moved to " +(getComments()==null?"NA": getComments());			
-	}
-	
-	@Override
-	public Color getColor() {
-		return new Color(230,255,230);
-	}
+	}	
 }

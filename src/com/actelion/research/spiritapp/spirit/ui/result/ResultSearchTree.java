@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -93,20 +94,12 @@ public class ResultSearchTree extends FormTree {
 		}			
 	});
 	
-//	private final InputNode compoundNode = new InputNode(this, FieldType.OR_CLAUSE, "ActNo/ELN", new Strategy<String>() {
-//		@Override
-//		public String getModel() {return query.getActNoOrElns();}
-//		@Override
-//		public void setModel(String modelValue) {query.setActNoOrElns(modelValue);}
-//	});
-
-	
 	private int push = 0;
 	
 	private static class ResultFilters {
-		public final Set<String> types = new HashSet<String>();
-		public final SetHashMap<TestAttribute, String> inputChoices = new SetHashMap<TestAttribute, String>();
-		public final Set<TestAttribute> outputDisplays = new LinkedHashSet<TestAttribute>();
+		public final Set<String> types = new HashSet<>();
+		public final Map<TestAttribute, Set<String>> inputChoices = new LinkedHashMap<>();
+		public final Set<TestAttribute> outputDisplays = new LinkedHashSet<>();
 		
 	}
 		
@@ -534,8 +527,10 @@ public class ResultSearchTree extends FormTree {
 			
 			//Find possible inputs
 			for(int testId: testIds) {
-				Map<TestAttribute, Collection<String>> inputChoices = DAOResult.getInputChoices(q.getStudyIds(), testId);
-				res.inputChoices.addAll(inputChoices);
+				Map<TestAttribute, Collection<String>> inputChoices = DAOTest.getInputFields(testId, q.getStudyIds());
+				for (Map.Entry<TestAttribute, Collection<String>> e : inputChoices.entrySet()) {
+					res.inputChoices.put(e.getKey(), new LinkedHashSet<>(e.getValue()));					
+				}
 			}
 			for(Test t: DAOTest.getTests(testIds)) {
 				List<TestAttribute> tas = t.getOutputAttributes();

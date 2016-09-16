@@ -59,23 +59,18 @@ public class PivotDataTable {
 	private List<PivotColumn> pivotColumns = new ArrayList<>();
 	private List<Result> results;
 
-	public static PivotDataTable createPivotDataTable(List<Result> results, Set<TestAttribute> skippedAttributes, PivotTemplate template) {
-		if(template==null) throw new IllegalArgumentException("Template cannot be null");
-		
-		if(template.getComputed()!=null) {
-			template.getComputed().calculateComputedValues(results);
-		}
-		PivotDataTable res = new PivotDataTable(results, skippedAttributes, template);
-		return res;
-	}
-
 	/**
 	 * Creates and populate a PivotTable from the given results and using the given template
 	 * @param results
 	 * @param skippedAttributes
 	 * @param template
 	 */
-	private PivotDataTable(List<Result> results, Set<TestAttribute> skippedAttributes, PivotTemplate template) {
+	public PivotDataTable(List<Result> results, Set<TestAttribute> skippedAttributes, PivotTemplate template) {
+		if(template==null) throw new IllegalArgumentException("Template cannot be null");
+		
+		if(template.getComputed()!=null) {
+			template.getComputed().calculateComputedValues(results);
+		}
 		
 		this.template = template;
 		this.skippedAttributes = skippedAttributes;
@@ -105,9 +100,9 @@ public class PivotDataTable {
 		}
 
 
-		Set<Test> skippableTests = new HashSet<Test>();
-		Set<Biosample> skippableSamples = new HashSet<Biosample>();		
-		Set<String> skippable = new HashSet<String>();
+		Set<Test> skippableTests = new HashSet<>();
+		Set<Biosample> skippableSamples = new HashSet<>();		
+		Set<String> skippable = new HashSet<>();
 		
 		Map<Test, List<Result>> mapTest = Result.mapTest(results);
 					

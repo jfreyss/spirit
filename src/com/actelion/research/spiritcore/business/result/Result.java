@@ -54,7 +54,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.RevisionNumber;
@@ -77,7 +76,6 @@ import com.actelion.research.util.CompareUtils;
 		@Index(name="assay_result_phase_idx", columnList = "phase_id")})
 @SequenceGenerator(name="assay_result_seq", sequenceName="assay_result_seq", allocationSize=1)
 @Audited
-@AuditTable(value="assay_result_aud")
 public class Result implements Comparable<Result>, IEntity, Cloneable {
 		
 	@Id
@@ -367,12 +365,12 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 	 * Either as a double or as as string
 	 * @return
 	 */
-	public Object getFirstValue() {
+	public String getFirstValue() {
 		for(TestAttribute ta: getTest().getAttributes()) {
 			if(ta.getOutputType()!=OutputType.OUTPUT) continue;
 			ResultValue rv = getResultValue(ta);
 			if(rv==null) return null;
-			if(rv.getDoubleValue()!=null) return rv.getDoubleValue();
+//			if(rv.getDoubleValue()!=null) return rv.getDoubleValue();
 			return rv.getValue();
 		}
 		return null;
@@ -396,14 +394,6 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 		return null;
 	}
 
-//	public String getOutputValueString() {
-//		List<ResultValue> rvs = getOutputValues();
-//		if(rvs.size()>0) {
-//			if(rvs.get(0).getValue()!=null) return rvs.get(0).getValue();
-//		}
-//		return null;
-//	}
-	
 	public String getOutputResultValuesAsString(){
 		if(test==null) return "No test";
 		List<TestAttribute> atts = test.getOutputAttributes();

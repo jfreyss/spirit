@@ -36,6 +36,8 @@ import java.util.Map;
 
 import javax.swing.JButton;
 
+import org.slf4j.LoggerFactory;
+
 import com.actelion.research.spiritapp.animalcare.AnimalCare;
 import com.actelion.research.spiritapp.animalcare.ui.monitor.MonitoringDlg;
 import com.actelion.research.spiritapp.animalcare.ui.monitor.MonitoringOverviewDlg;
@@ -55,6 +57,7 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.form.BiosampleFormDlg
 import com.actelion.research.spiritapp.spirit.ui.config.ConfigDlg;
 import com.actelion.research.spiritapp.spirit.ui.container.CheckinDlg;
 import com.actelion.research.spiritapp.spirit.ui.container.CheckoutDlg;
+import com.actelion.research.spiritapp.spirit.ui.home.HomeTab;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationTab;
 import com.actelion.research.spiritapp.spirit.ui.location.edit.LocationBatchEditDlg;
 import com.actelion.research.spiritapp.spirit.ui.pivot.PivotAnalyzerDlg;
@@ -86,44 +89,45 @@ public class HelpBinder {
 		if(class2Ref==null) {
 			class2Ref = new HashMap<>();
 			class2Ref.put(Spirit.class, null);
-			class2Ref.put(StudyTab.class, "Studies Visualization");
-			class2Ref.put(BiosampleTab.class, "Biosamples Visualization");
-			class2Ref.put(LocationTab.class, "Locations Visualization");
-			class2Ref.put(ResultTab.class, "Results Visualization");
+			class2Ref.put(HomeTab.class, "home");
+			class2Ref.put(StudyTab.class, "study_visualization");
+			class2Ref.put(BiosampleTab.class, "biosample_visualization");
+			class2Ref.put(LocationTab.class, "location_visualization");
+			class2Ref.put(ResultTab.class, "result_visualization");
 			
-			class2Ref.put(StudyWizardDlg.class, "Edit Study Design");
-			class2Ref.put(StudyInfoDlg.class, "Study Infos");
-			class2Ref.put(PhaseDlg.class, "Phases");
-			class2Ref.put(StudyGroupDlg.class, "Groups");
-			class2Ref.put(StudyTreatmentDlg.class, "Treatments");
-			class2Ref.put(NamedSamplingDlg.class, "Sampling Templates");
-			class2Ref.put(RandomizationDlg.class, "Assignment Wizard");
-			class2Ref.put(AttachAnimalsManuallyDlg.class, "Manual Assigment");			
-			class2Ref.put(MonitoringOverviewDlg.class, "Monitoring Overview");
-			class2Ref.put(MonitoringDlg.class, "Monitoring Dialog");
-			class2Ref.put(SetLivingStatusDlg.class, "Replace / Set Living Status");
-			class2Ref.put(ManageSamplesDlg.class, "Manage Samples");
-			class2Ref.put(SampleWeighingDlg.class, "Sample Weighing");
-			class2Ref.put(StudyHistoryDlg.class, "Study History");
+			class2Ref.put(StudyInfoDlg.class, "study_infos");
+			class2Ref.put(StudyWizardDlg.class, "study_design");
+			class2Ref.put(PhaseDlg.class, "study_phase");
+			class2Ref.put(StudyGroupDlg.class, "study_group");
+			class2Ref.put(StudyTreatmentDlg.class, "study_treatment");
+			class2Ref.put(NamedSamplingDlg.class, "study_sampling");
+			class2Ref.put(RandomizationDlg.class, "study_auto");
+			class2Ref.put(AttachAnimalsManuallyDlg.class, "study_manual");			
+			class2Ref.put(MonitoringOverviewDlg.class, "study_overview");
+			class2Ref.put(MonitoringDlg.class, "study_monitoring");
+			class2Ref.put(SetLivingStatusDlg.class, "study_living");
+			class2Ref.put(ManageSamplesDlg.class, "study_manage");
+			class2Ref.put(SampleWeighingDlg.class, "study_measure");
+			class2Ref.put(StudyHistoryDlg.class, "study_history");
 			
-			class2Ref.put(EditBiosampleDlg.class, "Editing in Batch Mode");
-			class2Ref.put(BiosampleFormDlg.class, "Editing in Form Mode");
-			class2Ref.put(CreateChildrenDlg.class, "Create Aliquots");
-			class2Ref.put(CheckinDlg.class, "Checkin / Relocate");
-			class2Ref.put(CheckoutDlg.class, "Checkout");
+			class2Ref.put(EditBiosampleDlg.class, "biosample_batch");
+			class2Ref.put(BiosampleFormDlg.class, "biosample_form");
+			class2Ref.put(CreateChildrenDlg.class, "biosample_children");
+			class2Ref.put(CheckinDlg.class, "biosample_checkin");
+			class2Ref.put(CheckoutDlg.class, "biosample_checkout");
 
-			//there buttons need to be added
-			class2Ref.put(LocationBatchEditDlg.class, "Editing Locations");
-			class2Ref.put(EditResultDlg.class, "Edit Result Dialog");
-			class2Ref.put(PivotDlg.class, "Pivot per Phase");
+			//these buttons need to be added
+			class2Ref.put(LocationBatchEditDlg.class, "location_edit");
+			class2Ref.put(EditResultDlg.class, "result_edit");
+			class2Ref.put(PivotDlg.class, "result_customize");
 
 			
-			class2Ref.put(PivotAnalyzerDlg.class, "Analysis");
+			class2Ref.put(PivotAnalyzerDlg.class, "result_analysis");
 			
 			class2Ref.put(EmployeeGroupEditDlg.class, "Edit Groups");
-			class2Ref.put(EmployeeEditDlg.class, "Edit Users");
-			class2Ref.put(BiotypeEditDlg.class, "Edit Biotypes");
-			class2Ref.put(TestEditDlg.class, "Edit Tests");
+			class2Ref.put(EmployeeEditDlg.class, "admin_user");
+			class2Ref.put(BiotypeEditDlg.class, "admin_user");
+			class2Ref.put(TestEditDlg.class, "admin_tests");
 			class2Ref.put(ConfigDlg.class, "Balance Configuration");
 
 			class2Ref.put(AnimalCare.class, "AnimalCare");
@@ -168,6 +172,7 @@ public class HelpBinder {
 			source = source.getParent();
 		}
 		String ref = class2Ref.get(source==null? null: source.getClass());
+		LoggerFactory.getLogger(HelpBinder.class).debug("Show help on " + source.getClass() + " #"+ref);
 		showHelp(ref);
 
 	}

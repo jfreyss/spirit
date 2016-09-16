@@ -103,25 +103,5 @@ public class DAOOrder {
 		
 		
 	}
-	
-	public static void main(String[] args) throws Exception {
-//		Order order = new Order();
-//		List<String> ids = new ArrayList<String>();
-//		ids.add("TST-1");
-//		ids.add("TST-2");
-//		order.getContainers().addAll(DAOBiosample.getContainers(ids));
-//		DAOOrder.persistOrders(Collections.singletonList(order), SpiritAdapter.getInstance().loadUser("freyssj"));
 		
-		for(Order o: getActiveOrders(10)) {
-			System.out.println(o);
-			for (String c : o.getContainerIds()) {
-				System.out.println(c+">"+o.getRackNo(c)+"/"+o.getRackPosition(c));
-				
-			}
-		}
-	}
-	
-
-	
-	
 }

@@ -110,7 +110,7 @@ public class MonitoringAnimalPanel extends JPanel {
 		//Weight Field
 		JCustomLabel lastWeightLabel = new JCustomLabel(FastFont.SMALL);	
 		{
-			weighResult = animal.getAuxResult(DAOTest.getWeighingTest(), phase);
+			weighResult = animal.getAuxResult(DAOTest.getTest(DAOTest.WEIGHING_TESTNAME), phase);
 			assert weighResult!=null;
 			
 			//Find LastWeight
@@ -143,7 +143,7 @@ public class MonitoringAnimalPanel extends JPanel {
 		//Observation Field
 		JCustomLabel lastObsLabel = new JCustomLabel(FastFont.SMALL);
 		{
-			obsResult = animal.getAuxResult(DAOTest.getObservationTest(), phase);
+			obsResult = animal.getAuxResult(DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME), phase);
 			assert obsResult!=null;
 
 			//Find previousObservation
@@ -152,7 +152,7 @@ public class MonitoringAnimalPanel extends JPanel {
 			lastObsLabel.setText( prevObsResult==null?"": (prevObsResult.getPhase().getShortName()+ ": " + prevObsResult.getFirstValue()));
 			
 			//Init field
-			obsTextField = new MonitorTextComboBox(animal.getAuxResult(DAOTest.getObservationTest(), phase), 0, false);
+			obsTextField = new MonitorTextComboBox(animal.getAuxResult(DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME), phase), 0, false);
 			obsTextField.setChoices(Arrays.asList(ObservationConstants.ALL_OBSERVATIONS));
 			obsTextField.setColumns(9);
 			measurementComps.add(new JLabel("Observation: "));
@@ -223,7 +223,7 @@ public class MonitoringAnimalPanel extends JPanel {
 		waterTextField.setBorderColor(Color.GRAY);
 		foodTextField.setEnabled(false);
 		waterTextField.setEnabled(false);
-		Result fwResult = animal.getAuxResult(DAOTest.getFoodWaterTest(), phase);
+		Result fwResult = animal.getAuxResult(DAOTest.getTest(DAOTest.FOODWATER_TESTNAME), phase);
 		String valFood = fwResult==null? "": fwResult.getOutputResultValues().get(0).getValue(); 
 		String valWater = fwResult==null? "": fwResult.getOutputResultValues().get(1).getValue(); 
 		foodTextField.setText(valFood);
@@ -331,7 +331,7 @@ public class MonitoringAnimalPanel extends JPanel {
 		StudyAction a = animal.getStudyAction(phase);
 		NamedTreatment nt = a==null? null: a.getNamedTreatment();
 		ActionTreatment action = animal.getAction(ActionTreatment.class, phase);
-		Result weighResult = animal.getAuxResult(DAOTest.getWeighingTest(), phase);
+		Result weighResult = animal.getAuxResult(DAOTest.getTest(DAOTest.WEIGHING_TESTNAME), phase);
 		Result prevWeighResult = SpiritRights.isBlind(phase.getStudy(), Spirit.getUser())? null: Result.getPrevious(weighResult, dlg.getAllPreviousResults());
 		Double weight = weighResult.getFirstAsDouble();
 				
@@ -390,7 +390,7 @@ public class MonitoringAnimalPanel extends JPanel {
 	
 	public void updateFW() {
 		
-		Result fwResult = animal.getAuxResult(DAOTest.getFoodWaterTest(), phase);
+		Result fwResult = animal.getAuxResult(DAOTest.getTest(DAOTest.FOODWATER_TESTNAME), phase);
 		
 		String valFood = fwResult==null? null: fwResult.getOutputResultValues().get(0).getValue(); 
 		String valWater = fwResult==null? null: fwResult.getOutputResultValues().get(1).getValue();
@@ -497,9 +497,10 @@ public class MonitoringAnimalPanel extends JPanel {
 			{			
 				JPAUtil.pushEditableContext(Spirit.getUser());
 				try {
-					ActionTreatment at = new ActionTreatment(animal, phase, weight, nt, effDose1TextField.getTextDouble(), effDose2TextField.getTextDouble(), popFormulationTextField.getText(), popCommentsTextField.getText(), Spirit.getUser().getUsername());
-					DAOBiosample.persistBiosampleActions(Collections.singletonList(at), Spirit.getUser());
+					ActionTreatment at = new ActionTreatment(animal, phase, weight, nt, effDose1TextField.getTextDouble(), effDose2TextField.getTextDouble(), popFormulationTextField.getText(), popCommentsTextField.getText());
+//					DAOBiosample.persistBiosampleActions(Collections.singletonList(at), Spirit.getUser());
 					animal.addAction(at);
+					DAOBiosample.persistBiosamples(Collections.singleton(animal), Spirit.getUser());
 					treatmentPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.BLUE), BorderFactory.createEmptyBorder(2, 2, 2, 2)));
 					updateTreatmentPanel();
 					updateFormulationLabel(at);

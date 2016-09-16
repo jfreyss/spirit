@@ -59,14 +59,13 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.ConfigProperties;
-import com.actelion.research.spiritcore.services.dao.DAORecentChanges;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.spiritcore.util.Triple;
-import com.actelion.research.util.HtmlUtils;
 import com.actelion.research.util.WikiNewsFeed;
 import com.actelion.research.util.WikiNewsFeed.News;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -84,7 +83,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 		setOpaque(false);
 		setEditable(false);
 
-		days = ConfigProperties.getInstance().getValueInt(PropertyKey.LAST_CHANGES);
+		days = SpiritProperties.getInstance().getValueInt(PropertyKey.LAST_CHANGES);
 		final JPopupMenu popupMenu = new JPopupMenu();
 		popupMenu.add(new JLabel("TEST"));
 		popupMenu.addPopupMenuListener(new PopupMenuListener() {			
@@ -150,7 +149,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 								@Override
 								protected void done() {
 									try {
-										JPAUtil.refresh();	
+										JPAUtil.close();	
 										spirit.recreateTabs();
 									} catch(Exception e) {
 										JExceptionDialog.showError(e); 										
@@ -310,7 +309,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 
 				//StudyTitle
 				if(s.getTitle()!=null) sb.append(" <div style='font-size:12px;white-space:wrap;'>" + s.getTitle() + "</div>");
-				if(s.getNotes()!=null) sb.append(" <div style='font-size:9px;white-space:wrap;color:#444444; margin:2px'>" + HtmlUtils.convert2Html(s.getNotes()) + "</div>");
+				if(s.getNotes()!=null) sb.append(" <div style='font-size:9px;white-space:wrap;color:#444444; margin:2px'>" + MiscUtils.convert2Html(s.getNotes()) + "</div>");
 			}
 			
 			sb.append("</td><td valign=top width=400 style='white-space:nowrap; margin: 0px; padding:0px'>");
@@ -356,16 +355,16 @@ public class LastActivityEditorPane extends ImageEditorPane {
 		
 	private String getRecentChangesFromDatabase() {
 
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(JPAUtil.getCurrentDateFromDatabase());
-		cal.set(Calendar.HOUR_OF_DAY, 0);
-		cal.set(Calendar.DAY_OF_YEAR, cal.get(Calendar.DAY_OF_YEAR)-days);
-		Date date = cal.getTime();
-
-		//Quey last changes
+		//Query last changes
 		try {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(JPAUtil.getCurrentDateFromDatabase());
+			cal.set(Calendar.HOUR_OF_DAY, 0);
+			cal.set(Calendar.DAY_OF_YEAR, cal.get(Calendar.DAY_OF_YEAR)-days);
+			Date date = cal.getTime();
+			
 			List<Study> studies = new ArrayList<>();
-			for(Study s: DAORecentChanges.getRecentChangesFast(date)) {
+			for(Study s: DAOStudy.getRecentChanges(date)) {
 				if(showExpertOnly && !SpiritRights.canBlind(s, Spirit.getUser())) continue;
 				if(!showExpertOnly && !SpiritRights.canView(s, Spirit.getUser())) continue;
 				studies.add(s);				

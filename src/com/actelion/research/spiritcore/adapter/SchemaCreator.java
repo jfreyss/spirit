@@ -21,21 +21,31 @@
 
 package com.actelion.research.spiritcore.adapter;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Collections;
+import java.util.List;
 
-import javax.swing.JPanel;
+import javax.persistence.EntityManager;
 
 import org.slf4j.LoggerFactory;
 
+import com.actelion.research.spiritcore.business.Exchange;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
+import com.actelion.research.spiritcore.business.study.Study;
+import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.ConfigProperties;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
+import com.actelion.research.spiritcore.services.dao.DAOExchange;
+import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
+import com.actelion.research.spiritcore.services.exchange.Importer;
 import com.actelion.research.spiritcore.services.migration.MigrationScript;
 
 public class SchemaCreator {
@@ -61,17 +71,17 @@ public class SchemaCreator {
 			//Create one group
 			SpiritUser admin = SpiritUser.getFakeAdmin();
 			EmployeeGroup group = new EmployeeGroup("Group");
-			DAOEmployee.persistEmployeeGroup(group, admin);
+			DAOEmployee.persistEmployeeGroups(Collections.singleton(group), admin);
 
 			Employee employee = new Employee("admin");
 			employee.getEmployeeGroups().add(group);
 			employee.setRoles(Collections.singleton("admin"));
-			DAOEmployee.persistEmployee(employee, admin);			
+			DAOEmployee.persistEmployees(Collections.singleton(employee), admin);			
 			
 			//The version is now the latest: update the version
 			String version = MigrationScript.getExpectedDBVersion();
-			ConfigProperties.getInstance().setDBVersion(version);
-			ConfigProperties.getInstance().saveValues();
+			SpiritProperties.getInstance().setDBVersion(version);
+			SpiritProperties.getInstance().saveValues();
 			adapter.executeScripts(CREATE_AFTER, false);
 			LoggerFactory.getLogger(HSQLFileAdapter.class).debug("DB UPDATED");
 		} catch(Exception e2) {
@@ -138,5 +148,36 @@ public class SchemaCreator {
 		}
 		
 	}
+	
+	public static void clearExamples(SpiritUser user) throws Exception {
+		List<Study> exampleStudies = DAOStudy.queryStudies(StudyQuery.createForState("EXAMPLE"),  user);
+		EntityManager session = JPAUtil.getManager();
+		try {
+			session.getTransaction().begin();
+			DAOStudy.deleteStudies(session, exampleStudies, true, user);
+			LoggerFactory.getLogger(SchemaCreator.class).info("examples deleted: "+exampleStudies);						
+			session.getTransaction().commit();
+		} catch(Exception e) {
+			if(session.getTransaction().isActive()) {
+				session.getTransaction().rollback();
+			}
+			throw e;
+		} 
+	}
 
+	public static Exchange createExamples(SpiritUser user) throws Exception {
+		try(InputStream is = SchemaCreator.class.getResourceAsStream("demo.spirit")) {
+			if(is==null) {
+				throw new Exception("The system could not find the default configuration. The system is therefore empty");
+			}
+			Exchange exchange = Importer.read(new InputStreamReader(is));			
+			ExchangeMapping mapping = new ExchangeMapping(exchange);
+			DAOExchange.persist(mapping, user);
+			LoggerFactory.getLogger(SchemaCreator.class).info("examples persisted");
+			return exchange;
+		} catch(Exception e) {
+			LoggerFactory.getLogger(SchemaCreator.class).error("Could not persist examples: replace old examples", e);
+			throw e;	
+		}
+	}
 }

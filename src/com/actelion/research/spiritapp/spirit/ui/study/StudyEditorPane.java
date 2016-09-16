@@ -50,7 +50,7 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.services.dao.ConfigProperties;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
@@ -59,7 +59,6 @@ import com.actelion.research.spiritcore.util.Formatter;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Triple;
 import com.actelion.research.util.CompareUtils;
-import com.actelion.research.util.HtmlUtils;
 import com.actelion.research.util.IOUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
 
@@ -180,7 +179,7 @@ public class StudyEditorPane extends JEditorPane {
 			sb.append("<hr>");
 			sb.append("<table style='font-size:8px'>");
 			for(Entry<String, String> entry: study.getMetadata().entrySet()) {
-				String name = ConfigProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, entry.getKey());
+				String name = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, entry.getKey());
 				if(name!=null && name.length()>0 && entry.getValue().length()>0) {
 					sb.append("<tr><td>" + MiscUtils.removeHtml(name) + ":</td><td>" + MiscUtils.removeHtml(entry.getValue()) + "</td></tr>");
 				}
@@ -189,21 +188,21 @@ public class StudyEditorPane extends JEditorPane {
 						
 			//Display notes
 			if(study.getNotes()!=null && study.getNotes().length()>0) {
-				sb.append("<div style='margin-top:5px;color:#444444;font-size:8px'>" + HtmlUtils.convert2Html(study.getNotes()) + "</div><br>");
+				sb.append("<div style='margin-top:5px;color:#444444;font-size:8px'>" + MiscUtils.convert2Html(study.getNotes()) + "</div><br>");
 			}
 			
 			sb.append("<hr>");
 			sb.append("<table style='font-size:8px'>");
 			sb.append("<tr><td>State:</td><td><b>" + (study.getState()==null?"": MiscUtils.removeHtml(study.getState())) + "</b></td></tr>");
 			
-			if(!ConfigProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY)) {
+			if(!SpiritProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY)) {
 				Set<String> adminSet = new LinkedHashSet<>();
-				adminSet.addAll(Arrays.asList(ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, study.getState())));
+				adminSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, study.getState())));
 				adminSet.addAll(study.getAdminUsersAsSet());
 				sb.append("<tr><td>Admin:</td><td><b>" + (adminSet.size()==0?"-": MiscUtils.flatten(adminSet, ", ")) + "</b></td></tr>");
 				
 				Set<String> expertSet = new LinkedHashSet<>();
-				expertSet.addAll(Arrays.asList(ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, study.getState())));
+				expertSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, study.getState())));
 				expertSet.addAll(study.getExpertUsersAsSet());
 				expertSet.addAll(EmployeeGroup.getNames(study.getEmployeeGroups()));
 				if(expertSet.size()>0) {
@@ -211,7 +210,7 @@ public class StudyEditorPane extends JEditorPane {
 				}
 				
 				Set<String> viewSet = new LinkedHashSet<>();
-				viewSet.addAll(Arrays.asList(ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState())));
+				viewSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState())));
 				if(viewSet.size()>0) {
 					sb.append("<tr><td>View:</td><td><b>" + (viewSet.size()==0? "-": MiscUtils.flatten(viewSet, ", ")) + "</b></td></tr>");
 				}

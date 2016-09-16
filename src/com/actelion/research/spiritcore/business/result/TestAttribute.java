@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritcore.business.result;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -36,10 +35,10 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 
 import com.actelion.research.spiritcore.business.DataType;
+import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
 @Entity
@@ -47,8 +46,7 @@ import com.actelion.research.spiritcore.util.MiscUtils;
 		@Index(name="assay_attribute_assay_idx", columnList = "assay_id")})
 @SequenceGenerator(name="assay_attribute_seq", sequenceName="assay_attribute_seq", allocationSize=1)
 @Audited
-@AuditTable(value="assay_attribute_aud")
-public class TestAttribute implements Comparable<TestAttribute> {
+public class TestAttribute implements Comparable<TestAttribute>, IObject {
 
 	public static enum OutputType {
 		INPUT, OUTPUT, INFO
@@ -60,7 +58,7 @@ public class TestAttribute implements Comparable<TestAttribute> {
 	@Column(name="assay_attribute_id")
 	private int id = 0;
 
-	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY)
+	@ManyToOne(cascade={}, fetch=FetchType.LAZY)
 	@JoinColumn(name="assay_id")
 	private Test test;
 	
@@ -158,35 +156,42 @@ public class TestAttribute implements Comparable<TestAttribute> {
 		c = getIndex() - o.getIndex();
 		if(c!=0) return c;
 		
-		return (int) (id - o.id);
+		c = getName()==null? (o.getName()==null?0: 1): getName().compareTo(o.getName());
+		return c;
 	}
 
 	@Override
 	public int hashCode() {
-		return (int)(id%Integer.MAX_VALUE);
+		return id;
 	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof TestAttribute)) return false;		
 		if(this==obj) return true;		
 		TestAttribute a2 = (TestAttribute) obj;
-//		if(getId()>0 && a2.getId()>0) return getId()==a2.getId();
+		
+		if(getId()>0) return getId()==a2.getId();
 		return this.compareTo(a2)==0;
 	}
 	
 	@Override
 	public String toString() {
-		return getName() + "("+getId()+")";
+		return getName();
 	}
+	
 	public void setIndex(int index) {
 		this.index = index;
 	}
+	
 	public int getIndex() {
 		return index;
 	}
+	
 	public void setTest(Test assay) {
 		this.test = assay;
 	}
+	
 	public Test getTest() {
 		return test;
 	}

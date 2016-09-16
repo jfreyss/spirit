@@ -21,8 +21,6 @@
 
 package com.actelion.research.spiritcore.services.exchange;
 
-import java.io.File;
-import java.io.FileReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,12 +55,12 @@ import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Measurement;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.NamedTreatment;
+import com.actelion.research.spiritcore.business.study.NamedTreatment.TreatmentUnit;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.PhaseFormat;
 import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
-import com.actelion.research.spiritcore.business.study.NamedTreatment.TreatmentUnit;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritlib.pojo.BiosamplePojo;
 import com.actelion.research.spiritlib.pojo.BiosampleQueryPojo;
@@ -231,13 +229,13 @@ public class Importer {
 			
 			if(g.getFromPhase()!=null && g.getFromPhase().length()>0) {
 				Phase fromPhase = studyIdPhaseName2phase.get(forStudy.getStudyId()+"_"+g.getFromPhase());
-				if(fromPhase==null) throw new Exception("The fromPhase "+forStudy.getStudyId()+"_"+g.getFromPhase()+" was not exported");
+				if(fromPhase==null) throw new Exception("The fromPhase "+forStudy.getStudyId()+"_"+g.getFromPhase()+" was not exported (studyIdPhaseName2phase="+studyIdPhaseName2phase+")");
 				group.setFromPhase(fromPhase);
 			}
 			
 			if(g.getFromGroup()!=null && g.getFromGroup().length()>0) {
 				Group fromGroup = studyIdGroupName2group.get(forStudy.getStudyId()+"_"+g.getFromGroup());
-				if(fromGroup==null) throw new Exception("The fromGroup "+forStudy.getStudyId()+"_"+g.getFromPhase()+" was not exported");
+				if(fromGroup==null) throw new Exception("The fromGroup "+forStudy.getStudyId()+"_"+g.getFromGroup()+" was not exported (studyIdGroupName2group="+studyIdGroupName2group+")");
 				group.setFromGroup(fromGroup);
 			}			
 			res.add(group);
@@ -355,10 +353,11 @@ public class Importer {
 		if(outAllSamplings!=null) outAllSamplings.add(p);
 		
 		//convert children
-		List<Sampling> children = new ArrayList<>();
+		Set<Sampling> children = new HashSet<>();
 		for (SamplingPojo childPj : g.getChildren()) {
 			Sampling child = convertSamplingAndItsChildren(childPj, outAllSamplings);
 			child.setParent(p);
+			children.add(child);
 		}		
 		p.setChildren(children);
 		
@@ -534,7 +533,9 @@ public class Importer {
 				}
 				if(b.getAttachedSamplingId()>0) {
 					Sampling s = study.getSampling(b.getAttachedSamplingId());
-					if(s==null) throw new Exception("The sampling " + b.getAttachedSamplingId() + " was not exported");
+					if(s==null) {						
+						throw new Exception("The sampling of " + biosample + ": " + b.getAttachedSamplingId() + " was not exported");
+					}
 					biosample.setAttachedSampling(s);
 				}
 			}

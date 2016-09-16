@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -48,7 +47,6 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
 import com.actelion.research.spiritcore.business.DataType;
-import com.actelion.research.spiritcore.business.IntegerMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 
@@ -76,7 +74,7 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 	@Column(name="name", nullable=false)
 	private String name = "";
 	
-	@ManyToOne( fetch=FetchType.LAZY, cascade=CascadeType.ALL, optional=false)
+	@ManyToOne( fetch=FetchType.LAZY, cascade={}, optional=false)
 	@JoinColumn(name="biotype_id")
 	@Audited(targetAuditMode=RelationTargetAuditMode.NOT_AUDITED)
 	private Biotype biotype = null;
@@ -104,7 +102,6 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 	public BiotypeMetadata(int id) {
 		this.id = id;
 	}
-	
 
 	public BiotypeMetadata(String name, DataType dataType) {
 		super();
@@ -156,11 +153,10 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 		this.dataType = dataType;
 	}
 	
-	
-
 	public String getParameters() {
 		return parameters;
 	}
+	
 	public void setParameters(String parameters) {
 		this.parameters = parameters;
 	}
@@ -169,10 +165,10 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 		if(this.parameters==null) return new String[0];
 		return MiscUtils.split(this.parameters);
 	}
+	
 	public void setParametersArray(String[] parameters) {
 		this.parameters = MiscUtils.unsplit(parameters);
 	}
-
 
 	public void setRequired(boolean required) {
 		this.required = required;
@@ -187,18 +183,21 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 		this.index = index;
 	}
 
-
 	@Override
 	public int hashCode() {
-		return id>0? (int) (id % Integer.MAX_VALUE): getName()==null? 0: getName().hashCode();
+		return id;
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof BiotypeMetadata)) return false;
 		if(obj==this) return true;
-		if(getId()>0) return (getId() == ((BiotypeMetadata)obj).getId());
-		else return getBiotype().equals(((BiotypeMetadata)obj).getBiotype()) && getName().equals(((BiotypeMetadata)obj).getName());  
+		BiotypeMetadata mt2 = ((BiotypeMetadata)obj);
+		if(getId()>0) return (getId() == mt2.getId());
+		else {
+			if(getBiotype()!=null && mt2.getBiotype()!=null && !getBiotype().equals(mt2.getBiotype())) return false;
+			return getName().equals(((BiotypeMetadata)obj).getName());  
+		}
 	}
 	
 	@Override
@@ -259,12 +258,10 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 	}
 
 	public static Map<BiotypeMetadata, String> deserialize(Biotype biotype, String metadataString) {
-		IntegerMap map = new IntegerMap(metadataString);
+		Map<Integer,String> map = MiscUtils.deserializeIntegerMap(metadataString);
 		Map<BiotypeMetadata, String> res = new HashMap<>();
 		for (int id : map.keySet()) {
 			assert id>0 && biotype.getMetadata(id)!=null;
-//			if(id<=0) throw new RuntimeException("Cannot deserialize "+metadataString);
-//			if(biotype.getMetadata(id)==null) throw new RuntimeException(id+" not in "+biotype+" "+biotype.getMetadataIds());
 			
 			if(id>0 && biotype.getMetadata(id)!=null) {
 				res.put(biotype.getMetadata(id), map.get(id));
@@ -274,13 +271,13 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 	}
 	
 	public static String serialize(Map<BiotypeMetadata, String> metadata) {
-		IntegerMap map = new IntegerMap();
+		Map<Integer,String> map = new HashMap<>();
 		for (Map.Entry<BiotypeMetadata, String> e : metadata.entrySet()) {
 			assert e.getKey().getId()>0: "Cannot serialize metadata: "+metadata+": "+e.getKey()+" has an id of "+e.getKey().getId();
 			if(e.getKey().getBiotype().getMetadata(e.getKey().getId())==null) throw new RuntimeException(e.getKey().getId()+" not in "+e.getKey().getBiotype().getMetadata());
 			map.put(e.getKey().getId(), e.getValue());
 		}
-		return map.getSerializedMap();
+		return MiscUtils.serializeIntegerMap(map);
 	}
 	
 }

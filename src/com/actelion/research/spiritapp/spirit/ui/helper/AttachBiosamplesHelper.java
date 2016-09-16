@@ -76,14 +76,14 @@ public class AttachBiosamplesHelper {
 	 */
 	public static void attachSamples(Study study, List<AttachedBiosample> rndSamples, Phase phase, boolean saveWeights, SpiritUser user) throws Exception {
 		
-		//Reattach objects to the session (if not already)
-		study = JPAUtil.reattach(study);
-		phase = JPAUtil.reattach(phase);
+//		Reattach objects to the session (if not already)
+//		study = JPAUtil.reattach(study);
+//		phase = JPAUtil.reattach(phase);
 		
 		//////////////////////////////////////////////////////////
 		//Validate the input to remove empty samples and duplicates
-		List<AttachedBiosample> list = new ArrayList<AttachedBiosample>();
-		Set<String> sampleIds = new HashSet<String>();
+		List<AttachedBiosample> list = new ArrayList<>();
+		Set<String> sampleIds = new HashSet<>();
 		for(AttachedBiosample rndSample: rndSamples) {
 			if(rndSample.getSampleId()==null || rndSample.getSampleId().length()==0) {
 				//skip empty sample (or throw an exception if some fields are prefilled)
@@ -95,9 +95,6 @@ public class AttachBiosamplesHelper {
 			sampleIds.add(rndSample.getSampleId());
 			list.add(rndSample);			
 		}
-
-		
-		
 
 		/////////////////////////////
 		//Load the former animals from the groups needing randomization		
@@ -113,7 +110,7 @@ public class AttachBiosamplesHelper {
 		//Compute the acceptedGroups
 		List<Group> acceptedGroups = null;
 		if(phase!=null) {
-			acceptedGroups = new ArrayList<Group>();
+			acceptedGroups = new ArrayList<>();
 			for (Group group : study.getGroups()) {
 				if(!phase.equals(group.getFromPhase())) continue;
 				if(!acceptedGroups.contains(group)) acceptedGroups.add(group);
@@ -159,8 +156,6 @@ public class AttachBiosamplesHelper {
 			}
 		}
 		
-		
-		
 		//Check existing animals and remove their cage
 		Map<String, Biosample> toRemoveId2biosample = new HashMap<String, Biosample>();
 		for (Biosample b : formerAnimals) toRemoveId2biosample.put(b.getSampleId(), b);		
@@ -199,7 +194,7 @@ public class AttachBiosamplesHelper {
 
 		
 		//Update samples
-		List<Biosample> toSave = new ArrayList<Biosample>();
+		List<Biosample> toSave = new ArrayList<>();
 		for (AttachedBiosample rndSample : list) {
 
 			//SampleId cannot be null (should have been checked already)
@@ -222,7 +217,7 @@ public class AttachBiosamplesHelper {
 				b.addAction(new ActionMoveGroup(b, phase, rndSample.getGroup(), rndSample.getSubGroup()));
 			}
 			if(rndSample.getWeight()!=null) {
-				b.addAction(new ActionTreatment(b, phase, rndSample.getWeight(), null, null, null, null, null, user.getUsername()));
+				b.addAction(new ActionTreatment(b, phase, rndSample.getWeight(), null, null, null, null, null));
 			}
 			
 			if(rndSample.getBiosample().getBiotype().getCategory()==BiotypeCategory.LIVING) {
@@ -257,8 +252,6 @@ public class AttachBiosamplesHelper {
 		}
 		
 		
-
-
 		List<Biosample> dividingBiosamplesToRemove = new ArrayList<>();
 		toSave.addAll(BiosampleCreationHelper.processDividingSamples(study, dividingBiosamplesToRemove));
 
@@ -269,7 +262,6 @@ public class AttachBiosamplesHelper {
 		try {
 			txn = session.getTransaction();
 			txn.begin();			
-			
 
 			//Save without checking the rights: rights have been checked already, and we may clone a rat from a previous study, where the user has no rights
 			DAOBiosample.persistBiosamples(session, toSave, user);
@@ -282,11 +274,10 @@ public class AttachBiosamplesHelper {
 				}
 			}
 
-
 			//Persist the weights into the result table
 			if(saveWeights) {
 				//Load existing results
-				DAOResult.attachOrCreateStudyResultsToSpecimen(study, toSave, phase, DAOResult.suggestElb(Spirit.getUsername()));
+				DAOResult.attachOrCreateStudyResultsToTops(study, toSave, phase, DAOResult.suggestElb(Spirit.getUsername()));
 				List<Result> weighings = new ArrayList<Result>();
 				
 				//Update results if the samples have a weight
@@ -314,256 +305,6 @@ public class AttachBiosamplesHelper {
 			throw e;
 		}
 		
-		
-		
-		
-		
 	}
-
 	
-
-	/**
-	public static void attachBioamples(Study study, List<Biosample> biosamples, Phase phase, SpiritUser user) throws Exception {
-		
-		//Reattach objects to the session (if not already)
-		study = JPAUtil.reattach(study);
-		phase = JPAUtil.reattach(phase);
-		
-		//////////////////////////////////////////////////////////
-		//Validate the input to remove empty samples and duplicates
-		List<Biosample> list = new ArrayList<>();
-		Set<String> sampleIds = new HashSet<>();
-		for(Biosample b: biosamples) {
-			if(b.getSampleId()==null || b.getSampleId().length()==0) {
-				//skip empty sample (or throw an exception if some fields are prefilled)
-				if(b.getSampleName()!=null && b.getSampleName().length()>0) throw new Exception("The sample named " + b.getSampleName() + " has no sampleId"); 
-				if(b.getContainerId()!=null && b.getContainerId().length()>0) throw new Exception("One sample in cage " + b.getContainerId() + " has no sampleId"); 
-			} else {
-				if(sampleIds.contains(b.getSampleId())) throw new Exception("The sampleId "+b.getSampleId()+" is duplicated");
-				sampleIds.add(b.getSampleId());
-				list.add(b);
-			}
-		}
-
-		
-		
-
-		/////////////////////////////
-		//Load the former animals from the groups needing randomization		
-		List<Biosample> formerToDettach = new ArrayList<>();
-		for(Biosample b: study.getTopAttachedBiosamples()) {
-			if(phase!=null) {
-				if(b.getInheritedGroup()==null) continue; //always keep the reserve when we assign from a a rando on a specified phase
-				if(!phase.equals( b.getInheritedGroup().getFromPhase())) continue; //the animals is attached from a different rando phase				
-			} 
-			formerToDettach.add(b);
-		}
-	
-		//Compute the acceptedGroups
-		List<Group> acceptedGroups = null;
-		if(phase!=null) {
-			acceptedGroups = new ArrayList<Group>();
-			for (Group group : study.getGroups()) {
-				if(!phase.equals(group.getFromPhase())) continue;
-				if(!acceptedGroups.contains(group)) acceptedGroups.add(group);
-				if(!acceptedGroups.contains(group.getFromGroup())) acceptedGroups.add(group.getFromGroup());
-			}
-		}
-		
-		//////////////////////////////////////////////
-		//Check that animals don't belong to an other study/group
-		//Because a biosample can only belong to one study, we solve this issue by duplicating the animals (ex: 881234 becomes 881234A in one study and 881234B in the other)
-		List<Biosample> wrongStudySamples = new ArrayList<>();
-		for (Biosample b : list) {				
-			boolean replacementNeeded = false;
-			Biosample replacement = null;
-
-			if(b.getInheritedStudy()!=null && b.getInheritedStudy().equals(study)) {				
-				//No Change -> OK
-			} else if(b.getInheritedStudy()!=null && (!b.getInheritedStudy().equals(study) || (acceptedGroups!=null && b.getInheritedGroup()!=null && !acceptedGroups.contains(b.getInheritedGroup())))) {
-				//The biosample belongs already to a different study/group
-				wrongStudySamples.add(b);
-			} else {
-				//The biosample has no study but it may have been cloned.
-				//Check if one the child is compatible 
-				for (Biosample c : b.getHierarchy(HierarchyMode.CHILDREN)) {
-					if (c.getAttachedStudy() != null && (c.getInheritedGroup() == null || c.getInheritedGroup().getFromGroup() == null || !c.getInheritedGroup().getFromGroup().getDividingGroups().contains(c.getInheritedGroup()))) {
-						replacementNeeded = true;
-						if (c.getBiotype().equals(b.getBiotype()) && c.getAttachedStudy().equals(study) && CompareUtils.compare(c.getInheritedGroup(), rndSample.getGroup()) == 0) {
-							replacement = c;
-						}
-					}
-				}
-				if(replacementNeeded) {
-					if (replacement == null) {
-						wrongStudySamples.add(b);
-					} else {
-						wrongStudySamples.remove(replacement);
-						rndSample.setBiosample(replacement);
-						rndSample.setSampleId(replacement.getSampleId());
-					}
-				}
-			}
-		}
-		
-		
-		
-		//Check existing animals and remove their cage
-		Map<String, Biosample> toRemoveId2biosample = new HashMap<String, Biosample>();
-		for (Biosample b : formerToDettach) toRemoveId2biosample.put(b.getSampleId(), b);		
-		for (RndSample r : list) toRemoveId2biosample.remove(r.getSampleId());
-		
-		if(formerToDettach.size()>0) {
-			int res = JOptionPane.showConfirmDialog(null, formerToDettach.size() + " samples were already attached to "+study.getStudyId()+".\nAre you sure you want to replace those with " + list.size() + " samples?"
-					+ (toRemoveId2biosample.size()>0? "\n"
-					+ toRemoveId2biosample.size()+" samples " + (toRemoveId2biosample.size()<6? "(" + toRemoveId2biosample.keySet() + ")":"") + " will be unassigned!":""),
-					"Randomization", JOptionPane.YES_NO_OPTION, toRemoveId2biosample.size()>0? JOptionPane.WARNING_MESSAGE: JOptionPane.QUESTION_MESSAGE);
-			
-			if(res!=JOptionPane.YES_OPTION) throw new Exception("Group Assignment canceled");
-		}
-		
-		//Display Message for Cloning
-		if(wrongStudySamples.size()>0) {
-			//Propose duplication
-			String msg = "";
-			if(wrongStudySamples.size()<6) {
-				msg = "The animals "+wrongStudySamples;
-			} else {
-				msg = wrongStudySamples.size() + " animals";
-			}
-			
-			int res = JOptionPane.showConfirmDialog(null, msg + " were used in a different study or group.\n Having an animal in 2 different groups, requires (virtual) cloning.\n Is this correct?", "Reusing animals", JOptionPane.YES_NO_OPTION);
-			if(res!=JOptionPane.YES_OPTION) throw new Exception("Group assignment canceled");
-			Map<Biosample, Biosample> old2New = DAOStudy.duplicateAnimalsForManyStudies(wrongStudySamples, study, user);
-			for (RndSample rndSample : list) {
-				Biosample newBio = old2New.get(rndSample.getBiosample());
-				if(newBio!=null) {
-					rndSample.setSampleId(newBio.getSampleId());
-					rndSample.setBiosample(newBio);
-				}
-			}
-		}
-
-		
-		//Update samples
-		List<Biosample> toSave = new ArrayList<Biosample>();
-		for (RndSample rndSample : list) {
-
-			//SampleId cannot be null (should have been checked already)
-			if(rndSample.getSampleId()==null || rndSample.getSampleId().length()==0) throw new Exception("You need to give a sampleId to each animal. Animal "+rndSample.getNo()+" has none.");
-
-			//The samplename cannot be null (if null, use the no)
-			if(rndSample.getSampleName()==null) rndSample.setSampleName(""+rndSample.getNo());				
-			
-			//Check corresponding biosample (should have been set already)
-			Biosample b = rndSample.getBiosample();
-			if(b==null) throw new Exception("Programming error? Contact an admin");
-
-			if(b.getBiotype()==null) {
-				Biotype animalBiotype = DAOBiotype.getBiotype(Biotype.ANIMAL);
-				b.setBiotype(animalBiotype);					
-			}
-			b.setSampleName(""+rndSample.getSampleName());
-			
-			if(rndSample.getGroup()!=b.getInheritedGroup() || rndSample.getSubGroup()!=b.getInheritedSubGroup()) {
-				b.addAction(new ActionMoveGroup(b, phase, rndSample.getGroup(), rndSample.getSubGroup()));
-			}
-			if(rndSample.getWeight()!=null) {
-				b.addAction(new ActionTreatment(b, phase, rndSample.getWeight(), null, null, null, null, null, user.getUsername()));
-			}
-			
-			if(rndSample.getBiosample().getBiotype().getCategory()==BiotypeCategory.ANIMAL) {
-				if(rndSample.getCageName()!=null && rndSample.getCageName().trim().length()>0) {
-					if(b.getContainer()==null || b.getContainerType()!=ContainerType.CAGE || !rndSample.getCageName().equals( b.getContainerId())) {
-						b.setContainer(new Container(ContainerType.CAGE, rndSample.getCageName()));
-					}
-				} else {
-					b.setContainer(null);
-				}
-			}
-			
-			//Don't use setAttach(study, group, subgroup) to avoid checking, this should always be possible from there
-			b.setAttached(study, rndSample.getGroup(), rndSample.getSubGroup());
-
-			toSave.add(b);			
-		}
-		
-		//Remove samples not associated to the study anymore
-		for (Biosample b : toRemoveId2biosample.values()) {
-			
-			if(b.getInheritedGroup()!=null || b.getInheritedSubGroup()!=0) {
-				b.setInheritedGroup(null);
-				b.setInheritedSubGroup(0);
-			}
-			if(b.getContainer()!=null) {
-				b.setContainer(null);
-			}
-			
-			b.setAttachedStudy(null);
-			toSave.add(b);
-		}
-		
-		
-
-
-		List<Biosample> dividingBiosamplesToRemove = new ArrayList<Biosample>();
-		toSave.addAll(BiosampleCreationHelper.processDividingSamples(study, dividingBiosamplesToRemove));
-
-				
-		//Open the transaction
-		EntityManager session = JPAUtil.getManager();
-		EntityTransaction txn = null;
-		try {
-			txn = session.getTransaction();
-			txn.begin();			
-			
-
-			//Save without checking the rights: rights have been checked already, and we may clone a rat from a previous study, where the user has no rights
-			DAOBiosample.persistBiosamples(session, toSave, user);
-					
-			//Propose deletion?
-			if(dividingBiosamplesToRemove.size()>0) {
-				int res = JOptionPane.showConfirmDialog(UIUtils.getMainFrame(), "There are "+dividingBiosamplesToRemove.size()+" extra samples derived from those animals that need to be deleted. Do you confirm", "Extra samples", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-				if(res==JOptionPane.YES_OPTION) {
-					DAOBiosample.deleteBiosamples(session, dividingBiosamplesToRemove, Spirit.getUser());
-				}
-			}
-
-
-			//Persist the weights into the result table
-			if(saveWeights) {
-				//Load existing results
-				DAOResult.attachOrCreateStudyResultsToSpecimen(study, toSave, phase, true);
-				List<Result> weighings = new ArrayList<Result>();
-				
-				//Update results if the samples have a weight
-				for (RndSample s : list) {
-					Result r = s.getBiosample().getAuxResult(DAOTest.WEIGHING_TESTNAME, phase);
-					if(r==null) continue;
-
-					String newVal = s.getWeight()==null?"": "" + s.getWeight();					
-					if(newVal.equals(r.getOutputValues().get(0))) continue;
-					r.getOutputValues().get(0).setValue(newVal);
-					r.setUpdDate(new java.util.Date());
-					r.setUpdUser(Spirit.getUser().getUsername());
-					weighings.add(r);
-				}
-				
-				DAOResult.persistResults(session, weighings, Spirit.getUser());
-			}
-			
-			txn.commit();
-			txn = null;
-		} catch (Exception e) {
-			if (txn != null)try {txn.rollback();} catch (Exception e2) {}
-			throw e;
-		}
-		
-		
-		
-		
-		
-	}
-*/
-
 }

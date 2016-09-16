@@ -80,7 +80,6 @@ public class BiosampleQuery implements Serializable {
 	private String updDays;
 	private String creDays;
 	private String department;
-	private boolean searchDiscardedOnly = false;
 	private boolean searchMySamples = false;
 	private ContainerType containerType;
 	private int selectOneMode = 0;
@@ -108,10 +107,10 @@ public class BiosampleQuery implements Serializable {
 		sampleIdOrContainerIds = copy.sampleIdOrContainerIds;
 		sampleNames = copy.sampleNames;
 		locationRoot = copy.locationRoot;
-		locations = copy.locations==null? null: new ArrayList<Location>(copy.locations);
-		locPoses = copy.locPoses==null? null: new ArrayList<LocPos>(copy.locPoses);
+		locations = copy.locations==null? null: new ArrayList<>(copy.locations);
+		locPoses = copy.locPoses==null? null: new ArrayList<>(copy.locPoses);
 			
-		linker2values = new HashMap<BiosampleLinker, String>(copy.linker2values);
+		linker2values = new HashMap<>(copy.linker2values);
 		biotypes = copy.biotypes;
 		keywords = copy.keywords;
 		comments = copy.comments;
@@ -120,7 +119,6 @@ public class BiosampleQuery implements Serializable {
 		creUser = copy.creUser;
 		creDays = copy.creDays;
 		department = copy.department;
-		searchDiscardedOnly = copy.searchDiscardedOnly;
 		searchMySamples = copy.searchMySamples;
 		containerType = copy.containerType;
 		selectOneMode = copy.selectOneMode;
@@ -175,20 +173,6 @@ public class BiosampleQuery implements Serializable {
 
 	public void setDepartment(String department) {
 		this.department = department;
-	}
-
-	/**
-	 * @param searchDeleted the searchDeleted to set
-	 */
-	public void setSearchDiscardedOnly(boolean searchDiscardedOnly) {
-		this.searchDiscardedOnly = searchDiscardedOnly;
-	}
-
-	/**
-	 * @return the searchDeleted
-	 */
-	public boolean isSearchDiscardedOnly() {
-		return searchDiscardedOnly;
 	}
 
 	/**

@@ -46,14 +46,14 @@ import com.actelion.research.spiritcore.services.dao.DAOFoodWater;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.util.ListHashMap;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.FormatterUtils;
-import com.actelion.research.util.HtmlUtils;
 
 public class SpecimenFoodWaterReport extends AbstractReport {
 
 	
 	public SpecimenFoodWaterReport() {
-		super(ReportCategory.TOP, "Food / Water", "Report on the Food & Water consumption " + HtmlUtils.convert2Html(
+		super(ReportCategory.TOP, "Food / Water", "Report on the Food & Water consumption " + MiscUtils.convert2Html(
 				"Group\tTopId\tNo\tContainer\tTare\tWeight\tN\tConsumption\n"
 				+ "A\tTopId1\tCage1\n"
 				+ "A\tTopId2\tCage1\n"));
@@ -69,7 +69,7 @@ public class SpecimenFoodWaterReport extends AbstractReport {
 		
 		Row row;
 		
-		DAOResult.attachOrCreateStudyResultsToSpecimen(study, study.getTopAttachedBiosamples(), null, null);
+		DAOResult.attachOrCreateStudyResultsToTops(study, study.getTopAttachedBiosamples(), null, null);
 		List<FoodWater> fws = DAOFoodWater.getFoodWater(study, null);
 		List<Phase> phases = FoodWater.getPhases(fws);
 		
@@ -185,7 +185,7 @@ public class SpecimenFoodWaterReport extends AbstractReport {
 					FoodWater fw = FoodWater.extract(fws, containerId, phase);
 					FoodWater previousFW = fw==null? null: fw.getPreviousFromList(fws, i==1);
 					
-					Result r = b.getAuxResult(DAOTest.FOODWATER_TESTNAME, phase);
+					Result r = b.getAuxResult(DAOTest.getTest(DAOTest.FOODWATER_TESTNAME), phase);
 					ResultValue val = r==null || r.getOutputResultValues().size()<2? null: i==0? r.getOutputResultValues().get(0): r.getOutputResultValues().get(1);
 					String value = val==null? null: val.getValue();
 					

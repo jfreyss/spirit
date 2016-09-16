@@ -153,7 +153,7 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 				//Then, remove all unnecessary columns
 				tpl.simplify(results);
 
-				statsTable = PivotDataTable.createPivotDataTable(results, skippedAttributes, tpl);
+				statsTable = new PivotDataTable(results, skippedAttributes, tpl);
 				
 				//Initializes the analyser
 				analyzer = new PivotAnalyzer(statsTable);

@@ -22,15 +22,15 @@
 package com.actelion.research.spiritlib.pojo;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class NamedSamplingPojo implements Serializable {
 	
 	private int id = 0;
 	private String name;
 	private boolean necropsy;
-	private List<SamplingPojo> samplings = new ArrayList<>();
+	private Set<SamplingPojo> samplings = new HashSet<>();
 	
 	
 	public int getId() {
@@ -51,13 +51,15 @@ public class NamedSamplingPojo implements Serializable {
 	public void setNecropsy(boolean necropsy) {
 		this.necropsy = necropsy;
 	}
-	public List<SamplingPojo> getSamplings() {
+	public Set<SamplingPojo> getSamplings() {
 		return samplings;
 	}
-	public void setSamplings(List<SamplingPojo> samplings) {
+	public void setSamplings(Set<SamplingPojo> samplings) {
 		this.samplings = samplings;
 	}
-	
-	
+	@Override
+	public String toString() {
+		return "[NamedSampling: " + id + "/" + name + (samplings.size()>0?" {" + samplings + "}":"") + "]";
+	} 
 	
 }

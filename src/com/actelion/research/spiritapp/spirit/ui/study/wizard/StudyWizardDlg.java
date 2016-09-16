@@ -21,6 +21,7 @@
 
 package com.actelion.research.spiritapp.spirit.ui.study.wizard;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -75,6 +76,7 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.NamedTreatment;
+import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.SpiritRights;
@@ -82,6 +84,7 @@ import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.IOUtils;
 import com.actelion.research.util.StringUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -150,6 +153,29 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 			JExceptionDialog.showError(e);
 			return;
 		}
+		
+		//Make sure to have some phases and some groups
+		if(study.getPhases().size()==0) {
+			for (int i = 0; i < 3; i++) {
+				Phase p = new Phase("d"+i);
+				p.setStudy(study);
+			}			
+		}
+		if(study.getGroups().size()==0) {
+			Phase first = study.getPhases().iterator().next();
+			Group g1 = new Group("1. Vehicle");
+			g1.setStudy(study);
+			g1.setFromPhase(first);
+			g1.setColorRgb(Color.CYAN.getRGB());
+			
+			Group g2 = new Group("2. Treated");
+			g2.setStudy(study);
+			g2.setFromPhase(first);
+			g2.setColorRgb(Color.PINK.getRGB());
+		}
+
+		System.out.println("StudyWizardDlg.StudyWizardDlg() "+study+" "+study.getGroups()+" "+study.getPhases());
+		
 		
 		studyEditorPane.setDisplayResults(false);
 		
@@ -226,8 +252,6 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 				
 			}
 		});
-//		final JButton removeDocButton = new JButton(new Action_RemoveDocument());
-//		removeDocButton.setEnabled(false);
 		
 		JPanel documentPanel = UIUtils.createTitleBox("2. Documents",
 				new JScrollPane(documentEditorPane));
@@ -341,19 +365,6 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 		refresh();
 		
 		
-/*
-		JButton stopButton = new JIconButton(IconType.DELETE, "Stop Study");
-		stopButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				TerminateStudyDlg dlg = new TerminateStudyDlg(study);
-				if(dlg.isSuccess()) {
-					dispose();
-				}				
-			}
-		});
-*/
-		
 		JButton imageButton = new JIconButton(IconType.STUDY, "Export as Image");
 		imageButton.addActionListener(new ActionListener() {			
 			@Override
@@ -411,7 +422,6 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 		topPanel.setMaximumSize(new Dimension(500, 250));
 		topPanel.setPreferredSize(new Dimension(500, 250));
 		
-
 		setContentPane(UIUtils.createBox(
 				UIUtils.createTitleBox("7. Set Actions", studyDesigner), 
 				topPanel, 
@@ -419,9 +429,6 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 
 		refresh();
 
-
-		
-		
 		UIUtils.adaptSize(this, 1550, 1150);
 		setLocationRelativeTo(UIUtils.getMainFrame());		
 		setVisible(true);

@@ -57,10 +57,6 @@ public enum Quality {
 		return name;
 	}
 	
-	public static Quality[] getQualities() {
-		return new Quality[] {BOGUS, QUESTIONABLE, VALID, CONFIRMED}; 
-	}
-	
 	public static Quality get(String name) {
 		for (Quality q : values()) {
 			if(q.name().equals(name)) return q;

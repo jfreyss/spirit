@@ -98,8 +98,8 @@ public class CreateSamplesHelper {
 			
 			//check existence of samples from sampling template
 			List<Biosample> allNeeded = BiosampleCreationHelper.processTemplateInStudy(study, null, null, null, null);
-			
-			
+			LoggerFactory.getLogger(CreateSamplesHelper.class).debug("allNeeded="+allNeeded);
+
 			////////////////////////////////////////
 			
 			//Check dividing samples to be added
@@ -157,7 +157,6 @@ public class CreateSamplesHelper {
 				if(top2toAddSamples.get(b.getTopParentInSameStudy())!=null) {
 					for (Biosample b2 : top2toAddSamples.get(b.getTopParentInSameStudy())) {
 						
-//						System.out.println("CreateSamplesHelper.synchronizeSamples() "+b.getAttachedSampling()+"("+b.getAttachedSampling().getId()+")"+" "+b2.getAttachedSampling()+"("+b2.getAttachedSampling().getId()+")"+" "+b.getAttachedSampling().equals(b2.getAttachedSampling()));
 						if(!b.getAttachedSampling().equals(b2.getAttachedSampling())) continue;
 						if(!b.getBiotype().equals(b2.getBiotype())) continue;
 						String cmt1 = b.getInfos(EnumSet.of(InfoFormat.METATADATA, InfoFormat.COMMENTS));
@@ -166,7 +165,6 @@ public class CreateSamplesHelper {
 						matches.add(b2);
 					}
 				}
-//				System.out.println("CreateSamplesHelper.synchronizeSamples() "+b+" matches to "+matches+" among potentials of "+top2toAddSamples.get(b.getTopParentInSameStudy()));
 				if(matches.size()==1) {
 					//Replace the sample with the match (and don't forget the children)
 					Biosample match = matches.get(0);

@@ -38,7 +38,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.management.MXBean;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;

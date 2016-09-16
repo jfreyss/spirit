@@ -24,6 +24,7 @@ package com.actelion.research.spiritapp.spirit.ui.admin.user;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collections;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -69,7 +70,7 @@ public class EmployeeGroupEditDlg extends JSpiritEscapeDialog {
 					group.setName(nameField.getText());
 					group.setParent(parentComboBox.getSelection());
 					
-					DAOEmployee.persistEmployeeGroup(group, Spirit.getUser());
+					DAOEmployee.persistEmployeeGroups(Collections.singleton(group), Spirit.getUser());
 					dispose();
 				} catch (Exception e) {
 					JExceptionDialog.showError(e);

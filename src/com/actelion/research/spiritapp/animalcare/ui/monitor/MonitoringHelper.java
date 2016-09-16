@@ -109,7 +109,6 @@ public class MonitoringHelper {
 		for (Result r : results) resultsMap.add(r.getTest().getId() + "_" + r.getBiosample().getId() + "_"+ r.getPhase(), r);
 				
 		for (Biosample animal : animals) {
-			System.out.println("MonitoringHelper.calculateDoneRequiredTest() "+animal+" "+animal.getStatus()+" "+animal.getStudyAction(phase));
 			if(!animal.getStatus().isAvailable()) continue;
 			//required?
 			boolean required = false;

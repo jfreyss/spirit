@@ -111,12 +111,12 @@ public class MonitoringDlg extends JEscapeDialog {
 		
 		this.phase = p;
 		this.study = JPAUtil.reattach(phase.getStudy());
-		Set<Biosample> animals = study.getTopAttachedBiosamples();
+		List<Biosample> animals = study.getTopAttachedBiosamples();
 		this.elb = DAOResult.suggestElb(Spirit.getUsername()); 
 
 		// Reload results
 		try {
-			DAOResult.attachOrCreateStudyResultsToSpecimen(study, animals, phase, elb);
+			DAOResult.attachOrCreateStudyResultsToTops(study, animals, phase, elb);
 		} catch (Exception e) {
 			JExceptionDialog.showError(e);
 			return;

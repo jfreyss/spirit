@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +34,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -52,25 +52,20 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
 import com.actelion.research.spiritcore.business.IEntity;
 
 @Entity
+@Table(name="biotype", uniqueConstraints = {@UniqueConstraint(name="biotype_name_index", columnNames = "name")})
 @Audited
-@Table(name="biotype")
-@Cacheable
-@Cache(usage=CacheConcurrencyStrategy.NONE)
 public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IEntity {
 
 	public static final String ANIMAL = "Animal";
-	public static final String ORGAN = "Organ";
-	public static final String SLICE = "Slice";
 	
 	@Id
 	@SequenceGenerator(name="biotype_sequence", sequenceName="biotype_sequence", allocationSize=1)
@@ -78,17 +73,17 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	@Column(name="id")
 	private int id = 0;
 	
-	@Column(name="name", unique=true)
+	@Column(name="name")
 	private String name = "";
 	
 	@ManyToOne(fetch=FetchType.LAZY)	
 	@JoinColumn(name="parent_id")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
-	private Biotype parent;
+	private Biotype parent = null;
 	
 	@OneToMany(fetch=FetchType.LAZY, mappedBy="parent")	
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
-	private Set<Biotype> children;
+	private Set<Biotype> children = new HashSet<>();
 	
 	@Column(nullable=false, name="cat")
 	@Enumerated(EnumType.STRING)
@@ -101,7 +96,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	private Set<BiotypeMetadata> metadata = new LinkedHashSet<>();
 	
 	/**
-	 * 
+	 * Not null, if the biosample has a name
 	 */
 	@Column(name="namelabel", length=30, nullable=true)
 	private String sampleNameLabel = "Name";

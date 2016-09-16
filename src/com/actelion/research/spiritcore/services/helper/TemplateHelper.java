@@ -68,7 +68,7 @@ public class TemplateHelper {
 	public static class BarcodeMemo {
 
 		private final ContainerType containerType;
-		private List<String> slidePrefixes = new ArrayList<String>();
+		private List<String> slidePrefixes = new ArrayList<>();
 		private int index = 0;
 		
 		public BarcodeMemo(ContainerType containerType) {
@@ -158,8 +158,8 @@ public class TemplateHelper {
 	
 	private static List<Biosample> applyTemplateForSlide(ContainerTemplate template, List<Biosample> animalsFor1Generation, String prefixContainerId, String userName, StringBuilder errors, List<Biosample> alreadyCreated) throws Exception  {
 		
-		Biotype sliceType = DAOBiotype.getBiotype(Biotype.SLICE);
-		if(sliceType==null) throw new Exception("The type '"+Biotype.SLICE+"' must be created");
+		Biotype sliceType = DAOBiotype.getBiotype("Slice");
+		if(sliceType==null) throw new Exception("The type 'Slice' must be created");
 		
 		Set<String> createdSampledIds = Biosample.getSampleIds(alreadyCreated);
 		Set<String> createdContainerIds = Biosample.getContainerIds(alreadyCreated);		

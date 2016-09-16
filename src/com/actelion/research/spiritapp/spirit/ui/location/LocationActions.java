@@ -74,7 +74,7 @@ public class LocationActions {
 			if(Spirit.getUser()==null) return;
 			Location location = new Location();
 			if(parent!=null) {
-				location.setLocationType(parent.getLocationType().getDefaultChild());
+				location.setLocationType(parent.getLocationType());
 				location.setCols(parent.getCols());
 				location.setRows(parent.getRows());
 				location.setParent(parent);

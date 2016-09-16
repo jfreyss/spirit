@@ -65,6 +65,9 @@ public class Employee implements Comparable<Employee>, IEntity {
 	@Column(name="disabled")
 	private Boolean disabled = false;
 	
+	/**
+	 * Encrypted password
+	 */
 	@Column(name="password", length=64)
 	private String password;
 	
@@ -95,10 +98,15 @@ public class Employee implements Comparable<Employee>, IEntity {
 	
 	public Employee() {
 	}
+
 	public Employee(String name) {
 		this.userName = name;
 	}
 	
+	public Employee(String name, Set<String> roles) {
+		this.userName = name;
+		setRoles(roles);
+	}
 	
 	@Override
 	public int getId() {
@@ -153,6 +161,10 @@ public class Employee implements Comparable<Employee>, IEntity {
 		return password;
 	}
 
+	/**
+	 * Sets the encrypted password
+	 * @param password
+	 */
 	public void setPassword(String password) {
 		this.password = password;
 	}
@@ -214,7 +226,7 @@ public class Employee implements Comparable<Employee>, IEntity {
 	
 	@Override
 	public int hashCode() {
-		return (int) (id%Integer.MAX_VALUE);
+		return id;
 	}
 
 	public Set<Employee> getChildren() {

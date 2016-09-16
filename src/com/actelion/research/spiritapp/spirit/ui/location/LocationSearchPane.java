@@ -96,8 +96,7 @@ public class LocationSearchPane extends JPanel {
 		c.gridwidth = 1; c.gridx = 1; c.gridy = 5; c.weightx = 1; filterLocation.add(UIUtils.createHorizontalBox(emptyCheckbox, nonEmptyCheckbox), c);
 
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 1; c.gridx = 1; c.gridy = 10; c.weightx = 1; filterLocation.add(UIUtils.createHorizontalBox(viewMineButton, Box.createHorizontalGlue(), resetButton, searchButton), c);
-			
+		c.gridwidth = 1; c.gridx = 1; c.gridy = 10; c.weightx = 1; filterLocation.add(UIUtils.createHorizontalBox(viewMineButton, Box.createHorizontalGlue(), resetButton, searchButton), c);			
 		
 		topPanel.add(BorderLayout.CENTER, filterLocation);
 		add(BorderLayout.NORTH, topPanel);
@@ -159,6 +158,7 @@ public class LocationSearchPane extends JPanel {
 	public void query() {
 		query(getLocationQuery());
 	}
+	
 	public void query(final LocationQuery query) {
 		new SwingWorkerExtended("Querying...", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			private List<Location> res;
@@ -200,8 +200,7 @@ public class LocationSearchPane extends JPanel {
 				LocationSearchPane.this.firePropertyChange(PROPERTY_QUERIED, 0, 1);
 
 			}
-		};
-		
+		};		
 	}
 	
 	public void repopulate() {
@@ -266,8 +265,7 @@ public class LocationSearchPane extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			query();
-		}
-			
+		}			
 	}
 	
 	public class Action_Reset extends AbstractAction {

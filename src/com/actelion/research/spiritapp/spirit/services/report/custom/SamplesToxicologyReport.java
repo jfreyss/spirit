@@ -32,11 +32,10 @@ import org.apache.poi.ss.usermodel.Sheet;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport;
 import com.actelion.research.spiritapp.spirit.services.report.ReportParameter;
-import com.actelion.research.spiritapp.spirit.services.report.AbstractReport.ReportCategory;
-import com.actelion.research.spiritapp.spirit.services.report.AbstractReport.Style;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.Result;
+import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.Phase;
@@ -75,7 +74,7 @@ public class SamplesToxicologyReport extends AbstractReport {
 			allSamples.addAll(topAnimal.getSamplesFromStudyDesign(null, requiredOnly));
 		}
 		
-		DAOResult.attachOrCreateStudyResultsToSpecimen(study, study.getTopAttachedBiosamples(), null, null);
+		DAOResult.attachOrCreateStudyResultsToTops(study, study.getTopAttachedBiosamples(), null, null);
 		DAOResult.attachOrCreateStudyResultsToSamples(study, allSamples, null, null);
 		
 		if(allSamples.size()==0) throw new Exception("There are no samples to be reported. Make sure you have a sampling template with some required weighings.");
@@ -134,7 +133,7 @@ public class SamplesToxicologyReport extends AbstractReport {
 			
 			//Column Headers
 			int col = 4;
-			for(Biosample animal: group.getTopAttachedBiosamples()) {
+			for(Biosample animal: study.getTopAttachedBiosamples(group)) {
 			
 				set(sheet, 4, col, animal.getEndPhase()==null?"": animal.getEndPhase().getShortName(), Style.S_TH_CENTER);
 				set(sheet, 5, col, animal.getSampleId(), Style.S_TH_CENTER);
@@ -174,7 +173,7 @@ public class SamplesToxicologyReport extends AbstractReport {
 			
 			//Data
 			col = 4;
-			for(Biosample animal: group.getTopAttachedBiosamples()) {
+			for(Biosample animal: study.getTopAttachedBiosamples(group)) {
 				row = 7;
 				//BW
 				set(sheet, row, col, getLastWeight(animal), Style.S_TD_DOUBLE1);
@@ -234,9 +233,10 @@ public class SamplesToxicologyReport extends AbstractReport {
 		
 		if(sample==null) sample = animal.getSample(s, null);
 		
-		if(sample==null) return null;
-		Result r = sample.getAuxResult(testName, p);
-		if(r==null) r = sample.getAuxResult(testName, null);
+		if(sample==null) return null;	
+		Test test = DAOTest.getTest(testName);
+		Result r = sample.getAuxResult(test, p);
+		if(r==null) r = sample.getAuxResult(test, null);
 		
 		if(animal.getSampleId().equals("104058")) {
 			System.out.println("SamplingToxicologyReport.getValue() "+animal+"/"+s+"/"+testName+">"+sample+" >"+r);

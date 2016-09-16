@@ -78,7 +78,8 @@ public class JColorChooserButton extends JButton {
 		private Color color;
 		public ColorDialog(Color selection, final boolean background) {
 			super(UIUtils.getMainFrame(), "Please select a " + (background?"background": "foreground") + " color");
-			this.color = selection;
+			this.color = selection==null? Color.LIGHT_GRAY: selection;
+			assert color!=null;
 			
 			int nx = background? 15: 12;
 			int ny = background? 7: 1;
@@ -106,7 +107,6 @@ public class JColorChooserButton extends JButton {
 					}
 					if(!background) {
 						s = 1;
-//						b= .8f;
 					}
 					final Color c = Color.getHSBColor(h, s, b);
 					

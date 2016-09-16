@@ -47,7 +47,6 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
@@ -58,7 +57,6 @@ import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType
 @Table(name="assay")
 @SequenceGenerator(name="sequence", sequenceName="assay_seq", allocationSize=1)
 @Audited
-@AuditTable(value="assay_aud")
 public class Test implements Comparable<Test>, IEntity {
 	
 	@Id
@@ -251,21 +249,13 @@ public class Test implements Comparable<Test>, IEntity {
 		
 		int c = getCategory()==null? (t.getCategory()==null?0:-1): getCategory().compareToIgnoreCase(t.getCategory());
 		if(c!=0) return c;
-		
-//		c = CompareUtils.compare(getName(), t.getName());
+
 		c = getName()==null? (t.getName()==null?0:-1): getName().compareToIgnoreCase(t.getName());
 		if(c!=0) return c;
 		
 		return 0;//(int)((getId()-t.getId())%Integer.MAX_VALUE);
 	}
 
-//	public void setTestType(TestType testType) {
-//		this.assayType = testType;
-//	}
-//
-//	public TestType getTestType() {
-//		return assayType;
-//	}
 	
 	public String getFullName() {		
 		return  getCategory() + " - " + name;

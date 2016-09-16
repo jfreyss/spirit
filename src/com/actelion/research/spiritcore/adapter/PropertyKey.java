@@ -73,7 +73,7 @@ public class PropertyKey {
 
 	
 	
-	public static final PropertyKey STUDY_METADATA_NAME = new PropertyKey(STUDY_METADATA, "Name", "Display for the end user", "study.metadata.name", "") {
+	public static final PropertyKey STUDY_METADATA_NAME = new PropertyKey(STUDY_METADATA, "Name", "Display for the end user", "name", "") {
 		@Override public String getDefaultValue(String nestedValue) {
 			return
 				"CLINICAL".equals(nestedValue)?"Clinical Status":
@@ -92,7 +92,7 @@ public class PropertyKey {
 						DataType.ALPHA.name();};
 	};
 	public static final PropertyKey STUDY_METADATA_PARAMETERS = new PropertyKey(STUDY_METADATA, "Parameters", "list of choices if datatype is LIST", "parameters", "") {
-		@Override public String getDefaultValue(String nestedValue) {return "CLINICAL".equals(nestedValue)?"PRECLINICAL, CLINICAL": DataType.AUTO.name();};		
+		@Override public String getDefaultValue(String nestedValue) {return "CLINICAL".equals(nestedValue)?"PRECLINICAL, CLINICAL": "";};		
 	};
 	public static final PropertyKey STUDY_METADATA_ROLES = new PropertyKey(STUDY_METADATA, "Roles", "Who is allowed to change it?<br>Leave empty if not concerned.", "roles", "", USER_ROLES);
 	public static final PropertyKey STUDY_METADATA_STATES = new PropertyKey(STUDY_METADATA, "States", "In which states, can we change it?<br>Leave empty if not concerned.", "states", "", STUDY_STATES);
@@ -115,7 +115,7 @@ public class PropertyKey {
 	public static final PropertyKey STUDY_STATES_ADMIN = new PropertyKey(STUDY_STATES, "Admin", "Roles of administrators (can edit study design/rights)", "admin", "",	USER_ROLES) {
 		public String[] getSpecialChoices() {return new String[]{"ALL"};}
 	};
-	public static final PropertyKey STUDY_STATES_SEALED = new PropertyKey(STUDY_STATES, "Sealed", "Should we seal the study (nothing is editable except by an admin)", "seal", "false", "true,false");
+	public static final PropertyKey STUDY_STATES_SEALED = new PropertyKey(STUDY_STATES, "Sealed", "Should we seal the study in this state? (no more editable except by an admin)", "seal", "false", "true,false");
 
 	public static final PropertyKey STUDY_STATE_DEFAULT = new PropertyKey(Tab.STUDY, "Default State", "when creating a new study", "study.state", "ONGOING", STUDY_STATES);
 	
@@ -131,7 +131,7 @@ public class PropertyKey {
 	private String tooltip;
 	
 	private String options;
-	private PropertyKey linkedChoices;
+	private PropertyKey linkedOptions;
 	
 	private List<PropertyKey> nestedProperties = new ArrayList<>();
 	
@@ -153,7 +153,7 @@ public class PropertyKey {
 	private PropertyKey(Tab tab, String label, String tooltip, String key, String defaultValue, PropertyKey choicesKey) {
 		this(tab, null, label, tooltip, key, defaultValue, null, choicesKey);
 	}	
-	private PropertyKey(Tab tab, PropertyKey parentKey, String label, String tooltip, String key, String defaultValue, String options, PropertyKey choicesKey) {
+	private PropertyKey(Tab tab, PropertyKey parentKey, String label, String tooltip, String key, String defaultValue, String options, PropertyKey linkedOptions) {
 		this.tab = tab;
 		this.parentProperty = parentKey;
 		this.label = label;
@@ -161,7 +161,7 @@ public class PropertyKey {
 		this.key = key;
 		this.defaultValue = defaultValue;
 		this.options = options;		
-		this.linkedChoices = choicesKey;
+		this.linkedOptions = linkedOptions;
 		
 		
 		//Build the tree of properties
@@ -179,7 +179,7 @@ public class PropertyKey {
 		}
 	}
 	
-	public static List<PropertyKey> getPropertyKey(Tab tab) {
+	public static List<PropertyKey> getPropertyKeys(Tab tab) {
 		return tab2properties.get(tab);
 	}
 	
@@ -228,7 +228,7 @@ public class PropertyKey {
 		return res.toArray(new String[res.size()]);
 	}
 	public PropertyKey getLinkedOptions() {
-		return linkedChoices;
+		return linkedOptions;
 	}
 	
 	public List<PropertyKey> getNestedProperties() {

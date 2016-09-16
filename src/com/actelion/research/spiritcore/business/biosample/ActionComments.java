@@ -21,8 +21,6 @@
 
 package com.actelion.research.spiritcore.business.biosample;
 
-import java.awt.Color;
-
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
@@ -32,18 +30,11 @@ import org.hibernate.envers.Audited;
 @DiscriminatorValue("Comments")
 @Audited
 public class ActionComments extends ActionBiosample {
-	
-	
-	public ActionComments() {
-	}
+		
+	public ActionComments() {}
 	
 	public ActionComments(Biosample biosample, String comments) {
 		super(biosample, null);
 		setComments(comments);
-	}
-	
-	@Override
-	public Color getColor() {
-		return new Color(255,255,180);
-	}
+	}	
 }

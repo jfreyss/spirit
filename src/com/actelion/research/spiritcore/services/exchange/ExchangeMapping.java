@@ -431,7 +431,6 @@ public class ExchangeMapping {
 						m.setBiotype(mappedBiotype);
 						biotypeMetadata2mappedBiotypeMetadata.put(new Pair<String, String>(inputBiotype.getName(), m.getName()), m);
 						mappedBiotypes.add(mappedBiotype);
-						System.out.println("ExchangeMapping.computeMappedBiotypes() CREATE="+mappedBiotype+" "+m.getName());
 					}
 				}
 			}
@@ -463,6 +462,7 @@ public class ExchangeMapping {
 			} else if(action==MappingAction.MAP_REPLACE) {
 				Test mappedTest = test2mappedTest.get(inputTest.getName());
 				if(mappedTest==null) throw new Exception("You cannot map a test without specifying the mapped test");
+				assert mappedTest.getId()>0;
 				for (TestAttribute ta : inputTest.getAttributes()) {
 					MappingAction action2 = testAttribute2action.get(new Pair<String, String>(inputTest.getName(), ta.getName()));
 					if(action2==null || action2==MappingAction.SKIP) {
@@ -542,7 +542,6 @@ public class ExchangeMapping {
 								BiotypeMetadata mappedBm = biotypeMetadata2mappedBiotypeMetadata.get(new Pair<String, String>(biotype.getName(), bm.getName()));
 								if(mappedBm==null) throw new Exception(s.getBiotype().getName() + " not found in " + biotypeMetadata2mappedBiotypeMetadata);
 								map2.put(mappedBm, e.getValue());
-								System.out.println("ExchangeMapping.computeMappedStudies() map "+inputStudy+" "+ns+" "+s+" to "+mappedBm+" "+mappedBm.getId() );
 							}
 							
 							s.setBiotype(biotype);
@@ -572,15 +571,9 @@ public class ExchangeMapping {
 			} else {
 				logger.debug("Link Study "+inputStudy);
 				//Ignore, just keep the link
-				System.out.println("ExchangeMapping.computeMappedStudies() MAP S TO "+existingStudy+" "+JPAUtil.getManager().contains(existingStudy));
-//				int id = existingStudy.getId();
-//				if(existingStudy.getId()<=0) throw new Exception("Cannot map "+inputStudy.getStudyId()+" to "+existingStudy+" "+existingStudy.getId());
 				existingStudy = JPAUtil.reattach(existingStudy);
 				studyId2mappedStudy.put(inputStudy.getStudyId(), existingStudy);					
 			}
-			
-			
-
 		}
 		
 	}
@@ -603,7 +596,6 @@ public class ExchangeMapping {
 				existing = null;
 			}
 			MappingAction action = location2action.get(inputLocation.getHierarchyFull());
-			System.out.println("ExchangeMapping.computeMappedLocations() "+inputLocation.getHierarchyFull()+" "+action+" "+existing);
 			if(action==null || action==MappingAction.SKIP) {
 				//Ignore
 			} else if(action==MappingAction.CREATE) {
@@ -712,7 +704,6 @@ public class ExchangeMapping {
 								+ "_" +(inputBiosample.getParent()==null?"":inputBiosample.getParent().getSampleId())
 								+ "_" + (inputBiosample.getInheritedPhase()==null?"":inputBiosample.getInheritedPhase().getName())
 								+ "_" + i;
-						System.out.println("ExchangeMapping.computeMappedBiosamples() "+inputBiosample+" "+key+" "+seenSamplingParentPhase.contains(key));
 						if(seenSamplingParentPhase.contains(key)) continue;
 						mappedSampling = s;
 						seenSamplingParentPhase.add(key);

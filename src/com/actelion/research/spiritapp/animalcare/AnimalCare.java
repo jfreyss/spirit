@@ -194,7 +194,7 @@ public class AnimalCare extends JFrame implements ISpiritChangeObserver, ISpirit
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				JPAUtil.refresh();
+				JPAUtil.close();
 				eventUserChanged();
 			} catch(Exception ex) {
 				ex.printStackTrace();				

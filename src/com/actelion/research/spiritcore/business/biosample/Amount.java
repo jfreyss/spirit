@@ -23,6 +23,11 @@ package com.actelion.research.spiritcore.business.biosample;
 
 import com.actelion.research.util.CompareUtils;
 
+/**
+ * Wrapper to an amount and a unit
+ * @author Joel Freyss
+ *
+ */
 public class Amount implements Comparable<Amount> {
 	private Double quantity;
 	private AmountUnit unit;

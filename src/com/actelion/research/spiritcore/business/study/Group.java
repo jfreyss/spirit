@@ -23,8 +23,6 @@ package com.actelion.research.spiritcore.business.study;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -49,7 +47,6 @@ import org.hibernate.envers.Audited;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.util.Counter;
-import com.actelion.research.util.CompareUtils;
 
 /**
  * 
@@ -80,7 +77,7 @@ public class Group implements Comparable<Group>, Cloneable {
 	private String name = "";
 	
 
-	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
+	@ManyToOne(fetch=FetchType.LAZY, cascade={})
 	@JoinColumn(name="study_id")
 	private Study study = null;
 		
@@ -95,7 +92,7 @@ public class Group implements Comparable<Group>, Cloneable {
 	 * - a "sick" group is splitted into "sick treated" and "sick untreated"
 	 * - samples are created from a group and assigned to this new subgroup  
 	 */
-	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL, optional=true)
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.PERSIST, optional=true)
 	@JoinColumn(name="randofromgroup_id")
 	private Group fromGroup;
 	
@@ -107,7 +104,7 @@ public class Group implements Comparable<Group>, Cloneable {
 	@JoinColumn(name="dividingsample_id")
 	private Sampling dividingSampling;
 
-	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL, optional=true)
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.PERSIST, optional=true)
 	@BatchSize(size=100)
 	@JoinColumn(name="randophase_id")	
 	private Phase fromPhase;
@@ -191,10 +188,8 @@ public class Group implements Comparable<Group>, Cloneable {
 	
 	public String getNameWithoutShortName() {
 		if(name==null) return "";
-		int index = name.indexOf(" ");
-		if(index<=0) index = name.length();
-		if(index>4) index = 4;
-		return index<name.length()? name.substring(index).trim(): "";
+		String s = getShortName();
+		return name.substring(s.length()).trim();
 	}
 	
 	/**
@@ -247,9 +242,8 @@ public class Group implements Comparable<Group>, Cloneable {
 	public boolean equals(Object obj) {
 		if(this==obj) return true;
 		if(!(obj instanceof Group)) return false;
-		if(getId()>0 && getId()==((Group)obj).getId()) return true;
-		if(getId()<=0 && getShortName().equals(((Group)obj).getShortName())) return true;
-		return false;
+		if(getId()>0) return getId() == ((Group)obj).getId();
+		return this.compareTo((Group)obj)==0;
 	}
 	
 	@Override
@@ -263,13 +257,13 @@ public class Group implements Comparable<Group>, Cloneable {
 		if(o==null) return 1;
 		if(o==this) return 0;
 		
-		int c = CompareUtils.compare(getStudy(), o.getStudy());
+		int c = getStudy()==null? (o.getStudy()==null?0:1): getStudy().compareTo(o.getStudy());
 		if(c!=0) return c;
 		
-		c = getShortName().compareToIgnoreCase(o.getShortName());
+		c = getShortName().compareTo(o.getShortName());
 		if(c!=0) return c;
 		
-		return (int) ((getId()-o.getId()) % Integer.MAX_VALUE);
+		return 0; //(int) ((getId()-o.getId()) % Integer.MAX_VALUE);
 	}
 	
 	
@@ -320,7 +314,7 @@ public class Group implements Comparable<Group>, Cloneable {
 		this.fromPhase = null;
 
 		//Remove actions of this group
-		for (StudyAction a: new ArrayList<StudyAction>(getStudy().getStudyActions())) {
+		for (StudyAction a: new ArrayList<>(getStudy().getStudyActions())) {
 			if(this.equals(a.getGroup())) {
 				a.remove();
 			}
@@ -594,10 +588,6 @@ public class Group implements Comparable<Group>, Cloneable {
 		return sizes[subgroupno];
 	}
 
-	public Set<Biosample> getTopAttachedBiosamples(){
-		return getStudy()==null? new HashSet<Biosample>(): Collections.unmodifiableSet(getStudy().getTopAttachedBiosamples(this));
-	}
-	
 	public Sampling getDividingSampling() {
 		return dividingSampling;
 	}
@@ -681,13 +671,14 @@ public class Group implements Comparable<Group>, Cloneable {
 			if(s!=null && s.length()>0) sb.append(s + "\n");
 		}
 		return sb.toString();
-
-		
 	}
 
 	/**
 	 * Util function to get a description of the treatment
-	 * @param subgroup
+	 * 1st line = measurements
+	 * 2nd line = treatments
+	 * 3rd line = samplings
+	 * @param subgroup (-1 to have a common description or a valid subgroupNo)
 	 * @return
 	 */
 	public String[] getDescriptionLines(int subgroup) {
@@ -741,15 +732,18 @@ public class Group implements Comparable<Group>, Cloneable {
 			if(samplingCounter.getCount(s)>1) sSamplings = "- " + (samplingCounter.getCount(s)>1? samplingCounter.getCount(s)+"x ":"") + s.getName();
 			break;
 		}
-		System.out.println("Group.getDescriptionLines() "+this+" "+subgroup+" "+sMeasurements.toString()+" "+sTreatments+" "+sSamplings);
 		return new String[] {sMeasurements.toString(), sTreatments, sSamplings};
 	}	
 
-	public void removeSubgroup(int subgroup) throws Exception {
-		
+	/**
+	 * Util function to remove a subgroup and move all the next subgroups up
+	 * @param subgroup
+	 * @throws Exception if there are samples attached to the group
+	 */
+	public void removeSubgroup(int subgroup) throws Exception {		
 		//Change subgroupsizes
 		int[] sizes = getSubgroupSizes();
-		if(subgroup<0 || subgroup>=sizes.length) throw new Exception("Invalid subgroup: "+subgroup);
+		if(subgroup<0 || subgroup>=sizes.length) throw new IllegalArgumentException("Invalid subgroup: "+subgroup);
 		
 		if(study.getTopAttachedBiosamples(this, subgroup).size()>0) throw new Exception("The group " + this +"'"+(1+subgroup) + " has "+study.getTopAttachedBiosamples(this, subgroup).size()+" attached samples");
 		
@@ -760,27 +754,32 @@ public class Group implements Comparable<Group>, Cloneable {
 		setSubgroupSizes(newSizes);
 		
 		//Delete actions
-		study.removeStudyActions(study.getStudyActions(this, subgroup));
+		Set<StudyAction> toRemove = study.getStudyActions(this, subgroup);
+		study.removeStudyActions(toRemove);
+		
 		
 		//Move actions		
 		for(StudyAction a: study.getStudyActions(this)) {
 			if(a.getSubGroup()>subgroup) {
 				a.setSubGroup(a.getSubGroup()-1);
 			}
-		}
-		
+		}		
 		
 		//Move biosamples
 		for (Biosample top : study.getTopAttachedBiosamples(this)) {
-			if(top.getInheritedSubGroup()<subgroup) continue;
-			for(Biosample b: top.getHierarchy(HierarchyMode.ATTACHED_SAMPLES)) {
-				b.setInheritedSubGroup(b.getInheritedSubGroup()-1);
-			}
-				
-		}		
-		
+			if(top.getInheritedSubGroup()>subgroup) {
+				System.out.println("Group.removeSubgroup() b="+top);
+				for(Biosample b: top.getHierarchy(HierarchyMode.ATTACHED_SAMPLES)) {
+					b.setInheritedSubGroup(b.getInheritedSubGroup()-1);
+				}
+			}			
+		}				
 	}
 	
+	/**
+	 * Util function to changes the order of the subGroup by swapping 'subgroup' and 'subgroup-1'
+	 * @param subgroup (>0)
+	 */
 	public void moveUp(int subgroup) {
 		int[] sizes = getSubgroupSizes();
 		if(subgroup<1 || subgroup>=sizes.length) throw new IllegalArgumentException("Invalid subgroup: "+subgroup);
@@ -790,8 +789,7 @@ public class Group implements Comparable<Group>, Cloneable {
 		sizes[subgroup-1] = sizes[subgroup];
 		sizes[subgroup] = tmp;				
 		setSubgroupSizes(sizes);
-		
-		
+				
 		//switch actions		
 		for(StudyAction a: study.getStudyActions(this)) {
 			if(a.getSubGroup()==subgroup) {
@@ -800,8 +798,7 @@ public class Group implements Comparable<Group>, Cloneable {
 				a.setSubGroup(subgroup);
 			}
 		}
-		
-		
+				
 		//Move biosamples
 		for (Biosample top : study.getTopAttachedBiosamples(this)) {
 			if(top.getInheritedSubGroup()==subgroup) {
@@ -812,10 +809,8 @@ public class Group implements Comparable<Group>, Cloneable {
 				for(Biosample b: top.getHierarchy(HierarchyMode.ATTACHED_SAMPLES)) {
 					b.setInheritedSubGroup(subgroup);
 				}
-			} 
-				
-		}	
-		
+			} 				
+		}			
 	}
 
 }

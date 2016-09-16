@@ -19,21 +19,27 @@
  * @author Joel Freyss
  */
 
-package com.actelion.research.spiritcore.services;
+package com.actelion.research.spiritcore.services.migration;
 
-import org.hibernate.envers.RevisionEntity;
-import org.hibernate.envers.RevisionListener;
+import com.actelion.research.spiritcore.util.SQLConverter;
+import com.actelion.research.spiritcore.util.SQLConverter.SQLVendor;
 
-import com.actelion.research.spiritcore.services.dao.JPAUtil;
+public class MigrationScript2_0 extends MigrationScript {
 
-@RevisionEntity
-public class SpiritRevisionListener implements RevisionListener {
-
-	@Override
-	public void newRevision(Object obj) {
-		SpiritRevisionEntity rev = (SpiritRevisionEntity) obj;		
-		SpiritUser user = JPAUtil.getSpiritUser();
-		rev.setUserId(user==null?"": user.getUsername());
-		rev.setTimestamp(JPAUtil.getCurrentDateFromDatabase().getTime());
+	private String SCRIPT = 
+			"alter table spirit.assay_result_value add document_id number(19);\n" 
+			+ "alter table spirit.assay_result_value_aud add document_id number(19);\n"
+			+ "alter table spirit.assay_result_value add constraint assay_result_fk foreign key (document_id) references spirit.document (ID);\n";
+	
+	
+	public MigrationScript2_0() {
+		super("2.0");
 	}
+	
+	@Override
+	public String getMigrationSql(SQLVendor vendor) throws Exception {
+		return SQLConverter.convertScript(SCRIPT, vendor);
+	}
+
+	
 }

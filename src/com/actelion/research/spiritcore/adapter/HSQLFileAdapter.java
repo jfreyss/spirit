@@ -38,7 +38,7 @@ import com.actelion.research.spiritcore.services.migration.MigrationScript;
 	
     protected static Server server = null;
 
-	public static DBProperty DBPATH_PROPERTY = new DBProperty("jnlp.hsqlFileAdapter.path", "DB Path", new File(System.getProperty("user.home"), ".spirit/hsqldb").getPath());
+	public static PropertyDescriptor DBPATH_PROPERTY = new PropertyDescriptor("jnlp.hsqlFileAdapter.path", "DB Path", new File(System.getProperty("user.home"), ".spirit/hsqldb").getPath());
 	
 	public HSQLFileAdapter() {
 	}
@@ -94,8 +94,8 @@ import com.actelion.research.spiritcore.services.migration.MigrationScript;
 	}
 		
 	@Override
-	public DBProperty[] getSpecificProperties() {		
-		return new DBProperty[] {DBPATH_PROPERTY};
+	public PropertyDescriptor[] getSpecificProperties() {		
+		return new PropertyDescriptor[] {DBPATH_PROPERTY};
 	}
 	
 	@Override

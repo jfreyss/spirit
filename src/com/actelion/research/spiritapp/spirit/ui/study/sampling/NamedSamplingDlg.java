@@ -256,7 +256,6 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				Sampling sd = new Sampling();
-				sd.setBiotype(DAOBiotype.getBiotype(Biotype.ORGAN));
 				SamplingDlg dlg = new SamplingDlg(NamedSamplingDlg.this, study, sd, true);
 				if(dlg.isSuccess() && sd.getBiotype()!=null) {
 					namedSamplingProxy.getAllSamplings().add(sd);
@@ -458,8 +457,10 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 
 		
 		//Draw children
-		for (int i = 0; i < sampling.getChildren().size(); i++) {
-			Sampling child = sampling.getChildren().get(i);
+		List<Sampling> children = new ArrayList<>(sampling.getChildren());
+		Collections.sort(children);;
+		for (int i = 0; i < children.size(); i++) {
+			Sampling child = children.get(i);
 			assert child!=null;
 			c.gridy = drawRec(c.gridy, depth + 1, child);
 		}
@@ -735,7 +736,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			}
 		} else {
 			//No study, the name must be globaly unique
-			for(NamedSampling ns: DAONamedSampling.getNamedSamplings(Spirit.getUser().getUsername(), null)) {
+			for(NamedSampling ns: DAONamedSampling.getNamedSamplings(Spirit.getUser(), null)) {
 				if(ns.equals(namedSamplingProxy)) continue;
 				if(ns.getName().equals(name)) throw new Exception("The name must be unique");				
 			}

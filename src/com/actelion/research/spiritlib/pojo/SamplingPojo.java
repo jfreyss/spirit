@@ -22,15 +22,15 @@
 package com.actelion.research.spiritlib.pojo;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class SamplingPojo implements Serializable {
 
 	private int id;
 	private String biotype = null;
-	private List<SamplingPojo> children = new ArrayList<>();
+	private Set<SamplingPojo> children = new HashSet<>();
 	
 	private boolean weighingRequired = false;
 	private boolean commentsRequired = false;
@@ -63,10 +63,10 @@ public class SamplingPojo implements Serializable {
 	public void setMetadata(Map<String, String> metadata) {
 		this.metadata = metadata;
 	}
-	public List<SamplingPojo> getChildren() {
+	public Set<SamplingPojo> getChildren() {
 		return children;
 	}
-	public void setChildren(List<SamplingPojo> children) {
+	public void setChildren(Set<SamplingPojo> children) {
 		this.children = children;
 	}
 	public boolean isWeighingRequired() {
@@ -122,5 +122,10 @@ public class SamplingPojo implements Serializable {
 	}	
 	public void setMeasurements(MeasurementPojo[] measurements) {
 		this.measurements = measurements;
+	}
+	
+	@Override
+	public String toString() {
+		return "[SamplingPojo:" + id + "/" + sampleName + " " + (metadata.size()>0?metadata.values():"") + (children.size()>0? "{" + children + "}": "") + "]";
 	}
 }

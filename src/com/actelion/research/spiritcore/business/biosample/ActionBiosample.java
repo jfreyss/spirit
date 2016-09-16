@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritcore.business.biosample;
 
-import java.awt.Color;
 import java.util.Date;
 
 import javax.persistence.CascadeType;
@@ -79,20 +78,21 @@ public abstract class ActionBiosample implements Comparable<ActionBiosample> {
 	
 	@Column(length=256)
 	protected String comments;
-
 		
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(nullable=false)
 	protected Date updDate = new Date();
 	
+	@Column(nullable=true)
+	protected String updUser;
+
 	public ActionBiosample() {
 	}
 	
 	public ActionBiosample(Biosample biosample, Phase phase) {
-		setBiosample(biosample);
-		setPhase(phase);		
-	}
-	
+		this.biosample = biosample;
+		this.phase = phase;
+	}	
 	
 	public int getId() {
 		return id;
@@ -100,6 +100,13 @@ public abstract class ActionBiosample implements Comparable<ActionBiosample> {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+	
+	public String getUpdUser() {
+		return updUser;
+	}
+	public void setUpdUser(String updUser) {
+		this.updUser = updUser;
 	}
 
 	public Biosample getBiosample() {
@@ -126,6 +133,34 @@ public abstract class ActionBiosample implements Comparable<ActionBiosample> {
 		this.updDate = updDate;
 	}
 
+	public String getDetails() {
+		return getComments();
+	}
+	
+	public final String getComments() {
+		return comments;
+	}
+
+	public final void setComments(String comments) {
+		this.comments = comments;
+	}
+		
+	@Override
+	public int hashCode() {
+		return id;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if(obj==null) return false;
+		if(!(obj instanceof ActionBiosample)) return false;
+		return id>0 && id==((ActionBiosample)obj).id;
+	}
+	@Override
+	public String toString() {
+		return getBiosample() + " > " + getDetails();
+	}
+	
 	@Override
 	public int compareTo(ActionBiosample o) {
 		int c = getBiosample()==null? (o.getBiosample()==null?0 : 1): getBiosample().compareTo(o.getBiosample());
@@ -140,26 +175,5 @@ public abstract class ActionBiosample implements Comparable<ActionBiosample> {
 		}
 		
 		return getClass().getName().compareTo(o.getClass().getName());
-	}
-
-	
-	public String getDetails() {
-		return getComments();
-	}
-
-	public String getComments() {
-		return comments;
-	}
-
-	public void setComments(String comments) {
-		this.comments = comments;
-	}
-	
-	public abstract Color getColor();
-	
-	
-	@Override
-	public String toString() {
-		return getBiosample() + " > " + getDetails();
 	}
 }

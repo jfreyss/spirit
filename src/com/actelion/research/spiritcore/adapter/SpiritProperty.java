@@ -39,7 +39,7 @@ import org.hibernate.envers.Audited;
 @Entity
 @Table(name="spirit_property")
 @Audited
-public class ConfigProperty {
+public class SpiritProperty {
 		
 	@Id
 	@Column(name="id", length=128)
@@ -48,13 +48,12 @@ public class ConfigProperty {
 	@Column(name="value", length=256)
 	private String value;
 	
-	public ConfigProperty() {}
+	public SpiritProperty() {}
 	
-	public ConfigProperty(String key, String value) {
+	public SpiritProperty(String key, String value) {
 		this.key = key;
 		this.value = value;
 	}
-	
 
 	public String getKey() {
 		return key;
@@ -73,7 +72,7 @@ public class ConfigProperty {
 	
 	@Override
 	public boolean equals(Object obj) {
-		return (obj instanceof ConfigProperty) && key.equals(((ConfigProperty) obj).getKey());
+		return (obj instanceof SpiritProperty) && key.equals(((SpiritProperty) obj).getKey());
 	}
 	
 }

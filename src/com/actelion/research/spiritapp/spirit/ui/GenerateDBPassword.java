@@ -19,13 +19,14 @@
  * @author Joel Freyss
  */
 
-package com.actelion.research.spiritcore.services;
+package com.actelion.research.spiritapp.spirit.ui;
 
 import javax.swing.BorderFactory;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 
 import com.actelion.research.spiritcore.adapter.DBAdapter;
+import com.actelion.research.spiritcore.services.StringEncrypter;
 
 
 public class GenerateDBPassword {

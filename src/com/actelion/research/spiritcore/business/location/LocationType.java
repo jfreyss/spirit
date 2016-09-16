@@ -159,23 +159,6 @@ public enum LocationType {
 		return defaultRows;
 	}
 	
-	public static LocationType get(String toStringRepresentation) {
-		for (LocationType l : values()) {
-			if(l.getName().equalsIgnoreCase(toStringRepresentation)) return l;
-		}
-		return null;
-	}
-	
-	public LocationType getDefaultChild() {
-		switch (this) {
-			case BUILDING: return LAB;
-			case LAB: return TANK;
-			case TANK: return TOWER;
-			case TOWER: return BOX;
-			default: return null;
-		}					
-	}
-	
 	public static List<LocationType> getPossibleRoots() {
 		List<LocationType> roots = new ArrayList<>();
 		for (LocationType t : values()) {

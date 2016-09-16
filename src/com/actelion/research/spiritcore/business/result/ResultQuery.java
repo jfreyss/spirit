@@ -34,30 +34,28 @@ import com.actelion.research.spiritcore.util.SetHashMap;
 public class ResultQuery implements Serializable {
 
 	private Collection<Integer> stids = null;	
-	private Collection<Integer> bids = new HashSet<Integer>();
+	private Collection<Integer> bids = new HashSet<>();
 	
 	private Phase phase;	
 	private String phases;	
-	private int animalId;
 	private int sid;
 	private String sampleId;
 	private String containerIds;
 	private String topSampleIds;
 	private String studyIds;
 	private String group;
-	private String resultElbs;
 	private String keywords;
-//	private String actNoOrElns;
 	private String biotype;
 	private String updUser;
 	private String updDays;
 	private String creDate;
+	private String resultElbs;
 	private Quality minQuality = null;
-	private Set<Integer> testIds = new TreeSet<Integer>();	
-	private SetHashMap<TestAttribute, String> attribute2values = new SetHashMap<TestAttribute, String>();
-	private Set<TestAttribute> skippedOutputAttributes = new HashSet<TestAttribute>();
-	private Set<String> inputs = new TreeSet<String>();	
-	private Set<String> biotypes = new TreeSet<String>();	
+	private Set<Integer> testIds = new TreeSet<>();	
+	private SetHashMap<TestAttribute, String> attribute2values = new SetHashMap<>();
+	private Set<TestAttribute> skippedOutputAttributes = new HashSet<>();
+	private Set<String> inputs = new TreeSet<>();	
+	private Set<String> biotypes = new TreeSet<>();	
 	
 	public ResultQuery() { }
 	
@@ -76,7 +74,7 @@ public class ResultQuery implements Serializable {
 	public static ResultQuery createQueryForBiosampleId(int biosampleId) {
 		ResultQuery query = new ResultQuery();
 		query.setQuality(null);
-		query.setBiosampleId(biosampleId);
+		query.setBid(biosampleId);
 		return query;
 	}
 	
@@ -127,14 +125,12 @@ public class ResultQuery implements Serializable {
 		this.bids = query.bids;
 		this.phase = query.phase;
 		this.topSampleIds = query.topSampleIds;
-		this.animalId = query.animalId;
 		this.sampleId = query.sampleId;
 		this.studyIds = query.studyIds;
 		this.group = query.group;
 		this.resultElbs = query.resultElbs;
 		this.keywords = query.keywords;
 		this.biotype = query.biotype;
-//		this.actNoOrElns = query.actNoOrElns;
 		this.updUser = query.updUser;
 		this.updDays = query.updDays;
 		this.skippedOutputAttributes = query.skippedOutputAttributes;
@@ -179,7 +175,7 @@ public class ResultQuery implements Serializable {
 		return studyIds;
 	}
 	
-	public void setBiosampleId(int biosampleId) {
+	public void setBid(int biosampleId) {
 		bids.clear();
 		bids.add(biosampleId);
 	}
@@ -187,15 +183,6 @@ public class ResultQuery implements Serializable {
 	public void setBids(Collection<Integer> ids) {
 		bids.clear();
 		bids.addAll(ids);
-	}
-
-
-	public int getAnimalId() {
-		return animalId;
-	}
-
-	public void setAnimalId(int animalId) {
-		this.animalId = animalId;
 	}
 
 	public void setAttribute2Values(SetHashMap<TestAttribute, String> attributes) {
@@ -224,41 +211,12 @@ public class ResultQuery implements Serializable {
 		return sid!=0 || (studyIds!=null && studyIds.length()>0) || (phases!=null && phases.length()>0) || (group!=null && group.length()>0);
 	}
 	
-//	public void setInputs(String inputs) {
-//		this.inputs = inputs;
-//	}
-//	public String getInputs() {
-//		return inputs;
-//	}
-	
-//	public String getActNo() {
-//		return actNo;
-//	}
-//
-//	public void setActNo(String actNo) {
-//		this.actNo = actNo;
-//	}
-//
-//	public String getEln() {
-//		return eln;
-//	}
-//
-//	public void setEln(String eln) {
-//		this.eln = eln;
-//	}
-
 	public void setPhase(Phase phase) {
 		this.phase = phase;
 	}
 
 	public Phase getPhase() {
 		return phase;
-	}
-	public String getResultElb() {
-		return resultElbs;
-	}
-	public void setResultElb(String resultElbs) {
-		this.resultElbs = resultElbs;
 	}
 	public String getBiotype() {
 		return biotype;

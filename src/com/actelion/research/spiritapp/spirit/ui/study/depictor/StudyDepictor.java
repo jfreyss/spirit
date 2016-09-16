@@ -36,8 +36,10 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,7 +86,6 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 
 	protected boolean designerMode = false;
 	private boolean printLegend = true;
-//	private boolean namingProblem;
 
 	private Calendar calendar = Calendar.getInstance();
 
@@ -94,6 +95,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 	private Map<Phase, Integer> phase2X = new HashMap<>();
 	private int sizeFactor = 0;
 	private Map<Phase, Phase> nextPhaseMap;
+	private Set<Phase> emptyPhases = new HashSet<>();
 
 	public StudyDepictor() {
 		addMouseListener(this);
@@ -235,7 +237,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			for (Group group : study.getGroups()) {
 				for (int subgroupNo = 0; subgroupNo < group.getNSubgroups(); subgroupNo++) {
 					for (Phase phase : study.getPhases()) {
-						StudyAction action = study.getStudyAction(group, phase, subgroupNo);
+						StudyAction action = study.getStudyAction(group, subgroupNo, phase);
 						paintAction(g, action);
 					}
 					if(isBlind) break;
@@ -320,7 +322,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			
 		} else if(sel.getPhase()!=null) {
 			
-			StudyAction action = study.getStudyAction(sel.getGroup(), sel.getPhase(), sel.getSubGroup());
+			StudyAction action = study.getStudyAction(sel.getGroup(), sel.getSubGroup(), sel.getPhase());
 	
 			if(!sel.getPhase().equals(sel.getGroup().getFromPhase()) && action==null) return null;
 			
@@ -407,13 +409,10 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 	}
 
 	public void setStudy(Study s) {
-
 		this.study = s;
 		
 		isBlindAll = SpiritRights.isBlindAll(this.study, Spirit.getUser());
 		isBlind = SpiritRights.isBlind(this.study, Spirit.getUser());
-		
-		
 		
 		imgBuffer = null;
 		phase2X = null;
@@ -498,7 +497,6 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 		return img;
 	}
 
-	private Set<Phase> emptyPhases = new HashSet<Phase>();
 
 	protected void computePositions(boolean adjustZoomFactor) {
 		if (study == null) return;
@@ -533,8 +531,10 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			int x = marginX + 20;
 
 			// PhaseNo2X positions
-			phase2X = new HashMap<Phase, Integer>();
-			for (Phase p : study.getPhases()) {
+			phase2X = new HashMap<>();
+			List<Phase> phases = new ArrayList<>(study.getPhases());
+			Collections.sort(phases);
+			for (Phase p : phases) {
 				phase2X.put(p, x);
 
 				// Check if phase is empty
@@ -561,10 +561,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			groupSubgroup2height.clear();
 			int y = OFFSET_Y + 35; //groupHeight / 2 + 15;
 
-//			List<Group> groupsSortedAlpha = new ArrayList<>(study.getGroups());
 			List<Group> groupsSortedHierarchical = study.getGroupsHierarchical();
-//			namingProblem = !groupsSortedAlpha.equals(groupsSortedHierarchical);
-			
 			for (Group group : groupsSortedHierarchical) {
 				if (group.getStudy() == null) continue;
 
@@ -949,7 +946,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 				// Get next action with treatment
 				int nextXWithTreatment = getWidth();
 				for (Phase p = getNext(phase); p != null; p = getNext(p)) {
-					StudyAction a = study.getStudyAction(group, p, subgroupNo);
+					StudyAction a = study.getStudyAction(group, subgroupNo, p);
 					if (a != null && a.getNamedTreatment() != null) {
 						nextXWithTreatment = getX(p);
 						break;
@@ -981,7 +978,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 				// Get next action with sampling
 				int nextXWithSampling = getWidth();
 				for (Phase p = getNext(phase); p != null; p = getNext(p)) {
-					StudyAction a = study.getStudyAction(group, p, subgroupNo);
+					StudyAction a = study.getStudyAction(group, subgroupNo, p);
 					if (a != null && (a.getNamedSampling1() != null || a.getNamedSampling2() != null)) {
 						nextXWithSampling = getX(p);
 						break;

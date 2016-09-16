@@ -68,7 +68,8 @@ public class BiosampleDuplicatesDlg extends JEscapeDialog {
 		studyComboBox.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				biotypeComboBox.setValues(studyComboBox.getText().length()==0? DAOBiotype.getBiotypes(): DAOStudy.getBiotypes(studyComboBox.getText()), true);
+				Study study = studyComboBox.getText().length()==0? null: DAOStudy.getStudyByStudyId(studyComboBox.getText());
+				biotypeComboBox.setValues(study==null? DAOBiotype.getBiotypes(): DAOStudy.getBiotypes(study), true);
 			}
 		});
 		

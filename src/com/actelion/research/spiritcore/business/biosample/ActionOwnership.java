@@ -21,8 +21,6 @@
 
 package com.actelion.research.spiritcore.business.biosample;
 
-import java.awt.Color;
-
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
@@ -42,12 +40,6 @@ public class ActionOwnership extends ActionBiosample {
 		setComments(comments);
 	}
 	
-	@Override
-	public Color getColor() {
-		return new Color(255,255,180);
-	}
-	
-
 	@Override
 	public String getDetails() {
 		return "given to " + comments;

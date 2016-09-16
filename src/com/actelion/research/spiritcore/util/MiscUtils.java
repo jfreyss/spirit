@@ -130,12 +130,18 @@ public class MiscUtils {
 	
 	public static String removeHtml(String s) {
 		if(s==null) return null;
-		return s.replaceAll("<br>", "\n").replaceAll("&nbsp;"," ").replaceAll("\\<.*?>","").replaceAll("\t", " ").replaceAll("[\r\n]+", "\n").replaceAll("[ ]+", " ").trim();
+		return s.replaceAll("<br>", "\n")
+				.replaceAll("&nbsp;"," ")
+				.replaceAll("\\<([^=>]*(=\\'.*?\\')?(=\\\".*?\\\")?)+>","")
+//				.replaceAll("\\<.*?>","")
+				.replaceAll("\t", " ")
+				.replaceAll("[\r\n]+", "\n")
+				.replaceAll("[ ]+", " ").trim();
 	}
 	public static String removeHtmlAndNewLines(String s) {
 		if(s==null) s = "";
 		s = removeHtml(s).replace("\n", " ").replace("\"", "");
-		if(s.length()==0) s = "-";
+		if(s.length()==0) s = "";
 		return s;
 	}
 	
@@ -644,6 +650,43 @@ public class MiscUtils {
 		assert incrementName("{1d}").equals("{1e}");
 
 		
+	}
+
+	public static String convert2Html(String s) {
+		if(s==null) return "";
+		
+		//Convert special chars
+		s = s.replaceAll("&", "&amp;");
+		s = s.replaceAll("<", "&lt;");
+		s = s.replaceAll(">", "&gt;");
+		
+		//convert tab to tables;
+		StringBuilder sb = new StringBuilder();
+		boolean inTable = false;
+		String[] lines = s.split("\n"); 
+		for(String line: lines ) {
+			if(line.indexOf('\t')<0) {
+				if(inTable) {
+					sb.append("</table>");
+					inTable = false;
+				}				
+				sb.append(line+"<br>");
+			} else {
+				if(inTable) {
+					sb.append("<tr><td>" + line.replaceAll("\t", "</td><td>") + "</td></tr>");
+					
+				} else {
+					inTable = true;
+					sb.append("<table style='border:solid 1px gray'>");
+					sb.append("<tr><th>" + line.replaceAll("\t", "</th><th>") + "</th></tr>");
+					
+				}
+			}
+		}
+		if(inTable) sb.append("</table>");
+		
+		s = sb.toString();
+		return s;
 	}
 	
 	

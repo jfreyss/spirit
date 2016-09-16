@@ -109,7 +109,7 @@ public class BiosampleTab extends JPanel implements ISpiritTab {
 				if(!biosampleDetailPanel.isVisible()) return;
 				
 				Collection<Biosample> sel = pivotCardPanel.getPivotTable().getSelectedBiosamples();
-				if(sel.size()>0) {
+				if(sel.size()==1) {
 					if(westPane.getDividerLocation()>westPane.getHeight()-20) westPane.setDividerLocation(500);
 					biosampleDetailPanel.setBiosamples(sel);
 				} else {

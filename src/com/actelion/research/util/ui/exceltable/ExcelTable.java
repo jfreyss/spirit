@@ -243,13 +243,7 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 		getActionMap().put("up", new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int row = getSelectedRow();
-				int col = getSelectedColumn();
-				if(row>0) {
-					editingStopped(new ChangeEvent(this));
-					setRowSelectionInterval(row-1, row-1);
-					setColumnSelectionInterval(col, col);
-				}
+				goUp();
 			}
 		});
 		
@@ -1067,12 +1061,16 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 		
 	}	
 
-	protected void addRow() {
+	protected void addRow(int index) {
 		ROW r = getModel().createRecord();
 		if(r!=null && canAddRow) {
-			getModel().getRows().add(r);
+			if(index<0) {
+				getModel().getRows().add(r);
+			} else {
+				getModel().getRows().add(index, r);
+			}
 			getModel().fireTableDataChanged();
-		}
+		}		
 	}
 	public void goRight() {
 		editingStopped(new ChangeEvent(this));
@@ -1084,11 +1082,14 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 			setColumnSelectionInterval(col+1, col+1);
 		} else {
 			if(row>=getRowCount()-1) {
-				addRow();
+				addRow(-1);
 			}
 			setColumnSelectionInterval(0, 0);					
 			if(row+1<getRowCount()) setRowSelectionInterval(row+1, row+1);					
 		}		
+		scrollToSelection();
+
+		
 	}
 
 	public void goLeft() {
@@ -1103,17 +1104,23 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 			setColumnSelectionInterval(getColumnCount()-1, getColumnCount()-1);					
 			setRowSelectionInterval(row-1, row-1);					
 		}		
+		scrollToSelection();
 	}
 	
 	public void goUp() {
 		editingStopped(new ChangeEvent(this));
 		int row = getSelectedRow();
 		int col = getSelectedColumn();
-		if(row<0 || col<0) return;
+		System.out.println("ExcelTable.goUp() "+row);
+		if(col<0) return;
+		if(row==0) {
+			addRow(row++);
+		} 
 		if(row>0) {
 			setColumnSelectionInterval(col, col);
 			setRowSelectionInterval(row-1, row-1);
 		}
+		scrollToSelection();
 	}
 
 	public void goDown() {
@@ -1122,12 +1129,13 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 		int col = getSelectedColumn();
 		if(row<0 || col<0) return;
 		if(row>=getRowCount()-1) {
-			addRow();
+			addRow(-1);
 		}
 		if(row<getRowCount()-1) {
 			setColumnSelectionInterval(col, col);
 			setRowSelectionInterval(row+1, row+1);
 		}
+		scrollToSelection();		
 	}
 	public void goNext() {
 		if(goNextOnEnter) {
@@ -1151,7 +1159,7 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 			}
 		}
 		if(row>=getRowCount()-1) {
-			addRow();
+			addRow(-1);
 		}
 		if(row<getRowCount()-1) {
 			for (int i = 0; i < getColumnCount(); i++) {
@@ -1162,6 +1170,7 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 				}
 			}
 		}
+		scrollToSelection();		
 	}
 
 

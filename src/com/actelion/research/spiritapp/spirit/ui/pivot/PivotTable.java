@@ -152,7 +152,6 @@ public class PivotTable extends ExtendTable<PivotRow> {
 
 		if(data==null) return new String[0][0];
 		PivotTemplate tpl = data.getTemplate();
-		boolean showExtraColumns = !(tpl instanceof GraphpadPivotTemplate);
 		
 		//Find if we have nested cells
 		boolean hasNestedCells = hasNestedCells();
@@ -169,7 +168,7 @@ public class PivotTable extends ExtendTable<PivotRow> {
 			if(c.getColumnClass()==PivotCell.class) {
 				row.add(MiscUtils.removeHtml(c.getName()));	
 				if(hasNestedCells && tpl.getAggregation()!=Aggregation.HIDE) row.add("");
-				if(showExtraColumns && tpl.getComputed()!=Computed.NONE) {
+				if(tpl.getComputed()!=Computed.NONE) {
 					row.add(MiscUtils.removeHtml(c.getName() + "\n" + tpl.getComputed()));	
 				}
 			} else {
@@ -197,13 +196,13 @@ public class PivotTable extends ExtendTable<PivotRow> {
 						if(cellKey==null) {
 							row.add("");
 							if(hasNestedCells && tpl.getAggregation()!=Aggregation.HIDE) row.add("");
-							if(showExtraColumns && tpl.getComputed()!=Computed.NONE) row.add("");	
+							if(tpl.getComputed()!=Computed.NONE) row.add("");	
 						} else {
 							hasData = true;
 							PivotCell subvl = cell.getNested(cellKey);
 							if(tpl.getAggregation()==Aggregation.HIDE || hasNestedCells) row.add(cellKey==null?"": cellKey.getKey());						
 							if(tpl.getAggregation()!=Aggregation.HIDE) row.add(formatForTab(subvl.getValue()));
-							if(showExtraColumns && tpl.getComputed()!=Computed.NONE) row.add(formatForTab(subvl.getComputed()));									
+							if(tpl.getComputed()!=Computed.NONE) row.add(formatForTab(subvl.getComputed()));									
 						}
 					} else {
 						if(subRow==0) {

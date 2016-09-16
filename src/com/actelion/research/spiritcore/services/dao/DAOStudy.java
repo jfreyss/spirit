@@ -39,14 +39,13 @@ import java.util.TreeSet;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
+import javax.persistence.LockModeType;
 import javax.persistence.Query;
 
 import org.hibernate.jpa.QueryHints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.actelion.research.spiritcore.business.Document;
-import com.actelion.research.spiritcore.business.Document.DocumentType;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
@@ -57,7 +56,6 @@ import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.AttachedBiosample;
-import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Measurement;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.Phase;
@@ -68,12 +66,10 @@ import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.util.Formatter;
 import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.spiritcore.util.QueryTokenizer;
 import com.actelion.research.spiritcore.util.Triple;
-import com.actelion.research.util.PriorityQueue;
-import com.actelion.research.util.PriorityQueue.Elt;
 
 @SuppressWarnings("unchecked")
 public class DAOStudy {
@@ -125,7 +121,7 @@ public class DAOStudy {
 					} else if(level==RightLevel.READ) {
 						if(SpiritRights.canRead(study, user)) studies.add(study);					
 					} else if(level==RightLevel.VIEW) {
-						if(ConfigProperties.getInstance().isOpen() || SpiritRights.canRead(study, user)) studies.add(study);					
+						if(SpiritProperties.getInstance().isOpen() || SpiritRights.canRead(study, user)) studies.add(study);					
 					}
 				}
 			} else {
@@ -141,6 +137,7 @@ public class DAOStudy {
 	
 	protected static void postLoad(Collection<Study> studies) {
 		if(studies==null) return;
+		
 		//2nd loading pass: load the tests from the serialized measurements
 		Set<Integer> testIds = new HashSet<>();
 		for (Study study : studies) {
@@ -165,40 +162,40 @@ public class DAOStudy {
 		}
 	}
 	
-	public static List<String> getAllMetadata(String key) {
-		List<String> res = (List<String>) Cache.getInstance().get("study_"+key);
+	public static List<String> getMetadataValues(String metadata) {
+		List<String> res = (List<String>) Cache.getInstance().get("study_"+metadata);
 		if(res==null) {
 			Set<String> set = new TreeSet<>();
 			for (Study s : getStudies()) {
-				if(s.getMetadata().get(key)!=null) {
-					set.add(s.getMetadata().get(key));
+				if(s.getMetadata().get(metadata)!=null) {
+					set.add(s.getMetadata().get(metadata));
 				}
 			}
 			res = new ArrayList<>(set);
-			Cache.getInstance().add("study_"+key, res, Cache.LONG);
+			Cache.getInstance().add("study_"+metadata, res, Cache.LONG);
 		} 
 		return res;
 	}
 	
-	public static void fullLoad(Study study) {
-		if(study==null) return;
-
-		study.getPhases().iterator();
-		study.getGroups().iterator();
-		study.getNamedTreatments().iterator();
-
-		for(NamedSampling ns: study.getNamedSamplings()) {
-			ns.getAllSamplings().iterator();
-		}
-		
-		for(StudyAction a: study.getStudyActions()) {
-			a.getGroup();
-			a.getPhase();
-			a.getNamedTreatment();
-			a.getNamedSamplings();
-		}
-
-	}
+//	public static void fullLoad(Study study) {
+//		if(study==null) return;
+//
+//		study.getPhases().iterator();
+//		study.getGroups().iterator();
+//		study.getNamedTreatments().iterator();
+//
+//		for(NamedSampling ns: study.getNamedSamplings()) {
+//			ns.getAllSamplings().iterator();
+//		}
+//		
+//		for(StudyAction a: study.getStudyActions()) {
+//			a.getGroup();
+//			a.getPhase();
+//			a.getNamedTreatment();
+//			a.getNamedSamplings();
+//		}
+//
+//	}
 	
 	public static Study getStudy(int id) {
 		EntityManager session = JPAUtil.getManager();
@@ -222,16 +219,14 @@ public class DAOStudy {
 	
 	public static List<Study> getStudyByIvvOrStudyId(String ivvs) {
 		EntityManager session = JPAUtil.getManager();
-		String sql="";
 		try {
-			sql = "select s from Study s where " + QueryTokenizer.expandOrQuery("s.ivv = ? or s.studyId = ?", ivvs);
+			String sql = "select s from Study s where " + QueryTokenizer.expandOrQuery("s.ivv = ? or s.studyId = ?", ivvs);
+			List<Study> res = (List<Study>) session.createQuery(sql).getResultList();
+			postLoad(res);
+			return res;
 		} catch(Exception e) {
 			throw new RuntimeException(e);
 		}
-		List<Study> res = (List<Study>) session.createQuery(sql)
-				.getResultList();
-		postLoad(res);
-		return res;
 	}
 		
 	public static List<ContainerType> getContainerTypes(Study study) {
@@ -240,7 +235,6 @@ public class DAOStudy {
 			EntityManager session = JPAUtil.getManager();
 			res = (List<ContainerType>) session.createQuery("select distinct(b.container.containerType) from Biosample b where b.inheritedStudy = ?1 and b.container.containerType is not null")
 					.setParameter(1, study)
-//					.setHint(QueryHints.READ_ONLY, !JPAUtil.isEditableContext())
 					.getResultList();		
 			Collections.sort(res);
 			Cache.getInstance().add("study_containers_"+study, res);
@@ -248,15 +242,15 @@ public class DAOStudy {
 		return res;
 	}
 	
-	public static List<Biotype> getBiotypes(String studyId){
-		List<Biotype> res = (List<Biotype>) Cache.getInstance().get("study_biotypes_"+studyId);
+	public static List<Biotype> getBiotypes(Study study){
+		List<Biotype> res = (List<Biotype>) Cache.getInstance().get("study_biotypes_"+study);
 		if(res==null) {
 			EntityManager session = JPAUtil.getManager();
-			res = (List<Biotype>) session.createQuery("select distinct(b.biotype) from Biosample b where b.inheritedStudy.studyId = ?1 and b.biotype is not null")
-					.setParameter(1, studyId)
+			res = (List<Biotype>) session.createQuery("select distinct(b.biotype) from Biosample b where b.inheritedStudy = ?1 and b.biotype is not null")
+					.setParameter(1, study)
 					.getResultList();
 			Collections.sort(res);
-			Cache.getInstance().add("study_biotypes_"+studyId, res);
+			Cache.getInstance().add("study_biotypes_"+study, res);
 		}
 		return res;
 	}
@@ -269,15 +263,14 @@ public class DAOStudy {
 		String jpql = "SELECT s FROM Study s where 1=1 ";
 		StringBuilder clause = new StringBuilder();
 		List<Object> parameters = new ArrayList<Object>();
-		//new Biosample().getg
 		if(q!=null) {
 			
 			if(q.getStudyIds()!=null && q.getStudyIds().length()>0) {				
 				clause.append(" and (" + QueryTokenizer.expandOrQuery("s.studyId = ?", q.getStudyIds()) + ")");
 			}
 			
-			if(q.getLocalIds()!=null && q.getLocalIds().length()>0) {				
-				clause.append(" and (" + QueryTokenizer.expandOrQuery("s.ivv = ?", q.getLocalIds()) + ")");
+			if(q.getIvvs()!=null && q.getIvvs().length()>0) {				
+				clause.append(" and (" + QueryTokenizer.expandOrQuery("s.ivv = ?", q.getIvvs()) + ")");
 			}
 			
 			if(q.getKeywords()!=null && q.getKeywords().length()>0) {
@@ -347,7 +340,6 @@ public class DAOStudy {
 		for (int i = 0; i < parameters.size(); i++) {
 			query.setParameter(1+i, parameters.get(i));				
 		}
-		query.setHint(QueryHints.HINT_READONLY, !JPAUtil.isEditableContext());
 		List<Study> studies = query.getResultList();
 		
 		Collections.sort(studies, new Comparator<Study>() {
@@ -387,9 +379,9 @@ public class DAOStudy {
 			persistStudies(session, studies, user);
 			
 			txn.commit();
-			txn = null;			
+			txn = null;
 		} finally {
-			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {}
+			if(txn!=null && txn.isActive()) txn.rollback();
 		}
 		
 	}
@@ -403,7 +395,7 @@ public class DAOStudy {
 	public static void persistStudies(EntityManager session, Collection<Study> studies, SpiritUser user) throws Exception {
 		
 		assert studies!=null;
-		logger.info("Persist "+studies.size()+ "(studies)");
+		logger.info("Persist "+studies.size()+ " studies");
 		assert user!=null;
 		assert session!=null;
 		assert session.getTransaction().isActive();
@@ -432,16 +424,9 @@ public class DAOStudy {
 				
 			if(!SpiritRights.canAdmin(study, user) && !SpiritRights.canBlind(study, user)) throw new Exception("You are not allowed to edit this study");
 			if(study.getId()<0 && getStudyByIvvOrStudyId(study.getIvv()).size()>0) throw new Exception("The internalId must be unique");
+			
+			
 			Date now = JPAUtil.getCurrentDateFromDatabase();
-			
-			
-			//Fix documents without docType (Spirit v<=1.9)
-			for (Document doc : study.getDocuments()) {
-				if(doc.getType()==null) {
-					doc.setType(DocumentType.DESIGN);
-				}
-			}
-	
 			study.setUpdUser(user.getUsername());
 			study.setUpdDate(now);
 						
@@ -470,7 +455,6 @@ public class DAOStudy {
 				phase.serializeRandomization();
 			}
 		}
-
 		Cache.getInstance().remove("studies_"+user);
 		Cache.getInstance().remove("allstudies");
 		
@@ -539,6 +523,7 @@ public class DAOStudy {
 			}
 			
 			//Remove
+			study.remove();
 			session.remove(study);
 		}
 		
@@ -760,201 +745,11 @@ public class DAOStudy {
 		}
 		return old2new;
 		
-	}
+	}	
 	
-	/**
-	 * Check consistency of the study and returns a list of advices / problems
-	 * 
-	 * @param study
-	 * @param checkSamples
-	 * @return null if there are no warning
-	 */
-	public static String getTodoList(Study study) {
-		StringBuilder sb = new StringBuilder();
-		//We need groups
-		if(study.getGroups().size()==0) {
-			sb.append("You should define 1+ groups\n");
-		}
-		if(study.getPhases().size()==0) {
-			sb.append("You should define 1+ phases\n");
-		}
-		
-		//Make sure, there are no actions before the start phase
-		checkActionsBeforeRnd: for (Group gr : study.getGroups()) {
-			if(gr.getFromPhase()!=null) {
-				for (StudyAction action : study.getStudyActions(gr)) {
-					if(action.getPhase().getTime()>=gr.getFromPhase().getTime()) continue;
-					if(action.isEmpty()) continue;
-					sb.append("You should not have actions before the GroupAssignment (Group " + gr.getShortName() + " / " + action.getPhase().getShortName() + ")\n");
-					break checkActionsBeforeRnd;
-				}
-			}
-		}
-		
-		//Make sure, there are no actions after a necropsy phase
-		checkActionsAfterNecro: for (Group gr : study.getGroups()) {
-			for(int subGroupNo=0; subGroupNo<gr.getNSubgroups(); subGroupNo++) {
-				Phase endPhase = gr.getEndPhase(subGroupNo);
-				if(endPhase==null) continue;
-				for (StudyAction action : study.getStudyActions(gr, subGroupNo)) {
-					if(action.getPhase().getTime()<=endPhase.getTime()) continue;
-					if(action.isEmpty()) continue;
-					sb.append("You should not have actions after a necropsy (Gr." + gr.getShortName() + (gr.getNSubgroups()>0?" '"+(1+subGroupNo):"") +" / " + action.getPhase() + ")\n");
-					break checkActionsAfterNecro;
-				}
-			}
-		}
-		
-		//Make sure groups cannot be split from groups, having subgroups (no way no find out the subgroup without looking at the history)
-		for (Group gr : study.getGroupsWithSplitting()) {
-			if(gr.getNSubgroups()>1) {
-				sb.append("The Group " + gr.getName() + " should not have subgroups because it is split\n");
-				break;
-			}
-			
-		}
-		
-		//Make sure the sum of animals is smaller in new groups
-		for (Group gr : study.getGroups()) {
-			int n = 0;
-			for(Group g2: gr.getToGroups()) {
-				n+=g2.getNAnimals();
-			}
-			if(n>gr.getNAnimals()) {
-				sb.append("The Groups going from " + gr.getName() + " should not have more than "+gr.getNAnimals()+"\n");				
-			}
-		}
-		
-		//Make sure the foodWater is measured on different days
-		Set<String> seenWater = new HashSet<String>();
-		Set<String> seenFood = new HashSet<String>();
-		for (StudyAction a: study.getStudyActions()) {
-			String key = a.getGroup()+"_"+a.getSubGroup()+"_"+a.getPhase().getDays();
-			if(a.isMeasureFood()) {
-				if(seenFood.contains(key)) {
-					sb.append("You should not have 2 Food measurements on " + a.getGroup() + " at " +a.getPhase().getShortName() + "\n");
-					break;
-				}
-				seenFood.add(key);
-			}
-			if(a.isMeasureWater()) {
-				if(seenWater.contains(key)) {
-					sb.append("You should not have 2 Water measurements on " + a.getGroup() + " at " +a.getPhase().getShortName() + "\n");
-					break;
-				}
-				seenWater.add(key);
-			}
-		}
-		
-		
-		//Make sure, there are no measurement actions on a dividing group (no treated in applications)
-		checkActionsOnDividing: for (Group gr : study.getGroups()) {
-			if(gr.getDividingSampling()==null) continue;
-			
-			for (StudyAction action : study.getStudyActions(gr)) {					
-				if(action.hasMeasurements()) {
-					sb.append("You should not have measurements on a dividing group (Gr." + gr.getShortName() +" / " + action.getPhase() + ")\n");
-					break checkActionsOnDividing;
-				}
-			}
-		}
-		
-		//Warn if there are treatments on a dividing group (no treated in applications)
-		checkActionsOnDividing: for (Group gr : study.getGroups()) {
-			if(gr.getDividingSampling()==null) continue;
-			
-			for (StudyAction action : study.getStudyActions(gr)) {					
-				if(action.getNamedTreatment()!=null) {
-					sb.append("You should not have treatments on a dividing group (Gr." + gr.getShortName() +" / " + action.getPhase() + ")\n");
-					break checkActionsOnDividing;
-				}
-			}
-		}
-
-		//Make sure all groups have a group assignment, or none
-		int nGroupsWithRando = 0;
-		for (Group gr : study.getGroups()) {
-			if(gr.getFromPhase()!=null) nGroupsWithRando++;
-		}
-		if(nGroupsWithRando>0 && nGroupsWithRando<study.getGroups().size()) {
-			sb.append("Some groups have no info regarding the GroupAssignment.\n");
-		}
-		
-		//Check number of attached samples
-		groupLoop: for (Group gr : study.getGroups()) {
-			//if the group comes from an other group and the study is empty, skip it
-			if(gr.getFromGroup()!=null && study.getAttachedBiosamples().size()==0) {
-				continue groupLoop;
-			}
-			//if the group comes from an other group and this originating group has samples, skip it
-			if(gr.getFromGroup()!=null && study.getTopAttachedBiosamples(gr.getFromGroup()).size()>0) {
-				continue groupLoop;
-			}
-			//if the group leads to other groups and those have samples, skip it
-			for (Group gr2 : study.getGroups()) {
-				if(gr2.getFromGroup()==gr && gr2.getTopAttachedBiosamples().size()>0) {
-					continue groupLoop;	
-				}
-			}
-			
-			
-			for(int subGroupNo=0; subGroupNo<gr.getNSubgroups(); subGroupNo++) {
-				Set<Biosample> attached = study.getTopAttachedBiosamples(gr, subGroupNo);
-				Integer expected = gr.getSubgroupSize(subGroupNo);
-				if(expected!=null && attached.size()>0 && expected>0 && attached.size()!=expected) {
-					sb.append("Gr. " + gr.getShortName() + (gr.getNSubgroups()>1?" '"+(1+subGroupNo):"") + " has "+attached.size()+"/"+expected+" samples\n");
-				}
-			}
-		}
-		
-		
-		return sb.length()==0? null: sb.toString();
-	}
-	
-//	/**
-//	 * Return all samples that should be deleted:
-//	 *  - phase where there are no available actions...
-//	 *  
-//	 * @param study
-//	 * @return
-//	 */
-//	public static void classifySamples(Study study, Set<Biosample> invalidSamples, Set<Biosample> notAttached, Set<Biosample> validSamples, Set<Biosample> toBeCreated ) {
-//		for (Biosample animal: study.getAttachedBiosamples()) {
-//			for(Biosample b: animal.getChildren()) {
-//				Sampling s = b.getAttachedSampling();
-//				if(s==null) {
-//					notAttached.add(b);
-//					notAttached.addAll(b.getHierarchy(HierarchyMode.CHILDREN));
-//				} else {
-//					if(b.getInheritedPhase()==null) {
-//						invalidSamples.add(b);
-//						invalidSamples.addAll(b.getHierarchy(HierarchyMode.CHILDREN));
-//					} else {
-//						StudyAction action = animal.getStudyAction(b.getInheritedPhase());
-//						if(action==null) {
-//							invalidSamples.add(b);
-//							invalidSamples.addAll(b.getHierarchy(HierarchyMode.CHILDREN));
-//						}
-//					}
-//				}
-//			}
-//		}
-//		
-//		//Check samples that should be created
-//		List<Biosample> samples = BiosampleCreationHelper.processTemplateInStudy(null, study, null, null, false, null, false);
-//		for (Biosample b : samples) {
-//			if(b.getAttachedStudy()!=null) continue; //skip animals
-//			if(b.getId()<=0) {
-//				toBeCreated.add(b);
-//			} else {
-//				validSamples.add(b);
-//			}
-//		}
-//	}
-//	
-	
+	/*
 	public static List<Study> getRelatedStudies(List<Study> studies, SpiritUser user) {
-		List<Study> res = new ArrayList<Study>();
+		List<Study> res = new ArrayList<>();
 		if(studies.size()==0) {
 			return res;
 		}
@@ -1015,12 +810,6 @@ public class DAOStudy {
 		
 		return res;
 	}
-	
-	/**
-	 * Returns some descriptors of the study between 0-1
-	 * @param s
-	 * @return
-	 */
 	public static double[] getDescriptors(Study s) {
 		int nMeasurements = 0;
 		int nWeighings = 0;
@@ -1093,16 +882,19 @@ public class DAOStudy {
 		
 	}
 	
-	
+		*/
+
 	
 	public static Map<Biotype, Triple<Integer, String, Date>> countRecentSamplesByBiotype(Date minDate) {
 		Map<Study, Map<Biotype, Triple<Integer, String, Date>>> res = countSamplesByStudyBiotype(null, minDate);
 		if(res.size()>0) return res.values().iterator().next();
 		return null;
 	}
+	
 	public static Map<Study, Map<Biotype, Triple<Integer, String, Date>>> countSamplesByStudyBiotype(Collection<Study> studies) {
 		return countSamplesByStudyBiotype(studies, null);
 	}
+	
 	/**
 	 * Return a map of study->(biotype->n.Samples)
 	 * @param studies
@@ -1228,7 +1020,7 @@ public class DAOStudy {
 		
 		EntityManager session = JPAUtil.getManager();
 		
-		Map<Test, Integer> res = new TreeMap<Test, Integer>();
+		Map<Test, Integer> res = new TreeMap<>();
 		List<Object[]> results;
 		String sql = "select r.test.id, count(r) from Result r"
 					+ " where 1=1" 
@@ -1244,20 +1036,39 @@ public class DAOStudy {
 		return res;		
 	}
 
-	
-	public static void main(String[] args) throws Exception {
-		final Study study1 = DAOStudy.getStudyByStudyId("S-00082");
+	public static Map<Phase, Pair<Integer, Integer>> countBiosampleAndResultsByPhase(Study study) {
 		
-				
+		EntityManager session = JPAUtil.getManager();
+		
+		Map<Phase, Pair<Integer, Integer>> res = new TreeMap<>();
+		List<Object[]> results;
+		String sql = "select p, (select count(*) from Biosample b where b.inheritedPhase = p), (select count(*) from Result r where r.phase = p)"
+				+ " from Phase p where p.study.id = " + study.getId(); 
+		results = session.createQuery(sql).getResultList();
+		
+		for (Object[] o : results) {
+			res.put((Phase)o[0], new Pair<Integer, Integer>( ((Long) o[1]).intValue(), ((Long)o[2]).intValue()));
+		}
+		return res;		
+	}
 
-		final long s = System.currentTimeMillis();
-		fullLoad(study1);
-		System.out.println("DAOStudy.main(0) "+(System.currentTimeMillis()-s)+"ms");
-		
-		System.out.println("DAOStudy" + getRelatedStudies(study1, DAOSpiritUser.loadUser("freyssj")));
+	public static List<Study> getRecentChanges(int days) throws Exception {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(JPAUtil.getCurrentDateFromDatabase());
+		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.DAY_OF_YEAR, cal.get(Calendar.DAY_OF_YEAR)-days);
+		Date date = cal.getTime();
+		return getRecentChanges(date);
 	}
 	
-	
+	public static List<Study> getRecentChanges(Date d) throws Exception {		
+		EntityManager em = JPAUtil.getManager();
+		Set<Study> list1 = new TreeSet<>(); 
+		list1.addAll(em.createQuery("select s from Study s where s.updDate > ?1 ").setParameter(1, d).setLockMode(LockModeType.NONE).getResultList());	
+		list1.addAll(em.createQuery("select b.inheritedStudy from Biosample b where b.updDate > ?1 and b.inheritedStudy is not null").setParameter(1, d).setLockMode(LockModeType.NONE).getResultList());	
+		list1.addAll(em.createQuery("select r.biosample.inheritedStudy from Result r where r.updDate > ?1 and r.biosample.inheritedStudy is not null").setLockMode(LockModeType.NONE).setParameter(1, d).getResultList());	
+		return new ArrayList<Study>(list1);
+	}	
 	
 	
 }

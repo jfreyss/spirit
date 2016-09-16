@@ -21,23 +21,10 @@
 
 package com.actelion.research.spiritapp.spirit.ui.location.column;
 
-import java.awt.Component;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.AbstractCellEditor;
-import javax.swing.JTable;
-import javax.swing.table.TableCellEditor;
-
-import com.actelion.research.spiritapp.spirit.ui.lf.EmployeeGroupComboBox;
-import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.spiritcore.business.location.Privacy;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.util.MiscUtils;
-import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class LocationStudyColumn extends Column<Location, String> {

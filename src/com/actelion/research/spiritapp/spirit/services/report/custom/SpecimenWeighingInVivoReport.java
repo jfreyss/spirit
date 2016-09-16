@@ -47,8 +47,8 @@ import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.FormatterUtils;
-import com.actelion.research.util.HtmlUtils;
 
 public class SpecimenWeighingInVivoReport extends AbstractReport {
 
@@ -61,7 +61,7 @@ public class SpecimenWeighingInVivoReport extends AbstractReport {
 	public SpecimenWeighingInVivoReport() {
 		super(ReportCategory.TOP, 
 				"Bodyweights (All phases in one table)", 
-				"<ul><li>First sheet shows the bodyweight<li>other sheets show the absolute increase and the relative increase from d-1</ul>" + HtmlUtils.convert2Html(
+				"<ul><li>First sheet shows the bodyweight<li>other sheets show the absolute increase and the relative increase from d-1</ul>" + MiscUtils.convert2Html(
 						"TopId\tNo\tPhase1\tPhase2\tPhase3\n"
 						+ "TopId1\t\t102\t105\n"
 						+ "TopId2\t\t110\t108\n"), 
@@ -106,7 +106,7 @@ public class SpecimenWeighingInVivoReport extends AbstractReport {
 		}
 
 		// Load Weighings
-		DAOResult.attachOrCreateStudyResultsToSpecimen(study, animals, null, null);
+		DAOResult.attachOrCreateStudyResultsToTops(study, animals, null, null);
 
 		for (int i = 0; i < 3; i++) {
 

@@ -26,42 +26,33 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.actelion.research.spiritcore.adapter.DBAdapter;
-
 public enum DataType {	
-	ALPHA("Alphanumeric", null, true, true, false),
-	NUMBER("Numeric", null, true, true, false),	
-	DATE("Date/Time", null, true, true, false),
+	ALPHA("Alphanumeric", null, true, true),
+	NUMBER("Numeric", null, true, true),	
+	DATE("Date/Time", null, true, true),
 	
-	D_FILE("File", null, true, false, false),
+	D_FILE("File", null, true, false),
 
-	LIST("Choice: One", "List of options",  true, true, false),
-	MULTI("Choice: Multi*", "List of options",  true, true, false),
-	AUTO("Autocomplete", null, true, true, false),
-	FORMULA("Formula", "Formula", false, true, false),
+	LIST("Choice: One", "List of options",  true, true),
+	MULTI("Choice: Multi*", "List of options",  true, true),
+	AUTO("Autocomplete", null, true, true),
+	FORMULA("Formula", "Formula", false, true),
 	
-//	@Deprecated
-//	DICO("Dictionary: Hugo", "Domain", true, true, true),
-//	@Deprecated
-//	ELN("Linked: ActNo or ELN", null, false, true, true),
-	BIOSAMPLE("Linked: Biosample", "Biotype", true, true, false);
+	BIOSAMPLE("Linked: Biosample", "Biotype", true, true);
 	
 	public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy"); 
 	public static SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("dd.MM.yyyy HH:mm"); 
 	
-	//private final String name;
 	private final String name;
 	private final String parametersDescription;
 	private final boolean compatibleWithBiotype;
 	private final boolean compatibleWithResult;
-	private final boolean onlyActelion;
 	
-	private DataType(String name, String parametersDescription, boolean compatibleWithBiosample, boolean compatibleWithResult, boolean onlyActelion) {
+	private DataType(String name, String parametersDescription, boolean compatibleWithBiosample, boolean compatibleWithResult) {
 		this.name = name;
 		this.parametersDescription = parametersDescription;
 		this.compatibleWithBiotype = compatibleWithBiosample;
 		this.compatibleWithResult = compatibleWithResult;
-		this.onlyActelion = onlyActelion;
 	}
 
 	
@@ -73,38 +64,24 @@ public enum DataType {
 		return parametersDescription;
 	}
 	
-	public boolean isCompatibleWithBiotype() {
-		return compatibleWithBiotype;
-	}
-
-	public boolean isCompatibleWithResult() {
-		return compatibleWithResult;
-	}
-	
-	public boolean isOnlyActelion() {
-		return onlyActelion;
-	}
-
 	@Override
 	public String toString() {
 		return name;
 	}
 	
 	public static List<DataType> valuesForBiotype() {
-		List<DataType> res = new ArrayList<DataType>();
+		List<DataType> res = new ArrayList<>();
 		for (DataType dataType : values()) {
-			if(dataType.isOnlyActelion() && !DBAdapter.getAdapter().isInActelionDomain()) continue;
-			if(!dataType.isCompatibleWithBiotype()) continue; 
+			if(!dataType.compatibleWithBiotype) continue; 
 			res.add(dataType);
 		}
 		return res;
 	}
 	
 	public static List<DataType> valuesForResult() {
-		List<DataType> res = new ArrayList<DataType>();
+		List<DataType> res = new ArrayList<>();
 		for (DataType dataType : values()) {
-			if(dataType.isOnlyActelion() && !DBAdapter.getAdapter().isInActelionDomain()) continue;
-			if(!dataType.isCompatibleWithResult()) continue; 
+			if(!dataType.compatibleWithResult) continue; 
 			res.add(dataType);
 		}
 		return res;

@@ -250,7 +250,7 @@ public class CreateChildrenDlg extends JEscapeDialog {
 	private void refreshSamplings() {
 		
 		Study study = Biosample.getStudy(parents);
-		List<NamedSampling> samplings = DAONamedSampling.getNamedSamplings(Spirit.getUser()==null?"": Spirit.getUser().getUsername(), study);			
+		List<NamedSampling> samplings = DAONamedSampling.getNamedSamplings(Spirit.getUser(), study);			
 		namedSamplingComboBox.setValues(samplings, true);
 	}
 

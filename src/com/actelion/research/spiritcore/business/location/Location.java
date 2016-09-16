@@ -29,6 +29,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -66,6 +67,7 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.LocationType.LocationCategory;
+import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.util.CompareUtils;
 
 /**
@@ -499,22 +501,6 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		}
 	}
 	
-	public Location duplicate()  {
-		Location location = new Location();
-
-		location.locationType = locationType;
-		location.name = name;
-		
-		location.privacy = privacy;
-		location.employeeGroup = employeeGroup;
-
-		location.labeling = labeling;
-		location.rows = rows;
-		location.cols = cols;
-		return location;
-		
-	}	
-	
 	public String getCreUser() {
 		return creUser;
 	}
@@ -615,6 +601,62 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 
 	public int getRow(int pos) {
 		return getLabeling().getRow(this, pos);
+	}
+
+
+	public Location duplicate()  {
+		Location location = new Location();
+
+		location.locationType = locationType;
+		location.name = name;
+		
+		location.privacy = privacy;
+		location.employeeGroup = employeeGroup;
+
+		location.labeling = labeling;
+		location.rows = rows;
+		location.cols = cols;
+		return location;
+		
+	}	
+	
+	
+	public static List<Location> duplicate(List<Location> locations) {
+		
+		//Sort the location to have them in hierarchy already (parents come before their children)
+		locations = new ArrayList<>(locations);
+		Collections.sort(locations);
+		
+		//Duplicate each location
+		List<Location> res = new ArrayList<>();
+		IdentityHashMap<Location, Location> old2new = new IdentityHashMap<>();
+		for(Location l: locations) {
+			Location clone = l.duplicate();
+			boolean changeName;
+			if(l.getParent()!=null) {
+				 if(old2new.get(l.getParent())!=null) {
+					 changeName = false;
+					 clone.setParent(old2new.get(l.getParent()));					 
+				 } else {
+					 changeName = true;
+					 clone.setParent(l.getParent());
+				 }
+			} else {
+				changeName = true;
+			}
+			if(changeName) {
+				//Find a new possible Name
+				String name = l.getName();
+				if(name.indexOf(" (Copy ")>0) name = name.substring(0, name.indexOf(" (Copy "));
+				int n = 1;
+				while(DAOLocation.getLocation(l.getParent(), name + " (Copy "+n+")")!=null) n++;			
+				clone.setName(name + " (Copy "+n+")");
+			}
+			
+			res.add(clone);
+			old2new.put(l, clone);
+		}
+		return res;
 	}
 }
 

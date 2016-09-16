@@ -187,9 +187,9 @@ public class MonitoringCagePanel extends JPanel {
 					
 					//Update results of current phase (based on previous tare)
 					if(newFoodCons!=null) {
-						DAOResult.attachOrCreateStudyResultsToSpecimen(phase.getStudy(), container.getBiosamples(), newFoodCons.toPhase, dlg.getElb());
+						DAOResult.attachOrCreateStudyResultsToTops(phase.getStudy(), container.getBiosamples(), newFoodCons.toPhase, dlg.getElb());
 						for (Biosample animal : container.getBiosamples()) {
-							Result r = animal.getAuxResult(DAOTest.getFoodWaterTest(), newFoodCons.toPhase);
+							Result r = animal.getAuxResult(DAOTest.getTest(DAOTest.FOODWATER_TESTNAME), newFoodCons.toPhase);
 							r.getOutputResultValues().get(0).setValue(newFoodCons.value==null? null: ""+newFoodCons.value);
 							r.setUpdDate(now);
 							r.setUpdUser(Spirit.getUser().getUsername());
@@ -197,9 +197,9 @@ public class MonitoringCagePanel extends JPanel {
 						}
 					}
 					if(newWaterCons!=null) {
-						DAOResult.attachOrCreateStudyResultsToSpecimen(phase.getStudy(), container.getBiosamples(), newWaterCons.toPhase, dlg.getElb());
+						DAOResult.attachOrCreateStudyResultsToTops(phase.getStudy(), container.getBiosamples(), newWaterCons.toPhase, dlg.getElb());
 						for (Biosample animal : container.getBiosamples()) {
-							Result r = animal.getAuxResult(DAOTest.getFoodWaterTest(), newWaterCons.toPhase);
+							Result r = animal.getAuxResult(DAOTest.getTest(DAOTest.FOODWATER_TESTNAME), newWaterCons.toPhase);
 							r.getOutputResultValues().get(1).setValue(newWaterCons.value==null? null: ""+newWaterCons.value);
 							r.setUpdDate(now);
 							r.setUpdUser(Spirit.getUser().getUsername());
@@ -209,9 +209,9 @@ public class MonitoringCagePanel extends JPanel {
 					
 					//Update results of next food phase (if needed, ie nextFood<>null)
 					if(newNextFoodCons!=null) {
-						DAOResult.attachOrCreateStudyResultsToSpecimen(phase.getStudy(), container.getBiosamples(), newNextFoodCons.toPhase, dlg.getElb());
+						DAOResult.attachOrCreateStudyResultsToTops(phase.getStudy(), container.getBiosamples(), newNextFoodCons.toPhase, dlg.getElb());
 						for (Biosample animal : container.getBiosamples()) {					
-							Result r2 = animal.getAuxResult(DAOTest.getFoodWaterTest(), newNextFoodCons.toPhase);
+							Result r2 = animal.getAuxResult(DAOTest.getTest(DAOTest.FOODWATER_TESTNAME), newNextFoodCons.toPhase);
 							String valFood = newNextFoodCons.value==null? null: ""+newNextFoodCons.value;
 							r2.getOutputResultValues().get(0).setValue(valFood);
 							r2.setUpdDate(now);
@@ -222,9 +222,9 @@ public class MonitoringCagePanel extends JPanel {
 					
 					//Update result of next water phase (if needed, ie nextWater<>null)
 					if(newNextWaterCons!=null) {
-						DAOResult.attachOrCreateStudyResultsToSpecimen(phase.getStudy(), container.getBiosamples(), newNextWaterCons.toPhase, dlg.getElb());						
+						DAOResult.attachOrCreateStudyResultsToTops(phase.getStudy(), container.getBiosamples(), newNextWaterCons.toPhase, dlg.getElb());						
 						for (Biosample animal : container.getBiosamples()) {											
-							Result r2 = animal.getAuxResult(DAOTest.getFoodWaterTest(), newNextWaterCons.toPhase);
+							Result r2 = animal.getAuxResult(DAOTest.getTest(DAOTest.FOODWATER_TESTNAME), newNextWaterCons.toPhase);
 							String valWater = newNextWaterCons.value==null? null: ""+newNextWaterCons.value;
 							r2.getOutputResultValues().get(1).setValue(valWater);
 							r2.setUpdDate(new Date());

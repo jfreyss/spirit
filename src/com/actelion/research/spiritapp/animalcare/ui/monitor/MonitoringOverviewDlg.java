@@ -81,9 +81,6 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 	
 	private final JPanel contentPanel = new JPanel(new BorderLayout());
 
-//	private TreatmentTable treatmentTable = new TreatmentTable();
-//	private FoodWaterTable foodWaterTable = new FoodWaterTable();
-
 	public MonitoringOverviewDlg(Study s) throws Exception {
 		super(UIUtils.getMainFrame(), "Live Monitoring");
 		if (s == null) throw new Exception("You must select a study");
@@ -94,12 +91,8 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 		UIUtils.adaptSize(this, 1500, 1200);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		
-		
-		recreateUIInThread();
-		
+		recreateUIInThread();		
 		setVisible(true);
-
-		
 	}
 	
 	public static List<Result> extractResults(Collection<Biosample> biosamples, Phase phase) {
@@ -110,7 +103,6 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 		Collections.sort(res);
 		return res;
 	}
-
 	
 	private void recreateUIInThread()  {
 		contentPanel.removeAll();
@@ -120,7 +112,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 		
 		new SwingWorkerExtended("Loading", contentPanel) {
 
-			private Set<Biosample> animals;
+			private List<Biosample> animals;
 			private Map<Test, List<Result>> mapResults;
 			private List<Test> tests;
 			private List<FoodWater> allFws;
@@ -135,20 +127,17 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 				animals = study.getTopAttachedBiosamples();
 
 				//Load Results (except foodwater which is loaded separately)
-				DAOResult.attachOrCreateStudyResultsToSpecimen(study, animals, null, null);
+				DAOResult.attachOrCreateStudyResultsToTops(study, animals, null, null);
 				mapResults = Result.mapTest(extractResults(animals, null));
 				tests = new ArrayList<>();
-				System.out.println("MonitoringOverviewDlg.recreateUIInThread() "+tests);
 				for (Test t : mapResults.keySet()) {
 					if(t.getName().equals(DAOTest.FOODWATER_TESTNAME)) continue;
 					tests.add(t);
 				}
 				Collections.sort(tests);
-				
-						
+										
 				//Load FWs
-				allFws = DAOFoodWater.getFoodWater(study, null);
-				
+				allFws = DAOFoodWater.getFoodWater(study, null);				
 			}
 			
 			@Override
@@ -162,7 +151,8 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 					JButton nowButton = null;
 					Set<Phase> phasesWithGroupAssignments =  study.getPhasesWithGroupAssignments();
 					for (final Phase phase : study.getPhases()) {
-
+						
+						
 						MonitoringStats fwStats = MonitoringHelper.calculateDoneRequiredFW(Biosample.getContainers(animals), phase, allFws);
 						Map<Test, MonitoringStats> stats = new LinkedHashMap<>();
 						for (Test test : tests) {

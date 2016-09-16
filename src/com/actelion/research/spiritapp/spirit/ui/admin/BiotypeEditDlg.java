@@ -422,7 +422,7 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 				if(r!=JOptionPane.YES_OPTION) return;
 				try {
 					if(biotype==null || biotype.getId()<=0) throw new Exception("Nothing to delete!?");
-					DAOBiotype.removeBiotype(biotype, Spirit.askForAuthentication());
+					DAOBiotype.deleteBiotype(biotype, Spirit.askForAuthentication());
 					dispose();
 					SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_DELETED, Biotype.class, biotype);
 					JOptionPane.showMessageDialog(BiotypeEditDlg.this, BiotypeEditDlg.this.biotype.getName() + " Deleted", "Success", JOptionPane.INFORMATION_MESSAGE);

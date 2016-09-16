@@ -34,14 +34,14 @@ import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
-import com.actelion.research.util.HtmlUtils;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.exceltable.CompareUtils;
 
 public class SpecimenStatusReport extends AbstractReport {
 
 	public SpecimenStatusReport() {
 		super(ReportCategory.TOP, "Living Status", "Living Status of each attached sample<br>"
-				+ HtmlUtils.convert2Html("\tNo\tContainer\tGroup\tSt.\tStatus\tPhase\tObservation\n"
+				+ MiscUtils.convert2Html("\tNo\tContainer\tGroup\tSt.\tStatus\tPhase\tObservation\n"
 						+ "TopId1\t\nTop2\t\n"));
 	}
 
@@ -73,7 +73,7 @@ public class SpecimenStatusReport extends AbstractReport {
 		String cageBefore = null;
 		Group groupBefore = null;
 		
-		DAOResult.attachOrCreateStudyResultsToSpecimen(study, study.getAttachedBiosamples(), null, null);
+		DAOResult.attachOrCreateStudyResultsToTops(study, study.getAttachedBiosamples(), null, null);
 		Test observationTest = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);
 		if(observationTest==null) throw new Exception("The test "+DAOTest.OBSERVATION_TESTNAME+" does not exist");
 		for (Biosample a : study.getAttachedBiosamples()) {

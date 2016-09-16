@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.LoggerFactory;
+
 import com.actelion.research.spiritcore.business.biosample.BarcodeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
@@ -39,7 +41,6 @@ import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.dao.DAOBarcode;
-import com.actelion.research.spiritcore.services.dao.JPAUtil;
 
 public class BiosampleCreationHelper {
 	
@@ -152,13 +153,9 @@ public class BiosampleCreationHelper {
 		List<Biosample> biosamples = new ArrayList<>();		
 		if(phases==null) phases = new ArrayList<>(study.getPhases());
 				
-		//Be sure, the objects belong to the session.
-		animalFilters = JPAUtil.reattach(animalFilters);
-		study = JPAUtil.reattach(study);
-		phases = JPAUtil.reattach(phases);
-		ns = JPAUtil.reattach(ns);
-		
-		for(Biosample animal: study.getTopAttachedBiosamples()) {
+		LoggerFactory.getLogger(BiosampleCreationHelper.class).debug("processTemplateInStudy for "+study+" n="+study.getAttachedBiosamples().size());
+
+		for(Biosample animal: study.getAttachedBiosamples()) {			
 			//filter by animals?
 			if(animalFilters!=null && !animalFilters.contains(animal)) continue;
 
@@ -171,6 +168,7 @@ public class BiosampleCreationHelper {
 				
 				//Should we apply the sampling on this action
 				if(action.getNamedSampling1()!=null && (ns==null || ns.equals(action.getNamedSampling1()))) {
+					LoggerFactory.getLogger(BiosampleCreationHelper.class).debug("Apply " +phase+" "+action.getNamedSampling1());
 					for (Sampling topSampling : action.getNamedSampling1().getTopSamplings()) {
 						retrieveOrCreateSamplesRec(phase, animal, topSampling, biosamples);
 					}
@@ -182,6 +180,7 @@ public class BiosampleCreationHelper {
 				}
 			}
 		}
+		
 		//Filter Samples
 		List<Biosample> res = new ArrayList<>();
 		for (Biosample biosample : biosamples) {
@@ -196,13 +195,13 @@ public class BiosampleCreationHelper {
 				}
 			}
 		}
-		
 		//generateContainers
 		List<Biosample> filtered = new ArrayList<>();
 		for (Biosample b : res) {
 			if(b.getContainerType()==null) continue; 
 			filtered.add(b);
 		}
+		LoggerFactory.getLogger(BiosampleCreationHelper.class).debug("processTemplateInStudy for "+study+" n="+res.size()+" containers="+filtered.size());
 		assignContainers(biosamples, filtered);
 		
 		return res;
@@ -216,12 +215,12 @@ public class BiosampleCreationHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public static List<Biosample> processTemplateOutsideStudy(NamedSampling ns, List<Biosample> parents, boolean generateContainers) throws Exception {
+	public static List<Biosample> processTemplateOutsideStudy(NamedSampling ns, Collection<Biosample> parents, boolean generateContainers) throws Exception {
 		
 		//Create samples
 		List<Biosample> biosamples = new ArrayList<>();	
 		for (Biosample parent : parents) {
-			biosamples.add(parent);		
+//			biosamples.add(parent);		
 			for (Sampling topSampling : ns.getTopSamplings()) {
 				retrieveOrCreateSamplesRec(null, parent, topSampling, biosamples);
 			}			
@@ -237,7 +236,7 @@ public class BiosampleCreationHelper {
 			assignContainers(biosamples, filtered);
 		}
 
-		//Remove link to Sampling (we don't want the linkage there)
+		//Remove link to Sampling (we don't want the linkage outside study)
 		for (Biosample biosample : biosamples) {
 			biosample.setAttachedSampling(null);
 		}
@@ -246,8 +245,8 @@ public class BiosampleCreationHelper {
 	
 	public static void assignContainers(Collection<Biosample> biosamplesWithExistingContainers, Collection<Biosample> biosamplesToAssign) {
 		
-		Map<String, Container> key2Containers = new HashMap<String, Container>();
-		Map<String, String> map2prefix = new HashMap<String, String>();
+		Map<String, Container> key2Containers = new HashMap<>();
+		Map<String, String> map2prefix = new HashMap<>();
 		
 		//Map existing multiple containers
 		for (Biosample b : biosamplesWithExistingContainers) {
@@ -269,7 +268,7 @@ public class BiosampleCreationHelper {
 			if(s.getContainerType()==null) {
 				//No container -> unset
 				b.setContainer(null);
-			} else if(s.getBlocNo()==null) {
+			} else if(!s.getContainerType().isMultiple() || s.getBlocNo()==null) {
 				//Container but no bloc, assign a new container type
 				if(b.getContainerType()==s.getContainerType()) {
 					continue; //Already done
@@ -305,6 +304,7 @@ public class BiosampleCreationHelper {
 					container = new Container(s.getContainerType(), containerId);						
 					key2Containers.put(key, container);
 				}
+				LoggerFactory.getLogger(BiosampleCreationHelper.class).debug("Assign " + container + " to "+b);
 				b.setContainer(container);	
 			}				
 
@@ -335,7 +335,7 @@ public class BiosampleCreationHelper {
 		}
 		
 		//Find compatible biosamples
-		List<Biosample> samples = new ArrayList<>();
+		List<Biosample> compatibles = new ArrayList<>();
 		if(phase!=null) {
 			for (Biosample biosample : parent.getChildren()) {
 				if(res.contains(biosample)) continue;				
@@ -343,11 +343,11 @@ public class BiosampleCreationHelper {
 				if(!sampling.equals(biosample.getAttachedSampling())) continue;
 					
 				//We found a compatible one
-				samples.add(biosample);
+				compatibles.add(biosample);
 			}
 		}
-		
-		if(samples.size()==0) {
+
+		if(compatibles.size()==0) {
 			//Create a compatible biosample
 			Biosample created = sampling.createCompatibleBiosample();			
 			created.setAttachedSampling(sampling);
@@ -357,10 +357,11 @@ public class BiosampleCreationHelper {
 			created.setInheritedGroup(parent.getInheritedGroup());
 			created.setInheritedSubGroup(parent.getInheritedSubGroup());
 			created.setInheritedPhase(phaseOfSample);
-			samples.add(created);
+			compatibles.add(created);
 		} 
-		
-		Biosample b = samples.get(0);
+		LoggerFactory.getLogger(BiosampleCreationHelper.class).debug("Create sample for "+phase+" "+parent+" "+sampling+" found="+compatibles.size());
+
+		Biosample b = compatibles.get(0);
 		res.add(b);
 		for (Sampling s : sampling.getChildren()) {
 			retrieveOrCreateSamplesRec(phase, b, s, res);

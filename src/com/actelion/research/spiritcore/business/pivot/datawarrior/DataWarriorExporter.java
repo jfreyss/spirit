@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.spiritcore.business.pivot.AllColumnPivotTemplate;
+import com.actelion.research.spiritcore.business.pivot.ExpandedPivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.Computed;
 import com.actelion.research.spiritcore.business.pivot.PivotCell;
 import com.actelion.research.spiritcore.business.pivot.PivotColumn;
@@ -75,14 +75,14 @@ public class DataWarriorExporter {
 		if(config.getCustomTemplate()==null) {		
 			// Smart template: everything is by column to start with
 			//
-			this.tpl = new AllColumnPivotTemplate();			
-			((AllColumnPivotTemplate)tpl).init(results, config, user);
+			this.tpl = new ExpandedPivotTemplate();			
+			((ExpandedPivotTemplate)tpl).init(results, config, user);
 
 		} else {
 			this.tpl = config.getCustomTemplate();
 		}
 		
-		this.pivotTable = PivotDataTable.createPivotDataTable(results, config.getSkippedAttributes(), tpl);
+		this.pivotTable = new PivotDataTable(results, config.getSkippedAttributes(), tpl);
 		this.generateAllGraphs = true;
 	}
 	
@@ -236,6 +236,7 @@ public class DataWarriorExporter {
 			// standard data
 			c = 0;
 			for (PivotItem item : tpl.getPivotItems(Where.ASROW)) {
+
 				String cn = MiscUtils.removeHtmlAndNewLines(item.getTitle(pivotRow.getRepresentative()));
 				if (cn == null)
 					cn = "";
@@ -266,10 +267,13 @@ public class DataWarriorExporter {
 				PivotColumn pivotColumn = pivotTable.getPivotColumns().get(col);			
 				if(!config.isExportAll() && !views.contains(pivotColumn.getTitle())) continue;
 
-				PivotCell pivotCell = pivotRow.getPivotCell(pivotColumn);
 				
+				
+				PivotCell pivotCell = pivotRow.getPivotCell(pivotColumn);				
 				Object val = pivotCell.getValue();
-				String cn = val==null?"":ResultValue.convertToValidDoubles(MiscUtils.removeHtmlAndNewLines(val.toString()));
+				String cn = val==null? "": ResultValue.convertToValidDoubles(MiscUtils.removeHtmlAndNewLines(val.toString()));
+				
+				
 				if (c < table[r + 1].length)
 					table[r + 1][c++] = cn;
 
@@ -408,7 +412,7 @@ public class DataWarriorExporter {
 			if(color!=null) sb.append("<colorColumn_" + viewName + "=\"" + color + "\">\n");
 
 			int count = 0;
-			List<Group> allGroups = new ArrayList<Group>(Biosample.getGroups(Result.getBiosamples(pivotTable.getResults())));
+			List<Group> allGroups = new ArrayList<>(Biosample.getGroups(Result.getBiosamples(pivotTable.getResults())));
 			Collections.sort(allGroups, CompareUtils.OBJECT_COMPARATOR);
 			sb.append("<colorCount_" + viewName + "=\"" + allGroups.size() + "\">\n");
 			sb.append("<colorListMode_" + viewName + "=\"Categories\">\n");

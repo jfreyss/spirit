@@ -130,11 +130,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 			public void valueChanged(ListSelectionEvent e) {
 				eventAnimalChanged();
 			}
-		});
-		
-		
-		observationField.setEnabled(false);
-
+		});				
 		
 		//Action when setting action
 		ButtonGroup group = new ButtonGroup();
@@ -277,9 +273,9 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 
 		////////////////////////////////////////////////////////////////////////
 		//update the db
-		final List<Result> resultsToSave = new ArrayList<Result>();
-		final List<Biosample> biosamplesToSave = new ArrayList<Biosample>();
-		final List<Biosample> samplesFromNecropsy = new ArrayList<Biosample>();
+		final List<Result> resultsToSave = new ArrayList<>();
+		final List<Biosample> biosamplesToSave = new ArrayList<>();
+		final List<Biosample> samplesFromNecropsy = new ArrayList<>();
 
 		String elb = DAOResult.suggestElb(Spirit.getUsername());
 		for(Biosample animal: animals) {

@@ -78,7 +78,13 @@ public class LocationTypeColumn extends Column<Location, LocationType> {
 	}
 	@Override
 	public void paste(Location row, String value) throws Exception {
-		setValue(row, LocationType.get(value));
+		for (LocationType l : LocationType.values()) {
+			if(l.getName().equalsIgnoreCase(value)) {
+				setValue(row, l);
+				return;
+			}
+		}
+		setValue(row, null);
 	}
 	
 	@Override

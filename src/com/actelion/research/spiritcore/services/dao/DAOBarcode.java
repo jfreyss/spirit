@@ -30,10 +30,13 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import org.slf4j.LoggerFactory;
+
 import com.actelion.research.spiritcore.business.biosample.BarcodeSequence;
+import com.actelion.research.spiritcore.business.biosample.BarcodeSequence.Category;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
-import com.actelion.research.spiritcore.business.biosample.BarcodeSequence.Category;
+import com.actelion.research.spiritcore.util.MiscUtils;
 
 public class DAOBarcode {
 
@@ -43,6 +46,9 @@ public class DAOBarcode {
 	private static final int MAX_HOLE = 100; //To be increased with the number of users
 	private static Map<String, List<String>> prefix2PrecomputedIds = new HashMap<>();
 
+	public static synchronized void reset() {
+		prefix2PrecomputedIds.clear();
+	}
 	
 	public static String getNextId(ContainerType locType) {
 		String prefix = locType.getName().substring(0, 2).toUpperCase();
@@ -52,26 +58,27 @@ public class DAOBarcode {
 	public static String getNextId(Biotype biotype) throws Exception {
 		if(biotype==null) throw new Exception("You must give a type");
 		String prefix = biotype.getPrefix();
-		if(prefix==null || prefix.length()==0) throw new Exception("SampleIds cannot be generated for " +biotype.getName());
+		if(prefix==null || prefix.length()==0) throw new Exception("SampleIds cannot be generated for " +biotype.getName()+" because the prefix is null");
 		return DAOBarcode.getNextId(Category.BIOSAMPLE, prefix);
 	}
 
 	@SuppressWarnings("unchecked")
 	public static synchronized String getNextId(Category cat, String prefix) {
-		List<String> list = DAOBarcode.prefix2PrecomputedIds.get(cat+"_"+prefix);
+		List<String> list = prefix2PrecomputedIds.get(cat+"_"+prefix);
+		LoggerFactory.getLogger(DAOBarcode.class).debug("getNextId for "+prefix+" list.n="+(list==null?"":list.size())+" next="+(list==null || list.size()==0?"":list.get(0)));
 		boolean newPrefix = list == null;
 		if(list==null || list.size()==0) {
 			
 			
-			list = new ArrayList<String>();
-			DAOBarcode.prefix2PrecomputedIds.put(cat+"_"+prefix, list);
+			list = new ArrayList<>();
+			prefix2PrecomputedIds.put(cat+"_"+prefix, list);
 			
 			int reserveN = cat==Category.BIOSAMPLE || cat==Category.CONTAINER? 20: 1;
-			EntityTransaction txn = null;
-			EntityManager session = null;
-			try {
-				session = JPAUtil.createManager();//Be careful to create a new session, or we may commit all other changes (open request must be followed by JPAUtil.closerequest in the finally close)
-				int lastBarcodeN1 = -1;
+			
+			/**Find the last used barcode (security check if BarcodeSequence is invalid)*/
+			int lastBarcodeN1 = -1;
+			{
+				EntityManager session = JPAUtil.getManager();
 				if(newPrefix) {
 					String lastBarcode; 
 				
@@ -100,13 +107,21 @@ public class DAOBarcode {
 						lastBarcode = lastBarcode.substring(prefix.length());
 						if(lastBarcode.lastIndexOf('-')>0) lastBarcode = lastBarcode.substring(0, lastBarcode.lastIndexOf('-'));
 						try {
-							lastBarcodeN1 = lastBarcode==null? 0: Integer.parseInt(lastBarcode);
+							lastBarcodeN1 = lastBarcode==null? 0: Integer.parseInt(MiscUtils.extractStartDigits(lastBarcode));
 						} catch (Exception e) {
-							System.err.println("Err in getting last barcode: "+e);
+							System.err.println("Error in getting last barcode: "+e);
 						}
 					}
 				}
-	
+			} 
+			
+			//Find the theoretical last barcode, and update it.
+			//Be careful to create a new session, or we may commit all other changes (open request must be followed by JPAUtil.closerequest in the finally close)
+			EntityTransaction txn = null;
+			EntityManager session = null;
+			try {
+				session = JPAUtil.createManager();
+
 				List<BarcodeSequence> barcodeSequences = (List<BarcodeSequence>) session.createQuery(
 						"SELECT bs FROM BarcodeSequence bs WHERE type = ?1 and category = ?2")
 						.setParameter(1, prefix)
@@ -158,7 +173,6 @@ public class DAOBarcode {
 		}
 		
 		String res = list.remove(0);
-		
 		return res;
 	}
 

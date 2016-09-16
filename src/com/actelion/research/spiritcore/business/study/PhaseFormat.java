@@ -42,99 +42,6 @@ public enum PhaseFormat {
 		return description;
 	}
 	
-	
-	
-	/*
-	public void setPhaseName(Phase phase, String txt) throws Exception {
-		txt = txt.trim();
-		switch(this) {
-		case DAY_MINUTES:
-		{
-			int indexLabel = txt.indexOf(" ");
-			String dateString;
-			String label = null;
-			if(indexLabel>0) {
-				dateString = txt.substring(0, indexLabel).toLowerCase();
-				label = txt.substring(indexLabel+1).trim();
-			} else {
-				dateString = txt.toLowerCase();
-			}
-	
-			if(!dateString.startsWith("d")) throw new Exception("The phase "+txt+" is not well formatted (Expected: d0_0h0 Label)");
-			int index = dateString.indexOf("_");
-			int index2 = dateString.indexOf("h", index);
-			int days;
-			int hours;
-			int minutes;
-			if(index<0 || index2<0) {
-				try {
-					days = Integer.parseInt(dateString.substring(1));
-					hours = 0;
-					minutes = 0;
-				} catch (Exception e) {
-					throw new Exception("The phase "+txt+" is not well formatted (Expected: d0_0h0 Label)");
-				}
-			} else {
-				try {
-					days = Integer.parseInt(dateString.substring(1, index));
-					hours = Integer.parseInt(dateString.substring(index+1, index2));
-					minutes = dateString.length()<=index2+1?0: Integer.parseInt(dateString.substring(index2+1));
-					
-				} catch (Exception e) {
-					throw new Exception("The phase "+txt+" is not well formatted (Expected: d0_0h0 Label)");
-				}					
-			}
-			phase.setDays(days);
-			phase.setHours(hours);
-			phase.setMinutes(minutes);
-			phase.setLabel(label);
-			break;
-		}
-		case NUMBER:
-		{
-			int indexLabel = txt.indexOf(".");
-			String dateString;
-			String label;
-			if(indexLabel>0) {
-				dateString = txt.substring(0, indexLabel).trim();
-				label = txt.substring(indexLabel+1).trim();
-			} else {
-				dateString = txt.trim();
-				label = null;
-			}
-	
-			int days;
-			try {
-				days = Integer.parseInt(dateString);
-			} catch (Exception e) {
-				throw new Exception("The phase "+txt+" is not well formatted (Expected: "+this+")");
-			}
-			phase.setDays(days);
-			phase.setHours(0);
-			phase.setMinutes(0);
-			phase.setLabel(label);
-			break;
-		}
-		default:
-			throw new Exception("The format "+this+" is invalid");
-		}
-	}
-
-
-	public String getName(Phase phase) {
-		switch(this) {
-		case DAY_MINUTES:
-			return "d" + phase.getDays()
-					+ (phase.getHours()!=0 || phase.getMinutes()!=0? "_" + phase.getHours() + "h": "")		
-					+ (phase.getMinutes()!=0? (phase.getMinutes()<10?"0":"") + phase.getMinutes(): "");
-		case NUMBER:
-			return phase.getDays()+".";
-		default:
-			throw new RuntimeException("The format "+this+" is invalid");
-		}
-	}
-	*/
-	
 	public String getName(int days, int hours, int minutes, String label) {
 		switch(this) {
 		case DAY_MINUTES:
@@ -149,6 +56,5 @@ public enum PhaseFormat {
 		}
 		
 	}
-
-
+	
 }

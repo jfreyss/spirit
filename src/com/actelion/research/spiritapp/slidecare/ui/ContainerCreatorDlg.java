@@ -168,19 +168,16 @@ public class ContainerCreatorDlg extends JSpiritEscapeDialog {
 				study = DAOStudy.getStudy(study.getId());
 
 				//Load all samples (for faster loading)
-				DAOStudy.fullLoad(study);
+//				DAOStudy.fullLoad(study);
 			}
 			
 			@Override
 			protected void done() {
 				for (OrganTab sp : organPanels) {
 					sp.refresh();
-				}
-				
+				}				
 				containerGeneratorPanel.refresh();
 			}
-			
-			
 		};
 		
 	}

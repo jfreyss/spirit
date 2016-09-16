@@ -217,13 +217,11 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 		}
 		
 	}
-		
 	
 	@Override
 	public Collection<Biosample> getBiosamples() {		
 		return biosamples;
 	}
-
 
 	@Override
 	public void setBiosamples(final Collection<Biosample> biosamples) {
@@ -243,7 +241,6 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 			refreshInThread();
 		}
 	}
-	
 	
 	/**
 	 * Refresh samples and refresh tabs in a separate thread
@@ -273,22 +270,19 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 		} else {
 			tabbedPane.setEnabled(false);
 		}
-		
-		
+				
+		//MetadataTab
 		if(tabbedPane.getSelectedComponent()==biosampleTab) {
 			metadataPanel.setBiosamples(biosamples);
 		} 
 
-		if(tabbedPane.getSelectedComponent()==historyTab) {
-			
-			//History
-			historyPanel.setBiosamples(biosamples);
-			
+		//HistoryTab
+		if(tabbedPane.getSelectedComponent()==historyTab) {			
+			historyPanel.setBiosamples(biosamples);			
 		} 
-		
+
+		//ResultTab
 		if(tabbedPane.getSelectedComponent()==resultTab) {
-			
-			
 			//Load Results for the parents and children
 			Set<Integer> ids = new TreeSet<>();
 			List<Result> results = new ArrayList<Result>();

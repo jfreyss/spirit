@@ -62,7 +62,7 @@ public class BioQualityColumn extends Column<Biosample, Quality> {
 	
 	@Override
 	public void paste(Biosample row, String value) throws Exception {
-		for(Quality q: Quality.getQualities()) {
+		for(Quality q: Quality.values()) {
 			if(q.getName().equalsIgnoreCase(value)) {
 				setValue(row, q);
 				break;

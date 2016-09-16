@@ -21,8 +21,6 @@
 
 package com.actelion.research.spiritcore.business.biosample;
 
-import java.awt.Color;
-
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -43,12 +41,6 @@ public class ActionStatus extends ActionBiosample {
 	public ActionStatus() {
 	}
 	
-	public ActionStatus(Biosample biosample, Phase phase, Status status) {
-		super(biosample, phase);
-		this.status = status;
-		setComments((status==null?"N/A":status.getName()));
-	}
-	
 	public ActionStatus(Biosample biosample, Phase phase, Status status, String comments) {
 		super(biosample, phase);
 		this.status = status;
@@ -57,12 +49,7 @@ public class ActionStatus extends ActionBiosample {
 	
 	@Override
 	public String getDetails() {
-		return "Status=" + (status==null?"N/A":status.getName());
-	}
-	
-	@Override
-	public Color getColor() {
-		return new Color(255,235,215);
+		return (status==null?"N/A":status.getName()) + (comments==null || comments.length()==0?"": " - " + comments);
 	}
 	
 	public Status getStatus() {

@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritcore.services.dao;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -35,36 +34,40 @@ import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.spiritcore.util.QueryTokenizer;
 
 public class DAONamedSampling {
-	public static List<NamedSampling> getNamedSamplingsFromStudy(SpiritUser user) {
-		List<Study> studies = DAOStudy.getRecentStudies(user, RightLevel.READ);
-		if(studies.size()==0) return new ArrayList<>();
-		
-		String inClause = MiscUtils.flatten(JPAUtil.getIds(studies), ",");
-		EntityManager session = JPAUtil.getManager();
-		Query query = session.createQuery("SELECT ns FROM NamedSampling ns WHERE  ns.study in ("+inClause+")");
-		List<NamedSampling> res = (List<NamedSampling>) query.getResultList();
-		Collections.sort(res);
-		Collections.reverse(res);
-		return res;
-	}
 	
+	/**
+	 * Gets the NamedSamplings, either
+	 * - created by the given user
+	 * - in the given study, or if null, where the user has rights
+	 * @param user
+	 * @param orStudy
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
-	public static List<NamedSampling> getNamedSamplings(String user, Study study) {
+	public static List<NamedSampling> getNamedSamplings(SpiritUser user, Study orStudy) {
 		assert user!=null;
+		
+		List<Integer> sids;
+		if(orStudy==null) {
+			sids = JPAUtil.getIds(DAOStudy.getRecentStudies(user, RightLevel.READ));
+		} else {
+			sids = Collections.singletonList(orStudy.getId());
+		}
+		
 		EntityManager session = JPAUtil.getManager();
 		Query query = session.createQuery("SELECT ns FROM NamedSampling ns " + 
 				" WHERE SIZE(ns.samplings)>0 and (" +
 				" (ns.creUser = ?1 and ns.study is null) " +
-				(study!=null? " or (ns.study.id = " + study.getId()+")": "") + 
-				" )")
-				.setParameter(1, user);
+				" or ( " + QueryTokenizer.expandForIn("ns.study.id", sids) + "))")
+				.setParameter(1, user.getUsername());
 		
 		
 		List<NamedSampling> res = (List<NamedSampling>) query.getResultList();
 		Collections.sort(res);
+		Collections.reverse(res);
 		return res;
 	}
 	

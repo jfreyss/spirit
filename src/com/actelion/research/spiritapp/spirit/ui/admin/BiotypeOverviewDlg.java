@@ -107,7 +107,7 @@ public class BiotypeOverviewDlg extends JEscapeDialog {
 					if(r!=JOptionPane.YES_OPTION) return;
 					try {
 						if(biotype==null || biotype.getId()<=0) throw new Exception("Nothing to delete!?");
-						DAOBiotype.removeBiotype(biotype, Spirit.askForAuthentication());
+						DAOBiotype.deleteBiotype(biotype, Spirit.askForAuthentication());
 						SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_DELETED, Biotype.class, biotype);
 						biosampleTypeComboBox.setValues(DAOBiotype.getBiotypes(true));	
 						helpPane.setBiotype(null);

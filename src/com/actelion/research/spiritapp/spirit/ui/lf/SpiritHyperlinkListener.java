@@ -93,7 +93,7 @@ public class SpiritHyperlinkListener implements HyperlinkListener {
 						String param = e.getDescription().substring(4);
 						try {
 							int id = Integer.parseInt(param);
-							Biosample b = DAOBiosample.getBiosample(id);
+							Biosample b = DAOBiosample.getBiosamplesByIds(Collections.singleton(id)).get(id);
 							
 							if(b!=null) {
 								SpiritContextListener.setBiosamples(Collections.singletonList(b));

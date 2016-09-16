@@ -59,7 +59,6 @@ public class UpdateAmountDlg extends JSpiritEscapeDialog {
 	public UpdateAmountDlg(final List<Biosample> biosamples) throws Exception {
 		super(UIUtils.getMainFrame(), "Biosample - Update Amount", UpdateAmountDlg.class.getName());
 		
-		//Find common biotype
 		Biotype type = null;
 		for (Biosample b : biosamples) {
 			if(type==null) type = b.getBiotype();

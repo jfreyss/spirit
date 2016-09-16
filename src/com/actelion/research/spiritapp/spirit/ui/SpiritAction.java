@@ -28,6 +28,8 @@ import java.net.URL;
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 
+import org.slf4j.LoggerFactory;
+
 import com.actelion.research.spiritapp.animalcare.AnimalCare;
 import com.actelion.research.spiritapp.bioviewer.BioViewer;
 import com.actelion.research.spiritapp.slidecare.SlideCare;
@@ -75,7 +77,7 @@ public class SpiritAction {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {				
-				JPAUtil.refresh();
+				JPAUtil.close();
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
@@ -135,15 +137,16 @@ public class SpiritAction {
 	
 	public static void logUsage(final String app) {
 		String version = Spirit.class.getPackage().getImplementationVersion();
-		if(version==null) return;
 		if(DBAdapter.getAdapter().isInActelionDomain()) {
+			//Record usage and version
+			if(version==null) return;
 			UsageLog.logUsage("Spirit", Spirit.getUsername(), null, UsageLog.ACTION_LOGON, "app=" + app + ";v="+version);
 		} else {
 			new Thread() {
 				public void run() {
 					try {
-						//Log to StatCounter
-						new URL("https://jfreyss.github.io/spirit/webstart/").getContent();
+						//Record usage
+						new URL("http://c.statcounter.com/11069822/0/f9288463/1/").getContent();
 					} catch(Exception e) {
 						e.printStackTrace();
 					}					

@@ -22,8 +22,8 @@
 package com.actelion.research.spiritcore.services.dao;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -51,7 +51,6 @@ import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.services.SpiritRevisionEntity;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.Formatter;
 
@@ -250,8 +249,6 @@ public class DAORevision {
 		Set<Integer> addAndDelRevIds = new HashSet<>();
 		for (Object[] a: objects) {
 			
-			System.out.println("DAORevision.mapRevisions() "+Arrays.toString(a)+" "+(claz!=null && !claz.isInstance(a[0]))+" "+claz+" "+a[0].getClass());
-			
 			IObject entity = (IObject) a[0];
 			SpiritRevisionEntity rev = (SpiritRevisionEntity) a[1];
 			RevisionType type = (RevisionType) a[2];
@@ -292,21 +289,21 @@ public class DAORevision {
 	 * @param comments
 	 * @throws Exception
 	 */
-	public static void restore(List<? extends IObject> objects, SpiritUser user, String comments) throws Exception {
+	public static void restore(Collection<? extends IObject> objects, SpiritUser user, String comments) throws Exception {
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn =  session.getTransaction();
 		
 		try {
-			if(comments==null|| comments.trim().length()==0) throw new Exception("You must give a reason");
+			if(comments==null || comments.trim().length()==0) throw new Exception("You must give a reason");
 			txn.begin();
 			Date now = JPAUtil.getCurrentDateFromDatabase();
-
-			for (Object object : objects) {
-				IObject clone = ((IObject) object);
-				remap(session, clone, now, user, comments, null);
+			Map<String, IObject> mapMerged = new HashMap<>();
+			for (IObject entity : objects) {
+				remap(session, entity, now, user, comments, mapMerged);
 				
 				
-				session.merge(clone);
+				session.merge(entity);
+				mapMerged.put(entity.getClass() + "_" + entity.getId(), null);
 					
 			}
 			txn.commit();		
@@ -377,29 +374,24 @@ public class DAORevision {
 					for (IObject o : new ArrayList<>(toMerge)) {
 						int id = o.getId();
 						boolean success = remap(session, o, now, user, comments, mapMerged);
-						System.out.println("DAORevision.revert() "+o+" > "+success);
 						if(!success) continue;
 						toMerge.remove(o);
 						
 						LoggerFactory.getLogger(DAORevision.class).debug("merge "+o.getClass().getSimpleName()+" "+o.getId()+":"+o);
 						mapMerged.put(o.getClass() + "_" + id, session.merge(o));
-						System.out.println("DAORevision.revert() mapMerged="+mapMerged);
 					}
 				}
 				for (IObject o : toDelete) {
 					LoggerFactory.getLogger(DAORevision.class).debug("remove "+o.getClass().getSimpleName()+" "+o.getId()+":"+o);
 					session.remove(o);
 				}
-			
-				
 			}
 			txn.commit();
 			txn = null;
-		} catch (Exception e) {
+		} catch (Exception e) {			
 			e.printStackTrace();			
-			throw e;
-		} finally {
 			if(txn!=null && txn.isActive()) txn.rollback();			
+			throw e;
 		}
 	}
 
@@ -413,6 +405,8 @@ public class DAORevision {
 	 * @throws Exception
 	 */
 	private static boolean remap(EntityManager session, IObject clone, Date now, SpiritUser user, String comments, Map<String, IObject> mapMerged) throws Exception {
+		
+		LoggerFactory.getLogger(DAORevision.class).debug("Restore "+clone.getClass().getSimpleName()+": "+clone);
 		boolean success = true;
 		if(clone instanceof Study) {
 			Study s = ((Study) clone); 
@@ -422,7 +416,6 @@ public class DAORevision {
 			
 		} else if(clone instanceof Biosample) {
 			Biosample b = (Biosample) clone;
-			System.out.println("DAORevision.remap() "+b.debugInfo());
 			if(mapMerged!=null && b.getInheritedStudy()!=null && mapMerged.containsKey(Study.class+"_"+b.getInheritedStudy().getId())) {
 				Study s = (Study)mapMerged.get(Study.class+"_"+b.getInheritedStudy().getId());
 				if(s!=null) {

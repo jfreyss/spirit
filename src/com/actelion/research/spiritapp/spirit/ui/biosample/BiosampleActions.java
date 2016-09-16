@@ -87,12 +87,11 @@ import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
+import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.spiritcore.util.ListHashMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
-import com.actelion.research.spiritcore.util.StorageUtil;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
@@ -246,13 +245,13 @@ public class BiosampleActions {
 		private final List<Biosample> biosamples;
 
 		public Action_Order(List<Biosample> biosamples) {
-			super("Order Biosamples from " + (StorageUtil.getAutomatedStoreLocation().size()==1? StorageUtil.getAutomatedStoreLocation().iterator().next().getName():" Automatic Stores"));
+			super("Order Biosamples from " + (DBAdapter.getAdapter().getAutomatedStoreLocation().size()==1? DBAdapter.getAdapter().getAutomatedStoreLocation().iterator().next().getName():" Automatic Stores"));
 			this.biosamples = biosamples;
 			putValue(Action.MNEMONIC_KEY, (int)('o'));
 			boolean enabled = biosamples.size()>0;
 			if(enabled) {
 				for(Biosample b: biosamples) {
-					if(b.getLocation()==null || !StorageUtil.isInAutomatedStore(b.getLocation())) {
+					if(b.getLocation()==null || !DBAdapter.getAdapter().isInAutomatedStore(b.getLocation())) {
 						enabled = false;
 						break;
 					}
@@ -640,7 +639,7 @@ public class BiosampleActions {
 			if(biosamples!=null) {
 				boolean enabled = biosamples.size()>0;
 				for (Biosample biosample : biosamples) {
-					if(!SpiritRights.canEdit(biosample, Spirit.getUser())) {enabled = false; break;}
+					if(!SpiritRights.canDelete(biosample, Spirit.getUser())) {enabled = false; break;}
 				}
 				setEnabled(enabled);
 			}

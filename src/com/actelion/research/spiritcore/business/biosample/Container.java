@@ -258,7 +258,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 
 	@Override
 	public String toString() {
-		return "[Container:"+getBiosamples()+" for " + createdFor +"]";
+		return "[Container:" + containerType + " " + containerId + "]";
 	}
 	public String getType() {		
 		Container c = this;

@@ -33,26 +33,31 @@ import javax.persistence.EntityTransaction;
 
 import org.slf4j.LoggerFactory;
 
-import com.actelion.research.spiritcore.adapter.ConfigProperty;
+import com.actelion.research.spiritcore.adapter.SpiritProperty;
 import com.actelion.research.spiritcore.adapter.PropertyKey;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
-public class ConfigProperties {
+/**
+ * Singleton used to encapsulate the SpiritProperty, stored in the Spirit database.
+ * 
+ * @author Joel Freyss
+ */
+public class SpiritProperties {
 
-	private static ConfigProperties instance = null;
+	private static SpiritProperties instance = null;
 	private Map<String, String> properties;
 	private Boolean hasWorkflow; 
 	
-	private ConfigProperties() {
+	private SpiritProperties() {
 		properties = getProperties();
 	}
 	
-	public static ConfigProperties getInstance() {
+	public static SpiritProperties getInstance() {
 		if(instance==null) {
-			synchronized (ConfigProperties.class) {
+			synchronized (SpiritProperties.class) {
 				if(instance==null) {
-					instance = new ConfigProperties();
+					instance = new SpiritProperties();
 				}
 			}
 		}
@@ -91,11 +96,14 @@ public class ConfigProperties {
 		return "true".equals(getValue(p));
 	}
 
+	public String getValue(PropertyKey p, String nestedValue) {
+		return getValue(p, new String[]{nestedValue});
+	}
 
 	/**
 	 * Gets the value of a nested property or the default value. One must give the values of all the parent properties
 	 */
-	public String getValue(PropertyKey p, String... nestedValues) {
+	public String getValue(PropertyKey p, String[] nestedValues) {
 		LinkedList<PropertyKey> list = new LinkedList<>();
 		PropertyKey tmp = p.getParentProperty();
 		while(tmp!=null) {
@@ -114,23 +122,64 @@ public class ConfigProperties {
 		if(v==null) v = p.getDefaultValue(nestedValues);
 		return v;
 	}
-	
+		
+	public String[] getValues(PropertyKey p, String nestedValue) {
+		return getValues(p, new String[]{nestedValue});
+	}
 	
 	/**
 	 * Gets the value of a nested property or the default value. One must give the values of all the parent properties
 	 * The result is splitted by ','
 	 */
-	public String[] getValues(PropertyKey p, String... nestedValues) {
+	public String[] getValues(PropertyKey p, String[] nestedValues) {
 		return MiscUtils.split(getValue(p, nestedValues), ",");
 	}
 
-	public boolean isChecked(PropertyKey p, String... nestedValues) {
+	public boolean isChecked(PropertyKey p, String nestedValues) {
+		return "true".equals(getValue(p, nestedValues));
+	}
+	
+	public boolean isChecked(PropertyKey p, String[] nestedValues) {
 		return "true".equals(getValue(p, nestedValues));
 	}
 
 
+	/**
+	 * Set the value of a simple property (without saving)
+	 * @param p
+	 * @param v
+	 */
 	public void setValue(PropertyKey p, String v) {
-		properties.put(p.getKey(), v);
+		setValue(p, new String[]{}, v);
+	}
+	
+	/**
+	 * Set the value of a nested property (without saving)
+	 * @param p
+	 * @param v
+	 */
+	public void setValue(PropertyKey p, String nested, String v) {
+		setValue(p, new String[]{nested}, v);
+	}
+	
+	/**
+	 * Set the value of a simple or nested property (without saving)
+	 * @param p
+	 * @param nested an array, whose length is equal to the number of parents of p
+	 * @param v
+	 */
+	public void setValue(PropertyKey p, String[] nested, String v) {
+		StringBuilder propertyKey = new StringBuilder();
+		propertyKey.append(p.getKey());
+		
+		PropertyKey c = p.getParentProperty();
+		for (int i = nested.length-1; i >= 0; i--) {					
+			assert c!=null;
+			propertyKey.insert(0, c.getKey() + "." + nested[i] + ".");
+			c = c.getParentProperty();
+		}
+		assert c==null;
+		properties.put(propertyKey.toString(), v);
 	}
 	
 	public Map<String, String> getValues() {
@@ -159,11 +208,11 @@ public class ConfigProperties {
 		EntityManager em = null;
 		try {
 			em = JPAUtil.createManager();
-			for(ConfigProperty p: (List<ConfigProperty>) em.createQuery("from ConfigProperty").getResultList()) {
+			for(SpiritProperty p: (List<SpiritProperty>) em.createQuery("from SpiritProperty").getResultList()) {
 				if(p==null) continue;
 				keyValuePairs.put(p.getKey(), p.getValue());			
 			}
-			LoggerFactory.getLogger(ConfigProperties.class).debug("properties="+keyValuePairs);
+			LoggerFactory.getLogger(SpiritProperties.class).debug("properties="+keyValuePairs);
 		} finally {
 			if(em!=null) em.close();
 		}
@@ -174,15 +223,15 @@ public class ConfigProperties {
 	 * @param keyValuePairs
 	 */
 	private static void saveProperties(Map<String, String> keyValuePairs) {
-		LoggerFactory.getLogger(ConfigProperties.class).debug("properties="+keyValuePairs);
+		LoggerFactory.getLogger(SpiritProperties.class).debug("properties="+keyValuePairs);
 		EntityManager em = JPAUtil.createManager();
 		EntityTransaction txn = null;
 		try {
 			txn = em.getTransaction();
 			txn.begin();
 			for (Map.Entry<String, String> entry : keyValuePairs.entrySet()) {
-				LoggerFactory.getLogger(ConfigProperty.class).debug("Write "+entry.getKey()+" = "+entry.getValue());
-				ConfigProperty p = new ConfigProperty(entry.getKey(), entry.getValue());
+				LoggerFactory.getLogger(SpiritProperty.class).debug("Write "+entry.getKey()+" = "+entry.getValue());
+				SpiritProperty p = new SpiritProperty(entry.getKey(), entry.getValue());
 				em.merge(p);
 			}		
 			txn.commit();
@@ -232,13 +281,13 @@ public class ConfigProperties {
 	public boolean hasStudyWorkflow() {
 		if(hasWorkflow==null) {
 			hasWorkflow = false;
-			for (String state : ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES)) {
-				if(ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_FROM, state).length>0) {
+			for (String state : SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES)) {
+				if(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_FROM, state).length>0) {
 					hasWorkflow = true; 
 					break;
 				}
-				if(ConfigProperties.getInstance().getValue(PropertyKey.STUDY_STATES_PROMOTERS, state).length()>0 &&
-						!ConfigProperties.getInstance().getValue(PropertyKey.STUDY_STATES_PROMOTERS, state).equals("ALL")) {
+				if(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_PROMOTERS, state).length()>0 &&
+						!SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_PROMOTERS, state).equals("ALL")) {
 					hasWorkflow = true; 
 					break;
 				}

@@ -22,13 +22,10 @@
 package com.actelion.research.spiritapp.spirit;
 
 import java.awt.Dimension;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 
-import javax.persistence.EntityManager;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
@@ -45,23 +42,15 @@ import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
 import com.actelion.research.spiritcore.adapter.HSQLFileAdapter;
 import com.actelion.research.spiritcore.adapter.SchemaCreator;
-import com.actelion.research.spiritcore.business.Exchange;
-import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.employee.Employee;
-import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.DAOBiosample;
-import com.actelion.research.spiritcore.services.dao.DAOExchange;
-import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
-import com.actelion.research.spiritcore.services.exchange.Importer;
 import com.actelion.research.spiritcore.services.migration.MigrationScript;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
@@ -140,72 +129,41 @@ public class SpiritDB {
 				public void run() {
 					new SpiritAction.Action_Relogin(UIUtils.getMainFrame(), "Spirit", msg.toString()).actionPerformed(null);
 					if(Spirit.getUser()==null) System.exit(1);
-					importExamples(false);
+					checkImportExamples(false);
 				}
 			});
 		}
-		importExamples(false);
+		checkImportExamples(false);
 	}
 	
-	public static void importExamples(boolean force) {
+	public static void checkImportExamples(boolean force) {
 		//Check emptyness?
 		SpiritUser user = Spirit.getUser();
 		if(user==null || DBAdapter.getAdapter().isInActelionDomain() || !SpiritRights.isSuperAdmin(user)) return;
-		try(InputStream is = DBAdapter.class.getResourceAsStream("demo.spirit")) {
-			if(is==null) {
-				throw new Exception("The system could not find the default configuration. The system is therefore empty");
-			}
+		try {
 			
-			Exchange exchange = Importer.read(new InputStreamReader(is));			
 			List<Study> exampleStudies = DAOStudy.queryStudies(StudyQuery.createForState("EXAMPLE"), null);
 			if(exampleStudies.size()==0) exampleStudies = DAOStudy.queryStudies(StudyQuery.createForState("TEST"), null);
 			
-			
-			
-			boolean importDemo = force || DAOTest.getTests().size()==0;
-			boolean askToRewrite = !importDemo && DBAdapter.getAdapter().getClass()==HSQLFileAdapter.class && exampleStudies.size()<exchange.getStudies().size();
-			if(askToRewrite) {
+			boolean importDemo;
+			if(force || DAOTest.getTests().size()==0) {
+				importDemo = true;
+			} else if(DBAdapter.getAdapter().getClass()==HSQLFileAdapter.class && exampleStudies.size()<3) {
 				int res = JOptionPane.showConfirmDialog(UIUtils.getMainFrame(), "There are new examples available!\nDo you want to update the current examples with the new ones?", "Examples", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-				if(res==JOptionPane.YES_OPTION) {
-					importDemo = true;
-				}
+				importDemo = res==JOptionPane.YES_OPTION;
+			} else {
+				importDemo = false;
 			}
-			if(importDemo) {
-				
-				if(force) {
-					//Clean
-					EntityManager session = null;
-					try {
-						JPAUtil.pushEditableContext(user);
-						session = JPAUtil.getManager();
-						session.getTransaction().begin();
-//						DAOResult.deleteResults(session, DAOResult.queryResults(session, ResultQuery.createQueryForSids(JPAUtil.getIds(exampleStudies)), user), user);
-//						DAOBiosample.deleteBiosamples(session, DAOBiosample.queryBiosamples(session, BiosampleQuery.createQueryForSids(JPAUtil.getIds(exampleStudies)), user), user);
-						DAOStudy.deleteStudies(session, exampleStudies, true, user);
-						LoggerFactory.getLogger(SpiritDB.class).info("examples deleted: "+exampleStudies);						
-						session.getTransaction().commit();									
-					} catch(Throwable e3) {
-						e3.printStackTrace();
-						if(session!=null && session.getTransaction().isActive()) session.getTransaction().rollback();
-					} finally {
-						JPAUtil.popEditableContext();
-					}								
-				}
-				
+			if(importDemo) {				
 				try {
 					JPAUtil.pushEditableContext(user);
-					ExchangeMapping mapping = new ExchangeMapping(exchange);
-					DAOExchange.persist(mapping, user);
-					LoggerFactory.getLogger(SpiritDB.class).info("examples persisted: "+exampleStudies);
-				} catch(Throwable e2) {
-					LoggerFactory.getLogger(SpiritDB.class).error("Could not persist examples: replace old examples", e2);
-					e2.printStackTrace();
-					force=true;
+					if(force) {
+						SchemaCreator.clearExamples(user);
+					}
+					SchemaCreator.createExamples(user);			
 				} finally {
 					JPAUtil.popEditableContext();
 				}
-				
-				
 			}
 		} catch(Exception e) {
 			JExceptionDialog.showError(UIUtils.getMainFrame(), e);

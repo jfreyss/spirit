@@ -22,6 +22,7 @@
 package com.actelion.research.spiritcore.services.dao;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -41,6 +42,12 @@ import com.actelion.research.spiritcore.util.QueryTokenizer;
 
 public class DAOEmployee {
 
+	public static EmployeeGroup getEmployeeGroup(String name) {
+		EntityManager session = JPAUtil.getManager();
+		List<EmployeeGroup> groups = session.createQuery("from EmployeeGroup g where g.name = ?1").setParameter(1, name).getResultList();		
+		return groups.size()==1? groups.get(0): null;
+	}
+		
 	/**
 	 * Get the list of groups below the root, sorted by hierarchy:
 	 * ex: return a list sorted like:
@@ -49,10 +56,10 @@ public class DAOEmployee {
 	 * !-Child2
 	 *   !-SubChild
 	 * Root2
-	 * @param rootName
+	 * @param root
 	 * @return
 	 */
-	public static List<EmployeeGroup> getEmployeeGroups(String rootName) {
+	public static List<EmployeeGroup> getEmployeeGroups(String root) {
 		List<EmployeeGroup> groups = (List<EmployeeGroup>) Cache.getInstance().get("departments");
 		if(groups==null) {
 			EntityManager session = JPAUtil.getManager();
@@ -64,13 +71,13 @@ public class DAOEmployee {
 			Cache.getInstance().add("departments", groups, 300);
 		}
 		
-		List<EmployeeGroup> res = new ArrayList<EmployeeGroup>();
-		ListHashMap<EmployeeGroup, EmployeeGroup> parent2children = new ListHashMap<EmployeeGroup, EmployeeGroup>();
-		List<EmployeeGroup> roots = new LinkedList<EmployeeGroup>();
-		Set<EmployeeGroup> toProceed = new HashSet<EmployeeGroup>();
+		List<EmployeeGroup> res = new ArrayList<>();
+		ListHashMap<EmployeeGroup, EmployeeGroup> parent2children = new ListHashMap<>();
+		List<EmployeeGroup> roots = new LinkedList<>();
+		Set<EmployeeGroup> toProceed = new HashSet<>();
 		for (EmployeeGroup gr : groups) {
 			toProceed.add(gr);
-			if((rootName==null && gr.getParent()==null) || (rootName!=null && rootName.equals(gr.getName()))) {				
+			if((root==null && gr.getParent()==null) || (root!=null && root.equals(gr.getName()))) {				
 				roots.add(gr);
 			} else {
 				parent2children.add(gr.getParent(), gr);
@@ -79,7 +86,7 @@ public class DAOEmployee {
 		}
 		
 		//Sort by hierarchy
-		res = new ArrayList<EmployeeGroup>();
+		res = new ArrayList<>();
 		while(!roots.isEmpty()) {
 			EmployeeGroup eg = roots.remove(0);
 			if(!toProceed.contains(eg)) continue;
@@ -87,7 +94,7 @@ public class DAOEmployee {
 			res.add(eg);
 			if(parent2children.get(eg)!=null) roots.addAll(0, parent2children.get(eg));
 		}
-		if(rootName==null) {
+		if(root==null) {
 			res.addAll(toProceed);
 		}
 		return res;
@@ -135,37 +142,39 @@ public class DAOEmployee {
 		return res.size()==1? res.get(0): null;
 	}
     
-	public static void persistEmployee(Employee employee, SpiritUser user) throws Exception {
-		
-		Date now = JPAUtil.getCurrentDateFromDatabase();
-		if(user!=null) {		
-			if(!user.isSuperAdmin() && !user.getUsername().equals(employee.getUserName())) throw new Exception("You must be a superadmin");
-			employee.setUpdUser(user.getUsername());
-			employee.setUpdDate(now);
-		}
-		
+	public static void persistEmployees(Collection<Employee> employees, SpiritUser user) throws Exception {		
+		if(user!=null && !user.isSuperAdmin()) throw new Exception("You must be a superadmin");
 		
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {
-			
+			Date now = JPAUtil.getCurrentDateFromDatabase();
+
 			txn = session.getTransaction();
 			txn.begin();			
 			
-			//Validate username
-			if(employee.getUserName()==null || employee.getUserName().length()==0 || employee.getUserName().contains(" ")) throw new Exception(employee.getUserName()+" is not valid");  
-			int n = session.createQuery("select count(e) from Employee e where lower(e.userName) = lower(?1) and e.id <> " + employee.getId()).setParameter(1, employee.getUserName()).getFirstResult();
-			if(n>0) throw new Exception(employee.getUserName()+" must be unique");
+			for (Employee employee : employees) {
+				
+				if(user!=null) {		
+					employee.setUpdUser(user.getUsername());
+					employee.setUpdDate(now);
+				}
 			
-			//validate manager
-			if(employee.getChildrenRec(7).contains(employee.getManager())) throw new Exception(employee.getManager()+" cannot be the manager of "+employee.getUserName());
-			
-			if(employee.getId()>0) {				
-				if(!session.contains(employee)) employee = session.merge(employee);
-			} else {
-				session.persist(employee);
+				//Validate username
+				if(employee.getUserName()==null || employee.getUserName().length()==0 || employee.getUserName().contains(" ")) throw new Exception(employee.getUserName()+" is not valid");  
+				int n = session.createQuery("select count(e) from Employee e where lower(e.userName) = lower(?1) and e.id <> " + employee.getId()).setParameter(1, employee.getUserName()).getFirstResult();
+				if(n>0) throw new Exception(employee.getUserName()+" must be unique");
+				
+				//validate manager
+				if(employee.getChildrenRec(7).contains(employee.getManager())) throw new Exception(employee.getManager()+" cannot be the manager of "+employee.getUserName());
+				
+				if(employee.getId()>0) {				
+					if(!session.contains(employee)) employee = session.merge(employee);
+				} else {
+					session.persist(employee);
+				}
 			}
-
+	
 			txn.commit();
 			txn = null;
 			
@@ -199,7 +208,7 @@ public class DAOEmployee {
 		}		
 	}
 
-	public static void persistEmployeeGroup(EmployeeGroup group, SpiritUser user) throws Exception {
+	public static void persistEmployeeGroups(Collection<EmployeeGroup> groups, SpiritUser user) throws Exception {
 		if(user==null || !user.isSuperAdmin()) throw new Exception("The user must be a superadmin");
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
@@ -208,20 +217,21 @@ public class DAOEmployee {
 			txn = session.getTransaction();
 			txn.begin();
 			
-			
-			//Validate name
-			if(group.getName()==null || group.getName().length()==0) throw new Exception(group.getName()+" is not valid");  
-			int n = session.createQuery("select count(g) from EmployeeGroup g where lower(g.name) = lower(?1) and g.id <> " + group.getId()).setParameter(1, group.getName()).getFirstResult();
-			if(n>0) throw new Exception(group.getName()+" must be unique");
-			
-			//validate manager
-			if(group.getChildrenRec(7).contains(group.getParent())) throw new Exception(group.getParent()+" cannot be the parent of "+group.getName());
-			
-			
-			if(group.getId()>0) {				
-				if(!session.contains(group)) group = session.merge(group);
-			} else {
-				session.persist(group);
+			for (EmployeeGroup group : groups) {				
+				//Validate name
+				if(group.getName()==null || group.getName().length()==0) throw new Exception(group.getName()+" is not valid");  
+				int n = session.createQuery("select count(g) from EmployeeGroup g where lower(g.name) = lower(?1) and g.id <> " + group.getId()).setParameter(1, group.getName()).getFirstResult();
+				if(n>0) throw new Exception(group.getName()+" must be unique");
+				
+				//validate manager
+				if(group.getChildrenRec(7).contains(group.getParent())) throw new Exception(group.getParent()+" cannot be the parent of "+group.getName());
+				
+				
+				if(group.getId()>0) {				
+					if(!session.contains(group)) group = session.merge(group);
+				} else {
+					session.persist(group);
+				}
 			}
 
 			txn.commit();
@@ -258,7 +268,7 @@ public class DAOEmployee {
 			txn.commit();
 			txn = null;
 			
-			Cache.getInstance().remove("employees_all");
+			Cache.getInstance().remove("departments");
 		} catch (Exception e) {
 			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {}
 			throw e;

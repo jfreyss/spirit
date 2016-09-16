@@ -25,9 +25,7 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -177,14 +175,12 @@ public class AttachAnimalsManuallyDlg extends JSpiritEscapeDialog {
 		
 		
 		//Recreate animal table, group per group
-		List<AttachedBiosample> rows = new ArrayList<AttachedBiosample>();
-		Set<Biosample> topAttached = study.getTopAttachedBiosamples();
+		List<AttachedBiosample> rows = new ArrayList<>();
+		List<Biosample> topAttached = study.getTopAttachedBiosamples();
 		if(topAttached.size()>0) {
 
 			//Create a template from the existing animals
-			List<Biosample> animals = new ArrayList<Biosample>(topAttached);
-			Collections.sort(animals, new Biosample.AnimalNoComparator());
-			for (Biosample b : animals) {
+			for (Biosample b : topAttached) {
 							
 				AttachedBiosample row = new AttachedBiosample();
 				row.setSampleId(b.getSampleId());

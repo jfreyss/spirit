@@ -115,7 +115,7 @@ public abstract class InventoryPanel extends JPanel {
 		} else if(!study.equals(this.study)){
 			this.study = study;
 			new SwingWorkerExtended("Loading Containers", this, false) {				
-				Set<Biosample> animals;
+				List<Biosample> animals;
 				Map<String, Integer> content2count;
 				@Override
 				protected void doInBackground() throws Exception {

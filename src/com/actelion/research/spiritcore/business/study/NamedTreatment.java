@@ -22,10 +22,7 @@
 package com.actelion.research.spiritcore.business.study;
 
 import java.awt.Color;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -109,7 +106,7 @@ public class NamedTreatment implements Comparable<NamedTreatment>, Cloneable {
 	@GeneratedValue(generator="treatment_sequence")
 	private int id = 0;
 	
-	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL, optional=false)
+	@ManyToOne(fetch=FetchType.LAZY, cascade={}, optional=false)
 	@JoinColumn(name="study_id")
 	private Study study = null;
 
@@ -168,19 +165,6 @@ public class NamedTreatment implements Comparable<NamedTreatment>, Cloneable {
 		return compoundName;
 	}
 	
-	public Set<String> getActCompounds() {
-		Set<String> set = new LinkedHashSet<String>();
-		
-		if(name!=null && name.startsWith("ACT-") && (name.length()==10 || name.length()==11) ) set.add(name);
-
-		for(int i=0; i<2; i++) {
-			String c = i==0? getCompoundName1(): getCompoundName2();
-			if(c==null || c.length()==0) continue;
-			if(c.startsWith("ACT-") && (c.length()==10 || c.length()==11) ) set.add(c);
-		}
-		return set;
-	}
-
 	public void setCompoundName1(String compoundName) {
 		this.compoundName = compoundName;
 	}

@@ -26,13 +26,19 @@ import java.util.Map;
 
 import com.actelion.research.spiritcore.util.Pair;
 
-public class DBProperty {
+/**
+ * Describes a property of the Spirit instance, stored in the database.
+ * 
+ * @author Joel Freyss
+ *
+ */
+public class PropertyDescriptor {
 	private final String key;
 	private final String display;
 	private final String defaultOption;
 	private final Pair<String, String>[] options;
 	
-	public DBProperty(String key, String display, String defaultValue) {
+	public PropertyDescriptor(String key, String display, String defaultValue) {
 		this.key = key;
 		this.display = display;
 		this.options = null;
@@ -45,7 +51,7 @@ public class DBProperty {
 	 * @param displayName
 	 * @param options Map of key->display
 	 */
-	public DBProperty(String key, String display, Pair<String, String>[] options) {
+	public PropertyDescriptor(String key, String display, Pair<String, String>[] options) {
 		this.key = key;
 		this.display = display;
 		this.options = options;
@@ -98,7 +104,7 @@ public class DBProperty {
 	
 	@Override
 	public boolean equals(Object obj) {
-		return key.equals(((DBProperty)obj).getPropertyName());
+		return key.equals(((PropertyDescriptor)obj).getPropertyName());
 	}
 	@Override
 	public int hashCode() {

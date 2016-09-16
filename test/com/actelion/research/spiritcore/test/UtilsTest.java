@@ -123,6 +123,32 @@ public class UtilsTest {
 		
 	}
 	
+	@Test
+	public void testHtml() throws Exception {
+		String s;
+		s = MiscUtils.removeHtml("<h1>Header</h1><br><p>Body</b>");
+		Assert.assertEquals("Header\nBody", s);
+		
+		s = MiscUtils.removeHtmlAndNewLines("<h1>Header</h1><br><p>Body</b>");
+		Assert.assertEquals("Header Body", s);
+		
+		s = MiscUtils.removeHtml("<b att='test<>test'>Test</b>");
+		Assert.assertEquals("Test", s);
+
+		s = MiscUtils.removeHtml("<b att='test<>test' att2='test'>Test</b>");
+		Assert.assertEquals("Test", s);
+
+		s = MiscUtils.removeHtml("<b att=\"Test<>test\" att2='test'>Test</b>");
+		Assert.assertEquals("Test", s);
+
+		s = MiscUtils.removeHtml("<b att='test<>'>Some\n HTML</b><br>2");
+		Assert.assertEquals("Some\n HTML\n2", s);
+		
+		s = MiscUtils.removeHtmlAndNewLines("<b att='test<>'>Some HTML</b><br>2");
+		Assert.assertEquals("Some HTML 2", s);
+		
+		
+	}
 	
 	
 	

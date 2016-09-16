@@ -21,19 +21,10 @@
 
 package com.actelion.research.spiritcore.business.biosample;
 
-import java.awt.Color;
-
-import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.RelationTargetAuditMode;
 
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
@@ -42,12 +33,6 @@ import com.actelion.research.spiritcore.business.study.Phase;
 @DiscriminatorValue("Group")
 @Audited
 public class ActionMoveGroup extends ActionBiosample {
-	
-	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY)
-	@OnDelete(action=OnDeleteAction.CASCADE)
-	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-	@JoinColumn(name="group_newgroup_id")
-	private Group newGroup;	
 	
 	public ActionMoveGroup() {
 	}
@@ -60,11 +45,6 @@ public class ActionMoveGroup extends ActionBiosample {
 	@Override
 	public String getDetails() {
 		return "Assigned to "+getComments();		
-	}
-	
-	@Override
-	public Color getColor() {
-		return new Color(220,220,255);
 	}
 	
 }

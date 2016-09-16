@@ -21,30 +21,19 @@
 
 package com.actelion.research.spiritapp.spirit.ui.study;
 
-import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
-import java.util.Collections;
 import java.util.List;
 
-import javax.swing.AbstractAction;
-import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.admin.AdminActions;
 import com.actelion.research.spiritapp.spirit.ui.util.RevisionList;
-import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
-import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
-import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.services.SpiritRights;
-import com.actelion.research.spiritcore.services.dao.DAOStudy;
-import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.util.ui.JEscapeDialog;
-import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.UIUtils;
 
@@ -72,7 +61,7 @@ public class StudyHistoryDlg extends JEscapeDialog {
 				Revision s = revisionList.getSelectedValue();
 				if(s!=null && s.getStudies().size()==1) {
 					JPopupMenu menu = new JPopupMenu();
-					menu.add(new RestoreAction(s.getStudies().size()>0? s.getStudies().get(0): null));
+					menu.add(new AdminActions.Action_Restore(s.getStudies()));
 					menu.show(revisionList, e.getX(), e.getY());
 				}
 			}
@@ -89,29 +78,6 @@ public class StudyHistoryDlg extends JEscapeDialog {
 		UIUtils.adaptSize(this, 1124, 800);
 		setVisible(true);
 		
-	}
-	
-	private class RestoreAction extends AbstractAction {
-		private Study study;
-		public RestoreAction(Study study) {
-			super("Restore version");
-			this.study = study;
-			setEnabled(SpiritRights.canAdmin(study, Spirit.getUser()));
-		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			try {			
-				JPAUtil.pushEditableContext(Spirit.getUser());
-				int res = JOptionPane.showConfirmDialog(StudyHistoryDlg.this, "Are you sure you want to restore to the selected version?", "Restore", JOptionPane.YES_NO_OPTION);
-				if(res!=JOptionPane.YES_OPTION) return;
-				DAOStudy.persistStudies(Collections.singleton(study), Spirit.askForAuthentication());
-				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, study);
-			} catch (Exception ex) {
-				JExceptionDialog.showError(ex);
-			} finally {
-				JPAUtil.popEditableContext();
-			}
-		}
 	}
 	
 }

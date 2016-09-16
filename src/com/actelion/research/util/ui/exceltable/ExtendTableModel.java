@@ -223,9 +223,11 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 			fireTableDataChanged();
 		}
 	}
+	
 	public void add(ROW row) {
 		addAll(Collections.singletonList(row));
 	}
+	
 	public void addAll(Collection<ROW> newRows) {
 		if(newRows!=null && newRows.size()>0) {
 			for (ROW row : newRows) {
@@ -233,14 +235,14 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 			}
 			fireTableDataChanged();
 		}
-	}
-	
+	}	
 
 	public void addColumn(Column<ROW, ?> column) {
 		List<Column<ROW, ?>> l = new ArrayList<Column<ROW,?>>();
 		l.add(column);
 		addColumns(l, false);
 	}
+	
 	public void addColumns(Collection<Column<ROW, ?>> columns, boolean sort) {
 		boolean modified = false;
 		for (Column<ROW, ?> column : columns) {

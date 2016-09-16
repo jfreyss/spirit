@@ -85,23 +85,25 @@ import com.actelion.research.util.CompareUtils;
 public class DAOBiosample {
 
 	private static Logger logger = LoggerFactory.getLogger(DAOBiosample.class);
-
-	public static int getNBiosamples() {
-		EntityManager session = JPAUtil.getManager();
-		return (Integer) session.createQuery("select count(*) from Biosample b").getSingleResult(); 
-	}
 	
-	public static Map<Integer, Biosample> getBiosamplesByIds(List<Integer> ids) {
-		Map<Integer, Biosample> res = new HashMap<>();
-		
+	public static Map<Integer, Biosample> getBiosamplesByIds(Collection<Integer> ids) {		
 		String hql = "select b from Biosample b where " + QueryTokenizer.expandForIn("b.id", ids);
 		EntityManager session = JPAUtil.getManager();
-		for (Biosample b : (List<Biosample>) session.createQuery(hql).getResultList()) {
-			res.put(b.getId(), b);
-		}
-		return res;
+		List<Biosample> l = (List<Biosample>) session.createQuery(hql).getResultList();
+		return JPAUtil.mapIds(l);
 	}
 
+	/**
+	 * Load a Biosample (fast, not fully loaded)
+	 * 
+	 * @param sampleId
+	 * @return
+	 */
+	public static Biosample getBiosample(String sampleId) {
+		return getBiosamplesBySampleIds(Collections.singleton(sampleId)).get(sampleId);
+	}
+	
+	
 	public static Map<String, Biosample> getBiosamplesBySampleIds(Collection<String> sampleIds) {
 		Map<String, Biosample> res = new HashMap<>();
 		if(sampleIds.size()==0) return res;
@@ -140,26 +142,6 @@ public class DAOBiosample {
 		return res;
 	}
 
-	public static Biosample getBiosample(int id) {
-		EntityManager session = JPAUtil.getManager();
-		List<Biosample> biosamples = session.createQuery("select b from Biosample b where b.id = ?1").setParameter(1, id).getResultList();
-		if (biosamples.size() == 1) return biosamples.get(0);
-		return null;
-	}
-
-	/**
-	 * Load a Biosample (fast, not fully loaded)
-	 * 
-	 * @param sampleId
-	 * @return
-	 */
-	public static Biosample getBiosample(String sampleId) {
-		EntityManager session = JPAUtil.getManager();
-		List<Biosample> biosamples = (List<Biosample>) session.createQuery("select b from Biosample b where b.sampleId = ?1").setParameter(1, sampleId).getResultList();
-
-		if (biosamples.size() == 1) return biosamples.get(0);
-		return null;
-	}
 
 	/**
 	 * Get Simple or multiple containers
@@ -180,30 +162,31 @@ public class DAOBiosample {
 		return containers.size()==1? containers.get(0): null;
 	}
 	
-	/**
-	 * Load the contain
-	 * @param containerIds
-	 * @return
-	 */
-	private static List<Container> getContainersNewSession(Collection<String> containerIds) {
-		EntityManager em = null;
-		try {
+//	/**
+//	 * Load the container
+//	 * @param containerIds
+//	 * @return
+//	 */
+//	private static List<Container> getContainersNewSession(Collection<String> containerIds) {
+//		EntityManager em = null;
+//		try {
 //			em = JPAUtil.createManager();
-			em = JPAUtil.getManager();
-			List<Biosample> biosamples = queryBiosamples(em, BiosampleQuery.createQueryForContainerIds(containerIds), null);
-			for (Biosample b : biosamples) {
-				if(b.getInheritedStudy()!=null) b.getInheritedStudy().getId();
-				if(b.getEmployeeGroup()!=null) b.getEmployeeGroup().getName();
-				
-			}
-			return Biosample.getContainers(biosamples, true);
-		} catch(Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		} finally {
+//			System.out.println("DAOBiosample.getContainersNewSession()1");
+//			List<Biosample> biosamples = queryBiosamples(em, BiosampleQuery.createQueryForContainerIds(containerIds), null);
+//			System.out.println("DAOBiosample.getContainersNewSession()2");
+//			for (Biosample b : biosamples) {
+//				if(b.getInheritedStudy()!=null) b.getInheritedStudy().getId();
+//				if(b.getEmployeeGroup()!=null) b.getEmployeeGroup().getName();
+//				
+//			}
+//			return Biosample.getContainers(biosamples, true);
+//		} catch(Exception e) {
+//			e.printStackTrace();
+//			throw new RuntimeException(e);
+//		} finally {
 //			if(em!=null) em.close();
-		}
-	}
+//		}
+//	}
 
 	public static Biosample getBiosample(Study study, String animalIdOrNo) {		
 		List<Biosample> biosamples = getBiosamples(study, Collections.singletonList(animalIdOrNo));
@@ -213,7 +196,7 @@ public class DAOBiosample {
 	public static List<Biosample> getBiosamples(Study study, List<String> animalIdOrNo) {
 		EntityManager session = JPAUtil.getManager();
 		Query query;
-		List<Biosample> biosamples = new ArrayList<Biosample>();
+		List<Biosample> biosamples = new ArrayList<>();
 
 		for (int offset = 0; offset < animalIdOrNo.size(); offset += 500) {
 			StringBuilder sb = new StringBuilder();
@@ -252,14 +235,9 @@ public class DAOBiosample {
 		long start = System.currentTimeMillis();
 		List<Entry<BiosampleLinker, String>> postprocessFilters = new ArrayList<>();
 
-		if (q.isSearchDiscardedOnly()) {
-			clause.append(" and b.discarded = 1");
-		}
-
 		if ((q.getBiotypes() == null || q.getBiotypes().length == 0) && user != null && !user.isSuperAdmin()) {
 			clause.append(" and b.biotype.isHidden = false");
 		}
-
 
 		if (q.getSampleIdOrContainerIds() != null && q.getSampleIdOrContainerIds().length() > 0) {
 			clause.append(" and (" + QueryTokenizer.expandForIn("b.sampleId", q.getSampleIdOrContainerIds()));
@@ -304,42 +282,40 @@ public class DAOBiosample {
 				expr.append(" (b.id in (select b2.id from Biosample b2 where lower(b2.inheritedStudy.studyId) like lower(?) or lower(b2.inheritedStudy.ivv) like lower(?)))");
 				expr.append(" or (b.id in (select b2.id from Biosample b2 where lower(b2.inheritedGroup.name) like lower(?)))");
 				expr.append(" or (b.id in (select b2.id from Biosample b2 where lower(b2.inheritedPhase.name) like lower(?)))");
+//				expr.append(" or (b.id in (select b2.id from Biosample b2 where lower(b.parent.biotype.name) like lower(?)))");
+//				expr.append(" or (b.id in (select b2.id from Biosample b2 where lower(b.topParent.biotype.name) like lower(?)))");	
 				expr.append(" or lower(b.biotype.name) like lower(?)");
 				expr.append(" or b.sampleId like ?");
 				expr.append(" or b.container.containerId like ?");
 				expr.append(" or replace(replace(replace(replace(replace(replace(replace(lower(b.name), '.', ''), ' ', ''), '-', ''), '_', ''), '/', ''), ':', ''), '#', '') like replace(replace(replace(replace(replace(replace(replace(lower(?), '.', ''), ' ', ''), '-', ''), '_', ''), '/', ''), ':', ''), '#', '')");
 				expr.append(" or (b.id in (select b2.id from Biosample b2 where replace(replace(replace(replace(replace(replace(replace(lower(b2.parent.name), '.', ''), ' ', ''), '-', ''), '_', ''), '/', ''), ':', ''), '#', '') like replace(replace(replace(replace(replace(replace(replace(lower(?), '.', ''), ' ', ''), '-', ''), '_', ''), '/', ''), ':', ''), '#', '')))");
-				expr.append(" or (b.id in (select b2.id from Biosample b2 where replace(replace(replace(replace(replace(replace(replace(lower(b2.parent.parent.name), '.', ''), ' ', ''), '-', ''), '_', ''), '/', ''), ':', ''), '#', '') like replace(replace(replace(replace(replace(replace(replace(lower(?), '.', ''), ' ', ''), '-', ''), '_', ''), '/', ''), ':', ''), '#', '')))");
-	
+				expr.append(" or (b.id in (select b2.id from Biosample b2 where replace(replace(replace(replace(replace(replace(replace(lower(b2.topParent.name), '.', ''), ' ', ''), '-', ''), '_', ''), '/', ''), ':', ''), '#', '') like replace(replace(replace(replace(replace(replace(replace(lower(?), '.', ''), ' ', ''), '-', ''), '_', ''), '/', ''), ':', ''), '#', '')))");
+				expr.append(" or lower(b.serializedMetadata) like lower(?)");
+				expr.append(" or (b.id in (select b2.id from Biosample b2 where lower(b2.parent.serializedMetadata) like lower(?)))");
+				expr.append(" or (b.id in (select b2.id from Biosample b2 where lower(b2.topParent.serializedMetadata) like lower(?)))");	
 				expr.append(" or lower(b.comments) like lower(?)");
 				expr.append(" or lower(b.creUser) like lower(?)");
 				expr.append(" or lower(b.updUser) like lower(?)");
 				expr.append(" or lower(b.elb) like lower(?)");
 				expr.append(" or (b.id in (select b2.id from Biosample b2 where lower(b2.location.name) like lower(?)))");
-				expr.append(" or (b.id in (select b2.id from Biosample b2 where lower(b2.location.parent.name) like lower(?)))");
-				expr.append(" or (b.id in (select b2.id from Biosample b2 where lower(b2.location.parent.parent.name) like lower(?)))");
-				expr.append(" or lower(b.serializedMetadata) like lower(?)");
+//				expr.append(" or (b.id in (select b2.id from Biosample b2 where lower(b2.location.parent.name) like lower(?)))");
+//				expr.append(" or (b.id in (select b2.id from Biosample b2 where lower(b2.location.parent.parent.name) like lower(?)))");
 				expr.append(" )\n");
-	
 				clause.append(" and (" + QueryTokenizer.expandQuery(expr.toString(), q.getKeywords(), true, true) + ")");
 			}
-
 			if (q.getStudyIds() != null && q.getStudyIds().equalsIgnoreCase("NONE")) {
 				clause.append(" and b.inheritedStudy is null");
 			} else if (q.getStudyIds() != null && q.getStudyIds().length() > 0) {
 				clause.append(" and (" + QueryTokenizer.expandOrQuery("b.inheritedStudy.studyId = ?", q.getStudyIds()) + ")");
 			}
-	
 			if (q.getGroup() != null && q.getGroup().length() > 0) {
 				clause.append(" and ( b.id in (select b2.id from Biosample b2 where b2.inheritedGroup.name = ?) " + " or b.id in (select b2.id from Biosample b2 where b2.inheritedGroup.fromGroup.name = ?))");
 				parameters.add(q.getGroup());
 				parameters.add(q.getGroup());
-			}
-	
+			}	
 			if (q.getPhase()!=null) {
 				clause.append(" and (b.id in (select b2.id from Biosample b2 where b2.inheritedPhase.id = " + q.getPhase().getId() + "))");
-			}
-	
+			}	
 			if (q.getBiotypes() != null && q.getBiotypes().length > 0) {
 				clause.append(" and (");
 				boolean first = true;
@@ -352,13 +328,11 @@ public class DAOBiosample {
 	
 				}
 				clause.append(") ");
-			}
-	
+			}	
 			if (q.getContainerType() != null) {
 				clause.append(" and (b.container.containerType = ?)");
 				parameters.add(q.getContainerType());
-			}
-	
+			}	
 			if(q.getLocationRoot()!=null) {
 				Location l = session.merge(q.getLocationRoot());
 				List<Location> locs = new ArrayList<Location>(l.getChildrenRec(8));
@@ -399,8 +373,7 @@ public class DAOBiosample {
 				} else {
 					clause.append(" and b.quality <= " + q.getMaxQuality().getId());
 				}
-			}
-			
+			}			
 			if (q.getExpiryDateMin() != null) {
 				clause.append(" and (b.expiryDate > ?)");
 				parameters.add(q.getExpiryDateMin());
@@ -409,8 +382,6 @@ public class DAOBiosample {
 				clause.append(" and (b.expiryDate <= ?)");
 				parameters.add(q.getExpiryDateMax());
 			}
-	
-	
 			if (q.getUpdUser() != null && q.getUpdUser().length() > 0) {
 				clause.append(" and b.updUser = ?");
 				parameters.add(q.getUpdUser());
@@ -568,11 +539,12 @@ public class DAOBiosample {
 		logger.debug("BiosampleQuery: queried in " + (System.currentTimeMillis() - start) + "ms >" + biosamples.size() + "biosamples");
 
 		//Verify the metadata, as the search didn't check the exact fields
-		for (Iterator<Biosample> iterator = biosamples.iterator(); iterator.hasNext();) {
+		loop: for (Iterator<Biosample> iterator = biosamples.iterator(); iterator.hasNext();) {
 			Biosample biosample = iterator.next();
 			for (Entry<BiosampleLinker, String> entry : q.getLinker2values().entrySet()) {
 				if(!QueryTokenizer.matchQuery(entry.getKey().getValue(biosample), entry.getValue())) {
 					iterator.remove();
+					continue loop;
 				}
 			}
 		}
@@ -606,7 +578,7 @@ public class DAOBiosample {
 
 		if(q.getPhases()!=null && q.getPhases().length()>0) {
 			
-			Set<String> set = new HashSet<String>(Arrays.asList(MiscUtils.split(q.getPhases(), MiscUtils.SPLIT_SEPARATORS_WITH_SPACE)));
+			Set<String> set = new HashSet<>(Arrays.asList(MiscUtils.split(q.getPhases(), MiscUtils.SPLIT_SEPARATORS_WITH_SPACE)));
 			if(set.size()>0) {
 				for (Iterator<Biosample> iterator = biosamples.iterator(); iterator.hasNext();) {
 					Biosample b = iterator.next();
@@ -619,7 +591,7 @@ public class DAOBiosample {
 
 		// Apply the Select-One query
 		if (q.getSelectOneMode() == BiosampleQuery.SELECT_MOST_RIGHT) {
-			Map<Biosample, Biosample> top2Sel = new HashMap<Biosample, Biosample>();
+			Map<Biosample, Biosample> top2Sel = new HashMap<>();
 			for (Biosample b : biosamples) {
 				Container c = b.getContainer();
 				if (c == null || c.getPos() < 0)
@@ -631,9 +603,9 @@ public class DAOBiosample {
 					top2Sel.put(top, b);
 				}
 			}
-			biosamples = new ArrayList<Biosample>(top2Sel.values());
+			biosamples = new ArrayList<>(top2Sel.values());
 		} else if (q.getSelectOneMode() == BiosampleQuery.SELECT_MOST_LEFT) {
-			Map<Biosample, Biosample> top2Sel = new HashMap<Biosample, Biosample>();
+			Map<Biosample, Biosample> top2Sel = new HashMap<>();
 			for (Biosample b : biosamples) {
 				Container c = b.getContainer();
 				if (c == null || c.getPos() < 0)
@@ -645,21 +617,11 @@ public class DAOBiosample {
 					top2Sel.put(top, b);
 				}
 			}
-			biosamples = new ArrayList<Biosample>(top2Sel.values());
+			biosamples = new ArrayList<>(top2Sel.values());
 		}
 
 		
 		LoggerFactory.getLogger(DAOBiosample.class).debug("filtered in " + (System.currentTimeMillis() - start) + "ms");
-
-		//Quick load children
-//		jpql = "from Biosample b where not exists(from Biosample c where c.parent = b) and " + QueryTokenizer.expandForIn("b.id", JPAUtil.getIds(biosamples));
-//		List<Biosample> empty = session.createQuery(jpql).getResultList();
-//		for (Biosample b : empty) {		
-//			b.setChildren(new TreeSet<Biosample>());
-//		}
-//		
-//		LoggerFactory.getLogger(DAOBiosample.class).debug("quickload in " + (System.currentTimeMillis() - start) + "ms");
-
 		return biosamples;
 	}
 
@@ -688,6 +650,7 @@ public class DAOBiosample {
 	public static void deleteBiosamples(EntityManager session, Collection<Biosample> biosamples, SpiritUser user) throws Exception {
 		assert session!=null;
 		assert session.getTransaction().isActive();
+		logger.info("Remove "+biosamples.size()+" biosamples");
 
 		for (Biosample biosample : biosamples) {
 			if (!SpiritRights.canDelete(biosample, user)) throw new Exception("You are not allowed to delete " + biosample);
@@ -837,7 +800,6 @@ public class DAOBiosample {
 					if (biosample.getPos() < 0 || loc.getLabeling() == LocationLabeling.NONE) {
 						biosample.setPos(-1);
 					} else if (locIdPos2container.containsKey(key) && ((biosample.getContainerId()==null && locIdPos2container.get(key)==null) || (biosample.getContainerId()!=null && !biosample.getContainerId().equals(locIdPos2container.get(key))) ) ) {
-//						System.out.println("DAOBiosample.persistBiosamples() "+locIdPos2container);
 						throw new ValidationException("The location " + biosample.getLocationString(LocationFormat.FULL_POS, null) + " is already taken by "+locIdPos2container.get(key), biosample, "Container\nLocation");
 					}
 					locIdPos2container.put(key, biosample.getContainerId());
@@ -930,21 +892,20 @@ public class DAOBiosample {
 			}
 			
 		}
-//		System.out.println("DAOBiosample.persistBiosamples()3" + " > " + (System.currentTimeMillis() - s) + "ms");
-
 
 		//////////////////////////////////////////////////////
 		// Update Containers
 		Set<String> containerIds = Biosample.getContainerIds(biosamples);
-		Map<String, Container> cid2container = Container.mapContainerId(getContainersNewSession(containerIds));
+//		Map<String, Container> cid2container = Container.mapContainerId(getContainersNewSession(containerIds));
+		Map<String, Container> cid2container = Container.mapContainerId(getContainers(containerIds));
 
 		for (Biosample biosample : biosamples) {				
 			String containerId = biosample.getContainerId();
 			if (containerId!=null && containerId.length()>0) {
 				Container c = cid2container.get(containerId);
 				if(c!=null && c.getContainerType().isMultiple() && !SpiritRights.canEdit(c, user)) throw new Exception("You are not allowed to edit the container " + containerId);
-				if(c!=null && c.getContainerType().isMultiple() && c.getContainerType()!=biosample.getContainerType()) throw new Exception("The container's type of " + containerId+" is "+c.getContainerType());
-				if(c!=null && !c.getContainerType().isMultiple() && c.getBiosamples().size()>0 && !c.getBiosamples().contains(biosample)) throw new Exception("The container " + containerId+" is already used");
+				if(c!=null && c.getContainerType().isMultiple() && c.getContainerType()!=biosample.getContainerType()) throw new Exception("The container's type of " + containerId+" is " + c.getContainerType());
+				if(c!=null && !c.getContainerType().isMultiple() && c.getBiosamples().size()>0 && !c.getBiosamples().contains(biosample)) throw new Exception("The container " + containerId + " of " + biosample + " is already used by "+c.getBiosamples());
 				if(c==null) cid2container.put(containerId, biosample.getContainer());
 			}
 			
@@ -954,11 +915,6 @@ public class DAOBiosample {
 			}
 			
 		}
-//		System.out.println("DAOBiosample.persistBiosamples()4" + " > " + (System.currentTimeMillis() - s) + "ms");
-
-//		//Quick preload, so that JPA is faster doing the merge
-//		session.createQuery("select b from Biosample b where " + QueryTokenizer.expandForIn("b.id", JPAUtil.getIds(biosamples))).getResultList();
-//		System.out.println("DAOBiosample.persistBiosamples()5" + " > " + (System.currentTimeMillis() - s) + "ms");
 
 		// /////////////////
 		//Update the upddate/upduser
@@ -994,7 +950,6 @@ public class DAOBiosample {
 		//Persist or merge
 		List<Biosample> attached = new ArrayList<>();
 		for (Biosample b : biosamples) {
-//			b.preSave();
 			assert b.getBiotype()!=null && b.getBiotype().getId()>0: "The biotype of "+b+" ("+b.getBiotype()+") is not persistent";
 			if (b.getId() <= 0) {
 				b.setCreUser(b.getUpdUser());
@@ -1002,6 +957,11 @@ public class DAOBiosample {
 				session.persist(b);
 			} else if (!session.contains(b)) {
 				b = session.merge(b);
+			}
+			for (ActionBiosample a : b.getActions()) {
+				if(a.getUpdUser()==null) {
+					a.setUpdUser(b.getUpdUser());
+				}
 			}
 			attached.add(b);
 		}
@@ -1038,9 +998,7 @@ public class DAOBiosample {
 			}
 		}
 
-//		System.out.println("DAOBiosample.persistBiosamples()11" + " > " + (System.currentTimeMillis() - s) + "ms");
-		
-//		session.flush();
+		session.flush();
 		
 		
 		// ///////////////////////////////////////////
@@ -1056,7 +1014,6 @@ public class DAOBiosample {
 				}
 			}
 		}
-//		System.out.println("DAOBiosample.persistBiosamples()12" + " > " + (System.currentTimeMillis() - s) + "ms");
 	}
 
 	public static int countRelations(Biotype biotype) {
@@ -1229,7 +1186,10 @@ public class DAOBiosample {
 		return o == null ? "" : o.toString();
 	}
 
-	public static void changeOwnership(Collection<Biosample> biosamples, SpiritUser toUser, SpiritUser updater) {
+	public static void changeOwnership(Collection<Biosample> biosamples, SpiritUser toUser, SpiritUser user) throws Exception {
+		assert toUser!=null;
+		if(!SpiritRights.canEditBiosamples(biosamples, user)) throw new Exception("You don't have sufficient rights to change the ownership");
+		
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {
@@ -1243,7 +1203,7 @@ public class DAOBiosample {
 
 				ActionOwnership a = new ActionOwnership(b, toUser.getUsername());
 				b.addAction(a);
-				b.setUpdUser(updater.getUsername());
+				b.setUpdUser(user.getUsername());
 				b.setUpdDate(now);
 				b.setCreUser(toUser.getUsername());
 				b.setEmployeeGroup(toUser.getMainGroup());
@@ -1254,14 +1214,10 @@ public class DAOBiosample {
 			txn.commit();
 			txn = null;
 		} finally {
-			if (txn != null)
-				try {
-					txn.rollback();
-				} catch (Exception e) {
-				}
+			if (txn != null && txn.isActive()) try { txn.rollback();} catch (Exception e) {}
 		}
 	}
-
+/*
 	public static void persistBiosampleActions(Collection<? extends ActionBiosample> actions, SpiritUser user) {
 		
 		EntityManager session = JPAUtil.getManager();
@@ -1293,5 +1249,5 @@ public class DAOBiosample {
 				}
 		}
 	}
-
+*/
 }

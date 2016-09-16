@@ -25,7 +25,11 @@ import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.services.SpiritUser;
 
 
-
+/**
+ * Proxy to the DBAdapter to load/authenticate user
+ * 
+ * @author Joel Freyss
+ */
 public class DAOSpiritUser {
 	
 	

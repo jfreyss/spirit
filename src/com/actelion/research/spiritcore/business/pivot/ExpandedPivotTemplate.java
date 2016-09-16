@@ -29,10 +29,10 @@ import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.services.SpiritUser;
 
 
-public class AllColumnPivotTemplate extends PivotTemplate {
+public class ExpandedPivotTemplate extends PivotTemplate {
 
-	public AllColumnPivotTemplate() {
-		super("AllColumn", "column.png");
+	public ExpandedPivotTemplate() {
+		super("Expanded", "column.png");
 	}		
 
 	@Override
@@ -52,7 +52,7 @@ public class AllColumnPivotTemplate extends PivotTemplate {
 	}
 	
 	public void init(List<Result> results, DataWarriorConfig config, SpiritUser user) {
-		AllColumnPivotTemplate tpl = this;
+		ExpandedPivotTemplate tpl = this;
 		init(results);		
 		tpl.removeBlindItems(results, user);
 

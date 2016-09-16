@@ -136,7 +136,7 @@ public class SampleWeighingDlg extends JEscapeDialog {
 		phaseComboBox.setValues(study.getPhases(), "");
 		groupComboBox.setValues(study.getGroups(), "");
 		
-		Set<Biosample> animals = study.getTopAttachedBiosamples();
+		List<Biosample> animals = study.getTopAttachedBiosamples();
 		animalList.setBiosamples(animals);
 
 

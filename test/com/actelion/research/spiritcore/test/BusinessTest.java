@@ -36,45 +36,73 @@ public class BusinessTest {
 
 	@Test
 	public void testPhases() {
+		Phase p0 = new Phase("");
+		Assert.assertEquals(0, p0.getDays());
+		Assert.assertEquals("", p0.getLabel());
+		
 		Phase p1 = new Phase("d-2_5h");
-		Assert.assertEquals(p1.getDays(), -2);
-		Assert.assertEquals(p1.getHours(), 5);
-		Assert.assertEquals(p1.getMinutes(), 0);
-		Assert.assertEquals(p1.getLabel(), "");		
-		Assert.assertEquals(p1.getName(), "d-2_5h");		
+		Assert.assertEquals(-2, p1.getDays());
+		Assert.assertEquals(5, p1.getHours());
+		Assert.assertEquals(0, p1.getMinutes());
+		Assert.assertEquals("", p1.getLabel());		
+		Assert.assertEquals("d-2_5h", p1.getName());		
 	
 	
 		Phase p2 = new Phase("d-1");
-		Assert.assertEquals(p2.getDays(), -1);
-		Assert.assertEquals(p2.getHours(), 0);
-		Assert.assertEquals(p2.getMinutes(), 0);
-		Assert.assertEquals(p2.getLabel(), "");		
-		Assert.assertEquals(p2.getName(), "d-1");		
+		Assert.assertEquals(-1, p2.getDays());
+		Assert.assertEquals(0, p2.getHours());
+		Assert.assertEquals(0, p2.getMinutes());
+		Assert.assertEquals("", p2.getLabel());		
+		Assert.assertEquals("d-1", p2.getName());		
 
 		Phase p3 = new Phase(" d5 ");
-		Assert.assertEquals(p3.getDays(), 5);
-		Assert.assertEquals(p3.getHours(), 0);
-		Assert.assertEquals(p3.getMinutes(), 0);
-		Assert.assertEquals(p3.getLabel(), "");		
-		Assert.assertEquals(p3.getName(), "d5");		
+		Assert.assertEquals(5, p3.getDays());
+		Assert.assertEquals(0, p3.getHours());
+		Assert.assertEquals(0, p3.getMinutes());
+		Assert.assertEquals("", p3.getLabel());		
+		Assert.assertEquals("d5", p3.getName());		
 
 		Phase p4 = new Phase("d5_10h");
-		Assert.assertEquals(p4.getDays(), 5);
-		Assert.assertEquals(p4.getHours(), 10);
-		Assert.assertEquals(p4.getMinutes(), 0);
-		Assert.assertEquals(p4.getLabel(), "");		
+		Assert.assertEquals(5, p4.getDays());
+		Assert.assertEquals(10, p4.getHours());
+		Assert.assertEquals(0, p4.getMinutes());
+		Assert.assertEquals("", p4.getLabel());		
 			
 		Phase p5 = new Phase("d5_10h20 label");
-		Assert.assertEquals(p5.getDays(), 5);
-		Assert.assertEquals(p5.getHours(), 10);
-		Assert.assertEquals(p5.getMinutes(), 20);
-		Assert.assertEquals(p5.getLabel(), "label");		
+		Assert.assertEquals(5, p5.getDays());
+		Assert.assertEquals(10, p5.getHours());
+		Assert.assertEquals(20, p5.getMinutes());
+		Assert.assertEquals("label", p5.getLabel());		
 	
 		Phase p6 = new Phase("1. label");
-		Assert.assertEquals(p6.getDays(), 1);
-		Assert.assertEquals(p6.getHours(), 0);
-		Assert.assertEquals(p6.getMinutes(), 0);
-		Assert.assertEquals(p6.getLabel(), "label");		
+		Assert.assertEquals(1, p6.getDays());
+		Assert.assertEquals(0, p6.getHours());
+		Assert.assertEquals(0, p6.getMinutes());
+		Assert.assertEquals("label", p6.getLabel());
+		
+		
+		Phase p7 = new Phase("d0_treatment");
+		Assert.assertEquals(0, p7.getDays());
+		Assert.assertEquals(0, p7.getMinutes());
+		Assert.assertEquals("treatment", p7.getLabel());
+
+		Phase p8 = new Phase(" treatment ");
+		Assert.assertEquals(0, p8.getDays());
+		Assert.assertEquals(0, p8.getMinutes());
+		Assert.assertEquals("treatment", p8.getLabel());
+
+		Phase p9 = new Phase("d5 6 20 treatment ");
+		Assert.assertEquals(5, p9.getDays());
+		Assert.assertEquals(6, p9.getHours());
+		Assert.assertEquals(20, p9.getMinutes());
+		Assert.assertEquals("treatment", p9.getLabel());
+
+		Phase p10 = new Phase("d5 -6 20 treatment ");
+		Assert.assertEquals(5, p10.getDays());
+		Assert.assertEquals(-6, p10.getHours());
+		Assert.assertEquals(20, p10.getMinutes());
+		Assert.assertEquals("treatment", p10.getLabel());
+
 	}
 
 	@Test

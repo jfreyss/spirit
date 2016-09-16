@@ -149,7 +149,7 @@ public class AttachedBiosample implements Comparable<AttachedBiosample> {
 	 * @param index
 	 * @return
 	 */
-	public static List<Double> extractDoubles(List<AttachedBiosample> rows, int index) {
+	public static List<Double> getData(List<AttachedBiosample> rows, int index) {
 		List<Double> res = new ArrayList<Double>();
 		for (AttachedBiosample s : rows) {
 			res.add(index<0? s.getWeight(): index<s.getDataList().size()? s.getDataList().get(index): null);

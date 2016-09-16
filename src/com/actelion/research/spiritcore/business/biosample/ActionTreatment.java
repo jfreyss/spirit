@@ -21,9 +21,7 @@
 
 package com.actelion.research.spiritcore.business.biosample;
 
-import java.awt.Color;
 import java.util.Date;
-import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -39,8 +37,6 @@ import org.hibernate.envers.RelationTargetAuditMode;
 
 import com.actelion.research.spiritcore.business.study.NamedTreatment;
 import com.actelion.research.spiritcore.business.study.Phase;
-import com.actelion.research.spiritcore.business.study.StudyAction;
-import com.actelion.research.spiritcore.util.Pair;
 
 @Entity
 @DiscriminatorValue("Treatment")
@@ -73,19 +69,15 @@ public class ActionTreatment extends ActionBiosample {
 	private Double calculatedDose2;
 
 	@Column(name="treatment_effdose2", precision=9, scale=3)
-	private Double effectiveDose2;
-		
+	private Double effectiveDose2;		
 	
 	@Column(name="treatment_formulation", length=20)
 	private String formulation;
 	
-	@Column(nullable=true)
-	private String updUser = "??";
-
-	
 	public ActionTreatment() {		
 	}
-	public ActionTreatment(Biosample animal, Phase phase, Double weight, NamedTreatment nt, Double eff1, Double eff2, String formulation, String comments, String user) {
+	
+	public ActionTreatment(Biosample animal, Phase phase, Double weight, NamedTreatment nt, Double eff1, Double eff2, String formulation, String comments) {
 		this.biosample = animal;
 		this.phase = phase;
 		this.weight = weight;
@@ -96,9 +88,9 @@ public class ActionTreatment extends ActionBiosample {
 		this.effectiveDose2 = eff2;
 		this.formulation = formulation;
 		this.comments = comments;
-		this.updUser = user;
 		this.updDate = new Date();
 	}
+	
 	
 	public NamedTreatment getNamedTreatment() {
 		return namedTreatment;
@@ -159,77 +151,6 @@ public class ActionTreatment extends ActionBiosample {
 	public String getFormulation() {
 		return formulation;
 	}
-		
-	public boolean isWeighingRequired() {		
-		if(getBiosample()==null || getPhase()==null) return false;
-		StudyAction a = getBiosample().getStudyAction(getPhase());
-		if(a==null) return false;
-		if(a.isMeasureWeight() || (a.getNamedTreatment()!=null && a.getNamedTreatment().isWeightDependant())) {
-			return true;
-		} else {
-			return false;
-		}	
-	}
-	
-	public Pair<Double, Phase> calculateWeightPercentIncrease() {
-		if(getWeight()==null || getWeight()<=0) return null;
-		
-		
-		if(getPhase()==null) {
-			System.err.println("ActionTreatment: " + this+" has a null phase");
-			return null;
-		}
-
-		List<ActionTreatment> list = getBiosample().getActions(ActionTreatment.class);
-		if(list==null) return null;
-		ActionTreatment sel = null;
-		for (ActionTreatment fw : list) {
-			if(fw.getPhase()==null) {
-				System.err.println(fw+" has a null phase");
-				continue;
-			}
-			if(fw.getPhase().getTime()>=getPhase().getTime()) continue;
-			if(fw.getWeight()==null || fw.getWeight()<=0) continue;
-			
-			if(sel==null || sel.getPhase().getTime()<fw.getPhase().getTime()) {
-				sel = fw;
-			}
-		}
-		
-		if(sel==null) return null;
-		return new Pair<Double,Phase> (100*(getWeight() - sel.getWeight())/sel.getWeight(), sel.getPhase());
-		
-	}
-	
-
-	
-	public ActionTreatment getPrevious() {
-		return getPreviousMeasureFromList(getBiosample().getActions(ActionTreatment.class));
-		
-	}
-	public ActionTreatment getPreviousMeasureFromList(List<ActionTreatment> list) {
-		ActionTreatment sel = null;
-		if(list!=null) {
-			for (ActionTreatment fw : list) {
-				if(fw.getBiosample().getId()!=getBiosample().getId()) continue;
-				if(fw.getPhase()==null) {
-					System.err.println(fw+" has a null phase");
-					continue;
-				}
-				if(getPhase()==null) {
-					System.err.println(this+" has a null phase");
-					continue;
-				}
-				if(fw.getPhase().getTime()>=getPhase().getTime()) continue;
-				
-				if(sel==null || sel.getPhase().getTime()<fw.getPhase().getTime()) {
-					sel = fw;
-				}
-			}
-		}
-		return sel;
-	}
-	
 	
 	public Double getCalculatedDose2() {
 		return calculatedDose2;
@@ -258,20 +179,5 @@ public class ActionTreatment extends ActionBiosample {
 		return getPhase().equals(t.getPhase()) && getBiosample().equals(t.getBiosample());
 		
 	}
-
 		
-	@Override
-	public Color getColor() {
-		return new Color(225,255,195);
-	}
-
-
-	public String getUpdUser() {
-		return updUser;
-	}
-
-	public void setUpdUser(String updUser) {
-		this.updUser = updUser;
-	}
-
 }

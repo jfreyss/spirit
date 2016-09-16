@@ -77,6 +77,7 @@ import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -109,7 +110,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		}
 		
 		//Reload results in the current session
-		results = DAOResult.reload(results);
+		results = JPAUtil.reattach(results);
 		
 		Collections.sort(results);
 
@@ -153,7 +154,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 			@Override
 			protected void done() {
 				try {
-					results = DAOResult.reload(results);
+					results = JPAUtil.reattach(results);
 					initTabbedPane(results);
 					setSelection(selectedResult);
 				} catch (Exception e) {

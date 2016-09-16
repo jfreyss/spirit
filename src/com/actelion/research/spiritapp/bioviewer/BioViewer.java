@@ -84,7 +84,7 @@ import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.util.CSVUtils;
+import com.actelion.research.spiritcore.util.CSVUtils;
 import com.actelion.research.util.ui.EasyClipboard;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -244,7 +244,7 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 		List<Biosample> before = new ArrayList<Biosample>(biosampleTab.getBiosamples());
 		List<Biosample> sel = biosampleTab.getBiosampleTable().getSelection();
 		biosampleTab.clear();
-		JPAUtil.clear();
+		JPAUtil.close();
 		List<Biosample> reloaded = JPAUtil.reattach(before);
 		biosampleTab.setBiosamples(reloaded);
 		biosampleTab.setSelectedBiosamples(sel);
@@ -303,8 +303,8 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 		List<Container> selContainers = Biosample.getContainers(selBiosamples);
 		statusBar.setInfos(selContainers.size() + "/" + biosampleTab.getBiosampleTable().getRowCount() + " Biosamples");
 		Collection<Biosample> highlighted = biosampleTab.getBiosampleTable().getHighlightedSamples();
-		biosampleEditorPane.setBiosamples(highlighted);
-		biosampleDetailPane.setBiosamples(highlighted, false);
+		biosampleEditorPane.setBiosamples(highlighted.size()==1? highlighted: null);
+		biosampleDetailPane.setBiosamples(highlighted.size()==1? highlighted: null, false);
 	}
 
 	private void newScan(Location rack) {

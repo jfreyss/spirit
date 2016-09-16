@@ -167,7 +167,7 @@ public abstract class BiosampleFinder extends JEscapeDialog {
 		westPane.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
 		centerPane = new JPanel(new BorderLayout());
-		centerPane.add(BorderLayout.CENTER, new JBGScrollPane(table, 3));
+		centerPane.add(BorderLayout.CENTER, new JScrollPane(table));
 		centerPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(statusLabel, Box.createHorizontalGlue(), okButton));
 
 		JSplitPane splitPane2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, westPane, centerPane);
@@ -203,11 +203,12 @@ public abstract class BiosampleFinder extends JEscapeDialog {
 				if(e.getValueIsAdjusting()) return;
 				
 				List<Biosample> l = table.getSelection();
-				detailPane.setBiosamples(l);
 
 				if(l.size()==1) {
+					detailPane.setBiosamples(l);
 					if(westPane.getDividerLocation()>westPane.getHeight()-20) westPane.setDividerLocation(480);
 				} else {
+					detailPane.setBiosamples(null);
 					if(westPane.getDividerLocation()<westPane.getHeight()-20) westPane.setDividerLocation(westPane.getHeight());					
 				}
 				

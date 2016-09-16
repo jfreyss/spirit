@@ -120,8 +120,6 @@ public class Document {
 	private Date creDate;
 	
 	
-	
-	
 	public Document() {
 	}
 	
@@ -130,19 +128,13 @@ public class Document {
 		setBytes(IOUtils.fileToBytes(file));
 		this.creDate = new Date();
 	}
-	
-//	@PreUpdate @PrePersist
-//	private void preUpdate() {
-//		id = bytes.id;
-//	}
-	
+		
 	public int getId() {
 		return id;
 	}
 
 	public void setId(int id) {
 		this.id = id;
-//		bytes.setId(id);
 	}
 
 	public String getFileName() {

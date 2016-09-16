@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,11 +46,10 @@ import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationLabeling;
 import com.actelion.research.spiritcore.business.location.LocationQuery;
 import com.actelion.research.spiritcore.business.location.LocationType;
-import com.actelion.research.spiritcore.business.location.Privacy;
 import com.actelion.research.spiritcore.business.location.LocationType.LocationCategory;
+import com.actelion.research.spiritcore.business.location.Privacy;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.util.CorrespondanceMap;
 import com.actelion.research.spiritcore.util.QueryTokenizer;
 
 @SuppressWarnings("unchecked")
@@ -104,7 +104,7 @@ public class DAOLocation {
 		}
 
 	
-		CorrespondanceMap<Location, Location> map = new CorrespondanceMap<Location, Location>();
+		IdentityHashMap<Location, Location> map = new IdentityHashMap<>();
 
 		Date now = JPAUtil.getCurrentDateFromDatabase();
 		
@@ -397,13 +397,13 @@ public class DAOLocation {
 		return res;
 	}
 	
-	public static void removeLocations(List<Location> locations, SpiritUser user) throws Exception {
+	public static void deleteLocations(Collection<Location> locations, SpiritUser user) throws Exception {
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {
 			txn = session.getTransaction();
 			txn.begin();
-			removeLocations(session, locations, user);
+			deleteLocations(session, locations, user);
 			txn.commit();
 
 		} finally {
@@ -411,7 +411,7 @@ public class DAOLocation {
 		}	
 	}
 		
-	public static void removeLocations(EntityManager session, List<Location> locations, SpiritUser user) throws Exception {
+	public static void deleteLocations(EntityManager session, Collection<Location> locations, SpiritUser user) throws Exception {
 		
 		if(user==null) throw new Exception("There is no user");
 		for (Location location : locations) {
@@ -591,45 +591,6 @@ public class DAOLocation {
 		} else {
 			b.setLocPos(null, -1);					
 		}
-	}
-	
-	
-	public static List<Location> duplicate(List<Location> locations) {
-		
-		//Sort the location to have them in hierarchy already (parents come before their children)
-		locations = new ArrayList<Location>(locations);
-		Collections.sort(locations);
-		
-		//Duplicate each location
-		List<Location> res = new ArrayList<Location>();
-		CorrespondanceMap<Location, Location> old2new = new CorrespondanceMap<Location, Location>();
-		for(Location l: locations) {
-			Location clone = l.duplicate();
-			boolean changeName;
-			if(l.getParent()!=null) {
-				 if(old2new.get(l.getParent())!=null) {
-					 changeName = false;
-					 clone.setParent(old2new.get(l.getParent()));					 
-				 } else {
-					 changeName = true;
-					 clone.setParent(l.getParent());
-				 }
-			} else {
-				changeName = true;
-			}
-			if(changeName) {
-				//Find a new possible Name
-				String name = l.getName();
-				if(name.indexOf(" (Copy ")>0) name = name.substring(0, name.indexOf(" (Copy "));
-				int n = 1;
-				while(getLocation(l.getParent(), name + " (Copy "+n+")")!=null) n++;			
-				clone.setName(name + " (Copy "+n+")");
-			}
-			
-			res.add(clone);
-			old2new.put(l, clone);
-		}
-		return res;
 	}
 	
 

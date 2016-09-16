@@ -41,9 +41,11 @@ public class SpiritUser {
 	private String username;
 	
 	private Set<String> managedUsers = new HashSet<>();	
-	private Set<EmployeeGroup> groupMembership = new HashSet<>();
+
 	private Set<String> roles = new HashSet<>();
+
 	private EmployeeGroup mainGroup;
+	private Set<EmployeeGroup> groups = new HashSet<>();
 	
 	public SpiritUser() {}
 	
@@ -54,9 +56,8 @@ public class SpiritUser {
 	
 	public SpiritUser(Employee emp) {
 		if(emp==null) throw new IllegalArgumentException("employee cannot be null");
-		this.username = emp.getUserName();
-		
-		groupMembership.addAll(emp.getEmployeeGroups());
+		this.username = emp.getUserName();		
+		this.groups.addAll(emp.getEmployeeGroups());
 		this.mainGroup = emp.getMainEmployeeGroup();
 		roles = emp.getRoles();
 		
@@ -92,6 +93,7 @@ public class SpiritUser {
 		roles.clear();
 		roles.add(role);
 	}
+	
 	public void setRole(String role, boolean set) {
 		if(set) {
 			roles.add(role);
@@ -103,15 +105,17 @@ public class SpiritUser {
 	public boolean isRole(String role) {
 		return roles.contains(role);
 	}
+	
 	public Set<String> getRoles() {
 		return Collections.unmodifiableSet(roles);
 	}
+	
 	public String getRolesString() {
 		return MiscUtils.flatten(roles, ", ");
 	}
 	
 	public boolean isMember(EmployeeGroup gr) {
-		return groupMembership.contains(gr);
+		return groups.contains(gr);
 	}	
 	
 	public boolean isReadall() {

@@ -54,13 +54,13 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.DBProperty;
 import com.actelion.research.spiritcore.adapter.HSQLFileAdapter;
+import com.actelion.research.spiritcore.adapter.PropertyDescriptor;
 import com.actelion.research.spiritcore.adapter.PropertyKey;
 import com.actelion.research.spiritcore.adapter.PropertyKey.Tab;
 import com.actelion.research.spiritcore.services.StringEncrypter;
-import com.actelion.research.spiritcore.services.dao.ConfigProperties;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.migration.MigrationScript;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.FastFont;
@@ -90,7 +90,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 	private final DBAdapter initialAdapter;
 	private Map<String, String> propertyMap;
 
-	private final Map<DBProperty, JComponent> dbproperty2comp = new HashMap<>();
+	private final Map<PropertyDescriptor, JComponent> dbproperty2comp = new HashMap<>();
 	private final JLabel label = new JLabel();
 	private JPanel userPanel = new JPanel(new GridLayout());
 	private JPanel studyPanel = new JPanel(new GridLayout());
@@ -106,7 +106,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 		//Initialize with current adapter
 		adapter = DBAdapter.getAdapter();
 		initialAdapter = adapter;
-		propertyMap = new HashMap<>(ConfigProperties.getInstance().getValues());
+		propertyMap = new HashMap<>(SpiritProperties.getInstance().getValues());
 
 		//Buttons
 		JButton okButton = new JIconButton(IconType.SAVE, "Save");
@@ -178,7 +178,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 						protected void doInBackground() throws Exception {
 							try {
 								label.setText("<html><div style='color:blue'>Recreate Examples...</div></html>");
-								SpiritDB.importExamples(true);
+								SpiritDB.checkImportExamples(true);
 								label.setText("<html><div style='color:green'>Successful</div></html>");
 								SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
 							} catch(Exception ex) {
@@ -253,8 +253,8 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 	}
 	
 	private void refreshConfigPanels() {
-		createPropertyPanel(userPanel, "", "", PropertyKey.getPropertyKey(Tab.SYSTEM), new String[0]);
-		createPropertyPanel(studyPanel, "", "", PropertyKey.getPropertyKey(Tab.STUDY), new String[0]);
+		createPropertyPanel(userPanel, "", "", PropertyKey.getPropertyKeys(Tab.SYSTEM), new String[0]);
+		createPropertyPanel(studyPanel, "", "", PropertyKey.getPropertyKeys(Tab.STUDY), new String[0]);
 	}
 	
 	private Map<PropertyKey, JComponent> prop2comp = new HashMap<>();
@@ -407,12 +407,14 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 	private void initUISpecificProperties() {
 		List<JComponent> comps = new ArrayList<>();
 		if(adapter!=null) {
-			for(DBProperty prop: adapter.getSpecificProperties()) {
+			for(PropertyDescriptor prop: adapter.getSpecificProperties()) {
 				addComp(prop, comps);
 			}
 		}
 		String help = adapter==null?"": adapter.getHelp();
-		JScrollPane sp = new JScrollPane(new JEditorPane("text/html", help==null?"": help));
+		JEditorPane editorPane = new JEditorPane("text/html", help==null?"": help);
+		editorPane.setEditable(false);
+		JScrollPane sp = new JScrollPane(editorPane);
 		sp.setVisible(help!=null && help.length()>0);
 		sp.setPreferredSize(new Dimension(450, 200));
 		specificConfigPane.removeAll();
@@ -421,7 +423,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 				sp));
 	}
 	
-	private JComponent addComp(DBProperty property, List<JComponent> comps) {
+	private JComponent addComp(PropertyDescriptor property, List<JComponent> comps) {
 		comps.add(new JLabel(property.getDisplayName()+": "));		
 		
 		Map<String, String> optionMap = property.getOptionMap();
@@ -482,7 +484,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 			}
 			
 			//Specific properties
-			for (DBProperty prop : adapter.getSpecificProperties()) {
+			for (PropertyDescriptor prop : adapter.getSpecificProperties()) {
 				assert dbproperty2comp.get(prop)!=null;
 				if(!dbproperty2comp.get(prop).isEnabled()) continue;
 				if(dbproperty2comp.get(prop) instanceof JTextField) {
@@ -550,14 +552,14 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 		}
 		
 		//ConfigProperties in DB
-		ConfigProperties.getInstance().setValues(propertyMap);
-		ConfigProperties.getInstance().saveValues();
+		SpiritProperties.getInstance().setValues(propertyMap);
+		SpiritProperties.getInstance().saveValues();
 		dispose();
 		SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
 		
 		//Reset Spirit
 		DBAdapter.setAdapter(null);
-		JPAUtil.refresh();
+		JPAUtil.close();
 		SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
 	}
 	

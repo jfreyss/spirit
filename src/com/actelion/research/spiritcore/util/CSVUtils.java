@@ -19,7 +19,7 @@
  * @author Joel Freyss
  */
 
-package com.actelion.research.util;
+package com.actelion.research.spiritcore.util;
 
 import java.awt.Desktop;
 import java.io.File;

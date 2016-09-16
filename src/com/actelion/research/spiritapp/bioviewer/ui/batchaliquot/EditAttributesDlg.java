@@ -45,7 +45,6 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.MetadataComponent;
 import com.actelion.research.spiritapp.spirit.ui.biosample.MetadataComponentFactory;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerTypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
-import com.actelion.research.spiritcore.business.IntegerMap;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;

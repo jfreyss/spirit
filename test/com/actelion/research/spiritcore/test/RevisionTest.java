@@ -29,21 +29,19 @@ import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 
-public class DAORevisionTest {
+public class RevisionTest {
 
 	private static SpiritUser user;
 	
 	@BeforeClass
 	public static void initDB() throws Exception {
-		//Set properties
-		System.setProperty("show_sql", "true");
-		
 		//Init user
 		user = SpiritUser.getFakeAdmin();
 		
 		//Init DB
 		DBAdapter.setAdapter(new HSQLMemoryAdapter());
-		DAOExchangeTest.importDemo(user);
+		ExchangeTest.initDemoExamples(user);
+		
 	}
 	
 	@Test
@@ -60,6 +58,8 @@ public class DAORevisionTest {
 		Assert.assertEquals(1, revisions.size());
 		
 		Revision rev = revisions.get(0);
+		Revision rev2 = DAORevision.getRevision(rev.getRevId());
+		Assert.assertEquals(rev.toString(), rev2.toString());
 		Assert.assertEquals(RevisionType.ADD, rev.getRevisionType());
 		DAORevision.revert(rev, user, "Revert");
 		
@@ -174,18 +174,23 @@ public class DAORevisionTest {
 	
 	@Test
 	public void testRevertCombo2() throws Exception {
-		DAOExchangeTest.importDemo(user);
+		ExchangeTest.initDemoExamples(user);
 		
 		Study study = DAOStudy.queryStudies(StudyQuery.createForLocalId("IVV2016-2"), user).get(0);
-
-		study.setNotes("Test");
-		DAOStudy.persistStudies(Collections.singleton(study), user);
-		
-		
-		//Load Revisions
-		study = DAOStudy.queryStudies(StudyQuery.createForLocalId("IVV2016-2"), user).get(0);
 		List<Revision> revisions = DAORevision.getRevisions(study);
 		Assert.assertTrue(revisions.size()>0);
+		JPAUtil.pushEditableContext(user);
+
+		study.setNotes("Test Combo2");
+		DAOStudy.persistStudies(Collections.singleton(study), user);
+		
+		JPAUtil.close();
+		//Load Revisions
+		study = DAOStudy.queryStudies(StudyQuery.createForLocalId("IVV2016-2"), user).get(0);
+		Assert.assertEquals("Test Combo2", study.getNotes());
+		revisions = DAORevision.getRevisions(study);
+		Assert.assertTrue(revisions.size()>0);
+		
 		
 		Revision rev = revisions.get(0);
 		Assert.assertEquals(RevisionType.MOD, rev.getRevisionType());

@@ -24,24 +24,43 @@ package com.actelion.research.spiritapp.spirit.ui.study.wizard.phase;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
+import javax.swing.JScrollPane;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 
 import org.jdesktop.swingx.JXDatePicker;
 
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyWizardDlg;
+import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
+import com.actelion.research.spiritcore.business.result.Result;
+import com.actelion.research.spiritcore.business.result.ResultQuery;
+import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.PhaseFormat;
 import com.actelion.research.spiritcore.business.study.Study;
+import com.actelion.research.spiritcore.business.study.StudyAction;
+import com.actelion.research.spiritcore.services.dao.DAOBiosample;
+import com.actelion.research.spiritcore.services.dao.DAOResult;
+import com.actelion.research.spiritcore.services.dao.DAOStudy;
+import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.FormatterUtils;
-import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
+import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.UIUtils;
 
 public class PhaseDlg extends JEscapeDialog {
@@ -53,18 +72,18 @@ public class PhaseDlg extends JEscapeDialog {
 	private JXDatePicker startingDayPicker = new JXDatePicker();
 		
 	private JLabel startingDateLabel = new JLabel();
-	private JTabbedPane tabbedPane = new JCustomTabbedPane();
 	
-	private final PhaseList phaseList1 = new PhaseList();
-	private final PhaseList phaseList2 = new PhaseList();
+	private PhaseEditTable phaseTable;
 	
 	public PhaseDlg(final StudyWizardDlg dlg, final Study study) {
 		super(dlg, "Study Wizard - Edit Phases");
-		this.dlg  = dlg;
+		this.dlg = dlg;
 		this.study = study;
 		
+		//Count biosamples/results
+		Map<Phase, Pair<Integer, Integer>> phase2count = DAOStudy.countBiosampleAndResultsByPhase(study);
 		
-		
+		phaseTable = new PhaseEditTable(study, phase2count);
 		
 		//formatPanel
 		formatComboBox.setSelection(study.getPhaseFormat());
@@ -73,12 +92,21 @@ public class PhaseDlg extends JEscapeDialog {
 			public void actionPerformed(ActionEvent e) {
 				if(formatComboBox.getSelection()==study.getPhaseFormat()) return;
 				try {					
+					for (Phase p : study.getPhases()) {
+						if(formatComboBox.getSelection()==PhaseFormat.NUMBER && (p.getMinutes()!=0 || p.getHours()!=0)) {
+							formatComboBox.setSelection(study.getPhaseFormat());
+							throw new Exception("You cannot change the format to " + PhaseFormat.NUMBER.getDescription() + " if you have hours or minutes in your phases");
+						}
+					}
+					for (Phase p : study.getPhases()) {
+						p.setName(Phase.cleanName(p.getName(), formatComboBox.getSelection()));
+					}					
 					study.setPhaseFormat(formatComboBox.getSelection());
 				} catch(Exception ex ) { 
 					JExceptionDialog.showError(ex);
 				}
-				recreateTabPane();
 				refresh();
+				dlg.refresh();
 			}
 		});
 
@@ -88,21 +116,70 @@ public class PhaseDlg extends JEscapeDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				study.setStartingDate(startingDayPicker.getDate());
+				dlg.refresh();				
+			}
+		});
+		JPanel formatPanel = UIUtils.createTable(
+				new JLabel("Phase Format: "), formatComboBox, 
+				new JLabel("Starting Date (opt.): "), startingDayPicker);
+
+		
+		refresh();
+		phaseTable.setAutoscrolls(true);
+		phaseTable.getModel().addTableModelListener(new TableModelListener() {
+			
+			@Override
+			public void tableChanged(TableModelEvent e) {		
+				synchroTable();
+			}
+		});
+		
+		JButton addButton = new JButton("Add Phases");
+		addButton.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new PhaseAddDlg(PhaseDlg.this);
 				refresh();
 			}
 		});
-		JPanel formatPanel = UIUtils.createVerticalBox(
-				UIUtils.createHorizontalBox(new JLabel("Phase Format: "), formatComboBox, Box.createHorizontalGlue()), 
-				UIUtils.createHorizontalBox(new JLabel("Starting Date (opt.): "), startingDayPicker, Box.createHorizontalGlue()));
-
-		
-		//TabbedPane
-		recreateTabPane();
-		
+		JButton removeButton = new JButton("Remove");
+		removeButton.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					phaseTable.getModel().getRows().removeAll(phaseTable.getSelection());
+					phaseTable.getModel().fireTableDataChanged();
+					synchroTable();
+				} catch(Exception ex) {
+					JExceptionDialog.showError(PhaseDlg.this, ex);
+				}
+			}
+		});
+		JButton selectEmpty = new JButton("Select Empty Phases");
+		selectEmpty.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				selectEmpty();
+			}
+		});
 		//ContentPane
-		add(BorderLayout.CENTER, UIUtils.createBox(tabbedPane, UIUtils.createTitleBox(null, formatPanel), Box.createGlue()));
+		add(BorderLayout.CENTER, UIUtils.createBox(
+				UIUtils.createTitleBox("Phases", 
+					UIUtils.createBox(new JScrollPane(phaseTable), null, null, null, 
+							UIUtils.createVerticalBox(
+								UIUtils.createHorizontalBox(addButton, Box.createHorizontalGlue()),
+								UIUtils.createHorizontalBox(selectEmpty, removeButton, Box.createHorizontalGlue()),
+								Box.createVerticalGlue(),
+								new JInfoLabel("<html><ul>"
+								+ "<li>To rename, edit the cell"
+								+ "<li>To insert a phase, right-click and insert"
+								+ "<li>To remove a phase, right-click and remove"
+								+ "<li>Phases will be sorted lexicographically")
+							)
+				)),					
+				UIUtils.createTitleBox(null, formatPanel), Box.createGlue()));
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue(), new JButton(new CloseAction())));
-		UIUtils.adaptSize(this, 650, 620);
+		UIUtils.adaptSize(this, 650, 660);
 		refresh();
 		setLocationRelativeTo(dlg);
 		setVisible(true);
@@ -113,32 +190,90 @@ public class PhaseDlg extends JEscapeDialog {
 		return study;
 	}
 	
-	public void recreateTabPane() {
-		int index = tabbedPane.getSelectedIndex();
-		tabbedPane.removeAll();
-		phaseList1.setPhases(study.getPhases());
-		phaseList2.setPhases(study.getPhases());
-
-		
-		if(formatComboBox.getSelection()==PhaseFormat.DAY_MINUTES) {
-			tabbedPane.addTab("Add Phases", new PhaseAddPanel(this));		
-			tabbedPane.addTab("Update Phases", new PhaseUpdatePanel(this, phaseList1));
-			tabbedPane.addTab("Remove Phases", new PhaseRemovePanel(this, phaseList2));
-		} else {
-			tabbedPane.addTab("Set Phases", new PhaseAddPanel(this));		
-			tabbedPane.addTab("Remove Phases", new PhaseRemovePanel(this, phaseList2));			
+	private void synchroTable() {
+		List<Phase> rows = phaseTable.getNonEmptyRows();
+		try {
+			//Add new phases				
+			Set<Phase> newPhases = new HashSet<>(rows);
+			newPhases.removeAll(study.getPhases());
+			for (Phase phase : newPhases) {
+				phase.setStudy(study);
+			}
+			
+			//Remove phases
+			Set<Phase> oldPhases = new HashSet<>(study.getPhases());
+			oldPhases.removeAll(rows);
+			removePhases(oldPhases);
+			System.out.println("PhaseDlg.synchroTable() add="+newPhases+" remove="+oldPhases);
+			
+			//Sort phases
+			study.setStartingDate(startingDayPicker.getDate());
+			study.resetCache();
+		} catch(Exception ex) {
+			JExceptionDialog.showError(PhaseDlg.this, ex);
+			refresh();
+		} finally {
+			dlg.refresh();					
 		}
-		
-		tabbedPane.setSelectedIndex(index>=0 && index<tabbedPane.getTabCount()? index: 0);
-		tabbedPane.validate();
 	}
 	
-
+	
+	private void selectEmpty() {
+		List<Phase> emptyPhases = new ArrayList<>();
+		
+		for(Phase phase: study.getPhases()) {
+			if(phase.getId()<=0) {
+				emptyPhases.add(phase);	
+				
+			} else if(!phase.hasRandomization()) {
+			
+				boolean empty = true;			
+				for(StudyAction action: study.getStudyActions(phase)) {
+					if(!action.isEmpty()){
+						empty = false;
+						break;
+					}
+				}
+				if(empty) emptyPhases.add(phase);
+			}
+		}
+		
+		phaseTable.setSelection(emptyPhases);
+		
+	}
+	
+	private void removePhases(Collection<Phase> phases) throws Exception {
+		
+		//Test that the user can delete the phase
+		for(Phase phase: phases) {		
+			if(phase.getId()<=0) continue;
+			
+			//Exception if there are samples associated to this phase
+			List<Biosample> samples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForPhase(phase), null);
+			if(samples.size()>0) {
+				throw new Exception("You cannot delete the phase "+phase+" because there are " +samples.size()+ " biosamples associated to it");
+			}
+			//Exception if there are results associated to this phase
+			List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForPhase(phase), null);
+			if(results.size()>0) {
+				throw new Exception("You cannot delete the phase "+phase+" because there are " +results.size()+ " results associated to it");
+			}
+			
+		}
+				
+		//Delete
+		for(Phase phase: phases) {
+			phase.remove();
+		}
+		
+	}
+	
 	public void refresh() {
-		recreateTabPane();
+		List<Phase> phases = new ArrayList<>(study.getPhases());
+		Collections.sort(phases);
+		phaseTable.setRows(phases);
 		startingDayPicker.setEnabled(study.getPhaseFormat()==PhaseFormat.DAY_MINUTES);
 		startingDateLabel.setText(study.getPhaseFormat()!=PhaseFormat.DAY_MINUTES? "": study.getFirstDate()==null? ": N/A": ": "+FormatterUtils.formatDate(study.getFirstDate()));
 		
-		dlg.refresh();
 	}
 }

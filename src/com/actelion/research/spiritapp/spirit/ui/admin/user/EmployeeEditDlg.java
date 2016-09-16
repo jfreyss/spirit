@@ -23,6 +23,7 @@ package com.actelion.research.spiritapp.spirit.ui.admin.user;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -41,7 +42,7 @@ import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDia
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
-import com.actelion.research.spiritcore.services.dao.ConfigProperties;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomTextField;
@@ -60,9 +61,9 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 
 	private JCheckBox disabledCheckBox  = new JCheckBox("Disabled");
 	private EmployeeGroupComboBox group1Box = new EmployeeGroupComboBox(false);
-//	private EmployeeGroupComboBox group2Box = new EmployeeGroupComboBox(false);
-//	private EmployeeGroupComboBox group3Box = new EmployeeGroupComboBox(false);
-//	private EmployeeGroupComboBox group4Box = new EmployeeGroupComboBox(false);
+	private EmployeeGroupComboBox group2Box = new EmployeeGroupComboBox(false);
+	private EmployeeGroupComboBox group3Box = new EmployeeGroupComboBox(false);
+	private EmployeeGroupComboBox group4Box = new EmployeeGroupComboBox(false);
 	
 	private JGenericComboBox<String> role1Box;
 	private JGenericComboBox<String> role2Box;
@@ -76,10 +77,10 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 		emp = JPAUtil.reattach(tmp);
 		
 		
-		role1Box = new JGenericComboBox<>(ConfigProperties.getInstance().getUserRoles(), true);
-		role2Box = new JGenericComboBox<>(ConfigProperties.getInstance().getUserRoles(), true);
-		role3Box = new JGenericComboBox<>(ConfigProperties.getInstance().getUserRoles(), true);
-		role4Box = new JGenericComboBox<>(ConfigProperties.getInstance().getUserRoles(), true);
+		role1Box = new JGenericComboBox<>(SpiritProperties.getInstance().getUserRoles(), true);
+		role2Box = new JGenericComboBox<>(SpiritProperties.getInstance().getUserRoles(), true);
+		role3Box = new JGenericComboBox<>(SpiritProperties.getInstance().getUserRoles(), true);
+		role4Box = new JGenericComboBox<>(SpiritProperties.getInstance().getUserRoles(), true);
 		
 		generateButton.addActionListener(new ActionListener() {			
 			@Override
@@ -111,9 +112,9 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 		managerField.setText(emp.getManager()==null?"": emp.getManager().getUserName());
 		Iterator<EmployeeGroup> iter = emp.getEmployeeGroups().iterator();
 		if(iter.hasNext()) group1Box.setSelection(iter.next());
-//		if(iter.hasNext()) group2Box.setSelection(iter.next()); 
-//		if(iter.hasNext()) group3Box.setSelection(iter.next()); 
-//		if(iter.hasNext()) group4Box.setSelection(iter.next()); 
+		if(iter.hasNext()) group2Box.setSelection(iter.next());
+		if(iter.hasNext()) group3Box.setSelection(iter.next());
+		if(iter.hasNext()) group4Box.setSelection(iter.next());
 		disabledCheckBox.setSelected(emp.isDisabled());
 		
 		Iterator<String> iter2 = emp.getRoles().iterator();
@@ -167,9 +168,9 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 					
 					emp.getEmployeeGroups().clear();
 					if(group1Box.getSelection()!=null) emp.getEmployeeGroups().add(group1Box.getSelection());
-//					if(group2Box.getSelection()!=null) emp.getEmployeeGroups().add(group2Box.getSelection());
-//					if(group3Box.getSelection()!=null) emp.getEmployeeGroups().add(group3Box.getSelection());
-//					if(group4Box.getSelection()!=null) emp.getEmployeeGroups().add(group4Box.getSelection());
+					if(group2Box.getSelection()!=null) emp.getEmployeeGroups().add(group2Box.getSelection());
+					if(group3Box.getSelection()!=null) emp.getEmployeeGroups().add(group3Box.getSelection());
+					if(group4Box.getSelection()!=null) emp.getEmployeeGroups().add(group4Box.getSelection());
 					
 					Set<String> roles = new HashSet<>();
 					if(role1Box.getSelection()!=null) roles.add(role1Box.getSelection());
@@ -181,7 +182,7 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 					
 					emp.setDisabled(disabledCheckBox.isSelected());
 					
-					DAOEmployee.persistEmployee(emp, Spirit.getUser());
+					DAOEmployee.persistEmployees(Collections.singleton(emp), Spirit.getUser());
 					dispose();
 				} catch (Exception e) {
 					JExceptionDialog.showError(e);

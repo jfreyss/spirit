@@ -24,12 +24,13 @@ package com.actelion.research.spiritcore.test;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.actelion.research.spiritcore.services.migration.MigrationScript;
-import com.actelion.research.util.SQLConverter;
-import com.actelion.research.util.SQLConverter.SQLVendor;
+import com.actelion.research.spiritcore.util.SQLConverter;
+import com.actelion.research.spiritcore.util.SQLConverter.SQLVendor;
 
 public class SQLConverterTest {
 	static Connection hsqlConn;
@@ -61,5 +62,10 @@ public class SQLConverterTest {
 				+ "insert into test2.spirit_property values('myProp', 'myValue')" 
 				+ "update test2.spirit_property set value = 'VALUE=' || replace(replace(value, '\\', '\\\\'), ';', '\\;');\n";
 		MigrationScript.executeScript(hsqlConn, SQLConverter.convertScript(script, SQLVendor.HSQL), true, null);
+	}
+	
+	@AfterClass
+	public static void after() throws Exception {
+		hsqlConn.close();
 	}
 }

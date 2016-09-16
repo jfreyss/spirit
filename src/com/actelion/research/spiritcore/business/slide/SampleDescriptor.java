@@ -22,13 +22,16 @@
 package com.actelion.research.spiritcore.business.slide;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-import com.actelion.research.spiritcore.business.IntegerMap;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.business.biosample.Metadata;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 
 public class SampleDescriptor implements Comparable<SampleDescriptor>, Serializable, Cloneable {
@@ -71,7 +74,7 @@ public class SampleDescriptor implements Comparable<SampleDescriptor>, Serializa
 		this.containerType = b.getContainerType();
 		this.blocNo = b.getContainer()==null? null: b.getContainer().getBlocNo();
 
-		IntegerMap map = new IntegerMap();
+		Map<Integer, String> map = new HashMap<>();
 		for (BiotypeMetadata bm : biotype.getMetadata()) {
 			Metadata m = b.getMetadata(bm);
 			if(m!=null && m.getValue()!=null) {
@@ -80,7 +83,7 @@ public class SampleDescriptor implements Comparable<SampleDescriptor>, Serializa
 		}
 		
 		name = b.getBiotype().getSampleNameLabel()==null? null: b.getSampleName();
-		parameters = map.getSerializedMap();
+		parameters = MiscUtils.serializeIntegerMap(map);
 	}
 	
 	public Biotype getBiotype() {
@@ -103,18 +106,11 @@ public class SampleDescriptor implements Comparable<SampleDescriptor>, Serializa
 
 	@Override
 	public String toString() {
-		String values = parseParams().getValues();
-		return biotype.getName() + (name!=null? " " + name: "") + (values.length()>0? ": " + values: "");
+		Collection<String> values = MiscUtils.deserializeIntegerMap(parameters).values();
+		return biotype.getName() + (name!=null? " " + name: "") + (values.size()>0? ": " + MiscUtils.flatten(values): "");
 	}
 	
-	/**
-	 * Return a Map of MetadataTypeId -> suggested value
-	 * @return
-	 */
-	public IntegerMap parseParams() {
-		return new IntegerMap(parameters);
-	}
-	
+
 	
 	public Biosample createCompatibleBiosample() {
 		Biosample biosample = new Biosample(biotype);
@@ -122,7 +118,7 @@ public class SampleDescriptor implements Comparable<SampleDescriptor>, Serializa
 		biosample.setSampleName(name);
 		
 		//parameters
-		IntegerMap map = parseParams();
+		Map<Integer, String> map = MiscUtils.deserializeIntegerMap(parameters);
 		for (BiotypeMetadata m : biotype.getMetadata()) {
 			String data = map.get(m.getId());
 			if(data!=null) biosample.getMetadata(m).setValue(data); 
@@ -183,7 +179,7 @@ public class SampleDescriptor implements Comparable<SampleDescriptor>, Serializa
 
 		//check biotype
 		if(biosample.getBiotype()==null || !biosample.getBiotype().equals(getBiotype())) return false;
-		IntegerMap map = parseParams();
+		Map<Integer, String> map = MiscUtils.deserializeIntegerMap(parameters);
 		
 		//check name
 		if(biosample.getBiotype().getSampleNameLabel()!=null) {			

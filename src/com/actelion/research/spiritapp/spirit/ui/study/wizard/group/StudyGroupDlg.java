@@ -382,7 +382,7 @@ public class StudyGroupDlg extends JEscapeDialog {
 					group.remove();
 					group = null;
 
-					study.clearCache();					
+					study.resetCache();					
 					refreshGroups();
 					
 					
@@ -405,7 +405,7 @@ public class StudyGroupDlg extends JEscapeDialog {
 					if(selection.size()<1) throw new Exception("You must select 1 group or more");
 					
 					for (Group group: selection) {
-						if(!group.getTopAttachedBiosamples().isEmpty()) throw new Exception("You cannot delete a group if there are samples attached to it");
+						if(!study.getTopAttachedBiosamples(group).isEmpty()) throw new Exception("You cannot delete a group if there are samples attached to it");
 					}
 					
 					int res = JOptionPane.showConfirmDialog(dlg, "Are you sure you want to delete " + (selection.size()==1?"this group": "these " + selection.size() + " groups") + "?", "Delete", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);

@@ -228,7 +228,7 @@ public class DataTab extends WizardPanel {
 		Set<Integer> usedNo = new HashSet<>(); 
 		int count = 0;
 		try {
-			DAOResult.attachOrCreateStudyResultsToSpecimen(study, study.getTopAttachedBiosamples(), dlg.getPhase(), null);
+			DAOResult.attachOrCreateStudyResultsToTops(study, study.getTopAttachedBiosamples(), dlg.getPhase(), null);
 		} catch(Exception e) {
 			JExceptionDialog.showError(e);
 		}
@@ -355,12 +355,10 @@ public class DataTab extends WizardPanel {
 		
 		//Check the number of attached samples coming from the corresponding groups
 		int nAttached = 0;
-//		boolean hasGroupSplitting = false;
 		for(Group g: dlg.getStudy().getGroups()) {
 			if(!dlg.getPhase().equals( g.getFromPhase())) continue;
-//			if(g.getFromGroup()!=null) hasGroupSplitting = true;
-			nAttached += g.getTopAttachedBiosamples().size();
-			if(g.getFromGroup()!=null) nAttached += g.getFromGroup().getTopAttachedBiosamples().size();			
+			nAttached += dlg.getStudy().getTopAttachedBiosamples(g).size();
+			if(g.getFromGroup()!=null) nAttached += dlg.getStudy().getTopAttachedBiosamples(g.getFromGroup()).size();			
 		}
 		
 		//Update view

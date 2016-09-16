@@ -37,7 +37,6 @@ import javax.swing.JList;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.JTextComboBox;

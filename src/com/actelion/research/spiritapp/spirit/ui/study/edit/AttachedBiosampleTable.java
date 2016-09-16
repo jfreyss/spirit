@@ -183,7 +183,7 @@ public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> 
 	
 	
 	public List<Double> getDoubles(int index){
-		return AttachedBiosample.extractDoubles(getRows(), index);
+		return AttachedBiosample.getData(getRows(), index);
 	}
 	
 	private DropListener dropListener = new DropListener();

@@ -19,26 +19,22 @@
  * @author Joel Freyss
  */
 
-package com.actelion.research.spiritcore.util;
+package com.actelion.research.spiritcore.services.dao;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.hibernate.envers.RevisionEntity;
+import org.hibernate.envers.RevisionListener;
 
-public class CorrespondanceMap<T1, T2> {
-	
-	private List<T1> originals = new ArrayList<T1>();
-	private List<T2> clones = new ArrayList<T2>();
-	
-	public void put(T1 original, T2 clone) {
-		originals.add(original);
-		clones.add(clone);
+import com.actelion.research.spiritcore.services.SpiritUser;
+
+@RevisionEntity
+public class SpiritRevisionListener implements RevisionListener {
+
+	@Override
+	public void newRevision(Object obj) {
+		SpiritRevisionEntity rev = (SpiritRevisionEntity) obj;		
+		SpiritUser user = JPAUtil.getSpiritUser();
+		rev.setUserId(user==null?"": user.getUsername());
+		rev.setTimestamp(JPAUtil.getCurrentDateFromDatabase().getTime());
+		DAOBarcode.reset();
 	}
-	
-	public T2 get(T1 original) {
-		for (int i = 0; i < originals.size(); i++) {
-			if(originals.get(i)==original) return clones.get(i);
-		}
-		return null;
-	}
-
 }

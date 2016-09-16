@@ -45,11 +45,10 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
-import com.actelion.research.spiritcore.services.dao.ConfigProperties;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.Formatter;
-import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Triple;
 import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.ui.FastFont;
@@ -108,7 +107,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 	public static final class MetadataColumn extends Column<Study, String> {
 		private String metaKey;
 		public MetadataColumn(String metaKey) {
-			super(ConfigProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metaKey), String.class, 80, 140);
+			super(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metaKey), String.class, 80, 140);
 			this.metaKey = metaKey;
 		}
 		@Override
@@ -118,16 +117,16 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		
 	}
 
-	public static final Column<Study, String> COLUMN_COMPOUNDS = new Column<Study, String>("Compounds", String.class, 80, 140) {
-		@Override
-		public String getValue(Study row) {
-			return MiscUtils.flatten(row.getCompounds(), ", ");
-		}
-		@Override
-		public boolean isAutoWrap() {return true;}
-		@Override
-		public boolean isHideable() {return true;}
-	};
+//	public static final Column<Study, String> COLUMN_COMPOUNDS = new Column<Study, String>("Compounds", String.class, 80, 140) {
+//		@Override
+//		public String getValue(Study row) {
+//			return MiscUtils.flatten(row.getCompounds(), ", ");
+//		}
+//		@Override
+//		public boolean isAutoWrap() {return true;}
+//		@Override
+//		public boolean isHideable() {return true;}
+//	};
 
 	
 	public static final Column<Study, String> COLUMN_RESPONSIBLES = new Column<Study, String>("Responsibles", String.class, 50, 120) {
@@ -344,14 +343,14 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		defaultColumns.add(COLUMN_STUDYID);
 		defaultColumns.add(COLUMN_TITLE);
 		
-		for (String metaKey : ConfigProperties.getInstance().getValues(PropertyKey.STUDY_METADATA)) {
+		for (String metaKey : SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA)) {
 			defaultColumns.add(new MetadataColumn(metaKey));
 		}
 		
 //		defaultColumns.add(COLUMN_TYPE);
 //		defaultColumns.add(COLUMN_PROJECT);
 //		defaultColumns.add(COLUMN_DISEASEAREA);
-		defaultColumns.add(COLUMN_COMPOUNDS);
+//		defaultColumns.add(COLUMN_COMPOUNDS);
 //		defaultColumns.add(COLUMN_SITE);
 //		defaultColumns.add(COLUMN_CLINICAL);
 		defaultColumns.add(COLUMN_RESPONSIBLES);		

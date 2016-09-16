@@ -483,7 +483,7 @@ public class BiosampleSearchTree extends FormTree {
 			Set<Biotype> allBioTypes = new TreeSet<Biotype>();
 			for (Study study : studies) {
 				allContainerTypes.addAll(DAOStudy.getContainerTypes(study));
-				allBioTypes.addAll(DAOStudy.getBiotypes(study.getStudyId()));
+				allBioTypes.addAll(DAOStudy.getBiotypes(study));
 			}
 			containerTypeComboBox.setValues(allContainerTypes);
 			bioTypeNode.setValues(allBioTypes);

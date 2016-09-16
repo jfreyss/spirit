@@ -109,7 +109,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 	
 	@Override
 	public void setBiosamples(Collection<Biosample> biosamples) {
-		this.biosamples = biosamples==null || biosamples.size()!=1? new ArrayList<Biosample>(): biosamples;
+		this.biosamples = biosamples==null/* || biosamples.size()!=1*/? new ArrayList<Biosample>(): biosamples;
 		refresh();
 	}
 	
@@ -252,9 +252,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 			//Status
 			ActionStatus s = b.getLastActionStatus();
 			if(s!=null) {
-				txt.append("<i style='font-size:8px; background:" + UIUtils.getHtmlColor(s.getStatus().getBackground()) + "; color:#000000'>" + s.getComments() + (s.getPhase()!=null?" at "+s.getPhase().getShortName(): " "+ Formatter.formatDate(s.getUpdDate())) + " </i><br>");
-//			} else {
-//				txt.append("<i style='font-size:8px; background:" + UIUtils.getHtmlColor(b.getStatus().getBackground()) + "; color:#000000'>" + b.getStatus().getName() + "</i><br>");
+				txt.append("<i style='font-size:8px; background:" + UIUtils.getHtmlColor(s.getStatus().getBackground()) + "; color:#000000'>" + s.getDetails() + (s.getPhase()!=null?" at "+s.getPhase().getShortName(): " "+ Formatter.formatDate(s.getUpdDate())) + " </i><br>");
 			}
 
 			//Quality

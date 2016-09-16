@@ -27,7 +27,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -45,6 +44,7 @@ import org.hibernate.envers.Audited;
 
 import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.spiritcore.util.Pair;
 
 /**
  * The phase can be formatted in 2 different ways:
@@ -65,7 +65,7 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 	@Column(name="name", length=64, nullable=false)
 	private String name;
 	
-	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
+	@ManyToOne(fetch=FetchType.LAZY, cascade={})
 	private Study study = null;
 	
 	
@@ -73,9 +73,11 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 	private String serializedRandomization = "";
 
 	private transient Randomization randomization = null;
-	private transient int days = 0; //any positive or negative, or null value is allowed
-	private transient int hours = 0; // should always be >0
-	private transient int minutes = -1; //-1 means not yet calculated, should always be >0
+	private transient boolean parsed = false;
+	private transient int days = 0; 
+	private transient int hours = 0; 
+	private transient int minutes = -1; 
+	private transient String label = "";
 	
 	
 	public Phase() {}
@@ -114,8 +116,8 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 	
 	public String getShortName() {
 		if(name==null) return "";
-		int index = name.indexOf(' ');
-		return index<0? name: name.substring(0, index).trim();
+		if(!parsed) parseDayHoursMinutesLabel();
+		return name.substring(0, name.length()-label.length());
 	}
 	
 	public String getName() {
@@ -124,13 +126,12 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 	
 	public void setName(String name) {
 		this.name = name==null?"": name.trim();
-		this.minutes = -1;
+		this.parsed = false;
 	}
 
 	public String getLabel() {
-		if(name==null) return "";
-		int index = name.indexOf(' ');
-		return index<0?"": name.substring(index+1).trim();
+		if(!parsed) parseDayHoursMinutesLabel();
+		return label;
 	}
 		
 	public Date getAbsoluteDate() {
@@ -168,25 +169,31 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 	public boolean equals(Object obj) {
 		if(obj==this) return true;
 		if(! (obj instanceof Phase)) return false;
-		return this.compareTo((Phase) obj)==0;		
+		Phase p = (Phase) obj;
+		if(p.getId()>0) return getId() == p.getId();		
+		return this.compareTo(p)==0;
 	}
 	
 	@Override
 	public int compareTo(Phase o) {
 		if(o==null) return -1;
-		int c = getDays() - o.getDays(); 
+		int c = getStudy()==null? (o.getStudy()==null?0:1): getStudy().compareTo(o.getStudy()); 
+		if(c!=0) return c;
+		c = getDays() - o.getDays(); 
 		if(c!=0) return c;
 		c = getHours() - o.getHours();
 		if(c!=0) return c;
 		c = getMinutes() - o.getMinutes();
 		if(c!=0) return c;
-		return getName()==null? (o.getName()==null?0: 1):  (o.getName()==null?-1: getName().compareTo(o.getName()));
+		c = getName()==null? (o.getName()==null?0: 1):  (o.getName()==null?-1: getName().compareTo(o.getName()));
+		if(c!=0) return c;
+		return 0;
 	}
 	
 
 	@Override
 	public int hashCode() {
-		return name==null?0: name.hashCode();
+		return id;
 	}
 	
 	
@@ -206,11 +213,11 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 		study.getPhases().remove(this);
 		
 		for(Group gr: study.getGroups()) {
-			if(gr.getFromPhase()==this) gr.setFromPhase(null);
+			if(this.equals(gr.getFromPhase())) gr.setFromPhase(null);
 		}
 		
 		//Remove actions of this group
-		for (StudyAction a: new ArrayList<StudyAction>(study.getStudyActions())) {
+		for (StudyAction a: new ArrayList<>(study.getStudyActions())) {
 			if(this.equals(a.getPhase())) {
 				a.remove();
 			}
@@ -219,70 +226,102 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 		study = null;
 	}
 	
-	private void parseDayHoursMinutes() {
-		String s = getShortName();
-		int index = s.indexOf("d");
-		if(index<0) {			
-			Integer d = extractNumber(s, 0);
-			days = d==null? 0: d;
-			hours = 0;
-			minutes = 0;
+	/**
+	 * Parses day, hours, minutes, seconds of the phase name formatted like "d1_5h05 Label"
+	 */
+	private void parseDayHoursMinutesLabel() {
+		parsed = true;
+		days = 0;
+		hours = 0;
+		minutes = 0;
+		
+		String s = getName();
+		if(s==null) return;		
+		int index = 0;
+		
+		if(!s.startsWith("d")) {
+			Pair<Integer,Integer> d = parseNumber(s, 0);
+			days = d==null? 0: d.getFirst();
+			index = d==null? 0: d.getSecond();
 		} else {
-			Integer d = extractNumber(s, index+1);
-			if(d==null) {
-				days = 0;
-				hours = 0;
-				minutes = 0;				
-			} else {
-				days = d;				
-				index = s.indexOf("_", index);
-				if(index<0) {
-					hours = 0;
-					minutes = 0;
-				} else {
-					Integer h = extractNumber(s, index+1);;
-					if(h==0) {
-						hours = 0;
-						minutes = 0;
-					} else {
-						hours = h;
-						index = s.indexOf("h", index);
-						if(index<0) {
-							minutes = 0;
-						} else {
-							Integer m = extractNumber(s, index+1);
-							minutes = m==null? 0: m;
-						}
-							
+			Pair<Integer,Integer> d = parseNumber(s, 1);
+			if(d!=null) {
+				days = d.getFirst();
+				index = d.getSecond()+1;
+				Pair<Integer,Integer> h = parseNumber(s, index);;
+				if(h!=null) {
+					hours = h.getFirst();
+					index = h.getSecond()+1;
+					Pair<Integer,Integer> m = parseNumber(s, index);
+					if(m!=null) {
+						minutes = m.getFirst();
+						index = m.getSecond()+1;
 					}
 				}
 			}
 		}
+		label = index>=s.length()?"": trim(s.substring(index));
+				
 	}
+	
+	public static String cleanName(String name, PhaseFormat phaseFormat) {
+		if(name==null || name.trim().length()==0) return "";
+		Phase p = new Phase(name);
+		if(phaseFormat==PhaseFormat.DAY_MINUTES) {
+			return name = "d" + p.getDays() +
+					(p.getHours()!=0 || p.getMinutes()!=0? "_" + p.getHours() + "h" + (p.getMinutes()!=0?p.getMinutes():""):"") +
+					(p.getLabel()!=null && p.getLabel().length()>0? " "+p.getLabel(): "");				
+		} else if(phaseFormat==PhaseFormat.NUMBER) {
+			return name = p.getDays() + "." +
+					(p.getLabel()!=null && p.getLabel().length()>0? " "+p.getLabel(): "");				
+		} else {
+			return name;
+		}
+		
+	}
+	
+	private String trim(String s) {
+		int i1 = 0;
+		int i2 = s.length();
+		for(;i1<s.length() && !Character.isLetterOrDigit(s.charAt(i1)); i1++) {}
+		for(;i2>i1 && !Character.isLetterOrDigit(s.charAt(i2-1)); i2--) {}
+		
+		return s.substring(i1, i2);
+		
+	}
+	
 	/**
 	 * Return the number of days as specified in d-1, d1, d2
 	 * or the phasenumber as specified in 1., 2.
 	 */
 	public int getDays() {
-		if(minutes<0) parseDayHoursMinutes();
+		if(!parsed) parseDayHoursMinutesLabel();
 		return days;
 	}
 	
 	public int getHours() {
-		if(minutes<0) parseDayHoursMinutes();
+		if(!parsed) parseDayHoursMinutesLabel();
 		return hours;
-	}
-	
+	}	
 	
 	public int getMinutes() {
-		if(minutes<0) parseDayHoursMinutes();
+		if(!parsed) parseDayHoursMinutesLabel();
 		return minutes;
 	}
 
 	
-	private static Integer extractNumber(String s, int offset) {
-		int index = offset;
+	/**
+	 * Extract the number starting at offset
+	 * extractNumber(d0, 1) ->0
+	 * extractNumber(d1_??, 1) ->1
+	 * extractNumber(d-2 ??, 1) ->-2
+	 * @return Pair<Integer, Integer>(found number, new index) or null if not found
+	 */
+	private static Pair<Integer, Integer> parseNumber(String s, int index) {
+		if(s==null) return null;
 		if(index>=s.length()) return null;
+		
+		//Check for '-' sign
 		boolean negative;
 		if(s.charAt(index)=='-') {
 			negative = true; 
@@ -292,12 +331,14 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 			negative = false;
 		}
 		
+		if(!Character.isDigit(s.charAt(index))) return null;
+		
 		int n = 0;
 		while(index<s.length() && Character.isDigit(s.charAt(index))) {
 			n = n*10 + s.charAt(index)-'0';
 			index++;
 		}		
-		return (negative?-1:1) * n;
+		return new Pair<Integer, Integer>((negative?-1:1) * n, index);
 	}
 	
 	/**

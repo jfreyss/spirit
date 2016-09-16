@@ -19,7 +19,7 @@
  * @author Joel Freyss
  */
 
-package com.actelion.research.spiritcore.services;
+package com.actelion.research.spiritcore.services.dao;
 
 import java.text.DateFormat;
 import java.util.Date;

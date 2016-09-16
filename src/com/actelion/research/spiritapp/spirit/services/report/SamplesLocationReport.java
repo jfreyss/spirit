@@ -41,8 +41,8 @@ import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.FormatterUtils;
-import com.actelion.research.util.HtmlUtils;
 
 public class SamplesLocationReport extends AbstractReport {
 	
@@ -53,7 +53,7 @@ public class SamplesLocationReport extends AbstractReport {
 	public SamplesLocationReport() {		
 		super(ReportCategory.SAMPLES, 
 				"Inventory", 
-				"Show the location of each sample in the study: " + HtmlUtils.convert2Html(
+				"Show the location of each sample in the study: " + MiscUtils.convert2Html(
 						"\tLocation\tContainer\tGroup\tPhase\tTopId\tBiotype\tMetadata\n"
 						+ "SampleId1\t\n"
 						+ "SampleId2\t\n"), 

@@ -38,8 +38,8 @@ import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Randomization;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
-import com.actelion.research.util.HtmlUtils;
 
 public class StudyGroupAssignmentReport extends AbstractReport {
 
@@ -48,7 +48,7 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 				"Group Assignment", 
 				"Group Assignment done through the Group Assignment Wizard, showing the data before and after the randomization.<ul>"
 				+ "<li>Each tab shows the assignment done at one given phase</ul>"
-				+ HtmlUtils.convert2Html("No\tBW\tTopId\tNewNo\tContainerId\tGroup\tMetadata\tTreatment\n"
+				+ MiscUtils.convert2Html("No\tBW\tTopId\tNewNo\tContainerId\tGroup\tMetadata\tTreatment\n"
 						+ "\t\tTopId1\n"
 						+ "\t\tTopId2\n"));
 	}

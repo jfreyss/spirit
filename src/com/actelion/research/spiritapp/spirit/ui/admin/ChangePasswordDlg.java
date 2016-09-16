@@ -24,6 +24,7 @@ package com.actelion.research.spiritapp.spirit.ui.admin;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collections;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -106,6 +107,6 @@ public class ChangePasswordDlg extends JEscapeDialog {
 		if(!new String(new1Field.getPassword()).equals(new String(new2Field.getPassword()))) throw new Exception("Your passwords don't match");
 		
 		employee.setPassword(DBAdapter.getAdapter().encryptPassword(new1Field.getPassword()));
-		DAOEmployee.persistEmployee(employee, Spirit.getUser());
+		DAOEmployee.persistEmployees(Collections.singleton(employee), Spirit.getUser());
 	}
 }

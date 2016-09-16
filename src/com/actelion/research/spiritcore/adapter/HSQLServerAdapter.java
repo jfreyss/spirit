@@ -37,17 +37,17 @@ import com.actelion.research.spiritcore.util.Pair;
  */
 public class HSQLServerAdapter extends HSQLFileAdapter {
 	
-	public static DBProperty DBMODE_PROPERTY = new DBProperty("jnlp.hsqlServerAdapter.mode", "Mode", new Pair[] {new Pair<String, String>("server", "Server"), new Pair<String, String>("client", "Client")});
-	public static DBProperty DBPATH_PROPERTY = new DBProperty("jnlp.hsqlServerAdapter.path", "Path [if Server mode]", new File(System.getProperty("user.home"), ".spirit/db").getPath());
-	public static DBProperty DBSERVER_PROPERTY = new DBProperty("jnlp.hsqlServerAdapter.server", "Server", "localhost");
+	public static PropertyDescriptor DBMODE_PROPERTY = new PropertyDescriptor("jnlp.hsqlServerAdapter.mode", "Mode", new Pair[] {new Pair<String, String>("server", "Server"), new Pair<String, String>("client", "Client")});
+	public static PropertyDescriptor DBPATH_PROPERTY = new PropertyDescriptor("jnlp.hsqlServerAdapter.path", "Path [if Server mode]", new File(System.getProperty("user.home"), ".spirit/db").getPath());
+	public static PropertyDescriptor DBSERVER_PROPERTY = new PropertyDescriptor("jnlp.hsqlServerAdapter.server", "Server", "localhost");
 	
 	public HSQLServerAdapter() {
 		super();
 	}
 	
 	@Override
-	public DBProperty[] getSpecificProperties() {
-		return new DBProperty[]{DBMODE_PROPERTY, DBPATH_PROPERTY, DBSERVER_PROPERTY};
+	public PropertyDescriptor[] getSpecificProperties() {
+		return new PropertyDescriptor[]{DBMODE_PROPERTY, DBPATH_PROPERTY, DBSERVER_PROPERTY};
 	}
 	
 	

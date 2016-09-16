@@ -51,11 +51,11 @@ import com.actelion.research.spiritcore.business.LogEntry;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.Cache;
-import com.actelion.research.spiritcore.services.dao.ConfigProperties;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.DAOLog;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
-import com.actelion.research.util.Config;
+import com.actelion.research.spiritcore.util.Config;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JEscapeDialog;
@@ -80,8 +80,8 @@ public class LoginDlg extends JEscapeDialog {
 	
 	private LoginDlg(Frame frame, final String title, String msg) {
 		super(frame, "Login");
-		askForSpecificRole = "true".equals(ConfigProperties.getInstance().getValue(PropertyKey.USER_LOGIN_ROLE));
-		hasDept = !"true".equals(ConfigProperties.getInstance().getValue(PropertyKey.RIGHT_ROLEONLY));
+		askForSpecificRole = "true".equals(SpiritProperties.getInstance().getValue(PropertyKey.USER_LOGIN_ROLE));
+		hasDept = !"true".equals(SpiritProperties.getInstance().getValue(PropertyKey.RIGHT_ROLEONLY));
         
         String username = config.getProperty("username", System.getProperty("user.name"));
         String role = config.getProperty("role", "Regular User");

@@ -25,6 +25,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.List;
 
@@ -45,6 +47,7 @@ import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
+import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
@@ -58,15 +61,15 @@ import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.MappingAction;
+import com.actelion.research.spiritcore.services.exchange.Exporter;
 import com.actelion.research.spiritcore.services.exchange.Importer;
 
-public class DAOExchangeTest {
+public class ExchangeTest {
 
 	private static SpiritUser user;
 	
 	@BeforeClass
 	public static void initDB() throws Exception {
-		System.out.println("DAOExchangeTest.initDB()");
 		//Init user
 		user = SpiritUser.getFakeAdmin();
 		
@@ -76,18 +79,10 @@ public class DAOExchangeTest {
 		SchemaCreator.displayTables(DBAdapter.getAdapter());
 	}
 	
-	public static Exchange importDemo(SpiritUser user) throws Exception {
-		try (InputStream is = DBAdapter.class.getResourceAsStream("demo.spirit")) {
-			if(is==null) {
-				throw new Exception("The system could not find the default configuration. The system is therefore empty");
-			}
-			Exchange exchange = Importer.read(new InputStreamReader(is));
-			Assert.assertTrue("The demo file has only " + exchange.getStudies().size() + " studies", exchange.getStudies().size()>=2);
-			
-			ExchangeMapping mapping = new ExchangeMapping(exchange);
-			DAOExchange.persist(mapping, user);
-			return exchange;
-		}
+	public static Exchange initDemoExamples(SpiritUser user) throws Exception {
+		//Clean previous examples
+		SchemaCreator.clearExamples(user);
+		return SchemaCreator.createExamples(user);
 	}
 	
 	@Test
@@ -97,7 +92,7 @@ public class DAOExchangeTest {
 		Assert.assertFalse(JPAUtil.getManager().getTransaction().isActive());
 		
 		{
-			Exchange exchange = importDemo(user);
+			Exchange exchange = initDemoExamples(user);
 			Study s = exchange.getStudies().iterator().next();
 			Assert.assertEquals(2, s.getNamedSamplings().size());
 			Assert.assertEquals(2, s.getSamplings("Blood Sampling", "Blood: EDTA; Alive").size());
@@ -115,7 +110,6 @@ public class DAOExchangeTest {
 			Biotype blood = DAOBiotype.getBiotype("Blood");
 			Assert.assertNotNull(blood);
 			BiotypeMetadata bloodType = blood.getMetadata("Type");
-			System.out.println("DAOExchangeTest.testImportDemo() after bloodType.getId()= "+bloodType.getId());
 			Assert.assertNotNull(bloodType);	
 			
 			//Check the studies
@@ -270,7 +264,7 @@ public class DAOExchangeTest {
 //		}
 //		Assert.assertEquals(1, DAOStudy.getStudies(user).size());
 
-		//3rd import: do nothing
+		//3rd import: skip (default)
 		try (FileReader r =  new FileReader(new File("test/files/S-00085.spirit"))) {
 			Exchange exchange = Importer.read(r);
 			ExchangeMapping mapping = new ExchangeMapping(exchange, MappingAction.SKIP);			
@@ -288,6 +282,50 @@ public class DAOExchangeTest {
 
 	}
 
+	@Test
+	public void testExportExchange() throws Exception {
+		//Export some data
+		SchemaCreator.createExamples(user);
+		
+		ResultQuery q = new ResultQuery();
+		q.setKeywords("LCMS Organ");
+		List<Result> results = DAOResult.queryResults(q, user);
+		int n = results.size();
+		Assert.assertTrue(n>0);
+
+		Exchange exchange = new Exchange("test");
+		exchange.addResults(results);
+		
+		for (Result r : exchange.getResults()) {
+			System.out.println("ExchangeTest.testExportExchange() "+r+" "+r.getBiosample()+" "+r.getBiosample().getAttachedSampling());
+		}
+		for (Study s : exchange.getStudies()) {
+			for (NamedSampling ns : s.getNamedSamplings()) {
+				for (Sampling ss : ns.getAllSamplings()) {
+					System.out.println("ExchangeTest.testExportExchange() "+s+" - "+ns.getId()+"/"+ ns+" - "+ ss.getId() + "/"+ss);
+				}
+			}
+		}
+		
+		StringWriter writer = new StringWriter();
+		Exporter.write(exchange, writer);
+		
+		
+		//Clear
+		SchemaCreator.clearExamples(user);
+		Assert.assertEquals(0, DAOResult.queryResults(q, user).size());
+		
+		//Import
+		exchange = Importer.read(new StringReader(writer.toString()));
+		ExchangeMapping mapping = new ExchangeMapping(exchange);
+		DAOExchange.persist(mapping, user);
+		
+		//ReTest query
+		Assert.assertEquals(n, DAOResult.queryResults(q, user).size());
+		
+		
+
+	}
 
 	
 }

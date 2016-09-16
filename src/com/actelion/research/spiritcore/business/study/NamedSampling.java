@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,6 @@ import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
-import com.actelion.research.spiritcore.util.CorrespondanceMap;
 import com.actelion.research.spiritcore.util.Counter;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.CompareUtils;
@@ -70,7 +70,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 	/**
 	 * The study for which this sampling was designed or none if any
 	 */
-	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL, optional = true)
+	@ManyToOne(fetch=FetchType.LAZY, cascade={}, optional = true)
 	@JoinColumn(name = "study_id")
 	private Study study = null;
 
@@ -162,7 +162,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 	
 	@Override
 	public int hashCode() {
-		return (int)(getId() % Integer.MAX_VALUE);
+		return id;
 	}
 
 
@@ -257,7 +257,6 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 		for(Iterator<Sampling> iter = getAllSamplings().iterator(); iter.hasNext(); ) {
 			Sampling s = iter.next();
 			if(input.getSampling(s.getId())==null) {
-				System.out.println("NamedSampling.copyFrom() remove "+s);
 				s.remove();
 				iter.remove();
 			}
@@ -266,7 +265,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 		//At this stage this.samplings have all an id
 		//Either, there is a match between this and ns and we keep the link
 		//Either, there is no match and we create a copy
-		CorrespondanceMap<Sampling, Sampling> input2this = new CorrespondanceMap<>();
+		IdentityHashMap<Sampling, Sampling> input2this = new IdentityHashMap<>();
 		for (Sampling inputSampling : input.getAllSamplings()) {
 			Sampling thisSampling = getSampling(inputSampling.getId());
 			if(thisSampling!=null) {
@@ -312,7 +311,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 		NamedSampling res = new NamedSampling();
 		res.setName(getName());
 		res.setNecropsy(isNecropsy());
-		CorrespondanceMap<Sampling, Sampling> old2new = new CorrespondanceMap<>();
+		IdentityHashMap<Sampling, Sampling> old2new = new IdentityHashMap<>();
 
 		//Create new sampling objects
 		for (Sampling existingSampling : getAllSamplings()) {
@@ -330,8 +329,8 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 			res.getAllSamplings().add(s);		
 			old2new.put(existingSampling, s);
 		}
-//		
-//		//Recreate hierarchy
+		
+		//Recreate hierarchy
 		for (Sampling existingSampling : getAllSamplings()) {
 			Sampling s = old2new.get(existingSampling);
 			s.setParent(old2new.get(existingSampling.getParent()));
@@ -344,14 +343,6 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 		return res;
 	}
 
-//	public String getUpdUser() {
-//		return updUser;
-//	}
-//
-//	public void setUpdUser(String updUser) {
-//		this.updUser = updUser;
-//	}
-//
 	public String getCreUser() {
 		return creUser;
 	}
@@ -359,14 +350,6 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 	public void setCreUser(String creUser) {
 		this.creUser = creUser;
 	}
-//
-//	public Date getUpdDate() {
-//		return updDate;
-//	}
-//
-//	public void setUpdDate(Date updDate) {
-//		this.updDate = updDate;
-//	}
 
 	public Date getCreDate() {
 		return creDate;
@@ -377,21 +360,14 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 	}
 	
 	/**
-	 * Returns a map of
-	 * (ContainerType/ContainerIndex) -> List of Samplings
+	 * Returns a map of (ContainerType/ContainerIndex) -> List of Samplings
 	 * @return
 	 */
 	public Map<Pair<ContainerType, Integer>, List<Sampling>> getContainerToSamplingsMap() {
 		Map<Pair<ContainerType, Integer>, List<Sampling>> map = new HashMap<>();
 		
 		for (Sampling s : getAllSamplings()) {
-			Pair<ContainerType, Integer> key;
-			if(s.getContainerType()==null) {
-				key = null;
-			} else {
-				key = new Pair<ContainerType, Integer>(s.getContainerType(), s.getBlocNo());
-			}
-			
+			Pair<ContainerType, Integer> key = s.getContainerType()==null? null: new Pair<ContainerType, Integer>(s.getContainerType(), s.getBlocNo());			
 			List<Sampling> l = map.get(key);
 			if(l==null) {
 				l = new ArrayList<>();
@@ -459,7 +435,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 	}
 
 	public String getDescription() {
-		Counter<Biotype> counter = new Counter<Biotype>();
+		Counter<Biotype> counter = new Counter<>();
 		for(Sampling s: samplings) {
 			counter.increaseCounter(s.getBiotype());
 		}
@@ -474,7 +450,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 
 
 	public static List<Sampling> getTopSamplings(Collection<Sampling> samplings) {
-		List<Sampling> res = new ArrayList<Sampling>();
+		List<Sampling> res = new ArrayList<>();
 		for (Sampling s : samplings) {
 			if(s.getParent()==null) res.add(s);
 		}

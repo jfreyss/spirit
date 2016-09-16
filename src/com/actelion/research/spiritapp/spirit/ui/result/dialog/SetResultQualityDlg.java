@@ -86,7 +86,10 @@ public class SetResultQualityDlg extends JSpiritEscapeDialog {
 			try {
 				
 				SpiritUser user = Spirit.askForAuthentication();
-				DAOResult.updateQuality(results, quality, user);
+				for (Result result : results) {
+					result.setQuality(quality);
+				}
+				DAOResult.persistResults(results, user);
 				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Result.class, results);
 				dispose();
 			} catch (Exception ex) {

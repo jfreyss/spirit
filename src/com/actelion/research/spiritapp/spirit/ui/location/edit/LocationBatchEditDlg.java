@@ -101,7 +101,7 @@ public class LocationBatchEditDlg extends JSpiritEscapeDialog {
 		
 		
 		if(duplicate) {
-			locations = DAOLocation.duplicate(locations);
+			locations = Location.duplicate(locations);
 		}
 		
 		//Create Print Button
@@ -228,7 +228,7 @@ public class LocationBatchEditDlg extends JSpiritEscapeDialog {
 				b.setStatus(status);
 			}				
 			if(toCheckout.size()>0) DAOBiosample.persistBiosamples(session, toCheckout, Spirit.getUser());
-			DAOLocation.removeLocations(session, locations, Spirit.getUser());
+			DAOLocation.deleteLocations(session, locations, Spirit.getUser());
 			
 
 			txn.commit();

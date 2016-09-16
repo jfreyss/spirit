@@ -91,10 +91,8 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 			JExceptionDialog.showError(new Exception("This feature can only be used for synchronized studies"));
 			return;
 		}
-		
-		
+				
 		namedSamplingComboBox = new NamedSamplingComboBox(study.getNamedSamplings(), true);
-
 		
 		//Components
 		JButton newPhaseButton = new JButton("New Phase");
@@ -118,20 +116,17 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 					JExceptionDialog.showError(ex);
 				}
 			}
-		});
-		
+		});		
 		
 		List<Phase> phases = new ArrayList<>();
 		phases.addAll(study.getPhases());
 		phaseComboBox.setValues(phases);
 		phaseComboBox.selectCurrentPhase();
-		
-		
-		final List<Biosample> animalInGroups = new ArrayList<Biosample>();
+				
+		final List<Biosample> animalInGroups = new ArrayList<>();
 		for(Biosample b: study.getTopAttachedBiosamples()) {
 			if(b.getInheritedGroup()!=null) animalInGroups.add(b);
-		}
-		
+		}		
 		
 		biosampleList.setBiosamples(animalInGroups);		
 		
@@ -168,17 +163,13 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		
 		JPanel contentPane = UIUtils.createBox(centerPane, infoPanel, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
 		setContentPane(contentPane);
-		
-		
+				
 		if(specimen!=null) biosampleList.setSelection(specimen);
-		if(phase!=null) phaseComboBox.setSelection(phase);
-		
+		if(phase!=null) phaseComboBox.setSelection(phase);		
 		
 		pack();
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
-		
-
 	}
 	
 	private void eventOk() throws Exception {
@@ -197,8 +188,7 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		
 		NamedSampling ns = namedSamplingComboBox.getSelection();
 		if(ns==null) throw new Exception("You must select a sampling");
-		
-		
+				
 		//Check the phase is not after a necropsy
 		if(group.getEndPhase(subgroup)!=null && phase.compareTo(group.getEndPhase(subgroup))>0) throw new Exception("You cannot apply a sampling after the necropsy at "+group.getEndPhase(subgroup));
 		
@@ -206,13 +196,11 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		if(phase.getId()<=0) {
 			phase.setStudy(study);		
 			study.getPhases().add(phase);
-		}
-		
-		
-		List<Biosample> toSave = new ArrayList<>();
+		}				
 
 		//Proceed with this group/subgroup
 		//Create 2 sets of animals: 1 that will be updated with this sampling (samplesToStayInSubgroup) and 1 that will be moved to a new subgroup (samplesToMoveInNewSubgroup)
+		List<Biosample> toSave = new ArrayList<>();
 		Set<Biosample> samplesToStayInSubgroup = new HashSet<>(study.getTopAttachedBiosamples(group, subgroup));	
 		samplesToStayInSubgroup.removeAll(animals);
 		
@@ -258,10 +246,6 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 
 		}
 		
-		
-		
-//		List<Biosample> created = null;
-
 		//Save in a transaction
 		JPAUtil.pushEditableContext(Spirit.getUser());
 		EntityManager session = JPAUtil.getManager();
@@ -274,33 +258,18 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 				DAOBiosample.persistBiosamples(session, toSave, Spirit.getUser());
 			}
 			
-//			//Apply the template
-//			created = BiosampleCreationHelper.processTemplateInStudy(study, ns, Collections.singletonList(phase), null, animals);
-//			if(created.size()>0) {
-//				DAOBiosample.persistBiosamples(session, created, Spirit.getUser());				
-//			}
-			
 			//Fire change Event
 			SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, study);
 			if(toSave.size()>0) SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, toSave);
-//			if(created.size()>0) SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, created); 
-			dispose();
 			txn.commit();
 			txn = null;
-			
+			dispose();			
 		} catch (Exception e) {
 			throw e;
 		} finally {
 			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {}
 			JPAUtil.popEditableContext();
-		}
-		
-//		int res = JOptionPane.showConfirmDialog(this, created.size()+" samples have been created. Do you want to print them?", "Print Samples", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-//		if(res==JOptionPane.YES_OPTION) {
-//			new PrintingDlg(created);
-//		}
-		
-		
+		}				
 	}
 
 	

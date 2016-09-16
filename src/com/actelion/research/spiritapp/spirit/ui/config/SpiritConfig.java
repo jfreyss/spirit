@@ -21,7 +21,7 @@
 
 package com.actelion.research.spiritapp.spirit.ui.config;
 
-import com.actelion.research.util.Config;
+import com.actelion.research.spiritcore.util.Config;
 
 public class SpiritConfig {
 	private Config config = Config.getInstance(".spirit");

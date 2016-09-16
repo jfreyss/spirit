@@ -88,7 +88,7 @@ public class StudyDesignerPanel extends JPanel {
 				Selection sel = getSelectionAt(e.getX(), e.getY());
 				if(sel==null) return;
 				if(sel.getGroup()!=null && sel.getPhase()!=null) {
-					StudyAction a = study.getOrCreateAction(sel.getGroup(), sel.getPhase(), sel.getSubGroup());
+					StudyAction a = study.getOrCreateStudyAction(sel.getGroup(), sel.getSubGroup(), sel.getPhase());
 					if(a!=null) applyChange(a);
 				}
 			}
@@ -246,21 +246,21 @@ public class StudyDesignerPanel extends JPanel {
 		
 		
 		if(study!=null) {
-			List<String> measurementOptions = new ArrayList<String>();
+			List<String> measurementOptions = new ArrayList<>();
 			measurementOptions.add("<<New>>");
 			measurementOptions.add("<<Remove>>");
 			measurementOptions.add("Weighing");
 			measurementOptions.add("Food");
 			measurementOptions.add("Water");
 			//Load the extraMeasurement and the associated test
-			extraMeasurements = new ArrayList<Measurement>();
+			extraMeasurements = new ArrayList<>();
 			for (Measurement em : study.getAllMeasurementsFromActions()) {
 				assert em.getTest()!=null;
 				extraMeasurements.add(em);
 				measurementOptions.add(em.getDescription());
 			}
 			
-			TreeSet<String> labels = new TreeSet<String>();
+			TreeSet<String> labels = new TreeSet<>();
 			labels.add("<<New>>");
 			labels.add("<<Remove>>");
 			for (StudyAction action : study.getStudyActions()) {
@@ -302,7 +302,7 @@ public class StudyDesignerPanel extends JPanel {
 					int y = depictor.getY(group, subgroup);
 					if(y<fromY || y>toY) continue;
 					
-					StudyAction action = study.getOrCreateAction(group, phase, subgroup);		
+					StudyAction action = study.getOrCreateStudyAction(group, subgroup, phase);		
 					if(model==null) model = new StudyAction(action);
 					
 					if(measurementCombobox.getSelectedIndex()>0 && action.getGroup().getDividingSampling()!=null) continue;

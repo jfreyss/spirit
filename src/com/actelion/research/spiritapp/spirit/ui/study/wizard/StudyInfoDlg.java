@@ -61,7 +61,7 @@ import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.ConfigProperties;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.helper.WorkflowHelper;
@@ -128,13 +128,13 @@ public class StudyInfoDlg extends JEscapeDialog {
 					null, new JInfoLabel("(recommended when the samples are perfectly defined in the study design, through the sampling templates)")));
 		//Metadata
 		List<JComponent> comps = new ArrayList<>();
-		for (String metadataKey : ConfigProperties.getInstance().getValues(PropertyKey.STUDY_METADATA)) {
-			String name = ConfigProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metadataKey);
-			String datatype = ConfigProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_DATATYPE, metadataKey);
-			String params = ConfigProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_PARAMETERS, metadataKey);
-			String[] roles = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_METADATA_ROLES, metadataKey);
-			String[] states = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_METADATA_STATES, metadataKey);
-			boolean req = ConfigProperties.getInstance().isChecked(PropertyKey.STUDY_METADATA_REQUIRED, metadataKey);
+		for (String metadataKey : SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA)) {
+			String name = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metadataKey);
+			String datatype = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_DATATYPE, metadataKey);
+			String params = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_PARAMETERS, metadataKey);
+			String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA_ROLES, metadataKey);
+			String[] states = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA_STATES, metadataKey);
+			boolean req = SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_METADATA_REQUIRED, metadataKey);
 			JComponent comp;
 			if(DataType.LIST.name().equals(datatype)) {
 				JGenericComboBox<String> combo = new JGenericComboBox<String>(MiscUtils.split(params), true);
@@ -146,7 +146,7 @@ public class StudyInfoDlg extends JEscapeDialog {
 				comp = dateField;
 			} else if(DataType.AUTO.name().equals(datatype)) {
 				JTextComboBox field = new JTextComboBox();
-				field.setChoices(DAOStudy.getAllMetadata(metadataKey));
+				field.setChoices(DAOStudy.getMetadataValues(metadataKey));
 				field.setText(study.getMetadata().get(metadataKey));
 				comp = field;
 			} else {
@@ -192,7 +192,7 @@ public class StudyInfoDlg extends JEscapeDialog {
 		
 		//Rights
 		JPanel studyRightsPanel = new JPanel();
-		if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && !ConfigProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY)) {
+		if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && !SpiritProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY)) {
 			blindNamesUsersField.setToolTipText("The group's name and the treatment's compounds are hidden. Those users can still see the group no (1A) and the treatment's name (blue) in AnimalCare");
 			blindAllUsersField.setToolTipText("The groups and the treatments compounds are completely hidden. Those users can only see the samples in AnimalCare");
 						
@@ -327,8 +327,8 @@ public class StudyInfoDlg extends JEscapeDialog {
 	
 	private void eventStudyStatusChanged() {
 		String state =  stateComboBox.getSelection();
-		String[] expertRoles = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, state);
-		String[] adminRoles = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, state);
+		String[] expertRoles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, state);
+		String[] adminRoles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, state);
 		
 		adminUsersTextArea.setEnabled(!MiscUtils.contains(adminRoles, "ALL"));
 		expertUsersTextArea.setEnabled(!MiscUtils.contains(expertRoles, "ALL"));
@@ -344,7 +344,7 @@ public class StudyInfoDlg extends JEscapeDialog {
 		SpiritUser user = Spirit.askForAuthentication();
 		
 		//Users
-		if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && !ConfigProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY)) {
+		if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && !SpiritProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY)) {
 			//Check that the write-users are valid
 			String adminUsers = adminUsersTextArea.getText().trim();
 			if(adminUsers.length()==0) throw new Exception("One admin is required");
@@ -393,9 +393,9 @@ public class StudyInfoDlg extends JEscapeDialog {
 		
 		//Metadata
 		Map<String, String> metaMap = study.getMetadata();
-		for (String metadataKey : ConfigProperties.getInstance().getValues(PropertyKey.STUDY_METADATA)) {
-			String name = ConfigProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metadataKey);
-			boolean req = ConfigProperties.getInstance().isChecked(PropertyKey.STUDY_METADATA_REQUIRED, metadataKey);
+		for (String metadataKey : SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA)) {
+			String name = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metadataKey);
+			boolean req = SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_METADATA_REQUIRED, metadataKey);
 			JComponent comp = metadataKey2comp.get(metadataKey);
 			if(!comp.isEnabled()) continue;
 			
@@ -433,14 +433,13 @@ public class StudyInfoDlg extends JEscapeDialog {
 		
 		
 		if(inTransaction) {
-			boolean inEditContext = JPAUtil.isEditableContext();
 			try {
-				if(!inEditContext) JPAUtil.pushEditableContext(user);
+				JPAUtil.pushEditableContext(user);
 				int id = study.getId();
 				DAOStudy.persistStudies(Collections.singleton(study), user);
 				SpiritChangeListener.fireModelChanged(id<=0? SpiritChangeType.MODEL_ADDED: SpiritChangeType.MODEL_UPDATED, Study.class, study);
 			} finally {
-				if(!inEditContext) JPAUtil.popEditableContext();
+				JPAUtil.popEditableContext();
 			}
 		}
 	}

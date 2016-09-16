@@ -42,8 +42,6 @@ public class InventoryPivotTemplate extends PivotTemplate {
 		if(PivotItemFactory.STUDY_GROUP.isDiscriminating(results)) {
 			setWhere(PivotItemFactory.STUDY_GROUP, Where.ASROW);
 		}
-//		setWhere(PivotItemFactory.BIOSAMPLE_TOPID, Where.ASROW);
-//		setWhere(PivotItemFactory.BIOSAMPLE_TOPNAME, Where.ASROW);
 		if(PivotItemFactory.STUDY_PHASE_DATE.isDiscriminating(results)) {
 			setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASCOL);
 		}

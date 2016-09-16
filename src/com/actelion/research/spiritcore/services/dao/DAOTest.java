@@ -68,53 +68,14 @@ public class DAOTest {
 			res.add(t.getCategory());
 		}
 		return res;
-	}
-	
-	public static Test getFoodWaterTest() {
-		Test test = getTest(FOODWATER_TESTNAME);
-		if(test==null) throw new RuntimeException("The test "+FOODWATER_TESTNAME+" is not found");
-		return test;
-	}
-	
-	public static Test getWeighingTest() {
-		Test test = getTest(WEIGHING_TESTNAME);
-		if(test==null) throw new RuntimeException("The test "+WEIGHING_TESTNAME+" is not found");
-		return test;
-	}
-	
-	public static Test getObservationTest() {
-		Test test = getTest(OBSERVATION_TESTNAME);
-		if(test==null) throw new RuntimeException("The test "+OBSERVATION_TESTNAME+" is not found");
-		return test;
-	}
-	
-	
-	public static Test getTest(int id) {
-		getTests();
-		Map<Integer, Test> id2Test = (Map<Integer, Test>) Cache.getInstance().get("id2Test_"+JPAUtil.getManager());
-		return id2Test.get(id);
-	}
-	
-	public static List<Test> getTests(Collection<Integer> ids) {
-		List<Test> res = new ArrayList<Test>();
-		getTests();
-		Map<Integer, Test> id2Test = (Map<Integer, Test>) Cache.getInstance().get("id2Test_"+JPAUtil.getManager());
-		for (int id : ids) {
-			Test t = id2Test.get(id);
-			if(t!=null) res.add(t);			
-		}
-		return res;
-		
-		
-	}
-
+	}	
 	
 	/**
 	 * Return the union tests that were done in all given studies
 	 * @param study
 	 * @return
 	 */
-	public static List<Test> getTestsFromStudies(List<Study> studies) {
+	public static Set<Test> getTestsFromStudies(Collection<Study> studies) {
 		return getTestsFromStudies(studies, null);		
 	}
 	
@@ -124,7 +85,7 @@ public class DAOTest {
 	 * @param outIntersection (if not null, returns the intersection)
 	 * @return
 	 */
-	public static List<Test> getTestsFromStudies(List<Study> studies, Set<Test> outIntersection) {
+	private static Set<Test> getTestsFromStudies(Collection<Study> studies, Set<Test> outIntersection) {
 		EntityManager session = JPAUtil.getManager();
 		boolean first = true;
 		Set<Test> res = new TreeSet<>();
@@ -142,14 +103,13 @@ public class DAOTest {
 			}
 		}
 		
-		return new ArrayList<Test>(res);
+		return res;
 	}
 	
 	public static List<Test> getTestsFromElbs(String elbs) {
 		try {
 			EntityManager session = JPAUtil.getManager();
-			String sql = "select distinct(r.test) FROM Result r where " + QueryTokenizer.expandOrQuery("r.elb = ?", elbs);
-			List<Test> tests = (List<Test>) session.createQuery(sql);
+			List<Test> tests = (List<Test>) session.createQuery("select distinct(r.test) FROM Result r where " + QueryTokenizer.expandOrQuery("r.elb = ?", elbs)).getResultList();
 			Collections.sort(tests);
 			return tests;
 		} catch(Exception e) {
@@ -158,34 +118,49 @@ public class DAOTest {
 		}
 	}
 	
-	public static Test getTest(String name) {
-		getTests();
-		Map<String, Test> name2Test = (Map<String, Test>) Cache.getInstance().get("name2Test_"+JPAUtil.getManager());
-		return name2Test.get(name);
-	}
 
-	public static List<Test> getTests() {
-		List<Test> res = (List<Test>) Cache.getInstance().get("allTests_"+JPAUtil.getManager());
-		if(res==null) {
+	private static Map<Integer, Test> getId2TestMap() {
+		Map<Integer, Test> id2Test = (Map<Integer, Test>) Cache.getInstance().get("id2test"+JPAUtil.getManager());
+		if(id2Test==null) {
 			
 			EntityManager session = JPAUtil.getManager();
-			res = (List<Test>) session.createQuery(
+			List<Test> res = (List<Test>) session.createQuery(
 					"SELECT distinct(t) FROM Test t left join fetch t.attributes").getResultList();
-			Collections.sort(res);
-			
-			
-			Map<String, Test> name2Test = new HashMap<>();
-			Map<Integer, Test> id2Test = new HashMap<>();
-			for (Test test : res) {
-				name2Test.put(test.getName(), test);
-				id2Test.put(test.getId(), test);
-			}
-			
-			Cache.getInstance().add("allTests_"+JPAUtil.getManager(), res, 180);
-			Cache.getInstance().add("name2Test_"+JPAUtil.getManager(), name2Test, 180);
-			Cache.getInstance().add("id2Test_"+JPAUtil.getManager(), id2Test, 180);
+			id2Test = JPAUtil.mapIds(res);
+			Cache.getInstance().add("id2Test_"+JPAUtil.getManager(), id2Test, Cache.FAST);
+		}
+		return id2Test;
+	}
+	
+	public static Test getTest(int id) {		
+		return getId2TestMap().get(id);
+	}
+	
+	public static List<Test> getTests(Collection<Integer> ids) {
+		Map<Integer, Test> id2Test = getId2TestMap();
+		
+		List<Test> res = new ArrayList<>();
+		for (Integer id : ids) {
+			Test t = id2Test.get(id);
+			if(t!=null) res.add(t);
 		}
 		return res;
+	}
+	
+	public static Test getTest(String name) {
+		Map<Integer, Test> id2Test = getId2TestMap();
+		for (Test t : id2Test.values()) {
+			if(t.getName().equals(name)) return t;
+		}
+		return null;
+	}
+
+	
+	public static List<Test> getTests() {
+		Map<Integer, Test> id2Test = getId2TestMap();
+		List<Test> tests = new ArrayList<>(id2Test.values());
+		Collections.sort(tests);				
+		return tests;
 	}
 	
 
@@ -211,6 +186,7 @@ public class DAOTest {
 		
 		for (Test test : tests) {
 			
+			if(test.getCategory()==null || test.getCategory().trim().length()==0) throw new Exception("Category is required");
 			if(test.getName()==null || test.getName().trim().length()==0) throw new Exception("The test name cannot be null");
 			test.setName(test.getName().trim());
 
@@ -235,9 +211,7 @@ public class DAOTest {
 				session.persist(test);				
 			}
 		}
-		
-		Cache.getInstance().remove("allTests");
-		Cache.getInstance().remove("testCategories");
+		Cache.getInstance().remove("id2test"+JPAUtil.getManager());
 	}
 
 	public static void removeTest(Test test, SpiritUser user) throws Exception {
@@ -259,38 +233,57 @@ public class DAOTest {
 			session.remove(test);
 			txn.commit();
 			txn = null;
-			Cache.getInstance().remove("allTests");
-			Cache.getInstance().remove("testCategories");
+			Cache.getInstance().remove("id2test"+JPAUtil.getManager());
 
 		} finally {
 			if(txn!=null) try{txn.rollback();}catch (Exception e) {}
 		}	
 	}
-	
-	
+		
 	public static Set<String> getAutoCompletionFields(TestAttribute att) {
-		return getAutoCompletionFields(att, null);
+		return getAutoCompletionFields(Collections.singleton(att), null);
 	}
-	public static Set<String> getAutoCompletionFields(TestAttribute att, Study study) {
+	
+	public static Set<String> getAutoCompletionFields(Collection<TestAttribute> atts, Study study) {		
+		EntityManager session = JPAUtil.getManager();
+		Query query =  session.createQuery(
+				"select distinct(rv.value) from ResultValue rv" +
+				" where " + QueryTokenizer.expandForIn("rv.attribute.id", JPAUtil.getIds(atts)) + " and rv.value is not null " +
+				(study!=null? " and rv.result.biosample.inheritedStudy.id = "+study.getId():""));
 		
-		String key = "auto_"+att.getId()+"_"+(study==null?0:study.getId());
+		return new TreeSet<String>( (List<String>) query.getResultList());
+	}	
+
+	public static Map<TestAttribute, Collection<String>> getInputFields(Integer testId, String studyIds) throws Exception {
+		EntityManager session = JPAUtil.getManager();
+		Map<TestAttribute, Collection<String>> res = new HashMap<>();
 		
-		//Retrieve from cache if possible
-		Set<String> res = (Set<String>) Cache.getInstance().get(key);
-		if(res==null) {
-			EntityManager session = JPAUtil.getManager();
-			Query query =  session.createQuery(
-					"select distinct(v.value) from ResultValue v" +
-					" where v.attribute = ?1 and v.value is not null " +
-					(study!=null? " and (v in (select v2 from ResultValue v2 where v2.result.phase.study.id = "+study.getId()+") or v in (select v2 from ResultValue v2 where v2.result.biosample.inheritedStudy.id = "+study.getId()+"))":""))
-				.setParameter(1, att);
+		if(studyIds==null || studyIds.trim().length()==0) return res;
+		Test test = DAOTest.getTest(testId); 
+		if(test==null) return res;
+
+		for (TestAttribute att : test.getInputAttributes()) {
+			StringBuilder jpql = new StringBuilder(); 
+			jpql.append("SELECT distinct(rv.value) FROM ResultValue rv " +
+					" where (" + QueryTokenizer.expandOrQuery("rv.result.biosample.inheritedStudy.studyId = ?", studyIds) + ")" + 
+					" and rv.attribute.id = "+att.getId() /*+ " and rv.attribute.outputType = 'INPUT'"*/);
 			
-			 res = new TreeSet<String>( (List<String>) query.getResultList());
-			 Cache.getInstance().add(key, res, Cache.FAST);
-			 logger.debug("loadded autocompletion fields for "+att+"/"+study+" > n="+res.size());
+			Query query = session.createQuery(jpql.toString());		
+			List<String> choices = new ArrayList<>();
+			
+			for (String string : (List<String>) query.getResultList()) {
+				if(string==null) {
+					choices.add("");
+				} else {
+					choices.add(string);
+				}
+			}
+			res.put(att, choices);
 		}
+
 		return res;
 	}
+	
 	
 	public static int countRelations(TestAttribute testAttribute) {
 		if (testAttribute == null || testAttribute.getId() <= 0) return 0;

@@ -25,7 +25,10 @@ import java.util.List;
 
 import com.actelion.research.spiritcore.business.result.Result;
 
-
+/**
+ * @deprecated
+ * @author Joel Freyss
+ */
 public class GraphpadPivotTemplate extends PivotTemplate {
 
 	public GraphpadPivotTemplate() {

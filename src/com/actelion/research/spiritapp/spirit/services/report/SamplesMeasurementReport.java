@@ -44,7 +44,6 @@ import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.util.ListHashMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.SetHashMap;
-import com.actelion.research.util.HtmlUtils;
 
 public class SamplesMeasurementReport extends AbstractReport {
 
@@ -56,7 +55,7 @@ public class SamplesMeasurementReport extends AbstractReport {
 			"Results", 
 			"<ul><li> Each test (weighing, LCMS) is shown on a separate tab"
 			+ "<li> Only the tests with one output value per animal-input are shown"
-			+ "</ul>"+HtmlUtils.convert2Html(
+			+ "</ul>"+MiscUtils.convert2Html(
 					"\tTopId1\tTopId2\tTopId3\n"
 					+ "Sample1\t\t\t\n"
 					+ "Sample2\t\t\t\n"),

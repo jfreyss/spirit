@@ -58,7 +58,7 @@ public enum PivotDataType {
 			tpl.removeBlindItems(results, user);
 			tpl.simplify(results);
 			
-			PivotDataTable table = PivotDataTable.createPivotDataTable(results, null, tpl);
+			PivotDataTable table = new PivotDataTable(results, null, tpl);
 			for(PivotDataType p: values()) {
 				List<String> columns = p.getColumnNames(table);
 				if(columns.size()>0) res.add(p);

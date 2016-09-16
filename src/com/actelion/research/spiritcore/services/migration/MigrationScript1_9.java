@@ -26,9 +26,8 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.services.DBTools;
-import com.actelion.research.util.SQLConverter;
-import com.actelion.research.util.SQLConverter.SQLVendor;
+import com.actelion.research.spiritcore.util.SQLConverter;
+import com.actelion.research.spiritcore.util.SQLConverter.SQLVendor;
 
 /**
  * Move to Spirit 1.+ if version is below 1.9
@@ -93,12 +92,12 @@ public class MigrationScript1_9 extends MigrationScript {
 		Connection conn = DBAdapter.getAdapter().getConnection();
 		
 		try {			
-			try {
-				int n = DBTools.queryAsInteger(conn, "select count(*) from biosample where metadata is not null").get(0);
-				if(n>0) throw new Exception("Biosample.Metadata should not empty");
-			} catch(Exception e) {
-				//OK, DB is clean
-			}
+//			try {
+//				int n = DBTools.queryAsInteger(conn, "select count(*) from biosample where metadata is not null").get(0);
+//				if(n>0) throw new Exception("Biosample.Metadata should be empty");
+//			} catch(Exception e) {
+//				//OK, DB is clean
+//			}
 			
 			StringBuilder sb1 = new StringBuilder();
 			StringBuilder sb2 = new StringBuilder();

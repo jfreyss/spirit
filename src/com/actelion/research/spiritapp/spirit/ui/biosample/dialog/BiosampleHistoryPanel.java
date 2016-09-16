@@ -39,7 +39,12 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.IBiosampleDetail;
 import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritcore.business.biosample.ActionBiosample;
+import com.actelion.research.spiritcore.business.biosample.ActionComments;
+import com.actelion.research.spiritcore.business.biosample.ActionContainer;
+import com.actelion.research.spiritcore.business.biosample.ActionLocation;
 import com.actelion.research.spiritcore.business.biosample.ActionMoveGroup;
+import com.actelion.research.spiritcore.business.biosample.ActionOwnership;
+import com.actelion.research.spiritcore.business.biosample.ActionStatus;
 import com.actelion.research.spiritcore.business.biosample.ActionTreatment;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
@@ -151,12 +156,12 @@ public class BiosampleHistoryPanel extends JEditorPane implements IBiosampleDeta
 						txt.append("Owner: <i>"+b.getCreUser()+" " +(b.getEmployeeGroup()==null?"": " (" + b.getEmployeeGroup().getName()+")") + "</i> - <span style='font-size:9px'>" + Formatter.formatDateOrTime(b.getCreDate()) + "</span><br>");
 						txt.append("Last Update: <i>"+b.getUpdUser()+"</i> - <span style='font-size:9px'>" + Formatter.formatDateOrTime(b.getUpdDate()) + "</span>");
 						txt.append("</div>");
-						for (ActionBiosample action: b.getActions(true)) {
+						for (ActionBiosample action: b.getActions(null, true)) {
 							if(SpiritRights.isBlind(b.getInheritedStudy(), Spirit.getUser()) && ((action instanceof ActionMoveGroup) || (action instanceof ActionTreatment)) ) {
 								continue;
 							}
 
-							txt.append("<tr style='background:"+UIUtils.getHtmlColor(action.getColor())+"'>");
+							txt.append("<tr style='background:"+UIUtils.getHtmlColor(getColor(action))+"'>");
 							if(biosamples.size()>1) txt.append("<th style='white-space:nowrap'>" + b.getSampleId() +"</th>");
 							txt.append("<th style='white-space:nowrap'>&nbsp;" + Formatter.formatDate(action.getUpdDate()) +"</th>");
 							txt.append("<th style='white-space:nowrap'>&nbsp;" + Formatter.formatTime(action.getUpdDate()) +"</th>");
@@ -169,7 +174,6 @@ public class BiosampleHistoryPanel extends JEditorPane implements IBiosampleDeta
 							if(biosamples.size()>1) txt.append("<th style='white-space:nowrap'>" + b.getSampleId() +"</th>");
 							txt.append("<th style='white-space:nowrap'>&nbsp;" + Formatter.formatDate(b.getCreDate()) +"</th>");
 							txt.append("<th style='white-space:nowrap'>&nbsp;" + Formatter.formatTime(b.getCreDate()) +"</th>");
-//							txt.append("<th style='white-space:nowrap'>&nbsp;</th>");
 							txt.append("<td style='white-space:nowrap'>&nbsp;Created</td>");
 							txt.append("<td style='white-space:nowrap'>&nbsp;</td>");
 						}
@@ -181,17 +185,31 @@ public class BiosampleHistoryPanel extends JEditorPane implements IBiosampleDeta
 				}
 				txt.append("</body></html>");
 				
-//			}
-//
-//			@Override
-//			protected void done() {
 				setText(txt.toString());
 				setCaretPosition(0);
-//			}
-			
-//		};
 		
 	}
 	
+	public static Color getColor(ActionBiosample action) {
+		if(action instanceof ActionOwnership) {
+			return new Color(255,255,180);
+		} else if(action instanceof ActionComments) {
+			return new Color(255,255,180);
+		} else if(action instanceof ActionContainer) {
+			return new Color(230,255,230);
+		} else if(action instanceof ActionLocation) {
+			return new Color(230,255,230);
+		} else if(action instanceof ActionComments) {
+			return new Color(255,255,180);
+		} else if(action instanceof ActionMoveGroup) {
+			return new Color(220,220,255);
+		} else if(action instanceof ActionStatus) {
+			return new Color(255,235,215);
+		} else if(action instanceof ActionTreatment) {
+			return new Color(225,255,195);
+		}
+
+		return null;
+	}
 	
 }

@@ -69,15 +69,14 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 
 	
 	@JoinColumn(name="study_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade={})
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
-	@BatchSize(size=16)
 	private Study study;
 	
 	/** (null possible only for deletion) */
 	@JoinColumn(name="phase_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=64)
@@ -85,7 +84,7 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	
 	/** (null possible only for deletion) */
 	@JoinColumn(name="group_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)	
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)	
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=16)
@@ -99,21 +98,21 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	private String label;
 	
 	@JoinColumn(name="namedtreatment_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)	
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)	
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=16)
 	private NamedTreatment namedTreatment;	
 	
 	@JoinColumn(name="namedsampling_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)	
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)	
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=16)
 	private NamedSampling namedSampling1;
 
 	@JoinColumn(name="namedsampling2_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)	
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)	
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=16)
@@ -144,18 +143,18 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	public StudyAction() {
 	}
 	
-	public StudyAction(Group group, Phase phase, int subGroupNo) {
-		if(group==null || phase==null) throw new IllegalArgumentException("Group and phase are required");
-		if(!group.getStudy().equals(phase.getStudy())) throw new IllegalArgumentException("The study does not match: "+group.getStudy()+" vs "+phase.getStudy());
-		if(group.getStudy()==null) throw new IllegalArgumentException("The study is not set");
+	public StudyAction(Study study, Group group, int subGroupNo, Phase phase) {
+		if(study == null || group==null || phase==null) throw new IllegalArgumentException("Group and phase are required");
+		if(group.getStudy()!=null && !group.getStudy().equals(study)) throw new IllegalArgumentException("The study does not match: "+group.getStudy()+" vs "+phase.getStudy());
+		if(phase .getStudy()!=null && !phase .getStudy().equals(study)) throw new IllegalArgumentException("The study does not match: "+group.getStudy()+" vs "+phase.getStudy());
+		this.study = study;
 		this.group = group;
 		this.phase = phase;
-		this.study = group.getStudy();
 		this.subGroup = subGroupNo;
 	}
 	
 	public StudyAction(StudyAction copy) {
-		this(copy.getGroup(), copy.getPhase(), copy.getSubGroup());
+		this(copy.getStudy(), copy.getGroup(), copy.getSubGroup(), copy.getPhase());
 		setLabel(copy.getLabel());
 		setNamedSampling1(copy.getNamedSampling1());
 		setNamedSampling2(copy.getNamedSampling2());
@@ -193,8 +192,9 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 
 
 	public void setGroup(Group group) {
+		assert group!=null;
 		this.group = group;
-		this.study = group==null? null: group.getStudy();
+		this.study = group.getStudy();
 	}
 
 	public NamedTreatment getNamedTreatment() {
@@ -209,9 +209,9 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	@Override
 	public boolean equals(Object obj) {
 		if(obj==this) return true;
-		if(! (obj instanceof StudyAction)) return false;
-		
-		StudyAction a = (StudyAction) obj;
+		if(!(obj instanceof StudyAction)) return false;
+		StudyAction a = (StudyAction) obj;		
+		if(id>0 && id==a.id) return true;
 		
 		if((getStudy()==null && a.getStudy()!=null) || (getStudy()!=null && !getStudy().equals(a.getStudy()))) return false;
 		if((getGroup()==null && a.getGroup()!=null) || (getGroup()!=null && !getGroup().equals(a.getGroup()))) return false;
@@ -222,14 +222,23 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	
 	@Override
 	public int hashCode() {		
-		return (int)((long)(getGroup()==null?0: getGroup().hashCode()) * 7 + (getPhase()==null?0: getPhase().hashCode()) * 3 + getSubGroup()) % Integer.MAX_VALUE;
+		return id;
+	}
+	
+	@Override
+	public int compareTo(StudyAction o) {
+		int c = CompareUtils.compare(getGroup(), o.getGroup());
+		if(c!=0) return c;
+		c = CompareUtils.compare(getPhase(), o.getPhase());
+		if(c!=0) return c;
+		return getSubGroup() - o.getSubGroup();
 	}
 	
 	public NamedTreatment getLastNamedTreatment() {
 		NamedTreatment res = null;
 		for(Phase p: getStudy().getPhases()) {
 			if(p.equals(getPhase())) break;
-			StudyAction a = getStudy().getStudyAction(group, p, subGroup);
+			StudyAction a = getStudy().getStudyAction(group, subGroup, p);
 			if(a!=null && a.getNamedTreatment()!=null) res = a.getNamedTreatment();  
 			
 		}
@@ -245,7 +254,7 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	}
 	
 	public Set<NamedSampling> getNamedSamplings() {
-		Set<NamedSampling> res = new LinkedHashSet<NamedSampling>();
+		Set<NamedSampling> res = new LinkedHashSet<>();
 		if(getNamedSampling1()!=null) res.add(getNamedSampling1());
 		if(getNamedSampling2()!=null) res.add(getNamedSampling2());
 		return res;
@@ -254,7 +263,6 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	public NamedSampling getNamedSampling1() {
 		return namedSampling1;
 	}
-
 
 	public void setNamedSampling1(NamedSampling namedSampling) {
 		this.namedSampling1 = namedSampling;
@@ -282,7 +290,7 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	
 	public void remove() {
 		if(getStudy()==null || getStudy().getStudyActions()==null) return;
-		getStudy().getStudyActions().remove(this);		
+		getStudy().getStudyActions().remove(this);
 		study = null;
 		group = null;
 		phase = null;
@@ -291,8 +299,6 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 		namedSampling2 = null;
 	}	
 	
-	
-
 	@Override
 	public StudyAction clone() {
 		try {
@@ -336,15 +342,6 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	}
 	public void setSubGroup(int subGroup) {
 		this.subGroup = subGroup;
-	}
-	
-	@Override
-	public int compareTo(StudyAction o) {
-		int c = CompareUtils.compare(getGroup(), o.getGroup());
-		if(c!=0) return c;
-		c =  CompareUtils.compare(getPhase(), o.getPhase());
-		if(c!=0) return c;
-		return getSubGroup() - o.getSubGroup();
 	}
 	
 	public String getLabel() {

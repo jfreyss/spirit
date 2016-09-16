@@ -229,7 +229,7 @@ public class GroupTab extends WizardPanel {
 
 		dlg.setMustAskForExit(true);
 		List<AttachedBiosample> samples = new ArrayList<AttachedBiosample>(dlg.getRandomization().getSamples());
-		List<Double> weights = AttachedBiosample.extractDoubles(samples, -1);
+		List<Double> weights = AttachedBiosample.getData(samples, -1);
 
 		int neededAnimals = 0;
 		for (Group gr : groups) neededAnimals+=gr.getNAnimals(dlg.getPhase());
@@ -416,7 +416,7 @@ public class GroupTab extends WizardPanel {
 		
 		double res = 0;
 		for(int index = minIndex; index<=maxIndex; index++) {
-			List<Double> doubles2 = AttachedBiosample.extractDoubles(list, index);
+			List<Double> doubles2 = AttachedBiosample.getData(list, index);
 			Double mRef = StatUtils.getMean(doubles2);
 			Double sRef = StatUtils.getStandardDeviation(doubles2, mRef);
 			
@@ -428,7 +428,7 @@ public class GroupTab extends WizardPanel {
 			for(Integer groupId: groupIds) {
 				List<AttachedBiosample> l = splits.get(groupId);
 				if(l==null || l.get(0).getGroup()==null) continue;
-				List<Double> doubles = AttachedBiosample.extractDoubles(l, index);
+				List<Double> doubles = AttachedBiosample.getData(l, index);
 				Double m = StatUtils.getMean(doubles);
 				if(m==null) continue;
 				tot += ((m-mRef) * (m-mRef)) / (mRef>0? mRef*mRef: 1);

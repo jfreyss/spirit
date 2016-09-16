@@ -62,7 +62,7 @@ import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.util.CSVUtils;
+import com.actelion.research.spiritcore.util.CSVUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
@@ -82,7 +82,7 @@ public class LocationTab extends JPanel implements ISpiritTab {
 	private LocationDepictor locationDepictor = new LocationDepictor();
 	private BiosampleTable biosampleTable = new BiosampleTable();
 	private boolean first = true;
-
+	private int push = 0;
 	
 	public LocationTab(Biotype forcedBiotype) {		
 		searchPane = new LocationSearchPane(forcedBiotype);
@@ -133,6 +133,7 @@ public class LocationTab extends JPanel implements ISpiritTab {
 				}
 			}
 		});
+		
 		JButton excelButton = new JIconButton(IconType.EXCEL, "XLS");
 		excelButton.addActionListener(new ActionListener() {			
 			@Override
@@ -159,8 +160,6 @@ public class LocationTab extends JPanel implements ISpiritTab {
 		locationPanel.add(BorderLayout.NORTH, northPanel);
 		locationPanel.add(BorderLayout.CENTER, tabbedPane);
 		
-		
-		
 		JPanel buttonsPanel = createButtonsPanel();
 		if(buttonsPanel!=null) locationPanel.add(BorderLayout.SOUTH, buttonsPanel);
 		
@@ -180,7 +179,6 @@ public class LocationTab extends JPanel implements ISpiritTab {
 				locationDepictor.setAcceptedAdminLocations(searchPane.getLocationQuery().isEmpty()? null: searchPane.getAcceptedAdminLocations());
 			}
 		});
-
 
 		//If the locationBrowser is changed, update the location
 		locationBrowser.addPropertyChangeListener(LocationBrowser.PROPERTY_LOCATION_SELECTED, new PropertyChangeListener() {			
@@ -207,7 +205,7 @@ public class LocationTab extends JPanel implements ISpiritTab {
 					if(westPane.getDividerLocation()<getHeight()-100) {
 						westPane.setDividerLocation(2400);
 					}
-					detailPane.setBiosamples(null);										
+					detailPane.setBiosamples(null);
 				}
 			}
 			@Override
@@ -234,13 +232,14 @@ public class LocationTab extends JPanel implements ISpiritTab {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {	
 				if(e.getValueIsAdjusting()) return;
+				if(push>0) return;
 				List<Location> selection = searchPane.getLocationTable().getSelection();
 				if(selection.size()==1) {
 					Location sel = selection.size()==1? selection.get(0): null;
-					setBioLocation(sel);
+					setBioLocation(sel, 1, true);
 				} else {
 					locationBrowser.setBioLocation(null);
-					setBioLocation(null);
+					setBioLocation(null, 1, true);
 				}
 			}
 		});
@@ -300,8 +299,11 @@ public class LocationTab extends JPanel implements ISpiritTab {
 		setBioLocation(location, -1);
 	}
 	
-
 	public void setBioLocation(final Location location, final int pos) {
+		setBioLocation(location, -1, false);		
+	}
+
+	private void setBioLocation(final Location location, final int pos, final boolean onlyDepictor) {
 		first = false;
 		new SwingWorkerExtended("Set Location", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			@Override
@@ -310,7 +312,9 @@ public class LocationTab extends JPanel implements ISpiritTab {
 				if(location!=null && !searchPane.getLocationTable().getRows().contains(location)) {
 					searchPane.getLocationTable().addRow(location);
 				}
-				if(location!=null) searchPane.getLocationTable().setSelection(Collections.singletonList(location));
+				if(location!=null && !onlyDepictor) {
+					searchPane.getLocationTable().setSelection(Collections.singletonList(location));
+				}
 				
 				//Update the browser
 				locationBrowser.setBioLocation(location);
@@ -323,8 +327,7 @@ public class LocationTab extends JPanel implements ISpiritTab {
 		};
 
 	}
-	
-	
+		
 	/**
 	 * Precondition: locationBrowser.location is set
 	 * Recreate the LocationDepictor or the table (depending which one is visible)
@@ -334,7 +337,7 @@ public class LocationTab extends JPanel implements ISpiritTab {
 		if(tabbedPane.getSelectedIndex()==0) {
 			locationDepictor.setBioLocation(location);
 		} else {			
-			List<Biosample> biosamples = new ArrayList<Biosample>();
+			List<Biosample> biosamples = new ArrayList<>();
 			if(location!=null) {
 				for (Biosample b: location.getBiosamples()) {
 					if(SpiritRights.canRead(b, Spirit.getUser())) {

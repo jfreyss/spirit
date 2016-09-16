@@ -31,22 +31,22 @@ import com.actelion.research.spiritcore.util.Pair;
  */
 class CustomAdapter extends DBAdapter {
 
-	private DBProperty DBVENDOR_PROPERTY = new DBProperty("jnlp.custom.vendor", "Connection Vendor", new Pair[] {
+	private PropertyDescriptor DBVENDOR_PROPERTY = new PropertyDescriptor("jnlp.custom.vendor", "Connection Vendor", new Pair[] {
 			new Pair<String, String>("mysql", "MySQL 5.6+ InnoDB"),
 			new Pair<String, String>("oracle", "Oracle 10+")});
 
-	private DBProperty DBURL_PROPERTY = new DBProperty("jnlp.custom.dburl", "Connection URL", "jdbc:mysql://localhost:3306/spirit");
+	private PropertyDescriptor DBURL_PROPERTY = new PropertyDescriptor("jnlp.custom.dburl", "Connection URL", "jdbc:mysql://localhost:3306/spirit");
 
-	private DBProperty DBNAME_PROPERTY = new DBProperty("jnlp.custom.username", "Connection UserId", "spirit");
+	private PropertyDescriptor DBNAME_PROPERTY = new PropertyDescriptor("jnlp.custom.username", "Connection UserId", "spirit");
 
-	private DBProperty DBPASSWORD_PROPERTY = new DBProperty("jnlp.custom.password", "Connection Password", "");
+	private PropertyDescriptor DBPASSWORD_PROPERTY = new PropertyDescriptor("jnlp.custom.password", "Connection Password", "");
 	
 	protected CustomAdapter() {
     }
     
 	@Override
-	public DBProperty[] getSpecificProperties() {
-		return new DBProperty[] {DBVENDOR_PROPERTY, DBURL_PROPERTY, DBNAME_PROPERTY, DBPASSWORD_PROPERTY};
+	public PropertyDescriptor[] getSpecificProperties() {
+		return new PropertyDescriptor[] {DBVENDOR_PROPERTY, DBURL_PROPERTY, DBNAME_PROPERTY, DBPASSWORD_PROPERTY};
 	}
 	
     @Override
@@ -113,11 +113,11 @@ class CustomAdapter extends DBAdapter {
 	
 	@Override
 	public String getHelp() {
-		return "The CustomAdapter is the most versatile way to connect to a server database. The steps to install it are:"
+		return "The CustomAdapter is the most versatile way to connect to a server database. The steps to install are:"
 				+ "<ul>"
 				+ "<li>Install an Oracle or a MySql database (download at http://dev.mysql.com/)"
-				+ "<li>Create a new user: <i>create user spirit identified by 'PASSWORD';</i>"
-				+ "<li>Test the connection and create the schema through this dialog</i>"
+				+ "<li>Run the following script: <br><br><i>create schema spirit;<br> create user spirit identified by 'PASSWORD';<br>grant all on spirit.* to 'spirit';<br><br></i>"
+				+ "<li>Test the connection and save to initialize the tables (this may take some time)</i>"
 				+ "</ul>"				
 				;
 	}

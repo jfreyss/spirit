@@ -33,7 +33,7 @@ import javax.swing.JPanel;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
-import com.actelion.research.util.Config;
+import com.actelion.research.spiritcore.util.Config;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.UIUtils;
 

@@ -43,13 +43,13 @@ import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.util.ListHashMap;
-import com.actelion.research.util.HtmlUtils;
+import com.actelion.research.spiritcore.util.MiscUtils;
 
 public class SpecimenWeighingToxicologyReport extends AbstractReport {
 
 	public SpecimenWeighingToxicologyReport() {
 		super(ReportCategory.TOP, "Bodyweights (one table per phase)", 
-				"One sheet per phase" + HtmlUtils.convert2Html(
+				"One sheet per phase" + MiscUtils.convert2Html(
 				"Group\tContainerId\tTopId\tNo\tWeight\tIncrease\tTreatment\n"
 				+ "\tCage1\tTopId1\t\n"
 				+ "\tCage1\tTopId2\t\n"));
@@ -58,8 +58,8 @@ public class SpecimenWeighingToxicologyReport extends AbstractReport {
 	@Override
 	protected void populateWorkBook() throws Exception {
 		
-		Set<Biosample> animals = study.getAttachedBiosamples();
-		List<Phase> phases = new ArrayList<Phase>();
+		List<Biosample> animals = study.getTopAttachedBiosamples();
+		List<Phase> phases = new ArrayList<>();
 		for(Phase phase: study.getPhases()) {
 			for(Biosample b: animals) {
 				if(b.getAction(ActionTreatment.class, phase)!=null) {
@@ -70,14 +70,13 @@ public class SpecimenWeighingToxicologyReport extends AbstractReport {
 		}
 		
 		//Load Weighings
-		DAOResult.attachOrCreateStudyResultsToSpecimen(study, animals, null, null);
+		DAOResult.attachOrCreateStudyResultsToTops(study, animals, null, null);
 		
 		Test weightingTest = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
 		if(weightingTest==null) throw new Exception("Error test "+DAOTest.WEIGHING_TESTNAME+" not found");
 		
 		for (Phase phase : phases) {				
-			
-			
+						
 			//Check if we need to display a compound
 			boolean hasCompound1 = false;
 			boolean hasCompound2 = false;
@@ -136,7 +135,7 @@ public class SpecimenWeighingToxicologyReport extends AbstractReport {
 
 			//Add Biosample Weighing
 			Group lastGroup = null;
-			ListHashMap<Group, Integer> group2Lines = new ListHashMap<Group, Integer>();
+			ListHashMap<Group, Integer> group2Lines = new ListHashMap<>();
 			for (Biosample animal : animals) {
 				//Gets Weight + Increase
 				Result weighResult = animal.getAuxResult(weightingTest, phase);

@@ -22,7 +22,6 @@
 package com.actelion.research.spiritcore.business.study;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -50,7 +50,6 @@ import javax.persistence.Table;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.SortNatural;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
@@ -73,19 +72,17 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="sampling_sequence")
 	private int id = 0;
 	
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.ALL)
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade={})
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@JoinColumn(name="parent_sampling_id")
 	private Sampling parent = null;
 	
-	@OneToMany(fetch=FetchType.LAZY, mappedBy="parent", cascade=CascadeType.ALL)
+	@OneToMany(fetch=FetchType.LAZY, mappedBy="parent", cascade={})
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
-	@SortNatural
 	@BatchSize(size=32)
-	private List<Sampling> children = new ArrayList<>();
+	private Set<Sampling> children = new TreeSet<>();
 	
-
 	@Column(name="containertype", nullable=true)
 	@Enumerated(EnumType.STRING)
 	private ContainerType containerType;
@@ -105,8 +102,6 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	
 	@Column(name="comments", length=256)
 	private String comments;
-
-	
 	
 	@Column(name="weighingrequired", nullable=false)
 	private boolean weighingRequired = false;
@@ -418,12 +413,13 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	public boolean equals(Object obj) {
 		if(this==obj) return true;
 		if(!(obj instanceof Sampling)) return false;
-		if(this.getId()>0 && this.getId()==((Sampling)obj).getId()) return true;
+		if(this.getId()>0) return this.getId()==((Sampling)obj).getId();
 		return false;
 	}
+	
 	@Override
 	public int hashCode() {
-		return (int)(id%Integer.MAX_VALUE);
+		return id;
 	}
 	
 	public void remove() {
@@ -482,15 +478,14 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	/**
 	 * @param children the children to set
 	 */
-	public void setChildren(List<Sampling> children) {
+	public void setChildren(Set<Sampling> children) {
 		this.children = children;
 	}
 
 	/**
 	 * @return the children (ordered)
 	 */
-	public List<Sampling> getChildren() {
-		Collections.sort(children);
+	public Set<Sampling> getChildren() {
 		return children;
 	}
 
@@ -650,7 +645,5 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 			this.metadata = BiotypeMetadata.serialize(metadataMap);
 		}
 	}
-	
-
 		
 }

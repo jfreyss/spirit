@@ -38,8 +38,10 @@ import javax.swing.JTextArea;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
+import org.slf4j.LoggerFactory;
+
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.services.dao.ConfigProperties;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.migration.MigrationScript;
 import com.actelion.research.spiritcore.services.migration.MigrationScript.ILogger;
@@ -74,38 +76,22 @@ public class DatabaseMigrationDlg extends JDialog {
 		JScrollPane sp2 = new JScrollPane(errorPane);
 		sp2.setPreferredSize(new Dimension(750, 400));
 		
-		JButton updateButton = new JButton("Run script");
+		JButton cancelButton = new JButton("Cancel");
+		cancelButton.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				dispose();
+			}
+		});		
+		
+		JButton updateButton = new JButton("Update DB");
 		updateButton.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				updateDB();
+				updateDB();	
 			}
 		});
-		
-		JButton closeButton = new JButton("Test & Close");
-		closeButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				new SwingWorkerExtended(errorPane, true) {
-					boolean ok = false;
-					@Override
-					protected void doInBackground() throws Exception {
-						ok = testSchema(DBAdapter.getAdapter());
-					}
-					@Override
-					protected void done() {
-						if(ok) {
-							dispose();
-						} else {							
-							int res = JOptionPane.showConfirmDialog(null, "The DB is still invalid. Do you want to close this dialog anyway?", "Error", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE);
-							if(res==JOptionPane.YES_OPTION) {
-								dispose();
-							}
-						}
-					}
-				};				
-			}
-		});
+		getRootPane().setDefaultButton(updateButton);
 		
 		//Init script
 		try {
@@ -126,7 +112,7 @@ public class DatabaseMigrationDlg extends JDialog {
 						
 				UIUtils.createVerticalBox(new JCustomLabel("Your database is not up to date (currently: " + (version==null?"NA":version) + ")", FastFont.BOLD, Color.RED),
 						new JLabel("You must update the DB to version " + MigrationScript.getExpectedDBVersion() + " to continue. Do you accept the update?")),
-				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), updateButton, closeButton)));
+				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), cancelButton, updateButton)));
 		pack();
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -209,7 +195,10 @@ public class DatabaseMigrationDlg extends JDialog {
 	public static boolean testSchema(DBAdapter adapter) throws Exception {
 		boolean ok;
 		try {			
+			JPAUtil.close();
+			LoggerFactory.getLogger(DatabaseMigrationDlg.class).debug("Test Schema: preinit "+adapter.getClass());
 			adapter.preInit();
+			LoggerFactory.getLogger(DatabaseMigrationDlg.class).debug("Test Schema: validate "+adapter.getClass());
 			adapter.validate();
 			ok = true;
 		} catch(Exception e) {
@@ -223,15 +212,12 @@ public class DatabaseMigrationDlg extends JDialog {
 				ok = false;
 			}
 		}
-		if(ok && adapter==DBAdapter.getAdapter()) {
-			ConfigProperties.getInstance().setDBVersion(MigrationScript.getExpectedDBVersion());
-			ConfigProperties.getInstance().saveValues();
+		if(ok && adapter==DBAdapter.getAdapter() && MigrationScript.getExpectedDBVersion().compareTo(MigrationScript.getDBVersion())>0) {
+			SpiritProperties.getInstance().setDBVersion(MigrationScript.getExpectedDBVersion());
+			SpiritProperties.getInstance().saveValues();
 		}
 		return ok;
-
 	}
-	
-	
 	
 	public static void main(String[] args) {
 		new DatabaseMigrationDlg();

@@ -351,11 +351,11 @@ public class EditGroupPanel extends JPanel {
 			//Copy the actions of the former subgroup to the new created subgroups
 			if(formerSubGroupCount>=1 && formerSubGroupCount<nSubGroups ) {
 				for(Phase phase: study.getPhases()) {
-					StudyAction a = study.getStudyAction(group, phase, formerSubGroupCount-1);
+					StudyAction a = study.getStudyAction(group, formerSubGroupCount-1, phase);
 					if(a==null) continue;
 					for (int i = formerSubGroupCount; i < nSubGroups; i++) {
 								
-						StudyAction a2 = study.getOrCreateAction(group, phase, i);
+						StudyAction a2 = study.getOrCreateStudyAction(group, i, phase);
 						a2.setMeasureFood(a.isMeasureFood());
 						a2.setMeasureWater(a.isMeasureWater());
 						a2.setMeasureWeight(a.isMeasureWeight());
@@ -464,7 +464,7 @@ public class EditGroupPanel extends JPanel {
 		
 		//Update invalid subgroups
 		boolean hasSampleMoved = false;
-		for (Biosample b : group.getTopAttachedBiosamples()) {
+		for (Biosample b : study.getTopAttachedBiosamples(group)) {
 			if(b.getInheritedSubGroup()<0 || b.getInheritedSubGroup()>=group.getNSubgroups()) {
 				b.setAttached(study, group, 0);
 				hasSampleMoved = true;

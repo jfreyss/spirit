@@ -80,14 +80,15 @@ public class DAOResult {
 		return "ELB-" + (user==null?"": user + "-") + new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date());
 	}
 	
-	public static List<Result> reload(List<Result> results) {
-		List<Result> res = JPAUtil.reattach(results);
-		postLoad(res);
-		return res;
-	}
-	
 	public static List<Result> queryResults(ResultQuery q, SpiritUser user) throws Exception  {
 		return queryResults(JPAUtil.getManager(), q, user);
+	}
+	
+	public static List<Result> getResults(Collection<Integer> ids) throws Exception  {
+		EntityManager session = JPAUtil.getManager();
+		List<Result> results = session.createQuery("SELECT r FROM Result r left join fetch r.biosample where " + QueryTokenizer.expandForIn("r.id", ids)).getResultList();
+		postLoad(results);
+		return results;				
 	}
 	
 	public static List<Result> queryResults(EntityManager session, ResultQuery q, SpiritUser user) throws Exception  {
@@ -176,21 +177,13 @@ public class DAOResult {
 		}	
 		return updated;
 	}
-
-	
 	
 	private static List<Result> getResults(EntityManager session, ResultQuery q) throws Exception {
-
-//		long start = System.currentTimeMillis();
-		
 		StringBuilder clause = new StringBuilder();
-		List<Object> parameters = new ArrayList<Object>();
+		List<Object> parameters = new ArrayList<>();
 
 		if(q.getBids().size()>0) {
 			clause.append(" and " + QueryTokenizer.expandForIn("b.id", q.getBids()));
-		}
-		if(q.getAnimalId()>0) {
-			clause.append(" and b.topParent.id = " + q.getAnimalId());					
 		}
 		if(q.getPhase()!=null) {
 			clause.append(" and r.phase.id = " + q.getPhase().getId());					
@@ -325,6 +318,9 @@ public class DAOResult {
 			expr.append(" or (r.test IN (SELECT t from Test t WHERE LOWER(t.name) like LOWER(?)))"); 
 			expr.append(" or r.elb like ?");
 			expr.append(" or LOWER(b.name) like LOWER(?)");
+			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.inheritedStudy.studyId) like LOWER(?)))");
+			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.inheritedStudy.ivv) like LOWER(?)))");
+			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.biotype.name) like LOWER(?)))");
 			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.inheritedGroup.name) like LOWER(?)))");
 			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.inheritedPhase.name) like LOWER(?)))");
 			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.topParent.sampleId) like LOWER(?)))");
@@ -339,9 +335,8 @@ public class DAOResult {
 			clause.append(" and (" + QueryTokenizer.expandQuery(expr.toString(), q.getKeywords(), true, true) + ")");
 		}
 		
-		String jpql = "SELECT distinct(r) FROM Result r " +
-				"left join fetch r.biosample b " +
-				"left join fetch r.values";
+		String jpql = "SELECT distinct(r) FROM Result r left join fetch r.biosample b ";
+			// + "left join fetch r.values";
 		
 		if(clause.length()>0) {
 			assert clause.subSequence(0,4).equals(" and"): "clause == '"+clause+"'";
@@ -420,7 +415,7 @@ public class DAOResult {
 	 * @param user - may be null, but then updUser and updDate have to be set
 	 * @throws Exception
 	 */
-	public static void persistExperiment(boolean isNewExperiment, String experimentElb, List<Result> results, SpiritUser user) throws Exception {		
+	public static void persistExperiment(boolean isNewExperiment, String experimentElb, Collection<Result> results, SpiritUser user) throws Exception {		
 		if(results.size()==0) throw new Exception("The results are empty");
 		if(experimentElb==null) throw new Exception("The elb is required");
 		
@@ -458,7 +453,7 @@ public class DAOResult {
 	 * @param user - the user updating the results, (if null, the upduser/upddate are not set 
 	 * @throws Exception
 	 */
-	public static void persistResults(List<Result> results, SpiritUser user) throws Exception {
+	public static void persistResults(Collection<Result> results, SpiritUser user) throws Exception {
 		if(results.size()==0) return;
 		logger.info("Persist "+results.size()+" results");
 		for (Result result : results) {
@@ -485,37 +480,11 @@ public class DAOResult {
 		
 	}
 	
-	public static void persistResults(EntityManager session, List<Result> results, SpiritUser user) throws Exception {
+	public static void persistResults(EntityManager session, Collection<Result> results, SpiritUser user) throws Exception {
 		persistResults(session, null, false, false, results, user);
 	}
 
-	
-	public static void testConcurrentModification(Collection<Biosample> biosamples) throws Exception {
-		Map<Integer, Biosample> id2biosample = JPAUtil.mapIds(biosamples);
-		if(id2biosample.size()==0) return;
-		EntityManager session = null;
-		try {
-			session = JPAUtil.createManager();
-			// Test that nobody else modified the biosamples
-			String jpql = "select b.updDate, b.updUser, b.id from Biosample b where " + QueryTokenizer.expandForIn("b.id", id2biosample.keySet());
-			List<Object[]> lastUpdates = (List<Object[]>) session.createQuery(jpql).getResultList();
-			for (Object[] lastUpdate : lastUpdates) {
-				Date lastDate = (Date) lastUpdate[0];
-				String lastUser = (String) lastUpdate[1];
-				Biosample b = id2biosample.get((Integer) lastUpdate[2]);
-				if (b != null && b.getUpdDate() != null && lastDate != null) {
-					int diffSeconds = (int) ((lastDate.getTime() - b.getUpdDate().getTime()) / 1000L);
-					if (diffSeconds > 0)
-						throw new Exception("The biosample (" + b + ") has just been updated by " + lastUser + " [" + diffSeconds + "seconds ago].\nYou cannot overwrite those changes unless you reopen the newest version.");
-				}
-			}
-		} finally {
-			if(session!=null) session.close();
-		}
-
-	}
-
-	private static void persistResults(EntityManager session, String experimentElb, boolean isNewExperiment, boolean removeOlderResults, List<Result> results, SpiritUser user) throws Exception {
+	private static void persistResults(EntityManager session, String experimentElb, boolean isNewExperiment, boolean removeOlderResults, Collection<Result> results, SpiritUser user) throws Exception {
 		assert user!=null;
 		assert session!=null;
 		assert session.getTransaction().isActive();
@@ -612,31 +581,6 @@ public class DAOResult {
 		}
 		
 	}	
-	
-	public static void updateQuality(List<Result> results, Quality quality, SpiritUser user) throws Exception {
-		for (Result result : results) {
-			if(!SpiritRights.canEdit(result, user)) {
-				throw new Exception("You are not allowed to update the quality");
-			}
-		}
-
-		EntityManager session = JPAUtil.getManager();
-		EntityTransaction txn = null;
-		try {
-			txn = session.getTransaction();
-			txn.begin();
-			
-			for (Result result : results) {
-				result.setQuality(quality);
-				session.merge(result);
-			}
-			
-			txn.commit();
-		} finally {
-			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
-		}		
-	}
-	
 
 	public static int rename(TestAttribute att, String value, String newValue, SpiritUser user) throws Exception {
 		if(user==null || !user.isSuperAdmin()) throw new Exception("You must be an admin to rename an attribute");
@@ -901,8 +845,8 @@ public class DAOResult {
 		if(!DBAdapter.getAdapter().isInActelionDomain()) return new ArrayList<>();
 		List<ElbLink> res = (List<ElbLink>) Cache.getInstance().get("elb_links_"+study.getId());
 		if(res==null) {
-			Map<String, ElbLink> map = new HashMap<String, DAOResult.ElbLink>();
-			res = new ArrayList<DAOResult.ElbLink>();
+			Map<String, ElbLink> map = new HashMap<>();
+			res = new ArrayList<>();
 			
 			//Load elbs accessible in Niobe
 			Connection conn = null;
@@ -953,7 +897,8 @@ public class DAOResult {
 	 * @param createMissingOnes
 	 * @throws Exception
 	 */
-	public static void attachOrCreateStudyResultsToSpecimen(Study study, Collection<Biosample> allBiosamples, Phase phaseFilter, String elbForCreatingMissingOnes) throws Exception  {
+	public static void attachOrCreateStudyResultsToTops(Study study, Collection<Biosample> allBiosamples, Phase phaseFilter, String elbForCreatingMissingOnes) throws Exception  {
+		assert allBiosamples!=null;
 		Test weighingTest = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
 		Test fwTest = DAOTest.getTest(DAOTest.FOODWATER_TESTNAME);
 		Test obsTest = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);
@@ -976,18 +921,19 @@ public class DAOResult {
 	 * @param createMissingOnes
 	 * @throws Exception
 	 */
-	public static void attachOrCreateStudyResultsToSamples(Study study, Collection<Biosample> samples, Phase phaseFilter, String elbForCreatingMissingOnes) throws Exception  {
+	public static void attachOrCreateStudyResultsToSamples(Study study, Collection<Biosample> allBiosamples, Phase phaseFilter, String elbForCreatingMissingOnes) throws Exception  {
+		assert allBiosamples!=null;
 		Test weighingTest = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
 		Test lengthTest = DAOTest.getTest(DAOTest.LENGTH_TESTNAME);
 		Test obsTest = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);		
 		if(weighingTest==null || lengthTest==null || obsTest==null) throw new Exception("You must create the tests: " + DAOTest.WEIGHING_TESTNAME + "(output=weight [g]), " + DAOTest.LENGTH_TESTNAME + "(output=length) , " + DAOTest.OBSERVATION_TESTNAME + "(output=observation)");
-		
+
 		List<Test> tests = new ArrayList<>();
 		tests.add(weighingTest);
 		tests.add(lengthTest);
 		tests.add(obsTest);		
 		tests.addAll(Measurement.getTests(study.getAllMeasurementsFromSamplings()));		
-		attachOrCreateStudyResults(study, true, samples, tests, phaseFilter, elbForCreatingMissingOnes);
+		attachOrCreateStudyResults(study, true, allBiosamples, tests, phaseFilter, elbForCreatingMissingOnes);
 	}
 	
 	
@@ -1092,7 +1038,7 @@ public class DAOResult {
 		jpql.append("SELECT distinct(r.biosample.biotype) FROM Result r " +
 				" where (" + QueryTokenizer.expandOrQuery("r.biosample.inheritedStudy.studyId = ?", studyIds) + ")");
 		
-		if(testIds.size()>0) {
+		if(testIds!=null && testIds.size()>0) {
 			jpql.append(" and (");
 			boolean first = true;
 			for (int testId : testIds) {
@@ -1108,38 +1054,7 @@ public class DAOResult {
 		List<Biotype> res = jpaQuery.getResultList();
 				
 		return res;
-	}
-	
-	public static Map<TestAttribute, Collection<String>> getInputChoices(String studyIds, Integer testId) throws Exception {
-		EntityManager session = JPAUtil.getManager();
-		Map<TestAttribute, Collection<String>> res = new HashMap<TestAttribute, Collection<String>>();
-		
-		if(studyIds==null || studyIds.trim().length()==0) return res;
-		Test test = DAOTest.getTest(testId); 
-		if(test==null) return res;
-
-		for (TestAttribute att : test.getInputAttributes()) {
-			StringBuilder jpql = new StringBuilder(); 
-			jpql.append("SELECT distinct(rv.value) FROM ResultValue rv " +
-					" where (" + QueryTokenizer.expandOrQuery("rv.result.biosample.inheritedStudy.studyId = ?", studyIds) + ")" + 
-					" and rv.attribute.id = "+att.getId());
-			
-			Query jpaQuery = session.createQuery(jpql.toString());		
-			List<String> choices = new ArrayList<String>();
-			
-			for (String string : (List<String>) jpaQuery.getResultList()) {
-				if(string==null) {
-					choices.add("");
-				} else {
-					choices.add(string);
-				}
-			}
-			res.put(att, choices);
-		}
-
-		return res;
-	}
-	
+	}	
 	
 	/**
 	 * Find similar results in the system and map them, by:

@@ -62,7 +62,7 @@ import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.ConfigProperties;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
@@ -87,9 +87,8 @@ public class StudyActions {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			Study study = new Study();
-			study.setState(ConfigProperties.getInstance().getValue(PropertyKey.STUDY_STATE_DEFAULT));
+			study.setState(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATE_DEFAULT));
 			if(Spirit.getUser()!=null) {
-//				study.setOwner(Spirit.getUser().getUsername());
 				study.setAdminUsers(Spirit.getUser().getUsername());
 			}
 			if(Spirit.getUser().getMainGroup()!=null) study.setEmployeeGroups(Collections.singletonList(Spirit.getUser().getMainGroup()));
@@ -602,7 +601,7 @@ public class StudyActions {
 			{
 				editMenu.add(new JMenuItem(new Action_EditInfos(study)));			
 				editMenu.add(new JMenuItem(new Action_EditDesign(study)));	
-				if(ConfigProperties.getInstance().hasStudyWorkflow()) {
+				if(SpiritProperties.getInstance().hasStudyWorkflow()) {
 					editMenu.add(new JMenuItem(new Action_Promote(study)));
 				}
 				editMenu.add(new JSeparator());

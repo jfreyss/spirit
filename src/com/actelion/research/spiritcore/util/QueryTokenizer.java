@@ -191,12 +191,13 @@ public class QueryTokenizer {
 	 * @return
 	 */
 	public static boolean matchQuery(String value, String queryString) {
+		if(value==null) value = "";
 		String[] split = tokenize(queryString, ",; ()");
 		for(int i=0; i<split.length; i++) {
 			String tok = split[i];
 			if("and".equalsIgnoreCase(tok) || "or".equalsIgnoreCase(tok)) {
 				//ignore
-			} else {								
+			} else {		
 				if(tok.length()>1 && tok.startsWith("\"") && tok.endsWith(tok.substring(0,1))) {
 					//Exact Search, never add wildcards
 					if(!value.equals(tok)) return false;

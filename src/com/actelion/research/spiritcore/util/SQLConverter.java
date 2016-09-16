@@ -19,7 +19,7 @@
  * @author Joel Freyss
  */
 
-package com.actelion.research.util;
+package com.actelion.research.spiritcore.util;
 
 public class SQLConverter {
 
@@ -41,8 +41,8 @@ public class SQLConverter {
 //		System.out.println("SQLConverter.convertScript()<< "+script.replaceAll(";[\n]*", ";\n"));
 		//Replace datatypes
 		script = script.replaceAll("(?i)NUMBER\\([1-9](,0)?\\)", "integer");
-		script = script.replaceAll("(?i)NUMBER\\(1[0-2](,0)?\\)", "integer");
-		script = script.replaceAll("(?i)NUMBER\\(1[3-9](,0)?\\)", "bigint");
+		script = script.replaceAll("(?i)NUMBER\\([12][0-2](,0)?\\)", "integer");
+		script = script.replaceAll("(?i)NUMBER\\(\\d[3-9](,0)?\\)", "bigint");
 		script = script.replaceAll("(?i)VARCHAR2\\((.*?)(\\schar)?\\)", "varchar($1)");
 				
 		

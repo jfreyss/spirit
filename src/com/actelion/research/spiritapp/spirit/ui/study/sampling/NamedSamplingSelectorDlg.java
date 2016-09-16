@@ -52,7 +52,7 @@ public class NamedSamplingSelectorDlg extends JEscapeDialog {
 		super(UIUtils.getMainFrame(), "Import sampling");
 	
 		//CenterPane
-		namedSamplingComboBox.setValues(DAONamedSampling.getNamedSamplingsFromStudy(Spirit.getUser()), true);
+		namedSamplingComboBox.setValues(DAONamedSampling.getNamedSamplings(Spirit.getUser(), null), true);
 		
 		final JEditorPane editorPane = new JEditorPane("text/html", "");
 		editorPane.setEditable(false);

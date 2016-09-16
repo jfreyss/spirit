@@ -22,6 +22,7 @@
 package com.actelion.research.spiritcore.services.migration;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,8 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.HSQLFileAdapter;
 import com.actelion.research.spiritcore.adapter.PropertyKey;
-import com.actelion.research.spiritcore.services.DBTools;
-import com.actelion.research.util.SQLConverter.SQLVendor;
+import com.actelion.research.spiritcore.util.SQLConverter.SQLVendor;
 
 /**
  * The Migration Script class is responsible for updating the DB from one version to the next. Therefore each script must implement:
@@ -54,8 +54,7 @@ public abstract class MigrationScript {
 			super(message);
 		}
 	}
- 
-	
+ 	
 	public static class MismatchDBException extends Exception {
 		public MismatchDBException(String dbVersion) {
 			super("The current version of the Spirit program ("+getExpectedDBVersion()+") does not match the DB version ("+(dbVersion==null?"NA":"")+")");
@@ -70,6 +69,7 @@ public abstract class MigrationScript {
 	private static List<MigrationScript> getScripts() {
 		List<MigrationScript> scripts = new ArrayList<>();		
 		scripts.add(new MigrationScript1_9());
+		scripts.add(new MigrationScript2_0());
 		return scripts;
 	}	
 	
@@ -100,7 +100,7 @@ public abstract class MigrationScript {
 		StringBuilder sb = new StringBuilder();
 		String version = MigrationScript.getDBVersion();
 		for (MigrationScript script : getScripts()) {
-			if(version==null || version.compareTo(script.getToVersion())<=0) {
+			if(version==null || version.compareTo(script.getToVersion())<0) {
 				sb.append("\r\n");
 				sb.append("/* Migration to " + script.getToVersion() + " */\r\n");
 				sb.append(script.getMigrationSql(vendor));
@@ -109,6 +109,13 @@ public abstract class MigrationScript {
 		return sb.toString();
 	}
 	
+	/**
+	 * Updates the DB, bx exececting the migration script.
+	 * However the DB version is not set.
+	 * @param vendor
+	 * @param logger
+	 * @throws Exception
+	 */
 	public static void updateDB(SQLVendor vendor, ILogger logger) throws Exception {
 		Connection conn = DBAdapter.getAdapter().getConnection();
 		try {
@@ -152,7 +159,14 @@ public abstract class MigrationScript {
 		Connection conn = null;
 		try {
 			conn = DBAdapter.getAdapter().getConnection();
-			String version = DBTools.queryAsString(conn, "select max(value) from spirit.spirit_property where id = '" + PropertyKey.DB_VERSION.getKey() + "'").get(0);
+			
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("select max(value) from spirit.spirit_property where id = '" + PropertyKey.DB_VERSION.getKey() + "'");
+			rs.next();
+			String version = rs.getString(1);
+			rs.close();
+			stmt.close();
+			
 			LoggerFactory.getLogger(MigrationScript.class).info("DBVersion: " + version);			
 			return version;
 		} catch(Exception ex) {
@@ -183,6 +197,7 @@ public abstract class MigrationScript {
 			if(script.trim().length()==0) continue;
 			try {
 				stmt = conn.createStatement();
+				LoggerFactory.getLogger(MigrationScript.class).info("script: "+script+"");
 				int n = stmt.executeUpdate(script);
 				LoggerFactory.getLogger(MigrationScript.class).info("script: "+script+": OK ("+ n + " rows updated)");
 				if(logger!=null) logger.info(script, " rows updated");

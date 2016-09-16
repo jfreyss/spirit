@@ -34,7 +34,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
-import org.hibernate.jpa.HibernateEntityManager;
 import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritcore.adapter.DBAdapter;
@@ -135,16 +134,16 @@ public class JPAUtil {
 		
 		public void clear() {
 			for(EntityManager em: getAll()) {
-				if(em.isOpen()) {
+				LoggerFactory.getLogger(JPAUtil.class).debug("Clear EM: "+em);
 				
+				if(em.isOpen()) {				
 		    		try {
 		    			//Begin / Rollback transaction to force clear on MySQL
 		    			//This should not be needed but I believe there is a bug on MySQL here (it can be commented out under Oracle)
-//		    			em.getTransaction().rollback();
 //		    			if(!em.getTransaction().isActive()) {
 //		    				em.getTransaction().begin();
 //		    			}
-//		    			em.getTransaction().rollback();
+		    			
 		    			if(em.getTransaction().isActive()) {
 		    				LoggerFactory.getLogger(JPAUtil.class).warn("Rollback unfinished transaction");
 		    				em.getTransaction().rollback();
@@ -162,6 +161,7 @@ public class JPAUtil {
 		
 		public void close() {
 			for(final EntityManager em : new ArrayList<>(getAll())) {
+				LoggerFactory.getLogger(JPAUtil.class).debug("Close EM: "+em);
 				if(em!=null && em.isOpen()) {
 					if(em.getTransaction().isActive()) em.getTransaction().rollback();
 					em.close();
@@ -180,24 +180,21 @@ public class JPAUtil {
 
     static {
     	System.setProperty("org.jboss.logging.provider", "slf4j");
-//    	initialize();
+    	 
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+        	@Override
+        	public void run() {
+        		close();
+        	}
+        });
     }
     
     private static void initialize() {    	
     	LoggerFactory.getLogger(JPAUtil.class).debug("JPA Factory Initialized");
     	assert factory == null;
-        try {
-        	
-            init();
+        try {        	
+            initFactory();
             getCurrentDateFromDatabase();
-            
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-            	@Override
-            	public void run() {
-            		close();
-            	}
-            });
-            
         } catch (RuntimeException ex) {
         	throw ex;
         } catch (Throwable ex2) {
@@ -206,31 +203,57 @@ public class JPAUtil {
         }
     }
 
-   
+    public static void close() {
+    	try {
+			LoggerFactory.getLogger(JPAUtil.class).debug("close sessions");			
+    		if(readEntityManager!=null) {
+    			readEntityManager.close();
+    			readEntityManager = null;
+        	}
+    		if(writeEntityManager!=null) {
+    			writeEntityManager.close();
+    			writeEntityManager = null;
+        	}
+    	} catch(Exception e) {
+    		e.printStackTrace();
+    		LoggerFactory.getLogger(JPAUtil.class).warn("Could not clear factory: "+e);
+    	}
+		if(factory!=null) {
+			LoggerFactory.getLogger(JPAUtil.class).debug("close factory");			
+	    	try {
+	    		factory.close();
+	    	} catch(Exception e) {
+	    		e.printStackTrace();
+	    		LoggerFactory.getLogger(JPAUtil.class).warn("Could not close factory: "+e);
+	    	}
+	    	factory = null;
+		}
+    }
+    
+    
     /**
      * Clear all entity manager and Spirit Cache.
      */
     public static void clear() {
+		LoggerFactory.getLogger(JPAUtil.class).debug("clear factory cache and sessions");			
     	popEditableContext();
     	
 		if(readEntityManager!=null) {
 			readEntityManager.clear();			
     	}
+		if(writeEntityManager!=null) {
+			writeEntityManager.clear();			
+    	}
 
     	Cache.removeAll();
-    	ConfigProperties.clear();
-    }
-    
-    public static void refresh() throws Exception {
-    	close();
-    	init();
+    	SpiritProperties.clear();
     }
     
     /**
      * Inits the JPA factory
      * @throws Exception
      */
-	public static void init() throws Exception {
+	protected static void initFactory() throws Exception {
 	    DBAdapter adapter = DBAdapter.getAdapter();
 		if(factory!=null) close();
 		adapter.preInit();
@@ -246,29 +269,28 @@ public class JPAUtil {
 	 * @throws Exception
 	 */
 	public static void initFactory(DBAdapter adapter, String mode) throws Exception {
-		if(factory!=null) close();
-
 		LoggerFactory.getLogger(JPAUtil.class).debug("initFactory on "+adapter.getClass().getName()+" url="+adapter.getDBConnectionURL()+" mode="+mode);
+		close();
+
 		Map properties = new HashMap();
-//		properties.put("current_session_context_class", "thread");
 		properties.put("hibernate.dialect", adapter.getHibernateDialect());
 		properties.put("hibernate.connection.driver_class", adapter.getDriverClass());
 		properties.put("hibernate.connection.username", adapter.getDBUsername());
 		properties.put("hibernate.connection.password", new String(new StringEncrypter("program from joel").decrypt(adapter.getDBPassword())));
-//		properties.put("hibernate.default_schema", "spirit");
 		properties.put("hibernate.show_sql", "true".equalsIgnoreCase(System.getProperty("show_sql")));
 		properties.put("hibernate.hbm2ddl.auto", mode);
 		properties.put("hibernate.connection.url", adapter.getDBConnectionURL());
 		
+		LoggerFactory.getLogger(JPAUtil.class).debug("create factory");
 		factory = Persistence.createEntityManagerFactory("spirit", properties);
-		
+		LoggerFactory.getLogger(JPAUtil.class).debug("factory created");
 		
 		if(jpaMode==JPAMode.REQUEST) {
 			readEntityManager = null;
 			writeEntityManager = null;
 		} else {
 	        readEntityManager = new MyThreadLocal();
-	        writeEntityManager = null; 
+	        writeEntityManager = jpaMode==JPAMode.WRITE? new MyThreadLocal(): null; 
 		}		
 		
 	}
@@ -278,7 +300,7 @@ public class JPAUtil {
 		assert jpaMode!=JPAMode.REQUEST;
 		
 		if(readEntityManager==null) try {
-			init();
+			initFactory();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -326,11 +348,12 @@ public class JPAUtil {
 		switch (jpaMode) {
 		case READ: 
 			em = readEntityManager.get();
-			((HibernateEntityManager)em).getSession().setDefaultReadOnly(true);
+//			((HibernateEntityManager)em).getSession().setDefaultReadOnly(true);
 			return em;
 		case WRITE: 
+			assert writeEntityManager!=null;
 			em = writeEntityManager.get();
-			((HibernateEntityManager)em).getSession().setDefaultReadOnly(false);
+//			((HibernateEntityManager)em).getSession().setDefaultReadOnly(false);
 			return em;
 		case REQUEST: 
 			em = thread2entityManager.get(Thread.currentThread());
@@ -341,24 +364,7 @@ public class JPAUtil {
 			return readEntityManager.get();
 		}
     }
-    
-    /**
-     * Return true if there is an open session containing the object
-     * @param obj
-     * @return
-     */
-    public static boolean contains(IObject obj) {
-    	if(jpaMode==JPAMode.REQUEST) {
-    		return getManager().contains(obj);
-    	} else {
-    		if(getManager().contains(obj)) return true;
-        	for (EntityManager em : readEntityManager.all) {
-    			if(em.contains(obj)) return true;
-    		}
-    	}
-    	return false;
-    }
-
+   
     /**
      * Create a new EntityManager - be ABSOLUTELY SURE to close it
      * @return
@@ -398,12 +404,8 @@ public class JPAUtil {
   
     public static void copyProperties(Biosample dest, Biosample src) {
 		if (dest == null || src==null) return;
-		
 		dest.getAuxiliaryInfos().putAll(src.getAuxiliaryInfos());
 		dest.setScannedPosition(src.getScannedPosition());
-
-		
-
 	}    
 
     public static<T extends IObject> T reattach(T object) {    	
@@ -491,27 +493,6 @@ public class JPAUtil {
     	return res;
     }
    
-    public static void close() {
-    	if(factory!=null) {
-    		synchronized (factory) {
-    			if(factory!=null) {
-					LoggerFactory.getLogger(JPAUtil.class).debug("close factory");			
-			    	try {
-				    	clear();
-			    	} catch(Exception e) {
-			    		LoggerFactory.getLogger(JPAUtil.class).warn("Could not clear factory: "+e);
-			    	}
-			    	try {
-			    		factory.close();
-			    	} catch(Exception e) {
-			    		LoggerFactory.getLogger(JPAUtil.class).warn("Could not close factory: "+e);
-			    	}
-			    	factory = null;
-    			}
-    		}
-    	}
-    }
-    
     public static<T extends IObject> List<Integer> getIds(Collection<T> object) {
     	List<Integer> res = new ArrayList<>();
     	for (T o : object) {

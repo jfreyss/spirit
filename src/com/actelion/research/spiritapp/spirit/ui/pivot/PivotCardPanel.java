@@ -82,8 +82,8 @@ import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorExporter;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
+import com.actelion.research.spiritcore.util.CSVUtils;
 import com.actelion.research.spiritcore.util.MiscUtils;
-import com.actelion.research.util.CSVUtils;
 import com.actelion.research.util.UsageLog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
@@ -524,7 +524,7 @@ public class PivotCardPanel extends JPanel {
 
 	private void pivot(final boolean shouldOpenEditTemplateDlg) {
 		if (results == null || results.size() == 0) {
-			pivotTable.setPivotDataTable(PivotDataTable.createPivotDataTable(results, null, currentPivotTemplate));
+			pivotTable.setPivotDataTable(new PivotDataTable(results, null, currentPivotTemplate));
 		} else {
 			// Make it asynchronous, but don't specify a time, because we can
 			// have more than 2 instances of this class (AnimalCare)
@@ -543,7 +543,7 @@ public class PivotCardPanel extends JPanel {
 //					currentPivotTemplate.simplify(results);
 
 					// Create the pivottable
-					pivotDataTable = PivotDataTable.createPivotDataTable(results, skippedAttributes, currentPivotTemplate);
+					pivotDataTable = new PivotDataTable(results, skippedAttributes, currentPivotTemplate);
 				}
 
 				@Override

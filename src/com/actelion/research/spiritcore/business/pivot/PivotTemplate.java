@@ -102,6 +102,8 @@ public class PivotTemplate implements Serializable, Cloneable {
 
 	private String name;
 	private String thumbnailName;
+	private Image image;
+
 	
 	public PivotTemplate() {}
 
@@ -126,7 +128,6 @@ public class PivotTemplate implements Serializable, Cloneable {
 		where2items.clear();
 	}
 	
-	
 	public synchronized void clear() {
 		item2where.clear();
 		where2items.clear();
@@ -137,8 +138,6 @@ public class PivotTemplate implements Serializable, Cloneable {
 		this.showN = true;
 				
 	}
-	
-	
 	
 	public void setAggregation(Aggregation display1) {
 		this.aggregation = display1;
@@ -188,10 +187,10 @@ public class PivotTemplate implements Serializable, Cloneable {
 	public Computed getComputed() {
 		return computed;
 	}
+	
 	public void setComputed(Computed computed) {
 		this.computed = computed;
 	}
-
 	
 	@Override
 	public String toString() {
@@ -213,8 +212,7 @@ public class PivotTemplate implements Serializable, Cloneable {
 	public void setShowN(boolean showN) {
 		this.showN = showN;
 	}
-	
-	
+		
 	@Override
 	public PivotTemplate clone() {
 		PivotTemplate tpl = new PivotTemplate();
@@ -233,16 +231,12 @@ public class PivotTemplate implements Serializable, Cloneable {
 		return name;
 	}
 	
-	private transient Image image;
 	public Image getThumbnail() {
 		if(thumbnailName!=null && image==null) {
 			image = PivotTemplate.getThumbnail(thumbnailName);
 			if(image==null) thumbnailName = null;
 		}
 		return image;
-	}
-	public String getThumbnailName() {
-		return thumbnailName;
 	}
 	
 	/**

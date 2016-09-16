@@ -27,15 +27,20 @@ import java.util.List;
 import com.actelion.research.spiritcore.adapter.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.ConfigProperties;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
 public class WorkflowHelper {
 
 	
+	/**
+	 * Return an HTML comment of the current state
+	 * @param currentState
+	 * @return
+	 */
 	public static String getWorkflowDescription(String currentState) {
-		boolean hasWorkflow = ConfigProperties.getInstance().hasStudyWorkflow();
-		String[] states = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES);
+		boolean hasWorkflow = SpiritProperties.getInstance().hasStudyWorkflow();
+		String[] states = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES);
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append("<html>");
@@ -44,9 +49,9 @@ public class WorkflowHelper {
 		}
 		boolean hasNext = false;
 		for (String state : states) {
-			String[] from = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_FROM, state);
+			String[] from = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_FROM, state);
 			if(!hasWorkflow || ((currentState==null || currentState.length()==0) && from.length==0) || MiscUtils.contains(from, currentState)) {
-				sb.append("&nbsp;&nbsp;&nbsp;--&gt;&nbsp;&nbsp;" + state + (hasWorkflow?" (" + ConfigProperties.getInstance().getValue(PropertyKey.STUDY_STATES_PROMOTERS, state) + ")":"") + "<br>");
+				sb.append("&nbsp;&nbsp;&nbsp;--&gt;&nbsp;&nbsp;" + state + (hasWorkflow?" (" + SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_PROMOTERS, state) + ")":"") + "<br>");
 				hasNext = true;
 			}
 		}
@@ -57,9 +62,13 @@ public class WorkflowHelper {
 		return sb.toString();
 	}
 	
+	/**
+	 * Returns an HTML table describing the workflow states
+	 * @return
+	 */
 	public static String getStateDescriptions() {
-		String[] states = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES);
-		boolean hasWorkflow = ConfigProperties.getInstance().hasStudyWorkflow();
+		String[] states = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES);
+		boolean hasWorkflow = SpiritProperties.getInstance().hasStudyWorkflow();
 		StringBuilder sb = new StringBuilder();
 		sb.append("<html><table border=0 padding=0 margin=0>");
 		sb.append("<tr><td></td>");
@@ -70,11 +79,11 @@ public class WorkflowHelper {
 				+ "<td style='background:#DDDDDDAA'><u>From</u></td>");}
 		sb.append("</tr>");
 		for (String state : states) {
-			String view = ConfigProperties.getInstance().getValue(PropertyKey.STUDY_STATES_READ, state);
-			String expert = ConfigProperties.getInstance().getValue(PropertyKey.STUDY_STATES_EXPERT, state);
-			String admin = ConfigProperties.getInstance().getValue(PropertyKey.STUDY_STATES_ADMIN, state);
-			String[] from = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_FROM, state);
-			String[] promoters = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_PROMOTERS, state);
+			String view = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_READ, state);
+			String expert = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_EXPERT, state);
+			String admin = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_ADMIN, state);
+			String[] from = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_FROM, state);
+			String[] promoters = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_PROMOTERS, state);
 			
 			sb.append("<tr><td style='background:#DDDDDDAA'><b>&nbsp;"+state+"&nbsp;</b></td>");
 			sb.append("<td style='background:#DDDDDDAA'>&nbsp;"+admin+"&nbsp;</td>");
@@ -90,18 +99,19 @@ public class WorkflowHelper {
 	}
 
 	/**
-	 * 
+	 * Return the possible promotion states for the given user. 
+	 * The current study state is always returned.
 	 * @param study
 	 * @param user
 	 * @return
 	 */
 	public static List<String> getNextStates(Study study, SpiritUser user) {
-		String[] states = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES);
+		String[] states = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES);
 		List<String> possibleStates = new ArrayList<>();
-		boolean hasWorkflow = ConfigProperties.getInstance().hasStudyWorkflow();
+		boolean hasWorkflow = SpiritProperties.getInstance().hasStudyWorkflow();
 		for (String state : states) {
-			String[] from = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_FROM, state);
-			String[] promoters = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_PROMOTERS, state);
+			String[] from = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_FROM, state);
+			String[] promoters = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_PROMOTERS, state);
 			
 			if(!hasWorkflow || user.isSuperAdmin()) {
 				possibleStates.add(state);		

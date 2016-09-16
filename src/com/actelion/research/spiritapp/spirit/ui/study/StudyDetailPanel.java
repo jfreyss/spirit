@@ -165,7 +165,7 @@ public class StudyDetailPanel extends JPanel {
 		if(orientation==JSplitPane.HORIZONTAL_SPLIT) { 
 			splitPane.setDividerLocation(dim.width-400);
 		} else {
-			splitPane.setDividerLocation(dim.height*2/3);
+			splitPane.setDividerLocation(400);
 		}
 		
 		setLayout(new BorderLayout());

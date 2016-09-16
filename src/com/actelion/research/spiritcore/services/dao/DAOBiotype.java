@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -57,8 +56,9 @@ public class DAOBiotype {
 
 	private static Logger logger = LoggerFactory.getLogger(DAOBiotype.class);
 
-	public static void removeBiotype(Biotype biotype, SpiritUser user) throws Exception {
+	public static void deleteBiotype(Biotype biotype, SpiritUser user) throws Exception {
 		if(user==null || !user.isSuperAdmin()) throw new Exception("You must be am admin");
+		if(biotype==null) throw new Exception("Biotype is null");
 		if(biotype.getChildren().size()>0) throw new Exception("You must delete the children first: "+biotype.getChildren());
 		EntityManager session = JPAUtil.getManager();
 		BiosampleQuery q = new BiosampleQuery();
@@ -67,6 +67,7 @@ public class DAOBiotype {
 		if(n>0) {
 			throw new Exception("You cannot delete a biotype if you have some biosamples");
 		}
+		
 		EntityTransaction txn = null;
 		try {
 			txn = session.getTransaction();
@@ -77,94 +78,76 @@ public class DAOBiotype {
 			session.remove(biotype);
 			
 			txn.commit();
-
-			
 			txn = null;
 		} finally {
 			if(txn!=null) try{txn.rollback();}catch (Exception e) {}
+			Cache.getInstance().removeAllWithPrefix("id2biotype_"+JPAUtil.getManager());
 		}
-		Cache.getInstance().removeAllWithPrefix("biotype");
 		
 	}
 
-	
+	public static Map<Integer, Biotype> getId2Biotype() {
+		Map<Integer, Biotype> id2biotype = (Map<Integer, Biotype>) Cache.getInstance().get("id2biotype_"+JPAUtil.getManager());
+		if(id2biotype==null) {			
+			EntityManager session = JPAUtil.getManager();
+			//Load all
+			Query query = session.createQuery("select distinct(t) from Biotype t left join fetch t.metadata");		
+			
+			List<Biotype> biotypes = query.getResultList();
+			id2biotype = JPAUtil.mapIds(biotypes);
+			Cache.getInstance().add("id2biotype_"+JPAUtil.getManager(), id2biotype, 180);
+		}
+		return id2biotype;
+	}
 	
 	public static List<Biotype> getBiotypes() {
 		return getBiotypes(false);
 	}
+	
 	public static List<Biotype> getBiotypes(boolean showHidden) {
-		List<Biotype> types = (List<Biotype>) Cache.getInstance().get("biotypes");
-		if(types==null) {			
-			EntityManager session = JPAUtil.getManager();
-			//Load all
-			Query query = session.createQuery(
-					"select distinct(t) from Biotype t left join fetch t.metadata");		
-			
-			List<Biotype> todo = query.getResultList();
-			Collections.sort(todo);
-			
-			//Order according to the hierarchy
-			types = new ArrayList<Biotype>();
-			while(todo.size()>0) {
-				for (Iterator<Biotype> iterator = todo.iterator(); iterator.hasNext();) {
-					Biotype biotype = iterator.next();
-					if(biotype.getParent()==null) {
-						biotype.setDepth(0);
-						types.add(biotype);
-						iterator.remove();
-					} else {
-						int index = types.indexOf(biotype.getParent());
-						if(index>=0) {
-							int depth = types.get(index).getDepth() + 1;
+		Map<Integer, Biotype> id2biotype = getId2Biotype();
+		List<Biotype> todo = new ArrayList<>(id2biotype.values());
+		Collections.sort(todo);
+		
+		//Order according to the hierarchy
+		List<Biotype> types = new ArrayList<>();
+		while(todo.size()>0) {
+			for (Iterator<Biotype> iterator = todo.iterator(); iterator.hasNext();) {
+				Biotype biotype = iterator.next();
+				if(biotype.getParent()==null) {
+					biotype.setDepth(0);
+					types.add(biotype);
+					iterator.remove();
+				} else {
+					int index = types.indexOf(biotype.getParent());
+					if(index>=0) {
+						int depth = types.get(index).getDepth() + 1;
+						index++;
+						while(index<types.size() && biotype.getParent().equals(types.get(index).getParent())) {
 							index++;
-							while(index<types.size() && biotype.getParent().equals(types.get(index).getParent())) {
-								index++;
-							}
-							biotype.setDepth(depth);
-							types.add(index, biotype);
-							iterator.remove();
 						}
+						biotype.setDepth(depth);
+						types.add(index, biotype);
+						iterator.remove();
 					}
 				}
 			}
-			
-			
-			//Create a map for easier access
-			Map<String, Biotype> name2type = new HashMap<>();
-			for (Biotype t : types) {
-				name2type.put(t.getName(), t);
-			}
-			
-			Cache.getInstance().add("biotypes", types, 180);
-			Cache.getInstance().add("biotypesMap", name2type, 180);
 		}
 		if(!showHidden) {
 			types = Biotype.removeHidden(types);
-		}
-		
+		}		
 		return types;
-	}
-	
-//	public static List<Biotype> getBiotypes(SpiritUser user) {
-//		List<Biotype> res = new ArrayList<Biotype>();		
-//		for (Biotype type :  DAOBiotype.getBiotypes()) {
-//			if(type.isHidden() && !SpiritRights.isSuperAdmin(user)) continue;
-//			res.add(type);				
-//		}
-//		return res;
-//	}
+	}	
 
 	public static Biotype getBiotype(String name) {
 		if(name==null) return null;
 		
-		//populate cache
-		Map<String, Biotype> name2type = (Map<String, Biotype>) Cache.getInstance().get("biotypesMap");
-		if(name2type==null) {
-			getBiotypes();
-			name2type = (Map<String, Biotype>) Cache.getInstance().get("biotypesMap");
+		Map<Integer, Biotype> id2biotype = getId2Biotype();
+		for (Biotype t : id2biotype.values()) {
+			if(t.getName().equals(name)) return t;
+			
 		}
-		
-		return name2type.get(name);		
+		return null;
 	}
 
 	public static Set<String> getAutoCompletionFields(BiotypeMetadata metadataType, Study study) {
@@ -293,6 +276,9 @@ public class DAOBiotype {
 		Date now = JPAUtil.getCurrentDateFromDatabase();
 		for (Biotype biotype : biotypes) {
 				
+			if(biotype.getCategory()==null) throw new Exception("The category is required");
+			if(biotype.getName()==null || biotype.getName().length()==0) throw new Exception("The name is required");
+			
 			//Update the bidirectional link
 			for (BiotypeMetadata m : biotype.getMetadata()) {
 				if(m.getName().trim().length()==0) throw new Exception("The Metadata name cannot be empty");
@@ -320,7 +306,8 @@ public class DAOBiotype {
 				}
 			}
 		}
-		Cache.getInstance().removeAllWithPrefix("biotype");
+		Cache.getInstance().remove("id2biotype_"+JPAUtil.getManager());
+
 	}
 
 	public static int renameNames(Biotype biotype, String value, String newValue, SpiritUser user) throws Exception {
@@ -343,10 +330,10 @@ public class DAOBiotype {
 			}
 			
 			txn.commit();
-			Cache.getInstance().removeAllWithPrefix("biotype");
 			return biosamples.size();
 		} finally {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
+			Cache.getInstance().remove("id2biotype_"+JPAUtil.getManager());
 		}		
 	}
 	
@@ -369,7 +356,7 @@ public class DAOBiotype {
 				}
 			}
 			
-			Cache.getInstance().removeAllWithPrefix("biotype");
+			Cache.getInstance().remove("id2biotype_"+JPAUtil.getManager());
 			txn.commit();
 			return biosamples.size();
 		} finally {
@@ -411,7 +398,7 @@ public class DAOBiotype {
 			///Remove the name
 			biotype.setSampleNameLabel(null);
 			
-			Cache.getInstance().removeAllWithPrefix("biotype");
+			Cache.getInstance().remove("id2biotype_"+JPAUtil.getManager());
 			txn.commit();
 		} finally {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
@@ -422,24 +409,28 @@ public class DAOBiotype {
 	public static void moveMetadataToName(BiotypeMetadata biotypeMetadata, SpiritUser user) throws Exception {
 		if(user==null || !user.isSuperAdmin()) throw new Exception("You must be an admin to rename a metadata");
 		
-		Biotype biotype = biotypeMetadata.getBiotype();
-		if(biotype.getSampleNameLabel()!=null) throw new Exception(biotype+" is already a MainField");
-
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {
+			Biotype biotype = biotypeMetadata.getBiotype();
+//			if(!session.contains(biotype)) {
+//				biotype = session.merge(biotype);
+//				biotypeMetadata = biotype.getMetadata(biotypeMetadata.getName());
+//			}
+			if(biotype.getSampleNameLabel()!=null) throw new Exception(biotype+" has already a MainField");
+
+
 			txn = session.getTransaction();
 			txn.begin();
 			Date now = JPAUtil.getCurrentDateFromDatabase();
 
-			
 			//Add the name
 			biotype.setSampleNameLabel(biotypeMetadata.getName());
 			biotype.setNameAutocomplete(biotypeMetadata.getDataType()==DataType.AUTO);
 			biotype.setNameRequired(biotypeMetadata.isRequired());
 			biotype.setUpdDate(now);
 			biotype.setUpdUser(user.getUsername());
-			biotype = session.merge(biotype);
+			
 			
 			//Query and Update the biosamples
 			BiosampleQuery q = new BiosampleQuery();
@@ -456,9 +447,9 @@ public class DAOBiotype {
 			}
 			
 			///Remove the metadata
-			biotype.getMetadata().remove(biotypeMetadata);
-			
-			Cache.getInstance().removeAllWithPrefix("biotype");
+			biotype.getMetadata().remove(biotype.getMetadata(biotypeMetadata.getName()));
+			biotype = session.merge(biotype);
+			Cache.getInstance().remove("id2biotype_"+JPAUtil.getManager());
 
 			txn.commit();
 			

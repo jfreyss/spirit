@@ -38,9 +38,12 @@ import javax.swing.SpinnerNumberModel;
 
 import com.actelion.research.spiritcore.business.LogEntry;
 import com.actelion.research.spiritcore.business.LogEntry.Action;
+import com.actelion.research.spiritcore.business.employee.Employee;
+import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.DAOLog;
 import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
@@ -76,10 +79,10 @@ public class LogEntryDlg extends JEscapeDialog {
 		columns.add(new Column<LogEntry, String>("User", String.class) {
 			public String getValue(LogEntry row) {return row.getUser();}
 		});
-		columns.add(new Column<LogEntry, String>("Dept", String.class) {			
+		columns.add(new Column<LogEntry, String>("Dept.", String.class) {			
 			public String getValue(LogEntry row) {
-				com.actelion.research.spiritcore.business.employee.Employee emp = DAOEmployee.getEmployee(row.getUser());
-				return emp.getMainEmployeeGroup()==null? null: emp.getMainEmployeeGroup().getName();
+				Employee emp = DAOEmployee.getEmployee(row.getUser());
+				return emp.getEmployeeGroups()==null? null: MiscUtils.flatten(EmployeeGroup.getNames(emp.getEmployeeGroups()));
 			}
 		});
 		columns.add(new Column<LogEntry, String>("IP", String.class) {

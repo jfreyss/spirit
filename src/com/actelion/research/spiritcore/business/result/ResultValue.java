@@ -40,11 +40,11 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
 import com.actelion.research.spiritcore.business.DataType;
+import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.util.CompareUtils;
 
@@ -52,11 +52,9 @@ import com.actelion.research.util.CompareUtils;
 @Table(name="assay_result_value", indexes = {		
 		@Index(name="value_attribute_idx", columnList = "assay_attribute_id"),
 		@Index(name="value_result_idx", columnList = "assay_result_id"),
-//		@Index(name="value_compound_idx", columnList = "linked_compound_id"),
-		@Index(name="value_detail_idx", columnList = "assay_result_detail_id")})
+		@Index(name="value_detail_idx", columnList = "document_id")})
 @SequenceGenerator(name="assay_result_value_seq", sequenceName="assay_result_value_seq", allocationSize=1)
 @Audited
-@AuditTable(value="assay_result_value_aud")
 public class ResultValue implements Comparable<ResultValue> {
 	
 	private static final String[] validValues = new String[] {"<LOD", ">LOD", "N/A", "NA", "?"};
@@ -69,27 +67,21 @@ public class ResultValue implements Comparable<ResultValue> {
 	@Column(name="text_value")
 	private String value = "";
 	
-	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY, optional=false)
+	@ManyToOne(cascade={}, fetch=FetchType.LAZY, optional=false)
 	@JoinColumn(name="assay_attribute_id", nullable=false)
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
 	@BatchSize(size=50)	
 	private TestAttribute attribute;
 	
-	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY, optional=false)
+	@ManyToOne(cascade={}, fetch=FetchType.LAZY, optional=false)
 	@JoinColumn(name="assay_result_id", nullable=false)
 	private Result result;
 	
 
 	@ManyToOne(cascade=CascadeType.ALL, fetch=FetchType.LAZY, optional=true)
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
-	@JoinColumn(name="assay_result_detail_id", nullable=true)	
-	private ResultDetail resultDetail;
-	
-//	@OneToOne(cascade=CascadeType.REFRESH, optional=true, fetch=FetchType.LAZY)
-//	@JoinColumn(name="linked_compound_id")
-//	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-//	@BatchSize(size=20)
-//	private Compound linkedCompound;
+	@JoinColumn(name="document_id", nullable=true)	
+	private Document document;
 	
 	private transient Double calculatedValue = null;
 	
@@ -277,12 +269,12 @@ public class ResultValue implements Comparable<ResultValue> {
 		return value;
 	}
 
-	public void setResultDetail(ResultDetail resultDetail) {
-		this.resultDetail = resultDetail;
+	public Document getDocument() {
+		return document;
 	}
-
-	public ResultDetail getResultDetail() {
-		return resultDetail;
+	
+	public void setDocument(Document document) {
+		this.document = document;
 	}
 	
 	public Double getCalculatedValue() {

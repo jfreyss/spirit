@@ -52,8 +52,8 @@ import com.actelion.research.spiritcore.services.StringEncrypter;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.Pair;
-import com.actelion.research.util.SQLConverter;
-import com.actelion.research.util.SQLConverter.SQLVendor;
+import com.actelion.research.spiritcore.util.SQLConverter;
+import com.actelion.research.spiritcore.util.SQLConverter.SQLVendor;
 
 /**
  * The adapter is responsible for the specific requirements concerning the DB: connection, user authentification, user tables, ...
@@ -71,7 +71,7 @@ public abstract class DBAdapter {
 	
 	public static final String KEY = new String("adjlkdada8d0uah9d9j238jsad0a");
 
-	public static DBProperty ADAPTER_PROPERTY = new DBProperty(
+	public static PropertyDescriptor ADAPTER_PROPERTY = new PropertyDescriptor(
 			"jnlp.adapter", "DB Adapter", 
 			new Pair[] {
 				new Pair<String,String>(HSQLFileAdapter.class.getName(), "HSQL Local Database for 1 user (no DB installation)"),
@@ -169,8 +169,8 @@ public abstract class DBAdapter {
 		return adapter;
 	}
 	
-	public DBProperty[] getSpecificProperties() {
-		return new DBProperty[]{};
+	public PropertyDescriptor[] getSpecificProperties() {
+		return new PropertyDescriptor[]{};
 	}
 	
 	/**
@@ -189,7 +189,7 @@ public abstract class DBAdapter {
 	 * @param conf
 	 * @return
 	 */
-	public final String getDBProperty(DBProperty conf) {
+	public final String getDBProperty(PropertyDescriptor conf) {
 		
 		
 		String v = System.getProperty(conf.getPropertyName());
@@ -388,6 +388,16 @@ public abstract class DBAdapter {
 		return conn;
 	}
 
+
+	public Set<Location> getAutomatedStoreLocation() {
+		if(getAutomaticStores()==null) return new HashSet<Location>();
+		return getAutomaticStores().keySet();
+		
+	}
+	
+	public boolean isInAutomatedStore(Location loc) {
+		return loc!=null && getAutomatedStoreLocation().contains(loc);
+	}
 
 	
 	

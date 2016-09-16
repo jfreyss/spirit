@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +61,6 @@ import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.services.dao.DAORecentChanges.RecentChange;
 import com.actelion.research.spiritlib.pojo.BiosamplePojo;
 import com.actelion.research.spiritlib.pojo.BiosampleQueryPojo;
 import com.actelion.research.spiritlib.pojo.BiotypeMetadataPojo;
@@ -72,7 +72,6 @@ import com.actelion.research.spiritlib.pojo.MeasurementPojo;
 import com.actelion.research.spiritlib.pojo.NamedSamplingPojo;
 import com.actelion.research.spiritlib.pojo.NamedTreatmentPojo;
 import com.actelion.research.spiritlib.pojo.PhasePojo;
-import com.actelion.research.spiritlib.pojo.RecentChangePojo;
 import com.actelion.research.spiritlib.pojo.ResultPojo;
 import com.actelion.research.spiritlib.pojo.ResultQueryPojo;
 import com.actelion.research.spiritlib.pojo.SamplingPojo;
@@ -124,9 +123,7 @@ public class Exporter {
 
 		//Autotest, make sure the conversion is possible
 		try {
-			System.out.println("Exporter.convertExchange() TRY REIMPORTING");
 			new Importer().convertExchange(res);
-			System.out.println("Exporter.convertExchange() TRY REIMPORTING DONE");
 		} catch(Exception ex) {
 			throw new RuntimeException("The exported exchange format is invalid", ex);
 		}
@@ -175,7 +172,6 @@ public class Exporter {
 			r.setAdminUsers(s.getAdminUsers());			
 			res.add(r);
 		}
-		
 		return res;
 	}
 	
@@ -186,13 +182,12 @@ public class Exporter {
 			p.setId(g.getId());
 			p.setName(g.getName());
 			p.setColorRgb(g.getColorRgb());
-			p.setDividingSampling(g.getDividingSampling()==null? null: convertSamplings(Collections.singletonList(g.getDividingSampling())).get(0));
+			p.setDividingSampling(g.getDividingSampling()==null? null: convertSamplings(Collections.singleton(g.getDividingSampling())).iterator().next());
 			p.setFromGroup(g.getFromGroup()==null?"": g.getFromGroup().getName());
 			p.setFromPhase(g.getFromPhase()==null?"": g.getFromPhase().getShortName());
 			p.setSubgroupSizes(g.getSubgroupSizes());
 			res.add(p);
 		}
-		System.out.println("Exporter.convertGroups() "+res);
 		return res;
 	}
 	
@@ -247,10 +242,10 @@ public class Exporter {
 		return res;
 	}
 	
-	public static List<SamplingPojo> convertSamplings(List<Sampling> list) {
+	public static Set<SamplingPojo> convertSamplings(Collection<Sampling> list) {
 		Map<Integer, Test> id2test = JPAUtil.mapIds(DAOTest.getTests(Measurement.getTestIds(Sampling.getMeasurements(list))));
 		
-		List<SamplingPojo> res = new ArrayList<>();
+		Set<SamplingPojo> res = new LinkedHashSet<>();
 		for (Sampling g : list) {
 			SamplingPojo p = new SamplingPojo();			
 			p.setAmount(g.getAmount());
@@ -284,7 +279,7 @@ public class Exporter {
 				mp.setParameters(m.getParameters());
 				mps.add(mp);
 			}
-			p.setMeasurements(mps.toArray(new MeasurementPojo[mps.size()]));
+			p.setMeasurements(mps.toArray(new MeasurementPojo[mps.size()]));			
 			
 			res.add(p);
 		}
@@ -498,21 +493,6 @@ public class Exporter {
 		return res;
 	}
 	
-	public static RecentChangePojo convertRecentChange(RecentChange rc) {
-		if(rc==null) return null;
-		
-		RecentChangePojo rcp = new RecentChangePojo();
-		rcp.setStudy(convertStudy(rc.study));
-		rcp.getBiosamples().addAll(convertBiosamples(rc.biosamples));
-		rcp.getResults().addAll(convertResults(rc.results));
-		rcp.setDate(rc.date);
-		rcp.setUserId(rc.userId);
-		return rcp;
-	}
-
-	
-	
-
 	//////////////////////////////////////////////////////////////////////////////////
 	public static BiosampleQueryPojo convertBiosampleQuery(BiosampleQuery q) {
 		BiosampleQueryPojo res = new BiosampleQueryPojo();

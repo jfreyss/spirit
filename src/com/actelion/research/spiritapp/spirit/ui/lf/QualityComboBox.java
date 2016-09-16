@@ -31,7 +31,7 @@ import com.actelion.research.util.ui.JGenericComboBox;
 public class QualityComboBox extends JGenericComboBox<Quality> {
 
 	public QualityComboBox() {
-		super(Quality.getQualities(), true);
+		super(Quality.values(), true);
 		setTextWhenEmpty("Quality");
 		setPreferredWidth(140);
 	}

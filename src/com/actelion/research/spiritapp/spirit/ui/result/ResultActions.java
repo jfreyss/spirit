@@ -358,7 +358,7 @@ public class ResultActions {
 			editMenu.add(new JSeparator());
 			JMenu markMenu = new JMenu("Set Quality"); 
 			markMenu.setIcon(IconType.QUALITY.getIcon());
-			for (Quality quality : Quality.getQualities()) {
+			for (Quality quality : Quality.values()) {
 				markMenu.add(new Action_SetQuality(results, quality));
 			}			
 			editMenu.add(markMenu);	

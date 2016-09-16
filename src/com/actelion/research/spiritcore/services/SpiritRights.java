@@ -34,7 +34,7 @@ import com.actelion.research.spiritcore.business.order.Order;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.services.dao.ConfigProperties;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
 /**
@@ -162,7 +162,7 @@ public class SpiritRights {
 		if(study.getCreUser()==null) return true;
 		
 		//check for seal state?
-		if("true".equals(ConfigProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
+		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
 			return false;
 		}
 		if(user.getUsername().equalsIgnoreCase(study.getCreUser())) return true;
@@ -212,12 +212,12 @@ public class SpiritRights {
 		if(study.getId()<=0) return true;
 
 		//check for seal state?
-		if("true".equals(ConfigProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
+		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
 			return false;
 		}
 
 		//Check roles?
-		String[] roles = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, study.getState());
+		String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, study.getState());
 		if(MiscUtils.contains(roles, "ALL")) {
 			return true;
 		}
@@ -241,15 +241,15 @@ public class SpiritRights {
 		if(study.getId()<=0) return true;
 
 		//check for seal state?
-		if("true".equals(ConfigProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
+		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
 			return false;
 		}
 
 		//Is there a workflow
-		if(!ConfigProperties.getInstance().hasStudyWorkflow()) return false;
+		if(!SpiritProperties.getInstance().hasStudyWorkflow()) return false;
 		
 		//Check roles?		
-		String[] roles = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_PROMOTERS, study.getState());
+		String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_PROMOTERS, study.getState());
 		if(MiscUtils.contains(roles, "ALL")) {
 			return true;
 		}
@@ -303,12 +303,12 @@ public class SpiritRights {
 		
 		
 		//Check seal?
-		if("true".equals(ConfigProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
+		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
 			return false;
 		}
 		
 		//Check roles?
-		String[] roles = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, study.getState());
+		String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, study.getState());
 		if(MiscUtils.contains(roles, "ALL")) {
 			return true;
 		}		
@@ -345,7 +345,7 @@ public class SpiritRights {
 		if(study.getId()<=0) return true;
 //		if(study.getStatus()==StudyStatus.FINISHED) return true;
 
-		String[] roles = ConfigProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState());
+		String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState());
 		if(MiscUtils.contains(roles, "ALL")) {
 			return true;
 		}
@@ -364,7 +364,7 @@ public class SpiritRights {
 	}
 
 	public static boolean canView(Study study, SpiritUser user) {
-		return ConfigProperties.getInstance().isOpen() || canRead(study, user);
+		return SpiritProperties.getInstance().isOpen() || canRead(study, user);
 	}
 
 	/**
