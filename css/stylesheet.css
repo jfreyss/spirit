@@ -289,37 +289,6 @@ form {
   padding: 20px;
 }
 
-/*******************************************************************************
-Full-Width Styles
-*******************************************************************************/
-#forkme_banner {
-  display: block;
-  z-index: 10;
-  margin-left:20px;
-  padding: 10px 50px 10px 10px;
-  color: #fff;
-  background: url('../images/blacktocat.png') #3175b0  no-repeat 95% 50%;
-  font-weight: 700;
-  box-shadow: inset 0px -5px 6px 2px #425088;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
-}
-
-#header_wrap {
-  background: #474737;
-  background: -moz-linear-gradient(top, #212121, #474737);
-  background: -webkit-linear-gradient(top, #212121, #474737);
-  background: -ms-linear-gradient(top, #212121, #474737);
-  background: -o-linear-gradient(top, #212121, #474737);
-  background: linear-gradient(top, #212121, #474737);
-}
-
-#footer_wrap {
-  margin-top: 40px;
-  background: #474737;
-  background: -webkit-linear-gradient(bottom, #212121, #474737);
-}
-
 dt {
 	margin-left:60px;
 	font-weight:600;
@@ -501,4 +470,54 @@ p {
     background-size: 10px 8px;
 	margin-top:4px;
 	font-weight:600
+}
+
+
+
+/*******************************************************************************
+Full-Width Styles
+*******************************************************************************/
+#forkme_banner {
+  display: block;
+  z-index: 10;
+  margin-left:20px;
+  padding: 10px 50px 10px 10px;
+  color: #fff;
+  background: url('../images/blacktocat.png') #3175b0  no-repeat 95% 50%;
+  font-weight: 700;
+  box-shadow: inset 0px -5px 6px 2px #425088;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+#header_wrap {
+  background: #474737;
+  background: -moz-linear-gradient(top, #212121, #474737);
+  background: -webkit-linear-gradient(top, #212121, #474737);
+  background: -ms-linear-gradient(top, #212121, #474737);
+  background: -o-linear-gradient(top, #212121, #474737);
+  background: linear-gradient(top, #212121, #474737);
+}
+
+#footer_wrap {
+  margin-top: 40px;
+  background: #474737;
+  background: -webkit-linear-gradient(bottom, #212121, #474737);
+}
+
+#news ol {
+	padding-left:0px;
+}
+
+#news {
+	margin-top: 25px;
+	padding: 2px;
+}
+.news-title {
+	font-weight:600;
+    color: #595cb3;
+}
+.news-content {
+	margin-top:-5px;
+	color: #555555
 }
