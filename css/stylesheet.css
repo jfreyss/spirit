@@ -5,29 +5,6 @@ by Jason Costello, @jsncostello
 
 @import url(github-light.css);
 
-/*******************************************************************************
-html, body, div, span, applet, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-a, abbr, acronym, address, big, cite, code,
-del, dfn, em, img, ins, kbd, q, s, samp,
-small, strike, strong, sub, sup, tt, var,
-b, u, i, center,
-dl, dt, dd, ol, ul, li,
-fieldset, form, label, legend,
-table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed,
-figure, figcaption, footer, header, hgroup,
-menu, nav, output, ruby, section, summary,
-time, mark, audio, video {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  font: inherit;
-  vertical-align: baseline;
-  vertical-align: baseline;
-}
-*/
-
 /* HTML5 display-role reset for older browsers */
 article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section {
@@ -315,6 +292,19 @@ form {
 /*******************************************************************************
 Full-Width Styles
 *******************************************************************************/
+#forkme_banner {
+  display: block;
+  z-index: 10;
+  margin-left:20px;
+  padding: 10px 50px 10px 10px;
+  color: #fff;
+  background: url('../images/blacktocat.png') #3175b0  no-repeat 95% 50%;
+  font-weight: 700;
+  box-shadow: inset 0px -5px 6px 2px #425088;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
 #header_wrap {
   background: #474737;
   background: -moz-linear-gradient(top, #212121, #474737);
