@@ -57,9 +57,9 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.BiosampleHisto
 import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.SetBiosampleQualityDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.SetBiosampleStatusDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.SetExpiryDateDlg;
+import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.UpdateAmountDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.CreateChildrenDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleDlg;
-import com.actelion.research.spiritapp.spirit.ui.biosample.edit.UpdateAmountDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.form.BiosampleFormDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.selector.SelectorDlg;
 import com.actelion.research.spiritapp.spirit.ui.container.CheckinDlg;
@@ -86,8 +86,6 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
-import com.actelion.research.spiritcore.services.dao.DAORevision;
-import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.ListHashMap;
@@ -115,11 +113,12 @@ public class BiosampleActions {
 			new BiosampleFormDlg(b);
 		}
 	}
-	public static class Action_CreateChild extends AbstractAction {
+	
+	public static class Action_NewChild extends AbstractAction {
 		
 		private Biosample parent;
 			
-		public Action_CreateChild(Biosample parent) {
+		public Action_NewChild(Biosample parent) {
 			super("Create Child");
 			putValue(AbstractAction.SMALL_ICON, IconType.NEW.getIcon());
 			setParent(parent);
@@ -140,11 +139,13 @@ public class BiosampleActions {
 	
 
 	public static class Action_NewBatch extends AbstractAction {
+		
 		public Action_NewBatch() {
 			super("New Biosamples");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
 			putValue(Action.SMALL_ICON, IconType.BIOSAMPLE.getIcon());
 		}
+		
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
@@ -155,12 +156,13 @@ public class BiosampleActions {
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
-
 		}
 	}
 	
 	public static class Action_Duplicate extends AbstractAction {
+		
 		private List<Biosample> biosamples;
+		
 		public Action_Duplicate(List<Biosample> biosamples) {
 			super("Duplicate");
 			this.biosamples = biosamples;
@@ -168,6 +170,7 @@ public class BiosampleActions {
 			putValue(Action.SMALL_ICON, IconType.DUPLICATE.getIcon());
 			setEnabled(SpiritRights.canEditBiosamples(biosamples, Spirit.getUser()));
 		}
+		
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
@@ -187,7 +190,6 @@ public class BiosampleActions {
 						b.setParent(old2copy.get(b.getParent()));
 					}
 				}
-				
 				
 				EditBiosampleDlg.createDialogForEditInTransactionMode(null, res).setVisible(true);
 			} catch (Exception ex) {
@@ -239,8 +241,6 @@ public class BiosampleActions {
 		}
 	}
 	
-	
-
 	public static class Action_Order extends AbstractAction {
 		private final List<Biosample> biosamples;
 
@@ -289,7 +289,10 @@ public class BiosampleActions {
 		}
 	}
 
-	
+
+	/**
+	 * Print Labels of biosamples
+	 */
 	public static class Action_Print extends AbstractAction {
 		private final List<Biosample> biosamples;
 
@@ -298,6 +301,13 @@ public class BiosampleActions {
 			this.biosamples = biosamples;
 			putValue(Action.MNEMONIC_KEY, (int)('p'));
 			putValue(Action.SMALL_ICON, IconType.PRINT.getIcon());
+			if(biosamples==null) {
+				setEnabled(true);
+			} else {
+				for(Biotype biotype: Biosample.getBiotypes(biosamples)) {
+					if(biotype.isAbstract()) setEnabled(false);
+				}
+			}
 		}
 		
 		public List<Biosample> getBiosamples() {
@@ -316,6 +326,9 @@ public class BiosampleActions {
 		}
 	}
 	
+	/**
+	 * Selects samples based on a discriminator (ex: samples with different fluorophores)
+	 */
 	public static class Action_SelectWithDiscriminator extends AbstractAction {
 		private final List<Biosample> biosamples;
 		
@@ -336,8 +349,7 @@ public class BiosampleActions {
 	}
 
 	/**
-	 * Delete Actiom
-	 * @author freyssj
+	 * Delete samples
 	 */
 	public static class Action_Delete extends AbstractAction {
 		private final List<Biosample> biosamples;
@@ -364,11 +376,12 @@ public class BiosampleActions {
 	}
 	
 	/**
-	 * Edit Action
-	 * @author freyssj
+	 * Edit samples
 	 */
 	public static class Action_BatchEdit extends AbstractAction {
+		
 		private final List<Biosample> biosamples;
+		
 		/**
 		 * Constructor for an edit action (generic, you must implement getBiosamples)
 		 */
@@ -378,6 +391,7 @@ public class BiosampleActions {
 			putValue(Action.SMALL_ICON, IconType.EDIT.getIcon());
 			this.biosamples = null;
 		}
+		
 		/**
 		 * Constructor for an edit action (on the given biosamples)
 		 * @param biosamples
@@ -457,10 +471,10 @@ public class BiosampleActions {
 		}
 	}
 	
-	public static class Action_NewChild extends AbstractAction {
+	public static class Action_NewChildren extends AbstractAction {
 		private final List<Biosample> biosamples;
 
-		public Action_NewChild(List<Biosample> biosamples) {
+		public Action_NewChildren(List<Biosample> biosamples) {
 			super("Add Children");
 			this.biosamples = biosamples;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
@@ -480,8 +494,7 @@ public class BiosampleActions {
 				dlg.setVisible(true);
 				List<Biosample> children = dlg.getChildren();
 				if(children!=null) {
-					EditBiosampleDlg dlg2 = EditBiosampleDlg.createDialogForEditInTransactionMode(null, children);
-					dlg2.setTopParentReadOnly(true);
+					EditBiosampleDlg dlg2 = EditBiosampleDlg.createDialogForEditInTransactionMode("Create Children", children);
 					dlg2.setVisible(true);							
 				}
 			} catch (Exception ex) {
@@ -557,8 +570,7 @@ public class BiosampleActions {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				List<Revision> revisions = DAORevision.getRevisions(biosamples.iterator().next());
-				new BiosampleHistoryDlg(revisions);
+				new BiosampleHistoryDlg(biosamples.iterator().next());
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
@@ -886,7 +898,7 @@ public class BiosampleActions {
 		newMenu.add(new Action_NewBatch());
 		newMenu.add(new Action_Duplicate(biosamples));
 		newMenu.add(new JSeparator());
-		newMenu.add(new Action_NewChild(biosamples));
+		newMenu.add(new Action_NewChildren(biosamples));
 		newMenu.add(new Action_NewResults(biosamples));
 
 		//Edit

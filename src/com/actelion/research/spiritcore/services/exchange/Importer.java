@@ -541,7 +541,7 @@ public class Importer {
 			}
 			
 			for(String key: b.getMetadata().keySet()) {
-				biosample.setMetadata(key, b.getMetadata().get(key));
+				biosample.setMetadataValue(key, b.getMetadata().get(key));
 			}
 			
 			String fullLocation = b.getFullLocation();

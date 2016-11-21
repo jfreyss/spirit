@@ -183,7 +183,6 @@ public class BiosampleSearchTree extends FormTree {
 		}
 	};
 	
-	
 	private final LocationFormNode locationFormNode = new LocationFormNode(this, "Location", new Strategy<Location>() {
 		@Override
 		public Location getModel() {
@@ -194,18 +193,16 @@ public class BiosampleSearchTree extends FormTree {
 			query.setLocationRoot(modelValue);
 		}
 	});
-
 	
 	private final ComboBoxNode<Quality> minQualityNode = new ComboBoxNode<Quality>(this, new QualityComboBox(), "Min Quality", new Strategy<Quality>() {
 		@Override public Quality getModel() {return query.getMinQuality();}
 		@Override public void setModel(Quality modelValue) {query.setMinQuality(modelValue);}						
 	});
+	
 	private final ComboBoxNode<Quality> maxQualityNode = new ComboBoxNode<Quality>(this, new QualityComboBox(), "Max Quality", new Strategy<Quality>() {
 		@Override public Quality getModel() {return query.getMaxQuality();}
 		@Override public void setModel(Quality modelValue) {query.setMaxQuality(modelValue);}						
 	});
-
-
 
 	private final CheckboxNode onlyContainerCheckbox = new CheckboxNode(this, "Only in Containers", new Strategy<Boolean>() {
 		@Override
@@ -227,8 +224,7 @@ public class BiosampleSearchTree extends FormTree {
 		public void setModel(Boolean modelValue) {
 			query.setFilterNotInLocation(modelValue==Boolean.TRUE);
 		}
-	});
-	
+	});	
 	
 	private final CheckboxNode filterTrashNode = new CheckboxNode(this, "Hide Trashed/Used Up", new Strategy<Boolean>() {
 		@Override
@@ -314,6 +310,7 @@ public class BiosampleSearchTree extends FormTree {
 					}
 				}
 			});
+			bioTypeNode.setVisible(selectableBiotypes.length>1);
 		}
 		bioNode.setCanExpand(false);
 		top.add(bioNode);
@@ -572,6 +569,8 @@ public class BiosampleSearchTree extends FormTree {
 								return DAOBiotype.getAutoCompletionFields(linker.getBiotypeMetadata(), studyNode.getStudy());
 							}
 						});
+					} else if(linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().getDataType()==DataType.D_FILE) {
+						continue;
 					} else if(linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().getDataType()==DataType.MULTI) {					
 						linkerNode.add(new MultiNode(this, label, linker.getBiotypeMetadata().extractChoices(), new Strategy<String>() {
 							@Override public String getModel() {return query.getLinker2values().get(linker);}
@@ -616,9 +615,10 @@ public class BiosampleSearchTree extends FormTree {
 			}
 		}
 		
-		
-		locationNode.setExpanded(false);
-		moreNode.add(locationNode);
+		if(selectableBiotypes==null || selectableBiotypes.length>1 || !selectableBiotypes[0].isAbstract()) {
+			locationNode.setExpanded(false);
+			moreNode.add(locationNode);
+		}
 		
 		advancedNode.setExpanded(false);
 		moreNode.add(advancedNode);

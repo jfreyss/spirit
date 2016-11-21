@@ -30,12 +30,12 @@ import java.awt.Graphics2D;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.pivot.Computed;
 import com.actelion.research.spiritcore.business.pivot.PivotCell;
+import com.actelion.research.spiritcore.business.pivot.PivotCell.Margins;
 import com.actelion.research.spiritcore.business.pivot.PivotCellKey;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
-import com.actelion.research.spiritcore.business.pivot.PivotCell.Margins;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Aggregation;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Deviation;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.exceltable.JComponentNoRepaint;
@@ -102,7 +102,7 @@ public class PivotCellPanel extends JComponentNoRepaint {
 			
 			if(m instanceof Double) {
 				f = FastFont.REGULAR;
-				String s = Formatter.formatMax3((Double) m);
+				String s = FormatterUtils.formatMax3((Double) m);
 				margin.m2Computed = Math.max(margin.m2Computed, getFontMetrics(f).stringWidth(s)+margin.m1Value+2);
 			} else if(m instanceof Integer) {
 				f = FastFont.REGULAR;
@@ -139,7 +139,7 @@ public class PivotCellPanel extends JComponentNoRepaint {
 				if(vl.getStd()!=null) {
 					Double coeff = vl.getStd();
 					if(coeff!=null) {
-						String s = coeff>999? "999": "+"+Formatter.format1(coeff);
+						String s = coeff>999? "999": "+"+FormatterUtils.format1(coeff);
 						margin.m4N = Math.max(margin.m4N, getFontMetrics(f).stringWidth(s) + margin.m3Std + 8);
 					}				
 				}
@@ -190,12 +190,7 @@ public class PivotCellPanel extends JComponentNoRepaint {
 		
 		int y = 1;
 		
-		int offset = 0; //getWidth() - Math.max(40, (margins.m5Width - margins.m1Value)) - margins.m1Value;
-//		int offset = getWidth() - ((margins.m5Width - margins.m1Value-1)/10+1)*10 - margins.m1Value;
-		
-//		g.getClipBounds(rect);
-//		if(rect.y>0) y = Math.min(rect.y-2, getHeight()-2-lineHeight*cell.getNestedKeys().size());
-
+		int offset = 0; 
 		
 		//Display keys (if needed)
 		g.setFont(FastFont.REGULAR_CONDENSED);
@@ -223,7 +218,7 @@ public class PivotCellPanel extends JComponentNoRepaint {
 				sWidth = 0;
 			} else if(m instanceof Double) {
 				g.setFont(FastFont.REGULAR);
-				s = Formatter.formatMax3((Double) m);
+				s = FormatterUtils.formatMax3((Double) m);
 				sWidth = g.getFontMetrics().stringWidth(s);
 			} else if(m instanceof Integer) {
 				g.setFont(FastFont.REGULAR);
@@ -285,7 +280,7 @@ public class PivotCellPanel extends JComponentNoRepaint {
 					if(template.getDeviation()==Deviation.COEFF_VAR) {								
 						s =  '\u00b1' + (Math.abs(coeff)>500?"??": coeff + "%");
 					} else {
-						s = vl.getStd()>999? "+++": '\u00b1' + Formatter.format1(vl.getStd());
+						s = vl.getStd()>999? "+++": '\u00b1' + FormatterUtils.format1(vl.getStd());
 					}
 					int x = margins.m3Std;						
 					g.drawString(s, offset+x, y+(line+1)*lineHeight);
@@ -305,10 +300,13 @@ public class PivotCellPanel extends JComponentNoRepaint {
 				PivotCell vl = cell.getNested(key);
 				if(vl.getN()>1) {
 					String s = "("+vl.getN()+")";
-					g.setColor(Color.BLUE);
-					g.setFont(FastFont.SMALL);
-					int x = margins.m4N;
-					g.drawString(s, offset+x, y+(line+1)*lineHeight);
+					g.setColor(UIUtils.getColor(100,100,255));
+					g.setFont(FastFont.SMALL_CONDENSED);
+//					int x = margins.m4N;
+//					g.drawString(s, offset+x, y+(line+1)*lineHeight);
+					
+					g.drawString(s, getWidth() - g.getFontMetrics().stringWidth(s) - 1, y + (line+1)*lineHeight - 2);
+					
 				}
 				line++;
 			}			

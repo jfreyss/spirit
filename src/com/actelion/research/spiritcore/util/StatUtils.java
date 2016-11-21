@@ -28,6 +28,10 @@ import java.util.List;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 
+/**
+ * Util class for making statistics.
+ * @author Joel Freyss
+ */
 public class StatUtils {
 
 	
@@ -87,8 +91,7 @@ public class StatUtils {
 		double K = 1-chi.cumulativeProbability(H);
 
 		return K;
-	}
-	
+	}	
 	
 	public static Double getMedian(List<Double> doubles) {
 		Collections.sort(doubles);
@@ -100,6 +103,7 @@ public class StatUtils {
 			return doubles.get(doubles.size()/2);
 		}		
 	}
+	
 	public static Double getMean(List<Double> doubles) {
 		if(doubles.size()==0) {
 			return null;

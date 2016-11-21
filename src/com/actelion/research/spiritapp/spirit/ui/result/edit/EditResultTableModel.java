@@ -31,7 +31,6 @@ import com.actelion.research.util.ui.exceltable.ExcelTableModel;
 public class EditResultTableModel extends ExcelTableModel<Result> {
 
 	private Test test;
-//	private Study study;
 
 	public EditResultTableModel() {
 		super();
@@ -52,22 +51,11 @@ public class EditResultTableModel extends ExcelTableModel<Result> {
 		this.test = test;
 	}
 
-//	public Study getStudy() {
-//		return study;
-//	}
-//
-//	public void setStudy(Study study) {
-//		this.study = study;
-//	}
-	
 	@Override
 	public void setValueAt(Object newValue, int rowIndex, int columnIndex) {
-		super.setValueAt(newValue, rowIndex, columnIndex);
-		
+		super.setValueAt(newValue, rowIndex, columnIndex);		
 		Result result = getRow(rowIndex);
-		DAOResult.computeFormula(Collections.singleton(result));
-		
-		
+		DAOResult.computeFormula(Collections.singleton(result));				
 	}
 	
 }

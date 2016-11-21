@@ -52,7 +52,7 @@ import com.actelion.research.spiritcore.business.study.AttachedBiosample;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
-import com.actelion.research.spiritcore.services.dao.DAOStudy;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
@@ -65,9 +65,9 @@ public class AttachAnimalsManuallyDlg extends JSpiritEscapeDialog {
 	private AttachedBiosampleTable animalTable;
 	private BiotypeComboBox biotypeComboBox; 
 	
-	public AttachAnimalsManuallyDlg(Study s) {
+	public AttachAnimalsManuallyDlg(Study myStudy) {
 		super(UIUtils.getMainFrame(), "Study - Assign Samples", AttachAnimalsManuallyDlg.class.getName());
-		this.study = DAOStudy.getStudy(s.getId());
+		this.study = JPAUtil.reattach(myStudy);
 			
 		AttachedBiosampleTableModel model = new AttachedBiosampleTableModel(Mode.MANUALASSIGN, study);
 		

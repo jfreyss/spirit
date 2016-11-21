@@ -26,7 +26,7 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 public class ElbColumn extends Column<Result, String> {
 	public ElbColumn() {
-		super("Result\nELB", String.class);
+		super("ELB", String.class);
 		setHideable(true);
 	}
 	

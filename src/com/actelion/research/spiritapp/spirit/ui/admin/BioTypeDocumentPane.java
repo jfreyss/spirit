@@ -34,7 +34,7 @@ import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.UIUtils;
 
 public class BioTypeDocumentPane extends JEditorPane {
@@ -118,9 +118,9 @@ public class BioTypeDocumentPane extends JEditorPane {
 		sb.append("</table></td></tr>");
 		sb.append("</table");
 		if(type.getCreDate()!=null) {
-			sb.append("<i>Created by " + (type.getCreUser()==null?"N/A":type.getCreUser()) + " - "+ Formatter.formatDateTime(type.getCreDate())+"</i><br>");
+			sb.append("<i>Created by " + (type.getCreUser()==null?"N/A":type.getCreUser()) + " - "+ FormatterUtils.formatDateTime(type.getCreDate())+"</i><br>");
 			if(type.getUpdDate()!=null && type.getUpdDate().after(type.getCreDate())) {
-				sb.append("<i>Updated by " + (type.getUpdUser()==null?"N/A":type.getUpdUser()) + " - "+ Formatter.formatDateTime(type.getUpdDate())+"</i><br>");
+				sb.append("<i>Updated by " + (type.getUpdUser()==null?"N/A":type.getUpdUser()) + " - "+ FormatterUtils.formatDateTime(type.getUpdDate())+"</i><br>");
 			}
 		}
 		return sb;

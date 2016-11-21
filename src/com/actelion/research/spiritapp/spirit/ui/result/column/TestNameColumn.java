@@ -32,7 +32,7 @@ import com.actelion.research.util.ui.exceltable.Column;
 public class TestNameColumn extends Column<Result, String> {
 	
 	public TestNameColumn() {
-		super("Result\nTest", String.class, 40);
+		super("Test", String.class, 40);
 	}
 	
 	@Override

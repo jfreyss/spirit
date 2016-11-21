@@ -40,10 +40,11 @@ import javax.swing.JScrollPane;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.spiritcore.business.location.Privacy;
 import com.actelion.research.spiritcore.business.location.LocationType.Disposition;
 import com.actelion.research.spiritcore.business.location.LocationType.LocationCategory;
+import com.actelion.research.spiritcore.business.location.Privacy;
 import com.actelion.research.spiritcore.services.SpiritRights;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.UIUtils;
@@ -473,8 +474,8 @@ public class LocationPanel extends JPanel {
 				location.getLocationType().getName() + ":<br> <b style='font-size:9px'>" + location.getHierarchyFull() + "</b><br>" + 				
 				(location.getDescription()==null || location.getDescription().length()==0?"": location.getDescription() + "<br>") +
 				(location.getInheritedPrivacy()!=Privacy.PUBLIC? location.getInheritedPrivacy().getName() + (eg==null?"": " to " + eg.getName() + "<br>"): "") +
-				(location.getUpdUser()!=null && location.getUpdDate()!=null && location.getCreDate()!=null && location.getUpdDate().after(location.getCreDate())? "<i>Updated by " + location.getUpdUser() + " [" + com.actelion.research.spiritcore.util.Formatter.formatDateOrTime(location.getUpdDate())+ "]</i><br>": "") +
-				(location.getCreUser()!=null && location.getCreDate()!=null? "<i>Created by " + location.getCreUser() + " [" + com.actelion.research.spiritcore.util.Formatter.formatDateOrTime(location.getCreDate())+ "]</i>": "") +
+				(location.getUpdUser()!=null && location.getUpdDate()!=null && location.getCreDate()!=null && location.getUpdDate().after(location.getCreDate())? "<i>Updated by " + location.getUpdUser() + " [" + FormatterUtils.formatDateOrTime(location.getUpdDate())+ "]</i><br>": "") +
+				(location.getCreUser()!=null && location.getCreDate()!=null? "<i>Created by " + location.getCreUser() + " [" + FormatterUtils.formatDateOrTime(location.getCreDate())+ "]</i>": "") +
 				"</div></html>";
 	}
 	

@@ -190,7 +190,11 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		if(ns==null) throw new Exception("You must select a sampling");
 				
 		//Check the phase is not after a necropsy
-		if(group.getEndPhase(subgroup)!=null && phase.compareTo(group.getEndPhase(subgroup))>0) throw new Exception("You cannot apply a sampling after the necropsy at "+group.getEndPhase(subgroup));
+		if(ns.isNecropsy()) {
+			//OK
+		} else {
+			if(group.getEndPhase(subgroup)!=null && phase.compareTo(group.getEndPhase(subgroup))>0) throw new Exception("You cannot apply a sampling after the necropsy at "+group.getEndPhase(subgroup));
+		}
 		
 		//Add the phase if needed
 		if(phase.getId()<=0) {
@@ -237,14 +241,19 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 			
 			//We add the sampling for the selected animals, which remain in the former group/subgroup at the given phase
 			study.resetCache();
-			study.setNamedSampling(group, phase, newSubGroupNo, ns, true);
-			LoggerFactory.getLogger(getClass()).debug("add sampling to " + group + " " + phase + " " + newSubGroupNo);
-		} else {
-			//Modify the existing subgroup
-			study.setNamedSampling(group, phase, subgroup, ns, true);
-			LoggerFactory.getLogger(getClass()).debug("add sampling to " + group + " " + phase + " " + subgroup);
-
+			
+			subgroup = newSubGroupNo;
+		} 
+		
+		//Modify the existing subgroup
+		if(ns.isNecropsy() && group.getEndPhase(subgroup)!=null) {
+			StudyAction a = study.getStudyAction(group, subgroup, group.getEndPhase(subgroup));
+			assert a!=null;
+			if(a.getNamedSampling1()!=null && a.getNamedSampling1().isNecropsy()) a.setNamedSampling1(null);
+			if(a.getNamedSampling2()!=null && a.getNamedSampling2().isNecropsy()) a.setNamedSampling2(null);
 		}
+		study.setNamedSampling(group, phase, subgroup, ns, true);
+		LoggerFactory.getLogger(getClass()).debug("add sampling to " + group + " " + phase + " " + subgroup);
 		
 		//Save in a transaction
 		JPAUtil.pushEditableContext(Spirit.getUser());
@@ -259,8 +268,6 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 			}
 			
 			//Fire change Event
-			SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, study);
-			if(toSave.size()>0) SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, toSave);
 			txn.commit();
 			txn = null;
 			dispose();			
@@ -269,7 +276,11 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		} finally {
 			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {}
 			JPAUtil.popEditableContext();
-		}				
+		}
+		
+		SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, study);
+		if(toSave.size()>0) SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, toSave);
+
 	}
 
 	

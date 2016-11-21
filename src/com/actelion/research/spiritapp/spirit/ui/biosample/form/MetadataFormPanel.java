@@ -216,12 +216,7 @@ public class MetadataFormPanel extends JPanel {
 				c.gridx = 0; add(new JCustomLabel("SampleId: ", Font.BOLD), c); //Name
 				c.gridx = 1; add(sampleIdTextField, c);
 				sampleIdTextField.setEnabled(editable && !biotype.isHideSampleId());
-				
-//				if(multicolumns) {
-//					//Study
-//					c.gridx = 3; c.gridwidth=2; c.fill=GridBagConstraints.BOTH; add(groupLabel, c);
-//					c.gridwidth=1; c.fill=GridBagConstraints.NONE;
-//				}
+			
 				c.gridy++;
 			}
 
@@ -245,7 +240,7 @@ public class MetadataFormPanel extends JPanel {
 				nameTextField.setText(text);
 				nameTextField.addTextChangeListener(listener);
 
-				c.gridx = 0; add(new JCustomLabel(biotype.getSampleNameLabel() + ": ", Font.BOLD), c); //Name
+				c.gridx = 0; add(new JCustomLabel(biotype.getSampleNameLabel() + ": "), c); //Name
 				c.gridx = 1; add(nameTextField, c);
 				c.gridy++;
 				nameTextField.setEnabled(editable);
@@ -261,7 +256,9 @@ public class MetadataFormPanel extends JPanel {
 				}
 				
 				JComponent comp = MetadataComponentFactory.getComponentFor(bm);
-				((MetadataComponent) comp).addTextChangeListener(listener);				
+				if(comp instanceof MetadataComponent) {
+					((MetadataComponent) comp).addTextChangeListener(listener);
+				}
 				components.add(comp);
 	
 				c.gridx = offsetX; add(new JLabel(bm.getName()+": "), c);			
@@ -349,7 +346,7 @@ public class MetadataFormPanel extends JPanel {
 		for(BiotypeMetadata bm: biotype.getMetadata()) {
 			JComponent c = components.get(n++);
 			if(c instanceof MetadataComponent) {
-				((MetadataComponent)c).updateModel(b.getMetadata(bm));
+				((MetadataComponent)c).updateModel(b, bm);
 			}
 		}
 		b.setComments(commentsTextField.getText());
@@ -398,7 +395,7 @@ public class MetadataFormPanel extends JPanel {
 		for(BiotypeMetadata bm: biotype.getMetadata()) {
 			JComponent c = components.get(n++);
 			if(c instanceof MetadataComponent) {
-				((MetadataComponent)c).updateView(b.getMetadata(bm));
+				((MetadataComponent)c).updateView(b, bm);
 			}
 		}
 		commentsTextField.setText(b.getComments());

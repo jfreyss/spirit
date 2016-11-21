@@ -84,11 +84,13 @@ import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
+import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.migration.MigrationScript.FatalException;
 import com.actelion.research.spiritcore.util.Config;
 import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.ArgumentParser;
 import com.actelion.research.util.ui.ApplicationErrorLog;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomTabbedPane;
@@ -108,7 +110,13 @@ import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
  */
 public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritContextObserver {
 
+	public static abstract class Action {
+		public abstract void doAction() throws Exception;
+	}
+
 	private static SplashConfig splashConfig = new SplashScreen2.SplashConfig(Spirit.class.getResource("spirit.jpg"), "Spirit", "Spirit v." + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Actelion - J.Freyss"); 
+	private static Spirit _instance = null;;
+	private static List<Action> afterLoginActions = Collections.synchronizedList(new ArrayList<Action>());
 
 	private JStatusBar statusBar;
 	private final JTabbedPane tabbedPane;
@@ -123,6 +131,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	public Spirit() {
 		super("Spirit");
 		
+		_instance = this;
 		SpiritChangeListener.register(this);
 		SpiritContextListener.register(this);
 		
@@ -157,73 +166,91 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		createMenu();
 		
 		statusBar.setCopyright("Spirit - (C) Joel Freyss - Actelion");		
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);		
-		
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);				
 		UIUtils.adaptSize(this, 1600, 1200);		
-
 		setVisible(true);
 
 
-		SpiritDB.check();
-		
-		recreateUI();	
-	
+		SpiritDB.check();		
+		recreateUI();		
 		toFront();
 	}
 	
 	/**
-	 * Function to be called when preferences are modified
+	 * Recreate the menu, the tabs, and apply the actions
+	 * This function can be called from outside the EventDispatcherThread
 	 */
-	public void recreateTabs() {
-		//Add the tabs
-		new SwingWorkerExtended("Starting", tabbedPane, SwingWorkerExtended.FLAG_SYNCHRONOUS) {			
+	public void recreateUI() {
+		SwingUtilities.invokeLater(new Runnable() {			
 			@Override
-			protected void doInBackground() throws Exception {
-				preLoadDAO();				
+			public void run() {
+				createMenu();
+				recreateTabs();						
 			}
-			@Override
-			protected void done() {
-				try {					 
-					tabbedPane.removeAll();
-					homeTab = new HomeTab(Spirit.this);
-					studyTab = new StudyTab();
-					biosampleTab = new BiosampleTab(null);
-					locationTab = new LocationTab(null);
-					resultTab = new ResultTab();
-					
-					if(user!=null) {
-						tabbedPane.setFont(FastFont.BOLD.deriveSize(14));
-						if(homeTab!=null) {
-							tabbedPane.addTab("", homeTab);		
-							tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.HOME.getIcon());
-						}
-						if(studyTab!=null) {
-							tabbedPane.addTab("Studies ", studyTab);		
-							tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.STUDY.getIcon());
-						}
-						if(biosampleTab!=null) {
-							tabbedPane.addTab("Biosamples ", biosampleTab);		
-							tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.BIOSAMPLE.getIcon());
-						}
-						if(locationTab!=null) {
-							tabbedPane.addTab("Locations ", locationTab);
-							tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.LOCATION.getIcon());
-						}
-						if(resultTab!=null) {
-							tabbedPane.addTab("Results ", resultTab);
-							tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.RESULT.getIcon());
-						}
-					}
-				} catch(Exception e) {
-					JExceptionDialog.showError(e);
-					tabbedPane.removeAll();
-				}
-			}
-		};
-		
+		});		
 	}
 	
-	public void createMenu() {
+	/**
+	 * Function to be called when preferences are modified or user is logged
+	 */
+	private void recreateTabs() {
+		try {					 
+			tabbedPane.removeAll();
+			homeTab = new HomeTab(Spirit.this);
+			studyTab = new StudyTab();
+			biosampleTab = new BiosampleTab(null);
+			locationTab = new LocationTab(null);
+			resultTab = new ResultTab();
+			
+			if(user!=null) {
+				//Add the tabs
+				tabbedPane.setFont(FastFont.BOLD.deriveSize(14));
+				if(homeTab!=null) {
+					tabbedPane.addTab("", homeTab);		
+					tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.HOME.getIcon());
+				}
+				if(studyTab!=null) {
+					tabbedPane.addTab("Studies ", studyTab);		
+					tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.STUDY.getIcon());
+				}
+				if(biosampleTab!=null) {
+					tabbedPane.addTab("Biosamples ", biosampleTab);		
+					tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.BIOSAMPLE.getIcon());
+				}
+				if(locationTab!=null) {
+					tabbedPane.addTab("Locations ", locationTab);
+					tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.LOCATION.getIcon());
+				}
+				if(resultTab!=null) {
+					tabbedPane.addTab("Results ", resultTab);
+					tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.RESULT.getIcon());
+				}
+				
+				//Apply actions after login
+				if(!afterLoginActions.isEmpty() && user!=null) {
+					new SwingWorkerExtended(tabbedPane, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
+						@Override
+						protected void doInBackground() throws Exception {
+							while(!afterLoginActions.isEmpty()) {
+								Action action = afterLoginActions.remove(0);
+								try {
+									action.doAction();
+								} catch(Exception ex) {
+									ex.printStackTrace();
+								}
+							}	
+						}						
+					};
+
+				}
+			}
+		} catch(Exception e) {
+			JExceptionDialog.showError(e);
+			tabbedPane.removeAll();
+		}
+	}
+	
+	private void createMenu() {
 		JMenuBar menuBar = new JMenuBar();		
 		
 		JMenu editMenu = new JMenu("Edit");
@@ -299,6 +326,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	}
 	
 	public static void initUI() {
+
   		try {
 			System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
 			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");			
@@ -306,7 +334,8 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		} catch (Exception e2) {
 			e2.printStackTrace();
 		}
-
+  		
+  		
 	  	//ToolTop binder
 		ToolTipManager.sharedInstance().setInitialDelay(750); 
 		ToolTipManager.sharedInstance().setDismissDelay(20000); 
@@ -321,7 +350,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 			@Override
 			public void uncaughtException(final Thread t, final Throwable e) {
 				e.printStackTrace();
-				JExceptionDialog.showError(UIUtils.getMainFrame(), ""+e);										
+				JExceptionDialog.showError(UIUtils.getMainFrame(), e);										
 			}
 		});		
 		
@@ -344,16 +373,6 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	 */
 	public static void setUser(SpiritUser user) {
 		Spirit.user = user;		
-	}
-	
-	public void recreateUI() {
-		SwingUtilities.invokeLater(new Runnable() {			
-			@Override
-			public void run() {
-				createMenu();
-				recreateTabs();
-			}
-		});		
 	}
 	
 	public static SpiritUser getUser() {
@@ -444,9 +463,9 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	
 	@Override
 	public void setStudy(final Study study) {
-		tabbedPane.setSelectedComponent(studyTab);
 		final String studyId = study==null?"": study.getStudyId();
 		studyTab.setStudyIds(studyId);
+		tabbedPane.setSelectedComponent(studyTab);
 		if(study!=null) statusBar.setInfos(study + " selected");
 	}
 	
@@ -505,10 +524,41 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		return exchange;				
 	}
 	
-	public static void main(String[] args) throws Exception {
-		initUI();
+	/**
+	 * Special executor for Actelion, to put Spirit toFront with the proper settings
+	 * @param args
+	 * @throws Exception
+	 */
+	public static void initSingleApplication(final String[] args) throws Exception {
+		if(_instance==null) {
+			main(args);
+		} else {
+			_instance.toFront();
+		}
 
+
+		//Process arguments
+		final ArgumentParser argumentParser = new ArgumentParser(args);
+		String studyId = argumentParser.getArgument("studyId");
+		if(studyId!=null) {
+			Study s = DAOStudy.getStudyByStudyId(studyId);
+			LoggerFactory.getLogger(Spirit.class).info("Init with studyId=" + studyId);
+			SpiritContextListener.setStudy(s);
+		}
+    }
+	
+	public static void main(final String[] args) throws Exception {
+		initUI();
 		SplashScreen2.show(splashConfig);				
+		
+		final ArgumentParser argumentParser = new ArgumentParser(args);
+		try {
+			argumentParser.validate("studyId");
+		} catch(Exception e) {
+			System.out.println("Invalid syntax: Spirit -studyId {S-######}");
+			System.exit(1);
+		}
+		
 
 		new SwingWorkerExtended("Starting Spirit", null, SwingWorkerExtended.FLAG_ASYNCHRONOUS) {
 			private Throwable throwable = null;
@@ -530,14 +580,21 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 					if(throwable instanceof FatalException) System.exit(1);
 					new DatabaseSettingsDlg(false);
 				}
+				Spirit spirit;
 				try {
 					LoggerFactory.getLogger(Spirit.class).debug("start Spirit");
-					Spirit spirit = new Spirit();
-					JOptionPane.setRootFrame(spirit);
+					spirit = new Spirit();
+					addAfterLoginAction(new Action() {
+						public void doAction() throws Exception {
+							initSingleApplication(args);
+						}
+					});
+					JOptionPane.setRootFrame(spirit);					
 				} catch(Throwable e) {
 					JExceptionDialog.showError(e);
 					new DatabaseSettingsDlg(false);
-				}
+					return;
+				}				
 			}
 			
 		};		
@@ -547,6 +604,9 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		Spirit spirit = new Spirit();
 		spirit.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	}
-
+	
+	public static void addAfterLoginAction(Action action) {
+		afterLoginActions.add(action);
+	}
 	
 }	

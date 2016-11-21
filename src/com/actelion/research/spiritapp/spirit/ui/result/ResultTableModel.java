@@ -40,9 +40,14 @@ import com.actelion.research.spiritapp.spirit.ui.result.column.StudyIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.result.column.StudySubGroupColumn;
 import com.actelion.research.spiritapp.spirit.ui.result.column.TestNameColumn;
 import com.actelion.research.spiritapp.spirit.ui.result.column.TopIdColumn;
+import com.actelion.research.spiritapp.spirit.ui.util.component.DocumentTextField;
+import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultValue;
+import com.actelion.research.spiritcore.business.result.Test;
+import com.actelion.research.spiritcore.business.result.TestAttribute;
+import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.ExtendTableModel;
@@ -50,31 +55,34 @@ import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 public class ResultTableModel extends ExtendTableModel<Result> {
 
 	
-	public Column<Result, ResultValue> createValueColumn(final int index, final boolean isOutput) {
+	public Column<Result, ResultValue> createValueColumn(final int index, final OutputType type) {
 		
-		return new Column<Result, ResultValue>((isOutput? "Result\nValue ": "Result\nInput ") , ResultValue.class) {
+		
+		return new Column<Result, ResultValue>((type==OutputType.OUTPUT? "Output": type==OutputType.INPUT? "Input": "Info") + (index+1) , ResultValue.class) {
 			
+			private ValuePanel valuePanel = new ValuePanel();
+
 			@Override
 			public float getSortingKey() {
-				return isOutput? 7f : 6f;
+				return 6f + type.ordinal();
 			}
 			
 			@Override
 			public ResultValue getValue(Result row) {
-				List<ResultValue> vals = isOutput? row.getOutputResultValues(): row.getInputResultValues();
-				if(index<0 || index>=vals.size()) return null;
-				ResultValue val = vals.get(index);	
+				TestAttribute ta = type==OutputType.OUTPUT? row.getTest().getOutputAttributes().get(index):
+					type==OutputType.INPUT? row.getTest().getInputAttributes().get(index):
+						row.getTest().getInfoAttributes().get(index);
+						
+				ResultValue val = row.getResultValue(ta);	
 				if(val.getValue()==null) return null;
 				return val;				
 			}
-			
-			private ValuePanel valuePanel = new ValuePanel();
-			
+						
 			@Override
 			public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
 				ResultValue v = (ResultValue) value;
 				if(v!=null) { 
-					valuePanel.setValue(isOutput, v);
+					valuePanel.setValue(type, v);
 					return valuePanel;
 				}
 				return super.getCellComponent(table, row, rowNo, value);
@@ -89,20 +97,36 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 			}
 			
 			@Override
+			public boolean mouseDoubleClicked(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
+				TestAttribute ta = type==OutputType.OUTPUT? row.getTest().getOutputAttributes().get(index):
+					type==OutputType.INPUT? row.getTest().getInputAttributes().get(index):
+						row.getTest().getInfoAttributes().get(index);
+						
+				if(ta.getDataType()==DataType.D_FILE && row.getResultValue(ta).getLinkedDocument()!=null) {
+					DocumentTextField.open(row.getResultValue(ta).getLinkedDocument());
+					return true;
+				}
+				return false;
+			}
+			
+			@Override
 			public boolean isMultiline() {
 				return true;
+			}
+			@Override
+			public boolean shouldMerge(Result r1, Result r2) {
+				return false;
 			}
 		};			
 	}		
 	
 	
-	private List<Column<Result, ?>> inputOutputColumns = new ArrayList<Column<Result, ?>>();
+	private List<Column<Result, ?>> inputOutputColumns = new ArrayList<>();
+	private final boolean compact;
 
 
-	
-	
-
-	public ResultTableModel() {
+	public ResultTableModel(boolean compact) {
+		this.compact = compact;
 		initColumns();
 	}
 	
@@ -115,16 +139,16 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 		
 		
 		
-		List<Column<Result, ?>> columns = new ArrayList<Column<Result,?>>();
+		List<Column<Result, ?>> columns = new ArrayList<>();
 		columns.add(COLUMN_ROWNO);
-		columns.add(new ElbColumn());
-		columns.add(new StudyIdColumn());
-		columns.add(new StudyGroupColumn());
-		columns.add(new StudySubGroupColumn());
-		columns.add(new TopIdColumn().setHideable(!differentParents));
+		if(!compact) columns.add(new ElbColumn());
+		if(!compact) columns.add(new StudyIdColumn());
+		if(!compact) columns.add(new StudyGroupColumn());
+		if(!compact) columns.add(new StudySubGroupColumn());
+		if(!compact) columns.add(new TopIdColumn().setHideable(!differentParents));
 		columns.add(new PhaseColumn());
-		columns.add(new SampleIdColumn());
-		columns.add(new MetadataColumn());
+		if(!compact) columns.add(new SampleIdColumn());
+		if(!compact) columns.add(new MetadataColumn());
 		columns.add(new TestNameColumn());
 
 		columns.addAll(createInputOutputColumns());
@@ -139,7 +163,7 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 	
 	@Override
 	public List<Column<Result, ?>> getPossibleColumns() {
-		List<Column<Result, ?>> res = new ArrayList<Column<Result, ?>>();
+		List<Column<Result, ?>> res = new ArrayList<>();
 		res.add(new ContainerColumn());
 		res.add(new QualityColumn());
 		res.add(new CreationColumn(false));
@@ -149,17 +173,23 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 	public List<Column<Result, ?>> createInputOutputColumns() {
 		int maxInput = 0;
 		int maxOutput = 0;
-		for (Result res : getRows()) {
-			maxInput = Math.max(maxInput, res.getInputResultValues().size());
-			maxOutput = Math.max(maxOutput, res.getOutputResultValues().size());
+		int maxInfos = 0;
+		Set<Test> tests = Result.getTests(getRows());
+		for (Test t : tests) {
+			maxInput = Math.max(maxInput, t.getInputAttributes().size());
+			maxOutput = Math.max(maxOutput, t.getOutputAttributes().size());
+			maxInfos = Math.max(maxInfos, t.getInfoAttributes().size());
 		}
 		
-		inputOutputColumns.clear();
+		inputOutputColumns.clear();		
 		for (int i = 0; i < maxInput; i++) {
-			inputOutputColumns.add(createValueColumn(i, false));					
+			inputOutputColumns.add(createValueColumn(i, OutputType.INPUT));					
 		}
 		for (int i = 0; i < maxOutput; i++) {
-			inputOutputColumns.add(createValueColumn(i, true));					
+			inputOutputColumns.add(createValueColumn(i, OutputType.OUTPUT));					
+		}
+		for (int i = 0; i < maxInfos; i++) {
+			inputOutputColumns.add(createValueColumn(i, OutputType.INFO));					
 		}
 		return inputOutputColumns;		
 	}

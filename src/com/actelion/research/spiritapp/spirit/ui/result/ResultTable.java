@@ -32,7 +32,10 @@ import com.actelion.research.spiritcore.business.result.Result;
 public class ResultTable extends SpiritExtendTable<Result> implements ListSelectionListener {
 	
 	public ResultTable() {
-		super(new ResultTableModel());
+		this(false);
+	}
+	public ResultTable(boolean compact) {
+		super(new ResultTableModel(compact));
 		init();
 	}
 	

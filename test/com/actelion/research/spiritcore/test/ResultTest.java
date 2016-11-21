@@ -9,8 +9,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.HSQLMemoryAdapter;
 import com.actelion.research.spiritcore.adapter.SchemaCreator;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Document;
@@ -30,26 +28,18 @@ import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.util.IOUtils;
 
-public class ResultTest {
-
-	private static SpiritUser user;
+public class ResultTest extends AbstractSpiritTest {
 
 	@BeforeClass
-	public static void initDB() throws Exception {
-		// Init user
-		user = SpiritUser.getFakeAdmin();
-
-		// Init DB
-		DBAdapter.setAdapter(new HSQLMemoryAdapter());
-		SchemaCreator.displayTables(DBAdapter.getAdapter());
-
-		ExchangeTest.initDemoExamples(user);
+	public static void init() throws Exception {
+		initDemoExamples(user);
 	}
 
 	@Test
@@ -74,12 +64,17 @@ public class ResultTest {
 		ta4.setOutputType(OutputType.OUTPUT);
 		ta4.setDataType(DataType.FORMULA);
 		ta4.setParameters("O1*2");
+		TestAttribute ta5 = new TestAttribute(t, "large");
+		ta5.setOutputType(OutputType.INFO);
+		ta5.setDataType(DataType.LARGE);
+		ta5.setParameters("O1*2");
 
 		t.getAttributes().add(ta1);
 		t.getAttributes().add(ta2);
 		t.getAttributes().add(ta3);
 		t.getAttributes().add(ta4);
-		Assert.assertEquals(4, t.getAttributes().size());
+		t.getAttributes().add(ta5);
+		Assert.assertEquals(5, t.getAttributes().size());
 		DAOTest.persistTests(Collections.singleton(t), user);
 
 		// Reload tests
@@ -87,10 +82,10 @@ public class ResultTest {
 
 		t = DAOTest.getTest("Test");
 		Assert.assertNotNull(t);
-		Assert.assertEquals(4, t.getAttributes().size());
+		Assert.assertEquals(5, t.getAttributes().size());
 		Assert.assertEquals(1, t.getInputAttributes().size());
 		Assert.assertEquals(3, t.getOutputAttributes().size());
-		Assert.assertEquals(0, t.getInfoAttributes().size());
+		Assert.assertEquals(1, t.getInfoAttributes().size());
 
 		// Try update
 		t.getAttribute("file").setOutputType(OutputType.INFO);
@@ -98,7 +93,7 @@ public class ResultTest {
 		t = DAOTest.getTest("Test");
 		Assert.assertEquals(1, t.getInputAttributes().size());
 		Assert.assertEquals(2, t.getOutputAttributes().size());
-		Assert.assertEquals(1, t.getInfoAttributes().size());
+		Assert.assertEquals(2, t.getInfoAttributes().size());
 
 		// Save some results
 		Study s = DAOStudy.getStudyByIvvOrStudyId("IVV2016-1").get(0);
@@ -108,7 +103,12 @@ public class ResultTest {
 		r1.setBiosample(a1);
 		r1.setValue("input", "IL1");
 		r1.setValue("number", "2.0");
-		r1.getResultValue("file").setDocument(new Document(new File("c:/DBAR_Ver.txt")));
+		r1.setValue("large", new String(new char[1000]).replace("\0", "large"));
+		
+		File f = new File("tmp/test.ico");
+		f.getParentFile().mkdirs();
+		IOUtils.bytesToFile("Some file content".getBytes(), f);
+		r1.getResultValue("file").setLinkedDocument(new Document(f));
 		DAOResult.persistResults(Collections.singleton(r1), user);
 //		DAOResult.persistExperiment(true, "test", Collections.singleton(r1), user);
 		try {
@@ -120,6 +120,7 @@ public class ResultTest {
 		
 
 		// Retrieve result
+		JPAUtil.clear();
 		List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForElb("test"), user);
 		Assert.assertEquals(1, results.size());
 		r1 = results.get(0);
@@ -127,7 +128,8 @@ public class ResultTest {
 		Assert.assertEquals("IL1", r1.getInputResultValuesAsString());
 		Assert.assertEquals("2.0", r1.getResultValue("number").getValue());
 		Assert.assertEquals("4.0", r1.getResultValue("formula").getValue());
-		Assert.assertEquals("DBAR_Ver.txt", r1.getResultValue("file").getDocument().getFileName());
+		Assert.assertEquals("test.ico", r1.getResultValue("file").getLinkedDocument().getFileName());
+		Assert.assertEquals(5*1000, r1.getResultValue("large").getValue().length());
 
 		// test filters
 		Assert.assertEquals(1, DAOTest.getAutoCompletionFields(t.getAttribute("input")).size());
@@ -242,7 +244,6 @@ public class ResultTest {
 		ResultQuery q = new ResultQuery();
 		q.setKeywords("IVV2016-1");
 		List<Result> results = DAOResult.queryResults(q, user);
-		System.out.println("ResultTest.testPivot() "+results);
 		Assert.assertTrue(results.size() > 0);
 
 		//Test standard pivot
@@ -281,7 +282,6 @@ public class ResultTest {
 		ResultQuery q = new ResultQuery();
 		q.setKeywords("IVV2016-1");
 		List<Result> results = DAOResult.queryResults(q, user);
-		System.out.println("ResultTest.testPivot() "+results);
 		Assert.assertTrue(results.size() > 0);
 
 		PivotTemplate tpl = new ColumnPivotTemplate();

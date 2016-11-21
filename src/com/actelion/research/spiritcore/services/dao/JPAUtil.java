@@ -37,12 +37,9 @@ import javax.persistence.Persistence;
 import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.HSQLMemoryAdapter;
 import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.StringEncrypter;
 import com.actelion.research.spiritcore.util.QueryTokenizer;
@@ -106,7 +103,7 @@ public class JPAUtil {
 						em.createNativeQuery(testQuery).getSingleResult();
 						lastTestQuery = System.currentTimeMillis();
 					}
-					connected = true;
+					connected = true;					
 				} catch(Exception e) {
 					connected = false;
 				}
@@ -138,18 +135,10 @@ public class JPAUtil {
 				
 				if(em.isOpen()) {				
 		    		try {
-		    			//Begin / Rollback transaction to force clear on MySQL
-		    			//This should not be needed but I believe there is a bug on MySQL here (it can be commented out under Oracle)
-//		    			if(!em.getTransaction().isActive()) {
-//		    				em.getTransaction().begin();
-//		    			}
-		    			
 		    			if(em.getTransaction().isActive()) {
 		    				LoggerFactory.getLogger(JPAUtil.class).warn("Rollback unfinished transaction");
 		    				em.getTransaction().rollback();
-		    			}
-		    			
-		    			//Then clear the cache
+		    			}		    			
 		    			em.clear();
 		    		} catch(Exception e) {
 		    			e.printStackTrace();
@@ -184,7 +173,11 @@ public class JPAUtil {
         Runtime.getRuntime().addShutdownHook(new Thread() {
         	@Override
         	public void run() {
-        		close();
+        		try { 
+        			closeFactory();
+        		} catch(Throwable e) {
+        			e.printStackTrace();
+        		}
         	}
         });
     }
@@ -203,7 +196,7 @@ public class JPAUtil {
         }
     }
 
-    public static void close() {
+    public static void closeFactory() {
     	try {
 			LoggerFactory.getLogger(JPAUtil.class).debug("close sessions");			
     		if(readEntityManager!=null) {
@@ -215,19 +208,19 @@ public class JPAUtil {
     			writeEntityManager = null;
         	}
     	} catch(Exception e) {
-    		e.printStackTrace();
-    		LoggerFactory.getLogger(JPAUtil.class).warn("Could not clear factory: "+e);
+    		LoggerFactory.getLogger(JPAUtil.class).warn("Could not clear factory: ", e);
     	}
 		if(factory!=null) {
 			LoggerFactory.getLogger(JPAUtil.class).debug("close factory");			
 	    	try {
 	    		factory.close();
 	    	} catch(Exception e) {
-	    		e.printStackTrace();
-	    		LoggerFactory.getLogger(JPAUtil.class).warn("Could not close factory: "+e);
+	    		LoggerFactory.getLogger(JPAUtil.class).warn("Could not close factory: ", e);
 	    	}
 	    	factory = null;
 		}
+		Cache.removeAll();
+    	SpiritProperties.clear();
     }
     
     
@@ -235,18 +228,32 @@ public class JPAUtil {
      * Clear all entity manager and Spirit Cache.
      */
     public static void clear() {
-		LoggerFactory.getLogger(JPAUtil.class).debug("clear factory cache and sessions");			
-    	popEditableContext();
-    	
-		if(readEntityManager!=null) {
-			readEntityManager.clear();			
+    	try {
+			LoggerFactory.getLogger(JPAUtil.class).debug("close sessions");
+			popEditableContext();
+    		if(readEntityManager!=null) {
+    			readEntityManager.close();
+        	}
+    		if(writeEntityManager!=null) {
+    			writeEntityManager.close();
+        	}
+    	} catch(Exception e) {
+    		LoggerFactory.getLogger(JPAUtil.class).warn("Could not close managers: ", e);
     	}
-		if(writeEntityManager!=null) {
-			writeEntityManager.clear();			
-    	}
-
     	Cache.removeAll();
-    	SpiritProperties.clear();
+    	
+//		LoggerFactory.getLogger(JPAUtil.class).debug("clear factory cache and sessions");			
+//    	popEditableContext();
+//    	
+//		if(readEntityManager!=null) {
+//			readEntityManager.clear();			
+//    	}
+//		if(writeEntityManager!=null) {
+//			writeEntityManager.clear();			
+//    	}
+//
+//    	Cache.removeAll();
+//    	SpiritProperties.clear();
     }
     
     /**
@@ -255,7 +262,7 @@ public class JPAUtil {
      */
 	protected static void initFactory() throws Exception {
 	    DBAdapter adapter = DBAdapter.getAdapter();
-		if(factory!=null) close();
+		if(factory!=null) closeFactory();
 		adapter.preInit();
 		initFactory(adapter, "");
 		adapter.postInit();
@@ -270,7 +277,7 @@ public class JPAUtil {
 	 */
 	public static void initFactory(DBAdapter adapter, String mode) throws Exception {
 		LoggerFactory.getLogger(JPAUtil.class).debug("initFactory on "+adapter.getClass().getName()+" url="+adapter.getDBConnectionURL()+" mode="+mode);
-		close();
+		closeFactory();
 
 		Map properties = new HashMap();
 		properties.put("hibernate.dialect", adapter.getHibernateDialect());
@@ -291,8 +298,7 @@ public class JPAUtil {
 		} else {
 	        readEntityManager = new MyThreadLocal();
 	        writeEntityManager = jpaMode==JPAMode.WRITE? new MyThreadLocal(): null; 
-		}		
-		
+		}
 	}
 
 
@@ -374,7 +380,7 @@ public class JPAUtil {
     		initialize();
     	}
     	return factory.createEntityManager();
-    }
+    }    
     
     public static EntityManager openRequest() {
     	if(factory==null) {
@@ -408,6 +414,12 @@ public class JPAUtil {
 		dest.setScannedPosition(src.getScannedPosition());
 	}    
 
+    /**
+     * Reattach the object to the current session (associated to the current thread)
+     * This function must be called in the constructor of each dialog
+     * @param object
+     * @return
+     */
     public static<T extends IObject> T reattach(T object) {    	
     	if(object==null) return null;
     	
@@ -418,7 +430,7 @@ public class JPAUtil {
     
     
     /**
-     * Check if the object belong to the current session. (to avoid proxy error)
+     * Check if the object belong to the current session (associated to the current thread).
      * If the object is not in the session, the object is loaded from the DB and kept attached to the session.
      * 
      * If the object is a biosample, reattach does not affect the scanned position or transient properties
@@ -446,27 +458,33 @@ public class JPAUtil {
 			} else if(o.getId()<=0) {				
 				//The entity is new. Reload the dependancies if needed
 				if(o instanceof Biosample) {
+					System.out.println("Reattach links");
 					((Biosample) o).setBiotype(JPAUtil.reattach(((Biosample) o).getBiotype()));
+					((Biosample) o).setParent(JPAUtil.reattach(((Biosample) o).getParent()));
+					((Biosample) o).setTopParent(JPAUtil.reattach(((Biosample) o).getTopParent()));
+					((Biosample) o).setInheritedStudy(JPAUtil.reattach(((Biosample) o).getInheritedStudy()));
+					((Biosample) o).setInheritedPhase(JPAUtil.reattach(((Biosample) o).getInheritedPhase()));
+					((Biosample) o).setInheritedGroup(JPAUtil.reattach(((Biosample) o).getInheritedGroup()));
 				}
 			} else {
 				//The entity is already attached to the session
 				
 				//Some checks...
-				//TODO remove checks
-				if(o instanceof Study) {
-					for (StudyAction a : ((Study)o).getStudyActions()) {
-						if(!entityManager.contains(a)) {
-							throw new IllegalArgumentException(o+" has dependancies not in the session");
-						}
-					}
-					for (Biosample b : ((Study)o).getAttachedBiosamples()) {
-						if(!entityManager.contains(b)) {
-							throw new IllegalArgumentException(o+" has dependancies not in the session");
-						}
-						b.getHierarchy(HierarchyMode.ALL);
-					}
-				}
-				//TODO end remove
+//				//TODO remove checks
+//				if(o instanceof Study) {
+//					for (StudyAction a : ((Study)o).getStudyActions()) {
+//						if(!entityManager.contains(a)) {
+//							throw new RuntimeException(o+" has dependancies not in the session");
+//						}
+//					}
+//					for (Biosample b : ((Study)o).getTopAttachedBiosamples()) {
+//						if(!entityManager.contains(b)) {
+//							throw new RuntimeException(o+" has dependancies not in the session");
+//						}
+//						b.getHierarchy(HierarchyMode.ALL);
+//					}
+//				}
+//				//TODO end remove
 			}
 		}
     	
@@ -579,12 +597,5 @@ public class JPAUtil {
 	public static JPAMode getJpaMode() {
 		return jpaMode;
 	}
- 
-	public static void main(String[] args) throws Exception {
-		HSQLMemoryAdapter adapter = new com.actelion.research.spiritcore.adapter.HSQLMemoryAdapter();
-		adapter.preInit();
-		JPAUtil.initFactory(adapter, "update");
-	}
-	
-	
+ 	
 }

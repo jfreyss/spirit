@@ -94,7 +94,7 @@ public class StudyTreatmentDlg extends JEscapeDialog {
 				null,
 				UIUtils.createVerticalBox(
 						UIUtils.createTitleBox("Compound 1", UIUtils.createVerticalBox(
-								new JInfoLabel("Optional. Used for the live moditoring.<br> Hidden for users in 'blind-details'"),
+								new JInfoLabel("<html>Optional. Used for the live moditoring.<br> Hidden for users in 'blind-details'"),
 								UIUtils.createTable(
 										new JLabel("Compound 1: "), compoundTextField1,
 										new JLabel("Dose/Unit/App.: "), UIUtils.createHorizontalBox(doseTextField1, unitComboBox1, applicationComboBox1, Box.createHorizontalGlue())))),

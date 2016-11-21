@@ -81,7 +81,7 @@ public class AdminActions {
 		public Action_Revert(Revision revision) {
 			super("Cancel this change");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('v'));
-			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()));
+			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()) || (revision.getUser()!=null && revision.getUser().equals(Spirit.getUsername())));
 			this.revision = revision;
 			
 		}

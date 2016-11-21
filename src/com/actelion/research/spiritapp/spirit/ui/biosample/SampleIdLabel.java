@@ -190,8 +190,7 @@ public class SampleIdLabel extends JComponentNoRepaint {
 		}		
 		
 		
-		//Some checks on the display 
-		
+		//Some checks on the display 		
 		int x = iconW;		
 		int y = verticalAlignment==SwingConstants.TOP? 1: 1 + (getHeight()-24)/2;		
 		
@@ -230,8 +229,8 @@ public class SampleIdLabel extends JComponentNoRepaint {
 		FastFont f = paintName?FastFont.SMALL: highlight? FastFont.BOLD: FastFont.REGULAR;
 		String s = biosample.getSampleId()==null?"": biosample.getSampleId();
 		g.setFont(f.increaseSize(sizeIncrement));
-		if(biosample.getBiotype()!=null && biosample.getBiotype().isHideSampleId() && paintName) {
-			g.setColor(Color.LIGHT_GRAY);
+		if(biosample.getBiotype()!=null && biosample.getBiotype().isHideSampleId()) {
+			g.setColor(fgColor.brighter());
 		} else {
 			g.setColor(fgColor);
 		}				
@@ -256,8 +255,7 @@ public class SampleIdLabel extends JComponentNoRepaint {
 			int w1 = g.getFontMetrics(font1).stringWidth(s1);				
 			int w2 = g.getFontMetrics(font2).stringWidth(s2);
 			int w3 = g.getFontMetrics(font3).stringWidth(s3);
-			if(w3<18) w3=18;
-			int x1 = getWidth() - insets.right - w1 - w2 - w3 - 2;
+			int x1 = getWidth() - Math.max(18, insets.right - w1 - w2 - w3 - 2);
 
 			g.setColor(UIUtils.getDilutedColor(biosample.getInheritedGroup()==null?Color.WHITE: biosample.getInheritedGroup().getColor(), getBackground()));
 			g.fillRect(x1-2, 0, y + w1+w2+w3+3, 13+sizeIncrement);

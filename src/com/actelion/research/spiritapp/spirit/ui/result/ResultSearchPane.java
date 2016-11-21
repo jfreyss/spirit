@@ -112,7 +112,11 @@ public class ResultSearchPane extends JPanel {
 			private List<Result> results;
 			
 			@Override
-			protected void doInBackground() throws Exception {
+			protected void doInBackground() throws Exception {				
+				//Clear Cache
+//				JPAUtil.clear();
+				
+				//Query results
 				results = DAOResult.queryResults(query, user);
 			}
 

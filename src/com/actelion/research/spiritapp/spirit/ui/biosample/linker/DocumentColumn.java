@@ -42,12 +42,12 @@ public class DocumentColumn extends AbstractLinkerColumn<Document> {
 	@Override
 	public Document getValue(Biosample row) {
 		row = linker.getLinked(row);
-		if(row==null  || row.getMetadata(getType())==null) return null;
-		return row.getMetadata(getType()).getLinkedDocument();
+		if(row==null  || row.getMetadataDocument(getType())==null) return null;
+		return row.getMetadataDocument(getType());
 	}
 	@Override
-	public void setValue(Biosample row, Document value) {
-		row.getMetadata(getType()).setLinkedDocument(value);
+	public void setValue(Biosample row, Document doc) {
+		row.setMetadataDocument(getType(), doc);
 	}
 	
 	@Override

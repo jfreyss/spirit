@@ -21,28 +21,16 @@
 
 package com.actelion.research.spiritcore.test;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.HSQLMemoryAdapter;
 import com.actelion.research.spiritcore.adapter.PropertyKey;
-import com.actelion.research.spiritcore.adapter.SchemaCreator;
-import com.actelion.research.spiritcore.business.DataType;
-import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.LogEntry;
 import com.actelion.research.spiritcore.business.LogEntry.Action;
-import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
-import com.actelion.research.spiritcore.business.biosample.Biotype;
-import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
-import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.Location;
@@ -51,107 +39,20 @@ import com.actelion.research.spiritcore.business.location.LocationType;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.SpiritProperties;
-import com.actelion.research.spiritcore.services.dao.DAOBiosample;
-import com.actelion.research.spiritcore.services.dao.DAOBiotype;
-import com.actelion.research.spiritcore.services.dao.DAODocument;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.DAOLog;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
-import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 
 /**
  * Basic tests on an empty DB
  * @author freyssj
  *
  */
-public class SimpleDBTest {
+public class SimpleDBTest extends AbstractSpiritTest {
 
-	private static SpiritUser user;
-	
-	@BeforeClass
-	public static void initDB() throws Exception {
-		//Init user
-		user = SpiritUser.getFakeAdmin();
-		
-		//Init DB
-		DBAdapter.setAdapter(new HSQLMemoryAdapter());
-		SchemaCreator.clearExamples(user);
-	}
-
-	@Test
-	public void testBiosamples() throws Exception {
-		//Persist biotype
-		Biotype biotype = new Biotype();
-		biotype.setCategory(BiotypeCategory.PURIFIED);
-		biotype.setName("BioTest");
-		biotype.setPrefix("test-");
-		biotype.getMetadata().add(new BiotypeMetadata("meta1", DataType.ALPHA));
-		biotype.getMetadata().add(new BiotypeMetadata("meta2", DataType.NUMBER));
-		biotype.getMetadata().add(new BiotypeMetadata("meta3", DataType.D_FILE));
-		DAOBiotype.persistBiotype(biotype, user);
-		
-		//Persist biosamples
-		Biosample b1 = new Biosample(biotype);
-		Biosample b2 = new Biosample(biotype);
-		
-		List<Biosample> list = new ArrayList<>();
-		list.add(b1);
-		list.add(b2);
-
-		DAOBiosample.persistBiosamples(list, user);
-		
-		//Update
-		b1.setMetadata("meta1", "ALPHA1 ALPHA3");
-		b2.setMetadata("meta1", "ALPHA1 ALPHA2");
-		b1.getMetadata("meta3").setLinkedDocument(new Document(new File("c:/DBAR_Ver.txt")));
-		DAOBiosample.persistBiosamples(list, user);
-
-		JPAUtil.clear();
-		
-		
-		
-		//Query
-		BiosampleQuery q = new BiosampleQuery();
-		q.setKeywords("ALPHA1");
-		Assert.assertEquals(2, DAOBiosample.queryBiosamples(q, user).size());
-		
-		q.setKeywords("ALPHA3 ALPHA1");
-		Assert.assertEquals(1, DAOBiosample.queryBiosamples(q, user).size());
-		Biosample b = DAOBiosample.queryBiosamples(q, user).get(0);
-		Assert.assertEquals("DBAR_Ver.txt", b.getMetadata("meta3").getLinkedDocument().getFileName());
-		Assert.assertEquals("DBAR_Ver.txt", b.getMetadata("meta3").getLinkedDocument().getFileName());
-		Assert.assertNotNull(b.getMetadata("meta3").getLinkedDocument().getBytes());
-		Assert.assertNotNull(DAODocument.getDocument(b.getMetadata("meta3").getLinkedDocument().getId()).getBytes());
-
-		q.setKeywords("ALPHA2 or ALPHA3");
-		Assert.assertEquals(2, DAOBiosample.queryBiosamples(q, user).size());
-
-		q.setKeywords("ALPHA2 ALPHA3");
-		Assert.assertEquals(0, DAOBiosample.queryBiosamples(q, user).size());
-
-		//Delete biotype (not allowed)
-		try {
-			DAOBiotype.deleteBiotype(biotype, user);
-			throw new AssertionError("Deletion biotype should not be allowed");
-		} catch(Exception e) {
-		}
-		
-		//Delete biosamples
-		DAOBiosample.deleteBiosamples(list, user);
-
-		//Delete biotype
-		DAOBiotype.deleteBiotype(biotype, user);
-		
-		
-		//Retest query
-		q.setKeywords("ALPHA1");
-		Assert.assertEquals(0, DAOBiosample.queryBiosamples(q, user).size());
-
-	}
-	
 	@Test
 	public void testLocations() throws Exception {
 		Location l = new Location();

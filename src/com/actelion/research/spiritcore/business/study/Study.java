@@ -133,17 +133,17 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	
 	@OneToMany(cascade = CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="study")
 	@SortNatural
-	@BatchSize(size=4)
+//	@BatchSize(size=4)
 	private Set<Group> groups = new TreeSet<>();
 	
 	@OneToMany(cascade = CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="study")	
 	@SortNatural
-	@BatchSize(size=4)
+//	@BatchSize(size=4)
 	private Set<Phase> phases = new TreeSet<>();
 
 	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="study")
 	@SortNatural
-	@BatchSize(size=4)
+//	@BatchSize(size=4)
 	private Set<NamedTreatment> namedTreatments = new TreeSet<>();
 	
 	/**
@@ -156,7 +156,6 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	private Set<NamedSampling> namedSamplings = new TreeSet<>();
 		
 	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="study")	
-//	@BatchSize(size=64)
 	private Set<StudyAction> actions = new HashSet<>();
 	
 	/**
@@ -196,11 +195,10 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	/**
 	 * The animals that are directly attached to one of the group or to the reserve
 	 * NB: The relation is still held by the biosample, so to unset a group use biosample.setAttachedStudy(null)
-	 *  
 	 */
-	@OneToMany(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY, mappedBy="attachedStudy")
+	@OneToMany(cascade={}, fetch=FetchType.LAZY, mappedBy="attachedStudy")
 	@Audited(targetAuditMode=RelationTargetAuditMode.NOT_AUDITED)	
-	@BatchSize(size=64)
+	@BatchSize(size=4)
 	private Set<Biosample> attachedBiosamples = new TreeSet<>();
 	
 	/** Helpful function for faster access groupId_groupName_subgroup->phaseName->action */
@@ -843,11 +841,8 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	@Override
 	public int compareTo(Study s) {
 		if(s==this) return 0;
-		if(s==null) return 1;
-		if(getStudyId()==null && s.getStudyId()==null) return 0;
-		if(getStudyId()==null) return -1;
-		if(s.getStudyId()==null) return 1;
-		return -getStudyId().compareTo(s.getStudyId());
+		if(s==null) return -1;
+		return -(getStudyId()==null?"":getStudyId()).compareTo(s.getStudyId()==null?"":s.getStudyId());
 	}
 
 	
@@ -858,6 +853,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		this.expertUsers = expertUsers;
 		expertUsersSet = null;
 	}
+	
 	/**
 	 * @return the restrictedUsers
 	 */
@@ -1070,8 +1066,9 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	}
 	
 	/**
-	 * This method is in most case identical to getAttachedBiosamples except when we use the dividing feature, where animals can be divided into tissues, which are still attached to the study
-	 * In that case we only return the top biosamples in study
+	 * This method is in most case identical to getAttachedBiosamples except when we use the dividing feature, 
+	 * where animals can be divided into tissues, which are still attached to the study
+	 * In that case we only return the top biosamples in study, sorted by group/sampleName/sampleId 
 	 * @return the attachedBiosamples
 	 */
 	public List<Biosample> getTopAttachedBiosamples() {
@@ -1080,35 +1077,39 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			if(b.getInheritedPhase()!=null) continue; //dividing sample
 			res.add(b);
 		}
-		Collections.sort(res, Biosample.COMPARATOR_ANIMALNO);
+		Collections.sort(res, Biosample.COMPARATOR_GROUP_SAMPLENAME);
 		return res;
 	}
 
 
 	/**
-	 * Same as getTopAttachedBiosample, but with an imposed filter on the group (if group==null, it means returns all samples with goup =null)(
+	 * Same as getTopAttachedBiosample, but with an imposed filter on the group 
+	 * (if group==null, it means returns all samples with goup == null)(
 	 * @param group
 	 * @return
 	 */
 	public List<Biosample> getTopAttachedBiosamples(Group group) {
 		List<Biosample> res = new ArrayList<>();		
-		for (Biosample b : getTopAttachedBiosamples()) {
+		for (Biosample b : getAttachedBiosamples()) {
+			if(b.getInheritedPhase()!=null) continue; //dividing sample
 			if(group!=null && !group.equals(b.getInheritedGroup())) continue;
 			if(group==null && b.getInheritedGroup()!=null) continue;
 			res.add(b);			
 		}
+		Collections.sort(res, Biosample.COMPARATOR_GROUP_SAMPLENAME);
 		return res;
 	}
 		
 	public List<Biosample> getTopAttachedBiosamples(Group group, int subgroup) {
 		List<Biosample> res = new ArrayList<>();		
-		for (Biosample b : getTopAttachedBiosamples()) {
+		for (Biosample b : getAttachedBiosamples()) {
+			if(b.getInheritedPhase()!=null) continue; //dividing sample
 			if(group!=null && !group.equals(b.getInheritedGroup())) continue;
-			if(group==null && b.getInheritedGroup()!=null) continue;
-			
+			if(group==null && b.getInheritedGroup()!=null) continue;			
 			if(b.getInheritedSubGroup()!=subgroup && group.getNSubgroups()>1) continue; 
 			res.add(b);			
 		}
+		Collections.sort(res, Biosample.COMPARATOR_GROUP_SAMPLENAME);
 		return res;
 	}
 	
@@ -1197,7 +1198,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	 */
 	public Set<Measurement> getAllMeasurementsFromActions() {
 		Set<Measurement> res = new TreeSet<>();
-		for (StudyAction a : getStudyActions()) {
+		for (StudyAction a : new ArrayList<>(getStudyActions())) {
 			res.addAll(a.getMeasurements());
 		}
 		return res;
@@ -1210,8 +1211,8 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	 */
 	public Set<Measurement> getAllMeasurementsFromSamplings() {
 		Set<Measurement> res = new TreeSet<>();
-		for (NamedSampling a : getNamedSamplings()) {
-			for(Sampling s: a.getAllSamplings()) {
+		for (NamedSampling a : new ArrayList<>(getNamedSamplings())) {
+			for(Sampling s: new ArrayList<>(a.getAllSamplings())) {
 				res.addAll(s.getMeasurements());
 			}
 		}

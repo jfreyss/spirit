@@ -41,6 +41,7 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.Config;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
@@ -50,23 +51,22 @@ public class MoveLocationDialog extends JSpiritEscapeDialog {
 	private List<Location> locations;
 	private LocationBrowser locationBrowser = new LocationBrowser(); 
 	
-	public MoveLocationDialog(List<Location> locations) {
+	public MoveLocationDialog(List<Location> myLocations) {
 		super(UIUtils.getMainFrame(), "Move Location", MoveLocationDialog.class.getName());
-		this.locations = locations;
+		this.locations = JPAUtil.reattach(myLocations);
 		
 		JPanel centerPanel = new JPanel(new BorderLayout());
 		centerPanel.setBorder(BorderFactory.createEtchedBorder());
 		centerPanel.add(BorderLayout.NORTH, new JLabel("Move " + (locations.size()==1? locations.get(0).getName(): locations.size()+" locations") + " to: "));
 		centerPanel.add(BorderLayout.CENTER, new JScrollPane(locationBrowser));
 		
-		Set<Location> parents = new HashSet<Location>();
+		Set<Location> parents = new HashSet<>();
 		for (Location location : locations) {
 			if(location.getParent()!=null) parents.add(location.getParent());			
 		}
 		if(parents.size()>0) {
 			locationBrowser.setBioLocation(parents.iterator().next());
 		}
-				
 		
 		//Buttons
 		JButton okButton = new JButton("OK");

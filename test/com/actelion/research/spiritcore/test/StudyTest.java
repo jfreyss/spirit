@@ -10,10 +10,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.HSQLMemoryAdapter;
 import com.actelion.research.spiritcore.adapter.PropertyKey;
-import com.actelion.research.spiritcore.adapter.SchemaCreator;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
@@ -27,7 +24,6 @@ import com.actelion.research.spiritcore.business.study.Randomization;
 import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
-import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAONamedSampling;
@@ -45,20 +41,12 @@ import com.actelion.research.util.CompareUtils;
  * @author Joel Freyss
  *
  */
-public class StudyTest {
+public class StudyTest extends AbstractSpiritTest {
 	
-	private static SpiritUser user;
 	
 	@BeforeClass
-	public static void initDB() throws Exception {
-		//Init user
-		user = SpiritUser.getFakeAdmin();
-		
-		//Init DB
-		DBAdapter.setAdapter(new HSQLMemoryAdapter());
-		SchemaCreator.displayTables(DBAdapter.getAdapter());
-		
-		ExchangeTest.initDemoExamples(user);
+	public static void init() throws Exception {
+		initDemoExamples(user);
 	}
 
 	@Test
@@ -145,17 +133,20 @@ public class StudyTest {
 		int np = s.getPhases().size();
 		int ng = s.getGroups().size();
 		
+		System.out.println("StudyTest.testUpdates() init with "+s.getPhases());
+		
 		//Add Phase, Group
 		Phase p = new Phase("d21");
-		p.setStudy(s);
 		s.getPhases().add(p);
+		s.getPhases().add(new Phase("d15_10h"));
+		
 		Group g = new Group("Test");
 		g.setStudy(s);
 		g.setFromPhase(p);
 		g.setSubgroupSizes(new int[]{2,2});
 		s.getGroups().add(g);
 		s.getOrCreateStudyAction(g, 0, p).setNamedSampling1(s.getNamedSamplings().iterator().next());
-		Assert.assertEquals(np+1, s.getPhases().size());
+		Assert.assertEquals(np+2, s.getPhases().size());
 		Assert.assertEquals(ng+1, s.getGroups().size());
 		
 		//Set Metadata
@@ -164,15 +155,23 @@ public class StudyTest {
 		}
 		
 		//Persist
-		System.out.println("StudyTest.testUpdates() PERSIST "+s);
 		DAOStudy.persistStudies(Collections.singleton(s), user);
-		System.out.println("StudyTest.testUpdates() PERSIST-END"+s);
 		
-		//And load
+		//Rename and then remove phase: bug from v2.0
+		System.out.println("StudyTest.testUpdates() load1 with "+s.getPhases());
+		s = DAOStudy.getStudyByIvvOrStudyId("IVV2016-1").get(0);
+		p = s.getPhase("d15_10h");
+		p.setName("");
+		p.remove();
+				
+
+		//And load		
+		System.out.println("StudyTest.testUpdates() load2 with "+s.getPhases());
 		s = DAOStudy.getStudyByIvvOrStudyId("IVV2016-1").get(0);
 		p = s.getPhase("d21");
 		g = s.getGroup("Test");
-		System.out.println("StudyTest.testUpdates() "+s.getPhases()+" "+s.getGroups()+" "+s.getPhasesWithGroupAssignments());
+		Assert.assertTrue(s.getPhases().contains(p));
+		Assert.assertTrue(s.getGroups().contains(g));
 		Assert.assertEquals(np+1, s.getPhases().size());
 		Assert.assertEquals(ng+1, s.getGroups().size());
 		Assert.assertEquals(2, s.getPhasesWithGroupAssignments().size());
@@ -186,7 +185,7 @@ public class StudyTest {
 		//Remove phase
 		Assert.assertNotNull(p);
 		p.remove();
-		Assert.assertEquals(np, s.getPhases().size());
+		Assert.assertEquals(p+" was not deleted in " + s.getPhases(), np, s.getPhases().size());
 		DAOStudy.persistStudies(Collections.singleton(s), user);
 		
 		s = DAOStudy.getStudyByIvvOrStudyId("IVV2016-1").get(0);
@@ -241,6 +240,7 @@ public class StudyTest {
 		//Create samples before attaching (-> no new samples)
 		List<Biosample> bios = BiosampleCreationHelper.processTemplateInStudy(s, null, null, null, null);
 		int toCreate = 0; for (Biosample b : bios) {
+			System.out.println("StudyTest.testUpdates() > "+b.getInfos());
 			if(b.getId()<=0) toCreate++; 
 		}
 		Assert.assertEquals(255, bios.size());
@@ -250,22 +250,21 @@ public class StudyTest {
 		//Move one animal and add one animal to g
 		Biosample a1 = s.getTopAttachedBiosamples().iterator().next(); 
 		a1.setAttached(s, g, 0);
-		Biosample a2 = new Biosample();
-		a2.setBiotype(DAOBiotype.getBiotype("Animal"));
+		
+		Biosample a2 = new Biosample(DAOBiotype.getBiotype("Animal"));
 		a2.setAttached(s, g, 0);		
-		Assert.assertFalse(JPAUtil.getManager().getTransaction().isActive());
 		DAOBiosample.persistBiosamples(Arrays.asList(new Biosample[]{a1,a2}), user);
-		Assert.assertFalse(JPAUtil.getManager().getTransaction().isActive());
 		
 		//Create samples after attaching: -> new samples
 		bios = BiosampleCreationHelper.processTemplateInStudy(s, null, null, null, null);
 		toCreate = 0; for (Biosample b : bios) {
 			if(b.getId()<=0) {
 				toCreate++;
+				System.out.println("StudyTest.testUpdates() "+toCreate+" > "+b.getInfos());
 			}
 		}
 		Assert.assertEquals(276, bios.size());
-		Assert.assertEquals(276-255, toCreate);
+		Assert.assertEquals(19+7, toCreate);
 		
 		
 		
@@ -400,6 +399,7 @@ public class StudyTest {
 		
 		//Check correctess of order
 		for(Biosample b: s.getTopAttachedBiosamples()) {
+			System.out.println("StudyTest.testAttachedSamples() "+b+" "+b.getInheritedGroupString(null)+" "+b.getInheritedSubGroup()+" "+ b.getSampleName());
 			if(previous!=null) {
 				Assert.assertTrue(b.getInheritedGroup()==null
 						|| b.getInheritedGroup().compareTo(previous.getInheritedGroup())>0

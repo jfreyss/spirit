@@ -40,6 +40,5 @@ public class MigrationScript2_0 extends MigrationScript {
 	public String getMigrationSql(SQLVendor vendor) throws Exception {
 		return SQLConverter.convertScript(SCRIPT, vendor);
 	}
-
-	
+		
 }

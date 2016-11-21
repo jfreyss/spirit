@@ -21,7 +21,8 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample;
 
-import com.actelion.research.spiritcore.business.biosample.Metadata;
+import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.util.ui.TextChangeListener;
 
 public interface MetadataComponent {
@@ -30,8 +31,8 @@ public interface MetadataComponent {
 	public void setData(String metadata);
 	
 	
-	public void updateModel(Metadata m);
-	public void updateView(Metadata m);
+	public void updateModel(Biosample b, BiotypeMetadata m);
+	public void updateView(Biosample b, BiotypeMetadata m);
 	
 	public void addTextChangeListener(TextChangeListener listener);
 

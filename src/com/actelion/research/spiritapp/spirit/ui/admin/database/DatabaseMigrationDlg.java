@@ -93,9 +93,13 @@ public class DatabaseMigrationDlg extends JDialog {
 		});
 		getRootPane().setDefaultButton(updateButton);
 		
-		//Init script
-		try {
+		//Init script		
+		try {			
 			String script = MigrationScript.getSql(DBAdapter.getAdapter().getVendor());
+			if(script.length()==0) {
+				//Assume this is correct and update the version
+				
+			}
 			sqlPane.setText(script);
 		} catch(Exception e) {
 			errorPane.setText(e.getMessage());
@@ -177,13 +181,13 @@ public class DatabaseMigrationDlg extends JDialog {
 					
 					if(ok) {
 						if(hasErrors) {
-							JExceptionDialog.showWarning(DatabaseMigrationDlg.this, "The database was successfully migrated. There were however some errors, please check.");
+							JExceptionDialog.showWarning(DatabaseMigrationDlg.this, "The Spirit database was successfully migrated.\n There were however some migration errors, please check what went wrong.");
 						} else {
-							JExceptionDialog.showInfo(DatabaseMigrationDlg.this, "The database was successfully migrated.");
+							JExceptionDialog.showInfo(DatabaseMigrationDlg.this, "The Spirit database was successfully migrated.");
 							dispose();
 						}
 					} else {
-						JExceptionDialog.showError(DatabaseMigrationDlg.this, "The DB could not be migrated. Please check the errors.");							
+						JExceptionDialog.showError(DatabaseMigrationDlg.this, "The Spirit database could not be migrated. Please check the errors.");							
 					}
 				} catch(Exception e) {
 					JExceptionDialog.showError(DatabaseMigrationDlg.this, e);												
@@ -195,7 +199,7 @@ public class DatabaseMigrationDlg extends JDialog {
 	public static boolean testSchema(DBAdapter adapter) throws Exception {
 		boolean ok;
 		try {			
-			JPAUtil.close();
+			JPAUtil.closeFactory();
 			LoggerFactory.getLogger(DatabaseMigrationDlg.class).debug("Test Schema: preinit "+adapter.getClass());
 			adapter.preInit();
 			LoggerFactory.getLogger(DatabaseMigrationDlg.class).debug("Test Schema: validate "+adapter.getClass());
@@ -212,7 +216,7 @@ public class DatabaseMigrationDlg extends JDialog {
 				ok = false;
 			}
 		}
-		if(ok && adapter==DBAdapter.getAdapter() && MigrationScript.getExpectedDBVersion().compareTo(MigrationScript.getDBVersion())>0) {
+		if(adapter==DBAdapter.getAdapter() && MigrationScript.getExpectedDBVersion().compareTo(MigrationScript.getDBVersion())!=0) {
 			SpiritProperties.getInstance().setDBVersion(MigrationScript.getExpectedDBVersion());
 			SpiritProperties.getInstance().saveValues();
 		}

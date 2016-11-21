@@ -22,6 +22,7 @@
 package com.actelion.research.spiritapp.spirit.ui.biosample.edit;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,10 +49,11 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.linker.SampleIdColumn
 import com.actelion.research.spiritcore.business.biosample.BarcodeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
+import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
-import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
+import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.ExcelTableModel;
 
@@ -68,6 +70,7 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 	public void setCompactView(boolean compactView) {
 		this.compactView = compactView;
 	}
+	
 	public boolean isCompactView() {
 		return compactView;
 	}
@@ -87,7 +90,7 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 		boolean hasScanPos = false;
 		boolean hasAttachedSamples = false;
 		boolean hasStudiedSamples = false;
-		Set<Biosample> myRows = new HashSet<Biosample>(getRows());				
+		Set<Biosample> myRows = new HashSet<>(getRows());				
 		for (Biosample b : getRows()) {
 			if(b.getParent()!=null && b.getParent().getParent()!=null && !myRows.contains(b.getParent().getParent())) {
 				hasParents2 = true;
@@ -103,9 +106,7 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 			}
 		}
 
-
-		List<Column<Biosample, ?>> defaultColumns = new ArrayList<Column<Biosample, ?>>();
-
+		List<Column<Biosample, ?>> defaultColumns = new ArrayList<>();
 		
 		//Generic Elements
 		defaultColumns.add(COLUMN_ROWNO);
@@ -135,8 +136,6 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 			defaultColumns.add(new ContainerFullColumn());				
 		}
 
-		
-		
 		//Study Elements
 		if(type!=null && type.getCategory()==BiotypeCategory.LIVING || hasAttachedSamples) {
 			defaultColumns.add(new StudyGroupColumn(this));
@@ -146,8 +145,6 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 			defaultColumns.add(new StudyPhaseColumn());
 		}
 		
-
-
 		if(type!=null && type.getCategory()==BiotypeCategory.PURIFIED && type.getParent()==null) {
 			//Don't add parents columns
 		} else if(!compactView) {
@@ -182,9 +179,7 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 		} else {
 			defaultColumns.add(new CombinedColumn());						
 		}
-System.out.println("EditBiosampleTableModel.initColumns() "+defaultColumns);
-		setColumns(defaultColumns);
-		
+		setColumns(defaultColumns);		
 	}
 	
 	@Override
@@ -253,5 +248,13 @@ System.out.println("EditBiosampleTableModel.initColumns() "+defaultColumns);
 		}
 		return col;
 	}
+	
+	@Override
+	public void setValueAt(Object newValue, int rowIndex, int columnIndex) {
+		super.setValueAt(newValue, rowIndex, columnIndex);		
+		Biosample b = getRow(rowIndex);
+		DAOBiosample.computeFormula(Collections.singleton(b));				
+	}
+
 	
 }

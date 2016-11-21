@@ -23,38 +23,29 @@ package com.actelion.research.spiritcore.business;
 
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
 
 public enum DataType {	
-	ALPHA("Alphanumeric", null, true, true),
-	NUMBER("Numeric", null, true, true),	
-	DATE("Date/Time", null, true, true),
-	
-	D_FILE("File", null, true, false),
-
-	LIST("Choice: One", "List of options",  true, true),
-	MULTI("Choice: Multi*", "List of options",  true, true),
-	AUTO("Autocomplete", null, true, true),
-	FORMULA("Formula", "Formula", false, true),
-	
-	BIOSAMPLE("Linked: Biosample", "Biotype", true, true);
+	ALPHA("Alphanumeric", null),
+	AUTO("Autocomplete", null),
+	NUMBER("Numeric", null),		
+	LIST("OneChoice", "List of options"),
+	MULTI("MultiChoice", "List of options"),
+	DATE("Date/Time", null),	
+	D_FILE("File", null),
+	LARGE("LargeText", null),
+	FORMULA("Formula", "Formula"),	
+	BIOSAMPLE("Biosample", "Biotype")
+	;
 	
 	public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy"); 
-	public static SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("dd.MM.yyyy HH:mm"); 
-	
+	public static SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("dd.MM.yyyy HH:mm"); 	
 	private final String name;
 	private final String parametersDescription;
-	private final boolean compatibleWithBiotype;
-	private final boolean compatibleWithResult;
 	
-	private DataType(String name, String parametersDescription, boolean compatibleWithBiosample, boolean compatibleWithResult) {
+	private DataType(String name, String parametersDescription) {
 		this.name = name;
 		this.parametersDescription = parametersDescription;
-		this.compatibleWithBiotype = compatibleWithBiosample;
-		this.compatibleWithResult = compatibleWithResult;
 	}
-
 	
 	public String getDescription() {
 		return name;
@@ -68,24 +59,5 @@ public enum DataType {
 	public String toString() {
 		return name;
 	}
-	
-	public static List<DataType> valuesForBiotype() {
-		List<DataType> res = new ArrayList<>();
-		for (DataType dataType : values()) {
-			if(!dataType.compatibleWithBiotype) continue; 
-			res.add(dataType);
-		}
-		return res;
-	}
-	
-	public static List<DataType> valuesForResult() {
-		List<DataType> res = new ArrayList<>();
-		for (DataType dataType : values()) {
-			if(!dataType.compatibleWithResult) continue; 
-			res.add(dataType);
-		}
-		return res;
-	}
-
 	
 }

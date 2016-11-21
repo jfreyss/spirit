@@ -31,6 +31,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Shape;
+import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -63,8 +64,8 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.Formatter;
 import com.actelion.research.spiritcore.util.Pair;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.UIUtils;
 
@@ -126,6 +127,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 
 	@Override
 	protected void paintComponent(Graphics graphics) {
+		
 		if (imgBuffer == null /*|| imgBuffer.getWidth() != getWidth() || imgBuffer.getHeight() != getHeight()*/) {
 			imgBuffer = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
 			Graphics2D g = (Graphics2D) imgBuffer.getGraphics();
@@ -160,9 +162,12 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 
 	private void draw(Graphics2D g) {
 		try {
-
-			g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
-			g.setRenderingHint(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING, java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+			Toolkit tk = Toolkit.getDefaultToolkit();
+	  		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
+	  		if (map != null) {
+	  		    g.addRenderingHints(map);
+	  		}
+	  		
 			//Refresh actual time
 			Calendar cal = Calendar.getInstance();
 			cal.setTime(JPAUtil.getCurrentDateFromDatabase());
@@ -309,11 +314,10 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			StringBuilder sb = new StringBuilder();
 			sb.append("<body><div style='font-size:8px;margin:0;padding:0; background: " + UIUtils.getHtmlColor(UIUtils.getDilutedColor(Color.WHITE, sel.getGroup().getBlindedColor(Spirit.getUsername()))) + "'>");
 			sb.append("<span style='font-size:9px'><b>" + sel.getGroup().getShortName() + "</b> " + sel.getGroup().getNameWithoutShortName() + "</span><br>");
-//			sb.append((sel.getGroup().getDiseaseModel()==null? "": sel.getGroup().getDiseaseModel()) + " " + (sel.getGroup().getTreatmentModel()==null? "": sel.getGroup().getTreatmentModel())+"<br>");
 			Collection<Biosample> biosamples = study.getTopAttachedBiosamples(sel.getGroup());
 			if(biosamples.size()>0 && biosamples.size()<=10) {
 				for (Biosample b : biosamples) {
-					sb.append(" - " +b.getSampleIdName()+"<br>");
+					sb.append((sel.getGroup().getNSubgroups()>1?"'"+(1+b.getInheritedSubGroup()):"") + 1 + " - " +b.getSampleIdName()+"<br>");
 				}
 			} else {
 				sb.append( - biosamples.size()+" biosamples<br>");
@@ -329,19 +333,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			try { 
 				StringBuilder sb = new StringBuilder();
 				sb.append("<body><div style='font-size:8px;margin:0;padding:0; background: " + UIUtils.getHtmlColor(UIUtils.getDilutedColor(Color.WHITE, sel.getGroup().getBlindedColor(Spirit.getUsername()))) + "'>");
-				sb.append("<span style='font-size:9px'><b>" + sel.getGroup().getShortName() + "</b>" + (sel.getGroup().getNSubgroups() <= 1 ? "" : " '" + (sel.getSubGroup() + 1)) + " / " + sel.getPhase().toString() + "</span>");
-		
-				int expected, n;
-				if(sel.getGroup().getNSubgroups() <= 1) {
-					n = study.getTopAttachedBiosamples(sel.getGroup()).size();
-					expected = sel.getGroup().getNAnimals(sel.getPhase());
-				} else {
-					n = study.getTopAttachedBiosamples(sel.getGroup(), sel.getSubGroup()).size();
-					expected = sel.getGroup().getSubgroupSize(sel.getSubGroup());			
-				}
-				if(n>0) {
-					sb.append( (n!=expected? "<span style='color:red'>":"") + " (N=" + n + (expected>0? "/" + expected: "") + ")" + (n!=expected? "</span>":""));
-				}
+				sb.append("<span style='font-size:9px'><b>" + sel.getGroup().getShortName() + (sel.getGroup().getNSubgroups() <= 1 ? "" : "<span style='font-size:8px'> '" + (sel.getSubGroup() + 1) + "</span>") + "</b> / " + sel.getPhase().toString() + "</span>");
 				sb.append("<br>");
 				
 				if (sel.getPhase().equals(sel.getGroup().getFromPhase())) {
@@ -360,32 +352,37 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 					}
 					if (measurements.length() > 0) {
 						sb.append("<span style='color:blue'>" + measurements + "</span>");
-						sb.append("<br>");
 					}
 		
 					//Treatment
 					if (action.getNamedTreatment() != null) {
 						NamedTreatment t = action.getNamedTreatment();
-						Color c = t.getColor() == null ? Color.BLACK : t.getColor();
-		
-						sb.append("<b style='color:" + UIUtils.getHtmlColor(c) + "'>" + t.getName() + "</b> ");
-						sb.append(t.getCompoundAndUnits(false, SpiritRights.isBlind(study, Spirit.getUser())) + "<br>");
+						Color c = t.getColor() == null ? Color.BLACK : t.getColor();		
+						sb.append("<b style='color:" + UIUtils.getHtmlColor(c) + "'>" + t.getName() + "</b><br>");
 					}
 		
 					//Sampling
 					if (action.getNamedSampling1() != null) {
 						NamedSampling s = action.getNamedSampling1();
-						sb.append("<b style='color:#990000'>" + s.getName() + ":</b>");
+						sb.append("<b style='color:#990000'>" + s.getName() + "</b><br>");
 					}	
 					if (action.getNamedSampling2() != null) {
 						NamedSampling s = action.getNamedSampling2();
-						sb.append("<b style='color:#990000'>" + s.getName() + ":</b></u><br>");
+						sb.append("<b style='color:#990000'>" + s.getName() + "</u><br>");
 					}
 					
 					//Label
 					if(action.getLabel()!=null && action.getLabel().length()>0) {
 						sb.append("<u>"+action.getLabel()+"</u><br>");
 					}
+					//Attached
+					List<Biosample> samples =  study.getTopAttachedBiosamples(sel.getGroup(), sel.getSubGroup());
+					if(samples.size()<10) {
+						for (Biosample b : samples) {
+							sb.append((sel.getGroup().getNSubgroups()>1? " '" + (1+b.getInheritedSubGroup()): "") + " " +b.getSampleIdName()+"<br>");
+						}
+					}
+					
 				}
 				return "<html><body style='padding:0px;margin:0px'>" + sb + "</body></html>";
 			} catch(Exception ex) {
@@ -892,7 +889,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 				g.setColor(Color.DARK_GRAY);
 				g.setFont(FastFont.SMALL);
 				String day = new String[] { "", "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" }[d];
-				s = Formatter.formatDate(date) + " "+day;
+				s = FormatterUtils.formatDate(date) + " "+day;
 				
 				g.drawString(s, x, y+4);
 			}

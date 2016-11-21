@@ -36,8 +36,8 @@ import com.actelion.research.spiritapp.spirit.ui.lf.CreationLabel;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.services.SpiritRights;
-import com.actelion.research.spiritcore.util.Formatter;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
@@ -45,7 +45,7 @@ import com.actelion.research.util.ui.exceltable.Column;
 public class CreationColumn extends Column<Result, String> {
 	private final boolean creation;
 	public CreationColumn(boolean creation) {
-		super(creation?"\nCreDate": "\nLastUpdate", String.class, 40);
+		super(creation?"CreDate": "LastUpdate", String.class, 40);
 		setHideable(!creation);
 		this.creation = creation;	
 	}
@@ -65,8 +65,8 @@ public class CreationColumn extends Column<Result, String> {
 	
 	@Override
 	public String getValue(Result row) {
-		return creation? row.getCreUser() + "\t" + Formatter.formatDate(row.getCreDate()): 
-			row.getUpdUser()  + "\t" + Formatter.formatDate(row.getUpdDate());
+		return creation? row.getCreUser() + "\t" + FormatterUtils.formatDate(row.getCreDate()): 
+			row.getUpdUser()  + "\t" + FormatterUtils.formatDate(row.getUpdDate());
 	}	
 	
 	@Override

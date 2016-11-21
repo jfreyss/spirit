@@ -59,23 +59,19 @@ public class StudySearchPane extends JPanel {
 		super(new BorderLayout(0, 0));
 		this.table = table;
 		
-		setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));	
 		
-//		add(BorderLayout.NORTH, UIUtils.createHorizontalBox(new JButton(new Action_ViewAll()), new JButton(new Action_ViewMine()), Box.createHorizontalGlue()));
 		add(BorderLayout.CENTER, new JScrollPane(studySearchTree));
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), resetButton, searchButton));
-		
 		
 		studySearchTree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {				
-				new Action_Search().actionPerformed(null);
+				query(studySearchTree.getQuery());
 			}
 		});
 		
+		setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));	
 		setPreferredSize(new Dimension(220, 200));
-		
-		
 	}
 
 	/**
@@ -114,11 +110,14 @@ public class StudySearchPane extends JPanel {
 	}
 	
 	public void query(final StudyQuery query) {
-		
 		new SwingWorkerExtended("Querying Studies", table, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			List<Study> studies;
 			@Override
 			protected void doInBackground() throws Exception {
+				//Clear Cache
+//				JPAUtil.clear();
+				
+				//Query Studies
 				studies = DAOStudy.queryStudies(query, Spirit.getUser());
 			}
 

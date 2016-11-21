@@ -526,10 +526,10 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 	}
 
 	public String getMetadata(String name) {
-		Set<String> res = new HashSet<String>();
+		Set<String> res = new HashSet<>();
 		for (Biosample b : getBiosamples()) {
-			Metadata metadata = b.getMetadata(name);
-			if(metadata!=null && metadata.getValue()!=null && metadata.getValue().length()>0) res.add(metadata.getValue());
+			String metadata = b.getMetadataValue(name);
+			if(metadata!=null && metadata.length()>0) res.add(metadata);
 		}
 		if(res.size()==1) return res.iterator().next();
 		return "";

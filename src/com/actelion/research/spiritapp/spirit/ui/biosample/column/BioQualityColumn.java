@@ -22,10 +22,7 @@
 package com.actelion.research.spiritapp.spirit.ui.biosample.column;
 
 
-import java.awt.Color;
-
 import javax.swing.JComponent;
-import javax.swing.SwingConstants;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.QualityCellEditor;
@@ -34,7 +31,6 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
-import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 
 public class BioQualityColumn extends Column<Biosample, Quality> {
 
@@ -71,30 +67,13 @@ public class BioQualityColumn extends Column<Biosample, Quality> {
 		throw new Exception(value+" is not a valid quality");
 	}
 	
-	private static JLabelNoRepaint lbl = new JLabelNoRepaint();
-	@Override
-	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
-		Quality quality = (Quality) value;
-		lbl.setVerticalAlignment(SwingConstants.TOP);
-		if(quality==null) {
-			lbl.setText(null);
-			lbl.setBackground(Color.WHITE);
-		} else {
-			lbl.setText(quality.getName());
-			lbl.setBackground(quality.getBackground());
-			
-		}
-		return lbl;
-	}
-	
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		super.postProcess(table, row, rowNo, value, comp);
 		
 		Quality status = (Quality) value;
-		if(status!=null) {
-			if(status.getBackground()!=null) lbl.setBackground(status.getBackground());
-			
+		if(status!=null && status.getBackground()!=null) {
+			lbl.setBackground(status.getBackground());			
 		}
 	}
 	

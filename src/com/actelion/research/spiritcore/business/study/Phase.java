@@ -25,6 +25,7 @@ package com.actelion.research.spiritcore.business.study;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -43,8 +44,8 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.envers.Audited;
 
 import com.actelion.research.spiritcore.business.IObject;
-import com.actelion.research.spiritcore.util.Formatter;
 import com.actelion.research.spiritcore.util.Pair;
+import com.actelion.research.util.FormatterUtils;
 
 /**
  * The phase can be formatted in 2 different ways:
@@ -62,13 +63,12 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="phase_sequence")
 	private int id = 0;
 
-	@Column(name="name", length=64, nullable=false)
+	@Column(length=64)
 	private String name;
 	
 	@ManyToOne(fetch=FetchType.LAZY, cascade={})
 	private Study study = null;
-	
-	
+		
 	@Column(name="rnd_allsamples", length=10000)
 	private String serializedRandomization = "";
 
@@ -79,13 +79,11 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 	private transient int minutes = -1; 
 	private transient String label = "";
 	
-	
 	public Phase() {}
 	
 	public Phase(String name) {
 		setName(name);
 	}	
-
 
 	@Override
 	public int getId() {
@@ -154,39 +152,43 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 	
 	@Override
 	public String toString() {
-		return getName();
+		return getName()==null?"??":getName();
 	}
 	
 	public String getAbsoluteDateAndName() {
 		String phaseName = toString();
 		if(getAbsoluteDate()!=null) {
-			phaseName = Formatter.formatDate(getAbsoluteDate()) + " - " + phaseName;
+			phaseName = FormatterUtils.formatDate(getAbsoluteDate()) + " - " + phaseName;
 		}
 		return phaseName;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if(obj==this) return true;
+		if(this==obj) return true;
 		if(! (obj instanceof Phase)) return false;
 		Phase p = (Phase) obj;
-		if(p.getId()>0) return getId() == p.getId();		
-		return this.compareTo(p)==0;
+		if(getId()>0 || p.getId()>0) return getId() == p.getId();		
+		return (getName()==null? "": getName()).equals(p.getName()==null? "": p.getName());
 	}
 	
 	@Override
 	public int compareTo(Phase o) {
 		if(o==null) return -1;
-		int c = getStudy()==null? (o.getStudy()==null?0:1): getStudy().compareTo(o.getStudy()); 
+		if(this==o) return 0;
+		
+		int c = getStudy()==null? (o.getStudy()==null?0:1): getStudy().compareTo(o.getStudy());
 		if(c!=0) return c;
+		
 		c = getDays() - o.getDays(); 
 		if(c!=0) return c;
 		c = getHours() - o.getHours();
 		if(c!=0) return c;
 		c = getMinutes() - o.getMinutes();
 		if(c!=0) return c;
-		c = getName()==null? (o.getName()==null?0: 1):  (o.getName()==null?-1: getName().compareTo(o.getName()));
-		if(c!=0) return c;
+		c = (getName()==null? "": getName()).compareTo(o.getName()==null? "": o.getName());
+		if(c!=0) return c;		
+
 		return 0;
 	}
 	
@@ -210,20 +212,38 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 	public void remove() {
 		if(study==null || study.getPhases()==null) return;
 
-		study.getPhases().remove(this);
-		
+
+		//Remove the links from groups
 		for(Group gr: study.getGroups()) {
 			if(this.equals(gr.getFromPhase())) gr.setFromPhase(null);
 		}
 		
-		//Remove actions of this group
+		//Remove actions
 		for (StudyAction a: new ArrayList<>(study.getStudyActions())) {
 			if(this.equals(a.getPhase())) {
 				a.remove();
 			}
 		}
 
-		study = null;
+		//Remove from the study
+		boolean removed = study.getPhases().remove(this);
+		if(!removed) {
+			//Be sure to loop through all phases, the phases.remove(this) may fail if the phase is not sorted (bug from v2.0)
+			int n = study.getPhases().size();
+			for (Iterator<Phase> iterator = study.getPhases().iterator(); iterator.hasNext();) {
+				Phase p = (Phase) iterator.next();
+				if(this.equals(p)) {
+					iterator.remove();
+					assert study.getPhases().size()==n-1;
+					study = null;
+					return;
+				}			
+			}						
+		}
+		
+		if(removed) {
+			study = null;
+		}
 	}
 	
 	/**

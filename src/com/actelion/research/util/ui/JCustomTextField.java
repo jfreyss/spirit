@@ -33,6 +33,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -43,6 +44,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
+
+import com.actelion.research.util.FormatterUtils;
 
 
 public class JCustomTextField extends JTextField {
@@ -144,6 +147,12 @@ public class JCustomTextField extends JTextField {
 		}
 	}
 	
+	public Date getTextDate() throws Exception {
+		Date parsed = FormatterUtils.parseDate(getText());
+		if(parsed==null && getText().length()>0) throw new Exception("The date not well formatted");
+		return parsed;
+	}
+	
 	public void setTextInteger(Integer v) {
 		if(v==null) {
 			setText("");
@@ -170,7 +179,15 @@ public class JCustomTextField extends JTextField {
 		if(warningWhenEdited) {
 			setEditable(getText().length()==0);
 		}
-
+	}
+		
+	public void setTextDate(Date d) {
+		super.setText(FormatterUtils.formatDate(d));
+		fireTextChanged();
+		
+		if(warningWhenEdited) {
+			setEditable(getText().length()==0);
+		}
 	}
 		
 	private void init() {

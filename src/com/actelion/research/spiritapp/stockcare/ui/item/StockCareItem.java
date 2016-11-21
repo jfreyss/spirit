@@ -39,6 +39,8 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.pivot.ColumnPivotTemplate;
+import com.actelion.research.spiritcore.business.pivot.Computed;
+import com.actelion.research.spiritcore.business.pivot.PivotItem;
 import com.actelion.research.spiritcore.business.pivot.PivotItemFactory;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -69,13 +71,11 @@ public class StockCareItem {
 						if(biotype.getParent()!=null) notLeaves.add(biotype.getParent());
 					}
 					for(Biotype biotype: DAOBiotype.getBiotypes()) {
-						if(biotype.getCategory()!=BiotypeCategory.PURIFIED) continue;
+						if(biotype.getCategory()==BiotypeCategory.LIVING || biotype.getCategory()==BiotypeCategory.SOLID || biotype.getCategory()==BiotypeCategory.LIQUID) continue;
 						if(biotype.isHidden()) continue;
 						if(notLeaves.contains(biotype)) continue;
 						add(biotype.getName(), biotype, null);
 					}
-
-					
 				}
 			}
 		}
@@ -95,10 +95,9 @@ public class StockCareItem {
 			
 			for (StockCareItem item : items) {
 				if(item!=null && item.getBiotypes()[item.getBiotypes().length-1].equals(type)) return; //already added
-			}
+			}			
 			
-			
-			List<Biotype> hierarchy = new ArrayList<Biotype>();
+			List<Biotype> hierarchy = new ArrayList<>();
 			hierarchy.add(type);
 			while(type.getParent()!=null) {
 				type = type.getParent();
@@ -195,17 +194,26 @@ public class StockCareItem {
 	
 	public PivotTemplate[] getDefaultTemplates() {
 		if(name.equals("Bacteria")) {
-			PivotTemplate tpl = new ColumnPivotTemplate("Bacteria") {
+			PivotTemplate tpl1 = new ColumnPivotTemplate("Bacteria") {
 				@Override
 				public void init(List<Result> results) {
 					super.init(results);
-//					setWhere(PivotItemFactory.BIOSAMPLE_TOPID, Where.MERGE);
-//					setWhere(new PivotItemFactory.PivotItemBiosampleLinker(new BiosampleLinker(getMainBiotype(), LinkerType.SAMPLEID)), Where.ASROW);
 					setWhere(new PivotItemFactory.PivotItemBiosampleLinker(new BiosampleLinker(getMainBiotype(), getMainBiotype().getMetadata("Genus"))), Where.ASROW);
 					setWhere(new PivotItemFactory.PivotItemBiosampleLinker(new BiosampleLinker(getMainBiotype(), getMainBiotype().getMetadata("Species"))), Where.ASROW);
 				}
 			};
-			return new PivotTemplate[]{tpl};
+			PivotTemplate tpl2 = new ColumnPivotTemplate("Range") {
+				@Override
+				public void init(List<Result> results) {
+					super.init(results);
+					setWhere(PivotItemFactory.BIOSAMPLE_TOPID, Where.MERGE);
+					setWhere(PivotItemFactory.BIOSAMPLE_TOPNAME, Where.MERGE);
+					setWhere(new PivotItemFactory.PivotItemBiosampleLinker(new BiosampleLinker(getMainBiotype(), getMainBiotype().getMetadata("Genus"))), Where.ASROW);
+					setWhere(new PivotItemFactory.PivotItemBiosampleLinker(new BiosampleLinker(getMainBiotype(), getMainBiotype().getMetadata("Species"))), Where.ASROW);
+					setAggregation(Aggregation.RANGE);
+				}
+			};
+			return new PivotTemplate[]{tpl1, tpl2};
 			
 			
 		} else {

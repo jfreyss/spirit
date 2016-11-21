@@ -168,7 +168,7 @@ public class SamplesInVivoReport extends AbstractReport {
 				//Write animalIds at row level
 				int animalRow = groupRow + 3;
 				for(Biosample animal: study.getTopAttachedBiosamples(group)) {
-					Phase phase = animal.getEndPhase();
+					Phase phase = animal.getExpectedEndPhase();
 					if(group.getNSubgroups()>1) set(sheet, animalRow, 0, ""+(1+animal.getInheritedSubGroup()) , Style.S_TD_DOUBLE0);					
 					set(sheet, animalRow, 1, animal.getSampleId(), Style.S_TD_CENTER);					
 					set(sheet, animalRow, 2, animal.getSampleName(), Style.S_TD_BOLD_CENTER);
@@ -332,7 +332,7 @@ public class SamplesInVivoReport extends AbstractReport {
 	}
 	
 	private static Double getValue(Biosample animal, Sampling s, String testName) {
-		Phase p = animal.getEndPhase();
+		Phase p = animal.getExpectedEndPhase();
 		Biosample sample = animal.getSample(s, p);
 		if(sample==null) sample = animal.getSample(s, null);
 		if(sample==null) return null;
@@ -344,7 +344,7 @@ public class SamplesInVivoReport extends AbstractReport {
 	}
 	
 	private static String getValueString(Biosample animal, Sampling s, String testName) {
-		Phase p = animal.getEndPhase();
+		Phase p = animal.getExpectedEndPhase();
 		Biosample sample = animal.getSample(s, p);
 		if(sample==null) sample = animal.getSample(s, null);
 		if(sample==null) return null;
@@ -377,7 +377,7 @@ public class SamplesInVivoReport extends AbstractReport {
 		
 		List<Result> results = animal.getAuxResults(DAOTest.WEIGHING_TESTNAME, null);
 		if(results==null) return null;
-		Phase last = animal.getEndPhase();
+		Phase last = animal.getExpectedEndPhase();
 		Result sel = null;
 		for (int i = 0; i < results.size(); i++) {
 			Result result = results.get(i);

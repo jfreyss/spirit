@@ -23,6 +23,8 @@ package com.actelion.research.util.ui.exceltable;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -186,25 +188,17 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 	}
 		
 	protected void fitRowHeight(int viewRow) {
-		int maxHeight = getRowHeight();
-		int avgHeight = 0;
-		int count = 0;
-		
-		
+		int maxHeight = getRowHeight();		
 		for (int col: selectIndixes(getModel().getColumnCount(), 100)) {
 			Column<ROW, ?> column = getModel().getColumn(convertColumnIndexToModel(col));
-			if(column==null || !column.isAutoWrap() && !column.isMultiline()) continue;
+			if(column==null || !column.isMultiline()) continue;
 			Component c = getCellRenderer(viewRow, col).getTableCellRendererComponent(this, getValueAt(viewRow, col), true, true, viewRow, col);
 			Dimension dim = c.getPreferredSize();	
 			int h = Math.max(getRowHeight(), (int) dim.getHeight());
 			maxHeight = Math.max( h, maxHeight);
-			avgHeight+= h;
-			
-			count++;
 		}
-		if(count>0) avgHeight = avgHeight/count;
 		
-		if(avgHeight>0 && maxHeight>0) {
+		if(maxHeight>0) {
 			setRowHeight(viewRow, maxHeight);
 		}
 	}
@@ -956,5 +950,15 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 	
 	public boolean isPreferredCondenseText() {
 		return preferredCondenseText;
+	}
+	
+	@Override
+	protected void paintComponent(Graphics g) {
+		Toolkit tk = Toolkit.getDefaultToolkit();
+  		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
+  		if (map != null) {
+  		    ((Graphics2D)g).addRenderingHints(map);
+  		}
+		super.paintComponent(g);
 	}
 }

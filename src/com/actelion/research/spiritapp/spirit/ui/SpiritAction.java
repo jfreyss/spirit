@@ -61,7 +61,7 @@ public class SpiritAction {
 				
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					spirit.recreateTabs();
+					spirit.recreateUI();
 				}
 			});
 		}
@@ -77,7 +77,7 @@ public class SpiritAction {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {				
-				JPAUtil.close();
+				JPAUtil.closeFactory();
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
 			}

@@ -28,6 +28,7 @@ import java.util.Map;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.util.Pair;
+import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.ExcelTable;
 import com.actelion.research.util.ui.exceltable.ExcelTableModel;
@@ -44,7 +45,16 @@ public class PhaseEditTable extends ExcelTable<Phase> {
 				}
 				public void setValue(Phase row, String value) {
 					String v = Phase.cleanName(value, study.getPhaseFormat());
-					row.setName(v);
+					if(v.length()==0) {
+						try {
+							PhaseDlg.checkCanDelete(row);
+							row.setName(v);
+						} catch(Exception e) {
+							JExceptionDialog.showError(e);
+						}
+					} else {					
+						row.setName(v);
+					}
 				}
 			});
 			if(phase2count!=null) {

@@ -63,7 +63,6 @@ import com.actelion.research.spiritapp.spirit.ui.result.ResultActions;
 import com.actelion.research.spiritapp.spirit.ui.result.ResultTable;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyDetailPanel;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyTable;
-import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
@@ -72,13 +71,14 @@ import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.DateTextField;
 import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
-public class RecentChancesDlg extends JSpiritEscapeDialog {
+public class RecentChancesDlg extends JEscapeDialog {
 	
 	
 	private final DefaultListModel<Revision> revisionModel = new DefaultListModel<Revision>();
@@ -100,7 +100,7 @@ public class RecentChancesDlg extends JSpiritEscapeDialog {
 	private Date now = JPAUtil.getCurrentDateFromDatabase();
 	
 	public RecentChancesDlg(String userId) {
-		super(UIUtils.getMainFrame(), "Recent Changes", RecentChancesDlg.class.getName());
+		super(UIUtils.getMainFrame(), "Recent Changes");
 		if(userId==null) {
 			userTextField.setText("");
 			userTextField.setEnabled(true);
@@ -211,7 +211,8 @@ public class RecentChancesDlg extends JSpiritEscapeDialog {
 		}
 		final Date date = d;
 		
-		new SwingWorkerExtended("Loading recent revisions", getContentPane(), true) {
+		new SwingWorkerExtended("Loading recent revisions", contentPanel, true) {
+			
 			List<Revision> revisions;
 			
 			@Override
@@ -238,14 +239,12 @@ public class RecentChancesDlg extends JSpiritEscapeDialog {
 				}
 				revisionList.repaint();
 			}
-			
-			
 		};
 		
 	}
 	
 	private void refreshSelection() {
-		new SwingWorkerExtended("Loading Revision", contentPanel, true) {
+		new SwingWorkerExtended("Loading Revision", contentPanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS | SwingWorkerExtended.FLAG_CANCELABLE) {
 			private Revision rev;
 			private JTabbedPane detailPanel = new JCustomTabbedPane();
 			@Override
@@ -338,8 +337,6 @@ public class RecentChancesDlg extends JSpiritEscapeDialog {
 				contentPanel.validate();
 				contentPanel.repaint();
 			}
-			
-			
 		};
 		
 	}

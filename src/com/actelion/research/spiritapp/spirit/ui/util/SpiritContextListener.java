@@ -42,56 +42,92 @@ public class SpiritContextListener {
 	}
 
 	public static void setStudy(Study study) {
-		for (ISpiritContextObserver o : observers) {
-			o.setStudy(study);
-		}		
+		try {
+			for (ISpiritContextObserver o : observers) {
+				o.setStudy(study);
+			}
+		} catch(Throwable e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void setBiosamples(List<Biosample> biosamples) {
-		for (ISpiritContextObserver o : observers) {
-			o.setBiosamples(biosamples);
-		}		
+		try {
+			for (ISpiritContextObserver o : observers) {
+				o.setBiosamples(biosamples);
+			}		
+		} catch(Throwable e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void setRack(Location rack) {
-		for (ISpiritContextObserver o : observers) {
-			o.setRack(rack);
-		}		
+		try {
+			for (ISpiritContextObserver o : observers) {
+				o.setRack(rack);
+			}		
+		} catch(Throwable e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void setLocation(Location location, int pos) {
-		for (ISpiritContextObserver o : observers) {
-			o.setLocation(location, pos);
-		}	
+		try {
+			for (ISpiritContextObserver o : observers) {
+				o.setLocation(location, pos);
+			}	
+		} catch(Throwable e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void setResults(List<Result> results, PivotTemplate template) {
-		for (ISpiritContextObserver o : observers) {
-			o.setResults(results, template);
-		}	
+		try {
+			for (ISpiritContextObserver o : observers) {
+				o.setResults(results, template);
+			}	
+		} catch(Throwable e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public static void query(final BiosampleQuery q) {
-		for (ISpiritContextObserver o : observers) {
-			o.query(q);
+		try {
+			for (ISpiritContextObserver o : observers) {
+				o.query(q);
+			}
+		} catch(Throwable e) {
+			e.printStackTrace();
 		}
 	}
 
 	public static void query(final ResultQuery q) {
-		for (ISpiritContextObserver o : observers) {
-			o.query(q);
+		try {
+			for (ISpiritContextObserver o : observers) {
+				o.query(q);
+			}
+		} catch(Throwable e) {
+			e.printStackTrace();
 		}
 	}
 
 	public static void setStatus(String s) {
-		for (ISpiritContextObserver o : observers) {
-			o.setStatus(s);
+		try {
+			for (ISpiritContextObserver o : observers) {
+				o.setStatus(s);
+			}
+		} catch(Throwable e) {
+			e.printStackTrace();
 		}
 	}
 	
 	public static void setUser(String s) {
-		for (ISpiritContextObserver o : observers) {
-			o.setUser(s);
+		try {
+			for (ISpiritContextObserver o : observers) {
+				o.setUser(s);
+			}
+		} catch(Throwable e) {
+			e.printStackTrace();
 		}
 	}
 	

@@ -320,14 +320,12 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 	}	
 	
 	public void setValue(String attName, String val) {
-		ResultValue value = getResultValue(attName);
-		assert value!=null: attName+" is invalid. Valid: "+test.getAttributes();
-		value.setValue(val);
+		setValue(getTest().getAttribute(attName), val);
 	}	
 	
 	public List<ResultValue> getInputResultValues(){
 		List<TestAttribute> atts = test.getInputAttributes();
-		List<ResultValue> res = new ArrayList<ResultValue>();
+		List<ResultValue> res = new ArrayList<>();
 		for (TestAttribute att : atts) {
 			res.add(getResultValue(att));
 		}
@@ -708,15 +706,16 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 	 * @return
 	 */
 	public static boolean isPhaseDependant(Collection<Result> results) {
-		ListHashMap<String, Phase> key2phases = new ListHashMap<String, Phase>();
+		ListHashMap<String, Phase> key2phases = new ListHashMap<>();
 		for (Result r : results) {
-			if(r.getPhase()==null) continue;
+			if(r.getInheritedPhase()==null) continue;
 			if(r.getBiosample()==null) continue;
 			
 			String key = r.getBiosample().getTopParent().getId() + "_" + r.getTest().getId() + "_" +r.getInputResultValues();
-			key2phases.add(key, r.getPhase());
+			key2phases.add(key, r.getInheritedPhase());
+			System.out.println("Result.isPhaseDependant() "+key+">"+key2phases.get(key).size());
 			if(key2phases.get(key).size()>1) return true;
-		}		
+		}
 		return false;
 	}
 	

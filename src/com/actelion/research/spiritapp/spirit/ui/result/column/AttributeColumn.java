@@ -43,7 +43,7 @@ import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.AlphaNumericalCellEditor;
@@ -51,9 +51,13 @@ import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 
 public class AttributeColumn extends Column<Result, String> {
+	
 	private TestAttribute att;
+
+	private SampleIdLabel sampleIdLabel = new SampleIdLabel();
+	
 	public AttributeColumn(final TestAttribute att) {
-		super("Result\n" + att.getName(), String.class, att.getDataType()==DataType.BIOSAMPLE? 105: 70);
+		super(att.getName(), String.class, att.getDataType()==DataType.BIOSAMPLE? 105: 70);
 		this.att = att;
 	}
 	
@@ -70,6 +74,9 @@ public class AttributeColumn extends Column<Result, String> {
 	@Override
 	public void setValue(Result row, String value) {
 		try {
+			if(att!=null && att.getDataType()==DataType.D_FILE) {
+				throw new Exception("Cannot copy a document");
+			}
 			row.setValue(att, value);		
 			if(att!=null && att.getDataType()==DataType.BIOSAMPLE) {
 				if(value==null || value.length()==0) {
@@ -79,8 +86,6 @@ public class AttributeColumn extends Column<Result, String> {
 					if(b==null) b = new Biosample(value);
 					row.getResultValue(att).setLinkedBiosample(b);					
 				}
-//			} else if(att!=null && att.getDataType()==DataType.ELN) {
-//				row.getResultValue(att).setLinkedCompound(CompoundTextField.extractCompound(value));
 			}
 		} catch(Exception e) {
 			JExceptionDialog.showError(e);
@@ -92,8 +97,6 @@ public class AttributeColumn extends Column<Result, String> {
 		return att;
 	}
 	
-	private SampleIdLabel sampleIdLabel = new SampleIdLabel();
-//	private CompoundLabel compoundLabel = new CompoundLabel();
 		
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
@@ -105,9 +108,6 @@ public class AttributeColumn extends Column<Result, String> {
 				sampleIdLabel.setBiosample(new Biosample((String)value));
 			}
 			return sampleIdLabel;
-//		} else if(att.getDataType()==DataType.ELN) {
-//			compoundLabel.setText(row.getResultValue(att).getValue(), row.getResultValue(att).getLinkedCompound());
-//			return compoundLabel;
 		} else {
 			return super.getCellComponent(table, row, rowNo, value);
 		}
@@ -129,15 +129,12 @@ public class AttributeColumn extends Column<Result, String> {
 			} else {	
 				warning = false;
 			}						
-//		} else if(datatype==DataType.ELN) {
-//			CompoundLabel lbl = (CompoundLabel) comp;
-//			warning = lbl.getText().length()>0 && lbl.getCompound()==null;
 		} else if(datatype==DataType.NUMBER) {
 			String sel = (String) value;
 			warning = sel!=null && !ResultValue.isValidDouble(sel);
 		} else if(datatype==DataType.DATE) {
 			String sel = (String) value;
-			warning = sel!=null && !sel.equals(Formatter.cleanDateTime(sel));
+			warning = sel!=null && !sel.equals(FormatterUtils.cleanDateTime(sel));
 		}
 		
 		
@@ -158,8 +155,7 @@ public class AttributeColumn extends Column<Result, String> {
 	}
 	
 	@Override
-	public TableCellEditor getCellEditor(AbstractExtendTable<Result> table) {
-		
+	public TableCellEditor getCellEditor(AbstractExtendTable<Result> table) {		
 		switch (att.getDataType()) {
 		case BIOSAMPLE:
 			Biotype biotype = null;
@@ -168,8 +164,6 @@ public class AttributeColumn extends Column<Result, String> {
 				if(biotype==null) System.err.println("Invalid biotype for attribute "+att+" : "+att.getParameters());
 			}
 			return new BiosampleIdCellEditor(biotype);
-//		case ELN:
-//			return new CompoundCellEditor();
 		case ALPHA:
 			return new AlphaNumericalCellEditor();	
 		case NUMBER:
@@ -184,8 +178,6 @@ public class AttributeColumn extends Column<Result, String> {
 			return null;
 		case DATE:
 			return new DateStringCellEditor();
-//		case DICO:
-//			return new DicoCellEditor(att.getParameters());
 		default:
 			throw new IllegalArgumentException("Invalid datatype, no editor for: "+att.getDataType());
 		}			

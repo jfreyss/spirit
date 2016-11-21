@@ -53,7 +53,7 @@ import com.actelion.research.spiritcore.services.dao.DAOFoodWater;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
@@ -91,8 +91,6 @@ public class MonitoringCagePanel extends JPanel {
 		assert currentFw.getContainerId().equals(container.getContainerId());
 		assert currentFw.getPhase().equals(phase);
 		
-		
-		
 		int nAnimals;
 		if(currentFw.getNAnimals()==null) {
 			nAnimals = 0;
@@ -102,8 +100,6 @@ public class MonitoringCagePanel extends JPanel {
 		} else {
 			nAnimals = currentFw.getNAnimals();
 		}
-
-		
 		
 		this.phase = phase;
 		boolean foodRequired = isRequired(currentFw, container, false);
@@ -419,7 +415,7 @@ public class MonitoringCagePanel extends JPanel {
 	}
 	
 	public static String formatTooltipText(Object val, String user, java.util.Date date) {
-		return (val==null?"NA":val + " - "+user+" "+Formatter.formatDateTime(date));
+		return (val==null?"NA":val + " - "+user+" "+FormatterUtils.formatDateTime(date));
 	}
 	
 	public List<JTextComponent> getRequiredComponents() {

@@ -26,8 +26,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
-import com.actelion.research.spiritcore.business.biosample.ActionStatus;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Group;
@@ -35,7 +35,8 @@ import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.util.MiscUtils;
-import com.actelion.research.util.ui.exceltable.CompareUtils;
+import com.actelion.research.spiritcore.util.Pair;
+import com.actelion.research.util.CompareUtils;
 
 public class SpecimenStatusReport extends AbstractReport {
 
@@ -83,10 +84,10 @@ public class SpecimenStatusReport extends AbstractReport {
 				drawLineUnder(sheet, line, 0, maxCol, (short)1);				
 			}
 			
-			ActionStatus actionStatus = a.getLastActionStatus();			
+			Pair<Status, Phase> actionStatus = a.getLastActionStatus();			
 //			if(actionStatus!=null && actionStatus.getStatus()!=a.getStatus()) throw new Exception("The status of "+a+" is inconsistent: last action is "+actionStatus.getStatus()+" but status is "+a.getStatus());
 
-			Phase lastPhase = actionStatus==null? null: actionStatus.getPhase();
+			Phase lastPhase = actionStatus.getSecond();
 //			if(actionStatus!=null && !actionStatus.getPhase().equals(lastPhase)) throw new Exception("The endPhase of "+a+" is inconsistent: last action is at "+actionStatus.getPhase()+" but endphase is "+lastPhase);
 			Result lastObservation = lastPhase==null? null: a.getAuxResult(observationTest, lastPhase);
 			
@@ -101,7 +102,7 @@ public class SpecimenStatusReport extends AbstractReport {
 			
 			
 			
-			set(sheet, line, col++, g==null?"": actionStatus==null?"": actionStatus.getStatus().getName() , Style.S_TD_LEFT);
+			set(sheet, line, col++, g==null?"": actionStatus.getFirst()==null?"": actionStatus.getFirst().getName() , Style.S_TD_LEFT);
 			set(sheet, line, col++, g==null?"": lastPhase==null?"": lastPhase.getAbsoluteDateAndName() , Style.S_TD_LEFT);
 			set(sheet, line, col++, g==null?"": lastObservation==null?"": lastObservation.getFirstValue(), Style.S_TD_LEFT);
 

@@ -196,7 +196,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		int[] selRows = getSelectedRows();
 		int[] selCols = getSelectedColumns();
 		
-		Set<Biosample> res = new LinkedHashSet<Biosample>();
+		Set<Biosample> res = new LinkedHashSet<>();
 		for (int c = 0; c < selCols.length; c++) {
 			for (int r = 0; r < selRows.length; r++) {
 				Biosample row = getModel().getRows().get(selRows[r]);
@@ -213,7 +213,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 					Biosample linked = ((AbstractLinkerColumn<?>) col).getLinker().getLinked(row);
 					if(linked!=null && linked.getContainer()!=null && ((col instanceof ContainerIdColumn) || (col instanceof ContainerTypeColumn) || (col instanceof ContainerLocationPosColumn))) {
 						res.addAll(linked.getContainer().getBiosamples());
-					} else if(linked!=null &&  (col instanceof SampleIdColumn)) {
+					} else if(linked!=null && (col instanceof SampleIdColumn)) {
 						res.add(linked);
 					} else if(!linker.isLinked()) {
 						res.add(row);

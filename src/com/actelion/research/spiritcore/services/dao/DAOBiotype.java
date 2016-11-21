@@ -43,7 +43,6 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
-import com.actelion.research.spiritcore.business.biosample.Metadata;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.util.CompareUtils;
@@ -152,24 +151,27 @@ public class DAOBiotype {
 
 	public static Set<String> getAutoCompletionFields(BiotypeMetadata metadataType, Study study) {
 		if(metadataType==null || metadataType.getId()<=0) return new TreeSet<String>();
-		
+	
 		//Use Cache
 		String key = "biotype_autocompletion_"+metadataType.getId()+"_"+(study==null?"": study.getId());
 		Set<String> res = (Set<String>) Cache.getInstance().get(key);
 		if(res==null) {
-			
-			EntityManager session = JPAUtil.getManager();
-			int id = metadataType.getId();
-			//Select first 3000 non empty rows
-			Query query = session.createQuery("SELECT b FROM Biosample b "
-					+ " WHERE concat(';', b.serializedMetadata, '%') like '%;"+id+"=%'"
-					+ " AND NOT concat(';', b.serializedMetadata, '%') like '%;"+id+"=;%'"
-					+ (study!=null? " AND b.inheritedStudy = ?2 ":""));
-			if(study!=null) query.setParameter(2, study);
-			query.setMaxResults(3000);
 			res = new TreeSet<String>(CompareUtils.STRING_COMPARATOR);
-			for (Biosample b : (List<Biosample>) query.getResultList()) {
-				res.add(b.getMetadataString(metadataType));
+			try { 
+				EntityManager session = JPAUtil.getManager();
+				int id = metadataType.getId();
+				//Select first 500 non empty rows
+				Query query = session.createQuery("SELECT b FROM Biosample b "
+						+ " WHERE concat(';', b.serializedMetadata, '%') like '%;"+id+"=%'"
+						+ " AND NOT concat(';', b.serializedMetadata, '%') like '%;"+id+"=;%'"
+						+ (study!=null? " AND b.inheritedStudy = ?2 ":""));
+				if(study!=null) query.setParameter(2, study);
+				query.setMaxResults(500);
+				for (Biosample b : (List<Biosample>) query.getResultList()) {
+					res.add(b.getMetadataValue(metadataType));
+				}
+			} catch(Exception e) {
+				e.printStackTrace();
 			}
 			
 			Cache.getInstance().add(key, res, 60);
@@ -286,9 +288,9 @@ public class DAOBiotype {
 				m.setBiotype(biotype);
 			}
 			
-			//The prefix is null or non empty
-			if(biotype.getPrefix()!=null && biotype.getPrefix().length()==0) {
-				biotype.setPrefix(null);
+			//Set a prefic if it is null or non empty
+			if(biotype.getPrefix()==null || biotype.getPrefix().length()==0) {
+				biotype.setPrefix(biotype.getName().substring(0, Math.min(3, biotype.getName().length())));
 			}
 						
 			biotype.setUpdDate(now);
@@ -349,10 +351,10 @@ public class DAOBiotype {
 					+ " WHERE concat(';', b.serializedMetadata, '%') like '%;"+att.getId()+"=" + value.replace("'", "''") + ";%'").getResultList();
 			Date now = JPAUtil.getCurrentDateFromDatabase();
 			for (Biosample b : biosamples) {
-				if(b.getMetadata(att).getValue().equals(value)) {
+				if(b.getMetadataValue(att).equals(value)) {
 					b.setUpdDate(now);
 					b.setUpdUser(user.getUsername());
-					b.setMetadata(att, newValue);
+					b.setMetadataValue(att, newValue);
 				}
 			}
 			
@@ -390,7 +392,7 @@ public class DAOBiotype {
 			List<Biosample> biosamples = DAOBiosample.queryBiosamples(session, q, null);
 			for(Biosample b: biosamples) {
 				b = session.merge(b);
-				b.setMetadata(newMetadata, b.getSampleName());
+				b.setMetadataValue(newMetadata, b.getSampleName());
 				b.setUpdUser(user.getUsername());
 				b.setUpdDate(now);
 			}
@@ -437,10 +439,10 @@ public class DAOBiotype {
 			q.setBiotype(biotype);
 			List<Biosample> biosamples = DAOBiosample.queryBiosamples(session, q, null);
 			for(Biosample b: biosamples) {
-				Metadata m = b.getMetadata(biotypeMetadata);
+				String m = b.getMetadataValue(biotypeMetadata);
 				if(m!=null) {
 					b = session.merge(b);
-					b.setSampleName(m.getValue());
+					b.setSampleName(m);
 					b.setUpdUser(user.getUsername());
 					b.setUpdDate(now);
 				}

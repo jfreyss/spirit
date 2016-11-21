@@ -386,6 +386,11 @@ public final class UIUtils {
 	}
 
 	
+	public static JPanel createTopLeftPanel(Component comp) {		
+		return UIUtils.createVerticalBox(UIUtils.createHorizontalBox(comp, Box.createHorizontalGlue()), Box.createVerticalGlue());
+	}
+	
+
 	public static JPanel createCenterPanel(Component comp, boolean alignTop) {
 		JPanel panel = new JPanel(new GridBagLayout());
 		panel.setOpaque(false);

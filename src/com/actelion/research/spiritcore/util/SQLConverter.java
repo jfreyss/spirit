@@ -40,9 +40,10 @@ public class SQLConverter {
 		if(vendor==SQLVendor.ORACLE) return script;
 //		System.out.println("SQLConverter.convertScript()<< "+script.replaceAll(";[\n]*", ";\n"));
 		//Replace datatypes
-		script = script.replaceAll("(?i)NUMBER\\([1-9](,0)?\\)", "integer");
-		script = script.replaceAll("(?i)NUMBER\\([12][0-2](,0)?\\)", "integer");
-		script = script.replaceAll("(?i)NUMBER\\(\\d[3-9](,0)?\\)", "bigint");
+		script = script.replaceAll("(?i)NUMBER\\(1\\)", "tinyint");
+		script = script.replaceAll("(?i)NUMBER\\([2-9](,0)?\\)", "integer");
+		script = script.replaceAll("(?i)NUMBER\\([12][0-9](,0)?\\)", "integer");
+		script = script.replaceAll("(?i)NUMBER\\(\\d+\\)", "bigint");
 		script = script.replaceAll("(?i)VARCHAR2\\((.*?)(\\schar)?\\)", "varchar($1)");
 				
 		

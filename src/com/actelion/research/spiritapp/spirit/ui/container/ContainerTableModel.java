@@ -94,7 +94,6 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<Container> table, Container row, int rowNo, Object value) {
-			groupLabel.setVerticalAlignment(SwingConstants.TOP);
 			groupLabel.setText(value == null ? "" : value.toString(), row.getFirstGroup());
 			return groupLabel;
 		}
@@ -123,7 +122,6 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<Container> table, Container row, int rowNo, Object value) {
-			groupLabel.setVerticalAlignment(SwingConstants.TOP);
 			groupLabel.setText(value == null ? "" : value.toString(), row.getFirstGroup());
 			return groupLabel;
 		}

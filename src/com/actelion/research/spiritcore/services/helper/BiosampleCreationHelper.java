@@ -118,12 +118,8 @@ public class BiosampleCreationHelper {
 					child.setSampleId(DAOBarcode.getNextId(child.getBiotype()));
 					dividingBiosamplesToAdd.add(child);
 				}
-				
-				
-
 			}
-		}
-		
+		}		
 		
 		toSave.addAll(dividingBiosamplesToAdd);
 		toSave.addAll(dividingBiosamplesToUpdate);
@@ -220,7 +216,6 @@ public class BiosampleCreationHelper {
 		//Create samples
 		List<Biosample> biosamples = new ArrayList<>();	
 		for (Biosample parent : parents) {
-//			biosamples.add(parent);		
 			for (Sampling topSampling : ns.getTopSamplings()) {
 				retrieveOrCreateSamplesRec(null, parent, topSampling, biosamples);
 			}			
@@ -295,8 +290,7 @@ public class BiosampleCreationHelper {
 						if(prefix==null) {
 							prefix = DAOBarcode.getNextId(s.getContainerType());
 							map2prefix.put(key2, prefix);
-						}
-						
+						}						
 					} else {
 						prefix = b.getSampleId();
 					}
@@ -322,7 +316,7 @@ public class BiosampleCreationHelper {
 	private static void retrieveOrCreateSamplesRec(Phase phase, Biosample parent, Sampling sampling, List<Biosample> res) {
 		boolean isNecropsy = sampling.getNamedSampling()!=null && sampling.getNamedSampling().isNecropsy();
 		
-		if(isNecropsy && (parent.getTopParentInSameStudy().getStatus()==Status.DEAD || parent.getTopParentInSameStudy().getStatus()==Status.KILLED)) {
+		if(isNecropsy && (parent.getTopParentInSameStudy().getStatus()==Status.DEAD || parent.getTopParentInSameStudy().getStatus()==Status.KILLED) && parent.isDeadAt(phase)) {
 			return;
 		}
 		
@@ -330,7 +324,7 @@ public class BiosampleCreationHelper {
 		if(phase==null) {
 			phaseOfSample = parent.getInheritedPhase();
 		} else{
-			Phase endPhase = parent.getTopParentInSameStudy().getEndPhase();
+			Phase endPhase = parent.getTopParentInSameStudy().getExpectedEndPhase();
 			phaseOfSample = isNecropsy && endPhase!=null? endPhase: phase;
 		}
 		

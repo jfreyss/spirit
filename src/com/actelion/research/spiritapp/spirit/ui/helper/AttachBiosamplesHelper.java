@@ -33,14 +33,12 @@ import javax.persistence.EntityTransaction;
 import javax.swing.JOptionPane;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritcore.business.biosample.ActionMoveGroup;
-import com.actelion.research.spiritcore.business.biosample.ActionTreatment;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
-import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.AttachedBiosample;
@@ -213,11 +211,12 @@ public class AttachBiosamplesHelper {
 			}
 			b.setSampleName(rndSample.getSampleName());
 			
-			if(rndSample.getGroup()!=b.getInheritedGroup() || rndSample.getSubGroup()!=b.getInheritedSubGroup()) {
-				b.addAction(new ActionMoveGroup(b, phase, rndSample.getGroup(), rndSample.getSubGroup()));
-			}
+//			if(rndSample.getGroup()!=b.getInheritedGroup() || rndSample.getSubGroup()!=b.getInheritedSubGroup()) {
+//				b.addAction(new ActionMoveGroup(b, phase, rndSample.getGroup(), rndSample.getSubGroup()));
+//			}
 			if(rndSample.getWeight()!=null) {
-				b.addAction(new ActionTreatment(b, phase, rndSample.getWeight(), null, null, null, null, null));
+//				b.addAction(new ActionTreatment(b, phase, rndSample.getWeight(), null, null, null, null, null));
+				b.setLastAction(new com.actelion.research.spiritcore.business.biosample.ActionTreatment(null, phase, rndSample.getWeight(), null, null, null, null));
 			}
 			
 			if(rndSample.getBiosample().getBiotype().getCategory()==BiotypeCategory.LIVING) {

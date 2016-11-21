@@ -82,13 +82,13 @@ public class BiosampleFormDlg extends JSpiritEscapeDialog {
 	 * @param parentSelectionForCreation
 	 * @param toEdit
 	 */
-	public BiosampleFormDlg(Biosample biosample) {
+	public BiosampleFormDlg(Biosample mySample) {
 		super(UIUtils.getMainFrame(), "Biosample Form Editor", BiosampleFormDlg.class.getName());
 		
 
 		//Make sure to reattach the sample
-		assert biosample!=null && biosample.getBiotype()!=null;
-		this.toEdit = JPAUtil.reattach(biosample);
+		this.toEdit = JPAUtil.reattach(mySample);
+		assert toEdit!=null && toEdit.getBiotype()!=null;
 		
 		//init actions
 		createParentButton.addActionListener(new ActionListener() {			

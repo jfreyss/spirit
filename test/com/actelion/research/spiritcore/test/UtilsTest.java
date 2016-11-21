@@ -21,6 +21,9 @@
 
 package com.actelion.research.spiritcore.test;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -28,6 +31,8 @@ import org.junit.Test;
 
 import com.actelion.research.spiritcore.services.StringEncrypter;
 import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.ArgumentParser;
+import com.actelion.research.util.CompareUtils;
 
 import junit.framework.AssertionFailedError;
 
@@ -113,7 +118,24 @@ public class UtilsTest {
 		}
 		
 	}
+	@Test
+	public void testMiscUtilsSerializeStrings() {
+		String s = "test1;test2;test\\\\\\;;";
+		List<String> l = MiscUtils.deserializeStrings(s);
+		Assert.assertEquals(4, l.size());
+		Assert.assertEquals("test1", l.get(0));
+		Assert.assertEquals("test2", l.get(1));
+		Assert.assertEquals("test\\;", l.get(2));
+		Assert.assertEquals("", l.get(3));
+		Assert.assertEquals(s, MiscUtils.serializeStrings(l));
 	
+		
+		//Test exceptions
+		List<String> l2 = Arrays.asList(new String[]{" ", "", ";;"});
+		Assert.assertArrayEquals(l2.toArray(), MiscUtils.deserializeStrings(MiscUtils.serializeStrings(l2)).toArray());		
+	}
+
+		
 	@Test
 	public void testEncryption() throws Exception {
 		String crypted = new StringEncrypter("key").encrypt("my password".toCharArray());
@@ -146,10 +168,43 @@ public class UtilsTest {
 		
 		s = MiscUtils.removeHtmlAndNewLines("<b att='test<>'>Some HTML</b><br>2");
 		Assert.assertEquals("Some HTML 2", s);
+	}
+	
+	@Test
+	public void testCompare() {
+		Assert.assertTrue(CompareUtils.compare(4, "5")<0);
+		Assert.assertTrue(CompareUtils.compare(6, "5")>0);
+		Assert.assertTrue(CompareUtils.compare(0, null)<0);
+		Assert.assertTrue(CompareUtils.compare(0.0, 0.0)==0);
+		Assert.assertTrue(CompareUtils.compare(0, 0.0)<0);
+		
+		String[] array = new String[] {"-", "-1", "-2", "-10", "1", "2", "10", "A", "B", "C",  "null", "_1", null};
+		List<String> list = Arrays.asList(array);
+		Collections.shuffle(list);
+		Collections.sort(list, CompareUtils.STRING_COMPARATOR);
+		Assert.assertArrayEquals(array, list.toArray());
+
+	}
+	
+
+	@Test
+	public void testArgumentParser() throws Exception {
+		ArgumentParser p = new ArgumentParser(new String[] {"-study", "S-00001", "-arg1 \"My long arg\"", "-arg2", "arg2", "-arg3 8"});
+		Assert.assertEquals("S-00001", p.getArgument("study"));
+		Assert.assertEquals("My long arg", p.getArgument("arg1"));
+		Assert.assertEquals(8, p.getArgumentInt("arg3", 10));
+		Assert.assertEquals(10, p.getArgumentInt("arg4", 10));
+		
+		p.validate("study, arg1, arg2, arg3, arg4");		
+		try {
+			p.validate("study, arg1, arg2");			
+			throw new AssertionFailedError("Should have failed");
+		} catch(Exception e) {
+			//OK
+		}
 		
 		
 	}
-	
-	
+
 	
 }

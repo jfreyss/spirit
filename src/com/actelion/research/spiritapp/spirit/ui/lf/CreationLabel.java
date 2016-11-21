@@ -26,11 +26,12 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.util.Date;
 
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.JComponentNoRepaint;
 
@@ -39,8 +40,8 @@ public class CreationLabel extends JComponentNoRepaint {
 
 	
 	private final FastFont FONT_DEPT = FastFont.REGULAR_CONDENSED.deriveSize(9).deriveFont(Font.ITALIC);
-	private final FastFont FONT_USER = FastFont.BOLD_CONDENSED.deriveSize(11);
-	private final FastFont FONT_DATE = FastFont.REGULAR_CONDENSED.deriveSize(11);
+	private final FastFont FONT_USER = FastFont.REGULAR_CONDENSED;
+	private final FastFont FONT_DATE = FastFont.REGULAR_CONDENSED;
 	
 	private String dept = "";
 	private String user = "";
@@ -61,7 +62,7 @@ public class CreationLabel extends JComponentNoRepaint {
 	@Override
 	public String getToolTipText() {
 		if(date==null && user==null) return null;
-		return (user==null?"": user + " ") + (date==null?"":Formatter.formatDateTime(date));
+		return (user==null?"": user + " ") + (date==null? "": FormatterUtils.formatDateTime(date));
 	}
 	
 	public void setOwner(String owner, boolean canEdit) {
@@ -96,37 +97,39 @@ public class CreationLabel extends JComponentNoRepaint {
 	protected void paintComponent(Graphics graphics) {
 		
 		Graphics2D g = (Graphics2D) graphics;
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g.setBackground(getBackground());
 		g.clearRect(0, 0, getWidth(), getHeight());
 		
 		if(!isVisible()) return;
 		
-		final int height = 22;
+		final int height = getHeight();
+		boolean hasDept = dept!=null && dept.length()>0;
+		
+		int y = height/2+(hasDept?9:4);
+		if(date!=null) {
+			g.setColor(Color.BLACK);
+			g.setFont(FONT_DATE);
+			String s = FormatterUtils.formatDate(date);
+			g.drawString(s, getWidth()-2-g.getFontMetrics().stringWidth(s), y);
+		}
+
 		Color fgColor = level==RightLevel.ADMIN? LF.FGCOLOR_ADMIN: 
 			level==RightLevel.WRITE? LF.FGCOLOR_WRITE: 
 			level==RightLevel.READ? LF.FGCOLOR_READ: 
 			LF.FGCOLOR_VIEW;
 		
 		g.setColor(fgColor);
-		
-
-		int w = 2;
-		boolean hasDept = dept!=null && dept.length()>0;
 		if(hasDept) {
 			g.setFont(FONT_DEPT);
 			g.drawString(dept, 2, height/2-3);
 		}
 		if(user!=null && user.length()>0) {
 			g.setFont(FONT_USER);
-			g.drawString(user, 2, height/2+(hasDept?7:4));
-			w = Math.max(w, 2+g.getFontMetrics().stringWidth(user)+4);
+			g.clearRect(2, y-11, g.getFontMetrics().stringWidth(user), 11);
+			g.drawString(user, 2, y);
 		}
-		if(date!=null) {
-			g.setColor(Color.BLACK);
-			g.setFont(FONT_DATE);
-			String s = Formatter.formatDate(date);
-			g.drawString(s, Math.max(w, getWidth()-2-g.getFontMetrics().stringWidth(s)), height/2+(hasDept?7:4));
-		}
+
 
 		
 	}

@@ -68,7 +68,7 @@ import com.actelion.research.spiritcore.services.dao.DAOFoodWater;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -109,7 +109,6 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 		contentPanel.revalidate();
 		contentPanel.repaint();
 
-		
 		new SwingWorkerExtended("Loading", contentPanel) {
 
 			private List<Biosample> animals;
@@ -118,8 +117,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 			private List<FoodWater> allFws;
 			private Date now = JPAUtil.getCurrentDateFromDatabase();
 			private Study study;
-			
-			
+						
 			@Override
 			protected void doInBackground() throws Exception {
 				study = JPAUtil.reattach(s);
@@ -166,7 +164,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 						
 						//Create button
 						JButton liveButton = new JButton("<html><span style='font-size:10px;font-weight:bold;'>" + phase.getShortName() + "</span><br>"
-								+ "<span style='font-size:8px'>" + (phase.getAbsoluteDate() == null ? "" :Formatter.formatDate(phase.getAbsoluteDate())) + "</span><br>");
+								+ "<span style='font-size:8px'>" + (phase.getAbsoluteDate() == null ? "" :FormatterUtils.formatDate(phase.getAbsoluteDate())) + "</span><br>");
 						if (Phase.isSameDay(phase.getAbsoluteDate(), now)) liveButton.setBackground(LF.BGCOLOR_TODAY);
 						if (phase.getAbsoluteDate() != null && phase.getAbsoluteDate().before(now)) nowButton = liveButton;
 

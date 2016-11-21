@@ -30,7 +30,6 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
 import com.actelion.research.spiritcore.business.IObject;
-import com.actelion.research.spiritcore.business.biosample.ActionBiosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.FoodWater;
 import com.actelion.research.spiritcore.business.location.Location;
@@ -116,7 +115,6 @@ public class SpiritExtendTable<T> extends ExtendTable<T> {
 		else if(row instanceof Result) last = ((Result) row).getUpdDate();
 		else if(row instanceof FoodWater) last = ((FoodWater) row).getUpdDate();
 		else if(row instanceof Location) last = ((Location) row).getUpdDate();
-		else if(row instanceof ActionBiosample) last = ((ActionBiosample) row).getUpdDate();
 		else return;
 		
 		

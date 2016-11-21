@@ -187,6 +187,20 @@ public class MiscUtils {
 		}
 		return sb.toString();
 	}
+	
+	/**
+	 * Format the Map like "key1=value1; key2=value2"
+	 * @param map
+	 * @return
+	 */
+	public static String flatten(Map<?, ?> map) {
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<?, ?> e : map.entrySet()) {
+			sb.append((sb.length()>0?"; ":"") + (e.getKey()==null?"":e.getKey()) + "=" + (e.getValue()==null?"":e.getValue()));
+		}
+		
+		return sb.toString();
+	}
 
 	
 	public static String[] cutText(String text, int maxLength) {
@@ -455,7 +469,6 @@ public class MiscUtils {
 		return map;
 	}
 	
-	
 	/**
 	 * Serializes a Map<Integer,String> like: 1->joel, 2->to;=to, 3->null to 1=joel;2=to\;=to;3=
 	 * All characters must be accepted. Returned string is [[id=string][;id=string]*]
@@ -521,6 +534,57 @@ public class MiscUtils {
 		}
 		return map;
 	}
+	
+	
+	/**
+	 * Serializes a List<String> like: {joel, 123} to joel;123
+	 * All characters must be accepted. Returned string is [[id=string][#id=string]*]
+	 * @param map
+	 * @return
+	 */
+	public static String serializeStrings(Collection<String> list) {
+		StringBuilder sb = new StringBuilder();
+		for (String s : list) {
+			if(s==null) s = "";
+			if(s.contains("\\")) s = s.replace("\\", "\\\\");
+			if(s.contains(";")) s = s.replace(";", "\\;");
+			if(s.contains("\t")) s = s.replace("\t", "\\\t");
+			
+			if(sb.length()>0) sb.append(";");
+			sb.append(s);
+		}
+		return sb.toString();
+	}
+	
+	/**
+	 * Inverse function of serializeStrings
+	 * @param data
+	 * @return
+	 */
+	public static List<String> deserializeStrings(String data) {
+		List<String> list = new ArrayList<>();
+		if(data==null) return list;
+		
+		//Automat algorithm to parse data
+		StringBuilder value = new StringBuilder();
+		for (int i = 0; i < data.length(); i++) {
+			char c = data.charAt(i);		
+			if(c=='\\') { //Escape character
+				i++;
+				if(i>=data.length()) throw new RuntimeException("Cannot deserialize: "+data);
+				value.append(data.charAt(i));
+			} else if(c==';' || c=='\t') {
+				list.add(value.toString());
+				value.setLength(0);
+			} else {
+				value.append(c);					
+			}
+		}
+		list.add(value.toString());
+		return list;
+	}
+	
+	
 	
 	/**
 	 * 1 -> 2
@@ -689,6 +753,13 @@ public class MiscUtils {
 		return s;
 	}
 	
-	
+
+	public static String repeat(String s, int n) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < n; i++) {
+			sb.append(s);
+		}
+		return sb.toString();
+	}
 	
 }

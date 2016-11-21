@@ -64,6 +64,7 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyPhaseColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudySubGroupColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyTopSampleIdColumn;
+import com.actelion.research.spiritapp.spirit.ui.biosample.linker.LinkerColumnFactory;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.SampleIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.location.DirectionCombobox;
@@ -73,9 +74,11 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
+import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.location.Direction;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.SpiritRights;
@@ -94,6 +97,21 @@ import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 import com.itextpdf.text.Font;
 
 public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChangeObserver {
+	
+	public static class RackPos extends Pair<Integer, String> {
+		public RackPos(RackPosTubeId pos) {
+			super(pos.getFirst(), pos.getSecond());
+		}
+		public RackPos(Integer rackNo, String pos) {
+			super(rackNo, pos);
+		}
+	}
+	
+	public static class RackPosTubeId extends Triple<Integer, String, String> {
+		public RackPosTubeId(Integer rackNo, String pos, String tubeId) {
+			super(rackNo, pos, tubeId);
+		}
+	}
 	
 	public static final String AUX_NEEDED_RACKNO = "RackNo";
 	public static final String AUX_RACKPOS = "RackPos";
@@ -122,22 +140,7 @@ public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChange
 			new BatchAssignRackPanel(this, 1),
 			new BatchAssignRackPanel(this, 2),
 			new BatchAssignRackPanel(this, 3)};
-	private int push = 0;
-	
-	public static class RackPos extends Pair<Integer, String> {
-		public RackPos(RackPosTubeId p) {
-			super(p.getFirst(), p.getSecond());
-		}
-		public RackPos(Integer rackNo, String pos) {
-			super(rackNo, pos);
-		}
-	}
-	public static class RackPosTubeId extends Triple<Integer, String, String> {
-		public RackPosTubeId(Integer rackNo, String pos, String tubeId) {
-			super(rackNo, pos, tubeId);
-		}
-	}
-	
+	private int push = 0;	
 	private List<RackPosTubeId> positions = new ArrayList<>();
 	private Map<RackPos, Biosample> mapBiosamples = new HashMap<>();
 	
@@ -401,13 +404,13 @@ public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChange
 	}
 	
 	private void setBiosamples(List<Biosample> biosamples) {
-		if(biosamples==null) biosamples = new ArrayList<Biosample>();
+		if(biosamples==null) biosamples = new ArrayList<>();
 		
 		
 		table.clear();
 
 		BiosampleTableModel model = table.getModel();
-		List<Column<Biosample, ?>> columns = new ArrayList<Column<Biosample,?>>();
+		List<Column<Biosample, ?>> columns = new ArrayList<>();
 		columns.add(model.COLUMN_ROWNO);
 		columns.add(COLUMN_RACKNO);
 		columns.add(COLUMN_RACKPOSITION);
@@ -420,6 +423,8 @@ public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChange
 		columns.add(new StudyTopSampleIdColumn());
 		columns.add(new SampleIdColumn());
 		columns.add(new CombinedColumn());
+		columns.add(LinkerColumnFactory.create(new BiosampleLinker(LinkerType.COMMENTS, null)));
+		
 		model.setColumns(columns);		
 		table.setRows(biosamples);
 		
@@ -532,7 +537,7 @@ public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChange
 	}
 	
 	protected List<Biosample> getBiosamples(int rackNo) {
-		List<Biosample> res = new ArrayList<Biosample>();
+		List<Biosample> res = new ArrayList<>();
 		for(Biosample b: getBiosamples()) {
 			RackPosTubeId rp = (RackPosTubeId) b.getAuxiliaryInfos().get(AUX_RACKPOS);
 			if(rp==null || rp.getFirst()!=rackNo) continue;

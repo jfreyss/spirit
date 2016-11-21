@@ -288,7 +288,6 @@ public class ResultQuery implements Serializable {
 			sb.append(" "+query.getBiotype());
 		}
 		
-
 		if(query.getElbs()!=null) {
 			sb.append(" "+query.getElbs());
 		}
@@ -301,9 +300,9 @@ public class ResultQuery implements Serializable {
 		if(query.getSampleIds()!=null) {
 			sb.append(" "+query.getSampleIds());
 		}
-		if(query.getKeywords()!=null) {
-			sb.append(" "+query.getKeywords());
-		}
+//		if(query.getKeywords()!=null) {
+//			sb.append(" "+query.getKeywords());
+//		}
 
 		if(query.getTestIds().size()>0) {
 			for (Integer id : query.getTestIds()) {
@@ -348,7 +347,7 @@ public class ResultQuery implements Serializable {
 		if(sid>0) return false;
 		if(studyIds!=null && studyIds.length()>0) return false;
 		
-		String sugg = getQueryKey();		
+		String sugg = getQueryKey();
 		return sugg.length()==0 || sugg.equals("AllTests");
 	}
 	

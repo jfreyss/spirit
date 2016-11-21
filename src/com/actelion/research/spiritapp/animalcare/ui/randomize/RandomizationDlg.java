@@ -47,7 +47,6 @@ import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Randomization;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
-import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomTabbedPane;
@@ -70,7 +69,17 @@ public class RandomizationDlg extends JSpiritEscapeDialog {
 	private GroupTab groupTab;
 	private CageTab cageTab;
 	private SummaryTab summaryTab;
-	
+
+	private final AutosaveDecorator autosaveDecorator = new AutosaveDecorator(this) {			
+		@Override
+		public void autosave() throws Exception {
+			if(mustAskForExit()) {
+				saveForLater();
+			}
+			setMustAskForExit(false);
+		}
+	};
+		
 	/**
 	 * Create a new RandomizationDlg for the given phase
 	 * @param p - can be null if the randomization does not need to be saved
@@ -108,8 +117,7 @@ public class RandomizationDlg extends JSpiritEscapeDialog {
 			canChooseBiotype = true;
 		}
 		
-		
-		//Buttons
+		//Buttons		
 		JButton saveButton = new JIconButton(IconType.SAVE, "Save (without doing the assignment)");
 		saveButton.setToolTipText("Save without finalization. Specimen are not assigned to the study");
 		saveButton.setEnabled(study!=null);		
@@ -153,34 +161,21 @@ public class RandomizationDlg extends JSpiritEscapeDialog {
 		
    		UIUtils.adaptSize(this, 1200, 1000);
 		setVisible(true);
-	}
-	
-	
+	}	
 	
 	protected void saveForLater() throws Exception {
-		WizardPanel.updateModel(wizardPane, false);
-		
+		WizardPanel.updateModel(wizardPane, false);		
 		DAOStudy.persistStudies(Collections.singleton(study), Spirit.getUser());
-	}
-	
-	
-	final AutosaveDecorator autosaveDecorator = new AutosaveDecorator(this) {			
-		@Override
-		public void autosave() throws Exception {
-			if(mustAskForExit()) {
-				saveForLater();
-			}
-			setMustAskForExit(false);
-		}
-	};
-	
-	
+	}	
+		
 	public Phase getPhase() {
 		return phase;
 	}
+	
 	public Study getStudy() {
 		return study;
 	}
+	
 	public List<Group> getGroups(){
 		return groups;
 	}
@@ -196,15 +191,18 @@ public class RandomizationDlg extends JSpiritEscapeDialog {
 	public void setBiotype(Biotype biotype) {
 		this.biotype =  biotype;
 	}
-	
+		
+	public boolean canChooseBiotype() {
+		return canChooseBiotype;
+	}
 	
 	public static Map<Integer, List<AttachedBiosample>> splitByGroup(List<AttachedBiosample> list) {
-		Map<Integer, List<AttachedBiosample>> id2list = new HashMap<Integer, List<AttachedBiosample>>();
+		Map<Integer, List<AttachedBiosample>> id2list = new HashMap<>();
 		for (AttachedBiosample rndSample : list) {
 			Integer key = rndSample.getGroup()==null? -1: (int) rndSample.getGroup().getId();
 			List<AttachedBiosample> l = id2list.get(key);
 			if(l==null) {
-				l = new ArrayList<AttachedBiosample>();
+				l = new ArrayList<>();
 				id2list.put(key, l);
 			}
 			l.add(rndSample);
@@ -212,16 +210,6 @@ public class RandomizationDlg extends JSpiritEscapeDialog {
 		
 		
 		return id2list;
-	}
-	
-	public static void main(String[] args) throws Exception {
-		Spirit.initUI();
-		Spirit.setUser(DAOSpiritUser.loadUser("freyssj"));
-		Study s = DAOStudy.getStudyByStudyId("S-00479");
-		new RandomizationDlg(s.getPhase("d-1"));
-	}
-	public boolean canChooseBiotype() {
-		return canChooseBiotype;
 	}
 	
 }

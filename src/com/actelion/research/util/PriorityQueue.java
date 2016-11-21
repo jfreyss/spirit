@@ -24,7 +24,8 @@ package com.actelion.research.util;
 import java.util.*;
 
 /**
- * 
+ * PriorityQueue used to insert elements into a list based on an indexed value.
+ * The elements are sorted and popped in ascending ordered 
  * @author freyssj
  */
 public class PriorityQueue<OBJECT> {
@@ -70,6 +71,7 @@ public class PriorityQueue<OBJECT> {
 		else if(begin+1<list.size()) list.add(begin+1, elt);
 		else list.add(elt);
 	}
+	
 	public void add(OBJECT obj, double val) {
 		add(new Elt(obj, val));
 	}
@@ -77,6 +79,7 @@ public class PriorityQueue<OBJECT> {
 	public Elt popElt() {
 		return size()>0? list.remove(0): null;
 	}
+	
 	public Elt getElt(int i) {
 		return list.get(i);
 	}
@@ -92,6 +95,14 @@ public class PriorityQueue<OBJECT> {
 		return list.remove(i).obj;
 	}
 	
+	public List<OBJECT> sublist(int indexFrom, int indexToExcluding) {
+		if(indexFrom<0 || indexToExcluding>size() || indexFrom>indexToExcluding) throw new ArrayIndexOutOfBoundsException("Invalid indexes: "+indexFrom+"-"+indexToExcluding);
+		List<OBJECT> res = new ArrayList<>();		
+		for (int i = indexFrom; i < indexToExcluding; i++) {
+			res.add(list.get(i).obj);
+		}
+		return res;
+	}
 	
 	public int size() {
 		return list.size();

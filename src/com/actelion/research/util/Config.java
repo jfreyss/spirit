@@ -22,12 +22,10 @@
 package com.actelion.research.util;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.prefs.Preferences;
 
 /**
@@ -46,8 +44,6 @@ public class Config {
 	public static final String SERVER_DATA = "/u01/data/JBossData";
 	
 	
-//	private File file;
-//	private Properties properties;
 	private Preferences preferences;
 	
 	private Config() {}
@@ -58,30 +54,7 @@ public class Config {
 	 * @param project
 	 */
 	private Config(String project) {
-		Properties properties = new Properties();
-		this.preferences = Preferences.userRoot().node("com.actelion.research."+project);
-				
-		//Import previous data
-		File file = new File(System.getProperty("user.home"), "." + project + ".properties");
-		if(file.exists()) {
-			System.out.println("Config.Config() retrieve properties from legacy "+file);
-			//Legacy System with properties
-			try {
-				FileInputStream is = new FileInputStream(file); 
-				properties.load(is);
-				for(Object key: properties.keySet()) {
-					Object o = properties.get(key);
-					if(o==null) continue;
-					String s = o.toString();
-					preferences.put((String) key, s);
-				}
-				is.close();
-				boolean res = file.delete();
-				System.out.println("Config.Config() file deleted="+res);
-			} catch(Exception e) {
-				//Nothing, new file
-			}			
-		}		
+		this.preferences = Preferences.userRoot().node("com.actelion.research."+project);				
 	}
 	
 	

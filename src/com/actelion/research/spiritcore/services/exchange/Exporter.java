@@ -39,7 +39,6 @@ import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.LocationFormat;
-import com.actelion.research.spiritcore.business.biosample.Metadata;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
@@ -391,8 +390,9 @@ public class Exporter {
 			biosample.setStudyPhase(b.getInheritedPhase()==null? "": b.getInheritedPhase().getShortName());
 			biosample.setAttachedSamplingId(b.getAttachedSampling()==null? 0: b.getAttachedSampling().getId());
 			
-			for(Metadata medatada: b.getMetadataMap().values()) {
-				biosample.getMetadata().put(medatada.getBiotypeMetadata().getName(), medatada.getValue()==null?"":medatada.getValue());
+			for(BiotypeMetadata bm: b.getBiotype().getMetadata()) {
+				String s = b.getMetadataValue(bm);
+				biosample.getMetadata().put(bm.getName(), s==null? "": s);
 			}
 			
 			biosample.setFullLocation(b.getLocationString(LocationFormat.FULL_POS, null));

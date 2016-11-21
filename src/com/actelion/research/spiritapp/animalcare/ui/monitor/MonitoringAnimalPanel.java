@@ -35,8 +35,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -65,9 +68,10 @@ import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
+import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
@@ -101,6 +105,7 @@ public class MonitoringAnimalPanel extends JPanel {
 		this.dlg = dlg;		
 		this.animal = animal;
 		this.phase = phase;
+		this.bio2history = mapTreatments(Collections.singleton(animal));
 		
 		//Extract Data
 		StudyAction a = animal.getStudyAction(phase);
@@ -208,7 +213,7 @@ public class MonitoringAnimalPanel extends JPanel {
 		
 		
 		//Formulation Fields
-		final ActionTreatment actionTreatment = animal.getAction(ActionTreatment.class, phase);
+		final ActionTreatment actionTreatment = getTreatment(animal, phase);
 		MouseAdapter ma = new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -288,6 +293,37 @@ public class MonitoringAnimalPanel extends JPanel {
 				Box.createHorizontalGlue()));
 	}
 
+	private final Map<Biosample, Map<String, Biosample>> bio2history;
+	
+	public static com.actelion.research.spiritcore.business.biosample.ActionTreatment getTreatment(Biosample h) {
+		if(h==null) return null;
+		if(h.getLastAction() instanceof com.actelion.research.spiritcore.business.biosample.ActionTreatment) {
+			return ((com.actelion.research.spiritcore.business.biosample.ActionTreatment)h.getLastAction());
+		}
+		return null;
+	}
+	
+	public static Map<Biosample, Map<String, Biosample>> mapTreatments(Collection<Biosample> animals) {
+		Map<Biosample, Map<String, Biosample>> bio2history = new HashMap<>();
+		for(Biosample b: animals) {
+			bio2history.put(b, new HashMap<String, Biosample>());
+			List<Biosample> history = DAORevision.getHistory(b);
+			for (Biosample b2 : history) {
+				
+				com.actelion.research.spiritcore.business.biosample.ActionTreatment t = getTreatment(b2);
+				if(t!=null) {
+					//Add the treatment, if it is the most recent
+					String phaseName = t.getPhaseName();
+					if(!bio2history.get(b).containsKey(phaseName)) bio2history.get(b).put(phaseName, b2);
+				}
+			}
+		}
+		return bio2history;				
+	}
+
+	public com.actelion.research.spiritcore.business.biosample.ActionTreatment getTreatment(Biosample animal, Phase phase) {
+		return bio2history.get(animal)==null? null: getTreatment(bio2history.get(animal).get(phase.getShortName()));
+	}
 
 	public static JPanel createAnimalPanel(int no, Biosample animal, Phase phase) {
 
@@ -330,7 +366,7 @@ public class MonitoringAnimalPanel extends JPanel {
 		Double dose1, dose2;
 		StudyAction a = animal.getStudyAction(phase);
 		NamedTreatment nt = a==null? null: a.getNamedTreatment();
-		ActionTreatment action = animal.getAction(ActionTreatment.class, phase);
+		ActionTreatment action = getTreatment(animal, phase);
 		Result weighResult = animal.getAuxResult(DAOTest.getTest(DAOTest.WEIGHING_TESTNAME), phase);
 		Result prevWeighResult = SpiritRights.isBlind(phase.getStudy(), Spirit.getUser())? null: Result.getPrevious(weighResult, dlg.getAllPreviousResults());
 		Double weight = weighResult.getFirstAsDouble();
@@ -351,10 +387,10 @@ public class MonitoringAnimalPanel extends JPanel {
 		} else {
 			String unit1 = nt.getUnit1()==null?"" : nt.getUnit1().getNumerator();					
 			String eff = "";
-			if(action!=null && action.getEffectiveDose1()!=null) {
-				eff = " (Eff. "+action.getEffectiveDose1()+unit1+")";
+			if(action!=null && action.getEff1()!=null && action.getEff1().length()>0) {
+				eff = " (Eff. "+action.getEff1()+unit1+")";
 			}
-			calculated1Label.setText("<html><b>" + Formatter.format3(dose1) + "</b>" + unit1 + eff);					
+			calculated1Label.setText("<html><b>" + FormatterUtils.format3(dose1) + "</b>" + unit1 + eff);					
 		}
 		if(nt==null) {
 			calculated2Label.setText("");		
@@ -363,17 +399,17 @@ public class MonitoringAnimalPanel extends JPanel {
 		} else {
 			String unit2 = nt.getUnit2()==null?"" : nt.getUnit2().getNumerator();
 			String eff = "";
-			if(action!=null && action.getEffectiveDose2()!=null) {
-				eff = " (Eff. "+action.getEffectiveDose2()+unit2+")";
+			if(action!=null && action.getEff2()!=null && action.getEff2().length()>0) {
+				eff = " (Eff. "+action.getEff2()+unit2+")";
 			}
 
-			calculated2Label.setText("<html><b>" + Formatter.format3(dose2) + "</b>" + unit2 + eff);
+			calculated2Label.setText("<html><b>" + FormatterUtils.format3(dose2) + "</b>" + unit2 + eff);
 		}
 		
-		updateWeightIncreaseLabel(prevWeighResult==null? null: prevWeighResult.getOutputResultValues().get(0).getDoubleValue(), weight, weightIncLabel);			
+		updateWeightIncreaseLabel(prevWeighResult==null? null: prevWeighResult.getOutputResultValues().get(0).getDoubleValue(), weight, weightIncLabel, prevWeighResult==null?"": "since " +prevWeighResult.getPhase().getShortName());			
 	}
 
-	private Double updateWeightIncreaseLabel(Double prevWeight, Double curWeight, JLabel weighIncreaseLabel) {
+	private Double updateWeightIncreaseLabel(Double prevWeight, Double curWeight, JLabel weighIncreaseLabel, String suffix) {
 		
 		if(prevWeight==null || prevWeight<=0) {
 			weighIncreaseLabel.setText("");	
@@ -383,7 +419,9 @@ public class MonitoringAnimalPanel extends JPanel {
 			return null;
 		} else {			
 			double percent = 100*(curWeight - prevWeight)/prevWeight;
-			weighIncreaseLabel.setText("<html><span style='white-space:nowrap'>" + (percent<0?"<span style='color:red'>":"<span style='color:green'>+") + Formatter.format1(percent) + "%</span></html>");			
+			weighIncreaseLabel.setText("<html><span style='white-space:nowrap'>" + (percent<0?"<span style='color:red'>":"<span style='color:green'>+") + FormatterUtils.format1(percent) + "%</span>"
+					+ " " + suffix
+					+ "</html>");			
 			return percent; 
 		}
 	}
@@ -419,13 +457,13 @@ public class MonitoringAnimalPanel extends JPanel {
 	
 	private void openTreatmentDialog() {
 		if(SpiritRights.isBlindAll(phase.getStudy(), Spirit.getUser())) return;
-		final ActionTreatment actionTreatment = animal.getAction(ActionTreatment.class, phase); //Be sure to get the latest one
+		final ActionTreatment actionTreatment = getTreatment(animal, phase);
 		
 		try {
 	
 	
-			final JCustomTextField popFormulationTextField = new JCustomTextField(14, actionTreatment==null || actionTreatment.getFormulation()==null? dlg.getFormulation(nt): actionTreatment.getFormulation(), "Formulation");
-			final JCustomTextField popCommentsTextField = new JCustomTextField(14, actionTreatment==null? "": actionTreatment.getComments(), "Comments");
+			final JCustomTextField popFormulationTextField = new JCustomTextField(14, actionTreatment==null || actionTreatment.getFormulation()==null? dlg.getFormulation(nt): actionTreatment.getFormulation());
+			final JCustomTextField popCommentsTextField = new JCustomTextField(14, actionTreatment==null? "": actionTreatment.getComments());
 			
 			if(popFormulationTextField.getText().length()==0) {
 				popFormulationTextField.setBackground(LF.BGCOLOR_REQUIRED);
@@ -437,8 +475,8 @@ public class MonitoringAnimalPanel extends JPanel {
 			effDose2TextField.setWarningWhenEdited(true);
 			
 			if(actionTreatment!=null) {
-				effDose1TextField.setTextDouble(actionTreatment.getEffectiveDose1());
-				effDose2TextField.setTextDouble(actionTreatment.getEffectiveDose2());
+				effDose1TextField.setText(actionTreatment.getEff1());
+				effDose2TextField.setText(actionTreatment.getEff2());
 			}
 			
 			//Get previous weights
@@ -448,13 +486,13 @@ public class MonitoringAnimalPanel extends JPanel {
 
 			JLabel weightIncreaseLabelFromPrevious = new JLabel();
 			JLabel weightIncreaseLabelFromStart = new JLabel();
-			Double inc = updateWeightIncreaseLabel(prevResult==null? null: prevResult.getOutputResultValues().get(0).getDoubleValue(),  weight, weightIncreaseLabelFromPrevious);
+			Double inc = updateWeightIncreaseLabel(prevResult==null? null: prevResult.getFirstAsDouble(),  weight, weightIncreaseLabelFromPrevious, prevResult==null? "": "since "+prevResult.getPhase().getShortName());
 			if(inc!=null && Math.abs(inc)>10) {
 				weightIncreaseLabelFromPrevious.setOpaque(true);
 				weightIncreaseLabelFromPrevious.setBackground(UIUtils.getDilutedColor(Color.RED, Color.WHITE));
 			}
 			if(firstResult!=prevResult) {
-				inc = updateWeightIncreaseLabel(firstResult==null? null: firstResult.getOutputResultValues().get(0).getDoubleValue(),  weight, weightIncreaseLabelFromStart);
+				inc = updateWeightIncreaseLabel(firstResult==null? null: firstResult.getFirstAsDouble(),  weight, weightIncreaseLabelFromStart, firstResult==null? "": "since "+firstResult.getPhase().getShortName());
 				if(inc!=null && inc<-20) {
 					weightIncreaseLabelFromStart.setOpaque(true);
 					weightIncreaseLabelFromStart.setBackground(UIUtils.getDilutedColor(Color.RED, Color.WHITE));
@@ -466,41 +504,37 @@ public class MonitoringAnimalPanel extends JPanel {
 			Double d1 = nt==null? null: nt.getCalculatedDose1(weight);
 			Double d2 = nt==null? null: nt.getCalculatedDose2(weight);
 
-			
+			SampleIdLabel sampleIdLabel = new SampleIdLabel(animal);
+			sampleIdLabel.setOpaque(false);
+			sampleIdLabel.setHighlight(true);
 			JPanel box = UIUtils.createVerticalBox(
-				UIUtils.createHorizontalBox(new ContainerLabel(ContainerDisplayMode.CONTAINERID, animal.getContainer()), new SampleIdLabel(animal), Box.createHorizontalGlue()),
-				UIUtils.createHorizontalBox(new JLabel(weight==null?"NA": weight+"g"), Box.createHorizontalStrut(5), weightIncreaseLabelFromPrevious, Box.createHorizontalStrut(5), weightIncreaseLabelFromStart, Box.createHorizontalGlue()),
-				nt==null? new JLabel(): UIUtils.createVerticalBox(BorderFactory.createEtchedBorder(),
-					UIUtils.createHorizontalBox(new JCustomLabel(nt.getName(), nt.getColor()), Box.createHorizontalGlue()),
-					UIUtils.createHorizontalBox(Box.createHorizontalStrut(10), new JLabel("Formulation: "), popFormulationTextField, Box.createHorizontalGlue()),
-					UIUtils.createHorizontalBox(Box.createHorizontalStrut(10), new JLabel("Comments:   "), popCommentsTextField, Box.createHorizontalGlue()),
-					UIUtils.createHorizontalBox(
-							Box.createHorizontalStrut(10),
-							UIUtils.createVerticalBox(
-									new JCustomLabel(nt.getCompoundAndUnit1()),
-									new JCustomLabel(nt.getCompoundAndUnit2())), 
-							Box.createHorizontalStrut(10),
-							UIUtils.createVerticalBox(
-									nt.getDose1()==null? new JLabel(): new JCustomLabel(d1==null?"NA":""+d1+(nt.getUnit1()==null?"": nt.getUnit1().getNumerator()), Color.BLUE),
-									nt.getDose2()==null? new JLabel(): new JCustomLabel(d2==null?"NA":""+d2+(nt.getUnit2()==null?"": nt.getUnit2().getNumerator()), Color.BLUE)),
-							Box.createHorizontalStrut(10),
-							UIUtils.createVerticalBox(
-									nt.getDose1()==null? new JLabel(): UIUtils.createHorizontalBox(new JLabel("Eff.: "), effDose1TextField),
-									nt.getDose2()==null? new JLabel(): UIUtils.createHorizontalBox(new JLabel("Eff.: "), effDose2TextField)),
-							Box.createHorizontalGlue()
+				UIUtils.createTitleBox(UIUtils.createVerticalBox(
+					UIUtils.createHorizontalBox(sampleIdLabel, Box.createHorizontalStrut(20), new ContainerLabel(ContainerDisplayMode.CONTAINERID, animal.getContainer()),  Box.createHorizontalGlue()),
+					UIUtils.createHorizontalBox(new JCustomLabel(weight==null?"NA": weight+"g", FastFont.BOLD), Box.createHorizontalStrut(15), weightIncreaseLabelFromPrevious, Box.createHorizontalStrut(15), weightIncreaseLabelFromStart, Box.createHorizontalGlue()))),
+				nt==null? new JLabel(): UIUtils.createTitleBox(UIUtils.createVerticalBox(
+					UIUtils.createHorizontalBox(new JCustomLabel(nt.getName(), FastFont.BOLD, nt.getColor()), Box.createHorizontalGlue()),
+					UIUtils.createTable(2, 5, 0,
+							new JLabel("Formulation: "), popFormulationTextField, 
+							new JLabel("Comments:   "), popCommentsTextField),
+					UIUtils.createTable(3, 5, 0,
+							new JCustomLabel(nt.getCompoundAndUnit1()), nt.getDose1()==null? new JLabel(): new JCustomLabel(d1==null?"NA":""+d1+(nt.getUnit1()==null?"": nt.getUnit1().getNumerator()), Color.BLUE), nt.getDose1()==null? new JLabel(): UIUtils.createHorizontalBox(new JLabel("Effective: "), effDose1TextField),
+							new JCustomLabel(nt.getCompoundAndUnit2()), nt.getDose2()==null? new JLabel(): new JCustomLabel(d2==null?"NA":""+d2+(nt.getUnit2()==null?"": nt.getUnit2().getNumerator()), Color.BLUE)), nt.getDose2()==null? new JLabel(): UIUtils.createHorizontalBox(new JLabel("Effective: "), effDose2TextField))
 					)
-				)
-			);
+				);
 			
 			
 			JOptionPane.showMessageDialog(MonitoringAnimalPanel.this, box, "Treatment", JOptionPane.PLAIN_MESSAGE);
 			{			
 				JPAUtil.pushEditableContext(Spirit.getUser());
 				try {
-					ActionTreatment at = new ActionTreatment(animal, phase, weight, nt, effDose1TextField.getTextDouble(), effDose2TextField.getTextDouble(), popFormulationTextField.getText(), popCommentsTextField.getText());
-//					DAOBiosample.persistBiosampleActions(Collections.singletonList(at), Spirit.getUser());
-					animal.addAction(at);
+					//Persist the treatment action
+//					ActionTreatment at = new ActionTreatment(animal, phase, weight, nt, effDose1TextField.getTextDouble(), effDose2TextField.getTextDouble(), popFormulationTextField.getText(), popCommentsTextField.getText());
+//					animal.addAction(at);
+					ActionTreatment at = new ActionTreatment(nt, phase, weight, effDose1TextField.getTextDouble(), effDose2TextField.getTextDouble(), popFormulationTextField.getText(), popCommentsTextField.getText());
+					animal.setLastAction(at);					
 					DAOBiosample.persistBiosamples(Collections.singleton(animal), Spirit.getUser());
+					
+					//Show that this is recorded
 					treatmentPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.BLUE), BorderFactory.createEmptyBorder(2, 2, 2, 2)));
 					updateTreatmentPanel();
 					updateFormulationLabel(at);

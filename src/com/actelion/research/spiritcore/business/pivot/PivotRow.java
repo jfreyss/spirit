@@ -65,9 +65,9 @@ public class PivotRow implements Comparable<PivotRow> {
 	}
 	
 	protected void addValue(PivotColumn pivotColumn, ResultValue value) {
-		PivotCell valueList = getPivotCell(pivotColumn);
-		valueList.addValue(value);
+		getPivotCell(pivotColumn).addValue(value);
 	}
+	
 	public PivotCell getPivotCell(PivotColumn pivotColumn) {
 		PivotCell cell = column2cell.get(pivotColumn);
 		if(cell==null) {
@@ -83,10 +83,6 @@ public class PivotRow implements Comparable<PivotRow> {
 	public Group getGroup() {
 		return group;
 	}	
-	
-//	public Set<Biosample> getBiosamples() {
-//		return biosamples;
-//	}
 	
 	@Override
 	public int compareTo(PivotRow o) {

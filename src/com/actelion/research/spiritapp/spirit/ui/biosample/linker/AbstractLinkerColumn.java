@@ -78,9 +78,7 @@ public abstract class AbstractLinkerColumn<T> extends Column<Biosample, T> {
 			res+=index/10000.0;
 			subIndex/=10000;
 		}
-		res+=subIndex;
-		
-		return res;
+		return res+subIndex;
 	}
 	
 	@Override
@@ -91,7 +89,7 @@ public abstract class AbstractLinkerColumn<T> extends Column<Biosample, T> {
 		switch(linker.getType()) {
 		case SAMPLEID: return true;
 		case SAMPLENAME: return row.getBiotype().getSampleNameLabel()!=null;
-		case METADATA: return row.getMetadata(linker.getBiotypeMetadata())!=null;
+		case METADATA: return row.getBiotype().getMetadata().contains(linker.getBiotypeMetadata());
 		case COMMENTS: return true;
 		}
 		return false;
@@ -100,9 +98,11 @@ public abstract class AbstractLinkerColumn<T> extends Column<Biosample, T> {
 	public Biotype getBiotype() {
 		return linker.getBiotypeForLabel();
 	}
+	
 	public BiotypeMetadata getType() {
 		return linker.getBiotypeMetadata();
 	}
+	
 	public BiosampleLinker getLinker() {
 		return linker;
 	}

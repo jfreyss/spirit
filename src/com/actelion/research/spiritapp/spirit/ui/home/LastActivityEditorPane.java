@@ -59,13 +59,13 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.spiritcore.util.Triple;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.WikiNewsFeed;
 import com.actelion.research.util.WikiNewsFeed.News;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -149,8 +149,8 @@ public class LastActivityEditorPane extends ImageEditorPane {
 								@Override
 								protected void done() {
 									try {
-										JPAUtil.close();	
-										spirit.recreateTabs();
+										JPAUtil.closeFactory();	
+										spirit.recreateUI();
 									} catch(Exception e) {
 										JExceptionDialog.showError(e); 										
 									}
@@ -226,7 +226,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 					newsBuilder.append("<div style='color:black;font-weight:bold;font-size:12px;background:#FFFFAA;width:100%;padding:2px;border-bottom:solid 1px #550000'>Here are some important changes</div>");
 					for (News n: news) {
 						newsBuilder.append("<div style='padding:5px'>");
-						newsBuilder.append("<span style='font-size:8px'>"+Formatter.formatDate(n.getDate()) + "</span><br>");
+						newsBuilder.append("<span style='font-size:8px'>"+FormatterUtils.formatDate(n.getDate()) + "</span><br>");
 						if(n.getTitle()!=null && n.getTitle().length()>0) newsBuilder.append("<b>" + n.getTitle() + "</b><br>");
 						if(n.getContent()!=null && n.getContent().length()>0) newsBuilder.append(n.getContent());
 						newsBuilder.append("</div>");
@@ -302,14 +302,20 @@ public class LastActivityEditorPane extends ImageEditorPane {
 				if(s.getFirstDate()!=null) {
 					Date startDate = s.getFirstDate();
 					Date endDate = s.getLastDate();
-					sb.append("&nbsp;&nbsp;<b style='color:black'>" + Formatter.formatDateFull(startDate) + "</b> ---&gt; <b style='color:black'>" + Formatter.formatDateFull(endDate) + "</b>&nbsp;&nbsp;");
+					sb.append("&nbsp;&nbsp;<b style='color:black'>" + FormatterUtils.formatDateFull(startDate) + "</b> ---&gt; <b style='color:black'>" + FormatterUtils.formatDateFull(endDate) + "</b>&nbsp;&nbsp;");
 				}
-				sb.append("<span style='color:" + StudyEditorPane.getColor(last.getSecond()) + "'> [" +  Formatter.formatDateOrTime(last.getSecond())+" - " + last.getFirst() +"] </span><br> ");
+				sb.append("<span style='color:" + StudyEditorPane.getColor(last.getSecond()) + "'> [" +  FormatterUtils.formatDateOrTime(last.getSecond())+" - " + last.getFirst() +"] </span><br> ");
 				sb.append("</div>");
 
 				//StudyTitle
 				if(s.getTitle()!=null) sb.append(" <div style='font-size:12px;white-space:wrap;'>" + s.getTitle() + "</div>");
-				if(s.getNotes()!=null) sb.append(" <div style='font-size:9px;white-space:wrap;color:#444444; margin:2px'>" + MiscUtils.convert2Html(s.getNotes()) + "</div>");
+				if(s.getNotes()!=null && s.getNotes().length()>0) {
+					String notes = s.getNotes();
+					if(notes.length()>500) {
+						notes = notes.substring(0, 500);
+					}
+					sb.append(" <div style='font-size:9px;white-space:wrap;color:#444444; margin:2px'>" + MiscUtils.convert2Html(notes) + "</div>");
+				}
 			}
 			
 			sb.append("</td><td valign=top width=400 style='white-space:nowrap; margin: 0px; padding:0px'>");
@@ -384,7 +390,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 					sb.append("<tr><td>");
 					sb.append("<a href='bios::" + type.getName() + ":" + days + "'><b>" + type.getName() + "</b></a> (" + m1.get(type).getFirst() + ") ");																								
 					sb.append("</td><td style='padding-left:5px'>");
-					sb.append("<span style='color:" + StudyEditorPane.getColor(m1.get(type).getThird()) + "'>" + Formatter.formatDateOrTime(m1.get(type).getThird())+ " - " + m1.get(type).getSecond() +"</span>");
+					sb.append("<span style='color:" + StudyEditorPane.getColor(m1.get(type).getThird()) + "'>" + FormatterUtils.formatDateOrTime(m1.get(type).getThird())+ " - " + m1.get(type).getSecond() +"</span>");
 					sb.append("</td></tr>");
 				}
 				sb.append("</table>");
@@ -413,7 +419,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 			} else {
 				sb2.append(" &nbsp;&nbsp; (<b>With Read Access</b> | <a href='expert:true'>With Write Access</a>)");
 			}
-			sb2.append(" &nbsp;&nbsp; (<a href='refresh:'>Refresh</a>)");			
+//			sb2.append(" &nbsp;&nbsp; (<a href='refresh:'>Refresh</a>)");			
 
 			//Display
 			if(sb.length()==0) {

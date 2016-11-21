@@ -45,9 +45,9 @@ public class PrintableOfLines implements Printable {
 	private List<String[]> lines = new ArrayList<String[]>(); 
 	private String jobName = "";
 	
-	public PrintableOfLines(Collection<String[]> containers) {
-		this.lines = new ArrayList<String[]>(containers);
-		this.jobName = "Brother (" + containers.size() + ")";
+	public PrintableOfLines(Collection<String[]> lines) {
+		this.lines = new ArrayList<String[]>(lines);
+		this.jobName = "Brother (" + lines.size() + ")";
 	}
 	
 	
@@ -66,7 +66,6 @@ public class PrintableOfLines implements Printable {
 		
 		boolean highLabel = pf.getImageableHeight()>50 || pf.getHeight()>50;
 		
-		System.out.println("BrotherPrintable.print() "+pf.getImageableX()+" "+pf.getImageableWidth()+" x "+pf.getImageableY()+" "+pf.getImageableHeight()+" / "+pf.getWidth()+"x"+pf.getHeight()+" orient="+pf.getOrientation());
 		int fontSizeIncrease = 0;
 		if(highLabel){
 			fontSizeIncrease = 1;
@@ -95,8 +94,6 @@ public class PrintableOfLines implements Printable {
 			cy+=g.getFont().getSize();
 			g.drawString(string, 0, cy);
 		}
-		
-
 		
 		//Print group
 		string = c.length>3? c[3]:"";
@@ -133,22 +130,14 @@ public class PrintableOfLines implements Printable {
 		//Barcode
 		if(sampleId!=null && sampleId.length()>0) {
 			g.setFont(new Font("Arial", Font.PLAIN, 3+fontSizeIncrease));
-			g.drawString(sampleId, 0, 4.5f);
-		
+			g.drawString(sampleId, 0, 4.5f);		
 	
-			//Print Barcode
-//			if(brotherFormat.isBarcodeOnRight()) {
-//				System.out.println("BrotherPrintable.print() "+brotherFormat);
-				//barcode on the top right: use Math.min(pf.getImageableWidth(), pf.getWidth()) to fix SlidePrinter Bug 
-				g.translate(maxWidth - 7.5*MM2PIXELS, 1*MM2PIXELS);
-				g.setColor(Color.WHITE);
-				g.fillRect(0, 0, (int)(6.5*MM2PIXELS), (int)(6.5*MM2PIXELS));
-				g.translate(.5,.5);
-				g.setColor(Color.BLACK);
-//			} else {
-//				//barcode on the upper left
-//				g.translate(1*MM2PIXELS, 2.1*MM2PIXELS);
-//			}
+			g.translate(maxWidth - 7.5*MM2PIXELS, 1*MM2PIXELS);
+			g.setColor(Color.WHITE);
+			g.fillRect(0, 0, (int)(6.5*MM2PIXELS), (int)(6.5*MM2PIXELS));
+			g.translate(.5,.5);
+			g.setColor(Color.BLACK);
+
 			DataMatrixBean bean = new DataMatrixBean();
 	        bean.setModuleWidth(1);
 	        bean.doQuietZone(false);

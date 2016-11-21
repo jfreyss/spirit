@@ -135,7 +135,7 @@ public class SamplesToxicologyReport extends AbstractReport {
 			int col = 4;
 			for(Biosample animal: study.getTopAttachedBiosamples(group)) {
 			
-				set(sheet, 4, col, animal.getEndPhase()==null?"": animal.getEndPhase().getShortName(), Style.S_TH_CENTER);
+				set(sheet, 4, col, animal.getExpectedEndPhase()==null?"": animal.getExpectedEndPhase().getShortName(), Style.S_TH_CENTER);
 				set(sheet, 5, col, animal.getSampleId(), Style.S_TH_CENTER);
 				set(sheet, 6, col, animal.getSampleName(), Style.S_TH_CENTER);
 				
@@ -228,7 +228,7 @@ public class SamplesToxicologyReport extends AbstractReport {
 	}	
 	
 	private static Object getValue(Biosample animal, Sampling s, String testName) {
-		Phase p = animal.getEndPhase();
+		Phase p = animal.getExpectedEndPhase();
 		Biosample sample = animal.getSample(s, p);
 		
 		if(sample==null) sample = animal.getSample(s, null);
@@ -250,7 +250,7 @@ public class SamplesToxicologyReport extends AbstractReport {
 		
 		List<Result> results = animal.getAuxResults(DAOTest.WEIGHING_TESTNAME, null);
 		if(results==null) return null;
-		Phase last = animal.getEndPhase();
+		Phase last = animal.getExpectedEndPhase();
 		Result sel = null;
 		for (int i = 0; i < results.size(); i++) {
 			Result result = results.get(i);

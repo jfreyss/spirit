@@ -34,7 +34,7 @@ public class TopIdColumn extends Column<Result, Biosample> {
 	private SampleIdLabel sampleIdLabel = new SampleIdLabel();
 
 	public TopIdColumn() {
-		super("Result\nTopId", Biosample.class);
+		super("TopId", Biosample.class);
 		setHideable(true);
 	}
 	
@@ -46,8 +46,8 @@ public class TopIdColumn extends Column<Result, Biosample> {
 	@Override
 	public Biosample getValue(Result row) {
 		if(row.getBiosample()==null) return null;
-		Biosample b = row.getBiosample().getTopParentInSameStudy();
-		return b;
+		Biosample top = row.getBiosample().getTopParent();
+		return top==row.getBiosample()? null: top;
 	}
 	@Override
 	public boolean isEditable(Result row) {return false;}

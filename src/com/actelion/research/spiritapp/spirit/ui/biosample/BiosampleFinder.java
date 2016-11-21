@@ -51,7 +51,6 @@ import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleDlg;
-import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JHeaderLabel;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritcore.business.biosample.Biosample;

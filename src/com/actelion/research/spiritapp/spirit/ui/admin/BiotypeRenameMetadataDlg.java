@@ -24,8 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui.admin;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.Set;
 
 import javax.swing.AbstractAction;
@@ -37,17 +35,17 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
-
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
-import com.actelion.research.util.ui.JGenericComboBox;
+import com.actelion.research.util.ui.JTextComboBox;
+import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
 
 public class BiotypeRenameMetadataDlg extends JSpiritEscapeDialog {
@@ -56,22 +54,20 @@ public class BiotypeRenameMetadataDlg extends JSpiritEscapeDialog {
 	private final boolean editNames;
 	private final BiotypeMetadata btMetadata;
 	
-	private JGenericComboBox<String> valuesComboBox = new JGenericComboBox<String>();
+	private JTextComboBox valuesComboBox = new JTextComboBox();
 	private JTextField newValueTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 10); 
 	private JButton renameButton = new JButton(new Action_Rename());
 	private JLabel infoLabel = new JLabel();
 	
-	public BiotypeRenameMetadataDlg(Biotype biotype, boolean editNames, BiotypeMetadata btMetadata) {
+	public BiotypeRenameMetadataDlg(Biotype type, boolean editNames, BiotypeMetadata btMetadata) {
 		
 		super(UIUtils.getMainFrame(), "Admin - Biotype - Rename", BiotypeRenameMetadataDlg.class.getName());
-		this.biotype = biotype;
+		this.biotype = JPAUtil.reattach(type);
 		this.editNames = editNames;
-		this.btMetadata = btMetadata;
+		this.btMetadata = biotype.getMetadata(btMetadata.getName());
 		
 		if(biotype==null) throw new IllegalArgumentException("Please select a biotype");
 		
-		
-		AutoCompleteDecorator.decorate(valuesComboBox);
 		Box line1 = Box.createHorizontalBox();
 		line1.add(new JLabel("Attribute: "));
 		line1.add(valuesComboBox);
@@ -96,13 +92,10 @@ public class BiotypeRenameMetadataDlg extends JSpiritEscapeDialog {
 		
 		repopulateValues();	
 
-		valuesComboBox.addItemListener(new ItemListener() {			
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if(e.getStateChange()!=ItemEvent.SELECTED) return;
-				String value = valuesComboBox.getSelection();
-				newValueTextField.setText(value==null?"": value);
-				newValueTextField.setEnabled(value!=null);
+		valuesComboBox.addTextChangeListener(new TextChangeListener() {
+			public void textChanged(javax.swing.JComponent src) {
+				String value = valuesComboBox.getText();
+				newValueTextField.setText(value);
 				renameButton.setEnabled(value!=null);
 			}
 		});
@@ -125,7 +118,7 @@ public class BiotypeRenameMetadataDlg extends JSpiritEscapeDialog {
 			values = DAOBiotype.getAutoCompletionFields(btMetadata, null);
 			infoLabel.setText("id:"+btMetadata.getId());
 		}
-		valuesComboBox.setValues(values, true);		
+		valuesComboBox.setChoices(values);		
 	}
 	
 	private class Action_Rename extends AbstractAction {
@@ -136,7 +129,7 @@ public class BiotypeRenameMetadataDlg extends JSpiritEscapeDialog {
 		public void actionPerformed(ActionEvent e) {
 			try {
 				SpiritUser user = Spirit.askForAuthentication();
-				String value = valuesComboBox.getSelection();
+				String value = valuesComboBox.getText();
 				String newValue = newValueTextField.getText();
 				
 				if(newValue.length()==0) throw new Exception("Please enter a new value");
@@ -149,7 +142,7 @@ public class BiotypeRenameMetadataDlg extends JSpiritEscapeDialog {
 				}
 				JOptionPane.showMessageDialog(UIUtils.getMainFrame(), res + " values renamed", "Success", JOptionPane.INFORMATION_MESSAGE);
 				repopulateValues();
-				valuesComboBox.setSelection(newValue);
+				valuesComboBox.setText(newValue);
 				
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);

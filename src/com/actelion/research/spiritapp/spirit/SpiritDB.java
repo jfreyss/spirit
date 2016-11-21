@@ -24,6 +24,7 @@ package com.actelion.research.spiritapp.spirit;
 import java.awt.Dimension;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.InetAddress;
 import java.util.List;
 
 import javax.swing.JLabel;
@@ -55,11 +56,14 @@ import com.actelion.research.spiritcore.services.migration.MigrationScript;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 
+/**
+ * Checks that the DB Version is correct, the user is logged in
+ * @author Joel Freyss
+ *
+ */
 public class SpiritDB {
-
+	
 	public static void check() {
-
-		
 		//Check DB Version
 		LoggerFactory.getLogger(Spirit.class).debug("check dbVersion");
 		try {
@@ -82,12 +86,11 @@ public class SpiritDB {
 			LoggerFactory.getLogger(Spirit.class).debug("check Users");
 			if(DBAdapter.getAdapter().isInActelionDomain()) {
 				//Login freyssj automatically 
-				if(System.getProperty("user.name").equals("freyssj")) {
+				if(System.getProperty("user.name").equals("freyssj") && InetAddress.getLocalHost().getHostAddress().equals("10.100.227.35") ) {
 					try {
 						user = DAOSpiritUser.loadUser("freyssj");
 						if(user==null) throw new Exception("Could not load user freyssj");
-						Spirit.setUser(user);
-									
+						Spirit.setUser(user);									
 					} catch (Exception e) {
 						System.err.println(e);
 					}
@@ -133,8 +136,8 @@ public class SpiritDB {
 				}
 			});
 		}
-		checkImportExamples(false);
 	}
+	
 	
 	public static void checkImportExamples(boolean force) {
 		//Check emptyness?
@@ -168,7 +171,6 @@ public class SpiritDB {
 		} catch(Exception e) {
 			JExceptionDialog.showError(UIUtils.getMainFrame(), e);
 		}
-		
 	}
 	
 }

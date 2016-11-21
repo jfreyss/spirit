@@ -262,10 +262,8 @@ public class TemplateHelper {
 						Biosample slice = new Biosample(sliceType);
 						slice.setParent(compatible, false);
 						slice.setSampleId(sampleId);
-						if(slice.getMetadata("Staining")==null) throw new Exception("Staining is not a valid metadata");
-						if(slice.getMetadata("SectionNo")==null) throw new Exception("SectionNo is not a valid metadata");
-						slice.setMetadata("Staining", staining);
-						slice.setMetadata("SectionNo", sectionNo);
+						slice.setMetadataValue("Staining", staining);
+						slice.setMetadataValue("SectionNo", sectionNo);
 						slice.setInheritedStudy(compatible.getInheritedStudy());
 						slice.setInheritedGroup(compatible.getInheritedGroup());
 						slice.setInheritedPhase(compatible.getInheritedPhase());

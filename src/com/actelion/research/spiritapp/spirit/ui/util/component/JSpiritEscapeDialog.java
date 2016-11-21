@@ -62,6 +62,11 @@ public class JSpiritEscapeDialog extends JEscapeDialog {
 	}
 	
 	private void init() {
+		//Clear cache
+		if(pushContext!=null) {
+			JPAUtil.clear();
+		}
+		
 		final AWTEventListener myListener = new AWTEventListener() {			
 			@Override
 			public void eventDispatched(AWTEvent event) {	

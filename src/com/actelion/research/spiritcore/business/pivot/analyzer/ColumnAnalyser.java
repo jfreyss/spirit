@@ -132,6 +132,7 @@ public class ColumnAnalyser<T> {
 	public int getNGroups() {
 		return nGroups;
 	}
+	
 	public int getIndex() {
 		return index;
 	}
@@ -150,6 +151,7 @@ public class ColumnAnalyser<T> {
 	public Double getMax() {
 		return doubles.get(doubles.size()-1);
 	}
+	
 	public Double getMed() {
 		return doubles.size()==0? null: doubles.size()%2==0? (doubles.get(doubles.size()/2-1) + doubles.get(doubles.size()/2)) / 2 : doubles.get((doubles.size()-1)/2);
 	}

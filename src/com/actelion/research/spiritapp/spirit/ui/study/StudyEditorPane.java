@@ -23,6 +23,9 @@ package com.actelion.research.spiritapp.spirit.ui.study;
 
 import java.awt.Color;
 import java.awt.Desktop;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Toolkit;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -50,15 +53,15 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
+import com.actelion.research.spiritcore.services.dao.DAOResult.ElbLink;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.services.dao.DAOResult.ElbLink;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Triple;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.IOUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
 
@@ -75,7 +78,6 @@ public class StudyEditorPane extends JEditorPane {
 		super("text/html", "");
 		setEditable(false);
 		setOpaque(true);
-		setBackground(Color.RED);
 		HTMLEditorKit kit = new HTMLEditorKit();
 		StyleSheet stylesheet = kit.getStyleSheet();
 		stylesheet.addRule("td, th {margin:0px;padding-left:2px; vertical-align:top; text-align:left}");
@@ -99,7 +101,7 @@ public class StudyEditorPane extends JEditorPane {
 							
 							//Save the doc in tmp dir
 							File f = new File(System.getProperty("java.io.tmpdir"), d.getFileName());
-							f.deleteOnExit();
+							f.deleteOnExit();	
 							IOUtils.bytesToFile(d.getBytes(), f);
 							//Execute on windows platform
 							Desktop.getDesktop().open(f);
@@ -320,7 +322,7 @@ public class StudyEditorPane extends JEditorPane {
 							
 							if(elbLink.isInNiobe() && elbLink.getTitle()!=null ) {
 								sb.append("<td style='color:#999999;font-size:8px'>&nbsp;" + elbLink.getScientist() + "</td>");
-								sb.append("<td style='color:#999999;font-size:8px;white-space:nowrap'>&nbsp; " + Formatter.formatDate(elbLink.getCreDate()) + " -> " + (elbLink.getPubDate()==null?" Unsealed": Formatter.formatDate(elbLink.getPubDate()))+"</td>");
+								sb.append("<td style='color:#999999;font-size:8px;white-space:nowrap'>&nbsp; " + FormatterUtils.formatDate(elbLink.getCreDate()) + " -> " + (elbLink.getPubDate()==null?" Unsealed": FormatterUtils.formatDate(elbLink.getPubDate()))+"</td>");
 							} 
 							sb.append("</tr>");
 							if(elbLink.isInNiobe() && elbLink.getTitle()!=null ) {
@@ -336,9 +338,9 @@ public class StudyEditorPane extends JEditorPane {
 			}
 		
 			sb.append("<div style='font-size:8px; color:gray'>");
-			sb.append("Created the " + Formatter.formatDateTimeShort(study.getCreDate()) + " by " + study.getCreUser() + "<br>");
+			sb.append("Created the " + FormatterUtils.formatDateTimeShort(study.getCreDate()) + " by " + study.getCreUser() + "<br>");
 			if (study.getUpdDate() != null && study.getUpdDate().getTime() > study.getCreDate().getTime() + 1000) {
-				sb.append("Updated the " + Formatter.formatDateTimeShort(study.getUpdDate()) + " by " + study.getUpdUser() + "<br>");				
+				sb.append("Updated the " + FormatterUtils.formatDateTimeShort(study.getUpdDate()) + " by " + study.getUpdUser() + "<br>");				
 			}
 			sb.append("</div>");
 
@@ -361,7 +363,7 @@ public class StudyEditorPane extends JEditorPane {
 			for (Biotype t: m1.keySet()) {					
 				sb.append("<tr><td><a href='bios:" + study.getStudyId() + ":" + t.getName() + "'>" + t.getName() + "</a> (" + m1.get(t).getFirst() + ")");																								
 				sb.append("</td><td style='padding-left:5px;color:" + getColor(m1.get(t).getThird()) + "'>");
-				sb.append(" <span style='font-size:8px'> [" + Formatter.formatDateOrTime(m1.get(t).getThird()) + " - " + m1.get(t).getSecond() +"]</span>");
+				sb.append(" <span style='font-size:8px'> [" + FormatterUtils.formatDateOrTime(m1.get(t).getThird()) + " - " + m1.get(t).getSecond() +"]</span>");
 				sb.append("</td></tr>");
 			}
 			sb.append("</table>");
@@ -380,7 +382,7 @@ public class StudyEditorPane extends JEditorPane {
 			for (Test t: m2.keySet()) {					
 				sb.append("<tr><td><a href='test:" + study.getStudyId() + ":" + t.getId() + "'>" + t.getName() + "</a>&nbsp;(" + m2.get(t).getFirst() + ")");																								
 				sb.append("</td><td style='padding-left:5px;color:" + getColor(m2.get(t).getThird()) + "'>");
-				sb.append(" <span style='font-size:8px'> [" + Formatter.formatDateOrTime(m2.get(t).getThird()) + " - " + m2.get(t).getSecond() +"]</span>");
+				sb.append(" <span style='font-size:8px'> [" + FormatterUtils.formatDateOrTime(m2.get(t).getThird()) + " - " + m2.get(t).getSecond() +"]</span>");
 				sb.append("</td></tr>");
 			}
 			sb.append("</table>");
@@ -412,4 +414,5 @@ public class StudyEditorPane extends JEditorPane {
 		if(date.after(yesterday)) return "#BB6666";
 		return "#888888";
 	}
+
 }

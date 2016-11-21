@@ -47,8 +47,8 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
 import com.actelion.research.spiritcore.business.study.Phase;
-import com.actelion.research.spiritcore.util.Formatter;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.FormatterUtils;
 
 @Entity
 @Audited
@@ -72,7 +72,6 @@ public class FoodWater implements Comparable<FoodWater> {
 			return water;
 		}
 	}
-	
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="food_water_sequence")
@@ -366,7 +365,7 @@ public class FoodWater implements Comparable<FoodWater> {
 						res.value = (prev.getWaterTare() - fw.getWaterWeight())/(nRats*nDays);
 						res.value = ((int)(res.value*10))/10.0;
 					}
-					res.formula = "("+Formatter.formatMax2(prev.getWaterTare()) + " - "+ Formatter.formatMax2(fw.getWaterWeight())+") / ("+nRats + " animal"+(nRats>1?"s":"") + " * "+Formatter.formatMax2(nDays)+" day"+(nDays>1?"s":"")+")";
+					res.formula = "("+FormatterUtils.formatMax2(prev.getWaterTare()) + " - "+ FormatterUtils.formatMax2(fw.getWaterWeight())+") / ("+nRats + " animal"+(nRats>1?"s":"") + " * "+FormatterUtils.formatMax2(nDays)+" day"+(nDays>1?"s":"")+")";
 				}
 			} else {
 				if(prev.getFoodTare()!=null && fw.getFoodWeight()!=null) {
@@ -374,7 +373,7 @@ public class FoodWater implements Comparable<FoodWater> {
 						res.value = (prev.getFoodTare() - fw.getFoodWeight())/(nRats*nDays);
 						res.value = ((int)(res.value*10))/10.0;
 					}
-					res.formula = "("+Formatter.formatMax2(prev.getFoodTare()) + " - "+ Formatter.formatMax2(fw.getFoodWeight())+") / ("+nRats+"animal"+(nRats>1?"s":"") + " * "+Formatter.formatMax2(nDays)+"day"+(nDays>1?"s":"")+")";
+					res.formula = "("+FormatterUtils.formatMax2(prev.getFoodTare()) + " - "+ FormatterUtils.formatMax2(fw.getFoodWeight())+") / ("+nRats+"animal"+(nRats>1?"s":"") + " * "+FormatterUtils.formatMax2(nDays)+"day"+(nDays>1?"s":"")+")";
 				}
 			}
 

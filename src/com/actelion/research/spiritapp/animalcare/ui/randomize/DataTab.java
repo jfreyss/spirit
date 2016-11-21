@@ -93,7 +93,7 @@ public class DataTab extends WizardPanel {
 		this.dlg = dlg;
 		this.balanceDecorator = new BalanceDecorator(dlg);		
 		this.dataTable = new AttachedBiosampleTable(new AttachedBiosampleTableModel(Mode.RND_WEIGHING, dlg.getStudy(), null, dlg.getPhase(), dlg.getBiotype()), false);
-		this.realTable = new AttachedBiosampleTable(new AttachedBiosampleTableModel(Mode.RND_WEIGHING, dlg.getStudy(), null, dlg.getPhase(), dlg.getBiotype()), false);
+		this.realTable = new AttachedBiosampleTable(new AttachedBiosampleTableModel(Mode.MANUALASSIGN, dlg.getStudy(), null, dlg.getPhase(), dlg.getBiotype()), false);
 		dataTable.setGoNextOnEnter(false);
 		
 		animalsSpinner.addChangeListener(new ChangeListener() {
@@ -160,8 +160,8 @@ public class DataTab extends WizardPanel {
 		realPanel = UIUtils.createTitleBox("Current Data", 
 				UIUtils.createBox(new JScrollPane(realTable), new JInfoLabel("this is how the samples are currently attached")));
 		JSplitPane centerPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-				UIUtils.createTitleBox("Saved Data",
-						UIUtils.createBox(new JScrollPane(dataTable), UIUtils.createVerticalBox(resetLabel, reuseButton, resetButton, Box.createHorizontalGlue()))),
+				UIUtils.createTitleBox("Randomization Data",
+						UIUtils.createBox(new JScrollPane(dataTable), UIUtils.createVerticalBox(resetLabel, UIUtils.createHorizontalBox(reuseButton, resetButton, Box.createHorizontalGlue())))),
 				realPanel);
 		centerPanel.setDividerLocation(400);
 		realTable.setEnabled(false);
@@ -373,15 +373,15 @@ public class DataTab extends WizardPanel {
 		if(!alreadyStarted) {
 			if(nAttached==0) {
 				resetLabel.setText("Please enter the samplesIds and their weights");
-				resetLabel.setForeground(Color.DARK_GRAY);
+				resetLabel.setForeground(Color.GRAY);
 			} else {
 				populateTables(false, false);
-				resetLabel.setText("Those sampleIds are retrieved from the current situation in the database.");
+				resetLabel.setText("The data is retrieved from the current database's state.");
 				resetLabel.setForeground(Color.BLUE);
 			}			
 		} else {
-			resetLabel.setText("Those samples are loaded from the last saved settings");
-			resetLabel.setForeground(Color.DARK_GRAY);
+			resetLabel.setText("The data is retrieved from the last rando settings");
+			resetLabel.setForeground(Color.GRAY);
 		}
 			
 

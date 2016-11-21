@@ -28,13 +28,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
+import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerMethod;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
-import com.actelion.research.spiritcore.business.biosample.Metadata;
-import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerMethod;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultValue;
 import com.actelion.research.spiritcore.business.result.Test;
@@ -45,11 +46,8 @@ import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.PhaseFormat;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.util.Formatter;
 import com.actelion.research.spiritcore.util.MiscUtils;
-
-import java.util.Set;
-import java.util.TreeMap;
+import com.actelion.research.util.FormatterUtils;
 
 public class PivotItemFactory {
 
@@ -500,7 +498,6 @@ public class PivotItemFactory {
 		}
 	};
 
-
 	public static final PivotItem STUDY_PHASE_LABEL = new PivotItem(PivotItemClassifier.STUDY_PHASE, "PhaseLabel") {
 		@Override
 		public String getTitle(ResultValue rv) {
@@ -508,8 +505,6 @@ public class PivotItemFactory {
 			return r.getInheritedPhase()==null?null: "<r>" + r.getInheritedPhase().getLabel();
 		}
 	};
-
-
 
 	public static final PivotItem RESULT_OUTPUT = new PivotItem(PivotItemClassifier.RESULT, "Output") {
 		@Override
@@ -519,7 +514,6 @@ public class PivotItemFactory {
 		}		
 	};
 	
-
 	public static final PivotItem RESULT_COMMENTS = new PivotItem(PivotItemClassifier.RESULT, "Comments") {
 		@Override
 		public String getTitle(ResultValue rv) {
@@ -540,16 +534,18 @@ public class PivotItemFactory {
 		@Override
 		public String getTitle(ResultValue rv) {
 			Result r = rv.getResult();
-			return Formatter.formatDate(r.getCreDate());
+			return FormatterUtils.formatDate(r.getCreDate());
 		}
 	};
+	
 	public static final PivotItem RESULT_CRETIME = new PivotItem(PivotItemClassifier.RESULT, "CreTime") {
 		@Override
 		public String getTitle(ResultValue rv) {
 			Result r = rv.getResult();
-			return Formatter.formatTime(r.getCreDate());
+			return FormatterUtils.formatTime(r.getCreDate());
 		}
 	};
+	
 	public static final PivotItem RESULT_CREUSER = new PivotItem(PivotItemClassifier.RESULT, "CreUser") {
 		@Override
 		public String getTitle(ResultValue rv) {
@@ -573,41 +569,7 @@ public class PivotItemFactory {
 			if(r.getResultValue(att)==null) return null;
 			return "<b>" + r.getResultValue(att).getValueWithoutDelegateUnit();
 		}
-	}
-	
-//	public static class PivotItemResultActNo extends PivotItem  {
-//		private TestAttribute att;
-//		
-//		public PivotItemResultActNo(TestAttribute att) {
-//			super(PivotItemClassifier.RESULT, "["+att.getTest().getName()+"] "+att.getName()+".actno");
-//			this.att = att;
-//		}		
-//		
-//		@Override
-//		public String getTitle(ResultValue rv) {
-//			Result r = rv.getResult();
-//			if(!att.getTest().equals(r.getTest())) return null;
-//			if(r.getResultValue(att)==null || r.getResultValue(att).getLinkedCompound()==null) return null;
-//			return "<b>" + r.getResultValue(att).getLinkedCompound().getActNo();
-//		}
-//	}
-//	
-//	public static class PivotItemResultEln extends PivotItem  {
-//		private TestAttribute att;
-//		
-//		public PivotItemResultEln(TestAttribute att) {
-//			super(PivotItemClassifier.RESULT, "["+att.getTest().getName()+"] "+att.getName()+".eln");
-//			this.att = att;
-//		}		
-//		
-//		@Override
-//		public String getTitle(ResultValue rv) {
-//			Result r = rv.getResult();
-//			if(!att.getTest().equals(r.getTest())) return null;
-//			if(r.getResultValue(att)==null || r.getResultValue(att).getLinkedCompound()==null) return null;
-//			return "<b>" + r.getResultValue(att).getLinkedCompound().getEln();
-//		}
-//	}
+	}	
 	
 	public static class PivotItemBiosampleFromResultValue extends PivotItem  {
 		private String valueWithLinkedBiosample;
@@ -630,8 +592,8 @@ public class PivotItemFactory {
 				if(metadata.equals(b.getBiotype().getSampleNameLabel())) return "<b>" + b.getSampleName();
 				
 				//otherwise check the metadata
-				Metadata m = b.getMetadata(metadata);
-				if(m!=null) return "<b>" + m.getValue();
+				String m = b.getMetadataValue(metadata);
+				if(m!=null) return "<b>" + m;
 			}
 			return null;
 		}

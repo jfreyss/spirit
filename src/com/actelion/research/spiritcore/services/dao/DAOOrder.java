@@ -33,6 +33,7 @@ import com.actelion.research.spiritcore.business.order.Order;
 import com.actelion.research.spiritcore.business.order.OrderStatus;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
+import com.actelion.research.spiritcore.util.MiscUtils;
 
 public class DAOOrder {
 
@@ -54,12 +55,17 @@ public class DAOOrder {
 	}
 
 	public static List<Order> getActiveOrders(int orMoreRecentThan) {
+		
+		Date now = JPAUtil.getCurrentDateFromDatabase();
+		Date minDate = MiscUtils.addDays(now, -Math.max(0, orMoreRecentThan));
+		
 		EntityManager session = JPAUtil.getManager();
 		List<Order> res = (List<Order>) session.createQuery(
 				"SELECT o FROM Order o "
 				+ " WHERE " 
-				+ (orMoreRecentThan>=0? " o.updDate > current_date() - " +orMoreRecentThan + " or ": "")
-				+ " (o.status <> '"+OrderStatus.CANCELED.name()+"' and o.status <> '"+OrderStatus.CLOSED.name()+"' and o.status <> '"+OrderStatus.REFUSED.name()+"')").getResultList();
+				+ " o.updDate > ?1"
+				+ " or (o.status <> '"+OrderStatus.CANCELED.name()+"' and o.status <> '"+OrderStatus.CLOSED.name()+"' and o.status <> '"+OrderStatus.REFUSED.name()+"')")
+				.setParameter(1, minDate).getResultList();
 		Collections.sort(res);
 		return res;
 	}

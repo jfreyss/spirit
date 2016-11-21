@@ -370,7 +370,6 @@ public class DAOStudy {
 	 */
 	public static void persistStudies(Collection<Study> studies, SpiritUser user) throws Exception {
 		EntityManager session = JPAUtil.getManager();		
-		//Start the transaction
 		EntityTransaction txn = null;
 		try {
 			txn = session.getTransaction();
@@ -434,6 +433,9 @@ public class DAOStudy {
 				if(a.isEmpty() || a.getSubGroup()<0 || a.getSubGroup()>=a.getGroup().getNSubgroups()) {
 					a.remove();
 				}
+			}
+			for(Phase p: study.getPhases()) {
+				System.out.println("DAOStudy.persistStudies() "+study+" "+p.getId()+" : "+p.getName());
 			}
 			
 			//Now save the study

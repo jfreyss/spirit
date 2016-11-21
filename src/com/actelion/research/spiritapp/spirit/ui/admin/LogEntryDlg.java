@@ -42,18 +42,18 @@ import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.DAOLog;
-import com.actelion.research.spiritcore.util.Formatter;
 import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
+import com.actelion.research.util.ui.exceltable.AbstractExtendTable.BorderStrategy;
 import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.ExtendTable;
 import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
-import com.actelion.research.util.ui.exceltable.AbstractExtendTable.BorderStrategy;
 
 public class LogEntryDlg extends JEscapeDialog {
 	
@@ -73,7 +73,7 @@ public class LogEntryDlg extends JEscapeDialog {
 			public Date getValue(LogEntry row) {return row.getDate();}
 			@Override
 			public void postProcess(AbstractExtendTable<LogEntry> table, LogEntry row, int rowNo, Object value, JComponent comp) {
-				((JLabelNoRepaint) comp).setText(Formatter.formatDateTime((Date)value));
+				((JLabelNoRepaint) comp).setText(FormatterUtils.formatDateTime((Date)value));
 			}
 		});
 		columns.add(new Column<LogEntry, String>("User", String.class) {

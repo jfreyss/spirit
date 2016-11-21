@@ -53,9 +53,9 @@ import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
-import com.actelion.research.spiritcore.util.Counter;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.Counter;
 
 @Entity
 @Audited
@@ -281,7 +281,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 			//always copy the attributes of the sampling
 			thisSampling.setBiotype(inputSampling.getBiotype());
 			thisSampling.setSampleName(inputSampling.getSampleName());
-			thisSampling.setSerializedMetadata(inputSampling.getSerializedMetadata());
+			thisSampling.setMetadataMap(inputSampling.getMetadataMap());
 			thisSampling.setComments(inputSampling.getComments());
 			thisSampling.setWeighingRequired(inputSampling.isWeighingRequired());
 			thisSampling.setLengthRequired(inputSampling.isLengthRequired());
@@ -318,7 +318,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 			Sampling s = new Sampling();			
 			s.setBiotype(existingSampling.getBiotype());
 			s.setSampleName(existingSampling.getSampleName());
-			s.setSerializedMetadata(existingSampling.getSerializedMetadata());
+			s.setMetadataMap(existingSampling.getMetadataMap());
 			s.setComments(existingSampling.getComments());
 			s.setWeighingRequired(existingSampling.isWeighingRequired());
 			s.setLengthRequired(existingSampling.isLengthRequired());

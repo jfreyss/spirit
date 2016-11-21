@@ -22,17 +22,13 @@
 package com.actelion.research.spiritapp.spirit.ui.biosample.column;
 
 
-import java.awt.Color;
-
 import javax.swing.JComponent;
-import javax.swing.SwingConstants;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
-import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 
 public class StatusColumn extends Column<Biosample, Status> {
 
@@ -53,36 +49,21 @@ public class StatusColumn extends Column<Biosample, Status> {
 	@Override
 	public boolean isEditable(Biosample row) {
 		return false;
-	}
-	
-	private static JLabelNoRepaint lbl = new JLabelNoRepaint();
-	@Override
-	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
-		Status status = (Status) value;
-		lbl.setVerticalAlignment(SwingConstants.TOP);
-		if(status==null) {
-			lbl.setText(null);
-			lbl.setBackground(Color.WHITE);
-		} else {
-			lbl.setText(status.getName());
-			lbl.setForeground(status.getForeground());
-			lbl.setBackground(status.getBackground());
-			
-		}
-		return lbl;
-	}
+	}	
 	
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		super.postProcess(table, row, rowNo, value, comp);
-		if(comp instanceof JLabelNoRepaint) ((JLabelNoRepaint)comp).setVerticalAlignment(SwingConstants.TOP);
-		
 		Status status = (Status) value;
-		if(status!=null) {
-			if(status.getForeground()!=null) lbl.setForeground(status.getForeground());
-			if(status.getBackground()!=null) lbl.setBackground(status.getBackground());
-			
+		if(status!=null && status.getForeground()!=null) {
+			lbl.setForeground(status.getForeground());
+		}
+		if(status!=null && status.getBackground()!=null) {
+			lbl.setBackground(status.getBackground());
 		}
 	}
-	
+
+	@Override
+	public boolean shouldMerge(Biosample r1, Biosample r2) {return false;}
+
 }

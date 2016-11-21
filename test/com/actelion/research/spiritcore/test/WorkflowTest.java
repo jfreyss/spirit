@@ -8,13 +8,9 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.HSQLMemoryAdapter;
 import com.actelion.research.spiritcore.adapter.PropertyKey;
-import com.actelion.research.spiritcore.adapter.SchemaCreator;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
@@ -22,19 +18,10 @@ import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.helper.WorkflowHelper;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
-public class WorkflowTest {
+public class WorkflowTest extends AbstractSpiritTest {
 
-private static SpiritUser user;
-	
 	@BeforeClass
-	public static void initDB() throws Exception {
-		//Init user
-		user = SpiritUser.getFakeAdmin();
-		
-		//Init DB
-		DBAdapter.setAdapter(new HSQLMemoryAdapter());
-		SchemaCreator.displayTables(DBAdapter.getAdapter());
-		
+	public static void init() throws Exception {
 		ExchangeTest.initDemoExamples(user);
 	}
 	

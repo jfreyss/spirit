@@ -23,10 +23,15 @@ package com.actelion.research.spiritapp.spirit.ui.biosample.dialog;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
+import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -40,49 +45,59 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTabbedPane;
 import com.actelion.research.spiritapp.spirit.ui.util.RevisionList;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
-import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
-import com.actelion.research.spiritcore.business.biosample.ActionComments;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
+import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.util.FormatterUtils;
+import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.UIUtils;
 
-public class BiosampleHistoryDlg extends JSpiritEscapeDialog {
+/**
+ * Dialog used to show the previous versions of a biosample
+ * @author Joel Freyss
+ *
+ */
+public class BiosampleHistoryDlg extends JEscapeDialog {
 
-		@Override
-	protected boolean mustAskForExit() {
-		return false;
-	}
+	private JCheckBox onlyNoticeableChange = new JCheckBox("Only Noticeable changes");
+	private RevisionList revisionList = new RevisionList();
+	private List<Revision> revisions; 
 	
-	public BiosampleHistoryDlg(final List<Revision> revisions) {
-		super(UIUtils.getMainFrame(), "Biosample History", BiosampleHistoryDlg.class.getName());
+	public BiosampleHistoryDlg(final Biosample biosample) {
+		super(UIUtils.getMainFrame(), "Biosample History");
 		
 		try {
+			this.revisions = DAORevision.getRevisions(biosample);
+
 			if(revisions.size()==0) throw new Exception("There are no revisions saved");
 	
-			final RevisionList revisionList = new RevisionList(revisions);
+			onlyNoticeableChange.addActionListener(new ActionListener() {				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					refreshList();
+				}
+			});
+			refreshList();
+			
 			final BiosampleTabbedPane detailPanel = new BiosampleTabbedPane(true);
 
-			
-			JScrollPane sp = new JScrollPane(revisionList);
-			
 			revisionList.addListSelectionListener(new ListSelectionListener() {
 				@Override
 				public void valueChanged(ListSelectionEvent e) {
 					if(e.getValueIsAdjusting()) return;
-					int i = revisionList.getSelectedIndex();
-					if(i<0) {
+					Revision r = revisionList.getSelectedValue();
+					if(r==null) {
 						detailPanel.setBiosamples(null);
 						return;
 					}
-					detailPanel.setBiosamples(revisions.get(i).getBiosamples());
+					detailPanel.setBiosamples(r.getBiosamples());
 				}
-			});
-			
+			});			
 			
 			revisionList.addMouseListener(new PopupAdapter() {			
 				@Override
@@ -95,23 +110,44 @@ public class BiosampleHistoryDlg extends JSpiritEscapeDialog {
 					}
 				}
 			});
-
 			
 			JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, 
-					UIUtils.createTitleBox("Revisions", sp), 
+					UIUtils.createTitleBox("Revisions", UIUtils.createBox(new JScrollPane(revisionList), null, onlyNoticeableChange)), 
 					UIUtils.createTitleBox("Biosample Revision", new JScrollPane(detailPanel)));
 			
 			JPanel contentPanel = new JPanel(new BorderLayout());
 			contentPanel.add(BorderLayout.CENTER, splitPane);
 			setContentPane(contentPanel);
-			
-			
+						
 			UIUtils.adaptSize(this, 850, 600);
 			setVisible(true);
 		} catch (Exception e) {
 			JExceptionDialog.showError(e);
 			dispose();
 		}		
+	}
+	
+	private void refreshList() {
+		Map<Revision, String> changeMap = new HashMap<>();
+		List<Revision> revs = new ArrayList<>();
+		for (int i = 0; i < revisions.size(); i++) {
+			Biosample b1 = revisions.get(i).getBiosamples().get(0);
+			String diff;
+			if(i+1<revisions.size()) {
+				Biosample b2 = revisions.get(i+1).getBiosamples().get(0);
+				diff = b1.getDifference(b2, Spirit.getUsername());
+			} else {
+				Biosample b2 = revisions.get(0).getBiosamples().get(0);
+				diff = b1.getDifference(b2, Spirit.getUsername());
+				if(diff.length()==0) diff = "First version";
+			}
+			if(onlyNoticeableChange.isSelected() && diff.length()==0) continue;
+			revs.add(revisions.get(i));
+			changeMap.put(revisions.get(i), diff);
+		}
+		
+		revisionList.setRevisions(revs);
+		revisionList.setChangeMap(changeMap);
 	}
 	
 	private class RestoreAction extends AbstractAction {
@@ -127,13 +163,15 @@ public class BiosampleHistoryDlg extends JSpiritEscapeDialog {
 				}
 			}
 		}
+		
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			try {			
 				int res = JOptionPane.showConfirmDialog(BiosampleHistoryDlg.this, "Are you sure you want to restore to the selected version?", "Restore", JOptionPane.YES_NO_OPTION);
 				if(res!=JOptionPane.YES_OPTION) return;
+			try {			
+				JPAUtil.pushEditableContext(JPAUtil.getSpiritUser());
 				for (Biosample biosample : biosamples) {
-					biosample.addAction(new ActionComments(biosample, "Restore from version "+Formatter.formatDateTime(biosample.getUpdDate())));
+					biosample.setLastAction(new com.actelion.research.spiritcore.business.biosample.ActionComments("Restored from version "+FormatterUtils.formatDateTime(biosample.getUpdDate())));
 					biosample.setUpdDate(null); 						
 				}
 				DAOBiosample.persistBiosamples(biosamples, Spirit.getUser());
@@ -141,9 +179,17 @@ public class BiosampleHistoryDlg extends JSpiritEscapeDialog {
 				dispose();
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
+			} finally {
+				JPAUtil.popEditableContext();
 			}
 		}
 	}
+
+	@Override
+	protected boolean mustAskForExit() {
+		return false;
+	}
 	
+
 	
 }

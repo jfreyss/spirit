@@ -21,13 +21,8 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.column;
 
-import javax.swing.JComponent;
-import javax.swing.SwingConstants;
-
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
-import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 
 public class BiosampleElbColumn extends Column<Biosample, String> {
 	public BiosampleElbColumn() {
@@ -47,10 +42,5 @@ public class BiosampleElbColumn extends Column<Biosample, String> {
 	@Override		
 	public String getToolTipText() {return "Electronic Lab Journal";}
 	
-	
-	@Override
-	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
-		if(comp instanceof JLabelNoRepaint) ((JLabelNoRepaint)comp).setVerticalAlignment(SwingConstants.TOP);
-	}
 
 }

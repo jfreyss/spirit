@@ -43,16 +43,19 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;
 import org.slf4j.LoggerFactory;
 
+import com.actelion.research.spiritcore.business.DataType;
+import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
+import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.FormatterUtils;
 
 public class DAORevision {
 
@@ -63,6 +66,18 @@ public class DAORevision {
 		private String user;
 		private List<IObject> entities = new ArrayList<>();
 		private RevisionType type;
+		
+		
+		@Override
+		public int hashCode() {
+			return revId;
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if(!(obj instanceof Revision)) return false;
+			return revId == ((Revision)obj).revId && type == ((Revision)obj).type;
+		}
 		
 		@Override
 		public int compareTo(Revision o) {
@@ -86,7 +101,7 @@ public class DAORevision {
 			(results.size()>0? " " + results.size() + " Results": "") +
 			(biotypes.size()==0? "": biotypes.size()==1? " " + biotypes.get(0).getName(): " " + biotypes.size() + " Biotypes") +
 			(tests.size()==0? "": tests.size()==1? " " + tests.get(0).getName(): " " + tests.size() + " Tests " ));
-			sb.append(" (" + Formatter.formatDateTime(date) + ")");
+			sb.append(" (" + FormatterUtils.formatDateTime(date) + ")");
 			return sb.toString();
 		}
 
@@ -150,16 +165,33 @@ public class DAORevision {
 	@SuppressWarnings("unchecked")
 	public static List<Revision> getRevisions(IObject obj) {
 		long s = System.currentTimeMillis();
-		EntityManager session = JPAUtil.createManager();
+		EntityManager session = JPAUtil.getManager();
 		AuditReader reader = AuditReaderFactory.get(session);	
 		AuditQuery query = reader.createQuery().forRevisionsOfEntity(obj.getClass(), false, true).add(AuditEntity.id().eq(obj.getId()));
 		List<Object[]> res = query.getResultList();
 		
-		Map<String, Revision> map = mapRevisions(res, obj.getClass());
+		Map<String, Revision> map = mapRevisions(res);
 		List<Revision> revisions = new ArrayList<>(map.values());
 		Collections.sort(revisions);
 		LoggerFactory.getLogger(DAORevision.class).debug("Loaded revisions for " + obj+" in "+(System.currentTimeMillis()-s)+"ms");
 		return revisions;
+	}
+	
+	/**
+	 * Get the different version of a samples, the first index shows the most recent version
+	 * @param obj
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")	
+	public static<T extends IObject> List<T> getHistory(T obj) {
+		long s = System.currentTimeMillis();
+		EntityManager session = JPAUtil.getManager();
+		AuditReader reader = AuditReaderFactory.get(session);	
+		AuditQuery query = reader.createQuery().forRevisionsOfEntity(obj.getClass(), true, false).add(AuditEntity.id().eq(obj.getId()));
+		List<T> res = (List<T>) query.getResultList();
+		
+		LoggerFactory.getLogger(DAORevision.class).debug("Loaded history for " + obj+" in "+(System.currentTimeMillis()-s)+"ms");
+		return res;
 	}
 	
 	
@@ -178,7 +210,7 @@ public class DAORevision {
 		
 		List<Object[]> objects = queryForRevisions(reader, entityClasses, revId, revId, null);
 		
-		Map<String, Revision> map = mapRevisions(objects, null);
+		Map<String, Revision> map = mapRevisions(objects);
 		assert map.values().size()==1;
 		Revision rev = map.values().iterator().next();
 		LoggerFactory.getLogger(DAORevision.class).debug("Loaded revisions " + revId + " in "+(System.currentTimeMillis()-s)+"ms");
@@ -221,7 +253,7 @@ public class DAORevision {
 		if(admin) entityClasses.add(Test.class);
 		
 		List<Object[]> objects = queryForRevisions(reader, entityClasses, rev1, rev2, userFilter);
-		Map<String, Revision> map = mapRevisions(objects, null);
+		Map<String, Revision> map = mapRevisions(objects);
 
 		List<Revision> revisions = new ArrayList<>(map.values());
 		Collections.sort(revisions);
@@ -243,8 +275,12 @@ public class DAORevision {
 	}
 	
 
-	@SuppressWarnings("unchecked")
-	private static Map<String, Revision> mapRevisions(List<Object[]> objects, Class<?> claz){
+	/**
+	 * Map revisions to their identifier (revId.revType) 
+	 * @param objects
+	 * @return
+	 */
+	private static Map<String, Revision> mapRevisions(List<Object[]> objects){
 		Map<String, Revision> res = new TreeMap<>();
 		Set<Integer> addAndDelRevIds = new HashSet<>();
 		for (Object[] a: objects) {
@@ -438,6 +474,15 @@ public class DAORevision {
 			b.setChildren(new HashSet<Biosample>());
 			b.setUpdDate(now);
 			b.setUpdUser(user.getUsername());
+			
+			//Update linked documents
+			for(BiotypeMetadata bm: b.getBiotype().getMetadata()) {
+				if(bm.getDataType()==DataType.D_FILE) {
+					Document doc = b.getMetadataDocument(bm);
+					b.setMetadataDocument(bm, doc==null? null: new Document(doc.getFileName(), doc.getBytes()));
+				}
+			}
+			
 		} else if(clone instanceof Test) {
 			((Test) clone).setUpdDate(now);
 			((Test) clone).setUpdUser(comments);

@@ -23,9 +23,9 @@ package com.actelion.research.spiritcore.business.pivot;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Quality;
@@ -48,12 +48,12 @@ public class PivotCell implements Comparable<PivotCell> {
 
 	//Underlying data
 	private final PivotDataTable table;
-	private List<ResultValue> values = new ArrayList<ResultValue>();
-	private List<PivotCellKey> orderedNestedKeys = new ArrayList<PivotCellKey>();		
-	private Map<PivotCellKey, PivotCell> nestedMap;
+	private List<ResultValue> values = new ArrayList<>();
+	private List<PivotCellKey> orderedNestedKeys = new ArrayList<>();		
+	private Map<PivotCellKey, PivotCell> nestedMap = null;
 	
 	//
-	private Margins margin;
+	private Margins margin = null;
 	private boolean calculated = false;
 
 	//Data to display
@@ -62,7 +62,8 @@ public class PivotCell implements Comparable<PivotCell> {
 	private Double std = null;
 	private Integer coeff = null;
 	private int N;
-	
+	private Quality quality = null;
+
 	
 	/**
 	 * Margins showing where to display the values:
@@ -101,15 +102,15 @@ public class PivotCell implements Comparable<PivotCell> {
 	private void calculateStats() {
 		if(calculated) return;
 		
-		PivotTemplate tpl = table.getTemplate();
 		
 		calculated = true;		
 		aggregated = null;
 		std = null;
 		coeff = null;
 		N=0;
+		quality = null;
+		
 		if(values.size()==0) return;
-
 
 		//Calculate quality
 		Quality res = null;
@@ -131,6 +132,7 @@ public class PivotCell implements Comparable<PivotCell> {
 			}
 		}
 		
+		PivotTemplate tpl = table.getTemplate();
 		if(tpl.getAggregation()==Aggregation.HIDE) {
 			//Count of all results, empty or non empty
 			aggregated = "";
@@ -153,10 +155,10 @@ public class PivotCell implements Comparable<PivotCell> {
 			
 			//Calculate Display1, Display2
 			boolean hasNonDoubles = false;
-			List<Double> doubles = new ArrayList<Double>();
-			List<String> texts = new ArrayList<String>();
+			List<Double> doubles = new ArrayList<>();
+			List<String> texts = new ArrayList<>();
 			for (ResultValue value: values) {
-				if(value.getAttribute().getDataType()==DataType.NUMBER) {
+				if(value.getAttribute().getDataType()==DataType.NUMBER || value.getAttribute().getDataType()==DataType.FORMULA) {
 					Double v = value.getDoubleValue();
 					if(v!=null) doubles.add(v);
 					else if(value.getValue()!=null) hasNonDoubles = true;					
@@ -196,6 +198,16 @@ public class PivotCell implements Comparable<PivotCell> {
 					aggregated = getMin(doubles);
 				} else if(tpl.getAggregation()==Aggregation.MAXIMUM) {
 					aggregated = getMax(doubles);
+				} else if(tpl.getAggregation()==Aggregation.RANGE) {
+					double min = getMin(doubles);
+					double max = getMax(doubles);
+					if(min<max) {
+						aggregated = min + " - " + max;
+					} else {
+						aggregated = min;
+					}
+				} else if(tpl.getAggregation()==Aggregation.SUM) {
+					aggregated = getSum(doubles);
 				} else if(hasNonDoubles) {
 					aggregated = "?";
 				} else {
@@ -222,9 +234,10 @@ public class PivotCell implements Comparable<PivotCell> {
 			}
 			
 		}
+		
 		//Calculate ComputedValue
 		if(tpl.getComputed()!=null) {
-			List<Double> doubles = new ArrayList<Double>();
+			List<Double> doubles = new ArrayList<>();
 			for (ResultValue value: values) {
 				Double v = value.getCalculatedValue();
 				if(v!=null) doubles.add(v);
@@ -256,11 +269,46 @@ public class PivotCell implements Comparable<PivotCell> {
 		return calculatedValue;
 	}
 	
+	public List<PivotCellKey> getNestedKeys() {
+		calculateNested();
+		return orderedNestedKeys;
+	}
+	
+	public PivotCell getNested(PivotCellKey key) {
+		calculateNested();
+		PivotCell pc = nestedMap.get(key);
+		if(pc!=null) return pc;
+		return new PivotCell(table);
+	}
+		
+	/**
+	 * Split the cell based on the Template.Cell parameters.
+	 * For each ResultValue included in this cell, we calculate the key and create a Map<key, new sub PivotCell>
+	 */
+	private void calculateNested() {
+		if(nestedMap==null) {
+			nestedMap = new LinkedHashMap<>();
+			
+			for (int i = 0; i < values.size(); i++) {
+				ResultValue v = values.get(i);
+				PivotCellKey key = getCellKey(table.getTemplate(), v);
+				PivotCell values = nestedMap.get(key);
+				if(values==null) {
+					values = new PivotCell(table);
+					nestedMap.put(key, values);
+				}
+				values.values.add(v);			
+			}
+			
+			orderedNestedKeys.clear();
+			orderedNestedKeys.addAll(nestedMap.keySet());
+		}
+	}	
+
 	private static PivotCellKey getCellKey(PivotTemplate template, ResultValue rv) {
 		StringBuilder sb = new StringBuilder();
 		Result r = rv.getResult();
-		if(r==null) return new PivotCellKey(null, "");
-		
+		if(r==null) return new PivotCellKey(null, "");		
 		
 		Phase phase = null;
 		for (PivotItem item : template.getPivotItems(Where.ASCELL)) {
@@ -282,54 +330,7 @@ public class PivotCell implements Comparable<PivotCell> {
 		}
 		
 				
-		return new PivotCellKey(phase, sb.toString());
-			 
-	}
-	
-//	public String getNestedKey(int subRow) {
-//		calculateSplit();
-//		return subRow>=0 && subRow<orderedPivotCellKeys.size()? orderedPivotCellKeys.get(subRow).getKey(): null;		
-//	}
-//	
-//	public PivotCell getNestedPivotCell(int subRow) {
-//		calculateSplit();
-//		return subRow>=0 && subRow<orderedPivotCellKeys.size()? pivotCellMap.get(orderedPivotCellKeys.get(subRow)): null;		
-//	}
-	
-	public List<PivotCellKey> getNestedKeys() {
-		calculateNested();
-		return orderedNestedKeys;
-	}
-	
-	public PivotCell getNested(PivotCellKey key) {
-		calculateNested();
-		PivotCell pc = nestedMap.get(key);
-		if(pc!=null) return pc;
-		return new PivotCell(table);
-	}
-		
-	/**
-	 * Split the cell based on the Template.Cell parameters.
-	 * For each ResultValue included in this cell, we calculate the key and create a Map<key, new sub PivotCell>
-	 */
-	private void calculateNested() {
-		if(nestedMap==null) {
-			nestedMap = new TreeMap<PivotCellKey, PivotCell>();
-			
-			for (int i = 0; i < values.size(); i++) {
-				ResultValue v = values.get(i);
-				PivotCellKey key = getCellKey(table.getTemplate(), v);
-				PivotCell values = nestedMap.get(key);
-				if(values==null) {
-					values = new PivotCell(table);
-					nestedMap.put(key, values);
-				}
-				values.values.add(v);			
-			}
-			
-			orderedNestedKeys.clear();
-			orderedNestedKeys.addAll(nestedMap.keySet());
-		}
+		return new PivotCellKey(phase, sb.toString());			 
 	}
 	
 	@Override
@@ -339,7 +340,6 @@ public class PivotCell implements Comparable<PivotCell> {
 		StringBuilder sb = new StringBuilder();
 		for(PivotCellKey key: getNestedKeys()) {
 			String s = key.getKey();
-//			PivotCell c = getPivotCell(key);
 			if(sb.length()>0) sb.append("\r\n");
 			if(hasKeys && table.getTemplate().getAggregation()==Aggregation.COUNT && (aggregated instanceof Integer) && 1==Integer.valueOf((Integer)aggregated)) {
 				sb.append(s);
@@ -348,25 +348,13 @@ public class PivotCell implements Comparable<PivotCell> {
 			}
 		}
 		return sb.toString();
-
-//		return getValuesAsString() + " " +getComments() + (display1!=null? " ("+display1+")":"");
 	}
-	
-//	public String getValuesAsString() {
-//		StringBuilder sb = new StringBuilder();		
-//		for (int i = 0; i < values.size(); i++) {
-//			if(i>0) sb.append("; ");
-//			sb.append(values.get(i)==null? "": values.get(i));			
-//		}
-//		return sb.toString().trim();
-//	}
 	
 	@Override
 	public int compareTo(PivotCell o) {
 		if(o==null) return -1;
 		return CompareUtils.compare(getValue(), o.getValue());
 	}
-
 	
 	/**
 	 * Returns results associated with this cell in the appropriate order (according to split)
@@ -375,21 +363,18 @@ public class PivotCell implements Comparable<PivotCell> {
 	public List<Result> getResults() {
 		calculateNested();
 		calculateStats();
-		List<Result> results = new ArrayList<Result>();
+		List<Result> results = new ArrayList<>();
 		for(PivotCell c2: nestedMap.values()) {
 			for (ResultValue value : c2.values) {
 				results.add(value.getResult());
 			}
-		}
-		
+		}		
 		return results;
 	}
 	
 	public int getN() {
 		return N;
 	}
-	
-	private Quality quality = null;
 	
 	public Quality getQuality() {
 		return quality;
@@ -426,6 +411,15 @@ public class PivotCell implements Comparable<PivotCell> {
 			if(d>max) max = d;
 		}
 		return max;
+	}
+	
+	private static final Double getSum(List<Double> doubles) {
+		if(doubles.size()==0) return null;
+		double sum = 0;
+		for (Double d : doubles) {
+			sum+=d;
+		}
+		return sum;
 	}
 	
 	private static final Double getAverage(List<Double> doubles) {
@@ -469,6 +463,7 @@ public class PivotCell implements Comparable<PivotCell> {
 	public Margins getMargins() {
 		return margin;
 	}
+	
 	public void setMargin(Margins margin) {
 		this.margin = margin;
 	}

@@ -79,9 +79,9 @@ public class PivotDataTable {
 		pivotColumns.clear();
 		
 		if(results==null) return;
-		Map<String, PivotRow> key2pivotRow = new HashMap<String, PivotRow>();		
-		Map<String, PivotColumn> key2pivotColumn = new HashMap<String, PivotColumn>();
-
+		
+		//Make sure results are sorted, to keep nested keys in the appropriate order
+		Collections.sort(results);
 		
 		boolean hasPhaseInColumn = false;
 		for(PivotItem item: template.getPivotItems(Where.ASCOL)) {
@@ -100,10 +100,11 @@ public class PivotDataTable {
 		}
 
 
+		Map<String, PivotRow> key2pivotRow = new HashMap<>();		
+		Map<String, PivotColumn> key2pivotColumn = new HashMap<>();
 		Set<Test> skippableTests = new HashSet<>();
 		Set<Biosample> skippableSamples = new HashSet<>();		
-		Set<String> skippable = new HashSet<>();
-		
+		Set<String> skippable = new HashSet<>();		
 		Map<Test, List<Result>> mapTest = Result.mapTest(results);
 					
 		for(Map.Entry<Test, List<Result>> e: mapTest.entrySet()) {

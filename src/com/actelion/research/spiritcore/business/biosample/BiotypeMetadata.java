@@ -84,8 +84,7 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 	private DataType dataType = DataType.ALPHA;
 	
 	@Column(name="required", nullable=false)
-	private boolean required = false;
-		
+	private boolean required = false;		
 	
 	@Column(name="hideFromDisplay")
 	private Boolean secundary = false;
@@ -261,13 +260,13 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 		Map<Integer,String> map = MiscUtils.deserializeIntegerMap(metadataString);
 		Map<BiotypeMetadata, String> res = new HashMap<>();
 		for (int id : map.keySet()) {
-			assert id>0 && biotype.getMetadata(id)!=null;
+			assert id>0;
 			
 			if(id>0 && biotype.getMetadata(id)!=null) {
 				res.put(biotype.getMetadata(id), map.get(id));
 			}
 		}
-		return res;		
+		return res;
 	}
 	
 	public static String serialize(Map<BiotypeMetadata, String> metadata) {

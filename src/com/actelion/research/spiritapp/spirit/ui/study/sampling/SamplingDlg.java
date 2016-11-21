@@ -69,16 +69,11 @@ import com.actelion.research.util.ui.JTextComboBox;
 import com.actelion.research.util.ui.UIUtils;
 
 /**
- * 
+ * The SamplingDlg is responsible for editing a Sampling, within a study or not
  * @author Joel Freyss
  *
  */
 public class SamplingDlg extends JEscapeDialog {
-	
-	/**
-	 * The parent dialog, can be null
-	 */
-//	private NamedSamplingDlg dlg;
 	
 	private BiotypeComboBox typeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 	private final Sampling sampling;
@@ -102,7 +97,6 @@ public class SamplingDlg extends JEscapeDialog {
 	
 	public SamplingDlg(final NamedSamplingDlg dlg, final Study study, final Sampling sampling, boolean addActions) {
 		super(dlg, "Edit Sampling", true);
-//		this.dlg = dlg;
 		this.sampling = sampling;
 		
 		typeComboBox.addActionListener(new ActionListener() {
@@ -301,8 +295,6 @@ public class SamplingDlg extends JEscapeDialog {
 			c.gridx = 0; contentPanel.add(new JLabel("Comments: "), c);
 			c.gridx = 1; contentPanel.add(commentsTextField, c);
 			commentsTextField.setText(sampling.getComments());
-			
-			
 			
 			c.gridy++; 
 			c.weighty = 1;

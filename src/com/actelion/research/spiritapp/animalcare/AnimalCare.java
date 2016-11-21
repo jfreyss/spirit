@@ -182,7 +182,6 @@ public class AnimalCare extends JFrame implements ISpiritChangeObserver, ISpirit
 		animalCare.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		animalCare.eventUserChanged();		
 	}
-
 	
 	public class Action_Refresh extends AbstractAction {
 		public Action_Refresh() {
@@ -194,7 +193,7 @@ public class AnimalCare extends JFrame implements ISpiritChangeObserver, ISpirit
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				JPAUtil.close();
+				JPAUtil.closeFactory();
 				eventUserChanged();
 			} catch(Exception ex) {
 				ex.printStackTrace();				

@@ -39,7 +39,6 @@ import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.xml.bind.ValidationException;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
@@ -73,12 +72,12 @@ public class PivotDlg extends JEscapeDialog {
 		final Test test = tab.getTestChoice().getSelection();
 		
 		if( test.getInputAttributes().size()>3) {
-			throw new ValidationException("Pivot is only possible when there is max 3 input value");
+			throw new Exception("Pivot is only possible when there is max 3 input value");
 		}
 		if(pivotMode==PivotMode.ANIMAL_PHASE) {
 			for (Result r : tab.getTable().getRows()) {
-				if(r.getBiosample().getInheritedPhase()!=null) {
-					throw new ValidationException("Pivot by phase is only possible when the samples don't already have a phase");
+				if(r.getBiosample()!=null && r.getBiosample().getInheritedPhase()!=null) {
+					throw new Exception("Pivot by phase is only possible when the samples don't already have a phase");
 				}
 			}
 		}
@@ -147,7 +146,7 @@ public class PivotDlg extends JEscapeDialog {
 			pivotMode = PivotMode.ANIMAL_PHASE;
 		} else {
 			pivotMode =  PivotMode.ANIMAL_INPUT;
-			if(table.length<2) throw new ValidationException("You need to paste at least 2 lines");
+			if(table.length<2) throw new Exception("You need to paste at least 2 lines");
 
 //			//Assess pivot mode
 //			for (int i = 2; i < table[0].length; i++) {
@@ -173,7 +172,7 @@ public class PivotDlg extends JEscapeDialog {
 	 * @throws Exception
 	 */
 	public static List<Result> parse(Test test, String[][] table, PivotMode mode) throws Exception {
-		if(table.length<2) throw new ValidationException("You need to paste at least 2 lines");
+		if(table.length<2) throw new Exception("You need to paste at least 2 lines");
 
 		
 		TestAttribute inputAtt = test.getInputAttributes().size()<=0? null: test.getInputAttributes().get(0);
@@ -284,8 +283,8 @@ public class PivotDlg extends JEscapeDialog {
 					String criteria = metadataIndex>=0? data[metadataIndex]: null;
 					List<Biosample> biosamples = b.getCompatibleInFamily(HierarchyMode.CHILDREN, criteria, groupIndex>=0? data[groupIndex]: null, null);
 					
-					if(biosamples.size()==0) throw new ValidationException("The biosample "+sampleId+" "+(metadataIndex>=0? data[metadataIndex]: "")+" could not be found");
-					if(biosamples.size()>1) throw new ValidationException("The biosample "+sampleId+" "+(metadataIndex>=0? data[metadataIndex]: "")+" has several matches: "+biosamples);
+					if(biosamples.size()==0) throw new Exception("The biosample "+sampleId+" "+(metadataIndex>=0? data[metadataIndex]: "")+" could not be found");
+					if(biosamples.size()>1) throw new Exception("The biosample "+sampleId+" "+(metadataIndex>=0? data[metadataIndex]: "")+" has several matches: "+biosamples);
 					b = biosamples.get(0);
 				}
 			}

@@ -43,7 +43,7 @@ public class DAOBarcode {
 	/**
 	 * Maximum tolerated sequence hole in the barcode sequences
 	 */
-	private static final int MAX_HOLE = 100; //To be increased with the number of users
+	private static final int MAX_HOLE = 50; //To be increased with the number of users
 	private static Map<String, List<String>> prefix2PrecomputedIds = new HashMap<>();
 
 	public static synchronized void reset() {

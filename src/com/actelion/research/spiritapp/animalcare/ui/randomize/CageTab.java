@@ -57,7 +57,7 @@ public class CageTab extends WizardPanel {
 	private final RandomizationDlg dlg;
 	private final JCheckBox reuseCagesCheckbox = new JCheckBox("Reuse the previous CageIds", true);
 	private final List<GroupPanel> groupPanels = new ArrayList<>();
-	private final List<Group> groups = new ArrayList<Group>();
+	private final List<Group> groups = new ArrayList<>();
 	private final JPanel centerPanel = new JPanel();
 	private final List<JToggleButton> nButtons = new ArrayList<>();
 	public static final int PANEL_WIDTH = 350;
@@ -82,7 +82,7 @@ public class CageTab extends WizardPanel {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					try {
-						reassignCages(maxAnimals, !reuseCagesCheckbox.isEnabled() || reuseCagesCheckbox.isSelected());
+						reassignCages(maxAnimals, reuseCagesCheckbox.isEnabled() && reuseCagesCheckbox.isSelected());
 						refreshTables();
 					} catch (Exception ex) {
 						ex.printStackTrace();
@@ -205,7 +205,7 @@ public class CageTab extends WizardPanel {
 	@Override
 	public void updateView() {
 		//Create groupPanels
-		setVisible(dlg.getStudy()!=null && !dlg.getBiotype().isHideContainer());
+		setVisible(dlg.getStudy()!=null && (dlg.getBiotype()==null || !dlg.getBiotype().isHideContainer()));
 		centerPanel.removeAll();
 		groupPanels.clear();
 		groups.clear();
@@ -221,6 +221,7 @@ public class CageTab extends WizardPanel {
 		}
 
 		reuseCagesCheckbox.setEnabled(canReuseCages);
+		if(!reuseCagesCheckbox.isEnabled()) reuseCagesCheckbox.setSelected(false);
 		
 		JPanel nonReservePanel = new JPanel();
 		for (Group gr : groups) {

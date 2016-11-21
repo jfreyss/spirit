@@ -21,6 +21,7 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.linker;
 
+import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -44,46 +45,38 @@ import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.result.ResultValue;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
-import com.actelion.research.spiritcore.util.Formatter;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.JCustomLabel;
-import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.AlphaNumericalCellEditor;
 import com.actelion.research.util.ui.exceltable.ExtendTableModel;
+import com.actelion.research.util.ui.exceltable.LargeTextCellEditor;
 
 public class MetadataColumn extends AbstractLinkerColumn<String> {
 	
-//	private DicoLabel dicoLabel = new DicoLabel();
-//	private JLabelNoRepaint defaultLabel = new JLabelNoRepaint();
-	
 	protected MetadataColumn(final BiosampleLinker linker) {
-		super(linker, String.class, 30, 400);
+		super(linker, String.class, 30, 600);
 	}
 	
 	@Override
 	public String getValue(Biosample row) {
 		row = linker.getLinked(row);
-		if(row==null || row.getBiotype()==null || !row.getBiotype().equals(getType().getBiotype()) || row.getMetadata(getType())==null) return null;
-		String v = row.getMetadata(getType()).getValue();
+		if(row==null || row.getBiotype()==null || !row.getBiotype().equals(getType().getBiotype()) || row.getMetadataValue(getType())==null) return null;
+		String v = row.getMetadataValue(getType());
 		if(v==null || v.length()==0) return null;
-		return v;
-	}
-	@Override
-	public void setValue(Biosample row, String value) {
-		row.setMetadata(getType(), value);
+		return v;			
 	}
 	
-//	@Override
-//	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {	
-//		if(getType().getDataType()==DataType.DICO) {
-//			dicoLabel.setText((String) value);
-//			return dicoLabel;
-//		} else {
-//			defaultLabel.setText((String) value);
-//			return defaultLabel;
-//		}
-//	}
+	@Override
+	public void setValue(Biosample row, String value) {
+		row.setMetadataValue(getType(), value);
+	}
+	
+	@Override
+	public boolean isEditable(Biosample row) {
+		return getType().getDataType()!=DataType.FORMULA;
+	}
 	
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {
@@ -100,12 +93,12 @@ public class MetadataColumn extends AbstractLinkerColumn<String> {
 			return new MetadataComboboxCellEditor(mt.getParameters());
 		case MULTI:
 			return new MultiComboboxCellEditor(mt.getParameters());
+		case FORMULA:
+			return null;
 		case DATE:
 			return new DateStringCellEditor();
-//		case DICO:
-//			return new DicoCellEditor(mt.getParameters());
-//		case ELN:
-//			return new AlphaNumericalCellEditor();
+		case LARGE:
+			return new LargeTextCellEditor();	
 		default:
 			throw new IllegalArgumentException("Invalid datatype, no editor for: "+datatype);
 		}
@@ -126,7 +119,6 @@ public class MetadataColumn extends AbstractLinkerColumn<String> {
 			comp.setBackground(ExtendTableModel.COLOR_NONEDIT);
 			return;
 		}
-
 		
 		String value = (String) value1;		
 		DataType datatype = mt.getDataType();
@@ -147,14 +139,17 @@ public class MetadataColumn extends AbstractLinkerColumn<String> {
 		} else if(datatype==DataType.NUMBER) {
 			warning = value!=null && !ResultValue.isValidDouble(value);
 		} else if(datatype==DataType.DATE) {
-			warning = value!=null && !value.equals(Formatter.cleanDateTime(value));
+			warning = value!=null && !value.equals(FormatterUtils.cleanDateTime(value));
+		} else if(datatype==DataType.FORMULA) {
+			comp.setForeground(Color.BLUE);
+		} else if(datatype==DataType.FORMULA) {
+			comp.setForeground(Color.BLUE);
 		}
 		if(warning) {
 			comp.setForeground(LF.COLOR_WARNING_FOREGROUND);						
 		} else if(error) {
 			comp.setForeground(LF.COLOR_ERROR_FOREGROUND);												
-		}
-		
+		}		
 		
 		if(!linker.isLinked() && getType()!=null && getType().isRequired()) {
 			comp.setBackground(LF.BGCOLOR_REQUIRED);
@@ -165,7 +160,7 @@ public class MetadataColumn extends AbstractLinkerColumn<String> {
 	public boolean isAutoWrap() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean mouseDoubleClicked(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
 		String v = (String) value;
@@ -174,7 +169,7 @@ public class MetadataColumn extends AbstractLinkerColumn<String> {
 				Desktop.getDesktop().browse(new URI(v));
 				return true;
 			} catch(Exception e) {
-				JExceptionDialog.showError(e);
+				e.printStackTrace();
 			}
 			
 		}

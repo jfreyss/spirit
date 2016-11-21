@@ -329,7 +329,7 @@ public class StudyActions {
 			putValue(AbstractAction.SMALL_ICON, IconType.FOOD.getIcon());			
 			
 			this.study = study;
-			setEnabled(study!=null && study.getPhases().size()>0 && SpiritRights.canBlind(study, Spirit.getUser()));
+			setEnabled(study!=null && study.getPhases().size()>0 && SpiritRights.canBlind(study, Spirit.getUser()) && study.getAttachedBiosamples().size()>0 );
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -377,7 +377,7 @@ public class StudyActions {
 			
 			this.study = study;
 			putValue(AbstractAction.SMALL_ICON, IconType.PRINT.getIcon());
-			setEnabled(SpiritRights.canExpert(study, Spirit.getUser()) || SpiritRights.canBlind(study, Spirit.getUser()));
+			setEnabled(study!=null && (SpiritRights.canExpert(study, Spirit.getUser()) || SpiritRights.canBlind(study, Spirit.getUser())) && study.getAttachedBiosamples().size()>0);
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -398,7 +398,7 @@ public class StudyActions {
 			
 			this.study = study;
 			putValue(AbstractAction.SMALL_ICON, IconType.BALANCE.getIcon());
-			setEnabled(study!=null && study.getPhases().size()>0 && SpiritRights.canBlind(study, Spirit.getUser()));
+			setEnabled(study!=null && (study.getPhases().size()>0 && SpiritRights.canBlind(study, Spirit.getUser())) && study.getAttachedBiosamples().size()>0);
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -411,72 +411,6 @@ public class StudyActions {
 		}
 	}
 
-	
-//	public static class Action_ObservationEvent extends AbstractAction {
-//		private final Study study;
-//		public Action_ObservationEvent(Study study) {
-//			super("Animal Observations");
-//			this.study = study;
-//			setEnabled(study.getGroups().size()>0 && SpiritRights.canEdit(study, Spirit.getUser()));
-//			putValue(AbstractAction.MNEMONIC_KEY, (int)('o'));			
-//			putValue(AbstractAction.SMALL_ICON, IconType.RESULT.getIcon());			
-//		}
-//
-//		@Override
-//		public void actionPerformed(ActionEvent e) {
-//			Phase[] phases = study.getPhases().toArray(new Phase[0]);
-//			Phase p = (Phase) JOptionPane.showInputDialog(UIUtils.getMainFrame(), "Select a phase", "Observations", JOptionPane.QUESTION_MESSAGE, null, phases, null);
-//			if(p!=null) {
-//				new com.actelion.research.animalcare.ui.observation.ObservationDlg(p);
-//			}
-//		}
-//	}
-	
-//	public static class Action_SamplingEvent extends AbstractAction {
-//		private Study study;
-//		private Collection<Biosample> biosamples;
-//		
-//		public Action_SamplingEvent(Study study) {
-//			super("Study Sampling ("+study.getStudyId()+")");
-//			putValue(AbstractAction.SMALL_ICON, IconType.BIOSAMPLE.getIcon());
-//			putValue(AbstractAction.MNEMONIC_KEY, (int)('s'));
-//			this.study = study;
-//			setEnabled(study.getGroups().size()>0 && SpiritRights.canEdit(study, Spirit.getUser()));
-//		}
-//		
-//		public Action_SamplingEvent(Collection<Biosample> biosamples) {
-//			putValue(AbstractAction.SMALL_ICON, IconType.BIOSAMPLE.getIcon());
-//			putValue(AbstractAction.MNEMONIC_KEY, (int)('s'));
-//			this.biosamples = biosamples;
-//			
-//					
-//			if(biosamples.size()==1 && biosamples.iterator().next().getAttachedStudy()!=null) {
-//				Biosample b = biosamples.iterator().next();
-//				study = b.getAttachedStudy();
-//				boolean canDoSampling = false;
-//				if(b.getAttachedStudy()!=null && b.getInheritedGroup()!=null) {
-//					
-//					for (StudyAction a : b.getInheritedGroup().getStudy().getActions()) {
-//						if(!a.getGroup().equals(b.getInheritedGroup())) continue;
-//						if(a.getNamedSampling1()!=null && a.getNamedSampling1().getSamplings().size()>0) {
-//							canDoSampling = true;
-//							break;
-//						}
-//					}
-//				}
-//				putValue(NAME, "Study Sampling ("+b.getAttachedStudy().getStudyId()+")");
-//				setEnabled(canDoSampling && SpiritRights.canEdit(study, Spirit.getUser()));
-//			} else {
-//				putValue(NAME, "Sampling");
-//				setEnabled(false);				
-//			}
-//			
-//		}
-//		@Override
-//		public void actionPerformed(ActionEvent e) {
-//			new BiosampleSamplingDlg(study, null, null, null, biosamples!=null && biosamples.size()==1? biosamples.iterator().next(): null);
-//		}
-//	}
 	
 	public static class Action_Report extends AbstractAction {
 		private Study study;

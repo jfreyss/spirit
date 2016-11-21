@@ -35,6 +35,7 @@ import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -65,6 +66,7 @@ import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.helper.ExpressionHelper;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.ui.JComboBoxBigPopup;
@@ -78,23 +80,25 @@ import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
+import net.objecthunter.exp4j.Expression;
+import net.objecthunter.exp4j.ValidationResult;
+
 public class BiotypeEditDlg extends JSpiritEscapeDialog {
 
 
 	private class MetadataPanel extends JPanel {
-		private Collection<BiotypeMetadata> metadataTypes;
+		private Collection<BiotypeMetadata> biotypeMetadatas;
 		private List<MetadataRow> rows = new ArrayList<>();
 		
 
 		private class MetadataRow {
 			private final BiotypeMetadata model;
-			int index;
 			JButton addButton = new JButton("+");
 			JButton delButton = new JButton("-");
 
 			JCustomTextField nameTextField = new JCustomTextField(10, "");
 			JButton paramButton = new JButton("View/Edit");
-			JGenericComboBox<DataType> dataTypeComboBox = new JGenericComboBox<DataType>(DataType.valuesForBiotype(), false);		
+			JGenericComboBox<DataType> dataTypeComboBox = new JGenericComboBox<DataType>(DataType.values(), false);		
 			JCheckBox requiredCheckBox = new JCheckBox("Req.");
 			JCheckBox hideCheckBox = new JCheckBox("Sec.");
 			final JLabel nCountDataLabel = new JLabel();
@@ -133,17 +137,20 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 						refresh();
 					}
 				});
-
+				
 				addButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
+						final int index = rows.indexOf(MetadataRow.this);
 						rows.add(index, new MetadataRow(new BiotypeMetadata()));
 						update();
 					}
 				});
+				
 				delButton.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
+						final int index = rows.indexOf(MetadataRow.this);
 						rows.remove(index);
 						update();
 					}
@@ -155,14 +162,11 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 			}
 			
 			private void eventClickParam() {
-				if(dataTypeComboBox.getSelection()==DataType.BIOSAMPLE) {
-					//Biosample -> select biotype
-					BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
-					biotypeComboBox.setSelectionString(model.getParameters());
-					int res = JOptionPane.showOptionDialog(BiotypeEditDlg.this, biotypeComboBox, "Select Linked Biotype", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
-					if(res==JOptionPane.YES_OPTION) {
-						model.setParameters(biotypeComboBox.getSelectionString());
-					}	
+				if(dataTypeComboBox.getSelection()==DataType.BIOSAMPLE) {					
+					editParametersBiotype(model);
+				} else if(dataTypeComboBox.getSelection()==DataType.FORMULA) {
+					//For a formula attribute, the user can enter a formula
+					editParametersFormula(model);
 				} else {
 					openEditParametersDlg(false, model, dataTypeComboBox.getSelection()!=DataType.AUTO);
 				}
@@ -178,6 +182,10 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 					paramButton.setVisible(true);
 				} else if(dataTypeComboBox.getSelection()==DataType.BIOSAMPLE) {
 					paramButton.setText(model.getParameters()==null || model.getParameters().length()==0? "Select": model.getParameters());				
+					paramButton.setVisible(true);
+				} else if(dataTypeComboBox.getSelection()==DataType.FORMULA) {
+					paramButton.setText(model.getParameters()==null || model.getParameters().length()==0? "Edit": model.getParameters().substring(0, Math.min(model.getParameters().length(), 15)));
+					paramButton.setToolTipText(model.getParameters());
 					paramButton.setVisible(true);
 				} else if(dataTypeComboBox.getSelection().getParametersDescription()!=null) {
 					paramButton.setText("Edit");				
@@ -197,13 +205,11 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 					model.setParametersArray(null);
 				}
 				return model;
-			}
-			
+			}			
 		}
 		
 		
-		public MetadataPanel() {			
-		}
+		public MetadataPanel() {}
 		
 		public void update() {
 			removeAll();
@@ -283,11 +289,13 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 			updateUI();
 			pack();
 		}
+		
 		public void refresh() {
 			for (MetadataRow r : rows) r.refresh();
 		}
+		
 		public void setMetadataTypes(Collection<BiotypeMetadata> metadataTypes){
-			this.metadataTypes = metadataTypes;		
+			this.biotypeMetadatas = metadataTypes;		
 			rows = new ArrayList<MetadataRow>();
 			if(metadataTypes!=null) {
 				for (BiotypeMetadata m : metadataTypes) {
@@ -295,44 +303,41 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 				}
 			}
 			update();
-			
-			
-			
 		}
+		
 		public void updateModel() {
-			metadataTypes.clear();
+			biotypeMetadatas.clear();
 			int index = 0;
 			for (MetadataRow row : rows) {
 				BiotypeMetadata m = row.updateModel();
 				m.setIndex(++index);
-				metadataTypes.add(m);				
+				biotypeMetadatas.add(m);				
 			}
 		}
 	}
 
 	private final Biotype biotype;
-	private BiotypeComboBox parentComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
-	private JCustomTextField biotypeNameTextField = new JCustomTextField(12, "", "");
-	private JCheckBox nameCheckBox = new JCheckBox("", true);
-	private JCustomTextField nameLabelTextField = new JCustomTextField(12, "", "No Main Metadata");
-	private JCustomTextField prefixTextField = new JCustomTextField(5, "", "PREFIX");
-	private JGenericComboBox<AmountUnit> amountUnitComboBox = new JGenericComboBox<AmountUnit>(AmountUnit.values(), true);
-//	private JTextArea descriptionTextField = new JTextArea(3, 20);
-	private JGenericComboBox<BiotypeCategory> categoryComboBox = new JGenericComboBox<BiotypeCategory>(BiotypeCategory.values(), true);
-	private MetadataPanel metadataPanel = new MetadataPanel();
-	private JCheckBox abstractCheckbox = new JCheckBox("Abstract Biotype");
-	private JCheckBox editSampleIdCheckbox = new JCheckBox("The sampleId is editable by the user");
-	private JCheckBox hideContainerCheckbox = new JCheckBox("No ContainerId");
-	private JCheckBox hiddenCheckbox = new JCheckBox("Hidden");
-	private ContainerTypeComboBox containerTypeComboBox = new ContainerTypeComboBox();
-	private JCheckBox nameAutocompleteCheckbox = new JCheckBox("Autocomplete");
-	private JCheckBox nameRequiredCheckbox = new JCheckBox("Required");
-	private JButton viewNamesButton = new JButton("View Entered");
-	private JButton setNameAsMetadataButton = new JButton("Convert to Metadata");
+	private final BiotypeComboBox parentComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
+	private final JCustomTextField biotypeNameTextField = new JCustomTextField(12, "", "");
+	private final JCheckBox nameCheckBox = new JCheckBox("", true);
+	private final JCustomTextField nameLabelTextField = new JCustomTextField(12, "", "No Main Metadata");
+	private final JCustomTextField prefixTextField = new JCustomTextField(5, "", "PREFIX");
+	private final JGenericComboBox<AmountUnit> amountUnitComboBox = new JGenericComboBox<>(AmountUnit.values(), true);
+	private final JGenericComboBox<BiotypeCategory> categoryComboBox = new JGenericComboBox<>(BiotypeCategory.values(), true);
+	private final MetadataPanel metadataPanel = new MetadataPanel();
+	private final JCheckBox abstractCheckbox = new JCheckBox("Abstract Biotype");
+	private final JCheckBox editSampleIdCheckbox = new JCheckBox("The sampleId is set by the user");
+	private final JCheckBox hideContainerCheckbox = new JCheckBox("No ContainerId");
+	private final JCheckBox hiddenCheckbox = new JCheckBox("Hidden");
+	private final ContainerTypeComboBox containerTypeComboBox = new ContainerTypeComboBox();
+	private final JCheckBox nameAutocompleteCheckbox = new JCheckBox("Autocomplete");
+	private final JCheckBox nameRequiredCheckbox = new JCheckBox("Required");
+	private final JCheckBox nameUniqueCheckbox = new JCheckBox("Unique");
+	private final JButton viewNamesButton = new JButton("View Entered");
+	private final JButton setNameAsMetadataButton = new JButton("Convert to Metadata");
 
 	private JButton deleteButton = new JIconButton(IconType.DELETE, "Delete");
 	private JButton saveButton = new JIconButton(IconType.SAVE, "Save");	
-//	private final JPanel contentPanel = new JPanel(new GridBagLayout());
 	
 	public BiotypeEditDlg(Biotype type) {
 		super(UIUtils.getMainFrame(), "Admin - Biotype - " + type.getName(), BiotypeEditDlg.class.getName());
@@ -341,16 +346,14 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 		//ContentPanel
 		parentComboBox.setEnabled(parentComboBox.getValues().size()>0);
 		JPanel contentPanel = UIUtils.createTitleBox("Biotype", 
-				UIUtils.createBox(
-					UIUtils.createTable(3,
-						new JLabel("Name: "), biotypeNameTextField, new JInfoLabel("Unique"),
-						
+				UIUtils.createVerticalBox(
+					UIUtils.createTable(3,5,0,
+						new JLabel("Name: "), biotypeNameTextField, new JInfoLabel(" Unique"),						
 						new JLabel("Category: "), categoryComboBox, null,
-						new JLabel("Inherited from: "), parentComboBox, new JInfoLabel("Only to be used if the samples inherits all the properties of its parent (ex: cells from cellline)"),
-						new JLabel("Prefix: "), prefixTextField, new JInfoLabel("The generated sampleId is 'Prefix######' where ###### is a number increment")),
-					null, 
-					UIUtils.createTable(2,
-							null, UIUtils.createHorizontalBox(editSampleIdCheckbox, new JInfoLabel("Check this box if the user can define the sampleId himself (ex: patientId)")),
+						new JLabel("Inherited from: "), parentComboBox, new JInfoLabel(" Only to be used if the samples inherits all the properties of its parent (ex: cells from cellline)"),
+						new JLabel("Prefix: "), prefixTextField, new JInfoLabel(" The generated sampleId is 'Prefix######' where ###### is a number increment")),
+					UIUtils.createTable(2,5,0,
+							null, UIUtils.createHorizontalBox(editSampleIdCheckbox, new JInfoLabel(" Check this box if the user can define the sampleId (ex: patientId, animalId)")),
 							null, hiddenCheckbox))
 				);
 
@@ -394,7 +397,7 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 		JPanel namePanel = UIUtils.createTitleBox("Main Metadata", 
 				UIUtils.createVerticalBox(
 						new JInfoLabel("The main metadata should be sufficient to describe the sample (not unique, displayed with the SampleId)"),
-						UIUtils.createHorizontalBox(nameCheckBox, new JLabel("Label: "), nameLabelTextField, Box.createHorizontalStrut(20), nameAutocompleteCheckbox, nameRequiredCheckbox, Box.createHorizontalStrut(40), viewNamesButton, setNameAsMetadataButton, Box.createHorizontalGlue())));
+						UIUtils.createHorizontalBox(nameCheckBox, new JLabel("Name: "), nameLabelTextField, Box.createHorizontalStrut(20), nameAutocompleteCheckbox, nameUniqueCheckbox, nameRequiredCheckbox, Box.createHorizontalStrut(40), viewNamesButton, setNameAsMetadataButton, Box.createHorizontalGlue())));
 
 
 		//MetadataPanel
@@ -453,13 +456,13 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 		nameCheckBox.setSelected(biotype.getSampleNameLabel()!=null);
 		abstractCheckbox.setSelected(biotype.isAbstract());
 		hiddenCheckbox.setSelected(biotype.isHidden());		
-//		descriptionTextField.setText(type.getDescription());
 		categoryComboBox.setSelection(biotype.getCategory());
 		metadataPanel.setMetadataTypes(biotype.getMetadata());
 		amountUnitComboBox.setSelection(biotype.getAmountUnit());
 		containerTypeComboBox.setSelection(biotype.getContainerType());
 		nameAutocompleteCheckbox.setSelected(biotype.isNameAutocomplete());
 		nameRequiredCheckbox.setSelected(biotype.isNameRequired());
+		nameUniqueCheckbox.setSelected(biotype.isNameUnique());
 		
 		refresh();
 		pack();
@@ -489,6 +492,7 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 		nameLabelTextField.setEnabled(nameCheckBox.isSelected());
 		nameAutocompleteCheckbox.setEnabled(nameCheckBox.isSelected());
 		nameRequiredCheckbox.setEnabled(nameCheckBox.isSelected());
+		nameUniqueCheckbox.setEnabled(nameCheckBox.isSelected());
 		viewNamesButton.setEnabled(nameCheckBox.isSelected());
 		setNameAsMetadataButton.setEnabled(nameCheckBox.isSelected());
 		
@@ -498,7 +502,6 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 		if(biotype==null) throw new Exception("Nothing to save!?");
 		if(categoryComboBox.getSelection()==null) throw new Exception("The category is required");
 		if(biotypeNameTextField.getText().length()==0) throw new Exception("The name is required");
-//		if(prefixTextField.getText().length()==0) throw new Exception("The prefix is required");
 
 		biotype.setName(biotypeNameTextField.getText());
 		biotype.setParent(parentComboBox.getSelection());
@@ -508,11 +511,11 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 		biotype.setSampleNameLabel(nameLabelTextField.getText());
 		biotype.setAbstract(abstractCheckbox.isSelected());
 		biotype.setHidden(hiddenCheckbox.isSelected());
-//		biotype.setDescription(descriptionTextField.getText());
 		biotype.setCategory(categoryComboBox.getSelection());
 		biotype.setAmountUnit(amountUnitComboBox.getSelection());
 		biotype.setContainerType(containerTypeComboBox.getSelection());
 		biotype.setNameAutocomplete(nameAutocompleteCheckbox.isSelected());
+		biotype.setNameUnique(nameUniqueCheckbox.isSelected());
 		biotype.setNameRequired(nameRequiredCheckbox.isSelected());
 		metadataPanel.updateModel();
 	}
@@ -642,7 +645,6 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 			SpiritUser user = Spirit.getUser();
 
 			updateModel();
-Thread.dumpStack();
 			if(biotype.getSampleNameLabel()!=null) throw new Exception(biotype+" has already a Main Field");
 			if(bm.getId()<=0) throw new Exception("You can only convert this metadata if the biotype is saved");
 			
@@ -662,6 +664,91 @@ Thread.dumpStack();
 		}		
 		
 	}
+	
+	
+	private void editParametersBiotype(BiotypeMetadata model) {
+		//Biosample -> select biotype
+		BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
+		biotypeComboBox.setSelectionString(model.getParameters());
+		int res = JOptionPane.showOptionDialog(BiotypeEditDlg.this, biotypeComboBox, "Select Linked Biotype", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+		if(res==JOptionPane.YES_OPTION) {
+			model.setParameters(biotypeComboBox.getSelectionString());
+		}
+	}
 
+
+	private void editParametersFormula(BiotypeMetadata model) {
+		String formula = model.getParameters();
+		
+		final JCustomTextArea paramTextArea = new JCustomTextArea(2, 15);
+		final JLabel okLabel = new JLabel("");
+		final JPanel contentPane = new JPanel(new BorderLayout());
+		
+		contentPane.add(BorderLayout.NORTH, 
+				new JLabel("<html><b>Enter the formula to be calculated:</b><ul>"
+						+ "<li> Variables 'M1', 'M2', .. reference the 1st, 2nd attributes (if numeric)"
+						+ "<li> ^ for exponentation, % for modulo"
+						+ "<li> sqrt(), log(), exp(), abs() can be used"
+						+ "<li> round(expression, n) to round to n decimals<br>"						
+						+ "</ul>Example:<br>"
+						+ "round(sqrt(M1*M2), 2) to calculate a geometric average"));
+		contentPane.add(BorderLayout.CENTER, new JScrollPane(paramTextArea));
+		contentPane.add(BorderLayout.SOUTH, okLabel);
+		contentPane.add(new JScrollPane(paramTextArea));
+		contentPane.setPreferredSize(new Dimension(500, 300));
+	
+		
+		paramTextArea.setText(model.getParameters());						
+		paramTextArea.setEditable(true);
+		paramTextArea.setVisible(true);
+		paramTextArea.setBackground(Color.WHITE);
+		
+		
+		CaretListener l = new CaretListener() {						
+			@Override
+			public void caretUpdate(CaretEvent e) {
+				try {
+					validateFormula(paramTextArea.getText());
+					okLabel.setForeground(Color.GREEN);
+					okLabel.setText("Valid");
+				} catch(Exception ex2) { 
+					okLabel.setForeground(Color.RED);
+					String s = ex2.getMessage();
+					okLabel.setText("Error: "+(s.length()>30? s.substring(0, 30): s));
+				}
+			}
+		};
+		paramTextArea.addCaretListener(l);
+		l.caretUpdate(null);
+		
+
+		while(true) {
+		
+			int res = JOptionPane.showOptionDialog(BiotypeEditDlg.this, contentPane, "Parameters", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+			if(res==JOptionPane.YES_OPTION) {
+				formula = paramTextArea.getText();
+				try {
+					validateFormula(formula);
+					model.setParameters(formula);
+					return;
+				} catch(Exception e) { 
+					JExceptionDialog.showError("The formula is not correct: "+e);
+				}
+			} else {
+				return;
+			}
+		}
+	}
+	
+	private void validateFormula(String expr) throws Exception {
+		Set<String> variables = new HashSet<>();
+		for (int i = 0; i < metadataPanel.rows.size(); i++) {
+			if(metadataPanel.rows.get(i).dataTypeComboBox.getSelection()==DataType.NUMBER) variables.add("M"+(i+1));
+		}
+		//Evaluate expression
+		Expression e = ExpressionHelper.createExpressionBuilder(expr).variables(variables).build();
+		ValidationResult res = e.validate(false);
+		if(!res.isValid()) throw new Exception(MiscUtils.flatten(res.getErrors(), ", "));
+	}
 	
 }

@@ -35,6 +35,7 @@ import com.actelion.research.spiritapp.spirit.ui.lf.SpiritExcelTable;
 import com.actelion.research.spiritapp.spirit.ui.result.column.AttributeColumn;
 import com.actelion.research.spiritapp.spirit.ui.result.column.CommentsColumn;
 import com.actelion.research.spiritapp.spirit.ui.result.column.CreationColumn;
+import com.actelion.research.spiritapp.spirit.ui.result.column.DocumentColumn;
 import com.actelion.research.spiritapp.spirit.ui.result.column.ElbColumn;
 import com.actelion.research.spiritapp.spirit.ui.result.column.PhaseColumn;
 import com.actelion.research.spiritapp.spirit.ui.result.column.QualityColumn;
@@ -52,10 +53,15 @@ import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.FillCellAction;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
+/**
+ * Excel like table to edit results
+ * 
+ * @author Joel Freyss
+ *
+ */
 public class EditResultTable extends SpiritExcelTable<Result>  {
 	
 	private EditResultDlg dlg;
-//	private EditResultTab tab;
 	
 	/**
 	 * Constructor
@@ -63,7 +69,6 @@ public class EditResultTable extends SpiritExcelTable<Result>  {
 	public EditResultTable(EditResultDlg dlg) {
 		super(new EditResultTableModel());
 		this.dlg = dlg;
-//		this.tab = tab;		
 	}
 	
 	@Override
@@ -103,7 +108,11 @@ public class EditResultTable extends SpiritExcelTable<Result>  {
 			columns.add(new PhaseColumn());
 			
 			for (final TestAttribute att : test.getAttributes()) {
-				columns.add(new AttributeColumn(att));	
+				if(att.getDataType()==DataType.D_FILE) {
+					columns.add(new DocumentColumn(att));
+				} else {
+					columns.add(new AttributeColumn(att));
+				}
 			}
 			
 			columns.add(new CommentsColumn());			
@@ -136,17 +145,9 @@ public class EditResultTable extends SpiritExcelTable<Result>  {
 		}		
 	}
 	
-//	/**
-//	 * @param study the study to set
-//	 */
-//	public void setStudy(Study study) {
-//		getModel().setStudy(study);
-//	}
-	
 	@Override
 	protected void pasteSelection() {
 		Test test = getModel().getTest();
-//		Study study = getModel().getStudy();
 		
 		//Check if we paste a pivot table
 		String paste = EasyClipboard.getClipboard();
@@ -157,7 +158,7 @@ public class EditResultTable extends SpiritExcelTable<Result>  {
 		if(DEBUG) System.out.println("ExcelTable: Paste "+paste);
 		if(table.length==0) return;
 		
-		if(table.length>0) {
+		if(table.length>0 && dlg!=null) {
 			
 			//Analyze first row
 			boolean isPivot = table[0].length>getColumnCount();

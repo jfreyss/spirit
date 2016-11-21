@@ -21,13 +21,16 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.editor;
 
-import com.actelion.research.spiritapp.spirit.ui.biosample.MetadataComponentFactory.DateStringComponent;
-import com.actelion.research.spiritcore.util.Formatter;
-
-import javax.swing.*;
-import javax.swing.table.TableCellEditor;
-import java.awt.*;
+import java.awt.Component;
 import java.util.Date;
+
+import javax.swing.AbstractCellEditor;
+import javax.swing.JTable;
+import javax.swing.UIManager;
+import javax.swing.table.TableCellEditor;
+
+import com.actelion.research.spiritapp.spirit.ui.biosample.MetadataComponentFactory.DateStringComponent;
+import com.actelion.research.util.FormatterUtils;
 
 public class DateCellEditor extends AbstractCellEditor implements TableCellEditor {
 
@@ -43,7 +46,7 @@ public class DateCellEditor extends AbstractCellEditor implements TableCellEdito
 	 */
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-		tf.setData(Formatter.formatDateYyyy( (Date) value));
+		tf.setData(FormatterUtils.formatDateYyyy( (Date) value));
 		tf.selectAll();
 		return tf;
 	}
@@ -53,7 +56,7 @@ public class DateCellEditor extends AbstractCellEditor implements TableCellEdito
 	 */
 	@Override		
 	public Date getCellEditorValue() {
-		Date t = Formatter.parseDate(tf.getData());
+		Date t = FormatterUtils.parseDate(tf.getData());
 		return t;
 	}				
 }

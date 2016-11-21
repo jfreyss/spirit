@@ -30,6 +30,12 @@ import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode.Fiel
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 
+/**
+ * The Study Search tree is the tree used to query a study (by id or by keyword)
+ * 
+ * @author Joel Freyss
+ *
+ */
 public class StudySearchTree extends FormTree {
 
 	private final StudyQuery query = new StudyQuery();
@@ -49,13 +55,12 @@ public class StudySearchTree extends FormTree {
 		}
 		@Override
 		public void onChange() {
-			if(getModel().length()>0) {
+			if(studyNode.getSelection().length()>0) {
 				StudySearchTree.this.firePropertyChange(FormTree.PROPERTY_SUBMIT_PERFORMED, "", null);
 			}
 		}
 	});
-	
-	
+		
 	public StudySearchTree() {
 		setRootVisible(false);
 
@@ -75,7 +80,6 @@ public class StudySearchTree extends FormTree {
 		setRoot(root);		
 	}
 	
-
 	public StudyQuery getQuery() {
 		updateModel();
 		query.setUser(null);

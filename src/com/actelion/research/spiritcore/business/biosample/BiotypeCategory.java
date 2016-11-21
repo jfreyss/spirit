@@ -28,7 +28,7 @@ public enum BiotypeCategory {
 	SOLID("Solid sample", new Color(255, 255, 220)),
 	LIQUID("Liquid sample", new Color(245, 245, 200)),
 	PURIFIED("Purified sample", new Color(235, 225, 200)),
-//	FORMULATION("Formulation (used as treatment)", new Color(240, 225, 255)),
+	FORMULATION("Formulation", new Color(240, 225, 255)),
 	LIBRARY("Library (abstract / used as references)", new Color(240, 240, 240));
 	
 	private final String name;

@@ -40,7 +40,6 @@ import com.actelion.research.spiritapp.spirit.ui.pivot.column.PivotStringColumn;
 import com.actelion.research.spiritapp.spirit.ui.pivot.designer.PivotTemplateDlg;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.pivot.Computed;
-import com.actelion.research.spiritcore.business.pivot.GraphpadPivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.PivotCell;
 import com.actelion.research.spiritcore.business.pivot.PivotCellKey;
 import com.actelion.research.spiritcore.business.pivot.PivotColumn;

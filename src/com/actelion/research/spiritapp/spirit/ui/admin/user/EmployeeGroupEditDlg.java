@@ -50,10 +50,10 @@ public class EmployeeGroupEditDlg extends JSpiritEscapeDialog {
 	private EmployeeGroupComboBox parentComboBox = new EmployeeGroupComboBox(true);
 	private EmployeeGroup group;
 	
-	public EmployeeGroupEditDlg(EmployeeGroup gr) {
+	public EmployeeGroupEditDlg(EmployeeGroup myGroup) {
 		super(UIUtils.getMainFrame(), "Add/Edit Group", EmployeeGroupEditDlg.class.getName());
 		
-		group = JPAUtil.reattach(gr);
+		group = JPAUtil.reattach(myGroup);
 		nameField.setText(group.getName());
 		parentComboBox.setSelection(group.getParent());
 		

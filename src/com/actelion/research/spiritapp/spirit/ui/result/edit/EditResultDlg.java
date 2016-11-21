@@ -75,7 +75,6 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
-import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomLabel;
@@ -89,7 +88,7 @@ import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 public class EditResultDlg extends JSpiritEscapeDialog {
 
 	private final JClosableTabbedPane tabbedPane = new JClosableTabbedPane();
-	private final List<EditResultTab> resultsTabs = new ArrayList<EditResultTab>();
+	private final List<EditResultTab> resultsTabs = new ArrayList<>();
 	
 	private JTextField elbTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 15);
 	
@@ -101,19 +100,17 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 	 * Constructor used to edit results from a elb
 	 * @param elb
 	 */
-	public EditResultDlg(List<Result> results) {
+	public EditResultDlg(List<Result> myResults) {
 		super(UIUtils.getMainFrame(), "Edit Results", EditResultDlg.class.getName());
 		editWholeExperiment = false;
+		//Reload results in the current session
+		List<Result> results = JPAUtil.reattach(myResults);
 		if(results.size()>40000) {
 			JExceptionDialog.showError(this, "The maximum number of results allowed is 40000.");
 			return;
-		}
-		
-		//Reload results in the current session
-		results = JPAUtil.reattach(results);
+		}		
 		
 		Collections.sort(results);
-
 		try {
 			for(Result result: results) {
 				if(!SpiritRights.canEdit(result, Spirit.getUser()))	{
@@ -184,19 +181,8 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		try {
 			List<Result> toDisplay = new ArrayList<>();
 			if(askForElb) {
-				//Suggest elb (Studyid)
-				String suggestedElb = null;
-				for (Result r : initialResults) {
-					if(r.getElb()!=null) {
-						suggestedElb = r.getElb();
-						break;
-					}
-				}
-				if(suggestedElb==null) {
-					suggestedElb = DAOResult.suggestElb(Spirit.getUsername());
-				}
 				//New experiment, ask for the elb (new or existing)
-				EditResultSelectElbDlg dlg = new EditResultSelectElbDlg(suggestedElb);
+				EditResultSelectElbDlg dlg = new EditResultSelectElbDlg();
 				String elb = dlg.getReturnedValue();
 				if(elb==null) return;
 				
@@ -396,8 +382,8 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 	 */
 	private void initTabbedPane(List<Result> results) throws Exception {
 		//Check rights
-		List<Result> notAllowed = new ArrayList<Result>();
-		List<Result> allowed = new ArrayList<Result>();
+		List<Result> notAllowed = new ArrayList<>();
+		List<Result> allowed = new ArrayList<>();
 		for (Result result : results) {
 			if(!SpiritRights.canEdit(result, Spirit.getUser())) {
 				notAllowed.add(result);
@@ -563,14 +549,6 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 	
 	public void eventDelete() {
 		
-//		List<Result> results = new ArrayList<Result>();			
-//		for (EditResultTab resultsPanel : resultsTabs) {
-//			for (Result result : resultsPanel.getTable().getRows()) {
-//				if(result.getId()>0) results.add(result);
-//			}
-//		}
-
-		
 		try {
 			String elb = elbTextField.getText();
 
@@ -580,7 +558,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 			//Check rights to be really sure
 			for (Result result : results) {
 				if(!SpiritRights.canDelete(result, Spirit.getUser())) {
-					throw new Exception("You are not allowed to delete "+result);
+					throw new Exception("You are not allowed to delete those results");
 				}
 			}
 			
@@ -616,11 +594,9 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		
 		long start = System.currentTimeMillis();
 		
-		System.out.println("EditResultDlg.eventOk1() "+(System.currentTimeMillis()-start)+"ms");
-		//
 		//Synchronize the results with the elb, test, phases
-		final List<Result> toSave = new ArrayList<Result>();
-		List<Result> warnQualityResults = new ArrayList<Result>();
+		final List<Result> toSave = new ArrayList<>();
+		List<Result> warnQualityResults = new ArrayList<>();
 		final String elb = elbTextField.getText().trim();
 		for (EditResultTab tab : resultsTabs) {
 			Test test = tab.getTable().getModel().getTest();
@@ -649,96 +625,6 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		System.out.println("EditResultDlg.eventOk2() "+(System.currentTimeMillis()-start)+"ms");
 		
 	
-		
-		/*
-		//Assign phases??
-		List<PhaseMapping> phaseMappings = new ArrayList<PhaseMapping>();
-		for (EditResultTab tab : resultsTabs) {
-			Test test = tab.getTable().getModel().getTest();
-			if(test==null) continue; //last tab
-			resultLoop: for(Result result: tab.getTable().getRows()) {
-				if(result.isEmpty()) continue;
-				if(result.getPhase()!=null) continue;
-				if(result.getBiosample()==null || result.getBiosample().getInheritedGroup()==null) continue;
-						
-				//Find the latest sampling for this animals (assuming that necropsy happened)
-				Group g = result.getBiosample().getInheritedGroup();
-				Phase p = result.getBiosample().getInheritedPhase();
-				if(p==null) {
-					//No phase associated to the biosample, try to get the latest sampling
-					Study s = g.getStudy();
-					for(Phase p2 : s.getPhases()) {
-						StudyAction a = result.getBiosample().getStudyAction(p2);
-						if(a==null) continue;
-						if(a.getNamedSampling1()!=null || a.getNamedSampling2()!=null) {
-							if(p!=null) {
-								//Skip this result if there were more than 2 samplings
-								continue resultLoop;
-							}
-							p = p2;									
-						} 
-					}
-				}
-				if(p!=null) phaseMappings.add(new PhaseMapping(result, p));					
-			}
-		}
-
-		if(phaseMappings.size()>0) {
-			StringBuilder sb = new StringBuilder();
-			sb.append("<html><table>");
-			int count = 0;
-			for (PhaseMapping phaseMapping : phaseMappings) {
-				Biosample b = phaseMapping.getResult().getBiosample();
-				sb.append("<tr>"
-						+ "<td>" 
-						+ (b.getInheritedGroup()==null?"":b.getInheritedGroup().getName())
-						+ "</td>"
-						+ "<td><b>"
-						+ b.getSampleId()
-						+ "</b></td>"
-						+ "<td>--></td>"
-						+ "<td><b>"
-						+ phaseMapping.getPhase().getName()
-						+ "</b></td>"
-						+ "</tr>"); 
-				if(count++>100) {
-					sb.append("<tr><td colsan=99>"+phaseMappings.size()+" More...</td></tr>");
-					break;
-				}
-				
-			}
-			sb.append("</table></html>");
-			System.out.println("EditResultDlg.eventOk3b() "+(System.currentTimeMillis()-start)+"ms");
-			
-			int res = JOptionPaneScrollpane.showConfirmDialog(this, 
-					"The following results are not associated to a phase.\nDo you want to make those associations?", 
-					sb.toString(), 
-					"No Phase?", 
-					JOptionPane.YES_NO_OPTION);
-			if(res==JOptionPane.NO_OPTION) {
-				//OK
-			} else if(res==JOptionPane.YES_OPTION) {
-				for (PhaseMapping phaseMapping : phaseMappings) {
-					phaseMapping.getResult().setPhase(phaseMapping.getPhase());						
-				}
-				SwingUtilities.invokeLater(new Runnable() {					
-					@Override
-					public void run() {
-						try {
-							initTabbedPane(toSave);
-						} catch(Exception e) {
-							e.printStackTrace();
-						}
-					}
-				});
-				
-			} else {
-				return null;
-			}			
-		}
-		System.out.println("EditResultDlg.eventOk4() "+(System.currentTimeMillis()-start)+"ms");
-		*/
-
 		//Check that all results linked to a biosample have a study
 		for (Result result : toSave) {
 			Study s = result.getBiosample()!=null && result.getBiosample().getInheritedStudy()!=null? result.getBiosample().getInheritedStudy(): null; 
@@ -749,20 +635,6 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 			}
 		}
 		System.out.println("EditResultDlg.eventOk5() "+(System.currentTimeMillis()-start)+"ms");
-
-
-//		//Check that all results are linked to an organ, fluid,  (except for Physiology tests)
-//		for (Result result : toSave) {
-//			if(result.getBiosample()!=null && result.getBiosample().getBiotype().getCategory()==BiotypeCategory.ANIMAL) {
-//				if(result.getTest().getCategory()!=TestCategory.PHYSIOLOGY && result.getTest().getCategory()==TestCategory.INVIVO) {
-//					int res = JOptionPane.showConfirmDialog(this, "The results should not be associated directly to an animal.\nYou should right-click on the sampleId column\n and convert it to the appropriate sample.\nDo you want to correct it?", "Result linked to Animal?", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-//					if(res!=JOptionPane.NO_OPTION) {
-//						return null;
-//					}						
-//				}
-//			}
-//		}
-		System.out.println("EditResultDlg.eventOk6() "+(System.currentTimeMillis()-start)+"ms");
 
 		
 		//Check the autocompletion fields for approximate spelling
@@ -800,22 +672,6 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 						correction.getAffectedData().add(result);
 						if(correction.getSuggestedValue()!=null) obviousProblems++;							
 					}							
-//				} else if(att.getDataType()==DataType.DICO) {
-//					//Nomenclature
-//					Set<NomenclatureTuple> set = NomenclatureClientImp.instanceOfDefault().searchForMatchingNomenclature(value, 10);
-//					Set<String> possibleValues = new HashSet<String>();
-//					boolean contains = false;
-//					for (NomenclatureTuple tuple : set) {
-//						if(value.equals(tuple.controlledTerm)) {contains = true; break;} 
-//						possibleValues.add(tuple.controlledTerm);
-//					}					
-//					if(contains) continue;
-//					
-//					Correction<TestAttribute, Result> correction = correctionMap.getCorrection(att, value);
-//					if(correction==null) correction = correctionMap.addCorrection(att, value, new ArrayList<String>(possibleValues), true);					
-//					correction.getAffectedData().add(result);
-//					if(correction.getSuggestedValue()!=null) obviousProblems++;							
-
 				}
 			}
 		}
@@ -853,7 +709,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 			String key = r.getTest().getId()+"_"+(r.getPhase()==null?"":r.getPhase().getId())+"_"+(r.getBiosample()==null?"":r.getBiosample().getSampleId())+"_"+r.getInputResultValuesAsString();
 			List<Result> list = input2Results.get(key);
 			if(list==null) {
-				list = new ArrayList<Result>();
+				list = new ArrayList<>();
 				input2Results.put(key, list);
 			} else {
 				duplicated.add(r);
@@ -945,7 +801,6 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		return false;
 	}
 	
-
 	public boolean isEditExperimentMode() {
 		return editWholeExperiment;
 	}
@@ -953,20 +808,9 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 	public JTabbedPane getTabbedPane() {
 		return tabbedPane;
 	}
+
 	public List<EditResultTab> getResultsTabs() {
 		return resultsTabs;
 	}
 	
-	public static void main(String[] args) throws Exception {
-		SpiritUser user = DAOSpiritUser.loadUser("freyssj");
-		Spirit.setUser(user);
-		//new EditResultDlg();
-		
-//		List<Result> results = new ArrayList<Result>();
-//		Result result = new Result();
-//		results.add(result);
-		Spirit.initUI();
-		
-		new EditResultDlg("S-00357", null);
-	}
 }

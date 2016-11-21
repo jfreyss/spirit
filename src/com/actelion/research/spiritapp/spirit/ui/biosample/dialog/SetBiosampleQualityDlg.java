@@ -52,6 +52,7 @@ import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
@@ -60,9 +61,9 @@ public class SetBiosampleQualityDlg extends JSpiritEscapeDialog {
 	
 	private List<Biosample> biosamples;
 	
-	public SetBiosampleQualityDlg(List<Biosample> biosamples, Quality quality) {
+	public SetBiosampleQualityDlg(List<Biosample> mySamples, Quality quality) {
 		super(UIUtils.getMainFrame(), "Set Quality", SetBiosampleQualityDlg.class.getName());
-		this.biosamples = biosamples;
+		this.biosamples = JPAUtil.reattach(mySamples);
 		
 		
 		JPanel centerPanel = new JPanel(new BorderLayout());
@@ -90,10 +91,12 @@ public class SetBiosampleQualityDlg extends JSpiritEscapeDialog {
 	
 	public class MarkAction extends AbstractAction {
 		private Quality quality;
+		
 		public MarkAction(Quality quality) {
 			super("Set As " + quality);
 			this.quality = quality;
 		}
+		
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {

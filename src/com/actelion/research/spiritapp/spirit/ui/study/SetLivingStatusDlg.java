@@ -52,9 +52,9 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.spiritcore.business.biosample.Metadata;
-import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
+import com.actelion.research.spiritcore.business.biosample.Biotype;
+import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Phase;
@@ -64,7 +64,7 @@ import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.DateTextField;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
@@ -85,16 +85,16 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 	
 	private JRadioButton removedAnimalRadioButton = new JRadioButton("Move to Reserve ");
 	private JRadioButton statusAliveRadioButton = new JRadioButton("Change Status to: Alive");
-	private JRadioButton statusNecropsiedRadioButton = new JRadioButton("Change Status to: Necropsied");
-	private JRadioButton statusDeadRadioButton = new JRadioButton("Change Status to: Found Dead (Samples will not be generated)");
-	private JRadioButton statusKilledRadioButton = new JRadioButton("Change Status to: Killed (Samples will not be generated)");
+	private JRadioButton statusNecropsiedRadioButton = new JRadioButton("Change Status to: Necropsied (Necropsy samples are generated)");
+	private JRadioButton statusDeadRadioButton = new JRadioButton("Change Status to: Found Dead (Necropsy samples will not be generated)");
+	private JRadioButton statusKilledRadioButton = new JRadioButton("Change Status to: Killed (Necropsy samples will not be generated)");
 	private PhaseComboBox phaseComboBox;
 	
 	private JCustomTextField observationField = new JCustomTextField();
 	
-	public SetLivingStatusDlg(final Study s, List<Biosample> selectedBiosamples) {
+	public SetLivingStatusDlg(final Study myStudy, List<Biosample> selectedBiosamples) {
 		super(UIUtils.getMainFrame(), "Set Living Status", SetLivingStatusDlg.class.getName());
-		this.study = JPAUtil.reattach(s);
+		this.study = JPAUtil.reattach(myStudy);
 		
 		if(study==null) {
 			JExceptionDialog.showError("Study cannot be null");
@@ -106,7 +106,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 		
 		phaseComboBox = new PhaseComboBox(study.getPhases());	
 		phaseComboBox.setSelection(study.getPhase(JPAUtil.getCurrentDateFromDatabase()));
-		dateField.setText(Formatter.formatDate(new Date()));
+		dateField.setText(FormatterUtils.formatDate(new Date()));
 		
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.VERTICAL;
@@ -152,7 +152,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 				replaceByComboBox.setEnabled(true);
 				replaceByComboBox.setSelection(null);
 				dateField.setEnabled(!statusAliveRadioButton.isSelected());
-				dateField.setText(statusAliveRadioButton.isSelected()?"": Formatter.formatDate(phaseComboBox.getSelection()==null || phaseComboBox.getSelection().getAbsoluteDate()==null? new Date(): phaseComboBox.getSelection().getAbsoluteDate()));
+				dateField.setText(statusAliveRadioButton.isSelected()?"": FormatterUtils.formatDate(phaseComboBox.getSelection()==null || phaseComboBox.getSelection().getAbsoluteDate()==null? new Date(): phaseComboBox.getSelection().getAbsoluteDate()));
 				Status s = getSelectedStatus();
 				observationField.setText(s==null || s==Status.INLAB?"": s.getName()) ;
 
@@ -167,7 +167,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 		phaseComboBox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				dateField.setText(statusAliveRadioButton.isSelected()?"": Formatter.formatDate(phaseComboBox.getSelection()==null || phaseComboBox.getSelection().getAbsoluteDate()==null? new Date(): phaseComboBox.getSelection().getAbsoluteDate()));
+				dateField.setText(statusAliveRadioButton.isSelected()?"": FormatterUtils.formatDate(phaseComboBox.getSelection()==null || phaseComboBox.getSelection().getAbsoluteDate()==null? new Date(): phaseComboBox.getSelection().getAbsoluteDate()));
 				observationField.setEnabled(phaseComboBox.getSelection()!=null);
 			}
 		});
@@ -258,7 +258,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 		Biosample replacement = replaceByComboBox.getSelection();
 		if(replacement!=null && animals.size()>1) throw new Exception("You can only set a replacement if you select one animal");
 		
-		Date dod = Formatter.parseDate(dateField.getText());
+		Date dod = FormatterUtils.parseDate(dateField.getText());
 		if(dateField.getText().length()>0 && dod==null) throw new Exception("You must give a valid date of death");
 		
 		Phase phase = phaseComboBox.getSelection();
@@ -286,12 +286,12 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 			
 	
 			// set the dod if possible
-			if (status!=null && !status.isAvailable() && animal.getMetadata(Metadata.DATEOFDEATH) != null) {
+			if (status!=null && !status.isAvailable() && animal.getMetadataValue(Biotype.DATEOFDEATH) != null) {
 				animal.setContainer(null);
 				if (dod != null) {
-					animal.setMetadata(Metadata.DATEOFDEATH, Formatter.formatDate(dod));
+					animal.setMetadataValue(Biotype.DATEOFDEATH, FormatterUtils.formatDate(dod));
 				} else {
-					animal.setMetadata(Metadata.DATEOFDEATH, null);
+					animal.setMetadataValue(Biotype.DATEOFDEATH, null);
 				}
 			}
 			biosamplesToSave.add(animal);
@@ -310,9 +310,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 				animal.setComments((animal.getComments() == null || animal.getComments().length() == 0 ? "" : animal.getComments() + " ") + comments1);
 	
 				// Exchange the container of the replacement and the animal
-//				Container ctn = replacement.getContainer();
 				replacement.setContainer(animal.getContainer());
-//				animal.setContainer(ctn);
 				biosamplesToSave.add(replacement);
 			}
 

@@ -254,7 +254,7 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 		}
 		
 		
-		List<Biosample> tops = new ArrayList<Biosample>();
+		List<Biosample> tops = new ArrayList<>();
 		for (Biosample b : container.getBiosamples()) {
 			if(!tops.contains(b.getTopParentInSameStudy())) {
 				tops.add(b.getTopParentInSameStudy());

@@ -40,8 +40,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
-
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritcore.business.DataType;
@@ -50,22 +48,27 @@ import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
+import com.actelion.research.util.ui.JTextComboBox;
+import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
 
 public class TestRenameAttDlg extends JSpiritEscapeDialog {
 	
 	
 	private JGenericComboBox<TestAttribute> attComboBox = new JGenericComboBox<TestAttribute>();
-	private JGenericComboBox<String> valuesComboBox = new JGenericComboBox<String>();
+	private JTextComboBox valuesComboBox = new JTextComboBox();
 	private JTextField newValueTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 10); 
 	private JButton renameButton = new JButton(new Action_Rename());
 	private JLabel infoLabel = new JLabel();
-	public TestRenameAttDlg(Test test) {
+	
+	public TestRenameAttDlg(Test myTest) {
 		super(UIUtils.getMainFrame(), "Admin - Tests - Rename Attribute", TestRenameAttDlg.class.getName());
-		
+
+		Test test = JPAUtil.reattach(myTest);
 		if(test==null) throw new IllegalArgumentException("Please select a test");
 		
 		String text = "<html><table>";
@@ -81,7 +84,6 @@ public class TestRenameAttDlg extends JSpiritEscapeDialog {
 		
 		attComboBox = new JGenericComboBox<TestAttribute>(atts, true);
 		
-		AutoCompleteDecorator.decorate(valuesComboBox);
 		Box line1 = Box.createHorizontalBox();
 		line1.add(new JLabel("Attribute: "));
 		line1.add(attComboBox);
@@ -117,13 +119,10 @@ public class TestRenameAttDlg extends JSpiritEscapeDialog {
 				
 			}
 		});
-		valuesComboBox.addItemListener(new ItemListener() {			
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if(e.getStateChange()!=ItemEvent.SELECTED) return;
-				String value = valuesComboBox.getSelection();
-				newValueTextField.setText(value==null?"": value);
-				newValueTextField.setEnabled(value!=null);
+		valuesComboBox.addTextChangeListener(new TextChangeListener() {
+			public void textChanged(javax.swing.JComponent src) {
+				String value = valuesComboBox.getText();
+				newValueTextField.setText(value);
 				renameButton.setEnabled(value!=null);
 			}
 		});
@@ -147,7 +146,7 @@ public class TestRenameAttDlg extends JSpiritEscapeDialog {
 			values = DAOTest.getAutoCompletionFields(att);
 			infoLabel.setText("id:"+att.getId());
 		}
-		valuesComboBox.setValues(values, true);		
+		valuesComboBox.setChoices(values);		
 	}
 	
 	private class Action_Rename extends AbstractAction {
@@ -159,14 +158,14 @@ public class TestRenameAttDlg extends JSpiritEscapeDialog {
 			try {
 				SpiritUser user = Spirit.askForAuthentication();
 				TestAttribute att = attComboBox.getSelection();
-				String value = valuesComboBox.getSelection();
+				String value = valuesComboBox.getText();
 				String newValue = newValueTextField.getText();
 				if(att==null || value==null) throw new Exception("Please select an attribute and a value");
 				if(newValue.length()==0) throw new Exception("Please enter a new value");
 				int res = DAOResult.rename(att, value, newValue, user);
 				JOptionPane.showMessageDialog(UIUtils.getMainFrame(), res + " values renamed", "Success", JOptionPane.INFORMATION_MESSAGE);
 				repopulateValues();
-				valuesComboBox.setSelection(newValue);
+				valuesComboBox.setText(newValue);
 				
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);

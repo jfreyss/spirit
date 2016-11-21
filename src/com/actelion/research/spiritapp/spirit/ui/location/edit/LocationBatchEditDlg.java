@@ -68,7 +68,7 @@ public class LocationBatchEditDlg extends JSpiritEscapeDialog {
 	private List<Location> savedLocations = null; 
 	
 	public static LocationBatchEditDlg duplicate(List<Location> locations) {
-		Set<Location> tree = new HashSet<Location>();
+		Set<Location> tree = new HashSet<>();
 		for (Location l : locations) {
 			tree.addAll(l.getChildrenRec(10));
 		}
@@ -95,11 +95,10 @@ public class LocationBatchEditDlg extends JSpiritEscapeDialog {
 		return new LocationBatchEditDlg(locations, false, false);
 	}
 	
-	private LocationBatchEditDlg(List<Location> locations, boolean duplicate, final boolean newTransaction) {
+	private LocationBatchEditDlg(List<Location> myLocations, boolean duplicate, final boolean newTransaction) {
 		super(UIUtils.getMainFrame(), "Location - Edit", newTransaction? LocationBatchEditDlg.class.getName(): null);
-		locations = JPAUtil.reattach(locations);
-		
-		
+		List<Location> locations = JPAUtil.reattach(myLocations);
+				
 		if(duplicate) {
 			locations = Location.duplicate(locations);
 		}

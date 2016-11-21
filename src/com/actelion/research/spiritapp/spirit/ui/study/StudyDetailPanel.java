@@ -24,6 +24,7 @@ package com.actelion.research.spiritapp.spirit.ui.study;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
+import java.awt.event.ComponentAdapter;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -59,7 +60,6 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.JCustomTabbedPane;
-import com.actelion.research.util.ui.SwingWorkerExecutor;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 
@@ -134,14 +134,10 @@ public class StudyDetailPanel extends JPanel {
 			animalTab = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JBGScrollPane(animalTable, 3), biosamplePane);
 			((JSplitPane)animalTab).setDividerSize(4);
 			
-			SwingWorkerExecutor.execute(new Runnable() {
-				@Override
-				public void run() {
-					while(getHeight()<=0) {
-						try{Thread.sleep(100);}catch(Exception e){}
-					}
-					((JSplitPane)animalTab).setDividerLocation(getHeight()-175);
-				}
+			animalTab.addComponentListener(new ComponentAdapter() {
+				public void componentShown(java.awt.event.ComponentEvent e) {
+					((JSplitPane)animalTab).setDividerLocation(animalTab.getHeight()-175);
+				};
 			});
 		}
 

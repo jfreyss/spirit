@@ -103,7 +103,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 		public AttributeRow(final TestAttribute att){
 			this.model = att;
 			name = new JCustomTextField(JCustomTextField.ALPHANUMERIC, att.getName(), 12);
-			dataTypeComboBox = new JGenericComboBox<DataType>(DataType.valuesForResult(), true);
+			dataTypeComboBox = new JGenericComboBox<DataType>(DataType.values(), true);
 			required = new JCheckBox("Req.", att.isRequired());
 			index = att.getIndex();
 			
@@ -126,8 +126,6 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 					} else if(dataTypeComboBox.getSelection()==DataType.FORMULA) {
 						//For a formula attribute, the user can enter a formula
 						editParametersFormula(att);
-						
-						
 					} else if(dataTypeComboBox.getSelection()==DataType.AUTO || dataTypeComboBox.getSelection()==DataType.LIST) {
 						//For a Auto or list attribute, the user can enter a list of choices
 						editParametersChoice(att, dataTypeComboBox.getSelection());
@@ -417,8 +415,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			JExceptionDialog.showError(e);
 		}
 	}
-	
-	
+		
 	private void editParametersBiotype(TestAttribute att) {
 		BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 		biotypeComboBox.setSelectionString(att.getParameters());
@@ -460,7 +457,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			@Override
 			public void caretUpdate(CaretEvent e) {
 				try {
-					validate(paramTextArea.getText());
+					validateFormula(paramTextArea.getText());
 					okLabel.setForeground(Color.GREEN);
 					okLabel.setText("Valid");
 				} catch(Exception ex2) { 
@@ -480,7 +477,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			if(res==JOptionPane.YES_OPTION) {
 				formula = paramTextArea.getText();
 				try {
-					validate(formula);
+					validateFormula(formula);
 					att.setParameters(formula);
 					return;
 				} catch(Exception e) { 
@@ -492,7 +489,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 		}
 	}
 	
-	private void validate(String expr) throws Exception {
+	private void validateFormula(String expr) throws Exception {
 		Set<String> variables = new HashSet<>();
 		for (int i = 0; i < inputRows.size(); i++) {
 			if(inputRows.get(i).dataTypeComboBox.getSelection()==DataType.NUMBER) variables.add("I"+(i+1));
@@ -557,5 +554,6 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			att.setParametersArray(MiscUtils.split(paramTextArea.getText()));
 		}
 	}
+
 
 }

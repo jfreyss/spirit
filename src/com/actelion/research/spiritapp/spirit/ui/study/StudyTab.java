@@ -22,6 +22,9 @@
 package com.actelion.research.spiritapp.spirit.ui.study;
 
 import java.awt.BorderLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
@@ -29,6 +32,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -53,7 +57,8 @@ public class StudyTab extends JPanel implements ISpiritTab {
 
 	private final JSplitPane northPane;
 	private final JSplitPane contentPane;
-	
+	private boolean initialized = false;
+
 	public StudyTab() {
 		
 		final JScrollPane studyScrollPane = new JBGScrollPane(studyTable, 3);
@@ -77,8 +82,6 @@ public class StudyTab extends JPanel implements ISpiritTab {
 			}
 		});		
 		
-		
-		
 
 		StudyActions.attachPopup(studyTable);
 		StudyActions.attachPopup(studyScrollPane);
@@ -96,14 +99,13 @@ public class StudyTab extends JPanel implements ISpiritTab {
 		
 		
 		addComponentListener(new ComponentAdapter() {
-			boolean shown = false;
 			@Override
 			public void componentShown(ComponentEvent e) {
 				if(getRootPane()!=null && searchPane!=null){
 					getRootPane().setDefaultButton(searchPane.getSearchButton());		
-					if(!shown && getRootPane()!=null /*&& getStudyIds().length()==0*/) {
+					if(!initialized && getRootPane()!=null) {
 						searchPane.reset();
-						shown = true;
+						initialized = true;
 					}
 				}
 			}
@@ -153,8 +155,8 @@ public class StudyTab extends JPanel implements ISpiritTab {
 	
 	@Override
 	public void setStudyIds(final String studyIds) {
-		if(studyIds==null || studyIds.length()==0) return;
-		
+		this.initialized = true;
+		if(studyIds==null || studyIds.length()==0) return;		
 		if(studyIds.equals(getStudyIds())) return; //no need to refresh
 		searchPane.setStudyIds(studyIds);
 		
@@ -183,5 +185,5 @@ public class StudyTab extends JPanel implements ISpiritTab {
 		return studyDetailPanel.getStudy()==null? new ArrayList<Study>(): Collections.singletonList(studyDetailPanel.getStudy());
 	}
 	
-	
+
 }

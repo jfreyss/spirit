@@ -21,8 +21,6 @@
 
 package com.actelion.research.spiritcore.test;
 
-import java.io.File;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -33,11 +31,9 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.HSQLMemoryAdapter;
 import com.actelion.research.spiritcore.adapter.SchemaCreator;
 import com.actelion.research.spiritcore.business.Exchange;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -51,7 +47,6 @@ import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
-import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAOExchange;
@@ -60,35 +55,15 @@ import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
-import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.MappingAction;
 import com.actelion.research.spiritcore.services.exchange.Exporter;
 import com.actelion.research.spiritcore.services.exchange.Importer;
 
-public class ExchangeTest {
+public class ExchangeTest extends AbstractSpiritTest {
 
-	private static SpiritUser user;
-	
-	@BeforeClass
-	public static void initDB() throws Exception {
-		//Init user
-		user = SpiritUser.getFakeAdmin();
-		
-		//Init DB and test emptynes
-		JPAUtil.close();
-		DBAdapter.setAdapter(new HSQLMemoryAdapter());
-		SchemaCreator.displayTables(DBAdapter.getAdapter());
-	}
-	
-	public static Exchange initDemoExamples(SpiritUser user) throws Exception {
-		//Clean previous examples
-		SchemaCreator.clearExamples(user);
-		return SchemaCreator.createExamples(user);
-	}
-	
 	@Test
 	public void testImportDemo() throws Exception {
-		JPAUtil.close();
-		DBAdapter.setAdapter(new HSQLMemoryAdapter());
+		JPAUtil.closeFactory();
+		SchemaCreator.clearExamples(user);
 		Assert.assertFalse(JPAUtil.getManager().getTransaction().isActive());
 		
 		{
@@ -134,9 +109,9 @@ public class ExchangeTest {
 			List<Biosample> biosamples = DAOBiosample.queryBiosamples(q1, user);
 			Assert.assertTrue(biosamples.size()>0);
 			for (Biosample b : biosamples) {
-				System.out.println("DAOExchangeTest.testImportDemo() "+b+">"+ b.getMetadataMap());
+				System.out.println("ExchangeTest.testImportDemo() "+b.getSampleId()+ " from " +b.getParent() + ": "+ b.getInfos());
 				if(b.getParent()==null) {
-					Assert.assertEquals("Rat", b.getMetadata("Type").getValue());
+					Assert.assertEquals("Rat", b.getMetadataValue("Type"));
 					Assert.assertTrue(b.getAttachedSampling()==null);
 				} else {
 					Assert.assertTrue(b.getAttachedSampling()!=null);
@@ -183,7 +158,7 @@ public class ExchangeTest {
 		
 		
 		//Reset
-		JPAUtil.close();
+		JPAUtil.closeFactory();
 		EntityManager session = null;
 		try {			
 			session = JPAUtil.createManager();
@@ -217,7 +192,7 @@ public class ExchangeTest {
 			Assert.assertTrue(biosamples.size()>0);
 			for (Biosample b : biosamples) {
 				if(b.getParent()==null) {
-					Assert.assertEquals("Rat", b.getMetadata("Type").getValue());
+					Assert.assertEquals("Rat", b.getMetadataValue("Type"));
 					Assert.assertTrue(b.getAttachedSampling()==null);
 				} else {
 					Assert.assertTrue(b.getAttachedSampling()!=null);
@@ -241,7 +216,7 @@ public class ExchangeTest {
 
 	}
 
-	
+	/*
 	@Test
 	public void testImportExchange1() throws Exception {
 		Assert.assertFalse(JPAUtil.getManager().getTransaction().isActive());
@@ -281,7 +256,7 @@ public class ExchangeTest {
 		Assert.assertEquals(n+2, DAOStudy.getStudies().size());
 
 	}
-
+*/
 	@Test
 	public void testExportExchange() throws Exception {
 		//Export some data

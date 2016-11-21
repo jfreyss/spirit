@@ -66,6 +66,8 @@ public class PivotTemplate implements Serializable, Cloneable {
 		GEOMETRIC_MEAN("Geometric Mean"),
 		MINIMUM("Minimum"),
 		MAXIMUM("Maximum"),
+		RANGE("Range"),
+		SUM("Sum"),
 		COUNT("Count"),
 		HIDE("Hide Values"),
 		;
@@ -290,9 +292,6 @@ public class PivotTemplate implements Serializable, Cloneable {
 
 		//Hide all items having less than 2 values (no discrimination possible)
 		for (PivotItem pivotItem : all) {
-//			if(pivotItem==PivotItemFactory.RESULT_INPUT) continue; //don't skip input if it is in the template
-//			if(pivotItem==PivotItemFactory.BIOSAMPLE_TOPID) continue; //don't skip top if it is in the template
-//			System.out.println("PivotTemplate.simplify() "+pivotItem+" > "+pivotItem.isDiscriminating(results));
 			if(!pivotItem.isDiscriminating(results)) {			
 				remove(pivotItem);
 			}
@@ -428,7 +427,6 @@ public class PivotTemplate implements Serializable, Cloneable {
 					if(!keysWith.contains(key2)) {
 						count++;
 						if(percentage==0) {
-							System.out.println("PivotTemplate.isDiscriminating() "+discrimator+" "+keysWith+" / "+key2);
 							return true;
 						}
 					}

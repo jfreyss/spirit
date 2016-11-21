@@ -21,16 +21,18 @@
 
 package com.actelion.research.spiritcore.services.helper;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import com.actelion.research.spiritcore.business.DataType;
+import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.Biotype;
+import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultValue;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
+import com.actelion.research.spiritcore.util.MiscUtils;
 
 import net.objecthunter.exp4j.Expression;
 import net.objecthunter.exp4j.ExpressionBuilder;
@@ -57,6 +59,13 @@ public class ExpressionHelper {
 		return e;		
 	}
 	
+	/**
+	 * Creates an expression using I1 for the input attributes and O1, O2 for the output
+	 * @param expr
+	 * @param test
+	 * @return
+	 * @throws Exception
+	 */
 	public static Expression createExpression(String expr, Test test) throws Exception {
 		ExpressionBuilder e = createExpressionBuilder(expr);
 		
@@ -77,9 +86,15 @@ public class ExpressionHelper {
 		return e.build();
 	}
 	
+	/**
+	 * Evaluate the given expression on the result. The Expression must have been created through createExpression
+	 * @param expr
+	 * @param result
+	 * @return
+	 * @throws Exception
+	 */
 	public static double evaluate(Expression expr, Result result) throws Exception {
 		Test test = result.getTest();
-		Map<String, Double> variables = new HashMap<>();
 		int i = 0;
 		for(TestAttribute a: test.getInputAttributes()) {
 			i++;
@@ -91,14 +106,62 @@ public class ExpressionHelper {
 		i = 0;
 		for(TestAttribute a: test.getOutputAttributes()) {
 			i++;
-			if(a.getDataType()==DataType.FORMULA) continue;
 			ResultValue rv = result.getResultValue(a);			
 			if(a.getDataType()==DataType.NUMBER && rv.getDoubleValue()!=null) {
 				expr.setVariable("O" + i, rv.getDoubleValue());
 			}
 		}
-		expr.setVariables(variables);
 		return expr.evaluate();
 	}
 
+	/**
+	 * Creates an expression using M1, M2 for the metadata
+	 * @param expr
+	 * @param test
+	 * @return
+	 * @throws Exception
+	 */
+	public static Expression createExpression(String expr, Biotype biotype) throws Exception {
+		ExpressionBuilder e = createExpressionBuilder(expr);
+		
+		if(biotype!=null) {
+			Set<String> variables = new HashSet<>();
+			int i = 0;
+			for(BiotypeMetadata a: biotype.getMetadata()) {
+				i++;
+				if(a.getDataType()==DataType.NUMBER) {
+					variables.add("M"+i);
+				}
+			}
+			e.variables(variables);
+		}
+		return e.build();
+	}
+	
+	/**
+	 * Evaluate the given expression on the biosample. The Expression must have been created through createExpression
+	 * @param expr
+	 * @param result
+	 * @return
+	 * @throws Exception
+	 */
+	public static double evaluate(Expression expr, Biosample biosample) throws Exception {
+		Biotype biotype = biosample.getBiotype();
+		int i = 0;
+		for(BiotypeMetadata bm: biotype.getMetadata()) {
+			i++;
+			String m = biosample.getMetadataValue(bm);		
+			if(bm.getDataType()==DataType.NUMBER && m!=null  && m.length()>0) {
+				Double d = MiscUtils.parseDouble(m);
+				if(d!=null) {
+					expr.setVariable("M" + i, d);
+				} else {
+					return Double.NaN;
+				}
+			}
+		}
+		return expr.evaluate();
+	}
+
+	
 }

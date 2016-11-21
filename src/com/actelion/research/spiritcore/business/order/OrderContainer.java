@@ -23,7 +23,6 @@ package com.actelion.research.spiritcore.business.order;
 
 import java.io.Serializable;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -47,7 +46,7 @@ public class OrderContainer implements Serializable {
 	private int id;
 
 	
-	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.REFRESH, optional = false)
+	@ManyToOne(fetch=FetchType.LAZY, cascade={}, optional = false)
 	@JoinColumn(name="bioorder_id")
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	private Order order;
@@ -64,8 +63,7 @@ public class OrderContainer implements Serializable {
 	public OrderContainer() {
 	}
 
-	public OrderContainer(Order order, String containerId) {
-		this.order = order;
+	public OrderContainer(String containerId) {
 		this.containerId = containerId;
 	}
 
@@ -112,15 +110,19 @@ public class OrderContainer implements Serializable {
 		}
 		return true;
 	}
+	
 	public int getRackNo() {
 		return rackNo;
 	}
+	
 	public void setRackNo(int rackNo) {
 		this.rackNo = rackNo;
 	}
+	
 	public String getPosition() {
 		return position;
 	}
+	
 	public void setPosition(String position) {
 		this.position = position;
 	}
@@ -128,6 +130,7 @@ public class OrderContainer implements Serializable {
 	public int getId() {
 		return id;
 	}
+	
 	public void setId(int id) {
 		this.id = id;
 	}

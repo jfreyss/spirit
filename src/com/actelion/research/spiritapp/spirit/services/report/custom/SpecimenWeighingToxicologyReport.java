@@ -22,8 +22,11 @@
 package com.actelion.research.spiritapp.spirit.services.report.custom;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.WorkbookUtil;
@@ -31,14 +34,13 @@ import org.apache.poi.ss.util.WorkbookUtil;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
-import com.actelion.research.spiritcore.business.biosample.ActionTreatment;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
-import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
+import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
@@ -48,51 +50,64 @@ import com.actelion.research.spiritcore.util.MiscUtils;
 public class SpecimenWeighingToxicologyReport extends AbstractReport {
 
 	public SpecimenWeighingToxicologyReport() {
-		super(ReportCategory.TOP, "Bodyweights (one table per phase)", 
+		super(ReportCategory.TOP, "Bodyweights (one sheet per phase)", 
 				"One sheet per phase" + MiscUtils.convert2Html(
 				"Group\tContainerId\tTopId\tNo\tWeight\tIncrease\tTreatment\n"
 				+ "\tCage1\tTopId1\t\n"
 				+ "\tCage1\tTopId2\t\n"));
 	}
 	
+	public static com.actelion.research.spiritcore.business.biosample.ActionTreatment getTreatment(Biosample h) {
+		if(h==null) return null;
+		if(h.getLastAction() instanceof com.actelion.research.spiritcore.business.biosample.ActionTreatment) {
+			return ((com.actelion.research.spiritcore.business.biosample.ActionTreatment)h.getLastAction());
+		}
+		return null;
+	}
+	
 	@Override
 	protected void populateWorkBook() throws Exception {
-		
+
 		List<Biosample> animals = study.getTopAttachedBiosamples();
-		List<Phase> phases = new ArrayList<>();
-		for(Phase phase: study.getPhases()) {
-			for(Biosample b: animals) {
-				if(b.getAction(ActionTreatment.class, phase)!=null) {
-					phases.add(phase);
-					break;
-				}
-			}
-		}
+		Map<Biosample, Map<String, Biosample>> bio2history = new HashMap<>();
+		Set<Phase> phases = new TreeSet<>();
 		
 		//Load Weighings
-		DAOResult.attachOrCreateStudyResultsToTops(study, animals, null, null);
-		
 		Test weightingTest = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
 		if(weightingTest==null) throw new Exception("Error test "+DAOTest.WEIGHING_TESTNAME+" not found");
+		DAOResult.attachOrCreateStudyResultsToTops(study, animals, null, null);
+
+		
+		for(Biosample b: animals) {
+			bio2history.put(b, new HashMap<String, Biosample>());
+			List<Biosample> history = DAORevision.getHistory(b);
+			for (Biosample b2 : history) {
+				
+				com.actelion.research.spiritcore.business.biosample.ActionTreatment t = getTreatment(b2);
+				if(t!=null) {
+					//Add the treatment, if it is the most recent
+					String phaseName = t.getPhaseName();
+					if(!bio2history.get(b).containsKey(phaseName)) bio2history.get(b).put(phaseName, b2);
+				}
+			}
+			for(Result r: b.getAuxResults(weightingTest.getName(), null)){
+				phases.add(r.getInheritedPhase());
+			}
+		}
+	
+		
+		
 		
 		for (Phase phase : phases) {				
-						
 			//Check if we need to display a compound
-			boolean hasCompound1 = false;
 			boolean hasCompound2 = false;
 			for (Biosample animal : animals) {
-				StudyAction a = animal.getStudyAction(phase);
-				ActionTreatment treatment = animal.getAction(ActionTreatment.class, phase);
-				if((a!=null && a.getNamedTreatment()!=null && a.getNamedTreatment().getCompoundName1()!=null && a.getNamedTreatment().getCompoundName1().length()>0)
-						|| (treatment!=null && treatment.getNamedTreatment()!=null && treatment.getNamedTreatment().getCompoundName1()!=null)) {
-					hasCompound1 = true;
-				}
-				if((a!=null && a.getNamedTreatment()!=null && a.getNamedTreatment().getCompoundName2()!=null && a.getNamedTreatment().getCompoundName2().length()>0)
-						|| (treatment!=null && treatment.getNamedTreatment()!=null && treatment.getNamedTreatment().getCompoundName2()!=null)) {
+				Biosample h = bio2history.get(animal).get(phase.getShortName());
+				com.actelion.research.spiritcore.business.biosample.ActionTreatment t = getTreatment(h);
+				if(t!=null && t.getEff2().length()>0) {
 					hasCompound2 = true;
-				}					
-			}
-			
+				}
+			}			
 			
 			//Print headers
 			Phase after = phase.getNextPhase();
@@ -114,15 +129,13 @@ public class SpecimenWeighingToxicologyReport extends AbstractReport {
 
 			set(sheet, line, col++, "Treatment", Style.S_TH_CENTER);
 			
-			if(hasCompound1) {
-				set(sheet, line, col++, "Compound", Style.S_TH_CENTER);
-				set(sheet, line, col++, "Dose", Style.S_TH_CENTER);
-				set(sheet, line, col++, "Unit", Style.S_TH_CENTER);
-			}
+//			set(sheet, line, col++, "Compound", Style.S_TH_CENTER);
+			set(sheet, line, col++, "Dose", Style.S_TH_CENTER);
+//			set(sheet, line, col++, "Unit", Style.S_TH_CENTER);
 			if(hasCompound2) {
-				set(sheet, line, col++, "Compound2", Style.S_TH_CENTER);
+//				set(sheet, line, col++, "Compound2", Style.S_TH_CENTER);
 				set(sheet, line, col++, "Dose", Style.S_TH_CENTER);
-				set(sheet, line, col++, "Unit", Style.S_TH_CENTER);
+//				set(sheet, line, col++, "Unit", Style.S_TH_CENTER);
 			}
 			
 			
@@ -149,42 +162,39 @@ public class SpecimenWeighingToxicologyReport extends AbstractReport {
 					increase = 100*(weight - prev)/prev;
 				}
 				
-			
-
 				//Memorize line to compute averages
 				group2Lines.add(animal.getInheritedGroup(), line);
 				
-				
 				//Display data
-				ActionTreatment treatment = animal.getAction(ActionTreatment.class, phase);
+//				ActionTreatment treatment = animal.getAction(ActionTreatment.class, phase);
+				Biosample h = bio2history.get(animal).get(phase.getShortName());
+				com.actelion.research.spiritcore.business.biosample.ActionTreatment t = getTreatment(h);
 				
 				col = 0;
-				set(sheet, line, col++, animal.getInheritedGroupString(Spirit.getUsername()), Style.S_TD_LEFT);				
-				set(sheet, line, col++, animal.getContainerId(), Style.S_TD_CENTER);				
-				set(sheet, line, col++, animal.getSampleId(), Style.S_TD_CENTER);				
-				set(sheet, line, col++, animal.getSampleName(), Style.S_TD_CENTER);	
+				set(sheet, line, col++, t==null? null: animal.getInheritedGroupString(Spirit.getUsername()), Style.S_TD_LEFT);				
+				set(sheet, line, col++, t==null? null: animal.getContainerId(), Style.S_TD_CENTER);				
+				set(sheet, line, col++, t==null? null: animal.getSampleId(), Style.S_TD_CENTER);				
+				set(sheet, line, col++, t==null? null: animal.getSampleName(), Style.S_TD_CENTER);	
 
 				set(sheet, line, col++, weight, Style.S_TD_DOUBLE1_BLUE);						
 				set(sheet, line, col++, increase , Style.S_TD_DOUBLE1);									
 				
-				set(sheet, line, col++, treatment==null || treatment.getNamedTreatment()==null?"":treatment.getNamedTreatment().getName(), Style.S_TD_LEFT);
+				set(sheet, line, col++, t==null? null: t.getTreatmentName(), Style.S_TD_LEFT);
 
-				if(hasCompound1) {
-					set(sheet, line, col++, (treatment==null || treatment.getNamedTreatment()==null?"":treatment.getNamedTreatment().getCompoundAndUnit1()), Style.S_TD_LEFT);				
-					set(sheet, line, col++, treatment==null? null: treatment.getEffectiveDose1()==null || treatment.getEffectiveDose1()<0? treatment.getCalculatedDose1(): treatment.getEffectiveDose1(), Style.S_TD_DOUBLE1);
-					set(sheet, line, col++, treatment==null? null: treatment.getNamedTreatment()==null || treatment.getNamedTreatment().getUnit1()==null? "": treatment.getNamedTreatment().getUnit1().getNumerator(), Style.S_TD_CENTER);
-				}
+//				set(sheet, line, col++, (treatment==null || treatment.getNamedTreatment()==null?"":treatment.getNamedTreatment().getCompoundAndUnit1()), Style.S_TD_LEFT);				
+				set(sheet, line, col++, t==null? null: t.getEff1(), Style.S_TD_DOUBLE1);
+//				set(sheet, line, col++, treatment==null? null: treatment.getNamedTreatment()==null || treatment.getNamedTreatment().getUnit1()==null? "": treatment.getNamedTreatment().getUnit1().getNumerator(), Style.S_TD_CENTER);
 				
 				if(hasCompound2) {
-					set(sheet, line, col++, (treatment==null || treatment.getNamedTreatment()==null?"":treatment.getNamedTreatment().getCompoundAndUnit2()), Style.S_TD_LEFT);				
-					set(sheet, line, col++, treatment==null? null: treatment.getEffectiveDose2()==null || treatment.getEffectiveDose2()<0? treatment.getCalculatedDose2(): treatment.getEffectiveDose2(), Style.S_TD_DOUBLE1);
-					set(sheet, line, col++, treatment==null? null: treatment.getNamedTreatment()==null || treatment.getNamedTreatment().getUnit2()==null? "": treatment.getNamedTreatment().getUnit2().getNumerator(), Style.S_TD_CENTER);
+//					set(sheet, line, col++, (treatment==null || treatment.getNamedTreatment()==null?"":treatment.getNamedTreatment().getCompoundAndUnit2()), Style.S_TD_LEFT);				
+					set(sheet, line, col++, t==null? null: t.getEff2(), Style.S_TD_DOUBLE1);
+//					set(sheet, line, col++, treatment==null? null: treatment.getNamedTreatment()==null || treatment.getNamedTreatment().getUnit2()==null? "": treatment.getNamedTreatment().getUnit2().getNumerator(), Style.S_TD_CENTER);
 				}
 				
-				set(sheet, line, col++, treatment==null || treatment.getFormulation()==null?"":treatment.getFormulation(), Style.S_TD_LEFT);				
-				set(sheet, line, col++, treatment==null || treatment.getComments()==null?"":treatment.getComments(), Style.S_TD_LEFT);				
+				set(sheet, line, col++, t==null? null: t.getFormulation(), Style.S_TD_LEFT);				
+				set(sheet, line, col++, t==null? null: t.getComments(), Style.S_TD_LEFT);				
 				
-				set(sheet, line, col++, treatment==null?null: treatment.getUpdDate(), Style.S_TD_DATE);
+				set(sheet, line, col++, h==null? null: h.getUpdDate(), Style.S_TD_DATE);
 				
 				
 				//Separator if we change group
@@ -193,8 +203,7 @@ public class SpecimenWeighingToxicologyReport extends AbstractReport {
 					drawLineAbove(sheet, line, 0, maxCol, (short) 1);						
 				}
 				lastGroup = animal.getInheritedGroup();
-				
-				
+								
 				line++;
 			}
 			
@@ -209,10 +218,10 @@ public class SpecimenWeighingToxicologyReport extends AbstractReport {
 				
 				List<Integer> lines = group2Lines.get(group);
 				col = 0;
-				set(sheet, line, col++, group.getBlindedName(Spirit.getUsername()), Style.S_TD_LEFT);	
-				set(sheet, line, col++, "" , Style.S_TD_LEFT);				
-				set(sheet, line, col++, "" , Style.S_TD_LEFT);				
-				set(sheet, line, col++, "" , Style.S_TD_LEFT);				
+				set(sheet, line, col++, group.getBlindedName(Spirit.getUsername()), Style.S_TD_LEFT);
+				set(sheet, line, col++, "" , Style.S_TD_LEFT);
+				set(sheet, line, col++, "" , Style.S_TD_LEFT);
+				set(sheet, line, col++, "" , Style.S_TD_LEFT);
 				if(lines!=null && lines.size()>0) {
 					setAverage(sheet, line, col, convertLinesToCells(lines, col++), Style.S_TD_DOUBLE1);
 					setAverage(sheet, line, col, convertLinesToCells(lines, col++), Style.S_TD_DOUBLE1);
@@ -244,12 +253,11 @@ public class SpecimenWeighingToxicologyReport extends AbstractReport {
 			line++;
 			
 			Group lastGroup = null;
-			ListHashMap<Group, Integer> group2Lines = new ListHashMap<Group, Integer>();
+			ListHashMap<Group, Integer> group2Lines = new ListHashMap<>();
 			for (Biosample biosample : animals) {
 
 				//Memorize line to compute averages
-				group2Lines.add(biosample.getInheritedGroup(), line);
-				
+				group2Lines.add(biosample.getInheritedGroup(), line);				
 				
 				//Display data
 				col = 0;

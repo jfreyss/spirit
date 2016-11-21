@@ -33,7 +33,6 @@ import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,11 +49,13 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.SpiritDB;
 import com.actelion.research.spiritapp.spirit.SpiritMenu;
 import com.actelion.research.spiritapp.spirit.ui.SpiritAction;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
@@ -120,6 +121,9 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	public StockCare() {
 		super("BioStockCare");
 		
+		//Check DB
+		SpiritDB.check();			
+		
 
 		SpiritChangeListener.register(this);
 		SpiritContextListener.register(this);
@@ -136,12 +140,13 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 			JPanel buttonsPanel = new JPanel(new WrapLayout(FlowLayout.LEFT, 10, 10));
 			for(final StockCareItem item: stockCareItems) {
 				if(item==null) {
-					buttonsPanel.add(Box.createHorizontalStrut(2000));
+					buttonsPanel.add(Box.createHorizontalStrut(5000));
 				} else {
 					JToggleButton button = new JToggleButton(item.getName());
-					button.setFont(FastFont.BOLD.deriveSize(20));		
 					button.setAction(new Action_View(item, true));
-					button.setPreferredSize(new Dimension(button.getPreferredSize().width, 70));
+					button.setHorizontalTextPosition(SwingConstants.CENTER);
+					button.setVerticalTextPosition(SwingConstants.BOTTOM);
+					button.setMinimumSize(new Dimension(120, 30));
 					group.add(button);
 					buttonsPanel.add(button);
 				}
@@ -176,8 +181,6 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 			
 			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			setVisible(true);
-			
-			
 			
 			//Login
 			if(System.getProperty("user.name").equals("freyssj")) {
@@ -258,11 +261,6 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 			createMenu.setEnabled(false);
 		}
 		
-//		JMenu scannerMenu = new JMenu("Scanner");
-//		menuBar.add(scannerMenu);
-//		scannerMenu.setMnemonic('s');	
-//		scannerMenu.add(new BiosampleActions.Action_ScanAndView());
-		
 		menuBar.add(SpiritMenu.getToolsMenu());
 		menuBar.add(SpiritMenu.getDatabaseMenu());
 		menuBar.add(SpiritMenu.getAdminMenu());
@@ -277,13 +275,7 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 			super(biotypes);
 			this.aggregatedBiotype = aggregated? biotypes[0]: null; 					
 		}
-		@Override
-		
-		/**Custom Sort by credate*/
-		protected void sortBiosamples(List<Biosample> biosamples) {
-			Collections.sort(biosamples, Biosample.COMPARATOR_CREDATE);
-		}				
-		
+			
 		@Override 
 		protected JPanel createButtonsPanel() {
 			//Edit button
@@ -297,7 +289,7 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 
 
 			final BiosampleActions.Action_New createAction = new BiosampleActions.Action_New(currentItem.getMainBiotype());
-			final BiosampleActions.Action_CreateChild childAction = new BiosampleActions.Action_CreateChild(null);
+			final BiosampleActions.Action_NewChild childAction = new BiosampleActions.Action_NewChild(null);
 			
 			//Create button
 			final JIconButton createButton = aggregatedBiotype==null? 
@@ -350,7 +342,6 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		for(Biotype biotype: currentItem.getBiotypes()) {
 			biotype2tab.put(biotype, biosampleTab);
 		}
-		System.out.println("StockCare.initTabs(1) "+(System.currentTimeMillis()-s)+"ms");
 		tabbedPane.add(currentItem.getName(), biosampleTab);
 		tabbedPane.setIconAt(tabbedPane.getTabCount()-1, currentItem.getIcon());
 		
@@ -362,52 +353,43 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		}
 	
 		// Create the InventoryTab
-		inventoryTab = new LocationTab(currentItem.getBiotypes()[currentItem.getBiotypes().length-1]) {
-			@Override
-			protected JPanel createButtonsPanel() {
-				//Scan and Update
-//				final JIconButton scanUpdateButton = new JIconButton(new LocationActions.Action_ScanUpdate(null));
-//				scanUpdateButton.setEnabled(false);
-
-				//Edit
-				final JIconButton editButton = new JIconButton(new BiosampleActions.Action_BatchEdit() {
-					@Override
-					public java.util.List<Biosample> getBiosamples() {return new ArrayList<Biosample>();}
-				});
-
-				//Create				
-				final JIconButton createButton = new JIconButton(new BiosampleActions.Action_New(currentItem.getMainBiotype()));
-
-				//Checkin
-				final JIconButton checkinButton = new JIconButton(new BiosampleActions.Action_Checkin(null));
-				
-				//Checkout
-				final JIconButton checkoutButton = new JIconButton(new BiosampleActions.Action_Checkout(null));
-
-//				//Events
-//				getLocationDepictor().addPropertyChangeListener(LocationDepictor.PROPERTY_LOCATIONCHANGED, new PropertyChangeListener() {					
-//					@Override
-//					public void propertyChange(PropertyChangeEvent evt) {
-////						scanUpdateButton.setAction(new LocationActions.Action_ScanUpdate(getLocationDepictor().getBioLocation()));						
-//					}
-//				});
-				getLocationDepictor().addRackDepictorListener(new RackDepictorListener() {					
-					@Override
-					public void onSelect(Collection<Integer> pos, final Container lastContainer, boolean dblClick) {
-						final List<Biosample> biosamples = Container.getBiosamples(getLocationDepictor().getSelectedContainers());
-
-						editButton.setAction(new BiosampleActions.Action_BatchEdit(biosamples));
-						checkinButton.setAction(new BiosampleActions.Action_Checkin(biosamples));
-						checkoutButton.setAction(new BiosampleActions.Action_Checkout(biosamples));
-
-					}
-				});
-
-				return UIUtils.createHorizontalBox(Box.createHorizontalGlue(), editButton, createButton, checkinButton, checkoutButton);
-			}
-		};
-		tabbedPane.add("Location", inventoryTab);
-		tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.LOCATION.getIcon());
+		if(biotypes.length>1 || !biotypes[0].isAbstract()) {
+			inventoryTab = new LocationTab(currentItem.getBiotypes()[currentItem.getBiotypes().length-1]) {
+				@Override
+				protected JPanel createButtonsPanel() {
+					//Edit
+					final JIconButton editButton = new JIconButton(new BiosampleActions.Action_BatchEdit() {
+						@Override
+						public java.util.List<Biosample> getBiosamples() {return new ArrayList<Biosample>();}
+					});
+	
+					//Create				
+					final JIconButton createButton = new JIconButton(new BiosampleActions.Action_New(currentItem.getMainBiotype()));
+	
+					//Checkin
+					final JIconButton checkinButton = new JIconButton(new BiosampleActions.Action_Checkin(null));
+					
+					//Checkout
+					final JIconButton checkoutButton = new JIconButton(new BiosampleActions.Action_Checkout(null));
+	
+					getLocationDepictor().addRackDepictorListener(new RackDepictorListener() {					
+						@Override
+						public void onSelect(Collection<Integer> pos, final Container lastContainer, boolean dblClick) {
+							final List<Biosample> biosamples = Container.getBiosamples(getLocationDepictor().getSelectedContainers());
+	
+							editButton.setAction(new BiosampleActions.Action_BatchEdit(biosamples));
+							checkinButton.setAction(new BiosampleActions.Action_Checkin(biosamples));
+							checkoutButton.setAction(new BiosampleActions.Action_Checkout(biosamples));
+	
+						}
+					});
+	
+					return UIUtils.createHorizontalBox(Box.createHorizontalGlue(), editButton, createButton, checkinButton, checkoutButton);
+				}
+			};
+			tabbedPane.add("Location", inventoryTab);		
+			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.LOCATION.getIcon());
+		}
 
 		//Create the ResultTab
 		if(currentItem.hasResults()) {
@@ -481,30 +463,6 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	}
 	
 	
-	public static void main(String[] args) {
-
-
-		Spirit.initUI();
-
-		// Splash
-		SplashScreen2.show(splashConfig);
-		new SwingWorkerExtended() {			
-			@Override
-			protected void doInBackground() throws Exception {
-				SpiritAction.logUsage("StockCare");					
-				JPAUtil.getManager();
-			}
-			@Override
-			protected void done() {
-				new StockCare();				
-			}
-			
-		};
-		
-		
-
-	}
-	
 	@Override
 	public void setStudy(Study study) {
 	}
@@ -574,4 +532,24 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		app.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		app.eventUserChanged();		
 	}
+	
+	public static void main(String[] args) {
+		Spirit.initUI();
+
+		// Splash
+		SplashScreen2.show(splashConfig);
+		new SwingWorkerExtended() {			
+			@Override
+			protected void doInBackground() throws Exception {
+				SpiritAction.logUsage("StockCare");					
+				JPAUtil.getManager();
+			}
+			@Override
+			protected void done() {
+				new StockCare();				
+			}			
+		};
+	}
+	
+
 }

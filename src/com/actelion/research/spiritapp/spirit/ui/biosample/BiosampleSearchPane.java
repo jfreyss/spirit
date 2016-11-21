@@ -116,6 +116,11 @@ public class BiosampleSearchPane extends JPanel {
 				@Override
 				protected void doInBackground() throws Exception {
 					if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && query.isEmpty()) throw new Exception("You must enter more search criteria");
+					
+					//Clear Cache 
+//					JPAUtil.clear();
+					
+					//Query samples
 					biosamples = DAOBiosample.queryBiosamples(query, user);
 					LoggerFactory.getLogger(getClass()).debug("Query done in: "+(System.currentTimeMillis()-s)+"ms");
 

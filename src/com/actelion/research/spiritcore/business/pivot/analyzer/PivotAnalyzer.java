@@ -34,17 +34,19 @@ import com.actelion.research.spiritcore.business.pivot.PivotCellKey;
 import com.actelion.research.spiritcore.business.pivot.PivotColumn;
 import com.actelion.research.spiritcore.business.pivot.PivotDataTable;
 import com.actelion.research.spiritcore.business.pivot.PivotRow;
-import com.actelion.research.spiritcore.util.Counter;
+import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.Counter;
+import com.actelion.research.util.PriorityQueue;
 
 public class PivotAnalyzer {
 	
 	public static enum Sort {NAME, GROUPS, N, KW, DISTRIB}
 
 	
-	private Map<PivotColumn, ColumnAnalyser<Integer>> columnAnalysis;
+	private Map<PivotColumn, ColumnAnalyser<Group>> columnAnalysis;
 	private PivotDataTable table;
 	private Sort sort = Sort.KW;
 	
@@ -52,10 +54,10 @@ public class PivotAnalyzer {
 		this.table = table;
 	}
 	
-	public ColumnAnalyser<Integer> getColumn(int index) throws Exception {
+	public ColumnAnalyser<Group> getColumn(int index) throws Exception {
 		if(columnAnalysis==null) compute();
 
-		for (ColumnAnalyser<Integer> ca : columnAnalysis.values()) {
+		for (ColumnAnalyser<Group> ca : columnAnalysis.values()) {
 			if(ca.getIndex()==index) return ca;
 		}
 		return null;
@@ -66,26 +68,24 @@ public class PivotAnalyzer {
 		columnAnalysis = new LinkedHashMap<>();
 		int colNo = 0;
 		for(PivotColumn col: table.getPivotColumns()) {
-			List<Pair<Integer, Double>> groupValues = new ArrayList<>();			
+			List<Pair<Group, Double>> groupValues = new ArrayList<>();			
 			
 			for(PivotRow row: table.getPivotRows()) {
 				//Skip rows without any group, because the objective is to analyze how groups are separated
 				
 				PivotCell cell = row.getPivotCell(col);				
 				if(cell.getNestedKeys().size()>1) throw new Exception("To analyze your data, you must use a template without subtables. Try to use the column template.");
-
 				
 				for (PivotCellKey key : cell.getNestedKeys()) {					
 					PivotCell subCell = cell.getNested(key);
 					Comparable<?> val = subCell.getValue();
 					if(val instanceof Double) {						
-						Integer groupKey = row.getGroup()==null? -1: row.getGroup().getId();
-						groupValues.add(new Pair<Integer, Double>(groupKey, (Double) val));
+						groupValues.add(new Pair<Group, Double>(row.getGroup(), (Double) val));
 					}						
 				}
 			}
 			if(groupValues.size()>0) {
-				ColumnAnalyser<Integer> analysis = new ColumnAnalyser<>(colNo, groupValues);  
+				ColumnAnalyser<Group> analysis = new ColumnAnalyser<>(colNo, groupValues);  
 				columnAnalysis.put(col, analysis);
 			}
 			colNo++;
@@ -108,8 +108,8 @@ public class PivotAnalyzer {
 			Collections.sort(cols, new Comparator<PivotColumn>() {
 				@Override
 				public int compare(PivotColumn o1, PivotColumn o2) {
-					ColumnAnalyser<Integer> a1 = columnAnalysis.get(o1);
-					ColumnAnalyser<Integer> a2 = columnAnalysis.get(o2);
+					ColumnAnalyser<Group> a1 = columnAnalysis.get(o1);
+					ColumnAnalyser<Group> a2 = columnAnalysis.get(o2);
 					switch(sort) {
 					case KW: return CompareUtils.compare(a1.getKruskalWallis(), a2.getKruskalWallis());
 					case GROUPS: return -CompareUtils.compare(a1.getNGroups(), a2.getNGroups());
@@ -124,21 +124,21 @@ public class PivotAnalyzer {
 		
 		Counter<Integer> counter = new Counter<Integer>();
 		for (PivotColumn col : cols) {			
-			ColumnAnalyser<Integer> a = columnAnalysis.get(col);
+			ColumnAnalyser<Group> a = columnAnalysis.get(col);
 			counter.increaseCounter(a.getN());
 		}
 		int nComplete = counter.getKeys().size()>0? counter.getKeySorted().get(0): 0;
 
 		int count = 0;		
-		List<Integer> indexes1 = new ArrayList<>();
-		List<Integer> indexes2 = new ArrayList<>();
-		List<Integer> indexes3 = new ArrayList<>();
+		PriorityQueue<Integer> indexes = new PriorityQueue<>();
 		List<Integer> indexesPca = new ArrayList<>();
-		List<Integer> indexesAll = new ArrayList<>();
 		StringBuilder sbRows = new StringBuilder();
 		for (PivotColumn col : cols) {
 						
-			ColumnAnalyser<Integer> a = columnAnalysis.get(col);
+			ColumnAnalyser<Group> a = columnAnalysis.get(col);
+			System.out.println("PivotAnalyzer.getReport() "+col+">"+a);
+			System.out.println("PivotAnalyzer.getReport() >"+a.getIndex());
+			System.out.println("PivotAnalyzer.getReport() >"+a.getKruskalWallis());
 			boolean complete = a.getN() == nComplete;
 			
 			sbRows.append("<tr style='background:" + (a.getKruskalWallis()==null?"": a.getKruskalWallis()>.2?"#FFCCCC": a.getKruskalWallis()>.05?"#FFEEDD": a.getKruskalWallis()>.01?"#DDFFDD": "#AAFFAA") + "'>");
@@ -151,19 +151,12 @@ public class PivotAnalyzer {
 			sbRows.append("<td><b>"+fc(a.getKruskalWallis())+"</b></td>");			
 			sbRows.append("<td style='white-space:nowrap'><a href='graphs:" + a.getIndex() + "'>Show Graph in DW</a></td>");			
 			sbRows.append("</tr>");
-			if(a.getKruskalWallis()!=null && a.getKruskalWallis()<0.01) {
-				indexes1.add(a.getIndex());
+			if(a.getKruskalWallis()!=null) {
+				indexes.add(a.getIndex(), a.getKruskalWallis());
+				if(complete) {
+					indexesPca.add(a.getIndex());
+				}
 			}
-			if(a.getKruskalWallis()!=null && a.getKruskalWallis()<0.05) {
-				indexes2.add(a.getIndex());
-			}
-			if(a.getKruskalWallis()!=null && a.getKruskalWallis()<0.2) {
-				indexes3.add(a.getIndex());
-			}
-			if(complete) {
-				indexesPca.add(a.getIndex());
-			}
-			indexesAll.add(a.getIndex());
 		}
 		
 		
@@ -176,24 +169,30 @@ public class PivotAnalyzer {
 				+ "<u>Careful:</u> a low value shows there is something to see on the graph, but it does not prove that a biomarker will actually signifant in all similar studies. Those values should be adjusted by the number of columns or measured genes. For more information, look at <a href='http://en.wikipedia.org/wiki/Multiple_comparisons_problem'>Wikipedia:MultipleComparisons</a><br>");
 		sb.append("<h2>Export Graphs to DataWarrior:</h2>");
 		
-		sb.append("<table width=100%><tr><td width=30% height=100%>");		
-		sb.append("<div style='width:100%; height:60px; background:#FFFFCC;font-size:11px;padding:2px; border: solid 1px #CCCCCC'><b>All graphs:</b><br> ");
-		sb.append("<a href='graphs:" + (MiscUtils.flatten(indexesAll, ",")) + "'> All (" + indexesAll.size() + " Graphs)</a><br>");
+		sb.append("<table width=100%><tr><td width=60% height=100%>");		
+		sb.append("<div style='width:100%; height:60px; background:#FFFFCC;font-size:11px;padding:2px; border: solid 1px #CCCCCC'>");
+		if(indexes.size()>0) {
+			if(indexes.size()<10) {
+				sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes.sublist(0, indexes.size()), ",")) + "'> Export all (" + indexes.size() + " graphs)</a><br>");
+			} else {
+				sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes.sublist(0, 10), ",")) + "'> Export most 10 significant graphs</a><br>");
+			}
+		}
+//		if(indexes3.size()>0) {
+//			sb.append("<td width=30% height=100%>");
+//			sb.append("<div style='width:100%; height:60px; background:#FFFFCC;font-size:11px;padding:2px; border: solid 1px #CCCCCC'><b>Most significant graphs:</b><br> ");
+//			if(indexes1.size()>0) sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes1, ",")) + "'>Export KW&lt;0.01 (" + indexes1.size() + " Graphs)</a><br> ");
+//			if(indexes2.size()>indexes1.size()) sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes2, ",")) + "'>Export KW&lt;0.05 (" + indexes2.size() + " Graphs)</a><br> ");
+//			if(indexes3.size()>indexes2.size()) sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes3, ",")) + "'>Export KW&lt;0.20 (" + indexes3.size() + " Graphs)</a><br> ");
+//			sb.append("</div>");
+//			sb.append("</td>");
+//		}
+				
 		sb.append("</div>");		
 		sb.append("</td>");
 		
-		if(indexes3.size()>0) {
-			sb.append("<td width=30% height=100%>");
-			sb.append("<div style='width:100%; height:60px; background:#FFFFCC;font-size:11px;padding:2px; border: solid 1px #CCCCCC'><b>Most significant graphs:</b><br> ");
-			if(indexes1.size()>0) sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes1, ",")) + "'>KW&lt;0.01 (" + indexes1.size() + " Graphs)</a><br> ");
-			if(indexes2.size()>indexes1.size()) sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes2, ",")) + "'>KW&lt;0.05 (" + indexes2.size() + " Graphs)</a><br> ");
-			if(indexes3.size()>indexes2.size()) sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes3, ",")) + "'>KW&lt;0.20 (" + indexes3.size() + " Graphs)</a><br> ");
-			sb.append("</div>");
-			sb.append("</td>");
-		}
-		
-		sb.append("<td width=30% height=100%>");		
-		sb.append("<div style='width:100%; height:60px; background:#FFFFCC;font-size:11px;padding:2px; border: solid 1px #CCCCCC'><b>Principal Component Analysis:</b><br> ");
+		sb.append("<td width=40% height=100%>");		
+		sb.append("<div style='width:100%; height:60px; background:#DDDDCC;font-size:11px;padding:2px; border: solid 1px #CCCCCC'><b>Principal Component Analysis:</b><br> ");
 		sb.append("<span style='font-size:8px'>(Computes the maximum complete dataset)</span><br>");
 		sb.append("<a href='pca:" + (MiscUtils.flatten(indexesPca, ",")) + "'> PCA (" + indexesPca.size() + " Graphs)</a><br>");
 		sb.append("</div>");
@@ -212,7 +211,7 @@ public class PivotAnalyzer {
 		sb.append("</tr>");
 		sb.append(sbRows);
 		sb.append("</table>");
-		
+		System.out.println("PivotAnalyzer.getReport() "+sb);
 		return sb.toString();
 	}
 

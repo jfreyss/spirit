@@ -120,16 +120,25 @@ public class ResultValue implements Comparable<ResultValue> {
 	}
 	
 	public String getValue() {
-		return value;
+		if(getAttribute().getDataType()==DataType.LARGE) {
+			return document==null? null: new String(document.getBytes());
+		} else {
+			return value;
+		}
 	}
 
 	public void setValue(String value) {
-		this.value = value==null? null: value.trim();
+		if(getAttribute().getDataType()==DataType.LARGE) {
+			this.value = value.substring(0, Math.min(30, value.length()));
+			this.document = new Document("large.txt", value.getBytes());			
+		} else {
+			this.value = value==null? null: value.trim();
+		}
 	}
 	
 	public Double getDoubleValue() {
 		//For numeric value, add the double value 
-		if(attribute.getDataType()==DataType.NUMBER) {
+		if(attribute.getDataType()==DataType.NUMBER || attribute.getDataType()==DataType.FORMULA) {
 			if(this.value==null || this.value.length()==0) {
 				return null;
 			} else {
@@ -269,12 +278,13 @@ public class ResultValue implements Comparable<ResultValue> {
 		return value;
 	}
 
-	public Document getDocument() {
+	public Document getLinkedDocument() {
 		return document;
 	}
 	
-	public void setDocument(Document document) {
+	public void setLinkedDocument(Document document) {
 		this.document = document;
+		setValue(document==null? "": document.getFileName());
 	}
 	
 	public Double getCalculatedValue() {
@@ -296,25 +306,22 @@ public class ResultValue implements Comparable<ResultValue> {
 	public static boolean isValidDouble(String value) {
 		if(value==null || value.length()==0) return true;
 		return value.equals(convertToValidDouble(value));
-		
-		
-
 	}
 
-	public static String convertToValidDoubles(String values) {
-		if(values==null || values.length()==0) return null;
-		
-		String[] vals = values.split("; ", -1);
-		StringBuilder sb = new StringBuilder();
-		for(int i=0; i<vals.length; i++) {
-			if(i>0) sb.append("; ");
-			
-			String s = convertToValidDouble(vals[i]);
-			sb.append(s==null?"": s);			
-		}
-		
-		return sb.toString();
-	}
+//	public static String convertToValidDoubles(String values) {
+//		if(values==null || values.length()==0) return null;
+//		
+//		String[] vals = values.split("; ", -1);
+//		StringBuilder sb = new StringBuilder();
+//		for(int i=0; i<vals.length; i++) {
+//			if(i>0) sb.append("; ");
+//			
+//			String s = convertToValidDouble(vals[i]);
+//			sb.append(s==null?"": s);			
+//		}
+//		
+//		return sb.toString();
+//	}
 	
 	public static String convertToValidDouble(String value) {
 		if(value==null || value.length()==0) return null;

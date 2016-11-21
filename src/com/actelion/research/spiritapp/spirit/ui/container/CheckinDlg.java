@@ -102,12 +102,15 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 	private JLabel containerStatusLabel = new JLabel();
 	private int push = 0;
 		
-	public CheckinDlg(Collection<Biosample> biosamples, boolean commitTransaction) {
+	public CheckinDlg(Collection<Biosample> mySamples, boolean commitTransaction) {
 		super(UIUtils.getMainFrame(), commitTransaction? "Checkin / Relocate": "Set Location", commitTransaction? CheckinDlg.class.getName(): null);
 		this.commitTransaction = commitTransaction;
 		
+		List<Biosample> biosamples;
 		if(commitTransaction) {
-			biosamples = JPAUtil.reattach(biosamples);
+			biosamples = JPAUtil.reattach(mySamples);
+		} else {
+			biosamples = new ArrayList<>(mySamples);
 		}
 		this.containers = Biosample.getContainers(biosamples, true);
 		System.out.println("CheckinDlg.CheckinDlg() "+containers);

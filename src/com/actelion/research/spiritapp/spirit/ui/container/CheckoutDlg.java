@@ -55,11 +55,11 @@ public class CheckoutDlg extends JSpiritEscapeDialog {
 
 	private List<Container> containers;
 	
-	public CheckoutDlg(Collection<Biosample> biosamples) {
+	public CheckoutDlg(Collection<Biosample> mySamples) {
 		super(UIUtils.getMainFrame(), "Checkout Dialog", CheckoutDlg.class.getName());
-		if(biosamples.size()==0) return;
+		if(mySamples.size()==0) return;
 
-		biosamples = JPAUtil.reattach(biosamples);
+		List<Biosample> biosamples = JPAUtil.reattach(mySamples);
 		this.containers = Biosample.getContainers(biosamples, true);
 		ContainerTable table = new ContainerTable(ContainerTableModelType.EXPANDED);
 		table.setRows(this.containers);

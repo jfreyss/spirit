@@ -48,6 +48,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 import com.actelion.research.spiritcore.util.IOUtils;
 
@@ -101,32 +102,34 @@ public class Document {
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="document_sequence")
 	private int id;
-	
-	
+		
 	private String fileName;
 	
 	@Column(length=20)
 	@Enumerated(EnumType.STRING)
-	private DocumentType type;
-	
+	private DocumentType type;	
 
 	@ManyToOne(fetch=FetchType.LAZY, optional=false, cascade=CascadeType.ALL)
 	@JoinColumn(name="document_bytes_id")
+	@Audited(targetAuditMode = RelationTargetAuditMode.AUDITED)
 	private DocumentBytes bytes = new DocumentBytes();
 
 	private String creUser;
 	
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date creDate;
-	
+	private Date creDate = new Date();	
 	
 	public Document() {
 	}
 	
+	public Document(String title, byte[] bytes) {
+		setFileName(title);
+		setBytes(bytes);
+	}
+	
 	public Document(File file) throws IOException {
-		this.fileName = file.getName();
+		setFileName(file.getName());
 		setBytes(IOUtils.fileToBytes(file));
-		this.creDate = new Date();
 	}
 		
 	public int getId() {

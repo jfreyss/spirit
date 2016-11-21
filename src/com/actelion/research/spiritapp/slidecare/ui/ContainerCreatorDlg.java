@@ -64,9 +64,9 @@ public class ContainerCreatorDlg extends JSpiritEscapeDialog {
 	private ContainerGeneratorPanel containerGeneratorPanel;
 
 	
-	public ContainerCreatorDlg(final Study study, ContainerType containerTypeToCreate) {
+	public ContainerCreatorDlg(final Study myStudy, ContainerType containerTypeToCreate) {
 		super(UIUtils.getMainFrame(), "SlideCare - Create " + containerTypeToCreate.getName(), ContainerCreatorDlg.class.getName());
-		this.study = DAOStudy.getStudy(study.getId());
+		this.study = DAOStudy.getStudy(myStudy.getId());
 		this.containerTypeToCreate = containerTypeToCreate;
 		
 		//OrganPanel

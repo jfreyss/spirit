@@ -83,8 +83,7 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.Formatter;
-import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.IOUtils;
 import com.actelion.research.util.StringUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -128,27 +127,25 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 		return new StudyWizardDlg(s, false);
 	}
 	
-	public StudyWizardDlg(Study s, boolean duplicateMode) {
+	public StudyWizardDlg(Study myStudy, boolean duplicateMode) {
 		super(UIUtils.getMainFrame(), "Study - Study Design", StudyWizardDlg.class.getName());
 		
-		if(duplicateMode && s!=null) {
-			s = DAOStudy.getStudy(s.getId());
-			s = s.duplicate();
-			assert s!=null && s.getId()<=0;
+		study = JPAUtil.reattach(myStudy);
+		if(duplicateMode && myStudy!=null) {
+			study = study.duplicate();
+			assert study!=null && study.getId()<=0;
 		}
 		
 		//New study, create the name and description
 		try {
-			if(s.getId()<=0 ) {
-				StudyInfoDlg dlg = new StudyInfoDlg(s, true);
+			if(study.getId()<=0 ) {
+				StudyInfoDlg dlg = new StudyInfoDlg(study, true);
 				if(dlg.isCancel()) return;
-				s = dlg.getStudy();				
+				study = JPAUtil.reattach(dlg.getStudy());		
 			}
 	
 			//make sure to work on a recent copy
-			assert s!=null && s.getId()>0;
-			this.study = DAOStudy.getStudy(s.getId());
-			assert this.study!=null;
+			assert study!=null && study.getId()>0;
 		} catch(Throwable e) {
 			JExceptionDialog.showError(e);
 			return;
@@ -453,7 +450,7 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 		}
 
 		//Refresh Phase
-		phaseLabel.setText("Start: " + (study.getFirstDate()==null?"N/A": Formatter.formatDate(study.getFirstDate())));
+		phaseLabel.setText("Start: " + (study.getFirstDate()==null?"N/A": FormatterUtils.formatDate(study.getFirstDate())));
 		
 		//Refresh Groups
 		Group selG = (Group) groupList.getSelectedValue();

@@ -60,10 +60,7 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 	//Rows
 	protected List<ROW> rows = new ArrayList<>();
 	
-	private int maxRowsToExplore = 1000; 
-//	private int push = 0;
-
-	
+	private int maxRowsToExplore = 200; 
 
 	/**
 	 * Node is used internally to memorize how each ROW should be formatted (if treeColumn!=null) 
@@ -99,7 +96,8 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 	private Map<ROW, Node> row2node = new HashMap<>();
 	
 	
-	public Column<ROW, Integer> COLUMN_ROWNO = new Column<ROW, Integer>("#",  Integer.class, 20) {
+	public Column<ROW, Integer> COLUMN_ROWNO = new Column<ROW, Integer>("#",  Integer.class, 15) {
+		private JLabelNoRepaint lbl = new JLabelNoRepaint();
 		@Override
 		public Integer getValue(ROW row, int rowNo) {
 			return rowNo+1;
@@ -110,7 +108,6 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 		public boolean isEditable(ROW row) {return false;}
 		@Override
 		public boolean shouldMerge(ROW r1, ROW r2) {return false;}
-		private JLabelNoRepaint lbl = new JLabelNoRepaint();
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<ROW> table, ROW row, int rowNo, Object value) {
 			lbl.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -279,14 +276,14 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 	}
 	
 	public void removeColumn(Column<ROW, ?> column) {
-		List<Column<ROW, ?>> l = new ArrayList<Column<ROW,?>>();
+		List<Column<ROW, ?>> l = new ArrayList<>();
 		l.add(column);
 		removeColumns(l);
 	}
 	
 	/**
-	 * Remove Empty(value=null) columns 
-	 * fire event
+	 * Remove Empty columns (ie. where all values are null or empty) 
+	 * fire structurechange event
 	 */
 	public void removeEmptyColumns() {
 		setColumns(removeEmptyColumns(getColumns()));
@@ -302,11 +299,11 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 		List<Column<ROW, ?>> res = new ArrayList<>();
 		for (int i = 0; i < columns.size(); i++) {
 			Column<ROW, ?> col = columns.get(i);
-			exporeRows: for(int row: rows) {
+			exploreRows: for(int row: rows) {
 				Object obj = col.getValue(getRow(row), row);
 				if(obj!=null && obj.toString().length()>0) {
 					res.add(col);
-					break exporeRows;
+					break exploreRows;
 				}
 			}
 		}		

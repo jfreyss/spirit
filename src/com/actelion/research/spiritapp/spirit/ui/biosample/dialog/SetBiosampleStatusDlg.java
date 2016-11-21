@@ -54,9 +54,9 @@ public class SetBiosampleStatusDlg extends JSpiritEscapeDialog {
 	private List<Biosample> biosamples;
 	private boolean updated = false;
 	
-	public SetBiosampleStatusDlg(List<Biosample> biosamples, Status status) {
+	public SetBiosampleStatusDlg(List<Biosample> mySamples, Status status) {
 		super(UIUtils.getMainFrame(), "Set Status", SetBiosampleStatusDlg.class.getName());
-		this.biosamples = biosamples;
+		this.biosamples = JPAUtil.reattach(mySamples);
 		
 		//Test if those samples have a location
 		boolean hasLoc = false;

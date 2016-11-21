@@ -70,6 +70,7 @@ public abstract class MigrationScript {
 		List<MigrationScript> scripts = new ArrayList<>();		
 		scripts.add(new MigrationScript1_9());
 		scripts.add(new MigrationScript2_0());
+		scripts.add(new MigrationScript2_1());
 		return scripts;
 	}	
 	
@@ -104,6 +105,7 @@ public abstract class MigrationScript {
 				sb.append("\r\n");
 				sb.append("/* Migration to " + script.getToVersion() + " */\r\n");
 				sb.append(script.getMigrationSql(vendor));
+				sb.append("update spirit.spirit_property set value = '" + script.getToVersion() + "' where id = '" + PropertyKey.DB_VERSION.getKey() + "' and value < '" + script.getToVersion() + "'");		
 			}
 		}
 		return sb.toString();

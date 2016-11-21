@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.util.CompareUtils;
 
 /**
@@ -101,21 +102,22 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 
 		if(followLinks) {
 			//Create aggregated links from this biosample
-			for(Metadata m: biosample.getMetadataMap().values()) {
-				Biosample b = m.getLinkedBiosample();
+			for(BiotypeMetadata m1: biosample.getBiotype().getMetadata()) {
+				Biosample b = m1.getDataType()==DataType.BIOSAMPLE? biosample.getMetadataBiosample(m1): null;
 				if(b!=null) {
-					res.add(new BiosampleLinker(m.getBiotypeMetadata(), LinkerType.SAMPLEID, m.getLinkedBiosample().getBiotype()));
+					res.add(new BiosampleLinker(m1, LinkerType.SAMPLEID, b.getBiotype()));
 					
 					if(b.getBiotype().getSampleNameLabel()!=null && (b.getSampleName()!=null  && b.getSampleName().length()>0) && !b.getBiotype().isHideSampleId()) {
-						res.add(new BiosampleLinker(m.getBiotypeMetadata(), LinkerType.SAMPLENAME, b.getBiotype()));
+						res.add(new BiosampleLinker(m1, LinkerType.SAMPLENAME, b.getBiotype()));
 					}
-					for(Metadata m2: b.getMetadataMap().values()) {
-						if(m2.getValue()!=null && m2.getValue().length()>0) {
-							res.add(new BiosampleLinker(m.getBiotypeMetadata(), m2.getBiotypeMetadata()));
+					for(BiotypeMetadata m2: b.getBiotype().getMetadata()) {
+						String s = b.getMetadataValue(m2);
+						if(s!=null && s.length()>0) {
+							res.add(new BiosampleLinker(m1, m2));
 						}
 					}
 					if(b.getComments()!=null && b.getComments().length()>0) {
-						res.add(new BiosampleLinker(m.getBiotypeMetadata(), LinkerType.COMMENTS, b.getBiotype()));
+						res.add(new BiosampleLinker(m1, LinkerType.COMMENTS, b.getBiotype()));
 					}
 
 				}
@@ -132,9 +134,10 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 					if(b2.getBiotype().getSampleNameLabel()!=null && b2.getSampleName()!=null && b2.getSampleName().length()>0) {
 						res.add(new BiosampleLinker(b2.getBiotype(), LinkerType.SAMPLENAME));
 					}
-					for(Metadata m2: b2.getMetadataMap().values()) {
-						if(m2.getValue()!=null && m2.getValue().length()>0) {
-							res.add(new BiosampleLinker(b2.getBiotype(), m2.getBiotypeMetadata()));
+					for(BiotypeMetadata m2: b2.getBiotype().getMetadata()) {
+						String s = b2.getMetadataValue(m2);
+						if(s!=null && s.length()>0) {
+							res.add(new BiosampleLinker(b2.getBiotype(), m2));
 						}
 					}
 					if(b2.getComments()!=null && b2.getComments().length()>0) {
@@ -164,16 +167,14 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 			}
 			//Retrieve metadata in the appropriate order
 			for(BiotypeMetadata bm: biosample.getBiotype().getMetadata()) {
-				Metadata m = biosample.getMetadata(bm);
-				if(m==null) continue;
-				
-				if(m.getValue()!=null && m.getValue().length()>0) {
+				String value = biosample.getMetadataValue(bm);
+				if(value!=null && value.length()>0) {
 					if(followLinks) {
-						if(m.getLinkedBiosample()==null) {
-							res.add(new BiosampleLinker(biosample.getBiotype(), m.getBiotypeMetadata()));
+						if(bm.getDataType()==DataType.BIOSAMPLE && biosample.getMetadataBiosample(bm)==null) {
+							res.add(new BiosampleLinker(biosample.getBiotype(), bm));
 						}
 					} else {
-						res.add(new BiosampleLinker(m.getBiotypeMetadata()));
+						res.add(new BiosampleLinker(bm));
 					}
 				}
 			}
@@ -308,8 +309,8 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		
 		if(aggregatedMetadata!=null) {
 			//Aggregation
-			if(b2.getBiotype().equals(aggregatedMetadata.getBiotype()) && b2.getMetadata(aggregatedMetadata)!=null) {
-				return b2.getMetadata(aggregatedMetadata).getLinkedBiosample();
+			if(b2.getBiotype().equals(aggregatedMetadata.getBiotype())) {
+				return b2.getMetadataBiosample(aggregatedMetadata);
 			}
 		} else if(hierarchyBiotype!=null) {
 			//Parent
@@ -338,7 +339,7 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		switch(type) {
 		case SAMPLEID: return b.getSampleId();
 		case SAMPLENAME: return b.getSampleName();
-		case METADATA: return !b.getBiotype().equals(biotypeMetadata.getBiotype()) || b.getMetadata(biotypeMetadata)==null? null: b.getMetadata(biotypeMetadata).getValue();
+		case METADATA: return !b.getBiotype().equals(biotypeMetadata.getBiotype())? null: b.getMetadataValue(biotypeMetadata);
 		case COMMENTS: return b.getComments();
 		default: return "??"+type;
 		}
@@ -356,8 +357,8 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 			b.setSampleName(value);
 			return true;
 		case METADATA:
-			if(!b.getBiotype().equals(biotypeMetadata.getBiotype()) || b.getMetadata(biotypeMetadata)==null) return false;
-			b.setMetadata(biotypeMetadata, value);
+			if(!b.getBiotype().equals(biotypeMetadata.getBiotype()) || b.getMetadataValue(biotypeMetadata)==null) return false;
+			b.setMetadataValue(biotypeMetadata, value);
 			return true;
 		case COMMENTS:
 			b.setComments(value);

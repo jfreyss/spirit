@@ -48,13 +48,13 @@ import com.actelion.research.util.ui.UIUtils;
 public class PromoteDlg extends JSpiritEscapeDialog {
 	private final Study study;
 	
-	public PromoteDlg(Study s) {
+	public PromoteDlg(Study myStudy) {
 		super(UIUtils.getMainFrame(), "Study - Promote", PromoteDlg.class.getName());
-		this.study = JPAUtil.reattach(s);
+		this.study = JPAUtil.reattach(myStudy);
 		
 		List<String> nextStates = WorkflowHelper.getNextStates(study, Spirit.getUser());
-		if(s.getState()!=null) nextStates.remove(s.getState());
-		final JGenericComboBox<String> stateComboBox = new JGenericComboBox<String>(nextStates, true);
+		if(study.getState()!=null) nextStates.remove(study.getState());
+		final JGenericComboBox<String> stateComboBox = new JGenericComboBox<>(nextStates, true);
 		stateComboBox.setEnabled(nextStates.size()>0);
 		JButton okButton = new JButton("Promote");
 		okButton.addActionListener(new ActionListener() {			
@@ -78,7 +78,7 @@ public class PromoteDlg extends JSpiritEscapeDialog {
 						UIUtils.createHorizontalBox(Box.createHorizontalStrut(30), new JCustomLabel(study.getState()==null?"": study.getState() + " to: ", Font.BOLD), stateComboBox, Box.createHorizontalGlue())),
 				null, 				
 				UIUtils.createVerticalBox(
-						UIUtils.createTitleBox("Possible states", new JLabel(WorkflowHelper.getWorkflowDescription(s.getState()))), 
+						UIUtils.createTitleBox("Possible states", new JLabel(WorkflowHelper.getWorkflowDescription(study.getState()))), 
 						UIUtils.createHorizontalBox(Box.createHorizontalGlue(), new JButton(new CloseAction("Cancel")), okButton))));
 		pack();
 		setLocationRelativeTo(UIUtils.getMainFrame());

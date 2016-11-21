@@ -27,7 +27,7 @@ import com.actelion.research.util.ui.exceltable.Column;
 public class StudyIdColumn extends Column<Result, String> {
 	
 	public StudyIdColumn() {
-		super("Result\nStudyId", String.class);
+		super("StudyId", String.class);
 		setHideable(true);
 	}
 	

@@ -37,16 +37,17 @@ import org.krysalis.barcode4j.impl.datamatrix.DataMatrixBean;
 import org.krysalis.barcode4j.impl.datamatrix.SymbolShapeHint;
 import org.krysalis.barcode4j.output.java2d.Java2DCanvasProvider;
 
-import com.actelion.research.spiritcore.business.biosample.ActionStatus;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
+import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
 import com.actelion.research.spiritcore.business.biosample.BrotherFormat;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
-import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
-import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
+import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
+import com.actelion.research.spiritcore.util.Pair;
 
 public class PrintableOfContainers implements Printable {
 	
@@ -108,7 +109,6 @@ public class PrintableOfContainers implements Printable {
 		boolean highLabel = pf.getHeight()>50;
 		
 		
-		System.out.println("BrotherPrintable.print() "+pf.getImageableX()+" "+pf.getImageableWidth()+" x "+pf.getImageableY()+" "+pf.getImageableHeight()+" / "+pf.getWidth()+"x"+pf.getHeight()+" orient="+pf.getOrientation());
 		int fontSizeIncrease = 0;		
 		if(highLabel){
 			fontSizeIncrease = 1;
@@ -148,7 +148,7 @@ public class PrintableOfContainers implements Printable {
 		//Print group
 		Group group = Biosample.getGroup(c.getBiosamples());
 		if(group!=null) {
-			cy+=5+fontSizeIncrease;
+			cy+=4+fontSizeIncrease;
 			
 			string = (group.getStudy().isBlind()?"Gr."+group.getShortName(): group.getName());// + (sub!=null?" '"+(sub+1):"");
 			
@@ -170,30 +170,27 @@ public class PrintableOfContainers implements Printable {
 		if(model!=Model.HIDEPARENT) {
 			//Print top SampleId/Name
 			if(topBiosample!=null) {
-				cy+=5+fontSizeIncrease;
+				cy+=4+fontSizeIncrease;
 				g.setFont(new Font("Arial", Font.BOLD, 5+fontSizeIncrease));
 				string = topBiosample.getSampleIdName();
 				reduceSizeIfTooWide(g, string, maxWidth-textOffsetPixel, 2);
 				
 				int w = g.getFontMetrics().stringWidth(string);
 				g.drawString(string, textOffsetPixel, cy);
-				if(!topBiosample.getStatus().isAvailable()) {
-					ActionStatus a = topBiosample.getLastActionStatus();
-					if(a!=null && a.getPhase()!=null) {
-						string =  " !" + a.getStatus().getName() + "->" + a.getPhase().getShortName() + "!";
-						g.setFont(new Font("Arial", Font.PLAIN, 2+fontSizeIncrease));
-						g.drawString(string, textOffsetPixel + w + 3, cy);
-					}
+				Pair<Status, Phase> p = topBiosample.getLastActionStatus();
+				if(p.getFirst()!=null && p.getSecond()!=null) {
+					string =  " !" + p.getFirst().getName() + "->" + p.getSecond().getShortName() + "!";
+					g.setFont(new Font("Arial", Font.PLAIN, 2+fontSizeIncrease));
+					g.drawString(string, textOffsetPixel + w + 3, cy);
 				}
 			}
 		}
 		
-		cy+=1+fontSizeIncrease;
+//		cy+=1+fontSizeIncrease;
+		System.out.println("PrintableOfContainers.print() cy="+cy);
+		if(cy>17 && cy<19) cy = 19;
 
-		
-		if(cy>18 && cy<22) cy = 20;
-
-		//1. Print blocNo if multiple or biotype
+		//1. decides text to print: blocNo if multiple or biotype
 		EnumSet<InfoFormat> nameEnumSet = EnumSet.noneOf(InfoFormat.class);
 		if(model==Model.HIDEPARENT || !c.getBiosamples().contains(topBiosample)) nameEnumSet.add(InfoFormat.SAMPLENAME);
 		if(model!=Model.HIDEPARENT && !Biosample.getParents(c.getBiosamples()).contains(topBiosample)) nameEnumSet.add(InfoFormat.PARENT_SAMPLENAME);
@@ -212,30 +209,33 @@ public class PrintableOfContainers implements Printable {
 			if(string.length()==0) string = Biosample.getInfos(c.getBiosamples(), EnumSet.of(InfoFormat.TYPE), InfoSize.ONELINE);
 		}
 		
+		//2. Print text: blocNo if multiple or biotype (BOLD)
 		cy+=4+fontSizeIncrease;
-		int cx = cy<22? textOffsetPixel: 0;
+		int cx = cy<19? textOffsetPixel: 0;
 		int maxCx = (int) ((pf.getWidth()<=0? 100: pf.getWidth()) - Math.abs(lineOffsetPixel) - 2);
-		g.setFont(new Font("Arial", Font.BOLD, 5+fontSizeIncrease));
+		int maxCy = (int) ((pf.getHeight()<=0? 100: pf.getHeight()) - 2);
+		g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 5+fontSizeIncrease));
 		reduceSizeIfTooWide(g, string, maxCx - cx, 2);
 		int cy2 = PrinterUtil.print(g, string, cx, cy, maxCx - cx, 0);
 		int wName = g.getFontMetrics().stringWidth(string);
 
-		//2. Print metadata
-		string  = Biosample.getInfos(c.getBiosamples(), EnumSet.of(InfoFormat.METATADATA), InfoSize.ONELINE);
+		//3. Print metadata, comments, amount (PLAIN)
+		string = Biosample.getInfos(c.getBiosamples(), EnumSet.of(InfoFormat.METATADATA), InfoSize.ONELINE);
 		int wMeta = g.getFontMetrics().stringWidth(string);
-		g.setFont(new Font("Arial", Font.PLAIN, 4+fontSizeIncrease));
+		g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 4+fontSizeIncrease));
 		if(wName + wMeta < (maxCx-cx)) {
 			cy = PrinterUtil.print(g, string, cx + (wName+4), cy, maxCx - cx - (wName+4), 0);
 		} else {
-			cx = cy2+1<22? textOffsetPixel: 0;
-			cy = PrinterUtil.print(g, string, cx, cy2, maxCx - cx, 8);
+			cx = 0;
+			System.out.println("PrintableOfContainers.print() h="+(maxCy-cy2-5));
+			cy = PrinterUtil.print(g, string, cx, cy2, maxCx - cx, Math.max(0, maxCy-cy2-5));
 		}
 
-		//2. Print comments amount
+		//2. Print comments amount (ITALIC)
 		cy+=1+fontSizeIncrease;
-		string  = Biosample.getInfos(c.getBiosamples(), EnumSet.of(InfoFormat.COMMENTS, InfoFormat.AMOUNT), InfoSize.ONELINE);
-		g.setFont(new Font("Arial", Font.PLAIN, 4+fontSizeIncrease));
-		cx = cy<22? textOffsetPixel: 0;
+		string = Biosample.getInfos(c.getBiosamples(), EnumSet.of(InfoFormat.COMMENTS, InfoFormat.AMOUNT), InfoSize.ONELINE);
+		g.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 4+fontSizeIncrease));
+		cx = 0;
 		cy = PrinterUtil.print(g, string, cx, cy, maxCx - cx, 30);
 				
 		//Barcode

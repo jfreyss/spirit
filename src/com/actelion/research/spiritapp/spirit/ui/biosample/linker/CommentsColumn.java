@@ -23,7 +23,6 @@ package com.actelion.research.spiritapp.spirit.ui.biosample.linker;
 
 
 import javax.swing.JComponent;
-import javax.swing.SwingConstants;
 
 import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -31,7 +30,6 @@ import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
-import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 
 public class CommentsColumn extends AbstractLinkerColumn<String> {
 
@@ -53,14 +51,6 @@ public class CommentsColumn extends AbstractLinkerColumn<String> {
 		if(linker.isLinked()) row = linker.getLinked(row);
 		
 		row.setComments((String) value);
-	}
-	
-	private static JLabelNoRepaint lbl = new JLabelNoRepaint();
-	@Override
-	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
-		lbl.setVerticalAlignment(SwingConstants.TOP);
-		lbl.setText(value==null?"": ""+value);
-		return lbl;
 	}
 	
 	@Override

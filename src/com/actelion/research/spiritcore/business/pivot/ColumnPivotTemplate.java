@@ -68,8 +68,7 @@ public class ColumnPivotTemplate extends PivotTemplate {
 		List<PivotItem> pvs = new ArrayList<PivotItem>();
 		pvs.addAll(getPivotItems(Where.ASROW));
 		pvs.addAll(getPivotItems(Where.ASCOL));
-		
-		
+				
 		checkAllResults: for (Result r : results) {
 			for(ResultValue rv: r.getOutputResultValues()) {
 				key.setLength(0);
@@ -113,7 +112,8 @@ public class ColumnPivotTemplate extends PivotTemplate {
 		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_COMMENTS, results)) {
 			setWhere(PivotItemFactory.BIOSAMPLE_COMMENTS, Where.ASCOL);
 		}
-
+		
+		simplify(results);
 		
 	}
 	

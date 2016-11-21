@@ -35,7 +35,7 @@ import javax.imageio.ImageIO;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
-import com.actelion.research.spiritcore.business.biosample.Metadata;
+import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 
 public class ImageFactory {
 
@@ -124,10 +124,10 @@ public class ImageFactory {
 			
 			//Find the image if the biosample is living with a type 
 			if(biosample.getBiotype().getCategory()==BiotypeCategory.LIVING) {
-				Metadata m = biosample.getMetadata("Type");
-				if(m!=null && m.getValue()!=null) {
-					img = ImageFactory.getImage(m.getValue());
-					imageKey = m.getValue();
+				String m = biosample.getMetadataValue("Type");
+				if(m!=null && m.length()>0) {
+					img = ImageFactory.getImage(m);
+					imageKey = m;
 				}
 			}
 			
@@ -142,14 +142,13 @@ public class ImageFactory {
 			
 			//Find the image based on the first metadata
 			if(img==null && biosample.getBiotype().getMetadata().size()>0) {
-				for (Metadata m : biosample.getMetadataMap().values()) {
-					String s = m.getValue();
-					if(s!=null) {
+				for (BiotypeMetadata m : biosample.getBiotype().getMetadata()) {
+					String s = biosample.getMetadataValue(m);
+					if(s!=null && s.length()>0) {
 						img = ImageFactory.getImage(s);
 						imageKey = s;
 					}
-					break;
-					
+					break;					
 				}
 			}
 			

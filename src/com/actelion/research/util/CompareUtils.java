@@ -157,7 +157,7 @@ public class CompareUtils {
 			return compare((String) o1, (String) o2);
 		} else if((o1 instanceof Object[]) && (o2 instanceof Object[])) {
 			return compare((Object[]) o1, (Object[]) o2);
-		} else if((o1 instanceof Comparable) /*&& o2.getClass().isAssignableFrom(o1.getClass())*/) {			
+		} else if((o1 instanceof Comparable) && o2.getClass().isAssignableFrom(o1.getClass())) {			
 			return ((Comparable) o1).compareTo(o2);
 		} else {
 			return compare(o1.toString(), o2.toString());			
@@ -219,8 +219,11 @@ public class CompareUtils {
 	};
 
 	public static boolean equals(Object obj1, Object obj2) {
-		return obj1==null? obj2==null: obj1.equals(obj2);
-			
+		return obj1==null? obj2==null: obj1.equals(obj2);			
+	}
+
+	public static boolean equals(String s1, String s2) {
+		return (s1==null?"":s1).equals((s2==null?"":s2));			
 	}
 
 	/**

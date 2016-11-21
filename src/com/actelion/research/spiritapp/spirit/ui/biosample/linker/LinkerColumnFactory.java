@@ -33,7 +33,6 @@ public class LinkerColumnFactory {
 	public static AbstractLinkerColumn<?> create(BiosampleLinker linker) {
 		switch(linker.getType()) {
 		case SAMPLEID:
-//			boolean onlyName = linker.getBiotypeForLabel()!=null && linker.getBiotypeForLabel().isHideSampleId();
 			return new SampleIdColumn(linker, true, true);
 		case SAMPLENAME:
 			return new SampleNameColumn(linker);
@@ -41,7 +40,6 @@ public class LinkerColumnFactory {
 			switch(linker.getBiotypeMetadata().getDataType()) {
 				case D_FILE: return new DocumentColumn(linker);
 				case BIOSAMPLE: return new LinkedBiosampleColumn(linker);
-//				case ELN: return new CompoundColumn(linker);
 				default: return new MetadataColumn(linker);
 			}
 		case COMMENTS:

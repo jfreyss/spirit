@@ -22,12 +22,9 @@
 package com.actelion.research.spiritapp.spirit.ui.biosample.dialog;
 
 import java.awt.Color;
-import java.awt.Image;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Hashtable;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JEditorPane;
@@ -38,27 +35,17 @@ import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.IBiosampleDetail;
 import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
-import com.actelion.research.spiritcore.business.biosample.ActionBiosample;
-import com.actelion.research.spiritcore.business.biosample.ActionComments;
-import com.actelion.research.spiritcore.business.biosample.ActionContainer;
-import com.actelion.research.spiritcore.business.biosample.ActionLocation;
-import com.actelion.research.spiritcore.business.biosample.ActionMoveGroup;
-import com.actelion.research.spiritcore.business.biosample.ActionOwnership;
-import com.actelion.research.spiritcore.business.biosample.ActionStatus;
-import com.actelion.research.spiritcore.business.biosample.ActionTreatment;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
-import com.actelion.research.spiritcore.services.SpiritRights;
-import com.actelion.research.spiritcore.util.Formatter;
-import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.spiritcore.services.dao.DAORevision;
+import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
+import com.actelion.research.util.FormatterUtils;
 
 public class BiosampleHistoryPanel extends JEditorPane implements IBiosampleDetail {
 	
 	private int display;
-	private Container container;
 	private Collection<Biosample> biosamples;
 	private HTMLEditorKit kit = new HTMLEditorKit();
-	private final static Hashtable<URL, Image> imageCache = new Hashtable<URL, Image>();
 	
 	public BiosampleHistoryPanel() {
 		super("text/html", "");
@@ -68,9 +55,7 @@ public class BiosampleHistoryPanel extends JEditorPane implements IBiosampleDeta
 		setEditable(false);
 		setBackground(Color.white);		
 		setEditorKit(kit);
-		getDocument().putProperty("imageCache", imageCache);
 		
-		//
 		StyleSheet stylesheet = kit.getStyleSheet();
 		stylesheet.addRule("td, th {margin:0px;padding:0px}");
 		stylesheet.addRule(".description th {padding-left:0px;padding-right:2px;margin-top:0px;font-weight:plain;text-align:right;font-size:9px;color:gray}");
@@ -92,45 +77,22 @@ public class BiosampleHistoryPanel extends JEditorPane implements IBiosampleDeta
 		return display;
 	}
 	
-	
-	
-	public Container getSelection() {
-		return container;
-	}	
-	
 	@Override
 	public Collection<Biosample> getBiosamples() {
 		return biosamples;
-	}
-	
+	}	
 
-	public void setBiosample(Biosample biosample) {
-		if(biosample==null) {
-			setSelection(false, null, null);
-		} else {
-			setSelection(false, biosample.getContainer(), Collections.singletonList(biosample));
-		}
-	}
-	
-	
 	@Override
 	public void setBiosamples(Collection<Biosample> biosamples) {
 		Collection<Container> containers = Biosample.getContainers(biosamples, true);
 		if(containers!=null && containers.size()==1) {
-			setSelection(true, containers.iterator().next(), biosamples);
+			this.biosamples = biosamples==null? new ArrayList<Biosample>(): biosamples;
 		} else {
-			setSelection(false, null, null);
+			this.biosamples = null;
 		}
-	}
-
-	private void setSelection(boolean containerSelected, Container container, Collection<Biosample> biosamples) {
-		this.container = container;
-		this.biosamples = biosamples==null? new ArrayList<Biosample>(): biosamples;
 		refresh();
 	}
-	
 
-	
 	private void refresh() {
 		
 		if(biosamples==null || biosamples.size()==0) {
@@ -138,78 +100,56 @@ public class BiosampleHistoryPanel extends JEditorPane implements IBiosampleDeta
 			return;
 		}
 		
-//		new SwingWorkerExtended() {
+		StringBuilder txt = new StringBuilder();
+		txt.append("<html><body style='background:white'>");
+		try {						
+		
+			for(Biosample b: biosamples) {
 			
-//			private 
-			StringBuilder txt;
-			
-//			@Override
-//			protected void doInBackground() throws Exception {
-				txt = new StringBuilder();
-				txt.append("<html><body>");
-				try {			
-					
+//				txt.append("<div style='border-bottom: solid 1px #999999; background:#FFFFFF; padding:3px; white-space:nowrap'>");
+//				txt.append("Owner: <i>"+b.getCreUser()+" " +(b.getEmployeeGroup()==null?"": " (" + b.getEmployeeGroup().getName()+")") + "</i>");
+//				txt.append("Last Update: <i>"+b.getUpdUser()+"</i> - <span style='font-size:9px'>" + FormatterUtils.formatDateOrTime(b.getUpdDate()) + "</span>");
+//				txt.append("</div>");
 				
-					for(Biosample b: biosamples) {
-					
-						txt.append("<div style='border-bottom: solid 1px #999999; background:#FFFFFF;padding:3px'>");
-						txt.append("Owner: <i>"+b.getCreUser()+" " +(b.getEmployeeGroup()==null?"": " (" + b.getEmployeeGroup().getName()+")") + "</i> - <span style='font-size:9px'>" + Formatter.formatDateOrTime(b.getCreDate()) + "</span><br>");
-						txt.append("Last Update: <i>"+b.getUpdUser()+"</i> - <span style='font-size:9px'>" + Formatter.formatDateOrTime(b.getUpdDate()) + "</span>");
-						txt.append("</div>");
-						for (ActionBiosample action: b.getActions(null, true)) {
-							if(SpiritRights.isBlind(b.getInheritedStudy(), Spirit.getUser()) && ((action instanceof ActionMoveGroup) || (action instanceof ActionTreatment)) ) {
-								continue;
-							}
-
-							txt.append("<tr style='background:"+UIUtils.getHtmlColor(getColor(action))+"'>");
-							if(biosamples.size()>1) txt.append("<th style='white-space:nowrap'>" + b.getSampleId() +"</th>");
-							txt.append("<th style='white-space:nowrap'>&nbsp;" + Formatter.formatDate(action.getUpdDate()) +"</th>");
-							txt.append("<th style='white-space:nowrap'>&nbsp;" + Formatter.formatTime(action.getUpdDate()) +"</th>");
-							txt.append("<td style='white-space:nowrap'>&nbsp;" + action.getDetails()+"</td>");
-							txt.append("<td style='white-space:nowrap'>&nbsp;<b>" + (action.getPhase()!=null? "at "+action.getPhase().getShortName():"") + "</b></td>");
-							txt.append("</tr>");
+				txt.append("<b>Change history</b><table>");
+				try {
+					List<Revision> revisions = DAORevision.getRevisions(b);
+					for (int i = 0; i < revisions.size(); i++) {
+						Revision rev = revisions.get(i);
+						
+						String diff;
+						Biosample b1 = revisions.get(i).getBiosamples().get(0);
+						if(i+1<revisions.size()) {
+							Biosample b2 = revisions.get(i+1).getBiosamples().get(0);
+							diff = b1.getDifference(b2, Spirit.getUsername());
+						} else {
+							Biosample b2 = revisions.get(0).getBiosamples().get(0);
+							diff = b1.getDifference(b2, Spirit.getUsername());
+							if(diff.length()==0) diff = "First version";
 						}
-						if(b.getCreDate()!=null && b.getCreUser()!=null) {
-							txt.append("<tr style='background:#DDDDDD'>");
-							if(biosamples.size()>1) txt.append("<th style='white-space:nowrap'>" + b.getSampleId() +"</th>");
-							txt.append("<th style='white-space:nowrap'>&nbsp;" + Formatter.formatDate(b.getCreDate()) +"</th>");
-							txt.append("<th style='white-space:nowrap'>&nbsp;" + Formatter.formatTime(b.getCreDate()) +"</th>");
-							txt.append("<td style='white-space:nowrap'>&nbsp;Created</td>");
-							txt.append("<td style='white-space:nowrap'>&nbsp;</td>");
-						}
-						txt.append("</table>");
+						
+						if(diff.length()==0) continue;
+						txt.append("<tr>");
+						txt.append("<th style='white-space:nowrap' valign=top>&nbsp;" + FormatterUtils.formatDateTimeShort(rev.getDate()) + "</th>");
+						txt.append("<th style='white-space:nowrap' valign=top>&nbsp;" + rev.getUser() + "&nbsp;</th>");
+						txt.append("<td style='white-space:nowrap' valign=top>" + diff.replace(";", "<br>") +"</td>");
+						txt.append("</tr>");
 					}
-											
-				} catch (Exception e) {
+					txt.append("</table>");
+				} catch(Exception e) {
 					e.printStackTrace();
 				}
-				txt.append("</body></html>");
-				
-				setText(txt.toString());
-				setCaretPosition(0);
+			}
+									
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		txt.append("</body></html>");
+		
+		setText(txt.toString());
+		setCaretPosition(0);
 		
 	}
 	
-	public static Color getColor(ActionBiosample action) {
-		if(action instanceof ActionOwnership) {
-			return new Color(255,255,180);
-		} else if(action instanceof ActionComments) {
-			return new Color(255,255,180);
-		} else if(action instanceof ActionContainer) {
-			return new Color(230,255,230);
-		} else if(action instanceof ActionLocation) {
-			return new Color(230,255,230);
-		} else if(action instanceof ActionComments) {
-			return new Color(255,255,180);
-		} else if(action instanceof ActionMoveGroup) {
-			return new Color(220,220,255);
-		} else if(action instanceof ActionStatus) {
-			return new Color(255,235,215);
-		} else if(action instanceof ActionTreatment) {
-			return new Color(225,255,195);
-		}
-
-		return null;
-	}
 	
 }

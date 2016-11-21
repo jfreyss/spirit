@@ -32,7 +32,7 @@ import javax.swing.JEditorPane;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.FormatterUtils;
 
 public class TestDocumentPane extends JEditorPane {
 	private static Hashtable<URL, Image> imageCache = new Hashtable<URL, Image>();
@@ -101,9 +101,9 @@ public class TestDocumentPane extends JEditorPane {
 		sb.append("<br><hr>");
 		
 		if(test.getCreDate()!=null) {
-			sb.append("<i>Created by " + (test.getCreUser()==null?"N/A":test.getCreUser()) + " - "+ Formatter.formatDateTime(test.getCreDate())+"</i><br>");
+			sb.append("<i>Created by " + (test.getCreUser()==null?"N/A":test.getCreUser()) + " - "+ FormatterUtils.formatDateTime(test.getCreDate())+"</i><br>");
 			if(test.getUpdDate()!=null && test.getUpdDate().after(test.getCreDate())) {
-				sb.append("<i>Updated by " + (test.getUpdUser()==null?"N/A":test.getUpdUser()) + " - "+ Formatter.formatDateTime(test.getUpdDate())+"</i><br>");
+				sb.append("<i>Updated by " + (test.getUpdUser()==null?"N/A":test.getUpdUser()) + " - "+ FormatterUtils.formatDateTime(test.getUpdDate())+"</i><br>");
 			}
 		}
 		return sb;

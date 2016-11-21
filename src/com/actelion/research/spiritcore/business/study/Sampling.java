@@ -58,7 +58,6 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
-import com.actelion.research.spiritcore.business.biosample.Metadata;
 import com.actelion.research.util.CompareUtils;
 
 @Entity
@@ -116,7 +115,7 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	 * Metadata serialized as biotypeMetadataId=VAL;...
 	 */
 	@Column(name="parameters", length=1024)
-	private String metadata;
+	private String serializedMetadata;
 	
 	/**
 	 * Extra Measurements, serialized as:
@@ -152,27 +151,30 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	 */
 	public Sampling() {}	
 	
-	public Biotype getBiotype() {
-		return biotype;
-	}
-	public void setBiotype(Biotype biotype) {
-		this.biotype = biotype;
-	}
-	
 	public void setId(int id) {
 		this.id = id;
 	}
+	
 	public int getId() {
 		return id;
 	}
 	
+	public Biotype getBiotype() {
+		return biotype;
+	}
+	
+	public void setBiotype(Biotype biotype) {
+		this.biotype = biotype;
+	}
+	
 
-	protected String getSerializedMetadata() {
-		return metadata;
-	}
-	protected void setSerializedMetadata(String parameters) {
-		this.metadata = parameters;
-	}
+//	protected String getSerializedMetadata() {
+//		return serializedMetadata;
+//	}
+//
+//	protected void setSerializedMetadata(String parameters) {
+//		this.serializedMetadata = parameters;
+//	}
 	
 	/**
 	 * Return a Map of BiotypeMetadata -> value
@@ -180,7 +182,7 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	 */
 	public Map<BiotypeMetadata, String> getMetadataMap() {
 		if(metadataMap==null) {			
-			metadataMap = BiotypeMetadata.deserialize(biotype, metadata);
+			metadataMap = BiotypeMetadata.deserialize(biotype, serializedMetadata);
 		}
 		return Collections.unmodifiableMap(metadataMap);
 
@@ -188,8 +190,7 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	
 	public void setMetadataMap(Map<BiotypeMetadata, String> metadataMap) {
 		this.metadataMap = metadataMap;
-	}
-	
+	}	
 	
 	public void setMetadata(BiotypeMetadata bm, String value) {
 		Map<BiotypeMetadata, String> map = new HashMap<>(getMetadataMap());
@@ -293,29 +294,28 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 		
 		//Check name
 		if(biosample.getBiotype().getSampleNameLabel()!=null) {
-			total++;
-			if(getSampleName()!=null) {
-				if(getSampleName().equalsIgnoreCase(biosample.getSampleName())) n++;
+			total+=6;
+			if(getSampleName()!=null && getSampleName().length()>0) {
+				if(getSampleName().equalsIgnoreCase(biosample.getSampleName())) n+=6;
 			} else {
-				if(biosample.getSampleName()==null || biosample.getSampleName().length()==0) n++;
+				if(biosample.getSampleName()==null || biosample.getSampleName().length()==0) n+=6;
 			}
 		}
 		
 		//Check metadata
 		for (BiotypeMetadata m : biotype.getMetadata()) {
 			String data = getMetadata(m);
-			Metadata me = biosample.getMetadata(m);
-			total++;		
-			if(data!=null) {
-				if(me!=null && data.equalsIgnoreCase(me.getValue())) {
-					n++;
+			String val = biosample.getMetadataValue(m);
+			total+=2;		
+			if(data!=null && data.length()>0) {
+				if(val!=null && data.equalsIgnoreCase(val)) {
+					n+=2;
 				}
 			} else {
-				if(me==null  || me.getValue()==null || me.getValue().length()==0) {
-					n++;
+				if( val==null || val.length()==0) {
+					n+=2;
 				}
-			}
-				
+			}				
 		}
 
 		//Check comments
@@ -363,7 +363,7 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 		//parameters
 		for (BiotypeMetadata m : biotype.getMetadata()) {
 			String data = getMetadata(m);
-			if(data!=null) biosample.getMetadata(m).setValue(data); 
+			if(data!=null) biosample.setMetadataValue(m, data); 
 		}
 		
 		//amount
@@ -372,7 +372,9 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 		}
 		
 		//Comments
-		biosample.setComments(comments);
+		biosample.setComments(comments);		
+		biosample.setContainerType(getContainerType());
+		biosample.setContainerIndex(getBlocNo());
 		
 		
 		
@@ -442,7 +444,7 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	public Sampling clone() {
 		try {
 			Sampling clone = new Sampling();
-			clone.setSerializedMetadata(getSerializedMetadata());
+			clone.setMetadataMap(getMetadataMap());
 			clone.setAmount(getAmount());
 			clone.setBiotype(getBiotype());
 			clone.setBlocNo(getBlocNo());
@@ -642,7 +644,7 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 			extraMeasurement = Measurement.serialize(extraMeasurementList);
 		}
 		if(metadataMap!=null) {
-			this.metadata = BiotypeMetadata.serialize(metadataMap);
+			this.serializedMetadata = BiotypeMetadata.serialize(metadataMap);
 		}
 	}
 		

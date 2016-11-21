@@ -26,28 +26,19 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.HSQLMemoryAdapter;
 import com.actelion.research.spiritcore.adapter.PropertyKey;
 import com.actelion.research.spiritcore.adapter.SchemaCreator;
 import com.actelion.research.spiritcore.business.DataType;
-import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.migration.MigrationScript;
 
-public class DatabaseTest {
+public class DatabaseTest extends AbstractSpiritTest {
 	
-	
-	private static SpiritUser user;
 	
 	@BeforeClass
-	public static void initDB() throws Exception {	
-		//Init user
-		user = SpiritUser.getFakeAdmin();
-		
-		//Init DB
-		DBAdapter.setAdapter(new HSQLMemoryAdapter());
+	public static void init() throws Exception {	
 		SchemaCreator.clearExamples(user);
 	}
 	

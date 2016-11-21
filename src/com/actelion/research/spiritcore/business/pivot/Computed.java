@@ -27,16 +27,16 @@ import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultValue;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
-import com.actelion.research.spiritcore.util.Formatter;
 import com.actelion.research.spiritcore.util.ListHashMap;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.FormatterUtils;
 
 public enum Computed {
 	NONE("None", null) {
 		@Override public String format(Double val) {return null;}
 	},
 	INC_DAY("Increase / Day [Absolute]", "Calculates the absolute increase from the last measured value and normalized by the number of days (if several values have been measured, only consider the first of the day)") {
-		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + Formatter.formatMax2(val) + "/d";}
+		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + FormatterUtils.formatMax2(val) + "/d";}
 	},
 //	INC_REF("Inc. / RefPhase [Abs.]", "Calculates the absolute increase from the result measured at the reference phase (as defined in the study design / group definition)") {
 //		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + Formatter.formatMax2(val);}
@@ -45,10 +45,10 @@ public enum Computed {
 //		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + Formatter.formatMax2(val) + "%";}
 //	},
 	INC_START("Increase / d0 [Absolute]", "Calculates the absolute increase from the result measured at d0 (or the closest to d0 if none)") {
-		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + Formatter.formatMax2(val);}
+		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + FormatterUtils.formatMax2(val);}
 	},
 	INC_START_PERCENT("Increase / d0 [%]", "Calculates the relative increase from the result measured at d0 (or the closest to d0 if none)") {
-		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + Formatter.formatMax2(val) + "%";}
+		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + FormatterUtils.formatMax2(val) + "%";}
 	},
 	;
 	

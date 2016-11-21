@@ -72,9 +72,9 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 
 	private final Employee emp;
 	
-	public EmployeeEditDlg(final Employee tmp) {
+	public EmployeeEditDlg(final Employee myEmp) {
 		super(UIUtils.getMainFrame(), "Add/Edit User", EmployeeEditDlg.class.getName());
-		emp = JPAUtil.reattach(tmp);
+		emp = JPAUtil.reattach(myEmp);
 		
 		
 		role1Box = new JGenericComboBox<>(SpiritProperties.getInstance().getUserRoles(), true);

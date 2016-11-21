@@ -53,10 +53,10 @@ public class SpiritRights {
 	 * @return
 	 */
 	public static boolean canRead(Location location, SpiritUser user) {
-		if(user==null) return false;
-		if(user.isSuperAdmin() || user.isReadall()) return true; 
 		if(location==null) return true;
 		if(location.getInheritedPrivacy()==Privacy.PUBLIC) return true;
+		if(user==null) return false;
+		if(user.isSuperAdmin() || user.isReadall()) return true; 
 		if(location.getInheritedPrivacy()==Privacy.PROTECTED) return true;		
 		return user.isMember(location.getInheritedEmployeeGroup());
 	}
@@ -68,7 +68,6 @@ public class SpiritRights {
 		}		
 		return true;
 	}
-
 	
 	public static boolean canRead(Biosample biosample, SpiritUser user) {
 		if(user==null) return false;
@@ -76,8 +75,6 @@ public class SpiritRights {
 		if(user.isSuperAdmin() || user.isReadall()) return true;
 		if(biosample.getCreUser()==null) return true;
 
-		
-		
 		if(biosample.getInheritedStudy()!=null) {			
 			return canView(biosample.getInheritedStudy(), user);
 		} else {	
@@ -150,6 +147,11 @@ public class SpiritRights {
 		if(biosample.getId()<=0) return false;
 		if(biosample.getCreUser()==null) return true;
 		if(user.getUsername().equalsIgnoreCase(biosample.getCreUser())) return true;
+		
+		
+		//Allow the study admin to delete a sample when the design changes
+		if(biosample.getInheritedStudy()!=null && canAdmin(biosample.getInheritedStudy(), user)) return true;
+		
 		return false;
 	}
 
@@ -226,9 +228,12 @@ public class SpiritRights {
 		}
 		
 		for(String uid: user.getManagedUsers()) {
-			if(uid.equalsIgnoreCase(study.getCreUser())) return true;
-//			if(study.getOwner()!=null && study.getOwner().equals(uid)) return true;
-			if(study.getAdminUsersAsSet().contains(uid)) return true;
+			if(uid.equalsIgnoreCase(study.getCreUser())) {
+				return true;
+			}
+			if(study.getAdminUsersAsSet().contains(uid)) {
+				return true;
+			}
 		}
 				
 		return false;
@@ -297,7 +302,6 @@ public class SpiritRights {
 	 */
 	public static boolean canExpert(Study study, SpiritUser user) {		
 		if(user==null) return false;
-		if(user.isReadall()) return true;
 		if(study==null) return true;
 		if(study.getId()<=0) return true;
 		
@@ -343,7 +347,6 @@ public class SpiritRights {
 		if(user.isReadall()) return true;
 		if(study==null) return true;
 		if(study.getId()<=0) return true;
-//		if(study.getStatus()==StudyStatus.FINISHED) return true;
 
 		String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState());
 		if(MiscUtils.contains(roles, "ALL")) {
@@ -354,12 +357,6 @@ public class SpiritRights {
 		}
 		if(canExpert(study, user)) return true;
 		
-//		if(openMode) {		
-////			if(study.getStatus()==StudyStatus.TEST && !canRead(study, user) && !canBlind(study, user)) return false;
-//			return true;
-//		} else {
-//			return canRead(study, user);
-//		}
 		return false;
 	}
 
@@ -374,12 +371,11 @@ public class SpiritRights {
 		if(user==null) return false;
 		if(result.getBiosample()!=null) {
 			Study study = result.getBiosample().getInheritedStudy();
-			if(study!=null && !canExpert(study, user)) return false;
+			if(study!=null && !canRead(study, user)) return false;
 		}
 		return true;		
 	}
 	
-
 	/**
 	 * To edit a result, you must either be the creator or you must have write access on a biosample
 	 */
@@ -410,15 +406,15 @@ public class SpiritRights {
 		if(result==null) return false;
 		if(result.getId()<=0) return false;
 		if(result.getCreUser()==null) return true;
-		if(user.getUsername().equalsIgnoreCase(result.getCreUser())) return true;
+		for(String uid: user.getManagedUsers()) {
+			if(uid.equals(result.getCreUser()) || uid.equals(result.getUpdUser())) return true;
+		}
 		return false;
 	}
 
-
 	public static boolean isSuperAdmin(SpiritUser user) {
 		return user!=null && user.isSuperAdmin();
-	}
-		
+	}		
 	
 	public static boolean canEdit(NamedSampling ns, SpiritUser user) {
 		if(user!=null && (user.isSuperAdmin())) return true;
@@ -429,7 +425,6 @@ public class SpiritRights {
 		if(ns.getStudy()!=null && canAdmin(ns.getStudy(), user)) return true;
 		return false;
 	}
-
 	
 	public static boolean canEdit(Order order, SpiritUser user) {
 		if(user==null || order==null) return false;	
@@ -454,12 +449,4 @@ public class SpiritRights {
 		return study.getBlindDetailsUsersAsSet().contains(user.getUsername()) || study.getBlindAllUsersAsSet().contains(user.getUsername());
 	}
 	
-	
-
-//	public static void setOpenMode(boolean openMode) {
-//		SpiritRights.openMode = openMode;
-//	}
-//	public static boolean isOpenMode() {
-//		return openMode;
-//	}
 }

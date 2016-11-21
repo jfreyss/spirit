@@ -30,8 +30,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.spiritcore.business.pivot.ExpandedPivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.Computed;
+import com.actelion.research.spiritcore.business.pivot.ExpandedPivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.PivotCell;
 import com.actelion.research.spiritcore.business.pivot.PivotColumn;
 import com.actelion.research.spiritcore.business.pivot.PivotDataTable;
@@ -41,7 +41,6 @@ import com.actelion.research.spiritcore.business.pivot.PivotRow;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Where;
 import com.actelion.research.spiritcore.business.result.Result;
-import com.actelion.research.spiritcore.business.result.ResultValue;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.MiscUtils;
@@ -134,7 +133,7 @@ public class DataWarriorExporter {
 	}
 	
 	private List<String> getViewNames() {
-		List<String> res = new ArrayList<String>();
+		List<String> res = new ArrayList<>();
 		if(pivotTable.getPivotColumns().size()==0) {
 			res.add("2D");
 		} else {
@@ -268,10 +267,9 @@ public class DataWarriorExporter {
 				if(!config.isExportAll() && !views.contains(pivotColumn.getTitle())) continue;
 
 				
-				
 				PivotCell pivotCell = pivotRow.getPivotCell(pivotColumn);				
 				Object val = pivotCell.getValue();
-				String cn = val==null? "": ResultValue.convertToValidDoubles(MiscUtils.removeHtmlAndNewLines(val.toString()));
+				String cn = val==null? "": MiscUtils.removeHtmlAndNewLines(val.toString());
 				
 				
 				if (c < table[r + 1].length)
@@ -349,13 +347,12 @@ public class DataWarriorExporter {
 			String viewName = MiscUtils.removeHtmlAndNewLines(views.get(i));
 
 			//X Axis
-			System.out.println("DataWarriorExporter.buildDataWarrior() config.getXAxis()="+config.getXAxis());
+			System.out.println("DataWarriorExporter.buildDataWarrior() "+viewName+" "+config.getXAxis());
 			if(config.getXAxis()==null) {
 				//Auto (boxplot per group or by phase)				
 				PivotColumn pivotColumn = pivotTable.getPivotColumn(viewName);
-				boolean byPhase = pivotColumn==null? false: Result.isPhaseDependant(pivotColumn.getResults());
+				boolean byPhase = /*pivotColumn==null? false:*/ Result.isPhaseDependant(pivotColumn.getResults());
 				if(byPhase) {
-					System.out.println("DataWarriorExporter.buildDataWarrior() SHOW BY PHASE");
 					String xAxis = MiscUtils.removeHtmlAndNewLines(PivotDataType.PHASE.getColumnName(pivotTable));
 					sb.append("<axisColumn_" + viewName + "_0=\"" + xAxis + "\">\n");
 					sb.append("<connectionColumn_" + viewName + "=\"<connectCases>\">\n");
@@ -366,11 +363,9 @@ public class DataWarriorExporter {
 					}
 					
 				} else if(Biosample.getGroups(Result.getBiosamples(pivotColumn.getResults())).size()>1) {
-					System.out.println("DataWarriorExporter.buildDataWarrior() SHOW BY GROUP");
 					String xAxis = MiscUtils.removeHtmlAndNewLines(PivotDataType.GROUP.getColumnName(pivotTable));
 					sb.append("<axisColumn_" + viewName + "_0=\"" + xAxis + "\">\n");					
 				} else {
-					System.out.println("DataWarriorExporter.buildDataWarrior() SHOW BY TOP");
 					String xAxis = MiscUtils.removeHtmlAndNewLines(PivotDataType.TOPSAMPLE.getColumnName(pivotTable));
 					sb.append("<axisColumn_" + viewName + "_0=\"" + xAxis + "\">\n");					
 				}
@@ -434,9 +429,6 @@ public class DataWarriorExporter {
 			sb.append("<mainViewType" + viewNo + "=\"2Dview\">\n");
 		}
 		sb.append("</datawarrior properties>\n");
-		
-		
-		System.out.println("DataWarriorExporter.buildDataWarrior() "+sb);
 		return sb;
 	}
 
@@ -454,10 +446,7 @@ public class DataWarriorExporter {
 		if(s1==null && s2==null) return 0; 
 		if(s1==null) return 1; //Null at the end
 		if(s2==null) return -1;
-		
 		return convertPhaseIntoMinutes(s1) - convertPhaseIntoMinutes(s2);
-		
-		
 	}
 	
 	private static int convertPhaseIntoMinutes(String dateString) {
@@ -485,23 +474,6 @@ public class DataWarriorExporter {
 			}					
 		}
 		return (days*24+hours)*60+minutes;
-	}
-	
-	public static void main(String[] args) {
-		
-		List<String> l = new ArrayList<String>();
-		l.add(null);
-		l.add("-");
-		l.add("koo");
-		l.add("11 tto");
-		l.add("2 dto");
-		l.add("A");
-		l.add("1 ds");
-		
-		Collections.sort(l, CompareUtils.STRING_COMPARATOR);
-		System.out.println("DataWarriorExporter.main() "+l);
-		Collections.sort(l, CompareUtils.OBJECT_COMPARATOR);
-		System.out.println("DataWarriorExporter.main() "+l);
 	}
 	
 }

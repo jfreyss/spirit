@@ -207,10 +207,5 @@ public class Order implements IEntity, Comparable<Order>, Serializable {
 	public Set<String> getContainerIds() {
 		return containerMap.keySet();
 	}
-//	public List<Container> getContainers() {
-//		return DAOBiosample.getContainers(getContainerIds());
-//	}
-	
-
 
 }

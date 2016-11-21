@@ -96,9 +96,6 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 	private JPanel studyPanel = new JPanel(new GridLayout());
 
 	
-	
-	
-	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public DatabaseSettingsDlg(boolean testImmediately) {
 		super(UIUtils.getMainFrame(), "Database Settings", DatabaseSettingsDlg.class.getName());
@@ -559,7 +556,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 		
 		//Reset Spirit
 		DBAdapter.setAdapter(null);
-		JPAUtil.close();
+		JPAUtil.closeFactory();
 		SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
 	}
 	

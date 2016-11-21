@@ -41,7 +41,7 @@ import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
-import com.actelion.research.spiritcore.business.biosample.Metadata;
+import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
@@ -118,8 +118,10 @@ public class EditBiosamplePanel extends JPanel {
 			//Test if the list has metadata
 			boolean hasData = false;
 			for(Biosample b: table.getBiosamples()) {
-				for(Metadata m : b.getMetadataMap().values()) {
-					if(m.getValue()!=null && m.getValue().length()>0) hasData = true;
+				if(b.getBiotype()==null) continue;
+				for(BiotypeMetadata m : b.getBiotype().getMetadata()) {
+					String s = b.getMetadataValue(m);
+					if(s!=null && s.length()>0) hasData = true;
 				}
 			}	
 			
@@ -135,10 +137,10 @@ public class EditBiosamplePanel extends JPanel {
 					//Change the type
 					List<Biosample> biosamples = table.getBiosamples();
 					for (Biosample b : biosamples) {
-						for (Metadata m : b.getMetadataMap().values()) {
-							m.setBiosample(null);								
-						}
-						b.getMetadataMap().clear();
+//						for (Metadata m : b.getMetadataMap().values()) {
+//							m.setBiosample(null);								
+//						}
+//						b.getMetadataMap().clear();
 						b.setBiotype(biotype);					
 					}
 					Spirit.getConfig().setProperty("biosample.type", biotype==null?"": biotype.getName());
@@ -148,7 +150,6 @@ public class EditBiosamplePanel extends JPanel {
 				List<Biosample> biosamples = table.getBiosamples();
 				for (Biosample b : biosamples) {
 					if(b.getBiotype()==null) {
-						JOptionPane.showMessageDialog(dlg, "You must select a biotype to create new biosample", "Error", JOptionPane.ERROR_MESSAGE);
 						typeComboBox.setSelection(table.getType());
 						return;
 					}

@@ -26,24 +26,19 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JEscapeDialog;
@@ -121,7 +116,7 @@ public abstract class CorrectionDlg<ATTRIBUTE, DATA> extends JEscapeDialog {
 
 
 	private JPanel createPanel(List<Correction<ATTRIBUTE, DATA>> list) {
-		final ATTRIBUTE att = list.get(0).getAttribute();
+//		final ATTRIBUTE att = list.get(0).getAttribute();
 
 		List<Component> comps = new ArrayList<>();
 		for (final Correction<ATTRIBUTE, DATA> correction : list) {

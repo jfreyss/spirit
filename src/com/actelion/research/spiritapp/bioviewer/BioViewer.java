@@ -84,7 +84,7 @@ import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.CSVUtils;
+import com.actelion.research.util.CSVUtils;
 import com.actelion.research.util.ui.EasyClipboard;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -153,7 +153,7 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 		biosampleTab.linkBiosamplePane(biosampleEditorPane);
 
 		// Right Panel
-		biosampleDetailPane.setSelectedTab(BiosampleTabbedPane.HIERARCHY_TITLE);
+		biosampleDetailPane.setSelectedTab(BiosampleTabbedPane.HISTORY_TITLE);
 
 		JPanel detailPanel = new JPanel(new BorderLayout());
 		JSplitPane detailPanes = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(biosampleEditorPane), biosampleDetailPane);
@@ -244,7 +244,7 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 		List<Biosample> before = new ArrayList<Biosample>(biosampleTab.getBiosamples());
 		List<Biosample> sel = biosampleTab.getBiosampleTable().getSelection();
 		biosampleTab.clear();
-		JPAUtil.close();
+		JPAUtil.closeFactory();
 		List<Biosample> reloaded = JPAUtil.reattach(before);
 		biosampleTab.setBiosamples(reloaded);
 		biosampleTab.setSelectedBiosamples(sel);

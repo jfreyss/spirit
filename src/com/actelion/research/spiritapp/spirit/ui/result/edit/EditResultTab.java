@@ -38,10 +38,8 @@ import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.ui.result.TestChoice;
 import com.actelion.research.spiritapp.spirit.ui.util.closabletab.JClosableTabbedPane.IClosableTab;
-import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
-import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
@@ -239,26 +237,27 @@ public class EditResultTab extends JPanel implements IClosableTab {
 		Collections.sort(results);
 		testChoice.setEnabled(true);
 		Test test = null;
-		Study study = null;
-		Biosample firstBiosample = null;
+//		Study study = null;
+//		Biosample firstBiosample = null;
 		
 		if(results.size()>0) {
 			test = results.get(0).getTest();
-			firstBiosample = results.get(0).getBiosample();
-			study = results.get(0).getStudy();
-		}
+//			firstBiosample = results.get(0).getBiosample();
+//			study = results.get(0).getStudy();
 		
-		//Validate the results given as parameter (same test, same ivv)
-		for (Result result : results) {
-			if(CompareUtils.compare(result.getTest(), test)!=0) {
-				throw new IllegalArgumentException("All results must have the same test");
+		
+			//Validate the results given as parameter (same test, same ivv)
+			for (Result result : results) {
+				if(CompareUtils.compare(result.getTest(), test)!=0) {
+					throw new IllegalArgumentException("All results must have the same test");
+				}
+	//			if(CompareUtils.compare(result.getStudy(), study)!=0) {
+	//				throw new IllegalArgumentException("All results must have the same study:\n " + 
+	//						result.getBiosample() + " is in " + (result.getStudy()==null?"NoStudy":result.getStudy()) +
+	//						" but " + (firstBiosample==null?"NoSample":firstBiosample) + " is in "+(study==null?"NoStudy":study));									
+	//			}
+				
 			}
-			if(CompareUtils.compare(result.getStudy(), study)!=0) {
-				throw new IllegalArgumentException("All results must have the same study:\n " + 
-						result.getBiosample() + " is in " + (result.getStudy()==null?"NoStudy":result.getStudy()) +
-						" but " + (firstBiosample==null?"NoSample":firstBiosample) + " is in "+(study==null?"NoStudy":study));									
-			}
-			
 		}
 		
 		//Set the test

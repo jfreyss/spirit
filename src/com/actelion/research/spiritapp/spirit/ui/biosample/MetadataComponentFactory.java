@@ -21,6 +21,7 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
@@ -33,9 +34,9 @@ import javax.swing.JLabel;
 import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.util.component.DocumentTextField;
 import com.actelion.research.spiritcore.business.DataType;
+import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
-import com.actelion.research.spiritcore.business.biosample.Metadata;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.DateTextField;
@@ -43,6 +44,7 @@ import com.actelion.research.util.ui.JComboCheckBox;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JTextComboBox;
 import com.actelion.research.util.ui.TextChangeListener;
+import com.actelion.research.util.ui.exceltable.JLargeTextField;
 
 public class MetadataComponentFactory {
 
@@ -89,17 +91,21 @@ public class MetadataComponentFactory {
 		case D_FILE:
 			res = new FileComponent();
 			break;
+		case LARGE:
+			res = new LargeComponent();
+			break;
 		case BIOSAMPLE:
 			res = new BiosampleComponent(parameters);
 			break;
+		case FORMULA:
+			res = new FormulaComponent(parameters);
+			break;
 		default:
 			res = new JLabel("Not editable: [" + datatype+"]");
-		}
-		
+		}		
 		if(required) {
 			res.setBackground(LF.BGCOLOR_REQUIRED);
-		}
-		
+		}		
 		return res;
 	}
 	
@@ -113,22 +119,19 @@ public class MetadataComponentFactory {
 		public String getData() {
 			return getText();
 		}			
-
 		@Override
 		public void setData(String val) {
 			if(val==null) setText("");
 			else setText(val);
-		}		
-		
+		}				
 		@Override
-		public void updateModel(Metadata m) {
-			if(m!=null) m.setValue(getData());
+		public void updateModel(Biosample b, BiotypeMetadata m) {
+			if(b!=null && m!=null) b.setMetadataValue(m, getData());
 		}
 		@Override
-		public void updateView(Metadata m) {
-			setData(m==null? null: m.getValue());
-		}
-	
+		public void updateView(Biosample b, BiotypeMetadata m) {
+			setData(b==null || m==null? null: b.getMetadataValue(m));
+		}	
 		@Override
 		public void addTextChangeListener(TextChangeListener listener) {
 			super.addTextChangeListener(listener);
@@ -148,26 +151,23 @@ public class MetadataComponentFactory {
 					setBiotype(null);
 				}
 			}
-		}
-		
+		}		
 		@Override
 		public String getData() {
 			return getText();
-		}
-		
+		}		
 		@Override
 		public void setData(String metadata) {
 			new IllegalArgumentException("Not supported");			
-		}
-		
+		}		
 		@Override
-		public void updateModel(Metadata m) {
-			m.setLinkedBiosample(getBiosample());
+		public void updateModel(Biosample b, BiotypeMetadata m) {
+			if(b!=null && m!=null) b.setMetadataBiosample(m, getBiosample());
 			
 		}
 		@Override
-		public void updateView(Metadata m) {
-			setBiosample(m==null? null: m.getLinkedBiosample());
+		public void updateView(Biosample b, BiotypeMetadata m) {
+			setBiosample(b==null || m==null? null: b.getMetadataBiosample(m));
 		}
 		@Override
 		public void addTextChangeListener(TextChangeListener listener) {
@@ -178,24 +178,22 @@ public class MetadataComponentFactory {
 	public static class FileComponent extends DocumentTextField implements MetadataComponent {		
 		public FileComponent() {
 			super();
-		}		
-		
+		}				
 		@Override
 		public String getData() {
-			return getSelectedText();
+			return getText();
 		}			
-
 		@Override
 		public void setData(String val) {
 			throw new IllegalArgumentException("Not supported");
 		}		
 		@Override
-		public void updateModel(Metadata m) {
-			m.setLinkedDocument(getSelectedDocument());
+		public void updateModel(Biosample b, BiotypeMetadata m) {
+			if(b!=null && m!=null) b.setMetadataDocument(m, getSelectedDocument());
 		}
 		@Override
-		public void updateView(Metadata m) {
-			setSelectedDocument(m==null? null: m.getLinkedDocument());
+		public void updateView(Biosample b, BiotypeMetadata m) {
+			setSelectedDocument(b==null || m==null? null: b.getMetadataDocument(m));
 		}
 		@Override
 		public void addTextChangeListener(TextChangeListener listener) {
@@ -203,6 +201,35 @@ public class MetadataComponentFactory {
 		}
 	}
 	
+	public static class LargeComponent extends JLargeTextField implements MetadataComponent {
+		public LargeComponent() {
+			super();
+		}		
+		@Override
+		public String getData() {
+			return getText();
+		}			
+		@Override
+		public void setData(String val) {
+			setText(val);
+		}		
+		@Override
+		public void updateModel(Biosample b, BiotypeMetadata m) {
+			if(getText().length()==0) {
+				b.setMetadataValue(m, null);
+			} else {
+				b.setMetadataValue(m, getText());
+			}
+		}
+		@Override
+		public void updateView(Biosample b, BiotypeMetadata m) {
+			setData(b.getMetadataValue(m));
+		}
+		@Override
+		public void addTextChangeListener(TextChangeListener listener) {
+			//ignore
+		}
+	}
 	
 	public static class MultiComponent extends JComboCheckBox implements MetadataComponent {
 		public MultiComponent(String parameters) {	
@@ -220,12 +247,12 @@ public class MetadataComponentFactory {
 			setText(metadata);
 		}
 		@Override
-		public void updateModel(Metadata m) {
-			if(m!=null) m.setValue(getData());
+		public void updateModel(Biosample b, BiotypeMetadata m) {
+			if(b!=null && m!=null) b.setMetadataValue(m, getData());
 		}
 		@Override
-		public void updateView(Metadata m) {
-			setData(m==null? null: m.getValue());
+		public void updateView(Biosample b, BiotypeMetadata m) {
+			setData(b==null || m==null? null: b.getMetadataValue(m));
 		}
 		@Override
 		public void addTextChangeListener(TextChangeListener listener) {
@@ -241,21 +268,12 @@ public class MetadataComponentFactory {
 			String[] choices = new String[split.length+1];
 			choices[0] = "";
 			System.arraycopy(split, 0, choices, 1, split.length);
-//			StringTokenizer st = new StringTokenizer(parameters, ",");
-//			Vector<String> choices = new Vector<String>();
-//			choices.add("");
-//			while(st.hasMoreTokens()) {
-//				String token = st.nextToken().trim();
-//				if(!choices.contains(token) && token.length()>0) choices.add(token);
-//			}
 			setModel(new DefaultComboBoxModel<String>(choices));
 		}
-
 		@Override
 		public String getData() {
 			return (String)getSelectedItem();
 		}		
-
 		@Override
 		public void setData(String val) {
 			if(val==null) {
@@ -265,12 +283,12 @@ public class MetadataComponentFactory {
 			}
 		}		
 		@Override
-		public void updateModel(Metadata m) {
-			if(m!=null) m.setValue(getData());
+		public void updateModel(Biosample b, BiotypeMetadata m) {
+			if(b!=null && m!=null) b.setMetadataValue(m, getData());
 		}
 		@Override
-		public void updateView(Metadata m) {
-			setData(m==null? null: m.getValue());
+		public void updateView(Biosample b, BiotypeMetadata m) {
+			setData(b==null || m==null? null: b.getMetadataValue(m));
 		}
 		@Override
 		public void addTextChangeListener(final TextChangeListener listener) {
@@ -281,7 +299,6 @@ public class MetadataComponentFactory {
 				}
 			});
 		}
-
 	}
 
 	public static class AutoCompleteComponent extends JTextComboBox implements MetadataComponent {
@@ -290,12 +307,10 @@ public class MetadataComponentFactory {
 			setEditable(true);
 			setColumns(28);
 		}
-
 		@Override
 		public String getData() {
 			return (String) getText();
-		}
-		
+		}		
 		@Override
 		public void setData(String val) {
 			if(val==null) {
@@ -303,35 +318,29 @@ public class MetadataComponentFactory {
 			} else {
 				setText(val);
 			}
+		}				
+		@Override
+		public void updateModel(Biosample b, BiotypeMetadata m) {
+			if(b!=null && m!=null) b.setMetadataValue(m, getData());
 		}		
 		@Override
-		public void updateModel(Metadata m) {
-			if(m!=null) m.setValue(getData());
-		}
-		@Override
-		public void updateView(Metadata m) {
-			setData(m==null? null: m.getValue());
-		}
-		
+		public void updateView(Biosample b, BiotypeMetadata m) {
+			setData(b==null || m==null? null: b.getMetadataValue(m));
+		}		
 		@Override
 		public void addTextChangeListener(TextChangeListener listener) {
 			super.addTextChangeListener(listener);
 		}
-
 	}
-
 	
 	public static class NumericalComponent extends JCustomTextField implements MetadataComponent {		
 		public NumericalComponent() {
 			super(JCustomTextField.DOUBLE, 4);
-		}
-		
+		}		
 		@Override
 		public String getData() {
 			return getText();
 		}
-
-
 		@Override
 		public void setData(String val) {
 			if(val==null) {
@@ -339,50 +348,50 @@ public class MetadataComponentFactory {
 			} else {
 				setText(val);
 			}
+		}				
+		@Override
+		public void updateModel(Biosample b, BiotypeMetadata m) {
+			if(b!=null && m!=null) b.setMetadataValue(m, getData());
 		}		
 		@Override
-		public void updateModel(Metadata m) {
-			if(m!=null) m.setValue(getData());
+		public void updateView(Biosample b, BiotypeMetadata m) {
+			setData(b==null || m==null? null: b.getMetadataValue(m));
 		}
-		@Override
-		public void updateView(Metadata m) {
-			setData(m==null? null: m.getValue());
-		}
-
 		@Override
 		public void addTextChangeListener(TextChangeListener listener) {
 			super.addTextChangeListener(listener);
 		}
 	}
 	
+	public static class FormulaComponent extends NumericalComponent implements MetadataComponent {
+		public FormulaComponent(String parameters) {
+			setToolTipText(parameters);
+			setEditable(false);
+			setForeground(Color.BLUE);
+		}
+	}
 
-	public static class DateStringComponent extends DateTextField implements MetadataComponent {
-		
+	public static class DateStringComponent extends DateTextField implements MetadataComponent {		
 		public DateStringComponent(boolean showToday) {
 			super(showToday);
-		}
-		
+		}		
 		@Override
 		public String getData() {
 			return getText();
 		}
-
 		@Override
 		public void setData(String val) {setText(val);}
-
 		@Override
-		public void updateModel(Metadata m) {
-			if(m!=null) m.setValue(getData());
+		public void updateModel(Biosample b, BiotypeMetadata m) {
+			if(b!=null && m!=null) b.setMetadataValue(m, getData());
 		}
 		@Override
-		public void updateView(Metadata m) {
-			setData(m==null? null: m.getValue());
-		}
-		
+		public void updateView(Biosample b, BiotypeMetadata m) {
+			setData(b==null || m==null? null: b.getMetadataValue(m));
+		}		
 		@Override
 		public void addTextChangeListener(TextChangeListener listener) {
 			super.addTextChangeListener(listener);
 		}
-
 	}
 }

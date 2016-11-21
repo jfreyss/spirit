@@ -38,10 +38,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class SwingWorkerExecutor {
 
-//	private static List<Thread> threads = new ArrayList<>();
-	private static LinkedBlockingQueue<Runnable> threads = new LinkedBlockingQueue<Runnable>();
+	private static LinkedBlockingQueue<Runnable> threads = new LinkedBlockingQueue<>();
+	
 	private static final ExecutorService service = 
-//			Executors.newFixedThreadPool(1, new ThreadFactory() {		
 			new ThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, threads, new ThreadFactory() {	
 		@Override
 		public Thread newThread(Runnable r) {

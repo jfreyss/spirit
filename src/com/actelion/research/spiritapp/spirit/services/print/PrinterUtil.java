@@ -61,6 +61,13 @@ public abstract class PrinterUtil {
 
 	}
 	
+	/**
+	 * Print some text in the rectangle defined by (x,y,width,height).
+	 * The printing use the set color and font.
+	 * each subsequent line is spaced by y+=metrics.height-1.2 and it is printed if y<=heigth
+	 * (so height=0 enforced 1 line) 
+	 * @return
+	 */
 	public static int print(Graphics2D g, String s, int x, int y, int width, int height) {
 		float current = y;
 		for(String line: s.split("\n")) {
@@ -70,13 +77,20 @@ public abstract class PrinterUtil {
 			while(offset+len<line.length() && current-oldy<=height) {
 				String t = line.substring(offset, offset+len);			
 				if(g.getFontMetrics().stringWidth(t)<width) {
+					//allow to print 1 more character if width is enough
 					len++;
 				} else {
+					//print the text
 					len--;
 					g.drawString(line.substring(offset, offset+len), x, current);
 					offset+=len;
 					len = 4;
 					current+=g.getFontMetrics().getHeight()-1.2;
+					
+					//skip the next unnessary characted (,; )
+					while(offset<line.length() && " ,;".indexOf(line.charAt(offset))>=0) {
+						offset++;
+					}
 				}
 			}
 			if(current-oldy<=height) {

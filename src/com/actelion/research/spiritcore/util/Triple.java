@@ -23,7 +23,14 @@ package com.actelion.research.spiritcore.util;
 
 import com.actelion.research.util.CompareUtils;
 
-
+/**
+ * Immutable class to represent a triple of Objects (works like Pair)
+ * @author Joel Freyss
+ *
+ * @param <FIRST>
+ * @param <SECOND>
+ * @param <THIRD>
+ */
 public class Triple<FIRST, SECOND, THIRD> implements Comparable<Triple<FIRST, SECOND, THIRD>>{
 	private final FIRST first;
 	private final SECOND second;

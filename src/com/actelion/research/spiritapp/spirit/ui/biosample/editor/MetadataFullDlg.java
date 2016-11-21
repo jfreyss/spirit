@@ -48,7 +48,6 @@ import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
-import com.actelion.research.spiritcore.business.biosample.Metadata;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JEscapeDialog;
@@ -164,8 +163,7 @@ public class MetadataFullDlg extends JEscapeDialog {
 			c.weighty = 0;
 
 			//Name
-			if(type.getSampleNameLabel()!=null) {
-				
+			if(type.getSampleNameLabel()!=null) {				
 				if(type.isNameAutocomplete()) {
 					nameTextField = new JTextComboBox(true) {
 						@Override
@@ -184,21 +182,11 @@ public class MetadataFullDlg extends JEscapeDialog {
 				c.weightx = 1; c.gridx = 1; content.add(nameTextField, c);
 			}
 			
-//			//Amount
-//			if(type.getAmountUnit()!=null) {
-//				c.gridy++; 
-//				c.weightx = 0; c.gridx = 0; content.add(new JLabel(type.getAmountUnit() + ": "), c);
-//				c.weightx = 1; c.gridx = 1; content.add(amountTextField, c);				
-//			}
-			
-			
 			//Metadata
 			for (BiotypeMetadata m : type.getMetadata()) {
 				JComponent comp = MetadataComponentFactory.getComponentFor(m);
-				Metadata meta = biosample.getMetadata(m);
 				if(comp instanceof MetadataComponent) {
-//					((MetadataComponent) comp).setData(meta==null?"": meta.getValue());
-					((MetadataComponent) comp).updateView(meta);
+					((MetadataComponent) comp).updateView(biosample, m);
 					
 				}
 				comps.add(comp);
@@ -248,7 +236,7 @@ public class MetadataFullDlg extends JEscapeDialog {
 //				String data = ((MetadataComponent) comps.get(i)).getData();
 //				biosample.setMetadata(m, data);
 				
-				((MetadataComponent) comps.get(i)).updateModel(biosample.getMetadata(m));
+				((MetadataComponent) comps.get(i)).updateModel(biosample, m);
 
 				i++;
 			}

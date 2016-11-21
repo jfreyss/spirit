@@ -77,7 +77,7 @@ public class DAOResult {
 	private static Logger logger = LoggerFactory.getLogger(DAOResult.class); 
 	
 	public static String suggestElb(String user) {
-		return "ELB-" + (user==null?"": user + "-") + new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date());
+		return "ELB-" + (user==null?"": user + "-") + new SimpleDateFormat("yyyyMMdd-HHmm").format(JPAUtil.getCurrentDateFromDatabase());
 	}
 	
 	public static List<Result> queryResults(ResultQuery q, SpiritUser user) throws Exception  {
@@ -325,7 +325,9 @@ public class DAOResult {
 			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.inheritedPhase.name) like LOWER(?)))");
 			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.topParent.sampleId) like LOWER(?)))");
 			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.topParent.name) like LOWER(?)))");
-			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2, IN(b2.location) l WHERE LOWER(l.name) like LOWER(?)))");				
+			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.location.name) like LOWER(?)))");				
+			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.serializedMetadata) like LOWER(?)))");
+			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.parent.serializedMetadata) like LOWER(?)))");
 			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 JOIN b2.linkedBiosamples b3 WHERE LOWER(b3.serializedMetadata) like LOWER(?)))");
 			expr.append(" or LOWER(b.comments) like LOWER(?)");
 			expr.append(" or LOWER(b.creUser) like LOWER(?)");
@@ -889,6 +891,10 @@ public class DAOResult {
 	}
 	
 
+	public static void attachOrCreateStudyResultsToTops(Study study) throws Exception {
+		attachOrCreateStudyResultsToTops(study, null, null, null);
+	}
+			
 	/**
 	 * Load the results of Weighing, FoodWater, Observation, extraMesurements that could be performed on the top specimen
 	 * @param study
@@ -898,7 +904,7 @@ public class DAOResult {
 	 * @throws Exception
 	 */
 	public static void attachOrCreateStudyResultsToTops(Study study, Collection<Biosample> allBiosamples, Phase phaseFilter, String elbForCreatingMissingOnes) throws Exception  {
-		assert allBiosamples!=null;
+		if(allBiosamples==null) allBiosamples = study.getAttachedBiosamples();
 		Test weighingTest = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
 		Test fwTest = DAOTest.getTest(DAOTest.FOODWATER_TESTNAME);
 		Test obsTest = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);
@@ -913,6 +919,10 @@ public class DAOResult {
 	}
 	
 	
+	public static void attachOrCreateStudyResultsToSamples(Study study) throws Exception {
+		attachOrCreateStudyResultsToSamples(study, null, null, null);
+	}
+	
 	/**
 	 * Load the results of Weighing, Length, Observation that could be performed on the samples
 	 * @param study
@@ -922,7 +932,7 @@ public class DAOResult {
 	 * @throws Exception
 	 */
 	public static void attachOrCreateStudyResultsToSamples(Study study, Collection<Biosample> allBiosamples, Phase phaseFilter, String elbForCreatingMissingOnes) throws Exception  {
-		assert allBiosamples!=null;
+		if(allBiosamples==null) allBiosamples = study.getAttachedBiosamples();
 		Test weighingTest = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
 		Test lengthTest = DAOTest.getTest(DAOTest.LENGTH_TESTNAME);
 		Test obsTest = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);		

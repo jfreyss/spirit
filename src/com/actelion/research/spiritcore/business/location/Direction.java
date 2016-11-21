@@ -49,6 +49,7 @@ public enum Direction {
 	public String getName() {
 		return name;
 	}
+	
 	public ImageIcon getImage() {
 		return img;
 	}

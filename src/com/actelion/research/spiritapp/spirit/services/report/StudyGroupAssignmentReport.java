@@ -94,19 +94,21 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 				samples = rnd.getSamples();
 				if(samples.size()==0) continue;
 				
-				Collections.sort(samples, new Comparator<AttachedBiosample>() {
-					@Override
-					public int compare(AttachedBiosample o1, AttachedBiosample o2) {
-						int c = CompareUtils.compare(o1.getGroup(), o2.getGroup());
-						if(c!=0) return c;
-						c = CompareUtils.compare(o1.getSubGroup(), o2.getSubGroup());
-						if(c!=0) return c;
-						c = CompareUtils.compare(o1.getSampleName(), o2.getSampleName());
-						return c;
-					}
-				});
 				nData = rnd.getNData();
 			}
+			
+			Collections.sort(samples, new Comparator<AttachedBiosample>() {
+				@Override
+				public int compare(AttachedBiosample o1, AttachedBiosample o2) {
+					int c = CompareUtils.compare(o1.getGroup(), o2.getGroup());
+					if(c!=0) return c;
+					c = CompareUtils.compare(o1.getSubGroup(), o2.getSubGroup());
+					if(c!=0) return c;
+					c = CompareUtils.compare(o1.getSampleName(), o2.getSampleName());
+					return c;
+				}
+			});
+
 			
 			//Create Header
 			Sheet sheet = createSheet(wb, "GA "+ (phase==null?"Final": phase.getShortName()));
@@ -162,7 +164,7 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 				set(sheet, line, col++, g==null || g.getNSubgroups()<=1?"": (r.getSubGroup()+1), Style.S_TD_CENTER);
 				if(biotype!=null) {
 					for (BiotypeMetadata bm : biotype.getMetadata()) {
-						set(sheet, line, col++, b.getMetadataString(bm), Style.S_TH_CENTER);
+						set(sheet, line, col++, b.getMetadataValue(bm), Style.S_TD_CENTER);
 					}
 				}
 				set(sheet, line, col++, g==null?"": g.getTreatmentDescription() , Style.S_TD_LEFT);

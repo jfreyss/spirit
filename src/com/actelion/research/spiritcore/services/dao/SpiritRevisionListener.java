@@ -33,7 +33,7 @@ public class SpiritRevisionListener implements RevisionListener {
 	public void newRevision(Object obj) {
 		SpiritRevisionEntity rev = (SpiritRevisionEntity) obj;		
 		SpiritUser user = JPAUtil.getSpiritUser();
-		rev.setUserId(user==null?"": user.getUsername());
+		rev.setUserId(user==null?"NA": user.getUsername());
 		rev.setTimestamp(JPAUtil.getCurrentDateFromDatabase().getTime());
 		DAOBarcode.reset();
 	}

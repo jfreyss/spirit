@@ -58,7 +58,7 @@ import com.actelion.research.spiritapp.spirit.ui.study.GroupLabel;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.UIUtils;
 
 public abstract class AbstractReport {
@@ -706,9 +706,9 @@ public abstract class AbstractReport {
 		row.setHeightInPoints(21f);
 		cell = row.createCell(0);
 		cell.setCellStyle(styles.get(Style.S_TITLE12));
-		cell.setCellValue("Date: " + Formatter.formatDateTime(new Date()));
+		cell.setCellValue("Date: " + FormatterUtils.formatDateTime(new Date()));
 		if(phase!=null) {
-			cell.setCellValue(phase.getShortName() + (phase.getAbsoluteDate()!=null? " - " + Formatter.formatDate(phase.getAbsoluteDate()): ""));
+			cell.setCellValue(phase.getShortName() + (phase.getAbsoluteDate()!=null? " - " + FormatterUtils.formatDate(phase.getAbsoluteDate()): ""));
 		}
 		cell = row.createCell(3);
 		cell.setCellStyle(styles.get(Style.S_TITLE12));
@@ -732,7 +732,7 @@ public abstract class AbstractReport {
 		sheet.createRow(2).setHeightInPoints(21f);
 		set(sheet, 0, 0, study.getStudyId(), Style.S_TITLE14);
 		set(sheet, 1, 0, (study.getIvv()!=null? " (" + study.getIvv() + ")":""), Style.S_TITLE12);
-		set(sheet, 2, 0, Formatter.formatDateTimeShort(new Date()), Style.S_TITLE12);		
+		set(sheet, 2, 0, FormatterUtils.formatDateTimeShort(new Date()), Style.S_TITLE12);		
 		set(sheet, 0, 2, title, Style.S_TITLE14);
 		set(sheet, 1, 2, subtitle, Style.S_TITLE14BLUE);		
 	}

@@ -87,10 +87,6 @@ public class XTR96Scanner {
 		return scanPlate(config).getTubes();
 	}
 	
-//	private static int testNo = 0;  
-//	public static void configureTest(int i) {
-//		testNo = i;
-//	}
 	public static List<RackPos> getTestTubes(int i) throws IOException, NoReadException {
 		List<RackPos> testTubes = new ArrayList<RackPos>();
 		if(i==0) {
@@ -107,7 +103,7 @@ public class XTR96Scanner {
 //			testTubes.add(new ScannedTube("A/10", "GT00032540"));
 //			testTubes.add(new ScannedTube("A/11", "GT00032541"));
 //			testTubes.add(new ScannedTube("A/12", "GT00032542"));
-			throw new NoReadException(testTubes);
+//			throw new NoReadException(testTubes);
 		} else if(i==1) {
 			testTubes.add(new RackPos("A/01", "GT00033531"));
 			testTubes.add(new RackPos("A/02", "GT00033532"));
@@ -153,9 +149,9 @@ public class XTR96Scanner {
 		boolean test = new File(".").canWrite() && !new File(".").getAbsolutePath().startsWith("P:") && !new File(".").getAbsolutePath().contains("actelch02") && !new File(".").getAbsolutePath().contains("ares");
 		if(!test) throw new IOException("The working directory must be somewhere where you have write access.\n Currently it is: "+new File(".").getAbsolutePath());
 		
-//		if("baerr".equals(System.getProperty("user.name")) || "freyssj".equals(System.getProperty("user.name"))) {
-//			return new Plate(config.getRows(), config.getCols(), getTestTubes(testNo));
-//		}
+		if("baerr".equals(System.getProperty("user.name")) || "freyssj".equals(System.getProperty("user.name"))) {
+			return new Plate(config.getRows(), config.getCols(), getTestTubes(0));
+		}
 		
 		if(overwriteRegistry) {
 			URL url = null;

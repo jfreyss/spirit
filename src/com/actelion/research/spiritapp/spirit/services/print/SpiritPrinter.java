@@ -130,8 +130,7 @@ public class SpiritPrinter {
 				return p;
 			}
 		}
-		return null;
-		
+		return null;		
 	}
 
 	public static Media getMedia(PrintService p, String media) {

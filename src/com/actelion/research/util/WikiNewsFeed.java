@@ -101,8 +101,6 @@ public class WikiNewsFeed {
 
 	}
 	
-	private String pageName;
-	
 	private WikiNewsFeed() {}
 	
 	public WikiNewsFeed(String wikiPageName) throws Exception {
@@ -111,7 +109,7 @@ public class WikiNewsFeed {
 
 	public WikiNewsFeed(String serverName, String wikiPageName) throws Exception {
 		this();
-		news = getNews(pageName);
+		news = getNews(wikiPageName);
 	}
 	
 	public List<News> getNews() {

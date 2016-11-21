@@ -210,12 +210,6 @@ public class NamedTreatment implements Comparable<NamedTreatment>, Cloneable {
 		}
 	}
 
-	@Override
-	public int compareTo(NamedTreatment o) {
-		if(this.equals(o)) return 0;
-		return CompareUtils.compare(name, o.name);
-	}
-
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -255,23 +249,24 @@ public class NamedTreatment implements Comparable<NamedTreatment>, Cloneable {
 	public String getCompoundAndUnits(boolean html, boolean blindMode) {
 		return getCompoundAndUnit(html, blindMode, 0);
 	}
+	
 	private String getCompoundAndUnit(boolean html, boolean blindMode, int n) {
 		if(study==null) return "";
 		boolean blind = study.isBlind();
 		
 		StringBuilder sb = new StringBuilder();
-		if((n<=0 || n==1) && getCompoundName1()!=null && getCompoundName1().length()>0) {
+		if((n<=0 || n==1)) {
 			if(html) sb.append("<br>&nbsp;&nbsp;&nbsp;");
 			if(blind && blindMode) sb.append(getCompoundName2()!=null && getCompoundName2().length()>0? "C1 ":"");
-			else sb.append(getCompoundName1()+" ");
+			else if(getCompoundName1()!=null && getCompoundName1().length()>0) sb.append(getCompoundName1()+" ");
 			if(getDose1()!=null && getUnit1()!=null) sb.append("("+getDose1() + getUnit1().getUnit() + (getApplication1()!=null? " " + getApplication1(): "") + ") ");
 		} else if(html) {
 			sb.append("<br>");
 		}
-		if((n<=0 || n==2) && getCompoundName2()!=null && getCompoundName2().length()>0) {
+		if((n<=0 || n==2)) {
 			if(html) sb.append("<br>&nbsp;&nbsp;&nbsp;");
 			if(blind && blindMode) sb.append("C2 ");
-			else sb.append(getCompoundName2()+" ");
+			else if(getCompoundName2()!=null && getCompoundName2().length()>0) sb.append(getCompoundName2()+" ");
 			if(getDose2()!=null && getUnit2()!=null) sb.append("("+getDose2() + getUnit2().getUnit() + (getApplication2()!=null? " " + getApplication2(): "") + ")");
 		} else if(html) {
 			sb.append("<br>");
@@ -357,9 +352,16 @@ public class NamedTreatment implements Comparable<NamedTreatment>, Cloneable {
 		return false;
 	}
 
+
+	@Override
+	public int compareTo(NamedTreatment o) {
+		if(this.equals(o)) return 0;
+		return CompareUtils.compare(name, o.name);
+	}
+	
 	@Override
 	public int hashCode() {
-		return (int)(id%Integer.MAX_VALUE);
+		return id;
 	}
 
 	public String getCompoundName2() {

@@ -41,7 +41,6 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.column.ContainerLocat
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.CreationColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.ExpiryDateColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.NamedSamplingColumn;
-import com.actelion.research.spiritapp.spirit.ui.biosample.column.OwnershipColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.ResultColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.ScannedPosColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StatusColumn;
@@ -58,11 +57,11 @@ import com.actelion.research.spiritapp.spirit.ui.lf.SpiritExtendTableModel;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
+import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
-import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
@@ -133,13 +132,11 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		boolean hasPhases = false;
 		boolean hasDifferentTop = false;
 		boolean hasContainers = false;
-		boolean hasScannedPos = getRows().size()>0 && getRows().get(0).getScannedPosition()!=null;
-		
+		boolean hasScannedPos = getRows().size()>0 && getRows().get(0).getScannedPosition()!=null;		
 		for (Biosample b : getRows()) {
 			if (b == null) {
 				continue;
 			}
-			
 			if (b.getInheritedStudy() != null) {
 				hasStudy = true;
 			}
@@ -166,7 +163,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		if(hasScannedPos) columns.add(new ScannedPosColumn());
 
 		// Container Info		
-		if (hasContainers && (type == null || type.getCategory() != BiotypeCategory.LIBRARY || !type.isAbstract())) {
+		if (hasContainers && (type == null || !type.isAbstract())) {
 			if(mode!=Mode.SHORT && type!=null && type.isHideContainer()) {
 				columns.add(new ContainerLocationPosColumn());
 				if(type.getAmountUnit()!=null) {
@@ -175,8 +172,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 			} else {
 				ContainerFullColumn col = new ContainerFullColumn(); 
 				col.setHideable(mode==Mode.SHORT);
-				columns.add(col);
-				
+				columns.add(col);				
 			}
 		}
 
@@ -189,20 +185,20 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 
 		// Top
 		if (hasDifferentTop) {
-			if (topBiotypes.size() == 1 /*&& topBiotypes.iterator().next().getCategory()!=BiotypeCategory.ANIMAL*/) {
+			if (topBiotypes.size() == 1) {
+				Biotype topBiotype = topBiotypes.iterator().next();
 				boolean topDifferentLinker = false;
-				BiosampleLinker linker = new BiosampleLinker(topBiotypes.iterator().next(), LinkerType.SAMPLEID);
+				BiosampleLinker linker = new BiosampleLinker(topBiotype, LinkerType.SAMPLEID);
 				for (Biosample b : rows) {
 					if(!b.getTopParent().equals(linker.getLinked(b))) {
 						topDifferentLinker = true;
 						break;
 					}
 				}
-
 				if(topDifferentLinker) {
 					columns.add(new StudyTopSampleIdColumn());					
 				} else {
-					columns.add(LinkerColumnFactory.create(linker));					
+					columns.add(LinkerColumnFactory.create(linker));
 				}
 			} else {
 				columns.add(new StudyTopSampleIdColumn());
@@ -218,13 +214,20 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		}
 
 		// Phase
-		if (mode!=Mode.SHORT && hasPhases)
+		if (mode!=Mode.SHORT && hasPhases) {
 			columns.add(new StudyPhaseColumn());
-
+		}
 		
-		// Sample Id
-		Column<Biosample, ?> sampleIdColumn = LinkerColumnFactory.create(new BiosampleLinker(LinkerType.SAMPLEID, type));
-		columns.add(sampleIdColumn);
+		// SampleId/Name
+		Column<Biosample, ?> sampleIdColumn;
+		if(type!=null && (type.getCategory()==BiotypeCategory.LIBRARY || !type.isHideSampleId()) && type.getSampleNameLabel()!=null) {
+			sampleIdColumn = new SampleIdColumn(new BiosampleLinker(LinkerType.SAMPLEID, type), false, true);
+			columns.add(sampleIdColumn);
+			columns.add(LinkerColumnFactory.create(new BiosampleLinker(LinkerType.SAMPLENAME, type)));
+		} else {
+			sampleIdColumn = LinkerColumnFactory.create(new BiosampleLinker(LinkerType.SAMPLEID, type));
+			columns.add(sampleIdColumn);
+		}
 
 		if (mode==Mode.COMPACT || type == null) {
 			// Combine all Metadata in one column
@@ -264,18 +267,13 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		}
 
 		// owner
-		if (type == null || type.getCategory() != BiotypeCategory.LIBRARY) {
-			CreationColumn col = new CreationColumn(true);
-			col.setHideable(mode!=Mode.FULL);
-			columns.add(col);
-		}
+		CreationColumn col = new CreationColumn(true);
+		col.setHideable(mode!=Mode.FULL);
+		columns.add(col);
 
 		columns = removeEmptyColumns(columns);
 		sortColumns(columns);
-		
-	
-		
-
+			
 		setTreeColumn(sampleIdColumn);
 		setColumns(columns);
 		
@@ -302,7 +300,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		res.add(new StatusColumn());
 		res.add(new ChildrenColumn());
 		res.add(new ResultColumn());
-		res.add(new OwnershipColumn());
+//		res.add(new OwnershipColumn());
 		res.add(new CreationColumn(false));
 
 		return res;	

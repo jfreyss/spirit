@@ -34,7 +34,7 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExecutor;
 
@@ -69,8 +69,8 @@ public abstract class AutosaveDecorator {
 					public void run() {
 						try {
 							autosave();
-							autosaveCheckBox.setText("Autosaved (" + Formatter.formatTime(new Date())+")");
-							autosaveCheckBox.setToolTipText("Saved " + Formatter.formatDateTime(new Date())+" (every "+lapseSeconds+"s)");
+							autosaveCheckBox.setText("Autosaved (" + FormatterUtils.formatTime(new Date())+")");
+							autosaveCheckBox.setToolTipText("Saved " + FormatterUtils.formatDateTime(new Date())+" (every "+lapseSeconds+"s)");
 							autosaveCheckBox.setForeground(Color.BLACK);
 							autosaveCheckBox.setBackground(Color.GREEN);
 						} catch(Exception e) {

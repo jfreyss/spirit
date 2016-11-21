@@ -66,6 +66,8 @@ import com.actelion.research.spiritcore.business.IEntity;
 public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IEntity {
 
 	public static final String ANIMAL = "Animal";
+	public static final String DATEOFDEATH = "DateOfDeath";
+	public static final String STAINING = "Staining";
 	
 	@Id
 	@SequenceGenerator(name="biotype_sequence", sequenceName="biotype_sequence", allocationSize=1)
@@ -91,7 +93,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	
 	@OneToMany(fetch=FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval=true, mappedBy="biotype")
 	@OrderBy("index, name")
-	@BatchSize(size=200) //to load all of them when needed (if not in cache)
+	@BatchSize(size=8) 
 	@Audited(targetAuditMode=RelationTargetAuditMode.AUDITED)
 	private Set<BiotypeMetadata> metadata = new LinkedHashSet<>();
 	
@@ -99,11 +101,13 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	 * Not null, if the biosample has a name
 	 */
 	@Column(name="namelabel", length=30, nullable=true)
-	private String sampleNameLabel = "Name";
+	private String sampleNameLabel = null;
 	
 	private Boolean nameRequired = Boolean.FALSE;
 	
 	private Boolean nameAutocomplete = Boolean.FALSE;
+	
+	private Boolean nameUnique = Boolean.FALSE;
 	
 	private Boolean hideSampleId = Boolean.TRUE;
 
@@ -121,7 +125,6 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	@Column(name="amountunit", nullable=true, length=10)
 	private AmountUnit amountUnit;
 	
-
 	/**
 	 * The default containerType (if any)
 	 */
@@ -131,7 +134,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	/**
 	 * An abstract biotype cannot have containers/locations
 	 */
-	private boolean isAbstract = false;
+	private boolean isAbstract = true;
 	
 	/**
 	 * A hidden biotype can only be seen by an admin
@@ -155,6 +158,9 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	public Biotype() {
 		
 	}
+	public Biotype(String name) {
+		this.name = name;
+	}
 	
 	@PrePersist	
 	void preUpdate() {
@@ -171,12 +177,15 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	public int getId() {
 		return id;
 	}
+	
 	public String getName() {
 		return name;
 	}
+	
 	public void setId(int id) {
 		this.id = id;
 	}
+	
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -192,6 +201,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	public void setMetadata(Set<BiotypeMetadata> metadata) {
 		this.metadata = metadata;
 	}
+	
 	public Set<BiotypeMetadata> getMetadata() {
 		return metadata;
 	}
@@ -238,7 +248,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	}
 	
 	private List<Biotype> getAncestors() {
-		LinkedList<Biotype> res = new LinkedList<Biotype>();
+		LinkedList<Biotype> res = new LinkedList<>();
 		Biotype b = this;
 		while(b!=null) {
 			res.addFirst(b);
@@ -250,6 +260,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	@Override
 	public int compareTo(Biotype o) {
 		if(this.equals(o)) return 0;
+		if(o==null) return 1;
 		
 		List<Biotype> l1 = getAncestors();
 		List<Biotype> l2 = o.getAncestors();
@@ -273,20 +284,6 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 		return 0;
 		
 	}
-
-//	/**
-//	 * @param description the description to set
-//	 */
-//	public void setDescription(String description) {
-//		this.description = description;
-//	}
-//
-//	/**
-//	 * @return the description
-//	 */
-//	public String getDescription() {
-//		return description;
-//	}
 
 	/**
 	 * @param amountUnit the amountUnit to set
@@ -417,6 +414,14 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 		return nameAutocomplete == Boolean.TRUE;
 	}
 	
+	public void setNameUnique(Boolean nameUnique) {
+		this.nameUnique = nameUnique;
+	}
+	
+	public boolean isNameUnique() {
+		return nameUnique == Boolean.TRUE;
+	}
+	
 	public void setNameRequired(boolean nameAutocomplete) {
 		this.nameRequired = nameAutocomplete;
 	}
@@ -501,7 +506,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 		List<Biotype> res  = new ArrayList<>();
 		if(biotypes==null) return res;
 		for (Biotype biotype : biotypes) {
-			if(!biotype.isAbstract) res.add(biotype);
+			if(!biotype.isAbstract()) res.add(biotype);
 		}
 		return res;
 	}

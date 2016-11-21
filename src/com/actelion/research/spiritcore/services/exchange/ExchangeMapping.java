@@ -35,7 +35,6 @@ import com.actelion.research.spiritcore.business.Exchange;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
-import com.actelion.research.spiritcore.business.biosample.Metadata;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultValue;
@@ -386,9 +385,6 @@ public class ExchangeMapping {
 		//Reset biosample.ids
 		for (Biosample b : exchange.getBiosamples()) {
 			b.setId(0);
-			for (BiotypeMetadata mt : b.getMetadataMap().keySet()) {
-				assert mt.getId()==0;
-			}
 		}
 		
 
@@ -726,18 +722,14 @@ public class ExchangeMapping {
 			}
 
 			//Remap the metadata
-			Map<BiotypeMetadata, Metadata> inputMap = new HashMap<>(inputBiosample.getMetadataMap());
-			inputBiosample.setMetadataMap(new HashMap<BiotypeMetadata, Metadata>());			
+			Map<BiotypeMetadata, String> inputMap = new HashMap<>(inputBiosample.getMetadataValues());
 			inputBiosample.setBiotype(biotype);
 			for (BiotypeMetadata mt : inputBiotype.getMetadata()) {
-				Metadata m = inputMap.get(mt);
-				
 				BiotypeMetadata mappedMt = biotypeMetadata2mappedBiotypeMetadata.get(new Pair<String, String>(inputBiotype.getName(), mt.getName()));
 				if(mappedMt==null) continue;
 				assert mappedMt.getBiotype().getId()==biotype.getId();
-				inputBiosample.setMetadata(mappedMt, m.getValue());
-			}
-			
+				inputBiosample.setMetadataValue(mappedMt.getName(), inputMap.get(mt));
+			}			
 			
 			//SampleId overlap?
 			Biosample existing = sampleId2existing.get(inputSampleId);				

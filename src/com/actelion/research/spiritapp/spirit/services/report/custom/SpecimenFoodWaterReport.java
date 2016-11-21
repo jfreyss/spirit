@@ -33,8 +33,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
-import com.actelion.research.spiritcore.business.biosample.ActionBiosample;
-import com.actelion.research.spiritcore.business.biosample.ActionContainer;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.FoodWater;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -44,6 +42,7 @@ import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.PhaseFormat;
 import com.actelion.research.spiritcore.services.dao.DAOFoodWater;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
+import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.util.ListHashMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
@@ -73,14 +72,10 @@ public class SpecimenFoodWaterReport extends AbstractReport {
 		List<FoodWater> fws = DAOFoodWater.getFoodWater(study, null);
 		List<Phase> phases = FoodWater.getPhases(fws);
 		
-		
-//		List<String> containerIds = FoodWater.getContainerIds(fws);
-//		boolean hasCageChanges = containerIds.size()>study.getTopAttachedBiosamples().size();
-
 		boolean hasCageChanges = false;
 		for (Biosample top : study.getTopAttachedBiosamples()) {
-			System.out.println("FoodWaterReport.createWorkBookNew() "+top+" > "+top.getActions(ActionContainer.class).size()+" cage changes");
-			if(top.getActions(ActionContainer.class).size()>1) {
+			List<Biosample> history = DAORevision.getHistory(top);
+			if(Biosample.getContainers(history).size()>1) {
 				hasCageChanges = true;
 			}
 		}
@@ -167,16 +162,15 @@ public class SpecimenFoodWaterReport extends AbstractReport {
 						for(FoodWater fw: FoodWater.extract(fws, phase)) {
 							cage2fwDate.put(fw.getContainerId(), fw.getCreDate());
 						}
-						System.out.println("FoodWaterReport.createWorkBookNew() "+phase+" > "+cage2fwDate);
 						Date d = null; 
 						containerId = "";
-						for(ActionBiosample a: b.getActions(ActionContainer.class)) {							
-							String cid = ((ActionContainer)a).getDetails();
-							cid = cid.replace("Set Container to ", "");
+						List<Biosample> history = DAORevision.getHistory(b);
+
+						for(Biosample h: history) {							
+							String cid = h.getContainerId();
 							long refTime = cage2fwDate.get(cid)!=null? cage2fwDate.get(cid).getTime(): (phase.getAbsoluteDate().getTime()+24*3600*1000L);
-							System.out.println("FoodWaterReport.createWorkBookNew() "+b+">"+cid+" at "+a.getUpdDate()+" /ref="+refTime);
-							if( (d==null || a.getUpdDate().after(d)) && a.getUpdDate().getTime()<=refTime) {
-								d = a.getUpdDate();
+							if( (d==null || h.getUpdDate().compareTo(d)>0) && h.getUpdDate().getTime()<=refTime) {
+								d = h.getUpdDate();
 								containerId = cid;
 							}
 						}

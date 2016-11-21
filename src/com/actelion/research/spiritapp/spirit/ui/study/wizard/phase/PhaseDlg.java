@@ -24,6 +24,8 @@ package com.actelion.research.spiritapp.spirit.ui.study.wizard.phase;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,8 +42,6 @@ import javax.swing.JScrollPane;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
-import org.jdesktop.swingx.JXDatePicker;
-
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyWizardDlg;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -57,6 +57,7 @@ import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.FormatterUtils;
+import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
@@ -69,11 +70,12 @@ public class PhaseDlg extends JEscapeDialog {
 	private final Study study;
 		
 	private JGenericComboBox<PhaseFormat> formatComboBox = new JGenericComboBox<PhaseFormat>(PhaseFormat.values(), false);
-	private JXDatePicker startingDayPicker = new JXDatePicker();
+	private JCustomTextField startingDayPicker = new JCustomTextField(JCustomTextField.DATE);
 		
 	private JLabel startingDateLabel = new JLabel();
 	
 	private PhaseEditTable phaseTable;
+	private int push = 0;
 	
 	public PhaseDlg(final StudyWizardDlg dlg, final Study study) {
 		super(dlg, "Study Wizard - Edit Phases");
@@ -110,13 +112,27 @@ public class PhaseDlg extends JEscapeDialog {
 			}
 		});
 
-		startingDayPicker.setDate(study.getFirstDate());
-		startingDayPicker.setFormats(FormatterUtils.dateFormat);		
+		startingDayPicker.setTextDate(study.getFirstDate());
 		startingDayPicker.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				study.setStartingDate(startingDayPicker.getDate());
-				dlg.refresh();				
+				try {
+					study.setStartingDate(startingDayPicker.getTextDate());
+					dlg.refresh();
+				} catch(Exception e2) {
+					JExceptionDialog.showError(e2);
+				}
+			}
+		});
+		startingDayPicker.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				try {
+					study.setStartingDate(startingDayPicker.getTextDate());
+					dlg.refresh();
+				} catch(Exception e2) {
+					JExceptionDialog.showError(e2);
+				}
 			}
 		});
 		JPanel formatPanel = UIUtils.createTable(
@@ -126,8 +142,7 @@ public class PhaseDlg extends JEscapeDialog {
 		
 		refresh();
 		phaseTable.setAutoscrolls(true);
-		phaseTable.getModel().addTableModelListener(new TableModelListener() {
-			
+		phaseTable.getModel().addTableModelListener(new TableModelListener() {			
 			@Override
 			public void tableChanged(TableModelEvent e) {		
 				synchroTable();
@@ -191,7 +206,9 @@ public class PhaseDlg extends JEscapeDialog {
 	}
 	
 	private void synchroTable() {
+		if(push>0) return;
 		List<Phase> rows = phaseTable.getNonEmptyRows();
+		System.out.println("PhaseDlg.synchroTable() rows="+rows);
 		try {
 			//Add new phases				
 			Set<Phase> newPhases = new HashSet<>(rows);
@@ -201,13 +218,15 @@ public class PhaseDlg extends JEscapeDialog {
 			}
 			
 			//Remove phases
-			Set<Phase> oldPhases = new HashSet<>(study.getPhases());
-			oldPhases.removeAll(rows);
-			removePhases(oldPhases);
-			System.out.println("PhaseDlg.synchroTable() add="+newPhases+" remove="+oldPhases);
+			Set<Phase> removePhases = new HashSet<>(study.getPhases());
+			removePhases.removeAll(rows);
+			removePhases(removePhases);
+			
+			
+			System.out.println("PhaseDlg.synchroTable() newPhases="+newPhases+" removePhases="+removePhases+" phases="+study.getPhases());
 			
 			//Sort phases
-			study.setStartingDate(startingDayPicker.getDate());
+			study.setStartingDate(startingDayPicker.getTextDate());
 			study.resetCache();
 		} catch(Exception ex) {
 			JExceptionDialog.showError(PhaseDlg.this, ex);
@@ -242,23 +261,26 @@ public class PhaseDlg extends JEscapeDialog {
 		
 	}
 	
+	public static void checkCanDelete(Phase phase) throws Exception {
+		if(phase.getId()<=0) return;
+		
+		//Exception if there are samples associated to this phase
+		List<Biosample> samples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForPhase(phase), null);
+		if(samples.size()>0) {
+			throw new Exception("You cannot delete the phase "+phase+" because there are " +samples.size()+ " biosamples associated to it");
+		}
+		//Exception if there are results associated to this phase
+		List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForPhase(phase), null);
+		if(results.size()>0) {
+			throw new Exception("You cannot delete the phase "+phase+" because there are " +results.size()+ " results associated to it");
+		}
+	}
+	
 	private void removePhases(Collection<Phase> phases) throws Exception {
 		
 		//Test that the user can delete the phase
-		for(Phase phase: phases) {		
-			if(phase.getId()<=0) continue;
-			
-			//Exception if there are samples associated to this phase
-			List<Biosample> samples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForPhase(phase), null);
-			if(samples.size()>0) {
-				throw new Exception("You cannot delete the phase "+phase+" because there are " +samples.size()+ " biosamples associated to it");
-			}
-			//Exception if there are results associated to this phase
-			List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForPhase(phase), null);
-			if(results.size()>0) {
-				throw new Exception("You cannot delete the phase "+phase+" because there are " +results.size()+ " results associated to it");
-			}
-			
+		for(Phase phase: phases) {
+			checkCanDelete(phase);			
 		}
 				
 		//Delete
@@ -269,11 +291,16 @@ public class PhaseDlg extends JEscapeDialog {
 	}
 	
 	public void refresh() {
-		List<Phase> phases = new ArrayList<>(study.getPhases());
-		Collections.sort(phases);
-		phaseTable.setRows(phases);
-		startingDayPicker.setEnabled(study.getPhaseFormat()==PhaseFormat.DAY_MINUTES);
-		startingDateLabel.setText(study.getPhaseFormat()!=PhaseFormat.DAY_MINUTES? "": study.getFirstDate()==null? ": N/A": ": "+FormatterUtils.formatDate(study.getFirstDate()));
+		push++;
+		try {
+			List<Phase> phases = new ArrayList<>(study.getPhases());
+			Collections.sort(phases);
+			phaseTable.setRows(phases);
+			startingDayPicker.setEnabled(study.getPhaseFormat()==PhaseFormat.DAY_MINUTES);
+			startingDateLabel.setText(study.getPhaseFormat()!=PhaseFormat.DAY_MINUTES? "": study.getFirstDate()==null? ": N/A": ": "+FormatterUtils.formatDate(study.getFirstDate()));
+		} finally {
+			push--;
+		}
 		
 	}
 }

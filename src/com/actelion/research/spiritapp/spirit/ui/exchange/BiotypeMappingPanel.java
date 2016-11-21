@@ -73,7 +73,7 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 			metadata: for (BiotypeMetadata m : biotype.getMetadata()) {
 				assert m!=null: biotype + " has null metadata: " + biotype.getMetadata();
 				for (Biosample b : dlg.getExchange().getBiosamples()) {
-					if(b.getBiotype().equals(m.getBiotype()) && b.getMetadata(m)!=null && b.getMetadata(m).getValue().length()>0) {
+					if(b.getBiotype().equals(m.getBiotype()) && b.getMetadataValue(m)!=null && b.getMetadataValue(m).length()>0) {
 						metadatas.add(m);
 						continue metadata;
 					}					

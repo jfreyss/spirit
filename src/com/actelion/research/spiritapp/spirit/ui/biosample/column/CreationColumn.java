@@ -36,8 +36,8 @@ import com.actelion.research.spiritapp.spirit.ui.lf.CreationLabel;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.services.SpiritRights;
-import com.actelion.research.spiritcore.util.Formatter;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
@@ -45,7 +45,9 @@ import com.actelion.research.util.ui.exceltable.Column;
 public class CreationColumn extends Column<Biosample, String> {
 	
 	private final boolean creation;
-	
+
+	private CreationLabel ownerLabel = new CreationLabel();
+
 	public CreationColumn(boolean creation) {
 		super(creation?"\nOwner": "\nLastUpdate", String.class, 40, 120);
 		this.creation = creation;
@@ -61,13 +63,14 @@ public class CreationColumn extends Column<Biosample, String> {
 	
 	@Override
 	public String getValue(Biosample row) {
-		return creation? row.getCreUser() + "\t" + Formatter.formatDate(row.getCreDate()): 
-			row.getUpdUser()  + "\t" + Formatter.formatDate(row.getUpdDate());
+		return creation? row.getCreUser() + "\t" + FormatterUtils.formatDate(row.getCreDate()): 
+			row.getUpdUser()  + "\t" + FormatterUtils.formatDate(row.getUpdDate());
 	}	
-	@Override
-	public boolean isEditable(Biosample row) {return false;}
 	
-	private CreationLabel ownerLabel = new CreationLabel();
+	@Override
+	public boolean isEditable(Biosample row) {
+		return false;
+	}
 	
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {

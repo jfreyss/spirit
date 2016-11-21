@@ -51,13 +51,12 @@ public class ConfigTab extends WizardPanel {
 	private JCustomTextField experimenterTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 12);
 	private JLabel groupsLabel = new JLabel();
 	private BiotypeComboBox biotypeComboBox;
-	JButton resetButton = new JIconButton(IconType.CLEAR, "Reset and restart this randomization");
+	private JButton resetButton = new JIconButton(IconType.CLEAR, "Reset and restart this randomization");
 	
 	public ConfigTab(final RandomizationDlg dlg) {
 		super(new BorderLayout());
 		this.dlg = dlg;
 
-		
 		biotypeComboBox = new BiotypeComboBox(Biotype.removeAbstract(DAOBiotype.getBiotypes()), "Biotype");
 		
 		
@@ -151,7 +150,9 @@ public class ConfigTab extends WizardPanel {
 			experimenterTextField.setText(experimenter);
 			licenseNoTextField.setText(dlg.getStudy().getMetadata().get("LICENSENO"));
 		}
-		biotypeComboBox.setSelectedItem(dlg.getBiotype());
+		
+		
+		biotypeComboBox.setSelection(dlg.getBiotype());
 		biotypeComboBox.setEnabled(dlg.canChooseBiotype());
 		
 	}

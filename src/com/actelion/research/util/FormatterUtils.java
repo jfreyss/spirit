@@ -27,26 +27,27 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.StringTokenizer;
 
 /**
- * 
+ * Formatter Utilidy class to format numbers and date/time 
  * @author freyssj
  */
 public class FormatterUtils {
 
 	public static final DateFormat dateFormat = new SimpleDateFormat("dd.MM.yy");
-	private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm");
+	public static final DateFormat dateFormatFull = new SimpleDateFormat("MMM dd, yyyy");
+	public static final DateFormat dateFormat2 = new SimpleDateFormat("dd.MM.yyyy");
+	public static final DateFormat timeFormat = new SimpleDateFormat("HH:mm");
 
 	private static final DateFormat[] dateTimeParsers = new SimpleDateFormat[] {		
-		new SimpleDateFormat("dd.MM.yy HH:mm:ss"),
-		new SimpleDateFormat("dd.MM.yy HH:mm"),
+		new SimpleDateFormat("dd.MM.yy H:mm:ss"),
+		new SimpleDateFormat("dd.MM.yy H:mm"),
 		new SimpleDateFormat("dd.MM.yy"),
 		new SimpleDateFormat("MM.yy"),
 		new SimpleDateFormat("yy")};
 	private static final DateFormat[] dateTimeFormatters = new SimpleDateFormat[] {		
-		new SimpleDateFormat("dd.MM.yyyy HH:mm:ss"),
-		new SimpleDateFormat("dd.MM.yyyy HH:mm"),
+		new SimpleDateFormat("dd.MM.yyyy H:mm:ss"),
+		new SimpleDateFormat("dd.MM.yyyy H:mm"),
 		new SimpleDateFormat("dd.MM.yyyy"),
 		new SimpleDateFormat("MM.yyyy"),
 		new SimpleDateFormat("yyyy")};
@@ -60,9 +61,6 @@ public class FormatterUtils {
 	private static final DecimalFormat df4 = new DecimalFormat("0.0000");
 	private static final DecimalFormat df8 = new DecimalFormat("0.00000000");
 	private static final DecimalFormat dfE = new DecimalFormat("0.00E0");
-	
-	public static final DecimalFormat dfI2 = new DecimalFormat("00");
-	public static final DecimalFormat dfI3 = new DecimalFormat("000");
 
 	static {
 		//Decimal Format should round like Excel, i.e half up
@@ -135,10 +133,18 @@ public class FormatterUtils {
 	}
 
 
-	
+
 
 	public static final String formatDate(Date d) {
 		return d == null ? "" : dateFormat.format(d);
+	}
+
+	public static final String formatDateFull(Date d) {
+		return d == null ? "" : dateFormatFull.format(d);
+	}
+
+	public static final String formatDateYyyy(Date d) {
+		return d == null ? "" : dateFormat2.format(d);
 	}
 
 	public static final String formatTime(Date d) {
@@ -156,131 +162,48 @@ public class FormatterUtils {
 		return dateTimeFormatters[4].format(d);
 	}
 	
+	public static final String formatDateOrTime(Date d) {
+		if(d==null) return "";
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(d);
+
+		String s = dateFormat.format(d);
+		if(s.equals(dateFormat.format(new Date()))) {
+			return timeFormat.format(d);
+		} else {
+			return s;
+		}
+	}
+	
 	public static final String formatDateTimeShort(Date d) {
 		if(d==null) return "";
-		return dateTimeParsers[2].format(d);
+		return dateTimeParsers[1].format(d);
 	}
 
 	public static final Date parseDate(String s) {
 		if(s==null || s.length()==0) return null;
-		try {			
-			return dateFormat.parse(s);
-		} catch (Exception e) {
-			return null;
+		
+		s = s.replace('/', '.');
+		for (DateFormat dateFormat : dateTimeParsers) {
+			try {			
+				return dateFormat.parse(s);
+			} catch (Exception e) {
+			}			
 		}
+		return null;
 	}
 	
 	public static final Date parseDateTime(String s) {
 		if(s==null || s.length()==0) return null;
 		
-		
-//		if(true) {
-//			s = s.replace('/', '.');
-//			for (DateFormat dateFormat : dateTimeParsers) {
-//				try {			
-//					return dateFormat.parse(s);
-//				} catch (Exception e) {
-//				}			
-//			}
-//			return null;
-//		}
-
-		
-		Calendar cal = Calendar.getInstance();
-		
-		
-		int ndate = 0;
-		int ntime = 0;
-		int date[] = new int[3];
-		int time[] = new int[3];
-		boolean inDate = true;
-		StringTokenizer st = new StringTokenizer(s.trim(), ":/. ", true);
-		while(st.hasMoreTokens()) {
-			String tok = st.nextToken();
-			if(tok.equals("/") || tok.equals(".")) {
-				if(inDate) {
-					ndate++;
-					if(ndate>2) return null; 
-				} else {
-					return null;
-				}
-			} else if(tok.equals(":")) {
-				if(inDate) {
-					return null;
-				} else {
-					ntime++;
-					if(ntime>2) return null; 
-				}				
-			} else if(tok.equals(" ")) {
-				if(inDate) {
-					ndate++;
-					inDate = false;
-				} else {
-					return null;
-				}				
-			} else {
-				for (int i = 0; i < tok.length(); i++) {
-					if(!Character.isDigit(tok.charAt(i))) return null;					
-				}
-				if(inDate) {
-					date[ndate] = CompareUtils.fastIntValueOf(tok);
-				} else {
-					time[ntime] = CompareUtils.fastIntValueOf(tok);					
-				}			
-			}
+		s = s.replace('/', '.');
+		for (DateFormat dateFormat : dateTimeParsers) {
+			try {			
+				return dateFormat.parse(s);
+			} catch (Exception e) {
+			}			
 		}
-		if(inDate) {
-			ndate++;
-		} else {
-			ntime++;
-		}
-//		System.out.println("Formatter.parseDateTime() "+ndate+">"+Arrays.toString(date)+" "+Arrays.toString(time));
-
-		if(ndate==0) {
-			cal.set(Calendar.DAY_OF_MONTH, 1);
-			cal.set(Calendar.MONTH, 0);
-			cal.set(Calendar.YEAR, 0);
-		} else if(ndate==1) {
-			cal.set(Calendar.DAY_OF_MONTH, 1);
-			cal.set(Calendar.MONTH, 0);
-			cal.set(Calendar.YEAR, date[0]<100? date[0]+2000: date[0]);
-		} else if(ndate==2) {
-//			if(date[0]<1 || date[0]>12) return null;
-			cal.set(Calendar.DAY_OF_MONTH, 1);
-			cal.set(Calendar.MONTH, date[0]-1);
-			cal.set(Calendar.YEAR, date[1]<100? date[1]+2000: date[1]);
-		} else if(ndate==3) {
-//			if(date[0]<1 || date[0]>31) return null;
-//			if(date[1]<1 || date[1]>12) return null;
-			cal.set(Calendar.DAY_OF_MONTH, date[0]);
-			cal.set(Calendar.MONTH, date[1]-1);
-			cal.set(Calendar.YEAR, date[2]<100? date[2]+2000: date[2]);
-		} else {
-			return null; //impossible case
-		}
-		
-		if(ntime==0) {
-			cal.set(Calendar.HOUR_OF_DAY, 0);
-			cal.set(Calendar.MINUTE, 0);
-			cal.set(Calendar.SECOND, 0);
-		} else if(ntime==1) {
-			return null; //only hour or minutes?
-		} else if(ntime==2) {
-			cal.set(Calendar.HOUR_OF_DAY, time[0]);
-			cal.set(Calendar.MINUTE, time[1]);
-			cal.set(Calendar.SECOND, 0);
-		} else if(ntime==3) {
-			cal.set(Calendar.HOUR_OF_DAY, time[0]);
-			cal.set(Calendar.MINUTE, time[1]);
-			cal.set(Calendar.SECOND, time[2]);
-		} else {
-			return null; //impossible case
-		}
-		
-
-		
-		
-		return cal.getTime();
+		return null;
 	}
 
 	public static final String cleanDate(String s) {
@@ -313,13 +236,12 @@ public class FormatterUtils {
 		System.out.println(formatDateTime(parseDateTime("10.10.2013")));
 		System.out.println();
 		
-		System.out.println("10.10.2013 12:23:20 -> "+cleanDateTime("10.10.2013 12:23:20"));
-		System.out.println("10/1/2013 12:60 -> "+cleanDateTime("10.10.2013 12:60"));
-		System.out.println("31.12.2013 23:60 -> "+cleanDateTime("31.12.2013 23:60"));
-		System.out.println("10.12.2013 -> "+cleanDateTime("10.12.2013"));
-		System.out.println("12.2013 -> "+cleanDateTime("12.2013"));
-		System.out.println("2013 -> "+cleanDateTime("2013"));
-		System.out.println("13 -> "+cleanDateTime("13"));
+		System.out.println(cleanDateTime("10.10.2013 12:23:20"));
+		System.out.println(cleanDateTime("31.12.2013 23:60"));
+		System.out.println(cleanDateTime("10.12.2013"));
+		System.out.println(cleanDateTime("12.2013"));
+		System.out.println(cleanDateTime("2013"));
+		System.out.println(cleanDateTime("13"));
 		System.out.println();
 		System.out.println(cleanDateTime("10/10/2013"));
 		System.out.println(cleanDateTime("toto"));

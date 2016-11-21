@@ -51,10 +51,10 @@ import com.actelion.research.spiritcore.business.LogEntry;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.Cache;
-import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.DAOLog;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.Config;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
@@ -68,6 +68,7 @@ import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
  * @author freyssj
  */
 public class LoginDlg extends JEscapeDialog {
+
 
 	private Config config = Spirit.getConfig();
 	private boolean askForSpecificRole; 
@@ -103,7 +104,7 @@ public class LoginDlg extends JEscapeDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					authenticate(userTextField.getText(), passwordTextField.getPassword());
+					authenticate(userTextField.getText(), passwordTextField.getPassword());					
 					dispose();
 				} catch(Exception ex) {
 					errorLabel.setIcon(IconType.ERROR.getIcon());
@@ -154,8 +155,6 @@ public class LoginDlg extends JEscapeDialog {
         setAutoRequestFocus(true);
         passwordTextField.requestFocusInWindow();
         setVisible(true);
-        
-        
 	}
 	
 	private void refreshRoles() {
@@ -215,8 +214,6 @@ public class LoginDlg extends JEscapeDialog {
 		} finally {
 			Cache.getInstance().clear();
 		}
-		
-
 	}
 	
 	public static void openLoginDialog(Frame frame, String title) {
@@ -226,6 +223,5 @@ public class LoginDlg extends JEscapeDialog {
 	public static void openLoginDialog(Frame frame, String title, String msg) {
 		new LoginDlg(frame, title, msg);				
 	}
-	
 
 }

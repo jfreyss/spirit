@@ -29,7 +29,6 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -47,7 +46,6 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.BiosampleHisto
 import com.actelion.research.spiritapp.spirit.ui.result.ResultActions;
 import com.actelion.research.spiritapp.spirit.ui.result.ResultTable;
 import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
-import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -69,18 +67,18 @@ import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 
 	public static final String BIOSAMPLE_TITLE = "Biosample";
-	public static final String HIERARCHY_TITLE = "Hierarchy";
 	public static final String HISTORY_TITLE = "History";
+//	public static final String HIERARCHY_TITLE = "Hierarchy";
 	public static final String RESULT_TITLE = "Results";
 	public static final String ORBIT_TITLE = "Raw";
 
 	private JComponent biosampleTab;
-	private JComponent hierarchyTab;
+//	private JComponent hierarchyTab;
 	private JComponent historyTab;
 	private JComponent resultTab;
 	private JComponent orbitTab;
 	
-	private boolean forRevision = true;
+	private boolean forRevision = false;
 	
 	
 	private final JTabbedPane tabbedPane = new JCustomTabbedPane();
@@ -94,7 +92,7 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 	private final BiosampleMetadataPanel metadataPanel = new BiosampleMetadataPanel();
 	private final BiosampleHistoryPanel historyPanel = new BiosampleHistoryPanel();
 	private final BiosampleTable hierarchyTable;
-	private final ResultTable resultTable = new ResultTable();
+	private final ResultTable resultTable = new ResultTable(true);
 	private IOrbitPanel orbitPanel = null;
 
 	public BiosampleTabbedPane() {
@@ -107,16 +105,27 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 		
 		setPreferredSize(new Dimension(370, 370));
 		setMinimumSize(new Dimension(0, 0));
-		
-		
+				
 		hierarchyTable = new BiosampleTable();
 		hierarchyTable.getModel().setMode(Mode.SHORT);
 		
-		setLayout(new GridBagLayout());
-		
-		buildUI();
-		
 
+//		if(DBAdapter.getAdapter().isInActelionDomain()) {
+//			try {
+//				String clazName = "com.actelion.research.spiritapp.spirit.ui.biosample.OrbitPane";
+//				Class<?> claz = Class.forName(clazName);
+//				if(claz!=null) {
+//					orbitPanel = (IOrbitPanel) claz.newInstance();
+//					orbitTab = new JScrollPane((JPanel) orbitPanel);
+//				} else {
+//					System.err.println(clazName + " not found");
+//				}
+//			} catch(Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
+		
+		
 		setBiosamples(null);
 
 		resultTable.addMouseListener(new PopupAdapter(resultTable) {
@@ -144,18 +153,10 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 			BiosampleActions.attachPopup(historyPanel);
 		}
 		
-		if(DBAdapter.getAdapter().isInActelionDomain()) {
-			try {
-				Class<?> claz = Class.forName("com.actelion.research.spiritapp.spirit.ui.biosample.OrbitPane");
-				if(claz!=null) {
-					orbitPanel = (IOrbitPanel) claz.newInstance();
-					orbitTab = new JScrollPane((JPanel) orbitPanel);
-				}
-			} catch(Exception e) {
-				
-			}
-		}
-		
+		//Init layout
+		setLayout(new GridBagLayout());		
+		buildUI();
+
 
 	}
 	public void setTabPlacement(int placement) {
@@ -171,7 +172,7 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 		
 		biosampleTab = new JScrollPane(metadataPanel);
 		
-		hierarchyTab = new JBGScrollPane(hierarchyTable, 3);
+//		hierarchyTab = new JBGScrollPane(hierarchyTable, 3);
 
 		historyTab = new JScrollPane(historyPanel);
 		
@@ -183,23 +184,27 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 			tabbedPane.setToolTipTextAt(tabbedPane.getTabCount()-1, "Content");
 			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.BIOSAMPLE.getIcon());
 
+
 			tabbedPane.add("", historyTab);
 			tabbedPane.setToolTipTextAt(tabbedPane.getTabCount()-1, "History");
 			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.HISTORY.getIcon());
-			
-			tabbedPane.add("", hierarchyTab);
-			tabbedPane.setToolTipTextAt(tabbedPane.getTabCount()-1, "Hierarchy");
-			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.HIERARCHY.getIcon());
+			tabbedPane.setEnabledAt(tabbedPane.getTabCount()-1, !forRevision);
+//			
+//			tabbedPane.add("", hierarchyTab);
+//			tabbedPane.setToolTipTextAt(tabbedPane.getTabCount()-1, "Hierarchy");
+//			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.HIERARCHY.getIcon());
+//			tabbedPane.setEnabledAt(tabbedPane.getTabCount()-1, !forRevision);
 			
 			tabbedPane.add("", resultTab);
 			tabbedPane.setToolTipTextAt(tabbedPane.getTabCount()-1, "Results");
 			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.RESULT.getIcon());
+			tabbedPane.setEnabledAt(tabbedPane.getTabCount()-1, !forRevision);
 			
-			if(orbitTab!=null) {
-				
+			if(orbitTab!=null) {				
 				tabbedPane.add("", orbitTab);
 				tabbedPane.setToolTipTextAt(tabbedPane.getTabCount()-1, "Orbit Raw Data");
 				tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.ORBIT.getIcon());
+				tabbedPane.setEnabledAt(tabbedPane.getTabCount()-1, !forRevision);
 			}
 				
 			tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
@@ -208,7 +213,7 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 		} else {
 			cardPanel.add(BIOSAMPLE_TITLE, metadataPanel);
 			cardPanel.add(HISTORY_TITLE, historyPanel);
-			cardPanel.add(HIERARCHY_TITLE, hierarchyTab);
+//			cardPanel.add(HIERARCHY_TITLE, hierarchyTab);
 			cardPanel.add(RESULT_TITLE, resultTab);
 			if(orbitTab!=null) {
 				cardPanel.add(ORBIT_TITLE, orbitTab);
@@ -233,7 +238,7 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 			this.biosamples = null;
 			refreshTab();
 		} else {
-			if(biosamples==null || biosamples.size()>6) {
+			if(biosamples==null || (biosamples.size()>1 && Biosample.getContainerIds(biosamples).size()>1)) {
 				this.biosamples = null;
 			} else {
 				this.biosamples = biosamples;
@@ -251,10 +256,11 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 		} else if(biosamples==null) {
 			refreshTab();
 		} else {
-			new SwingWorkerExtended("Loading Metadata", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+			new SwingWorkerExtended(this, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 				@Override
 				protected void done() {
 					biosamples = JPAUtil.reattach(biosamples);
+					if(isCancelled()) return;
 					refreshTab();
 				}
 			};
@@ -307,29 +313,29 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 			resultTable.setRows(results);
 		} 
 
-		if(tabbedPane.getSelectedComponent()==hierarchyTab) {
-			if(biosamples==null) {
-				hierarchyTable.clear();
-			} else {
-				Set<Biosample> set = new HashSet<>(); 
-				for (Biosample b : biosamples) {
-					
-					//all all parents and their children
-					for(Biosample p: b.getHierarchy(HierarchyMode.PARENTS)) {
-						set.add(p);
-						set.addAll(p.getChildren());
-					}
-					
-					// add itself and its children
-					set.add(b);
-					set.addAll(b.getChildren()); //one child					
-				}
-				List<Biosample> list = new ArrayList<>(set);
-				Collections.sort(list);
-				hierarchyTable.setRows(list);
-				hierarchyTable.setSelection(biosamples);
-			}
-		} 
+//		if(tabbedPane.getSelectedComponent()==hierarchyTab) {
+//			if(biosamples==null) {
+//				hierarchyTable.clear();
+//			} else {
+//				Set<Biosample> set = new HashSet<>(); 
+//				for (Biosample b : biosamples) {
+//					
+//					//all all parents and their children
+//					for(Biosample p: b.getHierarchy(HierarchyMode.PARENTS)) {
+//						set.add(p);
+//						set.addAll(p.getChildren());
+//					}
+//					
+//					// add itself and its children
+//					set.add(b);
+//					set.addAll(b.getChildren()); //one child					
+//				}
+//				List<Biosample> list = new ArrayList<>(set);
+//				Collections.sort(list);
+//				hierarchyTable.setRows(list);
+//				hierarchyTable.setSelection(biosamples);
+//			}
+//		} 
 		
 //		if(tabbedPane.getSelectedComponent()==locationTab) {
 //			Set<Location> locations = Biosample.getLocations(biosamples);
@@ -374,8 +380,8 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 			for (int i = 0; i < tabbedPane.getTabCount(); i++) {
 				if(tabbedPane.getComponentAt(i)==biosampleTab && BIOSAMPLE_TITLE.equals(tab)) {
 					tabbedPane.setSelectedIndex(i);
-				} else if(tabbedPane.getComponentAt(i)==hierarchyTab && HIERARCHY_TITLE.equals(tab)) {
-					tabbedPane.setSelectedIndex(i);
+//				} else if(tabbedPane.getComponentAt(i)==hierarchyTab && HIERARCHY_TITLE.equals(tab)) {
+//					tabbedPane.setSelectedIndex(i);
 				} else if(tabbedPane.getComponentAt(i)==historyTab && HISTORY_TITLE.equals(tab)) {
 					tabbedPane.setSelectedIndex(i);
 //				} else if(tabbedPane.getComponentAt(i)==studyTab && STUDY_TITLE.equals(tab)) {

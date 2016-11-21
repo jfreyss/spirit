@@ -24,32 +24,58 @@ package com.actelion.research.spiritapp.spirit.ui.util;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JList;
 
 import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.FormatterUtils;
+import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 
 public class RevisionList extends JList<Revision> {
 	
-	public RevisionList() {	
-		this(new ArrayList<Revision>());
-	}
+	private Map<Revision, String> changeMap = new HashMap<>();
 	
-	public RevisionList(Collection<Revision> revisions) {
-		super(new Vector<Revision>(revisions));
-		setCellRenderer(new DefaultListCellRenderer() {				
+	public RevisionList() {	
+		setCellRenderer(new DefaultListCellRenderer() {
+			private JLabelNoRepaint lbl = new JLabelNoRepaint();
 			@Override
 			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-				Revision s = (Revision) value;
-				setText((index+1)+ ". " + Formatter.formatDateTime(s.getDate()) + " - "+ s.getUser());
-				setToolTipText("Revision: "+s.getRevId());
-				return this;
+				Revision r = (Revision) value;
+				
+				String text = (index+1) + ". " + FormatterUtils.formatDateTime(r.getDate()) + " - "+ r.getUser();
+				if(changeMap!=null && changeMap.size()>0) {
+					text += "\n" + (changeMap.get(r)==null || changeMap.get(r).length()==0? "": "<b> > " + changeMap.get(r).replace("; ", "\n<b> > ") + "\n ");
+				}
+				lbl.setText(text);
+				lbl.setForeground(getForeground());
+				lbl.setBackground(getBackground());
+				lbl.setBorder(getBorder());
+				lbl.setToolTipText("Revision: "+r.getRevId());
+				return lbl;
 			}
 		});
+
 	}
 	
+	public RevisionList(Collection<Revision> revisions) {
+		this();
+		setRevisions(revisions);
+	}
+	
+	public void setRevisions(Collection<Revision> revisions) {
+		setListData(revisions.toArray(new Revision[revisions.size()]));
+	}	
+	
+	public void setChangeMap(Map<Revision, String> changeMap) {
+		this.changeMap = changeMap;
+	}
+	
+	public Map<Revision, String> getChangeMap() {
+		return changeMap;
+	}
 }

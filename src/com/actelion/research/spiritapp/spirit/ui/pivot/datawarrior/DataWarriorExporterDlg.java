@@ -66,24 +66,16 @@ public class DataWarriorExporterDlg extends JEscapeDialog {
 			return;
 		}
 		
-
-
-		
-		
-		
 		DataWarriorConfig model = DataWarriorConfig.createCustomModel(tpl);
 		model.setSkippedAttributes(skippedAttributes);
 
 		dataWarriorModelPanel = new DataWarriorConfigPanel(results, skippedAttributes);
 		dataWarriorModelPanel.setDataWarriorModel(model);
-		
-
 
 		JButton okButton = new JIconButton(IconType.DATAWARRIOR, "Open DataWarrior");
 		getRootPane().setDefaultButton(okButton);
 
-		okButton.addActionListener(new ActionListener() {
-			
+		okButton.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -93,16 +85,13 @@ public class DataWarriorExporterDlg extends JEscapeDialog {
 					JExceptionDialog.showError(ex);
 				}
 			}
-		});
-		
+		});		
 		
 		JPanel centerPanel = new JPanel(new BorderLayout());		
 		centerPanel.add(BorderLayout.NORTH, new JCustomLabel("<html><div style='width:100%; text-align:center'>Please select how you want your data to be exported:</div></html>", FastFont.BOLD.deriveSize(18)));
 		centerPanel.add(BorderLayout.CENTER, dataWarriorModelPanel /*UIUtils.createBox(dataWarriorModelPanel, choicePanel, null, null, null)*/);
 		centerPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
 		centerPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-		
-
 		
 		setContentPane(centerPanel);
 		pack();

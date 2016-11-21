@@ -89,8 +89,6 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 	private boolean canSort = true;
 	private ExcelUndoManager undoManager = new ExcelUndoManager(this);
 	private boolean goNextOnEnter = false;
-
-
 	
 	private int lastEditingRow = -1;
 	private int lastEditingCol = -1;
@@ -689,14 +687,6 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-//		
-//		
-//		String s = "line1\rline2\nline3\r\nline4\n\n\nwas just empty\r\r\rthere too";
-//		for (String string : s.split("\\r?\\n")) {
-//			System.out.println(string);
-//		}
-//		if(true) return;
-		
 		try {
 			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");			
 			UIManager.put("nimbusSelectionBackground", new Color(173,207,231));
@@ -846,14 +836,14 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 				int modelCol = convertColumnIndexToModel(cols[c]);
 				if(!getModel().isCellEditable(modelRow, modelCol)) continue;
 				try {
-					getModel().paste(null, modelRow, modelCol);
+					getModel().setValueAt(null, modelRow, modelCol);
 				} catch (Exception ex) {
 					System.err.println(ex);
 				}
 			}					
 		}
 		undoManager.setTransaction(false);
-		getModel().fireTableDataChanged();
+//		getModel().fireTableDataChanged(); //Removed 12.10.16 (called by setvalueat)
 		select(rows, cols);
 	}
 	
@@ -1111,7 +1101,6 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 		editingStopped(new ChangeEvent(this));
 		int row = getSelectedRow();
 		int col = getSelectedColumn();
-		System.out.println("ExcelTable.goUp() "+row);
 		if(col<0) return;
 		if(row==0) {
 			addRow(row++);

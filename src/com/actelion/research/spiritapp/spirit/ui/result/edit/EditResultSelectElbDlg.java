@@ -24,73 +24,55 @@ package com.actelion.research.spiritapp.spirit.ui.result.edit;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import javax.swing.text.JTextComponent;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
+import com.actelion.research.util.ui.JTextComboBox;
 import com.actelion.research.util.ui.UIUtils;
 
 public class EditResultSelectElbDlg extends JEscapeDialog {
 	
-	private DefaultComboBoxModel<String> model = new DefaultComboBoxModel<String>();
-	private JComboBox<String> comboBox = new JComboBox<String>(model);
+	private JTextComboBox comboBox = new JTextComboBox();
 	private String returnedValue;
 	
 	
-	public EditResultSelectElbDlg(String initial) {
+	public EditResultSelectElbDlg() {
 		super(UIUtils.getMainFrame(), "Results - New", true);
 		
-		final List<String> recentElbs = new ArrayList<String>(); 
-		try {
-			recentElbs.addAll( DAOResult.getRecentElbs(Spirit.getUser()));
-
-			model.addElement("");
-			for (String elb : recentElbs) {
-				model.addElement(elb);
-			}
-			comboBox.setEditable(true);
-		} catch (Exception e) {
-			JExceptionDialog.showError(e);
-			return;
-		}
-		
+		final List<String> recentElbs = DAOResult.getRecentElbs(Spirit.getUser());
+		comboBox.setChoices(recentElbs);
 
 		JLabel header = new JLabel(
 				"<html><body><b>Enter the ELB (electronic lab journal) or <br>" +
-		" select an existing one to edit/appends results.</b></body></html>");
+				" select an existing one to edit/appends results.</b></body></html>");
 		header.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 		
 		JButton okButton = new JButton("Continue");
 		
 		JPanel contentPanel = new  JPanel(new BorderLayout());
 		contentPanel.add(BorderLayout.NORTH, header);
-		contentPanel.add(BorderLayout.WEST, new JLabel("ELB: "));
-		contentPanel.add(BorderLayout.CENTER, comboBox);
+		contentPanel.add(BorderLayout.CENTER, UIUtils.createHorizontalBox(new JLabel("ELB: "), comboBox, Box.createHorizontalGlue()));
 		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
 		setContentPane(contentPanel);
 		pack();
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		
-		final JTextComponent editor = (JTextComponent) comboBox.getEditor().getEditorComponent();
 		okButton.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent ev) {
+				String res = comboBox.getText();
 				try {
-					String res = (String) comboBox.getSelectedItem();
 					
 					if(DBAdapter.getAdapter().isInActelionDomain() && res.startsWith("ELB") && !recentElbs.contains(res)) {
 						if(res.length()<12) throw new Exception("The ELB is not well formatted");
@@ -103,8 +85,8 @@ public class EditResultSelectElbDlg extends JEscapeDialog {
 					dispose();
 				} catch(Exception e) {
 					JExceptionDialog.showError(EditResultSelectElbDlg.this, e);
-					if(((String)comboBox.getSelectedItem()).startsWith("ELB")) {
-						editor.selectAll();
+					if(res.startsWith("ELB")) {
+						comboBox.selectAll();
 						SwingUtilities.invokeLater(new Runnable() {
 							@Override
 							public void run() {
@@ -112,20 +94,17 @@ public class EditResultSelectElbDlg extends JEscapeDialog {
 							}
 						});
 					}	
-				}
-				
+				}				
 			}
 		});
 		
-		if(initial!=null) {
-			comboBox.setSelectedItem(initial);
-		} else if(DBAdapter.getAdapter().isInActelionDomain()) {
-			comboBox.setSelectedItem("ELB9999-9999");
+		if(DBAdapter.getAdapter().isInActelionDomain()) {
+			comboBox.setText("ELB9999-9999");
 		} else {
-			comboBox.setSelectedItem("ELB-" + Spirit.getUsername()+"-"+System.currentTimeMillis());
+			comboBox.setText(DAOResult.suggestElb(Spirit.getUsername()));
 		}
 
-		editor.selectAll();
+		comboBox.selectAll();
 		getRootPane().setDefaultButton(okButton);
 		setVisible(true);
 		

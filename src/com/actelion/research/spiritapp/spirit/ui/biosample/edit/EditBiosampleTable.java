@@ -131,7 +131,6 @@ public class EditBiosampleTable extends SpiritExcelTable<Biosample> {
 	}
 	
 	public void setRows(Biotype type, List<Biosample> biosamples) throws Exception {
-//		Study study = null;
 		
 		//Check validity		
 		if(biosamples!=null) {
@@ -143,14 +142,9 @@ public class EditBiosampleTable extends SpiritExcelTable<Biosample> {
 				}
 			}
 			
-//			Collection<Study> studies = Biosample.getStudies(biosamples);
-//			if(studies.size()==1) {
-//				study = studies.iterator().next();
-//			}
 			
 		}
 		//Reset the model
-//		getModel().setStudy(study);
 		getModel().setRows(biosamples);
 		getModel().setBiotype(type);
 		resetPreferredColumnWidth();

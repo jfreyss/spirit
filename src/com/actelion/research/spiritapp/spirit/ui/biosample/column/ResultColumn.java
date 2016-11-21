@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.JComponent;
-import javax.swing.SwingConstants;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -37,7 +36,6 @@ import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
-import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 
 public class ResultColumn extends Column<Biosample, String> {
 	
@@ -96,7 +94,6 @@ public class ResultColumn extends Column<Biosample, String> {
 	
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
-		if(comp instanceof JLabelNoRepaint) ((JLabelNoRepaint)comp).setVerticalAlignment(SwingConstants.TOP);
 		comp.setForeground(Color.BLUE);
 		comp.setFont(FastFont.REGULAR_CONDENSED);
 	}

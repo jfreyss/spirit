@@ -33,7 +33,6 @@ import java.awt.event.FocusEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -62,9 +61,9 @@ import com.actelion.research.spiritapp.spirit.ui.util.component.BalanceDecorator
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
+import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.Status;
-import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
@@ -369,11 +368,11 @@ public class SampleWeighingDlg extends JEscapeDialog {
 				//Create panels for each animal
 				boolean showOnlyRequired = onlyRequired.isSelected();
 				
-				for (Biosample topSample : animal2Samples.keySet()) {
+				for (Biosample topSample : new ArrayList<>(animal2Samples.keySet())) {
 					List<Biosample> samples = animal2Samples.get(topSample);
 
 					//animalHeader
-					JPanel animalHeader = MonitoringAnimalPanel.createAnimalPanel(++n, topSample, topSample.getEndPhase()); 							
+					JPanel animalHeader = MonitoringAnimalPanel.createAnimalPanel(++n, topSample, topSample.getExpectedEndPhase()); 							
 
 					//Required comps?
 					boolean hasRequiredWeight = false;

@@ -39,8 +39,6 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,9 +56,9 @@ import javax.swing.table.TableColumn;
 import com.actelion.research.spiritapp.spirit.ui.lf.SpiritExcelTable;
 import com.actelion.research.spiritapp.spirit.ui.study.IStudy;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachedBiosampleTableModel.SampleIdColumn;
+import com.actelion.research.spiritcore.business.biosample.BarcodeSequence.Category;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
-import com.actelion.research.spiritcore.business.biosample.BarcodeSequence.Category;
 import com.actelion.research.spiritcore.business.study.AttachedBiosample;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOBarcode;
@@ -88,17 +86,6 @@ public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> 
 		}
 		getModel().fireTableStructureChanged();
 		resetPreferredColumnWidth();
-		
-		
-		addMouseListener(new MouseAdapter() {
-	        @Override
-	        public void mousePressed(MouseEvent evt) {
-	            // Need to explicitly start a drag operation when the mouse is pressed.
-	            // Otherwise drags are only started *after* the user has clicked once
-	            // on the JTable (this could be due to the L&F not doing the right thing).
-//	            getTransferHandler().exportAsDrag(RndSampleTable.this, evt, TransferHandler.MOVE);
-	        }
-	    });
 	}
 	
 	

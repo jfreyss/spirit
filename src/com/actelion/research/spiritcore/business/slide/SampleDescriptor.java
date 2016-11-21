@@ -30,7 +30,6 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
-import com.actelion.research.spiritcore.business.biosample.Metadata;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 
@@ -76,9 +75,9 @@ public class SampleDescriptor implements Comparable<SampleDescriptor>, Serializa
 
 		Map<Integer, String> map = new HashMap<>();
 		for (BiotypeMetadata bm : biotype.getMetadata()) {
-			Metadata m = b.getMetadata(bm);
-			if(m!=null && m.getValue()!=null) {
-				map.put(bm.getId(), m.getValue());
+			String m = b.getMetadataValue(bm);
+			if(m!=null) {
+				map.put(bm.getId(), m);
 			}
 		}
 		
@@ -121,7 +120,7 @@ public class SampleDescriptor implements Comparable<SampleDescriptor>, Serializa
 		Map<Integer, String> map = MiscUtils.deserializeIntegerMap(parameters);
 		for (BiotypeMetadata m : biotype.getMetadata()) {
 			String data = map.get(m.getId());
-			if(data!=null) biosample.getMetadata(m).setValue(data); 
+			if(data!=null) biosample.setMetadataValue(m, data); 
 		}
 		
 		return biosample;
@@ -187,15 +186,15 @@ public class SampleDescriptor implements Comparable<SampleDescriptor>, Serializa
 		}
 		//Check metadata
 		for (BiotypeMetadata m : getBiotype().getMetadata()) {
-			if(m.getName().equals(Metadata.STAINING)) continue;
+			if(m.getName().equals(Biotype.STAINING)) continue;
 			String data = map.get(m.getId());
-			Metadata me = biosample.getMetadata(m);
+			String me = biosample.getMetadataValue(m);
 			if(data==null || data.length()==0) {
-				if((me!=null && me.getValue()!=null && me.getValue().trim().length()>0)) {
+				if((me!=null && me.trim().length()>0)) {
 					return false;								
 				}
 			} else {
-				if((me==null || !data.equalsIgnoreCase(me.getValue()))) {
+				if((me==null || !data.equalsIgnoreCase(me))) {
 					return false;
 				}
 			}

@@ -22,7 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.biosample.linker;
 
 import javax.swing.JComponent;
-import javax.swing.SwingConstants;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.AutoCompletionCellEditor;
@@ -33,14 +32,11 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.AlphaNumericalCellEditor;
-import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 
 public class SampleNameColumn extends AbstractLinkerColumn<String> {
 
-	private JLabelNoRepaint lbl = new JLabelNoRepaint();
-	
 	protected SampleNameColumn(BiosampleLinker linker) {
-		super(linker, String.class, 40, 120);		
+		super(linker, String.class, 40, 260);		
 		lbl.setFont(FastFont.BOLD);
 	}
 
@@ -55,13 +51,6 @@ public class SampleNameColumn extends AbstractLinkerColumn<String> {
 	public void setValue(Biosample row, String value) {
 		row.setSampleName((String) value);
 	}	
-	
-	@Override
-	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
-		lbl.setVerticalAlignment(SwingConstants.TOP);
-		lbl.setText(value==null?"": value.toString());
-		return lbl;
-	}
 	
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {

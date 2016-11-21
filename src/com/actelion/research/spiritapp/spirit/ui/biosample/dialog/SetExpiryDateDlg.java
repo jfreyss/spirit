@@ -28,9 +28,13 @@ import java.awt.event.ActionListener;
 import java.util.Date;
 import java.util.List;
 
-import javax.swing.*;
-
-import org.jdesktop.swingx.JXDatePicker;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
@@ -40,8 +44,9 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomLabel;
+import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
@@ -51,12 +56,12 @@ public class SetExpiryDateDlg extends JSpiritEscapeDialog {
 	
 	private List<Biosample> biosamples;
 
-	private JXDatePicker expiryDateTextField = new JXDatePicker();
+	private JCustomTextField expiryDateTextField = new JCustomTextField(JCustomTextField.DATE);
 	
 	
-	public SetExpiryDateDlg(List<Biosample> biosamples) {
+	public SetExpiryDateDlg(List<Biosample> mySamples) {
 		super(UIUtils.getMainFrame(), "Set Expiry Date", SetExpiryDateDlg.class.getName());
-		this.biosamples = biosamples;
+		this.biosamples = JPAUtil.reattach(mySamples);
 		
 		JPanel centerPanel = new JPanel(new BorderLayout());
 		JLabel label = new JCustomLabel("Please enter the expiry date of those samples", Font.BOLD);
@@ -95,8 +100,7 @@ public class SetExpiryDateDlg extends JSpiritEscapeDialog {
 			}
 		}
 		
-		expiryDateTextField.setDate(minDate);
-		expiryDateTextField.setFormats(Formatter.dateFormat);
+		expiryDateTextField.setTextDate(minDate);
 
 		
 		JPanel southPanel = new JPanel(new BorderLayout());
@@ -118,7 +122,7 @@ public class SetExpiryDateDlg extends JSpiritEscapeDialog {
 	}
 	
 	private void eventOk() throws Exception {
-		Date expiryDate = expiryDateTextField.getDate();
+		Date expiryDate = expiryDateTextField.getTextDate();
 		if(expiryDate==null) {
 			int res = JOptionPane.showConfirmDialog(this, "Are you sure you want to remove the expiry date?", "Set Expiry Date", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 			if(res!=JOptionPane.YES_OPTION) return;

@@ -48,7 +48,7 @@ public final class SampleIdColumn extends Column<Result, String> {
 	private Map<String, Biosample> id2sampleCache = new HashMap<String, Biosample>();
 	
 	public SampleIdColumn() {
-		super("Result\nSampleId", String.class, 80);
+		super("SampleId", String.class, 80);
 	}
 	
 	@Override

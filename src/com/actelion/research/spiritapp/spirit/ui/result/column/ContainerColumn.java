@@ -33,7 +33,7 @@ public class ContainerColumn extends Column<Result, Container> {
 	private ContainerLabel containerLabel = new ContainerLabel();
 
 	public ContainerColumn() {
-		super("Result\nContainer", Container.class);
+		super("Container", Container.class);
 	}
 	
 	@Override

@@ -44,9 +44,10 @@ import javax.persistence.Table;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.envers.Audited;
 
+import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
-import com.actelion.research.spiritcore.util.Counter;
+import com.actelion.research.util.Counter;
 
 /**
  * 
@@ -56,7 +57,7 @@ import com.actelion.research.spiritcore.util.Counter;
 @Table(name="study_group", indexes = {@Index(name="group_study_index", columnList = "study_id")})
 @SequenceGenerator(name="group_sequence", sequenceName="group_sequence", allocationSize=1)
 @BatchSize(size=16)
-public class Group implements Comparable<Group>, Cloneable {
+public class Group implements Comparable<Group>, Cloneable, IObject {
 
 	public static final String DISEASE_NAIVE = "Naive";
 	public static final String DISEASE_SHAM =  "Sham";
@@ -254,7 +255,7 @@ public class Group implements Comparable<Group>, Cloneable {
 	
 	@Override
 	public int compareTo(Group o) {
-		if(o==null) return 1;
+		if(o==null) return -1;
 		if(o==this) return 0;
 		
 		int c = getStudy()==null? (o.getStudy()==null?0:1): getStudy().compareTo(o.getStudy());
@@ -263,7 +264,7 @@ public class Group implements Comparable<Group>, Cloneable {
 		c = getShortName().compareTo(o.getShortName());
 		if(c!=0) return c;
 		
-		return 0; //(int) ((getId()-o.getId()) % Integer.MAX_VALUE);
+		return 0;
 	}
 	
 	

@@ -51,8 +51,6 @@ public class JFileBrowser extends JPanel {
 		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 0; c.weightx = 1; add(file, c);
 		c.gridx = 1; c.weightx = 0; add(button, c);		
-//		file.setEditable(false);
-		
 		
 		if(propertyName!=null) {
 			File f = new File(Spirit.getConfig().getProperty(propertyName, "."));
@@ -66,13 +64,7 @@ public class JFileBrowser extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser chooser = new JFileChooser();
 				if(title!=null) chooser.setDialogTitle(title);
-//				if(propertyName!=null) {
-//					File f = new File(Spirit.getConfig().getProperty(propertyName, "."));
-//					if(!openDlg) f = f.getParentFile();
-//					chooser.setSelectedFile(f);					
-//				} else {
-					chooser.setSelectedFile(new File(getFile()));
-//				}
+				chooser.setSelectedFile(new File(getFile()));
 				chooser.setFileSelectionMode(fileSelectionMode);
 				if(extension!=null) {
 					chooser.setFileFilter(new FileFilter() {					

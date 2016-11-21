@@ -65,7 +65,7 @@ public class NamedSamplingComboBox extends JGenericComboBox<NamedSampling> {
 							"<span style='" + (ns.getId()>0?"":"font-weight:bold") + "'>"+  ns.getName() + "<span>" + 
 							"</html>");
 			try {
-				comp.setToolTipText(ns.getHtmlBySampling());
+				comp.setToolTipText("<html>" + ns.getHtmlBySampling());
 			} catch(Exception e) {
 				comp.setToolTipText(null);
 			}

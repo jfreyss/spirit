@@ -63,7 +63,6 @@ public class PhaseAddDlg extends JEscapeDialog {
 	
 	public PhaseAddDlg(final PhaseDlg dlg) {
 		super(dlg, "Add Phases");
-//		this.dlg = dlg;
 		this.study = dlg.getStudy();
 		
 		overviewEditor.setEnabled(false);

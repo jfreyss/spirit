@@ -52,7 +52,7 @@ public class DataWarriorConfig {
 	private Set<PivotDataType> merge = new HashSet<PivotDataType>();
 	private PivotDataType xAxis;
 	private PivotDataType separate;
-	private ChartType type;
+	private ChartType type = ChartType.SCATTER;
 	private PivotDataType split;
 	private Computed computed = Computed.NONE; 
 	private boolean logScale = false;

@@ -51,8 +51,8 @@ import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachedBiosampleTab
 import com.actelion.research.spiritcore.business.study.AttachedBiosample;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Randomization;
-import com.actelion.research.spiritcore.util.Formatter;
 import com.actelion.research.spiritcore.util.StatUtils;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.TextChangeListener;
@@ -224,11 +224,11 @@ public class GroupPanel extends JPanel {
 			for(int i=0; i<=10; i++) {
 				List<Double> datas = table.getDoubles(i);
 				mean = StatUtils.getMean(datas);
-				if(mean!=null) sb.append("D"+(i+1)+"=<b>"+Formatter.format3(mean) + "</b> (std=" + Formatter.format1(StatUtils.getStandardDeviation(datas, mean))+")<br>");
+				if(mean!=null) sb.append("D"+(i+1)+"=<b>"+FormatterUtils.format3(mean) + "</b> (std=" + FormatterUtils.format1(StatUtils.getStandardDeviation(datas, mean))+")<br>");
 			}
 			
 			mean = StatUtils.getMean(weights);
-			if(mean!=null) sb.append("Weight=<b>"+Formatter.format2(mean) + "</b> (std=" + Formatter.format1(StatUtils.getStandardDeviation(weights, mean))+")<br>");
+			if(mean!=null) sb.append("Weight=<b>"+FormatterUtils.format2(mean) + "</b> (std=" + FormatterUtils.format1(StatUtils.getStandardDeviation(weights, mean))+")<br>");
 			
 
 			infoLabel.setText("<html>" + sb + "</html>");

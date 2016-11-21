@@ -48,7 +48,7 @@ import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 
 public class DashboardPanel extends JPanel {
@@ -101,13 +101,13 @@ public class DashboardPanel extends JPanel {
 				sb.append("Dashboard for: ");
 				if(dayOffset==-1) sb.append("<b>yesterday</b> | ");
 				else sb.append("<a href='date:-1'>yesterday</a> | ");
-				if(dayOffset==0) sb.append("<b>today (" + Formatter.formatDate(now) + ")</b>");
-				else sb.append("<a href='date:0'>today (" + Formatter.formatDate(now) + ")</a>");
+				if(dayOffset==0) sb.append("<b>today (" + FormatterUtils.formatDate(now) + ")</b>");
+				else sb.append("<a href='date:0'>today (" + FormatterUtils.formatDate(now) + ")</a>");
 				for(int i=1; i<6; i++) {
 					if(dayOffset==i) sb.append(" | <b>day+"+i+"</b>");
 					else sb.append(" | <a href='date:"+i+"'>day+"+i+"</a>");
 				}
-				sb.append(" | <a href='refresh:'>Refresh</a>");
+//				sb.append(" | <a href='refresh:'>Refresh</a>");
 				sb.append("<br><br>");
 				
 				cal.setTime(now);
@@ -159,12 +159,12 @@ public class DashboardPanel extends JPanel {
 					//sb.append("<a href='stu:" + s.getId() + "' style='font-size:12px;font-weight:bold'>" + s.getStudyId() + "</a>");
 					if(desc.length()>0) {
 						sb.append("<div style='border:solid 1px #FFAAAA; background:#FFFAFA'>");
-						sb.append("<u>" + (dayOffset==0?"(" + Formatter.formatDate(dashDate)  + ")": "Day"+ (dayOffset>0?"+":"")+dayOffset) + "</u> - " + desc);
+						sb.append("<u>" + (dayOffset==0?"(" + FormatterUtils.formatDate(dashDate)  + ")": "Day"+ (dayOffset>0?"+":"")+dayOffset) + "</u> - " + desc);
 						sb.append("</div");
 					}
 					if(nextPhase!=null && nextDesc.length()>0) {
 						sb.append("<div>");
-						sb.append("<u>(" + Formatter.formatDate(nextPhase.getAbsoluteDate())  + ")</u> - " + nextDesc);
+						sb.append("<u>(" + FormatterUtils.formatDate(nextPhase.getAbsoluteDate())  + ")</u> - " + nextDesc);
 						sb.append("</div");
 					}
 					sb.append("</td>");

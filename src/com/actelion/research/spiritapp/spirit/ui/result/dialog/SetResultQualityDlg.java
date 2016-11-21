@@ -52,9 +52,9 @@ public class SetResultQualityDlg extends JSpiritEscapeDialog {
 	
 	private List<Result> results;
 	
-	public SetResultQualityDlg(List<Result> res, Quality quality) {
+	public SetResultQualityDlg(List<Result> myResults, Quality quality) {
 		super(UIUtils.getMainFrame(), "Set Quality", SetResultQualityDlg.class.getName());
-		this.results = JPAUtil.reattach(res);
+		this.results = JPAUtil.reattach(myResults);
 		
 		JPanel contentPanel = new JPanel(new BorderLayout());
 		JLabel label = new JCustomLabel("Are you sure you want to modify the quality of those results to " + quality, Font.BOLD);
@@ -83,8 +83,7 @@ public class SetResultQualityDlg extends JSpiritEscapeDialog {
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			try {
-				
+			try {				
 				SpiritUser user = Spirit.askForAuthentication();
 				for (Result result : results) {
 					result.setQuality(quality);

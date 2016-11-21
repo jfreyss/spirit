@@ -21,20 +21,27 @@
 
 package com.actelion.research.spiritcore.business.biosample;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import java.util.Arrays;
+import java.util.List;
 
-import org.hibernate.envers.Audited;
+import com.actelion.research.spiritcore.util.MiscUtils;
 
-@Entity
-@DiscriminatorValue("Comments")
-@Audited
 public class ActionComments extends ActionBiosample {
 		
 	public ActionComments() {}
 	
-	public ActionComments(Biosample biosample, String comments) {
-		super(biosample, null);
+	public ActionComments(String comments) {
 		setComments(comments);
 	}	
+	
+	@Override
+	public String serialize() {	
+		return MiscUtils.serializeStrings(Arrays.asList(new String[]{"Comments", comments}));
+	}
+
+	public static ActionComments deserialize(List<String> strings) {
+		assert strings.size()==2;
+		assert strings.get(0).equals("Comments");
+		return new ActionComments(strings.get(0)); 
+	}
 }

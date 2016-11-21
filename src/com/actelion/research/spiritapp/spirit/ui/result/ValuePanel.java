@@ -26,20 +26,29 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.ResultValue;
+import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.JComponentNoRepaint;
 
 public class ValuePanel extends JComponentNoRepaint {
 	
 	private final Dimension preferredDim = new Dimension(80, 16);
+	private OutputType outputType;
+	private String attLabel;
+	private String valLabel;
+	private Biosample linked;
+//	private Document doc;
+	
+	public ValuePanel() {		
+	}
 	
 	@Override
 	protected void paintComponent(Graphics graphics) {
 		Graphics2D g = (Graphics2D) graphics;
-		Color valColor = isOutput? LF.COLOR_TEST: Color.BLACK;
+		Color valColor = Color.BLACK;
 		
 		int width = getWidth();
 		int height = getHeight();
@@ -66,21 +75,16 @@ public class ValuePanel extends JComponentNoRepaint {
 				g.setColor(Color.MAGENTA);
 				g.drawString(linked.getSampleName(), w1 + 1, height/2 + 6 + g.getFontMetrics().getMaxDescent());
 			}
-		} else if(valLabel!=null && valLabel.length()>0){ 
-			//Draw Unit
-			g.setFont(FastFont.SMALLER);
-			g.setColor(valColor);
-			int w2 = width-2-g.getFontMetrics().stringWidth(unitLabel);
-			g.drawString(unitLabel, w2, height/2 + g.getFontMetrics().getMaxDescent());
-			
+		} else if(valLabel!=null && valLabel.length()>0){ 			
 			//Draw Val
-			g.setFont(isOutput? FastFont.REGULAR: FastFont.REGULAR_CONDENSED);
+			g.setColor(valColor);
+			g.setFont(outputType==OutputType.OUTPUT? FastFont.REGULAR: FastFont.REGULAR_CONDENSED);
 			int w = g.getFontMetrics().stringWidth(valLabel);			
-			if(isOutput) {
-				g.clearRect(w2 - 1 - w, 0, w, height);
-				g.drawString(valLabel, w2 - 1 - w, height/2 + g.getFontMetrics().getMaxDescent());				
+			if(outputType==OutputType.OUTPUT) {
+				g.clearRect(width - 1 - w, 0, w, height);
+				g.drawString(valLabel, width - 1 - w, height/2 + g.getFontMetrics().getMaxDescent());				
 			} else {
-				g.clearRect(w2 - 1 - w, 0, w, height);
+				g.clearRect(width - 1 - 1 - w, 0, w, height);
 				g.drawString(valLabel, w1+1, height/2 + g.getFontMetrics().getMaxDescent());				
 			}
 		}
@@ -88,38 +92,21 @@ public class ValuePanel extends JComponentNoRepaint {
 		
 	}
 	
-	private boolean isOutput;
-	private String attLabel;
-	private String valLabel;
-	private String unitLabel;
-	private Biosample linked;
-	
-	public void setValue(boolean isOutput, ResultValue v) {
+	public void setValue(OutputType outputType, ResultValue v) {
+		this.outputType = outputType;
 		if(v==null) {
-			this.isOutput = isOutput;
+//			this.doc = null;
 			this.linked = null;
 			this.attLabel = "";
 			this.valLabel = "";
-			this.unitLabel = "";
 		} else {
-			String val = v.getValue();
-			String unit = v.getUnit();
-			this.isOutput = isOutput;
-			this.linked = v.getLinkedBiosample();
-			if(!isOutput) {
-				val = v.getValueWithoutDelegateUnit();
-			}  
-			
-			this.attLabel = (v.getAttribute()==null? "??" : v.getAttribute().getName()) + ":";
-			this.valLabel = val==null?"": val;
-			
-			if(val!=null && unit!=null && unit.length()>0) {
-				this.unitLabel = " " +unit;
-			} else {
-				this.unitLabel = " ";
-			}
+			String val = v.getAttribute().getDataType()==DataType.LARGE? (v.getLinkedDocument()==null? null: new String(v.getLinkedDocument().getBytes())): v.getValue();
+//			this.doc = v.getAttribute().getDataType()==DataType.D_FILE? v.getLinkedDocument(): null;
+			this.linked = v.getAttribute().getDataType()==DataType.BIOSAMPLE? v.getLinkedBiosample(): null;			
+			this.attLabel = v.getAttribute().getName() + ":";
+			this.valLabel = val==null?"": val;			
 		}
-		preferredDim.width = getFontMetrics(FastFont.SMALLER).stringWidth(attLabel + ":") + getFontMetrics(isOutput? FastFont.REGULAR: FastFont.REGULAR_CONDENSED).stringWidth(valLabel + unitLabel);
+		preferredDim.width = getFontMetrics(FastFont.SMALLER).stringWidth(attLabel + ":") + getFontMetrics(outputType==OutputType.OUTPUT? FastFont.REGULAR: FastFont.REGULAR_CONDENSED).stringWidth(valLabel);
 	}
 	
 	@Override

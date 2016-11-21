@@ -46,6 +46,7 @@ import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.UIUtils;
@@ -64,8 +65,9 @@ public class TestMoveDlg extends JSpiritEscapeDialog {
 	private TestChoice tDest;
 	private SpiritUser user;
 	
-	public TestMoveDlg(Test test) {
+	public TestMoveDlg(Test myTest) {
 		super(UIUtils.getMainFrame(), "Admin - Tests - Move", TestMoveDlg.class.getName());
+		Test test = JPAUtil.reattach(myTest);
 		
 		try{
 			user = Spirit.askForAuthentication();

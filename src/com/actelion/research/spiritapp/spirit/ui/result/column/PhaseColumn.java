@@ -33,7 +33,7 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 public class PhaseColumn extends Column<Result, Phase> {
 	public PhaseColumn() {
-		super("Result\nPhase", Phase.class, 30);
+		super("Phase", Phase.class, 30);
 	}
 	
 	@Override

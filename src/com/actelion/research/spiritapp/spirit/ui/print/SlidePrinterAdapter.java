@@ -45,8 +45,8 @@ import javax.swing.JTextArea;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.print.PrintableOfContainers.Model;
-import com.actelion.research.spiritapp.spirit.services.print.SpiritPrinter;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JFileBrowser;
+import com.actelion.research.spiritapp.spirit.services.print.SpiritPrinter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;

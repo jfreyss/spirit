@@ -106,11 +106,11 @@ public class CreateSamplesHelper {
 			List<Biosample> dividingBiosamplesToRemove = new ArrayList<Biosample>();
 			toAdd.addAll(BiosampleCreationHelper.processDividingSamples(study, dividingBiosamplesToRemove));
 			toDelete.addAll(dividingBiosamplesToRemove);
-					
-						
+											
 			//First filter: Find which ones must be deleted or created based on their status and their existence
 			for (Biosample b : allNeeded) {
 				boolean dead = b.getTopParentInSameStudy().getStatus()==Status.KILLED || b.getTopParentInSameStudy().getStatus()==Status.DEAD;
+				System.out.println("CreateSamplesHelper.synchronizeSamples() "+b.getTopParentInSameStudy()+"> "+b.getInfos()+"," +b.getInheritedPhase()+" > "+dead+" / "+b.isDeadAt(b.getInheritedPhase()));
 				if(dead && b.isDeadAt(b.getInheritedPhase())) {
 					//Remove samples from animals marked as Found Dead or Killed, but keep Animals marked as Necropsied
 					if(b.getId()>0) {
@@ -136,6 +136,8 @@ public class CreateSamplesHelper {
 			for(Biosample top: study.getTopAttachedBiosamples()) {
 				//Skip dead/necropsied/...
 				for(Biosample sample: top.getHierarchy(HierarchyMode.ATTACHED_SAMPLES)) {
+					
+					System.out.println("CreateSamplesHelper.synchronizeSamples() "+sample);//SER002316
 					if(sample.getInheritedGroup()==null) continue; //Reserve -> Skip already created samples
 					if(sample.getInheritedPhase()==null) continue; //No Phase -> Skip
 					if(sample.getAttachedSampling()==null) continue; //No sampling, should not happen here 

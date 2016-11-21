@@ -32,6 +32,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.TreeSet;
 
 import javax.swing.BorderFactory;
 import javax.swing.text.html.HTMLEditorKit;
@@ -44,18 +45,21 @@ import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.Quality;
-import com.actelion.research.spiritcore.business.biosample.ActionStatus;
+import com.actelion.research.spiritcore.business.biosample.ActionBiosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
+import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.business.biosample.LocationFormat;
-import com.actelion.research.spiritcore.business.biosample.Metadata;
-import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
-import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
+import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.business.location.Privacy;
+import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.Formatter;
+import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.spiritcore.util.Pair;
+import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.UIUtils;
 
 public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampleDetail {
@@ -72,18 +76,13 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 		setPreferredSize(new Dimension(300, 200));
 		setOpaque(false);
 		setEditable(false);
-		setBackground(Color.white);		
 		
-		//
 		StyleSheet stylesheet = ((HTMLEditorKit) getEditorKit()).getStyleSheet();
 		stylesheet.addRule("td, th {margin:0px;padding:0px}");
 		stylesheet.addRule(".description th {padding-left:0px;padding-right:2px;margin-top:0px;font-weight:plain;text-align:right;font-size:9px;color:gray}");
-		stylesheet.addRule(".description td {padding-left:0px;margin-top:0px;font-weight:plain;text-align:left; font-size:9px}");
-		
+		stylesheet.addRule(".description td {padding-left:0px;margin-top:0px;font-weight:plain;text-align:left; font-size:9px}");		
 		setBackground(new Color(0,0,0,0));
-	
-		BiosampleActions.attachPopup(this);
-		
+		BiosampleActions.attachPopup(this);		
 		addHyperlinkListener(new SpiritHyperlinkListener());
 	}
 
@@ -100,20 +99,16 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 	public Collection<Biosample> getBiosamples() {
 		return biosamples;
 	}
-	
 
 	public void setBiosample(Biosample biosample) {
 		setBiosamples(biosample==null? null: Collections.singletonList(biosample));
 	}
-	
-	
+		
 	@Override
 	public void setBiosamples(Collection<Biosample> biosamples) {
 		this.biosamples = biosamples==null/* || biosamples.size()!=1*/? new ArrayList<Biosample>(): biosamples;
 		refresh();
 	}
-	
-
 	
 	private void refresh() {
 		StringBuilder txt;
@@ -169,7 +164,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 									}
 								}
 							}
-							txt.append("</div>");		
+							txt.append("</div>");
 						}
 					}
 					
@@ -203,8 +198,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 		setCaretPosition(getDocument().getLength()-1);		
 		scrollToReference("sample");
 		
-	}
-	
+	}	
 	
 	private void appendBiosample(StringBuilder txt, Biosample b) {
 		txt.append("<table width=100% style='padding:0px;margin:0px;white-space:nowrap;font-size:9px'>");					
@@ -212,8 +206,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 		//Main fields
 		{
 			
-			txt.append("<tr><td width=60px style='width:60px;white-space:nowrap; font-size:8px;vertical-align:super' valign=super>");
-			txt.append(b.getBiotype()==null?"": b.getBiotype().getName().length()>12? b.getBiotype().getName().substring(0, 12)+".<br>":b.getBiotype().getName()+"<br>");			
+			txt.append("<tr><td width=60px style='width:60px;white-space:nowrap; font-size:8px;vertical-align:bottom' valign=bottom>");
 			String imgKey = ImageFactory.getImageKey(b);			
 			if(imgKey!=null) {
 				BufferedImage img = ImageFactory.getImage(b, 28);
@@ -223,9 +216,9 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 					txt.append("<img align=left src='" + url + "'>");
 				}
 			}
-			//txt.append("</td></tr></table>");
+			txt.append("<br>" + (b.getBiotype()==null?"": b.getBiotype().getName().length()>12? b.getBiotype().getName().substring(0, 12)+".":b.getBiotype().getName()));			
 			txt.append("</td>");
-			txt.append("<td width="+(getWidth()-60)+"px valign=top style='white-space:nowrap; vertical-align:super' >");
+			txt.append("<td width="+(getWidth()-60)+"px valign=top style='white-space:nowrap; vertical-align:bottom' >");
 			
 			//study
 			if(b.getParent()==null || b.getAttachedStudy()!=null || (b.getInheritedPhase()!=null && !b.getInheritedPhase().equals(b.getParent().getInheritedPhase()))) {
@@ -245,14 +238,12 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 			}
 			
 			//SampleId
-			txt.append("<a style='white-space:nowrap' href='bio:" + b.getId() + "'>");			
-			txt.append("<span" + (b.getBiotype()!=null && b.getBiotype().isHideSampleId()?" style='color:gray;font-size:7px'":"") + ">" + b.getSampleId() + "</span>");
-			txt.append("</a><br>");
+			txt.append("<span" + (b.getBiotype()!=null && b.getBiotype().isHideSampleId()?" style='color:gray'":"") + ">" + b.getSampleId() + "</span> ");
 
 			//Status
-			ActionStatus s = b.getLastActionStatus();
-			if(s!=null) {
-				txt.append("<i style='font-size:8px; background:" + UIUtils.getHtmlColor(s.getStatus().getBackground()) + "; color:#000000'>" + s.getDetails() + (s.getPhase()!=null?" at "+s.getPhase().getShortName(): " "+ Formatter.formatDate(s.getUpdDate())) + " </i><br>");
+			Pair<Status, Phase> s = b.getLastActionStatus();
+			if(s.getFirst()!=null) { 
+				txt.append("<i style='font-size:8px; background:" + UIUtils.getHtmlColor(s.getFirst().getBackground()) + "; color:#000000'>" + s.getFirst() + (s.getSecond()!=null? (s.getFirst().isAvailable()? " until ": " at ") + s.getSecond().getShortName(): "") + " </i><br>");
 			}
 
 			//Quality
@@ -262,7 +253,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 			
 			//Expiry
 			if(b.getExpiryDate()!=null) {
-				txt.append("<i style='font-weight:bold;font-size:8px; foreground:" + (b.getExpiryDate().before(now)?"red":"black") + "'>Expiry Date: " + Formatter.formatDate(b.getExpiryDate()) + "</i><br>");
+				txt.append("<i style='font-weight:bold;font-size:8px; foreground:" + (b.getExpiryDate().before(now)?"red":"black") + "'>Expiry Date: " + FormatterUtils.formatDate(b.getExpiryDate()) + "</i><br>");
 			}
 			
 			txt.append("</td></tr>");
@@ -278,45 +269,28 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 		if(b.getElb()!=null && b.getElb().length()>0) {
 			txt.append("<tr><td width=60px style='width:60px;font-size:8px'>ELB:</td><td>" + b.getElb() + "</td></tr>");
 		}
-
-		//Metadata					
+		//Metadata
 		if(b.getBiotype()!=null) {						
-			for (BiotypeMetadata metadataType : b.getBiotype().getMetadata()) {
-				Metadata metadata = b.getMetadata(metadataType);
-				if(metadata==null) continue;
-				String value = metadata.getValue();
+			for (BiotypeMetadata metadataType : new TreeSet<>(b.getBiotype().getMetadata())) { //Use TreeSet because Envers may not sort it
+				String value = b.getMetadataValue(metadataType);
 				if(value!=null && value.length()>0) {
 					txt.append("<tr>");
 					String name = metadataType.getName();
 					txt.append("<td width=60px style='width:60px;font-size:8px;white-space:nowrap' valign=top>" + name  + ":</td>");
-//					if(value==null) {
-//						txt.append("<td></td>");
-//					} else 
 					if(metadataType.getDataType()==DataType.D_FILE) {
-						if(metadata.getLinkedDocument()!=null) {
-							txt.append("<td><a href='doc:" + metadata.getLinkedDocument().getId() + "'>" + value + "</a></td>");
+						if(b.getMetadataDocument(metadataType)!=null) {
+							txt.append("<td><a href='doc:" + b.getMetadataDocument(metadataType).getId() + "'>" + value + "</a></td>");
 						} else {
 							txt.append("<td style='color:red'>" + value + "</td>");
 						}
-					} else if(metadataType.getDataType()==DataType.BIOSAMPLE && metadata.getLinkedBiosample()!=null) {
-						Biosample linked = metadata.getLinkedBiosample();
-						
+					} else if(metadataType.getDataType()==DataType.LARGE) {
+						txt.append("<td><div style='font-size:8px; width:100%' disabled>" + MiscUtils.convert2Html(value) + "</textarea></td>");
+					} else if(metadataType.getDataType()==DataType.BIOSAMPLE && b.getMetadataBiosample(metadataType)!=null) {
+						Biosample linked = b.getMetadataBiosample(metadataType);						
 						txt.append("<td><a href='bio:" + linked.getId() + "'>" + linked.getSampleId() + "</a><span style='font-size:8px;white-space:nowrap;color:gray'><br>" + linked.getInfos(EnumSet.of(InfoFormat.SAMPLENAME, InfoFormat.METATADATA), InfoSize.ONELINE) + "</span></td>");									
-//					} else if(metadataType.getDataType()==DataType.ELN && metadata.getLinkedCompound()!=null) {
-//						try {
-//							URL url = new URL(CompoundTextField.getImageLinkFor(metadata.getLinkedCompound(), 50));
-//							imageCache.put(url.toString(), ImageIO.read(url));
-//							txt.append("<td><table><tr><td><img src=\"" +  url + "\"></td><td>" + metadata.getLinkedCompound().getActNo()+"/<br>"+metadata.getLinkedCompound().getEln() + "</td></tr></table></td>");									
-//						} catch(Exception e) {
-//							e.printStackTrace();
-//							txt.append("<td><table><tr><td></td><td>" + metadata.getLinkedCompound().getActNo()+"/<br>"+metadata.getLinkedCompound().getEln() + "</td></tr></table></td>");									
-//						}
-//					} else if(metadataType.getDataType()==DataType.DICO) {
-//						String desc = DicoLabel.getDescription(value);
-//						txt.append("<td>" + value + "<br><span style='font-size:7px;white-space:nowrap;color:#333333'>" + desc + "</span></td>");
 					} else if(metadataType.getDataType()==DataType.MULTI) {
 						txt.append("<td>" + value.replace(";", "<br>") + "</td>");
-					} else if(value.startsWith("http://") || value.startsWith("https://")){
+					} else if((value.startsWith("http://") || value.startsWith("https://")) && value.indexOf("://", 7)<0){
 						txt.append("<td><a href='"+value + "'>" + value + "</a></td>");
 					} else {
 						txt.append("<td>" + value + "</td>");
@@ -334,20 +308,19 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 				txt.append("</td></tr>");
 			}
 			
-
-			
 			//Comments
 			if(b.getComments()!=null && b.getComments().length()>0) { 
 				txt.append("<tr><td width=60px style='width:60px;font-size:8px'>Comments: </td><td>");
 				txt.append(b.getComments());
 				txt.append("</td></tr>");
 			}
-			/*
-			//Owner
-			txt.append("<tr><td width=60px style='width:60px;font-size:8px'>Owner: </td><td width=* style='width:*; font-size:8px'>");
-			txt.append("<i>"+b.getCreUser()+" " +(b.getEmployeeGroup()==null?"": " (" + b.getEmployeeGroup().getName()+")") + "</i>");
-			txt.append("</td></tr>");
-			*/
+			//LastAction
+			ActionBiosample action = b.getLastAction();
+			if(action!=null) { 
+				txt.append("<tr><td width=60px style='width:60px;font-size:8px'>Last action: </td><td>");
+				txt.append(action.getDetails());
+				txt.append("</td></tr>");
+			}
 			txt.append("</table>");
 			
 		}

@@ -62,7 +62,6 @@ import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyWizardDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
-import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
@@ -72,7 +71,6 @@ import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
-import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAONamedSampling;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
@@ -104,14 +102,14 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 	private final JPanel samplingsPanel = new JPanel(new GridBagLayout());
 	private final NamedSamplingEditorPane namedSamplingEditorPane = new NamedSamplingEditorPane();
 
-	public NamedSamplingDlg(final Study st, NamedSampling namedSamplingToEdit, final StudyWizardDlg dlg) {
+	public NamedSamplingDlg(final Study myStudy, NamedSampling namedSamplingToEdit, final StudyWizardDlg dlg) {
 		super(UIUtils.getMainFrame(), "Edit Sampling Template", dlg==null? NamedSamplingDlg.class.getName(): null);
-		this.study = st;
+		this.study = JPAUtil.reattach(myStudy);
 		this.transactionMode = dlg==null;
 		this.dlg = dlg;
 		
-		if(transactionMode && st!=null) throw new IllegalArgumentException("You can only edit a Sampling Template outside a study from here");
-		if(!transactionMode && st==null) throw new IllegalArgumentException("You can only edit a Sampling Template in a study from here");
+		if(transactionMode && study!=null) throw new IllegalArgumentException("You can only edit a Sampling Template outside a study from here");
+		if(!transactionMode && study==null) throw new IllegalArgumentException("You can only edit a Sampling Template in a study from here");
 		
 		
 		if(namedSamplingToEdit == null) {
@@ -126,13 +124,13 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		} else {
 			//Old sampling
 			addDlg = false;
-			this.namedSamplingToEdit = namedSamplingToEdit;
+			this.namedSamplingToEdit = JPAUtil.reattach(namedSamplingToEdit);
 		}
 
 		//Create a proxy, to avoid changing the object when the user closes the window
 		this.namedSamplingProxy = new NamedSampling();
 		namedSamplingProxy.copyFrom(this.namedSamplingToEdit);
-		necropsyCheckbox.setEnabled(st!=null);
+		necropsyCheckbox.setEnabled(study!=null);
 
 		
 		//TopPanel
@@ -634,7 +632,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 				}
 			});
 			
-			mainPanel.add(UIUtils.createTitleBox("Modified samples", sp));
+			mainPanel.add(UIUtils.createTitleBox("Attached samples, to be kept unchanged", sp));
 		}
 		
 		JPanel panel = new JPanel(new BorderLayout());
@@ -769,7 +767,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			
 			//Check that samples have not been modified
 			for (Biosample b : samples) {
-				double score = fromSamplingClone.getMatchingScore(b);				
+				double score = fromSamplingClone.getMatchingScore(b);
 				if(score<1) samplesToKeep.add(b);
 				else samplesToUpdate.add(b);
 			}
@@ -778,6 +776,8 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			String[] options;
 			if(samplesToKeep.size()>0 && samplesToUpdate.size()>0) {
 				options = new String[] {"Update (except modified samples)", "Update all samples", "Do not update/synchronize"};
+			} else if(samplesToKeep.size()>0) {
+				options = new String[] {"Do not update/synchronize", "Update all samples"};
 			} else {
 				options = new String[] {"Update all samples", "Do not update/synchronize"};
 			}
@@ -786,6 +786,12 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 				if(res==1) {
 					samplesToUpdate.addAll(samplesToKeep);
 				} else if(res!=0) {
+					return false;
+				}
+			} else if(samplesToKeep.size()>0 ) {				
+				if(res==1) {
+					samplesToUpdate.addAll(samplesToKeep);
+				} else {
 					return false;
 				}
 			} else {

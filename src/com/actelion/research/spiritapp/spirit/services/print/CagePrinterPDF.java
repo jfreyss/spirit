@@ -26,15 +26,18 @@ import java.awt.Desktop;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.NamedTreatment;
 import com.actelion.research.spiritcore.business.study.Study;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
@@ -252,26 +255,16 @@ public class CagePrinterPDF {
 	}
 	
 	private static String getMetadata(Collection<Biosample> animals, String metadata) {
-		String res = "";
+		Set<String> res = new HashSet<>();
 		for (Biosample a : animals) {
-			String m = a.getMetadata(metadata)==null || a.getMetadata(metadata).getValue()==null ? "N/A": a.getMetadata(metadata).getValue().replaceAll("/", " ");
-			if(!res.contains(m) && m.length()>0) {
-				res += (res.length()>0? ", ": "") + m;
-			}
+			BiotypeMetadata bm = a.getBiotype().getMetadata(metadata);
+			String m = bm==null || a.getMetadataValue(bm)==null? "N/A": a.getMetadataValue(bm).replaceAll("/", " ");
+			res.add(m);
 		}
-		return res;
+		return MiscUtils.flatten(res);
 	}
-//	private static String getSampleIds(Collection<Biosample> animals) {
-//		String res = "";
-//		for (Biosample a : animals){
-//			if(res.length()>0) res += " - ";
-//			res+=a.getSampleId()+ (a.getName()!=null && a.getName().length()>0? "[" + a.getName() + "]": "");
-//		}
-//		return res;
-//	}
 	
 	private static void drawCageSeparation(Document doc, PdfContentByte canvas) {
-		
 		canvas.setLineWidth(1f);
 		canvas.setColorStroke(BaseColor.BLACK);
 		canvas.moveTo(0, doc.getPageSize().getHeight()/2);
@@ -282,9 +275,6 @@ public class CagePrinterPDF {
 		canvas.lineTo(2*doc.getPageSize().getWidth()/4, doc.getPageSize().getHeight());
 		canvas.moveTo(3*doc.getPageSize().getWidth()/4, 0);
 		canvas.lineTo(3*doc.getPageSize().getWidth()/4, doc.getPageSize().getHeight());
-		
-		
-		
 		canvas.stroke();
 	}
 }

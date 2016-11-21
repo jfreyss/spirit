@@ -27,10 +27,11 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.Icon;
 import javax.swing.SwingConstants;
@@ -253,7 +254,14 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 	@Override
 	protected void paintComponent(Graphics graphics) {
 		Graphics2D g = (Graphics2D) graphics;
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+		Toolkit tk = Toolkit.getDefaultToolkit();
+  		@SuppressWarnings("rawtypes")
+		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
+  		if (map != null) {
+  		    ((Graphics2D)g).addRenderingHints(map);
+  		}
+		
 		int width = getWidth();
 		int height = getHeight();
 
@@ -432,6 +440,7 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 	public Boolean getCondenseText() {
 		return condenseText;
 	}
+	
 	public void setCondenseText(Boolean condenseText) {
 		this.condenseText = condenseText;
 		preferredDim.width = -1;

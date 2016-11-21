@@ -43,6 +43,7 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
+import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.pivot.InventoryPivotTemplate;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -255,11 +256,23 @@ public class BiosampleTab extends JPanel implements ISpiritTab {
 
 	
 	/**
-	 * To be overriden by classes to get a custom sort (or filtering)
+	 * Can be overriden by classes to get a custom sort (or filtering)
+	 * If the biosample belong to one type: 
+	 * - purified: sort by credate
+	 * - Library: sort by name
+	 * Otherwise
+	 * - Use the normal sort: study, group, topId
 	 * @return
 	 */
 	protected void sortBiosamples(List<Biosample> biosamples) {
-		Collections.sort(biosamples);
+		Biotype biotype = Biosample.getBiotype(biosamples);
+		if(biotype!=null && biotype.getCategory()==BiotypeCategory.LIBRARY) {
+			Collections.sort(biosamples, Biosample.COMPARATOR_NAME);						
+		} else if(biotype!=null && biotype.getCategory()==BiotypeCategory.PURIFIED) {
+			Collections.sort(biosamples, Biosample.COMPARATOR_CREDATE);			
+		} else {
+			Collections.sort(biosamples);
+		}
 	}	
 	
 	public void query(BiosampleQuery q) {

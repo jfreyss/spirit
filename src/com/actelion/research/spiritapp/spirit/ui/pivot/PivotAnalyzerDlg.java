@@ -122,6 +122,7 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 			private PivotDataTable statsTable;
 			private PivotAnalyzer analyzer;
 			private String report;
+			
 			@Override
 			protected void doInBackground() throws Exception {
 
@@ -166,9 +167,9 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 					report = "<div style='color:red'>Error: " + e.getMessage() + "</div>";
 				}				
 			}
+			
 			@Override
 			protected void done() {
-
 				editorPane.addHyperlinkListener(new HyperlinkListener() {					
 					@Override
 					public void hyperlinkUpdate(HyperlinkEvent e) {
@@ -210,7 +211,7 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 									List<String> allViewNames = DataWarriorExporter.getViewNames(results, config, Spirit.getUser());
 									
 									//Select views
-									List<String> views = new ArrayList<String>();
+									List<String> views = new ArrayList<>();
 									for (int id : ids) {
 										if(id>=0 && id<allViewNames.size()) views.add(allViewNames.get(id));										
 									}
@@ -233,8 +234,7 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 								setHtml(analyzer.getReport());
 							} catch(Exception ex ) {
 								JExceptionDialog.showError(ex);
-							}
-							
+							}							
 						}
 					}
 				});

@@ -40,7 +40,6 @@ public class AnimalsTable extends BiosampleTable {
 
 	public AnimalsTable() {
 		super();
-		setSmartColumns(false);
 	}
 	
 	

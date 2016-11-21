@@ -48,7 +48,7 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 	private boolean hideable;
 	private int internalCounter = staticCounter++;
 
-	private final JLabelNoRepaint lbl = new JLabelNoRepaint();
+	protected final JLabelNoRepaint lbl = new JLabelNoRepaint();
 	private AbstractExtendTable<ROW> table;
 			
 	public Column(String name, Class<VALUE> columnClass) {
@@ -68,7 +68,6 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 		this.minWidth = minWidth;
 		this.maxWidth = maxWidth;
 		setName(name);
-
 	}
 	
 	/**
@@ -83,7 +82,6 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 		if(index2>=0 && index2<index)  index = index2;
 		if(index3>=0 && index3<index)  index = index3;
 		
-//		String[] split = name.split("[.\n]");
 		String[] split = name.split("\n");
 		this.category = split.length>=4? split[0]+"."+split[1]:
 						split.length>=2? split[0]: 
