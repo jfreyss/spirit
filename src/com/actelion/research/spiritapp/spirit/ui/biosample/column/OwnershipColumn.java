@@ -55,7 +55,6 @@ public class OwnershipColumn extends Column<Biosample, String> {
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		comp.setForeground(Color.PINK);
-		comp.setFont(FastFont.REGULAR_CONDENSED);
 	}
 	
 	

@@ -66,7 +66,7 @@ public class FastHeaderRenderer<T> implements TableCellRenderer {
 		}
 		
 		label.setForeground(Color.BLACK);
-		label.setBackground(null);
+		label.setBackground(table.getBackground());
 		
 		String str = col==null?"": col.getName();
 		if(col!=null && prevCol!=null && col.getCategory().length()>0 && prevCol.getCategory().equals(col.getCategory())) {

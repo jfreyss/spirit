@@ -96,6 +96,15 @@ public class FormTree extends JPanel {
 	}
 	
 	protected void initLayout() {
+		if(!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(new Runnable() {				
+				@Override
+				public void run() {
+					initLayout();
+				}
+			});
+			return;
+		}
 		//Memorize the focus		
 		final Component comp = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
 		
@@ -136,7 +145,7 @@ public class FormTree extends JPanel {
 		if(node==null || !node.isVisible()) return;
 		
 		GridBagConstraints c = new GridBagConstraints();
-		c.insets = new Insets(-1, 0, -1, 0);
+		c.insets = new Insets(0, 0, 0, 0);
 		c.fill = GridBagConstraints.NONE;
 		c.anchor = GridBagConstraints.WEST;
 		c.gridx = 0;

@@ -36,7 +36,6 @@ import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.Status;
-import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
@@ -103,7 +102,6 @@ public class ChildrenColumn extends Column<Biosample, String> {
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		comp.setForeground(Color.BLUE);
-		comp.setFont(FastFont.REGULAR_CONDENSED);
 	}
 	
 	

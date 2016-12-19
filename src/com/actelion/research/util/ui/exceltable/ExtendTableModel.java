@@ -96,8 +96,8 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 	private Map<ROW, Node> row2node = new HashMap<>();
 	
 	
-	public Column<ROW, Integer> COLUMN_ROWNO = new Column<ROW, Integer>("#",  Integer.class, 15) {
-		private JLabelNoRepaint lbl = new JLabelNoRepaint();
+	public Column<ROW, Integer> COLUMN_ROWNO = new Column<ROW, Integer>("#",  Integer.class, 18) {
+		private JLabelNoRepaint lbl = new JLabelNoRepaint();		
 		@Override
 		public Integer getValue(ROW row, int rowNo) {
 			return rowNo+1;

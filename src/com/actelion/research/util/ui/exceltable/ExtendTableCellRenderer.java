@@ -39,6 +39,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
@@ -146,7 +147,6 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-		
 		try {
 			AbstractExtendTable myTable = (AbstractExtendTable) table;
 			ExtendTableModel<ROW> model = myTable.getModel();
@@ -223,8 +223,8 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 			if( myTable.getBorderStrategy()==BorderStrategy.ALL_BORDER) {
 				c.setBorder(
 						BorderFactory.createCompoundBorder(
-								BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK),
-								BorderFactory.createMatteBorder(0, 0, 0, 1, rightBorder?Color.BLACK:COLOR_LIGHTBORDER))
+								BorderFactory.createMatteBorder(0, 0, 1, 0, UIManager.getColor("Table.gridColor")),
+								BorderFactory.createMatteBorder(0, 0, 0, 1, rightBorder?UIManager.getColor("Table.gridColor"):COLOR_LIGHTBORDER))
 						);	
 				
 			} else if( myTable.getBorderStrategy()==BorderStrategy.WHEN_DIFFERENT_VALUE) {
@@ -254,16 +254,19 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 				
 				
 				boolean merge = shouldMergeWithBottom(myTable, column, row);
+				Color lightBorder = UIManager.getColor("Table.gridColor");
+				if(lightBorder==null) lightBorder = COLOR_LIGHTBORDER;
+				Color darkBorder = UIUtils.darker(lightBorder, .7);
 				if(!merge) {
 					c.setBorder(BorderFactory.createCompoundBorder(
 							BorderFactory.createCompoundBorder(
-									BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK),
-									BorderFactory.createMatteBorder(0, 0, 0, 1, rightBorder?Color.BLACK:COLOR_LIGHTBORDER)
+									BorderFactory.createMatteBorder(0, 0, 0, 1, rightBorder? darkBorder:lightBorder),
+									BorderFactory.createMatteBorder(0, 0, 1, 0, darkBorder)
 									),
 						c.getBorder()));											
 				} else {
 					c.setBorder(BorderFactory.createCompoundBorder(
-						BorderFactory.createMatteBorder(0, 0, 0, 1, rightBorder?Color.BLACK:COLOR_LIGHTBORDER),
+						BorderFactory.createMatteBorder(0, 0, 0, 1, rightBorder?darkBorder:lightBorder ),
 						c.getBorder()));											
 				}
 			}
@@ -272,7 +275,7 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 			//Make non-enable table or non-editable cells gray
 			if (!myTable.isEnabled() || (myTable.isEditable() && !isSelected && !model.isCellEditable(row, modelColumn))) {				
 				c.setBackground(UIUtils.darker(c.getBackground(), .9));
-				c.setForeground(UIUtils.getDilutedColor(c.getForeground(), COLOR_LIGHTBORDER));
+				c.setForeground(UIUtils.getDilutedColor(c.getForeground(), c.getBackground()));
 			}
 	
 			//Create the hierarchy if enabled
@@ -302,7 +305,6 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 				return hierarchyPanel;
 			}
 	
-			
 			return c;
 		} catch (Throwable e) {
 			e.printStackTrace();
@@ -394,6 +396,9 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 			paintBorder(g);
 			
 		}
+		
+		
+		
 		int offset = 0;
 		@Override
 		public void doLayout() {

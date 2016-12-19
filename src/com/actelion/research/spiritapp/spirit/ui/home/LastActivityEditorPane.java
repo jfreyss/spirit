@@ -52,8 +52,8 @@ import com.actelion.research.spiritapp.spirit.ui.study.depictor.StudyDepictor;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.HSQLFileAdapter;
-import com.actelion.research.spiritcore.adapter.PropertyKey;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
@@ -203,13 +203,13 @@ public class LastActivityEditorPane extends ImageEditorPane {
 	}
 	
 	private void updateEditorPane() {
-		setText("<html>"
+		setText("<html><body style='font-family:Arial'>"
 				+ recentNews
 				+ "<div style='background:#FAFAFA; padding:5px; border:solid 1px #550000; width:100%; font-size:11px'>"
 				+ "<b>Welcome " + Spirit.getUsername()+", </b>"
 				+ recentChanges
 				+ "</div>"
-				+ "</html>");
+				+ "</body></html>");
 		setCaretPosition(0);
 		
 	}

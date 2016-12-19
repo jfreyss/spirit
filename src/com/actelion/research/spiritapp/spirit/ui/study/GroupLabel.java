@@ -38,7 +38,7 @@ public class GroupLabel extends JLabelNoRepaint {
 	public GroupLabel() {
 		setText(null);
 		setMinimumSize(new Dimension(50, 22));		
-		setOpaque(true);
+//		setOpaque(true);
 	}
 	
 	public GroupLabel(Group group) {

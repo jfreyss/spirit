@@ -23,7 +23,6 @@ package com.actelion.research.spiritcore.services;
 
 import java.util.Collection;
 
-import com.actelion.research.spiritcore.adapter.PropertyKey;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
@@ -31,6 +30,7 @@ import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.Privacy;
 import com.actelion.research.spiritcore.business.location.LocationType.LocationCategory;
 import com.actelion.research.spiritcore.business.order.Order;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.Study;

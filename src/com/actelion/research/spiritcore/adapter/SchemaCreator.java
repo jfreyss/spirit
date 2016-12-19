@@ -39,11 +39,11 @@ import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.DAOExchange;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
 import com.actelion.research.spiritcore.services.exchange.Importer;
 import com.actelion.research.spiritcore.services.migration.MigrationScript;
@@ -60,7 +60,7 @@ public class SchemaCreator {
 			+ "";
 	
 	public static void recreateTables(DBAdapter adapter) throws Exception {
-		LoggerFactory.getLogger(HSQLFileAdapter.class).warn("Creating tables");
+		LoggerFactory.getLogger(SchemaCreator.class).warn("Creating tables");
 		
 		try {
 			adapter.executeScripts(CREATE_BEFORE, false);
@@ -70,22 +70,28 @@ public class SchemaCreator {
 						
 			//Create one group
 			SpiritUser admin = SpiritUser.getFakeAdmin();
-			EmployeeGroup group = new EmployeeGroup("Group");
-			DAOEmployee.persistEmployeeGroups(Collections.singleton(group), admin);
+			EmployeeGroup group = DAOEmployee.getEmployeeGroup("Group");
+			if(group==null) {
+				group = new EmployeeGroup("Group");
+				DAOEmployee.persistEmployeeGroups(Collections.singleton(group), admin);
+			}
 
-			Employee employee = new Employee("admin");
-			employee.getEmployeeGroups().add(group);
-			employee.setRoles(Collections.singleton("admin"));
-			DAOEmployee.persistEmployees(Collections.singleton(employee), admin);			
+			Employee employee = DAOEmployee.getEmployee("admin");
+			if(employee==null) {
+				employee = new Employee("admin");
+				employee.getEmployeeGroups().add(group);
+				employee.setRoles(Collections.singleton("admin"));
+				DAOEmployee.persistEmployees(Collections.singleton(employee), admin);			
+			}
 			
 			//The version is now the latest: update the version
 			String version = MigrationScript.getExpectedDBVersion();
 			SpiritProperties.getInstance().setDBVersion(version);
 			SpiritProperties.getInstance().saveValues();
 			adapter.executeScripts(CREATE_AFTER, false);
-			LoggerFactory.getLogger(HSQLFileAdapter.class).debug("DB UPDATED");
+			LoggerFactory.getLogger(SchemaCreator.class).debug("DB UPDATED");
 		} catch(Exception e2) {
-			LoggerFactory.getLogger(HSQLFileAdapter.class).error("***Spirit.LocalFactory: Could not update DB", e2);
+			LoggerFactory.getLogger(SchemaCreator.class).error("***Spirit.LocalFactory: Could not update DB", e2);
 			throw e2;
 		}
 	}

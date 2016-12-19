@@ -122,4 +122,9 @@ public class ActionTreatment extends ActionBiosample {
 		assert strings.get(0).equals("Treatment");
 		return new ActionTreatment(strings.get(1), strings.get(2), strings.get(3), strings.get(4), strings.get(5), strings.get(6), strings.get(7)); 
 	}
+	
+	@Override
+	public String toString() {
+		return "[ActionTreatment:" + getDetails() + "]";
+	}
 }

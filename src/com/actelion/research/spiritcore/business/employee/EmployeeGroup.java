@@ -48,7 +48,9 @@ import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.util.CompareUtils;
 
 @Entity
-@Table(name="employee_group", indexes = {@Index(name="employeegroup_parent_index", columnList="group_parent"), @Index(name="employeegroup_name_index", columnList="group_name")})
+@Table(name="employee_group", schema="spirit", indexes = {
+		@Index(name="employeegroup_parent_index", columnList="group_parent"), 
+		@Index(name="employeegroup_name_index", columnList="group_name")})
 @SequenceGenerator(name="employee_group_sequence", sequenceName="employee_group_sequence", allocationSize=1)
 @BatchSize(size=64)
 public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
@@ -58,7 +60,7 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 	@Column(name="group_id", scale=9)
 	private int id = 0;	
 	
-	@Column(name="group_name")	
+	@Column(name="group_name", unique=true)	
 	private String name;
 
 	@ManyToOne(optional=true, fetch=FetchType.LAZY)
@@ -75,22 +77,28 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 	public EmployeeGroup(String name) {
 		this.name = name;
 	}
+	
 	@Override
 	public int getId() {
 		return id;
 	}
+	
 	public void setId(int id) {
 		this.id = id;
 	}
+	
 	public EmployeeGroup getParent() {
 		return parent;
 	}
+	
 	public void setParent(EmployeeGroup parent) {
 		this.parent = parent;
 	}
+	
 	public String getName() {
 		return name;
 	}
+	
 	public String getNameShort() {
 		final int newLength = 20;
 		if(name==null || name.length()<newLength) return name;
@@ -108,6 +116,7 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 		}
 		return sb.toString();
 	}
+	
 	public void setName(String name) {
 		this.name = name;
 	}

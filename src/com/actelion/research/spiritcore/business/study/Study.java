@@ -570,8 +570,6 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			samplingClones.put(o, oc);
 		}
 
-
-
 		study.setStudyActions(new TreeSet<StudyAction>());
 		for (StudyAction o : getStudyActions()) {
 			StudyAction oc = new StudyAction(o);
@@ -583,8 +581,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			oc.setNamedTreatment(treatmentClones.get(o.getNamedTreatment()));
 			oc.setNamedSampling1(samplingClones.get(o.getNamedSampling1()));
 			oc.setNamedSampling2(samplingClones.get(o.getNamedSampling2()));
-			study.getStudyActions().add(oc);
-			
+			study.getStudyActions().add(oc);			
 		}		
 	
 		return study;
@@ -1220,22 +1217,23 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	}
 	
 	public Set<Phase> getEmptyPhases(){
-		Set<Phase> res = new HashSet<>(getPhases());
+		return new HashSet<>();
+//		Set<Phase> res = new HashSet<>(getPhases());
 		
-		for (StudyAction a: getStudyActions()) {
-			if(!a.isEmpty()) {
-				res.remove(a.getPhase());
-			}
-		}
-		
-		for (Group group : getGroups()) {
-			res.remove(group.getFromPhase());
-		}
-		
-		for(Phase p: getPhases()) {
-			if(p.getLabel()!=null && p.getLabel().length()>0) res.remove(p);
-		}
-		return res;
+//		for (StudyAction a: getStudyActions()) {
+//			if(!a.isEmpty()) {
+//				res.remove(a.getPhase());
+//			}
+//		}
+//		
+//		for (Group group : getGroups()) {
+//			res.remove(group.getFromPhase());
+//		}
+//		
+//		for(Phase p: getPhases()) {
+//			if(p.getLabel()!=null && p.getLabel().length()>0) res.remove(p);
+//		}
+//		return res;
 	}
 	
 	public PhaseFormat getPhaseFormat() {

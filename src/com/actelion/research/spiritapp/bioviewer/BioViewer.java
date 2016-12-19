@@ -134,7 +134,7 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 		});
 
 		JButton b1 = new JButton(new ClearAction());
-		JButton b2 = new JButton(new Action_Scanner());
+		JButton b2 = new JButton(new BiosampleActions.Action_ScanAndView());
 		b1.setText("");
 		b2.setText("");
 		
@@ -307,24 +307,24 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 		biosampleDetailPane.setBiosamples(highlighted.size()==1? highlighted: null, false);
 	}
 
-	private void newScan(Location rack) {
-		
-
-		boolean clearList = true;
-		if(biosampleTab.getBiosamples().size()>0) {
-			clearList = false;
-			int res = JOptionPane.showConfirmDialog(this, "Do you want to clear your previous list?", "Scan Plate", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-			if(res==JOptionPane.YES_OPTION) clearList = true;
-		}
-		
-		if(clearList) {			
-			biosampleTab.setRack(rack);
-			selectionChanged();
-			Toolkit.getDefaultToolkit().beep();
-		} else {
-			newScan(rack.getContainers());
-		}		
-	}
+//	private void newScan(Location rack) {
+//		
+//
+//		boolean clearList = true;
+//		if(biosampleTab.getBiosamples().size()>0) {
+//			clearList = false;
+//			int res = JOptionPane.showConfirmDialog(this, "Do you want to clear your previous list?", "Scan Plate", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+//			if(res==JOptionPane.YES_OPTION) clearList = true;
+//		}
+//		
+//		if(clearList) {			
+//			biosampleTab.setRack(rack);
+//			selectionChanged();
+//			Toolkit.getDefaultToolkit().beep();
+//		} else {
+//			newScan(rack.getContainers());
+//		}		
+//	}
 	
 	private void newScan(String sampleId) {
 		if(sampleId==null) return;
@@ -567,30 +567,29 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 		}
 	}
 
-	public class Action_Scanner extends AbstractAction {
-		public Action_Scanner() {
-			super("Scan Rack");
-			putValue(AbstractAction.SMALL_ICON, JIconButton.IconType.SCANNER.getIcon());
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			try {
-				
-				SpiritScanner scanner = new SpiritScanner();
-				Location rack = scanner.scan(null, true, null);
-				if(rack==null) return;
-				newScan(rack);
-			} catch (Exception ex) {
-				JExceptionDialog.showError(ex);
-			}
-
-		}
-	}
+//	public class Action_Scanner extends AbstractAction {
+//		public Action_Scanner() {
+//			super("Scan Rack");
+//			putValue(AbstractAction.SMALL_ICON, JIconButton.IconType.SCANNER.getIcon());
+//		}
+//
+//		@Override
+//		public void actionPerformed(ActionEvent e) {
+//			try {
+//				
+//				SpiritScanner scanner = new SpiritScanner();
+//				Location rack = scanner.scan(null, true, null);
+//				if(rack==null) return;
+//				newScan(rack);
+//			} catch (Exception ex) {
+//				JExceptionDialog.showError(ex);
+//			}
+//
+//		}
+//	}
 
 	public static void main(String[] args) {
 
-		Spirit.initUI();
 		SplashScreen2.show(splashConfig);
 		
 		new SwingWorkerExtended() {
@@ -601,6 +600,7 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 			}
 			@Override
 			protected void done() {
+				Spirit.initUI();
 				new BioViewer();
 			}
 		};
@@ -629,7 +629,21 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 	}
 
 	@Override
-	public void setLocation(Location location, int pos) {
+	public void setLocation(Location rack, int pos) {
+		boolean clearList = true;
+		if(biosampleTab.getBiosamples().size()>0) {
+			clearList = false;
+			int res = JOptionPane.showConfirmDialog(this, "Do you want to clear your previous list?", "Scan Plate", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+			if(res==JOptionPane.YES_OPTION) clearList = true;
+		}
+		
+		if(clearList) {			
+			biosampleTab.setRack(rack);
+			selectionChanged();
+			Toolkit.getDefaultToolkit().beep();
+		} else {
+			newScan(rack.getContainers());
+		}		
 	}
 
 	@Override

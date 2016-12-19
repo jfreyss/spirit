@@ -28,8 +28,6 @@ import java.net.URL;
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 
-import org.slf4j.LoggerFactory;
-
 import com.actelion.research.spiritapp.animalcare.AnimalCare;
 import com.actelion.research.spiritapp.bioviewer.BioViewer;
 import com.actelion.research.spiritapp.slidecare.SlideCare;

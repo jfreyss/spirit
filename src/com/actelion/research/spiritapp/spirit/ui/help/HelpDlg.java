@@ -512,8 +512,4 @@ public class HelpDlg extends JEscapeDialog {
 	    return temp;
 	}
 
-	public static void main(String[] args) throws Exception {
-		Spirit.initUI();
-		new HelpDlg();
-	}
 }

@@ -25,6 +25,7 @@ import java.io.File;
 
 import org.hsqldb.Server;
 
+import com.actelion.research.spiritcore.business.property.PropertyDescriptor;
 import com.actelion.research.spiritcore.services.migration.MigrationScript;
 
 /**
@@ -47,20 +48,17 @@ import com.actelion.research.spiritcore.services.migration.MigrationScript;
 	
 	@Override
 	public void preInit() throws Exception {
-		try {
-			if(server!=null && !(this instanceof HSQLServerAdapter)) {
-				server.shutdown(); 
-				server = null;
-			}
-			
-			String dbVersion = MigrationScript.getDBVersion();			
-			if(dbVersion==null) {
-				SchemaCreator.recreateTables(this);
-			}
-			
-		} catch(Exception e) {
-			throw e;
+		super.preInit();
+		
+		if(server!=null && !(this instanceof HSQLServerAdapter)) {
+			server.shutdown(); 
+			server = null;
 		}
+		
+		String dbVersion = MigrationScript.getDBVersion();			
+		if(dbVersion==null) {
+			SchemaCreator.recreateTables(this);
+		}		
 	}
 		
 	@Override

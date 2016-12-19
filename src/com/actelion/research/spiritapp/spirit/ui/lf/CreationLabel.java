@@ -40,7 +40,7 @@ public class CreationLabel extends JComponentNoRepaint {
 
 	
 	private final FastFont FONT_DEPT = FastFont.REGULAR_CONDENSED.deriveSize(9).deriveFont(Font.ITALIC);
-	private final FastFont FONT_USER = FastFont.REGULAR_CONDENSED;
+	private final FastFont FONT_USER = FastFont.REGULAR;
 	private final FastFont FONT_DATE = FastFont.REGULAR_CONDENSED;
 	
 	private String dept = "";
@@ -89,7 +89,7 @@ public class CreationLabel extends JComponentNoRepaint {
 
 	@Override
 	public Dimension getPreferredSize() {
-		return date==null? new Dimension(60,22): new Dimension(90,22);
+		return date==null? new Dimension(65,22): new Dimension(100,22);
 	}
 	
 	

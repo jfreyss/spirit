@@ -73,7 +73,7 @@ class BatchAssignRackPanel extends JPanel {
 	
 	private SpiritScanner model = new SpiritScanner();
 	private BiosampleOrRackTab rackTab = new BiosampleOrRackTab();
-	private JLabel sharedInfoLabel = new JCustomLabel("", FastFont.REGULAR_CONDENSED);
+	private JLabel sharedInfoLabel = new JCustomLabel("", FastFont.REGULAR);
 	private JLabel rackIdLabel = new JLabel();
 	private Location rack;
 	

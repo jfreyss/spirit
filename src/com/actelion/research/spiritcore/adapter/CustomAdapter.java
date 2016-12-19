@@ -21,6 +21,7 @@
 
 package com.actelion.research.spiritcore.adapter;
 
+import com.actelion.research.spiritcore.business.property.PropertyDescriptor;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.Pair;
 

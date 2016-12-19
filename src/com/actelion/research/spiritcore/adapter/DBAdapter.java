@@ -47,13 +47,18 @@ import org.slf4j.LoggerFactory;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.Location;
+import com.actelion.research.spiritcore.business.property.PropertyDescriptor;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.StringEncrypter;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.spiritcore.util.SQLConverter;
 import com.actelion.research.spiritcore.util.SQLConverter.SQLVendor;
+import com.actelion.research.util.FormatterUtils;
+import com.actelion.research.util.FormatterUtils.LocaleFormat;
 
 /**
  * The adapter is responsible for the specific requirements concerning the DB: connection, user authentification, user tables, ...
@@ -103,10 +108,10 @@ public abstract class DBAdapter {
 					
 					//Find the adapter and the config
 					String className = System.getProperty(ADAPTER_PROPERTY.getPropertyName());					
-					if(className==null) {
+					if(className==null || className.length()==0) {
 						isConfigurable = true;
 						className = properties.get(ADAPTER_PROPERTY.getPropertyName());
-						if(className==null) {
+						if(className==null || className.length()==0) {
 							className = HSQLFileAdapter.class.getName();
 						}
 					} else {
@@ -117,9 +122,7 @@ public abstract class DBAdapter {
 					try {
 						instance = getAdapter(className);
 					} catch (Exception ex) {
-						if(!isConfigurable) throw new RuntimeException("Could not load adapter "+className, ex);
-						LoggerFactory.getLogger(DBAdapter.class).error("Could not load adapter "+className, ex);
-						instance = new HSQLFileAdapter();
+						throw new RuntimeException("Could not load adapter "+className, ex);
 					}
 					LoggerFactory.getLogger(DBAdapter.class).info("Use adapter: "+instance.getClass().getName());
 				}
@@ -319,7 +322,13 @@ public abstract class DBAdapter {
 	 * @throws Exception
 	 */
 	public void postInit() throws Exception {
-		
+		LocaleFormat localeFormat = LocaleFormat.SWISS;
+		String format = SpiritProperties.getInstance().getValue(PropertyKey.DATE_MODE);
+		if(format.length()>0) {
+			localeFormat = LocaleFormat.get(format);
+			if(localeFormat==null) throw new Exception("Invalid LocaleFormat in spirit_property: "+format);
+			FormatterUtils.setLocaleFormat(localeFormat);
+		}
 	}
 
 	
@@ -348,14 +357,14 @@ public abstract class DBAdapter {
 			for (String script : scripts.split(";")) {
 				script = script.replaceAll("[\r\n]", "").trim();
 				if(script.trim().length()==0) continue;
-				LoggerFactory.getLogger(DBAdapter.class).debug("execute script: "+script);
+				LoggerFactory.getLogger(DBAdapter.class).debug("Execute script on "+getDBConnectionURL()+": "+script);
 				stmt.addBatch(script);					
 			}
 			stmt.executeBatch();
 			stmt.close();
 			conn.commit();
 		} catch(Exception e) {
-			e.printStackTrace();
+			LoggerFactory.getLogger(DBAdapter.class).warn("Could not execute script: "+e);
 			try {conn.rollback();} catch(Exception e2) {}
 			if(failOnError) throw e;
 		} finally {

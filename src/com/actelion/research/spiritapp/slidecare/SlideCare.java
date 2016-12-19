@@ -320,6 +320,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 			
 			@Override
 			protected void done() {
+				Spirit.initUI();
 				new SlideCare();
 			}
 		};

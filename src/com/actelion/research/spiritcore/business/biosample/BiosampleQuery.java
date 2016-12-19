@@ -362,7 +362,7 @@ public class BiosampleQuery implements Serializable {
 	public boolean isEmpty() {
 		return locationRoot==null && isNull(elb) && isNull(studyIds)
 		 && isNull(group) && phase==null && isNull(sampleId) && isNull(topSampleIds) && isNull(containerIds) && isNull(sampleIdOrContainerIds) 
-		 && isNull(sampleNames)
+		 && isNull(sampleNames)	&& isNull(sampleIds)
 		 && (biotypes==null || biotypes.length==0) 
 		 && isNull(locations)
 		 && isNull(updUser) && isNull(updDate) && isNull(creUser) && isNull(updDays) && isNull(creDays) && isNull(department)

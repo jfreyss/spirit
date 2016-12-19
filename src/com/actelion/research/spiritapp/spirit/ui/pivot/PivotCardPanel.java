@@ -82,6 +82,7 @@ import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorExporter;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CSVUtils;
 import com.actelion.research.util.UsageLog;
@@ -548,15 +549,16 @@ public class PivotCardPanel extends JPanel {
 
 				@Override
 				protected void done() {
+					results = JPAUtil.reattach(results);
 					if (currentPivotTemplate == null) {
 						SpiritContextListener.setStatus("No Results");
 						return;
 					}
 					pivotTable.setPivotDataTable(pivotDataTable);
-					SpiritContextListener
-							.setStatus(results.size() + " Results - " + pivotDataTable.getPivotRows().size() + " rows, " + pivotDataTable.getPivotColumns().size() + " columns");
-					if (shouldOpenEditTemplateDlg)
+					SpiritContextListener.setStatus(results.size() + " Results - " + pivotDataTable.getPivotRows().size() + " rows, " + pivotDataTable.getPivotColumns().size() + " columns");
+					if (shouldOpenEditTemplateDlg) {
 						openEditTemplateDlg();
+					}
 				}
 			};
 

@@ -34,21 +34,28 @@ import java.util.Map;
  *
  */
 public class FastFont extends Font {
-	
-	public static final Map<String, FastFont> fonts = new HashMap<String, FastFont>();
-	public static final FastFont BIGGEST = FastFont.getFont(Font.SANS_SERIF, Font.BOLD, 16);
-	public static final FastFont BIGGER = FastFont.getFont(Font.SANS_SERIF, Font.BOLD, 14);
-	public static final FastFont REGULAR = FastFont.getFont(Font.SANS_SERIF, Font.PLAIN, 12);
-	public static final FastFont MEDIUM = FastFont.getFont(Font.SANS_SERIF, Font.PLAIN, 11);
-	public static final FastFont SMALL = FastFont.getFont(Font.SANS_SERIF, Font.PLAIN, 10);
-	public static final FastFont SMALLER = FastFont.getFont(Font.SANS_SERIF, Font.PLAIN, 9);
-	public static final FastFont BOLD = FastFont.getFont(Font.SANS_SERIF, Font.BOLD, 12);
+	public static String DEFAULT_FONT = "Segoe UI, Tahoma";
+	public static final Map<String, FastFont> fonts = new HashMap<>();
+	public static final FastFont BIGGEST = FastFont.getFont(DEFAULT_FONT, Font.BOLD, 16);
+	public static final FastFont BIGGER = FastFont.getFont(DEFAULT_FONT, Font.BOLD, 14);
+	public static final FastFont REGULAR = FastFont.getFont(DEFAULT_FONT, Font.PLAIN, 12);
+	public static final FastFont BOLD = FastFont.getFont(DEFAULT_FONT, Font.BOLD, 12);
 	public static final FastFont MONO = FastFont.getFont(Font.DIALOG_INPUT, Font.PLAIN, 12);
-	public static final FastFont REGULAR_CONDENSED = FastFont.getFont("Arial Narrow", Font.PLAIN, 12);
-	public static final FastFont MEDIUM_CONDENSED = FastFont.getFont("Arial Narrow", Font.PLAIN, 11);
-	public static final FastFont BOLD_CONDENSED = FastFont.getFont("Arial Narrow Bold", Font.PLAIN, 12);
-	public static final FastFont SMALL_CONDENSED = FastFont.getFont("Arial Narrow", Font.PLAIN, 10);
-	public static final FastFont SMALLER_CONDENSED = FastFont.getFont("Arial Narrow", Font.PLAIN, 9);
+	public static final FastFont MEDIUM = FastFont.getFont(DEFAULT_FONT, Font.PLAIN, 11);
+	public static final FastFont SMALL = FastFont.getFont(DEFAULT_FONT, Font.PLAIN, 10);
+	public static final FastFont SMALLER = FastFont.getFont(DEFAULT_FONT, Font.PLAIN, 9);
+
+	public static final FastFont REGULAR_CONDENSED = REGULAR;
+	public static final FastFont MEDIUM_CONDENSED = MEDIUM;
+	public static final FastFont BOLD_CONDENSED = BOLD;
+	public static final FastFont SMALL_CONDENSED = SMALL;
+	public static final FastFont SMALLER_CONDENSED = SMALLER;
+
+//	public static final FastFont REGULAR_CONDENSED = FastFont.getFont("Arial Narrow", Font.PLAIN, 12);
+//	public static final FastFont MEDIUM_CONDENSED = FastFont.getFont("Arial Narrow", Font.PLAIN, 11);
+//	public static final FastFont BOLD_CONDENSED = FastFont.getFont("Arial Narrow Bold", Font.PLAIN, 12);
+//	public static final FastFont SMALL_CONDENSED = FastFont.getFont("Arial Narrow", Font.PLAIN, 10);
+//	public static final FastFont SMALLER_CONDENSED = FastFont.getFont("Arial Narrow", Font.PLAIN, 9);
 	
 	private FastFont(String name, int style, int size) {
 		super(name, style, size);

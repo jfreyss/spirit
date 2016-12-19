@@ -133,10 +133,4 @@ public class ScanUpdateDlg extends JSpiritEscapeDialog {
 		setVisible(true);
 	}
 	
-	public static void main(String[] args) throws Exception {
-		SpiritUser user = DAOSpiritUser.loadUser("freyssj");
-		Spirit.initUI();
-		new ScanUpdateDlg(DAOLocation.getCompatibleLocation("Test/compare", user));
-	}
-
 }

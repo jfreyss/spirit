@@ -28,7 +28,7 @@ public class MixedReport extends AbstractReport {
 	private List<AbstractReport> reports;
 	
 	public MixedReport(List<AbstractReport> reports) {
-		super(null, "Mixed Report", "Mix of several reports");
+		super(null, "Reports", "Mix of several reports");
 		this.reports = reports;
 	}
 	

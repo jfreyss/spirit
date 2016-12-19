@@ -26,6 +26,7 @@ import java.io.File;
 import org.hsqldb.Server;
 import org.slf4j.LoggerFactory;
 
+import com.actelion.research.spiritcore.business.property.PropertyDescriptor;
 import com.actelion.research.spiritcore.util.Pair;
 
 /**
@@ -60,6 +61,8 @@ public class HSQLServerAdapter extends HSQLFileAdapter {
 	
 	@Override
 	public void preInit() throws Exception {		
+		super.preInit();
+		
 		if(!"client".equals(getDBProperty(DBMODE_PROPERTY))) {
 	        
 	        if(server!=null) {

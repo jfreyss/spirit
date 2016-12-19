@@ -122,7 +122,7 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		super("BioStockCare");
 		
 		//Check DB
-		SpiritDB.check();			
+		SpiritDB.checkAndLogin();			
 		
 
 		SpiritChangeListener.register(this);
@@ -534,7 +534,6 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	}
 	
 	public static void main(String[] args) {
-		Spirit.initUI();
 
 		// Splash
 		SplashScreen2.show(splashConfig);
@@ -546,6 +545,7 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 			}
 			@Override
 			protected void done() {
+				Spirit.initUI();
 				new StockCare();				
 			}			
 		};

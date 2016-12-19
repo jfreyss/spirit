@@ -32,6 +32,8 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class PhaseColumn extends Column<Result, Phase> {
+	private PhaseLabel phaseLabel = new PhaseLabel();
+	
 	public PhaseColumn() {
 		super("Phase", Phase.class, 30);
 	}
@@ -43,14 +45,12 @@ public class PhaseColumn extends Column<Result, Phase> {
 	
 	@Override
 	public Phase getValue(Result row) {
-		return row.getPhase();
+		return row.getInheritedPhase();
 	}
 	@Override
 	public void setValue(Result row, Phase value) {
 		row.setPhase((Phase) value);
 	}
-	
-	private PhaseLabel phaseLabel = new PhaseLabel();
 	
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {

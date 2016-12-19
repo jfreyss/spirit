@@ -63,7 +63,7 @@ import com.actelion.research.util.ui.UIUtils;
  */
 public class SpiritDB {
 	
-	public static void check() {
+	public static void checkAndLogin() {
 		//Check DB Version
 		LoggerFactory.getLogger(Spirit.class).debug("check dbVersion");
 		try {

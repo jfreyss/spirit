@@ -56,6 +56,18 @@ public class CSVUtils {
 			}
 		}
 		return sb.toString();
+	}
+	
+	public static List<String> toFlatList(String[][] table) {
+		List<String> res = new ArrayList<>();
+		for (int i = 0; i < table.length; i++) {
+			for (int j = 0; j < table[i].length; j++) {
+				String s = table[i][j];
+				if(s==null) s="";
+				res.add(s);
+			}
+		}
+		return res;
 	}	
 	
 	public static void exportToCsv(String[][] table, File file) throws Exception {	

@@ -22,8 +22,6 @@
 package com.actelion.research.spiritapp.spirit.services.print;
 
 import java.awt.print.Printable;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.print.Doc;
 import javax.print.DocFlavor;
@@ -33,11 +31,6 @@ import javax.print.SimpleDoc;
 import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.Media;
-
-import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritapp.spirit.ui.print.PrintingDlg;
-import com.actelion.research.spiritcore.business.biosample.Container;
-import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 
 public class DirectPrinter  {
 
@@ -62,42 +55,4 @@ public class DirectPrinter  {
 	    
 		return p.getName();
 	}	
-	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static void main(String[] args) throws Exception{
-		PrintService[] services = SpiritPrinter.getPrintServices("AW-S", null);
-		PrintService service = null;
-		for (PrintService printService : services) {
-			System.out.println("Found printer '"+printService.getName()+"'");
-			service = printService;
-			break;
-		}
-		if(service==null) throw new Exception("Could not find any Brother Printer ");
-		
-		for(Class cat: service.getSupportedAttributeCategories()) {
-			try {
-				System.out.println("CAT: "+cat  + " = " + service.getDefaultAttributeValue(cat));
-				
-				Object values = service.getSupportedAttributeValues(cat, null, null);
-				
-				if(values instanceof Object[]) {
-					for (Object o2 : (Object[]) values) {
-						System.out.println("->"+o2);
-					}
-				} else {
-					System.out.println("->"+values);				
-				}
-			} catch(Exception e) {
-				
-			}
-		}
-		
-		List<Container> containers = new ArrayList<>();
-		containers.add(DAOBiosample.getContainer("SL011312-1-1")); //Micro
-		
-		
-		Spirit.initUI();
-		new PrintingDlg(Container.getBiosamples(containers));		
-	}
-	
 }

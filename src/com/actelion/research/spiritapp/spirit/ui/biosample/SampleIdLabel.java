@@ -110,7 +110,7 @@ public class SampleIdLabel extends JComponentNoRepaint {
 				textWidth = sampleIdWidth;				
 			}			
 			
-			preferredWidth =  iconW + 4 + textWidth + (displayGroup && biosample.getInheritedGroup()!=null?32:0);
+			preferredWidth =  iconW + 4 + textWidth + (displayGroup && biosample.getInheritedGroup()!=null?35:0);
 			
 			
 			if(preferredWidth>200) preferredWidth = 200;
@@ -140,7 +140,7 @@ public class SampleIdLabel extends JComponentNoRepaint {
 
 	@Override
 	public Dimension getPreferredSize() {
-		return preferredDim; //new Dimension(preferredWidth, 20 + sizeIncrement*2 + (extraDisplay!=null && !extraSameLine /*&& extraDisplay.getValue(biosample)!=null*/? 15 + sizeIncrement: 0) );
+		return preferredDim; 
 	}
 	
 	@Override
@@ -241,9 +241,9 @@ public class SampleIdLabel extends JComponentNoRepaint {
 		if(paintGroup && biosample.getInheritedGroup()!=null && !SpiritRights.isBlindAll(biosample.getInheritedGroup().getStudy(), Spirit.getUser())) {				
 
 			//Group Background				
-			Font font1 = FastFont.REGULAR_CONDENSED.increaseSize(sizeIncrement);
-			Font font2 = FastFont.SMALL_CONDENSED.increaseSize(sizeIncrement);
-			Font font3 = FastFont.REGULAR_CONDENSED.increaseSize(sizeIncrement);
+			Font font1 = FastFont.REGULAR.increaseSize(sizeIncrement);
+			Font font2 = FastFont.SMALL.increaseSize(sizeIncrement);
+			Font font3 = FastFont.REGULAR.increaseSize(sizeIncrement);
 			
 			String s1 = biosample.getInheritedGroup().getShortName();
 			String s2 = biosample.getInheritedGroup().getNSubgroups()>1? "'" + (biosample.getInheritedSubGroup()+1): "";
@@ -255,19 +255,22 @@ public class SampleIdLabel extends JComponentNoRepaint {
 			int w1 = g.getFontMetrics(font1).stringWidth(s1);				
 			int w2 = g.getFontMetrics(font2).stringWidth(s2);
 			int w3 = g.getFontMetrics(font3).stringWidth(s3);
-			int x1 = getWidth() - Math.max(18, insets.right - w1 - w2 - w3 - 2);
+			int x1 = getWidth() - Math.max(35, insets.right + w1 + w2 + w3 + 2);
 
 			g.setColor(UIUtils.getDilutedColor(biosample.getInheritedGroup()==null?Color.WHITE: biosample.getInheritedGroup().getColor(), getBackground()));
 			g.fillRect(x1-2, 0, y + w1+w2+w3+3, 13+sizeIncrement);
 					
+			//Group
 			g.setFont(font1);
 			g.setColor(Color.BLACK);					
 			g.drawString(s1, x1, y+11+sizeIncrement);
 			
+			//SubGroup
 			g.setFont(font2);
 			g.setColor(Color.DARK_GRAY);
 			g.drawString(s2, x1+w1, y+8+sizeIncrement);
 			
+			//Phase
 			g.setFont(font3);
 			g.setColor(Color.BLUE);
 			g.drawString(s3, x1+w1+w2, y+11+sizeIncrement);

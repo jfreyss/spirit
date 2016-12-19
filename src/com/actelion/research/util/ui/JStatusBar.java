@@ -22,6 +22,7 @@
 package com.actelion.research.util.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -30,61 +31,59 @@ import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
 
-@SuppressWarnings("serial" )
+/**
+ * Status Bar showing the copytight, the info, the memory
+ * @author Joel Freyss
+ */
 public class JStatusBar extends JPanel {
 	
-	//private JLabel text = new JLabel("                                                          ");
-	private JLabel copyright = new JLabel(" ");
-	private JLabel infos = new JLabel(" ");
-	private JProgressBar memory = new JProgressBar();
-	private JProgressBar progress = new JProgressBar();
+	private JLabel copyrightLabel = new JLabel(" ");
+	private JLabel infoLabel = new JLabel(" ");
+	private JProgressBar memoryBar = new JProgressBar();
+	private JLabel userLabel = new JLabel();
 	
 	private class MemoryThread extends Thread {
 		@Override
 		public void run() {
 			while(true) {
-				try {Thread.sleep(2000);} catch (Exception e) {}
-				int max = (int)(Runtime.getRuntime().maxMemory() / 1000);
-				int free = (int)(Runtime.getRuntime().freeMemory() / 1000);
-				int total = (int)(Runtime.getRuntime().totalMemory() / 1000);
-				int used = total-free;
-				memory.setMaximum(max);
-				memory.setValue(used);
-				memory.setStringPainted(true);
-				memory.setString((used/1000) + "M of "+(max/1000)+"M");
-				
+				try {Thread.sleep(2000);} catch (Exception e) {return;}
+				final int max = (int)(Runtime.getRuntime().maxMemory() / 1000);
+				final int free = (int)(Runtime.getRuntime().freeMemory() / 1000);
+				final int total = (int)(Runtime.getRuntime().totalMemory() / 1000);
+				final int used = total-free;
+				SwingUtilities.invokeLater(new Runnable() {					
+					@Override
+					public void run() {
+						memoryBar.setMaximum(max);
+						memoryBar.setValue(used);
+						memoryBar.setStringPainted(true);
+						memoryBar.setString((used/1000) + "M of "+(max/1000)+"M");		
+						memoryBar.setToolTipText("Memory usage: "+(used/1000) + "Mo out of "+(max/1000)+"Mo available");
+					}
+				});
 			}
 		}
 	}
 	
 	public JStatusBar() {
-		super(new BorderLayout(5,5));
-		copyright.setBorder(BorderFactory.createLoweredBevelBorder());
-		infos.setBorder(BorderFactory.createLoweredBevelBorder());
-		copyright.setPreferredSize(new Dimension(400,10));
-		progress.setPreferredSize(new Dimension(300,22));
-		progress.setFont(progress.getFont().deriveFont(10f));
-		progress.setBorder(BorderFactory.createLoweredBevelBorder());
-		progress.setStringPainted(true);
-		progress.setString("");
-
-		//JPanel panel2 = new JPanel(new BorderLayout(5,5));
-		//panel2.add(BorderLayout.CENTER, text);
-		//panel2.add(BorderLayout.EAST, progress);
-
-		JPanel left = new JPanel(new BorderLayout());
-		left.add(BorderLayout.WEST, copyright);
-		left.add(BorderLayout.CENTER, infos);	
-		left.add(BorderLayout.EAST, memory);	
+		super(new BorderLayout());
+		Color lineColor = UIUtils.darker(getBackground(), .7);
+		copyrightLabel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, lineColor), BorderFactory.createEmptyBorder(0, 4, 0, 4)));
+		infoLabel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, lineColor), BorderFactory.createEmptyBorder(0, 4, 0, 4)));
+		memoryBar.setBorder(null);
+		userLabel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, lineColor), BorderFactory.createEmptyBorder(0, 4, 0, 4)));
 		
-		add(BorderLayout.CENTER, left);
-		add(BorderLayout.EAST, progress);
+		userLabel.setPreferredSize(new Dimension(320,22));
+		userLabel.setFont(FastFont.SMALL);
+
+		add(UIUtils.createBox(infoLabel, null, null, copyrightLabel, UIUtils.createHorizontalBox(memoryBar, userLabel)));
 		MemoryThread memoryThread = new MemoryThread();
 		memoryThread.setDaemon(true);
-		memoryThread.setPriority(Thread.MAX_PRIORITY);
+		memoryThread.setPriority(Thread.MIN_PRIORITY);
 		memoryThread.start();
-		memory.addMouseListener(new MouseAdapter() {
+		memoryBar.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				Runtime.getRuntime().gc();
@@ -94,30 +93,15 @@ public class JStatusBar extends JPanel {
 	}
 		
 	public void setCopyright(String t) {		
-		copyright.setText(t);
+		copyrightLabel.setText(t);
 	}
 	
 	public void setInfos(String t) {
-		infos.setText(t);
+		infoLabel.setText(t);
 	}
 	
-	public void setProgress(String t) {
-		progress.setString(t);
-	}
-	
-	public void startWorkInProgress(String t) {
-		progress.setString(t);
-		progress.setIndeterminate(true);
-	}
-
-	public void stopWorkInProgress(String t) {
-		progress.setString(t);
-		progress.setIndeterminate(false);
-	}
-
 	public void setUser(String t) {
-		progress.setString(t);
-		progress.setStringPainted(true);
+		userLabel.setText(t);
 	}
 
 }

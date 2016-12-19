@@ -127,14 +127,14 @@ public class BiosampleTab extends JPanel implements ISpiritTab {
 		//SearchPane
 		searchPane = new BiosampleSearchPane(this, forcedBiotypes);
 		
-		JPanel westPanel = new JPanel(new BorderLayout());
-		westPanel.add(BorderLayout.CENTER, pivotCardPanel);
+		JPanel eastPanel = new JPanel(new BorderLayout());
+		eastPanel.add(BorderLayout.CENTER, pivotCardPanel);
 		
 		JPanel buttonsPanel = createButtonsPanel();
-		if(buttonsPanel!=null) westPanel.add(BorderLayout.SOUTH, buttonsPanel);
+		if(buttonsPanel!=null) eastPanel.add(BorderLayout.SOUTH, buttonsPanel);
 
 		westPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, searchPane, biosampleDetailPanel);
-		contentPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, westPane, westPanel);
+		contentPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, westPane, eastPanel);
 		
 		contentPane.setDividerLocation(300);
 		contentPane.setOneTouchExpandable(true);

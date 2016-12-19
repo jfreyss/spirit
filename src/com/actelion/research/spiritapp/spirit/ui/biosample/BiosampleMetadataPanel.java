@@ -152,7 +152,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 									Privacy privacy = b.getLocation().getInheritedPrivacy();
 									if(SpiritRights.canRead(b.getLocation(), Spirit.getUser())) {
 										txt.append("<a style='font-size:8px' href='loc:" + b.getLocation().getId() + ":" + b.getPos() + "'>");
-										txt.append("<b>" + b.getLocationString(LocationFormat.FULL_POS, null).replace("/", "</b>/<b>")+"</b>");		
+										txt.append("<b>" + b.getLocationString(LocationFormat.FULL_POS, Spirit.getUser()).replace("/", "</b>/<b>")+"</b>");		
 										txt.append("</a>");
 									} else if(privacy==Privacy.PROTECTED) {
 										txt.append("<span color='#CC8800'>" + privacy.getName() + (b.getLocation().getEmployeeGroup()!=null? " (" + b.getLocation().getEmployeeGroup().getName() + ")": "") + "</span>") ;

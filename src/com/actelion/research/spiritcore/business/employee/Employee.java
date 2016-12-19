@@ -247,8 +247,7 @@ public class Employee implements Comparable<Employee>, IEntity {
 		}
 		return res;
 	}
-	
-	
+		
 	public Set<String> getRoles() {
 		return new TreeSet<String>(Arrays.asList(MiscUtils.split(this.roles, ",")));
 	}
@@ -260,5 +259,5 @@ public class Employee implements Comparable<Employee>, IEntity {
 	public boolean isRole(String role) {
 		return Arrays.asList(getRoles()).contains(role);
 	}
-	
+
 }

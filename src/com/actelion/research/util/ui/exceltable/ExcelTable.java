@@ -99,8 +99,7 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 	 * @param model
 	 */
 	public ExcelTable(final ExcelTableModel<ROW> model) {
-		super();
-		setModel(model);
+		super(model);
 
 		putClientProperty("JTable.autoStartsEdit", Boolean.TRUE);
 		putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
@@ -843,7 +842,6 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 			}					
 		}
 		undoManager.setTransaction(false);
-//		getModel().fireTableDataChanged(); //Removed 12.10.16 (called by setvalueat)
 		select(rows, cols);
 	}
 	

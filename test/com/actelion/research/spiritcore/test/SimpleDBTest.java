@@ -28,7 +28,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.PropertyKey;
 import com.actelion.research.spiritcore.business.LogEntry;
 import com.actelion.research.spiritcore.business.LogEntry.Action;
 import com.actelion.research.spiritcore.business.employee.Employee;
@@ -36,6 +35,7 @@ import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationQuery;
 import com.actelion.research.spiritcore.business.location.LocationType;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.SpiritUser;

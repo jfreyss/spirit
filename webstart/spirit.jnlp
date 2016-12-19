@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <jnlp spec="1.0+" codebase="https://jfreyss.github.io/spirit/webstart/spirit-bin">
 	<information>
-		<title>Spirit Biobank v2.0</title>		
+		<title>Spirit</title>		
 		<vendor>Actelion</vendor>
 		<homepage href="http://www.actelion.com"/>
 		<description>Spirit - Joel Freyss Actelion Pharmaceuticals Ltd</description>
@@ -19,7 +19,7 @@
 		<all-permissions/>
 	</security>
 	<resources>
-		<j2se version="1.7+" href="http://java.sun.com/products/autodl/j2se"  java-vm-args="-Xmx1024M" />
+		<j2se version="1.8+" href="http://java.sun.com/products/autodl/j2se"  java-vm-args="-Xmx1024M" />
 		
 		<jar href="antlr-2.7.7.jar" download="lazily"/>
 		<jar href="barcode4j-light.jar" download="lazily"/>
@@ -53,11 +53,11 @@
 		
 		<!-- Custom Adapter (overwrite local properties if needed, to be configured on a secure server) -->
 		<!--		
-			<property name="jnlp.adapter" value="com.actelion.research.spirit.adapter.CustomAdapter"/>	
+			<property name="jnlp.adapter" value="com.actelion.research.spiritcore.adapter.CustomAdapter"/>	
 			<property name="jnlp.custom.hdialect" value="org.hibernate.dialect.MySQLDialect"/>
 			<property name="jnlp.custom.driver" value="com.mysql.jdbc.Driver"/>
-			<property name="jnlp.custom.dburl" value="jdbc:mysql://localhost:3306/mysql"/>
-			<property name="jnlp.custom.password" value="encrypted password"/>
+			<property name="jnlp.custom.dburl" value="jdbc:mysql://localhost:3306/spirit"/>
+			<property name="jnlp.custom.password" value="###encrypted password###"/>
 		-->
 	
 	

@@ -64,10 +64,11 @@ public class SpecimenWeighingInVivoReport extends AbstractReport {
 	public SpecimenWeighingInVivoReport() {
 		super(ReportCategory.TOP, 
 				"Bodyweights (All phases in one table)", 
-				"<ul><li>First sheet for the bodyweight<li>Second sheet for the absolute increase and third for the relative increase (since d0)</ul>" + MiscUtils.convert2Html(
+					MiscUtils.convert2Html(
 						"TopId\tNo\tPhase1\tPhase2\tPhase3\n"
-						+ "TopId1\t\t102\t105\n"
-						+ "TopId2\t\t110\t108\n"), 
+						+ "Id1\t\t102\t105\t108\n"
+						+ "Id2\t\t110\t108\t111\n"
+						+ "Weight | Abs Inc. | % Inc."), 
 				new ReportParameter[] { ONE_PER_DAY_PARAMETER, USE_SINCEFIRST, ADD_RATIO, ADD_OBSERVATION_PARAMETER });
 	}
 
@@ -98,14 +99,14 @@ public class SpecimenWeighingInVivoReport extends AbstractReport {
 		int phaseIndexRef = 0;
 		Phase refPhase = study.getReferencePhase(0);
 		Map<Pair<Biosample, String>, Phase> animalSince1st2Phase = new HashMap<>();
+		int index = 0;
 		for (Phase phase : study.getPhases()) {
 			if (onePerDay && days.contains(phase.getDays())) continue;
-			
 			for (Biosample animal : study.getAttachedBiosamples()) {
 				Result weighResult = animal.getAuxResult(weighingTest, phase);
 				if (weighResult != null) {
 					if (phase.equals(refPhase)) {
-						phaseIndexRef = phases.size();
+						phaseIndexRef = index;
 					}
 					Phase firstPhase = study.getPhaseFirstTreatment(animal.getInheritedGroup(), animal.getInheritedSubGroup());
 					int since1st = phase.getDays() - (firstPhase==null? 0: firstPhase.getDays());
@@ -115,6 +116,7 @@ public class SpecimenWeighingInVivoReport extends AbstractReport {
 					days.add(phase.getDays());
 				}
 			}
+			index++;
 		}
 
 		//Calculate X Axis

@@ -268,7 +268,7 @@ public class PivotItemFactory {
 			Biosample top = r.getBiosample().getTopParent();
 			Biosample topInStudy = r.getBiosample().getTopParentInSameStudy(); //parent in same study because the animal can have different id
 			
-			if(top==null || top.getBiotype().getSampleNameLabel()==null) {
+			if(top==null || top.getBiotype()==null || top.getBiotype().getSampleNameLabel()==null) {
 				return null;
 			} else if(topInStudy!=top && top.getSampleName()==null && topInStudy.getSampleName()!=null && top.getBiotype().equals(topInStudy.getBiotype()) && topInStudy.getBiotype().getSampleNameLabel()!=null) {
 				return topInStudy.getSampleName()==null?"": "<b>" + topInStudy.getSampleName(); 
@@ -284,8 +284,6 @@ public class PivotItemFactory {
 			if(r.getBiosample()!=null && r.getBiosample().getBiotype()!=null) {
 				String s = "<b>" + r.getBiosample().getBiotype().getName();				
 				return s;
-
-				
 			} else {
 				return null;
 			}

@@ -23,8 +23,6 @@ package com.actelion.research.util.ui.exceltable;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -88,7 +86,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 	private boolean useSmartHeight = true;
 	private boolean useAlphaForMergedCells = false;
 	private boolean tableChanged = true;
-	private Boolean condenseText = null;
+	private Boolean condenseText = Boolean.FALSE;
 	private boolean preferredCondenseText = false;
 
 	private HeaderClickingPolicy headerClickingPolicy = HeaderClickingPolicy.POPUP;
@@ -170,7 +168,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 			}									
 		});
 		setHeaderRenderers();
-		
+		setShowGrid(false);		
 	}
 
 	public HeaderClickingPolicy getHeaderClickingPolicy() {
@@ -935,8 +933,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 	 * @return
 	 */
 	public static List<Integer> selectIndixes(int N, int size) {
-
-		List<Integer> res = new ArrayList<Integer>();
+		List<Integer> res = new ArrayList<>();
 		//We choose alpha such as sum(1+(alpha*i), i, 0, n-1)) = list.size
 		int alpha = -2*(size-N-1)/(size*(size-1));
 		int index = 0;
@@ -952,13 +949,13 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 		return preferredCondenseText;
 	}
 	
-	@Override
-	protected void paintComponent(Graphics g) {
-		Toolkit tk = Toolkit.getDefaultToolkit();
-  		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
-  		if (map != null) {
-  		    ((Graphics2D)g).addRenderingHints(map);
-  		}
-		super.paintComponent(g);
-	}
+//	@Override
+//	protected void paintComponent(Graphics g) {
+//		Toolkit tk = Toolkit.getDefaultToolkit();
+//  		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
+//  		if (map != null) {
+//  		    ((Graphics2D)g).addRenderingHints(map);
+//  		}
+//		super.paintComponent(g);
+//	}
 }

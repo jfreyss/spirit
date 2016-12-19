@@ -26,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import javax.swing.Box;
@@ -42,9 +43,11 @@ import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDia
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
-import com.actelion.research.spiritcore.services.dao.SpiritProperties;
+import com.actelion.research.spiritcore.services.SpiritRights;
+import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
@@ -76,6 +79,21 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 		super(UIUtils.getMainFrame(), "Add/Edit User", EmployeeEditDlg.class.getName());
 		emp = JPAUtil.reattach(myEmp);
 		
+//		
+//		SpiritUser user = Spirit.getUser();
+//		if(user==null || !user.isSuperAdmin()) {
+//			List<Employee> emps = DAOEmployee.getEmployees();
+//			int nAdmins = 0;
+//			for (Employee employee : emps) {
+//				if(employee.getRoles().contains("admin")) nAdmins++;
+//			}
+//			if(nAdmins>0) {
+//				JExceptionDialog.showError(UIUtils.getMainFrame(), "You must be logged as an admin");
+//				return;
+//			}
+//		}
+//		
+
 		
 		role1Box = new JGenericComboBox<>(SpiritProperties.getInstance().getUserRoles(), true);
 		role2Box = new JGenericComboBox<>(SpiritProperties.getInstance().getUserRoles(), true);

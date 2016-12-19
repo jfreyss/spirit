@@ -28,8 +28,11 @@ import java.awt.Toolkit;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import javax.swing.Box;
 import javax.swing.JFrame;
@@ -40,6 +43,7 @@ import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -170,8 +174,8 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		UIUtils.adaptSize(this, 1600, 1200);		
 		setVisible(true);
 
+		SpiritDB.checkAndLogin();
 
-		SpiritDB.check();		
 		recreateUI();		
 		toFront();
 	}
@@ -328,13 +332,24 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	public static void initUI() {
 
   		try {
-			System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
 			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");			
 			UIManager.put("nimbusSelectionBackground", new Color(173,207,231));
+			System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
+			System.setProperty("awt.useSystemAAFontSettings","on"); 
+			System.setProperty("swing.aatext", "true");
+
+//			UIManager.setLookAndFeel(new SubstanceDustLookAndFeel());
+			
+//			UIManager.setLookAndFeel(new SubstanceBusinessLookAndFeel());
+//			UIManager.setLookAndFeel(new SubstanceGeminiLookAndFeel());
+//			
+  			listUIProperties();
+			
+//  			UIManager.getLookAndFeelDefaults().put("Table.cellNoFocusBorder", BorderFactory.createLineBorder(Color.GREEN));
+//  			UIManager.getLookAndFeelDefaults().put("Table.gridColor", Color.RED);
 		} catch (Exception e2) {
 			e2.printStackTrace();
-		}
-  		
+		}  		
   		
 	  	//ToolTop binder
 		ToolTipManager.sharedInstance().setInitialDelay(750); 
@@ -352,11 +367,28 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 				e.printStackTrace();
 				JExceptionDialog.showError(UIUtils.getMainFrame(), e);										
 			}
-		});		
+		});
 		
 		//Bind help
 		HelpBinder.bindHelp();		
 	}
+
+	private static void listUIProperties() {
+
+
+		UIDefaults defaults = UIManager.getDefaults();
+		Enumeration newKeys = defaults.keys();
+		Map<String, String> values = new TreeMap<>();
+		while (newKeys.hasMoreElements()) {
+			Object obj = newKeys.nextElement();
+			values.put(obj.toString(), UIManager.get(obj).toString());
+		}
+		for (Map.Entry<String, String> e: values.entrySet()) {
+			System.out.printf("%50s : %s\n", e.getKey(), e.getValue());
+		}
+		
+	}
+	
 	
 	public static void preLoadDAO() throws Exception {
 		JPAUtil.getManager();		
@@ -548,7 +580,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
     }
 	
 	public static void main(final String[] args) throws Exception {
-		initUI();
+		
 		SplashScreen2.show(splashConfig);				
 		
 		final ArgumentParser argumentParser = new ArgumentParser(args);
@@ -575,6 +607,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 
 			@Override
 			protected void done() {
+				initUI();
 				if(throwable!=null) {					
 					JExceptionDialog.showError(throwable);
 					if(throwable instanceof FatalException) System.exit(1);

@@ -56,9 +56,9 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
-import com.actelion.research.spiritcore.adapter.PropertyKey;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
@@ -105,20 +105,14 @@ public class StudyInfoDlg extends JEscapeDialog {
 	
 	private boolean cancel = true;
 	
-	public StudyInfoDlg(Study study, boolean inTransaction) {
-		super(UIUtils.getMainFrame(), "Study - Definition");
+	public StudyInfoDlg(Study s, boolean inTransaction) {
+		super(UIUtils.getMainFrame(), "Study - Infos");
 				
-		this.study = study;		
+		
+		if(inTransaction) this.study = JPAUtil.reattach(s);
+		else this.study = s; 
 		this.inTransaction = inTransaction;
 		studyIdField.setEnabled(false);
-		
-//		typeComboBox = new JTextComboBox(DAOStudy.getAllStudyTypes());
-//		siteComboBox = new JTextComboBox(DAOStudy.getAllStudyCenters());
-//		siteComboBox.setEditable(true);
-//		
-//		
-//		projectComboBox = new JTextComboBox(DAOStudy.getAllStudyProjects());
-//		diseaseComboBox = new JComboCheckBox(DAOStudy.getAllStudyDiseaseArea());
 	
 		JPanel studyDescPanel = UIUtils.createTitleBox("Definition", UIUtils.createTable(
 					new JLabel("StudyId*: "), UIUtils.createHorizontalBox(studyIdField, new JInfoLabel("Unique, cannot be changed")),
@@ -299,20 +293,6 @@ public class StudyInfoDlg extends JEscapeDialog {
 			}
 		});
 		
-//		titleField.addTextChangeListener(new TextChangeListener() {
-//			@Override
-//			public void textChanged(JComponent src) {
-//				if(projectComboBox.getText().length()==0) {
-//					for (String v : projectComboBox.getChoices()) {
-//						if(v.length()>2 && titleField.getText().toUpperCase().contains(v.toUpperCase())) {
-//							projectComboBox.setText(v);
-//							break;
-//						}
-//					}
-//				}
-//				
-//			}
-//		});
 		eventStudyStatusChanged();
 						
 		//Set visible

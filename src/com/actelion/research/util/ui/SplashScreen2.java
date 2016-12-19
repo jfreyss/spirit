@@ -367,7 +367,6 @@ public class SplashScreen2 extends JFrame {
 					@Override
 					public void run() {
 						SplashScreen2 splash = new SplashScreen2(config);
-						splash.setAlwaysOnTop(true);
 						splash.setVisible(true);
 					}
 				});			

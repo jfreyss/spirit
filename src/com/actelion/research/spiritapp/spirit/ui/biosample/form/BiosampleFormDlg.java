@@ -301,21 +301,12 @@ public class BiosampleFormDlg extends JSpiritEscapeDialog {
 		SpiritChangeListener.fireModelChanged(isNew? SpiritChangeType.MODEL_ADDED: SpiritChangeType.MODEL_UPDATED, Biosample.class, toSave);
 	}
 	
-	
-	public static void main(String[] args) throws Exception {
-		
-
-		Spirit.initUI();
-		Spirit.setUser(DAOSpiritUser.loadUser("freyssj"));
-		new BiosampleFormDlg(new Biosample(DAOBiotype.getBiotype("Cell Aliquot")));
-		System.exit(1);
-	}
-	
 	public BiosampleFormPanel getNext(BiosampleFormPanel panel) {
 		int index = panels.indexOf(panel);
 		System.out.println("BiosampleFormDlg.getNext() "+index+" "+panel+" in "+panels);
 		return index>=0 && index+1<panels.size()? panels.get(index+1): null;
 	}
+	
 	public BiosampleFormPanel getPrevious(BiosampleFormPanel panel) {
 		int index = panels.indexOf(panel);
 		return index>0 && index<panels.size()? panels.get(index-1): null;

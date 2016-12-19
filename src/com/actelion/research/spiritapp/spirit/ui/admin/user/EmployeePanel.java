@@ -45,7 +45,6 @@ import javax.swing.event.ChangeListener;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
-import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomTextField;
@@ -61,21 +60,6 @@ public class EmployeePanel extends JPanel {
 	private EmployeeTable employeeTable = new EmployeeTable();
 	
 	public EmployeePanel() {
-		
-		SpiritUser user = Spirit.getUser();
-		if(user==null || !user.isSuperAdmin()) {
-			List<Employee> emps = DAOEmployee.getEmployees();
-			int nAdmins = 0;
-			for (Employee employee : emps) {
-				if(employee.getUserName().startsWith("admin_")) nAdmins++;
-			}
-			if(nAdmins>0) {
-				JExceptionDialog.showError(UIUtils.getMainFrame(), "You must be logged as an admin");
-				return;
-			}
-		}
-		
-		
 		
 		final JButton deleteUserButton = new JIconButton(IconType.DELETE, "Delete User");
 		final JButton editUserButton = new JIconButton(IconType.EDIT, "Edit User");

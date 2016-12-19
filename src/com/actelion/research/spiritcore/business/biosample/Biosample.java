@@ -2432,7 +2432,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		Location location = getLocation();
 		if(location!=null) {				
 			Privacy privacy = location.getInheritedPrivacy();
-			if(SpiritRights.canRead(location, user)) {
+			if(user==null || SpiritRights.canRead(location, user)) {
 				switch(format) {
 				case FULL_POS: 
 					sb.append(location.getHierarchyFull());

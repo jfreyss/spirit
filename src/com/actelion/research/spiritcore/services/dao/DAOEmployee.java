@@ -262,7 +262,7 @@ public class DAOEmployee {
 			group = session.find(EmployeeGroup.class, group.getId());
 			if(group==null) throw new Exception("The group is invalid");
 			List<Employee> employees = getEmployees(group);
-			if(employees.size()>0) throw new Exception("The group "+group+" is not empty "+employees);
+			if(employees.size()>0) throw new Exception("The group "+group+" is not empty. Members: "+employees);
 			session.remove(group);
 
 			txn.commit();

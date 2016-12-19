@@ -65,6 +65,7 @@ import com.actelion.research.spiritcore.business.study.Measurement;
 import com.actelion.research.spiritcore.business.study.NamedTreatment;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.StudyAction;
+import com.actelion.research.spiritcore.business.study.NamedTreatment.TreatmentUnit;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
@@ -293,36 +294,37 @@ public class MonitoringAnimalPanel extends JPanel {
 				Box.createHorizontalGlue()));
 	}
 
-	private final Map<Biosample, Map<String, Biosample>> bio2history;
+	private final Map<Biosample, Map<String, ActionTreatment>> bio2history;
 	
-	public static com.actelion.research.spiritcore.business.biosample.ActionTreatment getTreatment(Biosample h) {
-		if(h==null) return null;
-		if(h.getLastAction() instanceof com.actelion.research.spiritcore.business.biosample.ActionTreatment) {
-			return ((com.actelion.research.spiritcore.business.biosample.ActionTreatment)h.getLastAction());
-		}
-		return null;
-	}
 	
-	public static Map<Biosample, Map<String, Biosample>> mapTreatments(Collection<Biosample> animals) {
-		Map<Biosample, Map<String, Biosample>> bio2history = new HashMap<>();
+	public static Map<Biosample, Map<String, ActionTreatment>> mapTreatments(Collection<Biosample> animals) {
+		Map<Biosample, Map<String, ActionTreatment>> bio2history = new HashMap<>();
 		for(Biosample b: animals) {
-			bio2history.put(b, new HashMap<String, Biosample>());
+			bio2history.put(b, new HashMap<String, ActionTreatment>());
 			List<Biosample> history = DAORevision.getHistory(b);
 			for (Biosample b2 : history) {
-				
-				com.actelion.research.spiritcore.business.biosample.ActionTreatment t = getTreatment(b2);
+				ActionTreatment t = null;
+				if(b2.getLastAction() instanceof ActionTreatment) {
+					t = (ActionTreatment) b2.getLastAction();
+				}
+				System.out.println("MonitoringAnimalPanel.mapTreatments() "+b2.getSampleId()+"> "+b2.getUpdUser()+" "+b2.getUpdDate()+" > "+t);
 				if(t!=null) {
-					//Add the treatment, if it is the most recent
-					String phaseName = t.getPhaseName();
-					if(!bio2history.get(b).containsKey(phaseName)) bio2history.get(b).put(phaseName, b2);
+					//Add the treatment, only if it is the most recent (ie, the first)
+					String key = t.getPhaseName() + "_" + t.getTreatmentName();
+					if(!bio2history.get(b).containsKey(key)) {						
+						bio2history.get(b).put(key, t);
+					}
 				}
 			}
 		}
 		return bio2history;				
 	}
 
-	public com.actelion.research.spiritcore.business.biosample.ActionTreatment getTreatment(Biosample animal, Phase phase) {
-		return bio2history.get(animal)==null? null: getTreatment(bio2history.get(animal).get(phase.getShortName()));
+	public ActionTreatment getTreatment(Biosample animal, Phase phase) {
+		StudyAction a = phase.getStudy().getStudyAction(phase, animal);
+		NamedTreatment nt = a.getNamedTreatment();
+		ActionTreatment treatment = bio2history.get(animal)==null? null: bio2history.get(animal).get(phase.getShortName() + "_" + (nt==null?"":nt.getName()));
+		return treatment;
 	}
 
 	public static JPanel createAnimalPanel(int no, Biosample animal, Phase phase) {
@@ -458,12 +460,13 @@ public class MonitoringAnimalPanel extends JPanel {
 	private void openTreatmentDialog() {
 		if(SpiritRights.isBlindAll(phase.getStudy(), Spirit.getUser())) return;
 		final ActionTreatment actionTreatment = getTreatment(animal, phase);
-		
+		System.out.println("MonitoringAnimalPanel.openTreatmentDialog() "+actionTreatment);
 		try {
 	
-	
-			final JCustomTextField popFormulationTextField = new JCustomTextField(14, actionTreatment==null || actionTreatment.getFormulation()==null? dlg.getFormulation(nt): actionTreatment.getFormulation());
-			final JCustomTextField popCommentsTextField = new JCustomTextField(14, actionTreatment==null? "": actionTreatment.getComments());
+			String presetFormulation = actionTreatment==null || actionTreatment.getFormulation()==null? dlg.getFormulation(nt): actionTreatment.getFormulation();
+			String presetComments = actionTreatment==null? "": actionTreatment.getComments();
+			final JCustomTextField popFormulationTextField = new JCustomTextField(14, presetFormulation);
+			final JCustomTextField popCommentsTextField = new JCustomTextField(14, presetComments);
 			
 			if(popFormulationTextField.getText().length()==0) {
 				popFormulationTextField.setBackground(LF.BGCOLOR_REQUIRED);
@@ -528,8 +531,6 @@ public class MonitoringAnimalPanel extends JPanel {
 				JPAUtil.pushEditableContext(Spirit.getUser());
 				try {
 					//Persist the treatment action
-//					ActionTreatment at = new ActionTreatment(animal, phase, weight, nt, effDose1TextField.getTextDouble(), effDose2TextField.getTextDouble(), popFormulationTextField.getText(), popCommentsTextField.getText());
-//					animal.addAction(at);
 					ActionTreatment at = new ActionTreatment(nt, phase, weight, effDose1TextField.getTextDouble(), effDose2TextField.getTextDouble(), popFormulationTextField.getText(), popCommentsTextField.getText());
 					animal.setLastAction(at);					
 					DAOBiosample.persistBiosamples(Collections.singleton(animal), Spirit.getUser());

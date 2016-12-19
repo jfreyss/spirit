@@ -29,7 +29,9 @@ public class MigrationScript2_0 extends MigrationScript {
 	private String SCRIPT = 
 			"alter table spirit.assay_result_value add document_id number(19);\n" 
 			+ "alter table spirit.assay_result_value_aud add document_id number(19);\n"
-			+ "alter table spirit.assay_result_value add constraint assay_result_fk foreign key (document_id) references spirit.document (ID);\n";
+			+ "alter table spirit.assay_result_value add constraint assay_result_fk foreign key (document_id) references spirit.document (ID);\n"
+			+ "alter table spirit.employee add roles varchar(125);\n"
+			+ "";
 	
 	
 	public MigrationScript2_0() {

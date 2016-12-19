@@ -63,8 +63,18 @@ public class SQLConverterTest {
 				+ "alter table test.spirit_property add (bool number(1));"
 				+ "";
 		
-		MigrationScript.executeScript(hsqlConn, SQLConverter.convertScript(script, SQLVendor.HSQL), true, null);
+		MigrationScript.executeScript(hsqlConn, SQLConverter.convertScript(script, SQLVendor.HSQL), true, null);		
+	}
+	
+	
+	
+	@Test
+	public void testTables2() throws Exception {
+		//Test some schema creation on HSQL using Oracle syntax
+		String script = "alter table spirit.spirit_property modify (id varchar2(64 CHAR));"
+				+ "";
 		
+		Assert.assertEquals("alter table spirit.spirit_property modify id varchar(64);", SQLConverter.convertScript(script, SQLVendor.MYSQL));		
 	}
 	
 	@Test

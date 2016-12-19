@@ -51,11 +51,11 @@ public class UsageLog {
 			@Override
 			public void run() {
 				try {
-					
+					java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+					String ip = localMachine.getHostAddress();
 					String userId2 = userId == null? System.getProperty("user.name"): userId;
 					String pcName2;
 					if(pcName==null) {
-						java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
 						pcName2 = localMachine.getHostName();
 					} else {
 						pcName2 = pcName;
@@ -73,6 +73,7 @@ public class UsageLog {
 							+ "&username="+URLEncoder.encode(userId2, "UTF-8")
 							+ "&pcname=" + URLEncoder.encode(pcName2, "UTF-8")
 							+ "&action=" + URLEncoder.encode(action2, "UTF-8") 
+							+ "&ip=" + URLEncoder.encode(ip, "UTF-8") 
 							+ (parameters2!=null? "&parameters="+URLEncoder.encode(parameters2, "UTF-8"): "")
 							).getContent();
 						

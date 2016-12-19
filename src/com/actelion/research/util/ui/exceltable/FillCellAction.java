@@ -32,7 +32,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -41,6 +40,7 @@ import javax.swing.SwingUtilities;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
+import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.UIUtils;
 
 public class FillCellAction extends AbstractAction{
@@ -57,7 +57,6 @@ public class FillCellAction extends AbstractAction{
 		this.table = table;
 		this.choices = choices;
 		this.column = column;
-		if(this.choices!=null && !this.choices.contains("")) this.choices.add(0, "");
 		
 		
 		setEnabled(false);
@@ -73,7 +72,7 @@ public class FillCellAction extends AbstractAction{
 	
 	private class FillDlg extends JEscapeDialog {
 		private JCustomTextField textField = null;
-		private JComboBox<String> comboBox = null;
+		private JGenericComboBox<String> comboBox = null;
 
 		public FillDlg() {			
 			super(UIUtils.getMainFrame(), "Fill Empty Cells");
@@ -112,7 +111,7 @@ public class FillCellAction extends AbstractAction{
 				line2.add(Box.createHorizontalStrut(10));
 				line2.add(new JLabel(column.getName()+":"));
 				if(choices!=null && choices.size()>0) {
-					comboBox = new JComboBox<String>(choices.toArray(new String[0]));
+					comboBox = new JGenericComboBox<String>(choices, true);
 					line2.add(comboBox);
 					SwingUtilities.invokeLater(new Runnable() {@Override public void run() {comboBox.requestFocusInWindow();}});
 				} else {

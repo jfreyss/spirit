@@ -58,26 +58,20 @@ public class MigrationScript1_9 extends MigrationScript {
 			+ "ALTER TABLE SPIRIT.STUDY ADD (METADATA VARCHAR2(4000) );\n"
 			+ "ALTER TABLE SPIRIT.STUDY_AUD ADD (METADATA VARCHAR2(4000) );\n"
 			+ "ALTER TABLE SPIRIT.SPIRIT_PROPERTY MODIFY (ID VARCHAR2(64 CHAR) );\n"
-			+ "update study set METADATA = 'TYPE=' || replace(replace(type, '\\', '\\\\'), ';', '\\;')"
+			+ "update spirit.study set METADATA = 'TYPE=' || replace(replace(type, '\\', '\\\\'), ';', '\\;')"
 			+ "|| ';CLINICAL='  || replace(replace(clinical, '\\', '\\\\'), ';', '\\;')"
 			+ "|| ';PROJECT='  || replace(replace(project, '\\', '\\\\'), ';', '\\;')"
 			+ "|| ';SITE='  || replace(replace(external_site, '\\', '\\\\'), ';', '\\;')"
 			+ "|| ';LICENCENO='  || replace(replace(licenceno, '\\', '\\\\'), ';', '\\;')"
 			+ "|| ';EXPERIMENTER='  || replace(replace(rnd_experimenter, '\\', '\\\\'), ';', '\\;')"
 			+ "|| ';DISEASEAREA='  || replace(replace(diseases, '\\', '\\\\'), ';', '\\;');"
-			+ "update study_aud set METADATA = 'TYPE=' || replace(replace(type, '\\', '\\\\'), ';', '\\;')"
+			+ "update spirit.study_aud set METADATA = 'TYPE=' || replace(replace(type, '\\', '\\\\'), ';', '\\;')"
 			+ "|| ';CLINICAL='  || replace(replace(clinical, '\\', '\\\\'), ';', '\\;')"
 			+ "|| ';PROJECT='  || replace(replace(project, '\\', '\\\\'), ';', '\\;')"
 			+ "|| ';SITE='  || replace(replace(external_site, '\\', '\\\\'), ';', '\\;')"
 			+ "|| ';LICENCENO='  || replace(replace(licenceno, '\\', '\\\\'), ';', '\\;')"
 			+ "|| ';EXPERIMENTER='  || replace(replace(rnd_experimenter, '\\', '\\\\'), ';', '\\;')"
 			+ "|| ';DISEASEAREA='  || replace(replace(diseases, '\\', '\\\\'), ';', '\\;');"
-
-//			+ "grant insert,select,update,delete on spirit.biosample_biosample to spirit_user;\n"
-//			+ "grant insert,select,update,delete on spirit.biosample_document to spirit_user;\n"
-//			+ "grant insert,select on spirit.biosample_biosample_aud to spirit_user;\n"
-//			+ "grant insert,select on spirit.biosample_document_aud to spirit_user;\n"
-//			+ "grant select on spirit.dbversion to spirit_user;\n"
 			+ "";
 			
 	
@@ -123,8 +117,8 @@ public class MigrationScript1_9 extends MigrationScript {
 				
 				
 			}
-			sb1.append("update spirit.biosample set metadata = substr(metadata, 2) where metadata like ';%'\r\n");
-			sb2.append("update spirit.biosample_aud set metadata = substr(metadata, 2) where metadata like ';%'\r\n");
+			sb1.append("update spirit.biosample set metadata = substr(metadata, 2) where metadata like ';%';\r\n");
+			sb2.append("update spirit.biosample_aud set metadata = substr(metadata, 2) where metadata like ';%';\r\n");
 			rs.close();
 			stmt.close();
 			

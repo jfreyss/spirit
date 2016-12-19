@@ -41,7 +41,7 @@ public class CombinedColumn extends Column<Biosample, CombinedColumnMap> {
 	public CombinedColumn() {
 		super("Sample\nMetadata", CombinedColumnMap.class, 
 				60, 
-				350);
+				420);
 	}
 	
 	

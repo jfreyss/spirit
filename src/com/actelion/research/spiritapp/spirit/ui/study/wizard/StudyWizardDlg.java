@@ -128,16 +128,16 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 	}
 	
 	public StudyWizardDlg(Study myStudy, boolean duplicateMode) {
-		super(UIUtils.getMainFrame(), "Study - Study Design", StudyWizardDlg.class.getName());
-		
+		super(UIUtils.getMainFrame(), "Study - Study Design", StudyWizardDlg.class.getName());		
 		study = JPAUtil.reattach(myStudy);
-		if(duplicateMode && myStudy!=null) {
-			study = study.duplicate();
-			assert study!=null && study.getId()<=0;
-		}
+	
 		
-		//New study, create the name and description
+		//Duplicate modem open the studyInfoDlg
 		try {
+			if(duplicateMode && myStudy!=null) {
+				study = study.duplicate();
+				assert study!=null && study.getId()<=0;
+			}
 			if(study.getId()<=0 ) {
 				StudyInfoDlg dlg = new StudyInfoDlg(study, true);
 				if(dlg.isCancel()) return;

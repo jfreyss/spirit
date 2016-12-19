@@ -24,7 +24,7 @@ package com.actelion.research.spiritcore.services.helper;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.actelion.research.spiritcore.adapter.PropertyKey;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;

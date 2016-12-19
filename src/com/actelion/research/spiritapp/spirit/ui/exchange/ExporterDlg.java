@@ -72,7 +72,7 @@ public class ExporterDlg extends JEscapeDialog {
 	private JRadioButton exportCurrentViewRadioButton = new JRadioButton("Export all data from the current view");
 	private JRadioButton exportStudyRadioButton = new JRadioButton("Export all entities from the following studies: ");
 	private JRadioButton exportAdminRadioButton = new JRadioButton("Export all biotypes/tests");
-	private JRadioButton exportAllRadioButton = new JRadioButton("Export all studies/biosamples/results (with read access)");
+	private JRadioButton exportAllRadioButton = new JRadioButton("Export the complete database");
 	
 	public ExporterDlg(Exchange currentView) {
 		super(UIUtils.getMainFrame(), "Export Data", true);

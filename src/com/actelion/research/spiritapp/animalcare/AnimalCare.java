@@ -154,7 +154,6 @@ public class AnimalCare extends JFrame implements ISpiritChangeObserver, ISpirit
 	
 	public static void main(String[] args) {
 		
-		Spirit.initUI();
 
 		SplashScreen2.show(splashConfig);
 
@@ -171,6 +170,7 @@ public class AnimalCare extends JFrame implements ISpiritChangeObserver, ISpirit
 			}			
 			@Override
 			protected void done() {
+				Spirit.initUI();
 				new AnimalCare();
 			}
 		};

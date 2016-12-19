@@ -174,9 +174,4 @@ public class JColorChooserButton extends JButton {
 	}
 	
 	
-	public static void main(String[] args) {
-		Spirit.initUI();
-		new ColorDialog(new Color(255,100,200), true);
-		new ColorDialog(new Color(255,100,200), false);
-	}
 }

@@ -38,7 +38,7 @@ public class SQLConverter {
 	 */
 	public static String convertScript(String script, SQLVendor vendor) {
 		if(vendor==SQLVendor.ORACLE) return script;
-//		System.out.println("SQLConverter.convertScript()<< "+script.replaceAll(";[\n]*", ";\n"));
+
 		//Replace datatypes
 		script = script.replaceAll("(?i)NUMBER\\(1\\)", "tinyint");
 		script = script.replaceAll("(?i)NUMBER\\([2-9](,0)?\\)", "integer");
@@ -49,14 +49,16 @@ public class SQLConverter {
 		
 		//Replace alter tables
 		script = script.replaceAll("(?i)alter table (.*?) add \\((.*?)\\)", "alter table $1 add $2");
-		script = script.replaceAll("(?i)alter table (.*?) modify \\((.*?)\\)", "alter table $1 alter column $2");
+		if(vendor==SQLVendor.HSQL) {
+			script = script.replaceAll("(?i)alter table (.*?) modify \\((.*?)\\)", "alter table $1 alter column $2");
+		} else if(vendor==SQLVendor.MYSQL) {
+			script = script.replaceAll("(?i)alter table (.*?) modify \\((.*?)\\)", "alter table $1 modify $2");
+			script = script.replace("\\", "\\\\");
+		}
 		
 		//remove Enable
 		script = script.replaceAll("(?i)\\senable", "");
 		
-//		System.out.println("SQLConverter.convertScript()>> "+script.replaceAll(";[\n]*", ";\n"));
-		
-
 		return script;
 	}
 	

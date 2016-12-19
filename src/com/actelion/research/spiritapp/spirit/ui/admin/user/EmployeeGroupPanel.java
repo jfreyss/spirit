@@ -52,20 +52,6 @@ public class EmployeeGroupPanel extends JPanel {
 	private EmployeeGroupTable employeeGroupTable = new EmployeeGroupTable();
 	
 	public EmployeeGroupPanel() {
-
-		SpiritUser user = Spirit.getUser();
-		if(user==null || !user.isSuperAdmin()) {
-			List<Employee> emps = DAOEmployee.getEmployees();
-			int nAdmins = 0;
-			for (Employee employee : emps) {
-				if(employee.getUserName().startsWith("admin_")) nAdmins++;
-			}
-			if(nAdmins>0) {
-				JExceptionDialog.showError(UIUtils.getMainFrame(), "You must be logged as an admin");
-				return;
-			}
-		}
-		
 		
 		final JButton deleteButton = new JIconButton(IconType.DELETE, "Delete");
 		final JButton editButton = new JIconButton(IconType.EDIT, "Edit");

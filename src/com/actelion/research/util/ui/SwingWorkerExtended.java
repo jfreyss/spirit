@@ -57,7 +57,7 @@ import javax.swing.SwingUtilities;
  */
 public abstract class SwingWorkerExtended  {
 
-	private final boolean DEBUG = true;
+	private final boolean DEBUG = false;
 	
 	public static final int FLAG_ASYNCHRONOUS = 0;
 	public static final int FLAG_CANCELABLE = 1;
@@ -343,7 +343,6 @@ public abstract class SwingWorkerExtended  {
 				if(currentThreads.get(comp)==null) currentThreads.put(comp, new HashMap<String, Thread>());
 				Thread t2 = currentThreads.get(comp).get(title);
 				if(t2!=null && !t2.isInterrupted()) {
-					System.out.println("STOP SLEEP "+t2.getName()+" alive="+t2.isAlive());
 					t2.interrupt();
 				}
 				currentThreads.get(comp).put(title, sw);				

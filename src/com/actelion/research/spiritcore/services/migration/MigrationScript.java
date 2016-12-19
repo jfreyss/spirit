@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.HSQLFileAdapter;
-import com.actelion.research.spiritcore.adapter.PropertyKey;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.util.SQLConverter.SQLVendor;
 
 /**
@@ -105,7 +105,7 @@ public abstract class MigrationScript {
 				sb.append("\r\n");
 				sb.append("/* Migration to " + script.getToVersion() + " */\r\n");
 				sb.append(script.getMigrationSql(vendor));
-				sb.append("update spirit.spirit_property set value = '" + script.getToVersion() + "' where id = '" + PropertyKey.DB_VERSION.getKey() + "' and value < '" + script.getToVersion() + "'");		
+				sb.append("update spirit.spirit_property set value = '" + script.getToVersion() + "' where id = '" + PropertyKey.DB_VERSION.getKey() + "' and value < '" + script.getToVersion() + "';");		
 			}
 		}
 		return sb.toString();

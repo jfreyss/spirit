@@ -226,6 +226,7 @@ public class StudyDetailPanel extends JPanel {
 			cardLayout.show(infoCardTabbedPane, "view");
 			infoLabel.setText("");
 		} else if(SpiritRights.canRead(study, Spirit.getUser())) {
+			study = JPAUtil.reattach(study);
 			if(infoTabbedPane.getSelectedIndex()==0) {
 				final List<Biosample> animals = study==null?new ArrayList<Biosample>(): new ArrayList<>(study.getAttachedBiosamples());
 				Collections.sort(animals);			

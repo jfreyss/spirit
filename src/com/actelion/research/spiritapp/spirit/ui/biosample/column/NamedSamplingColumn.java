@@ -27,7 +27,6 @@ import javax.swing.JComponent;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
-import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
@@ -52,7 +51,6 @@ public class NamedSamplingColumn extends Column<Biosample, NamedSampling> {
 		NamedSampling ns = (NamedSampling) value;
 		lbl.setText(ns==null?"": ns.getName());
 		lbl.setForeground(Color.RED);
-		lbl.setFont(FastFont.REGULAR_CONDENSED);
 	}
 	
 	

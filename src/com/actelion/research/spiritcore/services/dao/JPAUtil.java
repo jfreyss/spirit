@@ -39,6 +39,8 @@ import org.slf4j.LoggerFactory;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.study.NamedSampling;
+import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.StringEncrypter;
@@ -241,19 +243,6 @@ public class JPAUtil {
     		LoggerFactory.getLogger(JPAUtil.class).warn("Could not close managers: ", e);
     	}
     	Cache.removeAll();
-    	
-//		LoggerFactory.getLogger(JPAUtil.class).debug("clear factory cache and sessions");			
-//    	popEditableContext();
-//    	
-//		if(readEntityManager!=null) {
-//			readEntityManager.clear();			
-//    	}
-//		if(writeEntityManager!=null) {
-//			writeEntityManager.clear();			
-//    	}
-//
-//    	Cache.removeAll();
-//    	SpiritProperties.clear();
     }
     
     /**
@@ -278,7 +267,6 @@ public class JPAUtil {
 	public static void initFactory(DBAdapter adapter, String mode) throws Exception {
 		LoggerFactory.getLogger(JPAUtil.class).debug("initFactory on "+adapter.getClass().getName()+" url="+adapter.getDBConnectionURL()+" mode="+mode);
 		closeFactory();
-
 		Map properties = new HashMap();
 		properties.put("hibernate.dialect", adapter.getHibernateDialect());
 		properties.put("hibernate.connection.driver_class", adapter.getDriverClass());
@@ -287,6 +275,7 @@ public class JPAUtil {
 		properties.put("hibernate.show_sql", "true".equalsIgnoreCase(System.getProperty("show_sql")));
 		properties.put("hibernate.hbm2ddl.auto", mode);
 		properties.put("hibernate.connection.url", adapter.getDBConnectionURL());
+		properties.put("hibernate.default_schema", "spirit");
 		
 		LoggerFactory.getLogger(JPAUtil.class).debug("create factory");
 		factory = Persistence.createEntityManagerFactory("spirit", properties);
@@ -458,13 +447,22 @@ public class JPAUtil {
 			} else if(o.getId()<=0) {				
 				//The entity is new. Reload the dependancies if needed
 				if(o instanceof Biosample) {
-					System.out.println("Reattach links");
 					((Biosample) o).setBiotype(JPAUtil.reattach(((Biosample) o).getBiotype()));
 					((Biosample) o).setParent(JPAUtil.reattach(((Biosample) o).getParent()));
-					((Biosample) o).setTopParent(JPAUtil.reattach(((Biosample) o).getTopParent()));
 					((Biosample) o).setInheritedStudy(JPAUtil.reattach(((Biosample) o).getInheritedStudy()));
 					((Biosample) o).setInheritedPhase(JPAUtil.reattach(((Biosample) o).getInheritedPhase()));
 					((Biosample) o).setInheritedGroup(JPAUtil.reattach(((Biosample) o).getInheritedGroup()));
+				} else if(o instanceof Study) {
+					for (NamedSampling a : ((Study)o).getNamedSamplings()) {						
+						for(Sampling ss: a.getAllSamplings()) {
+							if(ss.getId()>0 && !entityManager.contains(ss)) {
+								throw new RuntimeException(o+" has Sampling dependancies not in the session");
+							}
+							if(ss.getBiotype().getId()>0 && !entityManager.contains(ss.getBiotype())) {
+								ss.setBiotype(JPAUtil.reattach(ss.getBiotype()));
+							}
+						}
+					}
 				}
 			} else {
 				//The entity is already attached to the session
@@ -474,14 +472,13 @@ public class JPAUtil {
 //				if(o instanceof Study) {
 //					for (StudyAction a : ((Study)o).getStudyActions()) {
 //						if(!entityManager.contains(a)) {
-//							throw new RuntimeException(o+" has dependancies not in the session");
+//							throw new RuntimeException(o+" has StudyAction dependancies not in the session");
 //						}
-//					}
+//					}					
 //					for (Biosample b : ((Study)o).getTopAttachedBiosamples()) {
 //						if(!entityManager.contains(b)) {
-//							throw new RuntimeException(o+" has dependancies not in the session");
+//							throw new RuntimeException(o+" has Biosample dependancies not in the session");
 //						}
-//						b.getHierarchy(HierarchyMode.ALL);
 //					}
 //				}
 //				//TODO end remove

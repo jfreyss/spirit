@@ -39,9 +39,9 @@ import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.lf.CreationLabel;
-import com.actelion.research.spiritcore.adapter.PropertyKey;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
@@ -62,7 +62,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 
 	private static final Date now = JPAUtil.getCurrentDateFromDatabase();
 
-	public static final Column<Study, String> COLUMN_STUDYID = new Column<Study, String>("StudyId", String.class, 50) {
+	public static final Column<Study, String> COLUMN_STUDYID = new Column<Study, String>("StudyId", String.class, 52) {
 		@Override
 		public String getValue(Study row) {
 			return row.getStudyId();
@@ -79,17 +79,10 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		public String getValue(Study row) {
 			return row.getState();
 		}
-		
-		private JLabelNoRepaint lbl = new JLabelNoRepaint();
-		
-		@Override
-		public JComponent getCellComponent(AbstractExtendTable<Study> table, Study row, int rowNo, Object value) {
-			lbl.setText(value==null?"": value.toString());
-			return lbl;
-		}
+				
 	};
 	
-	public static final Column<Study, String> COLUMN_IVV = new Column<Study, String>("IVV", String.class, 80) {
+	public static final Column<Study, String> COLUMN_IVV = new Column<Study, String>("InternalId", String.class, 80) {
 		@Override
 		public String getValue(Study row) {
 			return row.getIvv();

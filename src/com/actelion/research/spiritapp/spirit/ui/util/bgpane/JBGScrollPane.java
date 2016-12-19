@@ -33,28 +33,13 @@ import javax.swing.JViewport;
 public class JBGScrollPane extends JScrollPane {
 	
 	private final int scheme;
-//	private Image backgroundImage;
 	
 	public JBGScrollPane(Component comp, int scheme) {
 		super(comp);
 		this.scheme = scheme;
-//		backgroundImage = getBackground(scheme);
 		getViewport().setOpaque(false);
 		getViewport().setScrollMode(JViewport.SIMPLE_SCROLL_MODE);
 	}
-	
-//	public static Image getBackground(int scheme) {
-//		try {
-//			InputStream is = JBGScrollPane.class.getResourceAsStream("scheme" + scheme + ".png");
-//			if(is==null) throw new Exception("Invalid scheme: "+scheme);
-//			Image backgroundImage = ImageIO.read(is);
-//			is.close();
-//			return backgroundImage;
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//			return null;
-//		}		
-//	}
 	
 	private final Color SCHEME1_1 = new Color(239,243,255);
 	private final Color SCHEME1_2 = new Color(255,255,255);
@@ -77,22 +62,7 @@ public class JBGScrollPane extends JScrollPane {
 		}
 		g2d.fillRect(0, 0, getWidth(), getHeight());
 		
-//		if( backgroundImage != null ) {
-//			if(backgroundImage.getWidth(this)>=getWidth() && backgroundImage.getHeight(this)>=getHeight()) {
-//				g.drawImage(backgroundImage, 0, 0, this);
-//			} else {
-//				g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), 0, 0, Math.min(getWidth(), backgroundImage.getWidth(this)), Math.min(getHeight(), backgroundImage.getHeight(this)), this);				
-//			}
-//			g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), 0, 0, backgroundImage.getWidth(this), backgroundImage.getHeight(this), this);
-//		}
 		super.paint( g );
 	}
-
-//	public Image getBackgroundImage() {
-//		return backgroundImage;
-//	}
-//	public void setBackgroundImage(Image backgroundImage) {
-//		this.backgroundImage = backgroundImage;
-//	}	
 
 }

@@ -33,8 +33,8 @@ import javax.persistence.EntityTransaction;
 
 import org.slf4j.LoggerFactory;
 
-import com.actelion.research.spiritcore.adapter.SpiritProperty;
-import com.actelion.research.spiritcore.adapter.PropertyKey;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
+import com.actelion.research.spiritcore.business.property.SpiritProperty;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
@@ -63,9 +63,11 @@ public class SpiritProperties {
 		}
 		return instance;
 	}
+	
 	public static void clear() {
 		instance = null;
 	}
+	
 	/**
 	 * Gets the value of a simple property or the default value
 	 * @param p

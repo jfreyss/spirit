@@ -45,7 +45,6 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTableModel.M
 import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.BiosampleHistoryPanel;
 import com.actelion.research.spiritapp.spirit.ui.result.ResultActions;
 import com.actelion.research.spiritapp.spirit.ui.result.ResultTable;
-import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -172,11 +171,9 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 		
 		biosampleTab = new JScrollPane(metadataPanel);
 		
-//		hierarchyTab = new JBGScrollPane(hierarchyTable, 3);
-
 		historyTab = new JScrollPane(historyPanel);
 		
-		resultTab = new JBGScrollPane(resultTable, 1);
+		resultTab = new JScrollPane(resultTable);
 
 		if(useTabPane) {
 			tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);

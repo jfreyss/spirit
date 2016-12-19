@@ -41,6 +41,8 @@ import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;
+import org.hibernate.envers.query.internal.property.RevisionNumberPropertyName;
+import org.hibernate.envers.query.order.internal.PropertyAuditOrder;
 import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritcore.business.DataType;
@@ -187,7 +189,10 @@ public class DAORevision {
 		long s = System.currentTimeMillis();
 		EntityManager session = JPAUtil.getManager();
 		AuditReader reader = AuditReaderFactory.get(session);	
-		AuditQuery query = reader.createQuery().forRevisionsOfEntity(obj.getClass(), true, false).add(AuditEntity.id().eq(obj.getId()));
+		AuditQuery query = reader.createQuery()
+				.forRevisionsOfEntity(obj.getClass(), true, false)
+				.add(AuditEntity.id().eq(obj.getId()))
+				.addOrder(new PropertyAuditOrder(new RevisionNumberPropertyName(), false));
 		List<T> res = (List<T>) query.getResultList();
 		
 		LoggerFactory.getLogger(DAORevision.class).debug("Loaded history for " + obj+" in "+(System.currentTimeMillis()-s)+"ms");

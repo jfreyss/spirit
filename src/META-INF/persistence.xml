@@ -6,8 +6,10 @@
       <properties>
         <property name="hibernate.max_fetch_depth" value="1"/>
         <property name="hibernate.default_batch_fetch_size" value="32"/>
+		<!-- 
 		<property name="hibernate.show_sql" value="true"/>
 		<property name="hibernate.format_sql" value="false"/>
+		 -->
 		<property name="hibernate.id.new_generator_mappings" value="true"/>
 
 		<!-- NO Connection pool: no need as we use a fully managed connection model -->
