@@ -48,36 +48,55 @@
     </div>
 	<div class="main container">
 		<div class="row" style="margin-top:30px">
-			<div class="col-md-6">
-				<img src="../overview.png" class="yellow-bg" style="margin:5px; max-width:100%;border:0; -webkit-box-shadow:0 0 0; border: solid 2px #425088; border-radius: 15px;">
-			</div>
-			<div class="col-md-6">
-				<div class=""  style="margin:5px; border: solid 2px #425088; border-radius: 15px">
-				<h0 style="margin-top:0; border-radius: 15px 15px 0 0">Demo</h0>
+			<div class="col-sm-4" style="height:100%">
+				<div style="border: solid 2px #425088; border-radius: 15px;height:250px">
+				<h0 style="font-size:24px; margin-top:0; border-radius: 15px 15px 0 0">Option 1: Windows Installer</h0>
 				<p style="padding:10px">
-					To execute Spirit from the browser, be sure to have <a href="https://java.com/en/download/">Java 8+</a> installed. Then click on the following button to download and open the file with Java Webstart<br><br>
-					<a href="../webstart/spirit.jnlp" class="btn btn-primary btn-lg">Spirit Demo</a><br>
+					If you have a Windows OS, run the installer:<br><br>
+					<a href="https://github.com/jfreyss/spirit/releases/download/v2.1.2/spirit-2.1.2.exe" class="btn btn-primary">Spirit-2.1.2.exe</a><br>
 				</p>
 				</div>
 			</div>
+			<div class="col-sm-4" style="height:100%">
+				<div style="border: solid 2px #425088; border-radius: 15px;height:250px">
+				<h0 style="font-size:24px; margin-top:0; border-radius: 15px 15px 0 0">Option 2: Webstart</h0>
+				<p style="padding:10px">
+					For any other OS. Be sure to have <a href="https://java.com/en/download/">Java 8+</a> installed, and start Spirit from your browser:<br><br>
+					<a href="../webstart/spirit.jnlp" class="btn btn-primary">Spirit Webstart</a><br>
+				</p>
+				</div>
+			</div>
+			<div class="col-sm-4" style="height:100%">
+				<div style="border: solid 2px #425088; border-radius: 15px;height:250px">
+				<h0 style="font-size:24px; margin-top:0; border-radius: 15px 15px 0 0">Option 3: Binaries</h0>
+				<p style="padding:10px">
+					For advanced users or to have a production environment:
+					<a href="https://github.com/jfreyss/spirit/releases/download/v2.1.2/spirit-bin-2.1.2.zip" class="btn btn-primary">Spirit-bin.2.1.2.zip</a><br>
+				</p>
+				</div>
+			</div>
+			
 		</div>
-		<h2>Troubleshootings</h2>
+		<h3>Troubleshootings</h3>
+		<h4>General</h4>
 		<dl>
-			<dt>Chrome/IE/Safari cannot open this type of file?
+			<dt>The application asks me to login, but I don't know my login?
+			<dd>Are you sure you don't have Spirit already configured to work with a user database on your system? You can reset the system (and delete the local database)  by deleting the directory ".spirit" under your home directory. 
+		</dl>
+		<h4>Webstart</h4>
+		<dl>
+			<dt>Webstart: Chrome/IE/Safari cannot open this type of file?
 			<dd>Make sure you have Java installed. You can download it at <a href="https://java.com/en/download/">https://java.com/en/download/</a>
 			
-			<dt>This type of file can harm your computer?
+			<dt>Webstart: This type of file can harm your computer?
 			<dd>Chrome may display this warning when you click any jnlp file. Be sure to keep it and open it. Spirit will not harm the computer but create a ".spirit" folder under your home directory to store the configuration and the database
 			
-            <dt>java.lang.UnsupportedClassVersionError exception?
+            <dt>Webstart: java.lang.UnsupportedClassVersionError exception?
             <dd>Your version of Java is tool old, please download the latest version of java. JRE 8+ is required.
 			
             
-			<dt>The application does not start?
+			<dt>Webstart: The application does not start?
 			<dd>Did you accept the certificate? Be sure to click "Run" when you get this message<br><img src="certificate.png" border=0 style="border:0; -webkit-box-shadow:0 0 0; max-width:100%">
-
-			<dt>The application asks me to login, but I don't know my login?
-			<dd>Are you sure you don't have Spirit already configured to work with a user database on your system? You can reset the system (and delete the local database)  by deleting the directory ".spirit" under your home directory. 
 			
 		</dl>		
 	</div>
