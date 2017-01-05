@@ -41,7 +41,7 @@ public class SpiritRevisionEntity {
 
 	@Id
 	@Column(name="rev")
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@GeneratedValue(strategy=GenerationType.AUTO)
 	@RevisionNumber
 	private int id;
 

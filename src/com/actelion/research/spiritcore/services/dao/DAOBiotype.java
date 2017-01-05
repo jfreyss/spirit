@@ -45,6 +45,7 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 
 @SuppressWarnings("unchecked")
@@ -161,14 +162,18 @@ public class DAOBiotype {
 				EntityManager session = JPAUtil.getManager();
 				int id = metadataType.getId();
 				//Select first 500 non empty rows
-				Query query = session.createQuery("SELECT b FROM Biosample b "
+				Query query = session.createQuery("select distinct(b.serializedMetadata) from Biosample b "
 						+ " WHERE concat(';', b.serializedMetadata, '%') like '%;"+id+"=%'"
 						+ " AND NOT concat(';', b.serializedMetadata, '%') like '%;"+id+"=;%'"
 						+ (study!=null? " AND b.inheritedStudy = ?2 ":""));
 				if(study!=null) query.setParameter(2, study);
-				query.setMaxResults(500);
-				for (Biosample b : (List<Biosample>) query.getResultList()) {
-					res.add(b.getMetadataValue(metadataType));
+				query.setMaxResults(3000);
+//				for (Biosample b : (List<Biosample>) query.getResultList()) {
+//					res.add(b.getMetadataValue(metadataType));
+//				}
+				for (String s : (List<String>) query.getResultList()) {
+					String tok = MiscUtils.deserializeIntegerMap(s).get(id);
+					if(tok!=null) res.add(tok);
 				}
 			} catch(Exception e) {
 				e.printStackTrace();
@@ -189,7 +194,7 @@ public class DAOBiotype {
 			EntityManager session = JPAUtil.getManager();
 			Query query = session.createQuery("SELECT distinct(b.sampleId) FROM Biosample b WHERE b.biotype = ?1");
 			query.setParameter(1, biotype);
-			query.setMaxResults(1000);
+			query.setMaxResults(3000);
 			res = new TreeSet<String>(CompareUtils.STRING_COMPARATOR);
 			res.addAll(query.getResultList());
 			
@@ -213,7 +218,7 @@ public class DAOBiotype {
 					(study!=null? " AND b.inheritedStudy = ?2 ":""));
 			query.setParameter(1, biotype);
 			if(study!=null) query.setParameter(2, study);
-			query.setMaxResults(1000);
+			query.setMaxResults(3000);
 			res = new TreeSet<String>(CompareUtils.STRING_COMPARATOR);
 			res.addAll(query.getResultList());
 			
@@ -238,7 +243,7 @@ public class DAOBiotype {
 					(study!=null? " AND b.inheritedStudy = ?2 ":""));
 			query.setParameter(1, biotype);
 			if(study!=null) query.setParameter(2, study);
-			query.setMaxResults(1000);
+			query.setMaxResults(3000);
 			res = new TreeSet<String>(CompareUtils.STRING_COMPARATOR);
 			res.addAll(query.getResultList());
 			

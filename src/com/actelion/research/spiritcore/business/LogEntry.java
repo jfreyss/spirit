@@ -46,10 +46,6 @@ public class LogEntry implements Serializable, Comparable<LogEntry> {
 		LOGON_FAILED,
 	}
 	
-//	@Id
-//	@GeneratedValue(strategy=GenerationType.AUTO)
-//	private int id;
-	
 	@Column(name="creUser", length=20, nullable=false)
 	@Id
 	private String user;

@@ -56,7 +56,7 @@ public class PhaseAddDlg extends JEscapeDialog {
 	private JSpinner firstDaySpinner = new JSpinner(new SpinnerNumberModel(0, -99, 999, 1));		
 	private JSpinner firstHourSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 23, 1));		
 	private JSpinner firstMinuteSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 60, 1));		
-	private JSpinner nSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 99, 1));
+	private JSpinner nSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 9999, 1));
 	private JSpinner dayIncreaseSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 900, 1));
 	private JEditorPane overviewEditor = new ImageEditorPane();
 	
@@ -88,8 +88,7 @@ public class PhaseAddDlg extends JEscapeDialog {
 		dayIncreaseSpinner.addChangeListener(cl);
 		nSpinner.addChangeListener(cl);
 		
-				
-		
+						
 		if(study.getPhaseFormat()==PhaseFormat.DAY_MINUTES) {
 			/////////////////////////////////////////////////////
 			//Format = DAY_MINUTES
