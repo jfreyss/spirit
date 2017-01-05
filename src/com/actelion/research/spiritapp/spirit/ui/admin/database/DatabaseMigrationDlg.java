@@ -40,6 +40,7 @@ import javax.swing.text.StyleConstants;
 
 import org.slf4j.LoggerFactory;
 
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
@@ -61,7 +62,7 @@ public class DatabaseMigrationDlg extends JDialog {
 	
 	private boolean hasErrors = false;
 	private final JTextArea sqlPane = new JTextArea();
-	private final JEditorPane errorPane = new JEditorPane("text/html", "<html>");
+	private final JEditorPane errorPane = new ImageEditorPane();
 
 	public DatabaseMigrationDlg() {
 		super(UIUtils.getMainFrame(), "Spirit - DB Migration", true);
@@ -111,7 +112,7 @@ public class DatabaseMigrationDlg extends JDialog {
 			version = null;
 		}
 		
-		setContentPane(
+		add(
 				UIUtils.createBox(UIUtils.createBox(sp2, sp1),
 						
 				UIUtils.createVerticalBox(new JCustomLabel("Your database is not up to date (currently: " + (version==null?"NA":version) + ")", FastFont.BOLD, Color.RED),
@@ -159,7 +160,7 @@ public class DatabaseMigrationDlg extends JDialog {
 					
 				    javax.swing.text.Document doc = errorPane.getDocument();								
 					doc.insertString(doc.getLength(), sql.replaceAll("\n", " ")+"\n", att1);
-					doc.insertString(doc.getLength(), " > " + e.getMessage().replaceAll("\n", " ")+"\n", att2);
+					doc.insertString(doc.getLength(), " > " + (e.getMessage()==null? e.toString(): e.getMessage().replaceAll("\n", " "))+"\n", att2);
 
 					errorPane.setCaretPosition(doc.getLength());
 				} catch(Exception e2) {

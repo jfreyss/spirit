@@ -79,7 +79,7 @@ public class DropZonePanel extends JPanel implements DropTargetListener {
 		Graphics2D g2 = (Graphics2D)g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-		Font f = FastFont.BOLD.deriveSize(22); 
+		Font f = FastFont.BOLD.increaseSize(10); 
 		if(description!=null && description.length()>0) {
 			g2.setColor(Color.DARK_GRAY);
 			g2.setFont(f);

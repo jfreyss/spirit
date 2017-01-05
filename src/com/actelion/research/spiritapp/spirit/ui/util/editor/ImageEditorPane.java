@@ -21,11 +21,16 @@
 
 package com.actelion.research.spiritapp.spirit.ui.util.editor;
 
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Toolkit;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.JEditorPane;
+
+import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 
 public class ImageEditorPane extends JEditorPane {
 	
@@ -39,6 +44,7 @@ public class ImageEditorPane extends JEditorPane {
 		super("text/html", "");
 		this.imageCache = imageCache;
 		setEditorKit(new MyHTMLEditorKit(imageCache));
+		LF.initComp(this);
 		setEditable(false);
 	}
 	
@@ -46,9 +52,24 @@ public class ImageEditorPane extends JEditorPane {
 		this(imageCache);
 		setText(html);
 	}
+	public ImageEditorPane(String text) {
+		this();
+		setText(text);
+	}
 	
 	public Map<String, Image> getImageCache() {
 		return imageCache;
+	}
+	
+	@Override
+	protected void paintComponent(Graphics g) {
+		Toolkit tk = Toolkit.getDefaultToolkit();
+  		@SuppressWarnings("rawtypes")
+		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
+  		if (map != null) {
+  		    ((Graphics2D)g).addRenderingHints(map);
+  		}
+  		super.paintComponent(g);
 	}
 
 }

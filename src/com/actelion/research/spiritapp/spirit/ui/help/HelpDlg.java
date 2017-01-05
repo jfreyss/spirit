@@ -58,7 +58,6 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreePath;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.util.IOUtils;
 import com.actelion.research.util.FormatterUtils;

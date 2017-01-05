@@ -87,7 +87,7 @@ public class ActionTreatment extends ActionBiosample {
 
 	@Override
 	public String getDetails() {
-		String s = (treatmentName!=null && treatmentName.length()>0? treatmentName : "Weighing:") + 
+		String s = (treatmentName!=null && treatmentName.length()>0? "Treatment: " + treatmentName : "Weighing:") + 
 			(weightString==null || weightString.length()==0?"": " " + weightString+"g ") +
 			(phaseName==null? "": " at "+phaseName) + 
 			(treatmentName==null || treatmentName.length()==0? "": 

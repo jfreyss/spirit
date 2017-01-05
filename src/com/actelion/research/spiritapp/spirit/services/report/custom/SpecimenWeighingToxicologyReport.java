@@ -34,6 +34,7 @@ import org.apache.poi.ss.util.WorkbookUtil;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
+import com.actelion.research.spiritcore.business.biosample.ActionTreatment;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
@@ -50,11 +51,11 @@ import com.actelion.research.spiritcore.util.MiscUtils;
 public class SpecimenWeighingToxicologyReport extends AbstractReport {
 
 	public SpecimenWeighingToxicologyReport() {
-		super(ReportCategory.TOP, "Bodyweights (one sheet per phase)", 
-				"One sheet per phase" + MiscUtils.convert2Html(
-				"Group\tContainerId\tTopId\tNo\tWeight\tIncrease\tTreatment\n"
-				+ "\tCage1\tTopId1\t\n"
-				+ "\tCage1\tTopId2\t\n"));
+		super(ReportCategory.TOP, "Bodyweights (one sheet per phase)", MiscUtils.convert2Html(
+				"Group\tContainerId\tTopId\tNo\tWeight\tIncrease\tTreatment\tFormulation\tDate\n"
+				+ "1. \tCage1\tTopId1\t1\t20\t+1%\tVehicle\n"
+				+ "1. \tCage1\tTopId2\t2\t18\t+2%\tVehicle\n"
+				+ "Phase1 | Phase2 | Phase 3 | Summary | Increase"));
 	}
 	
 	public static com.actelion.research.spiritcore.business.biosample.ActionTreatment getTreatment(Biosample h) {
@@ -129,13 +130,9 @@ public class SpecimenWeighingToxicologyReport extends AbstractReport {
 
 			set(sheet, line, col++, "Treatment", Style.S_TH_CENTER);
 			
-//			set(sheet, line, col++, "Compound", Style.S_TH_CENTER);
 			set(sheet, line, col++, "Dose", Style.S_TH_CENTER);
-//			set(sheet, line, col++, "Unit", Style.S_TH_CENTER);
 			if(hasCompound2) {
-//				set(sheet, line, col++, "Compound2", Style.S_TH_CENTER);
 				set(sheet, line, col++, "Dose", Style.S_TH_CENTER);
-//				set(sheet, line, col++, "Unit", Style.S_TH_CENTER);
 			}
 			
 			
@@ -167,28 +164,24 @@ public class SpecimenWeighingToxicologyReport extends AbstractReport {
 				
 				//Display data
 //				ActionTreatment treatment = animal.getAction(ActionTreatment.class, phase);
-				Biosample h = bio2history.get(animal).get(phase.getShortName());
-				com.actelion.research.spiritcore.business.biosample.ActionTreatment t = getTreatment(h);
+				Biosample h = bio2history.get(animal).get(phase.getName());
+				ActionTreatment t = getTreatment(h);
 				
 				col = 0;
-				set(sheet, line, col++, t==null? null: animal.getInheritedGroupString(Spirit.getUsername()), Style.S_TD_LEFT);				
-				set(sheet, line, col++, t==null? null: animal.getContainerId(), Style.S_TD_CENTER);				
-				set(sheet, line, col++, t==null? null: animal.getSampleId(), Style.S_TD_CENTER);				
-				set(sheet, line, col++, t==null? null: animal.getSampleName(), Style.S_TD_CENTER);	
+				set(sheet, line, col++, animal==null? null: animal.getInheritedGroupString(Spirit.getUsername()), Style.S_TD_LEFT);				
+				set(sheet, line, col++, animal==null? null: animal.getContainerId(), Style.S_TD_CENTER);				
+				set(sheet, line, col++, animal==null? null: animal.getSampleId(), Style.S_TD_CENTER);				
+				set(sheet, line, col++, animal==null? null: animal.getSampleName(), Style.S_TD_CENTER);	
 
 				set(sheet, line, col++, weight, Style.S_TD_DOUBLE1_BLUE);						
 				set(sheet, line, col++, increase , Style.S_TD_DOUBLE1);									
 				
 				set(sheet, line, col++, t==null? null: t.getTreatmentName(), Style.S_TD_LEFT);
 
-//				set(sheet, line, col++, (treatment==null || treatment.getNamedTreatment()==null?"":treatment.getNamedTreatment().getCompoundAndUnit1()), Style.S_TD_LEFT);				
 				set(sheet, line, col++, t==null? null: t.getEff1(), Style.S_TD_DOUBLE1);
-//				set(sheet, line, col++, treatment==null? null: treatment.getNamedTreatment()==null || treatment.getNamedTreatment().getUnit1()==null? "": treatment.getNamedTreatment().getUnit1().getNumerator(), Style.S_TD_CENTER);
 				
 				if(hasCompound2) {
-//					set(sheet, line, col++, (treatment==null || treatment.getNamedTreatment()==null?"":treatment.getNamedTreatment().getCompoundAndUnit2()), Style.S_TD_LEFT);				
 					set(sheet, line, col++, t==null? null: t.getEff2(), Style.S_TD_DOUBLE1);
-//					set(sheet, line, col++, treatment==null? null: treatment.getNamedTreatment()==null || treatment.getNamedTreatment().getUnit2()==null? "": treatment.getNamedTreatment().getUnit2().getNumerator(), Style.S_TD_CENTER);
 				}
 				
 				set(sheet, line, col++, t==null? null: t.getFormulation(), Style.S_TD_LEFT);				

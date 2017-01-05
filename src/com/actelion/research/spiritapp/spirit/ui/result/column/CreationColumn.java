@@ -45,7 +45,7 @@ import com.actelion.research.util.ui.exceltable.Column;
 public class CreationColumn extends Column<Result, String> {
 	private final boolean creation;
 	public CreationColumn(boolean creation) {
-		super(creation?"CreDate": "LastUpdate", String.class, 40);
+		super(creation?"CreDate": "LastUpdate", String.class, 45);
 		setHideable(!creation);
 		this.creation = creation;	
 	}

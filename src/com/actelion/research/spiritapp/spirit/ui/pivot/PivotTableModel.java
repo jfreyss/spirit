@@ -36,7 +36,7 @@ import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
 public class PivotTableModel extends ExtendTableModel<PivotRow> {
 
-	public static final Column<PivotRow, Group> COLUMN_GROUP = new Column<PivotRow, Group>("Group", Group.class, 30) {
+	public static final Column<PivotRow, Group> COLUMN_GROUP = new Column<PivotRow, Group>("Group", Group.class, 25) {
 		private GroupLabel groupLabel = new GroupLabel();
 
 		@Override
@@ -53,7 +53,6 @@ public class PivotTableModel extends ExtendTableModel<PivotRow> {
 		public JComponent getCellComponent(AbstractExtendTable<PivotRow> table, PivotRow row, int rowNo, Object value) {
 			groupLabel.setVerticalAlignment(SwingUtilities.TOP);
 			groupLabel.setGroup((Group) value);
-			groupLabel.setCondenseText(table.isPreferredCondenseText());
 			return groupLabel;
 		}		
 	};
@@ -85,7 +84,7 @@ public class PivotTableModel extends ExtendTableModel<PivotRow> {
 		
 	};
 
-	public static final Column<PivotRow, Biosample> COLUMN_TOPID = new Column<PivotRow, Biosample>("TopId", Biosample.class, 70) {		
+	public static final Column<PivotRow, Biosample> COLUMN_TOPID = new Column<PivotRow, Biosample>("TopId", Biosample.class) {		
 		private SampleIdLabel sampleIdLabel = new SampleIdLabel(false, false);
 
 		@Override

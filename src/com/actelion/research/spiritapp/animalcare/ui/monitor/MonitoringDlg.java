@@ -72,6 +72,7 @@ import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -413,7 +414,7 @@ public class MonitoringDlg extends JEscapeDialog {
 		treatment2Formulation.put(nt, formulation);
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("<html><span style='font-size:8px'>");
+		sb.append("<html><span style='font-size:80%'>");
 		for (NamedTreatment key : treatment2Formulation.keySet()) {
 			if (treatment2Formulation.get(key) != null) {
 				sb.append(key + " -> " + treatment2Formulation.get(key) + "<br>");

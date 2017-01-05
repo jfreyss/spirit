@@ -23,6 +23,12 @@ package com.actelion.research.spiritapp.spirit.ui.lf;
 
 import java.awt.Color;
 
+import javax.swing.JEditorPane;
+import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.StyleSheet;
+
+import com.actelion.research.util.ui.FastFont;
+
 public class LF {
 
 	public static final Color FGCOLOR_ADMIN = new Color(0, 80, 0);
@@ -33,7 +39,6 @@ public class LF {
 	public static final Color COLOR_ERROR_BACKGROUND = new Color(255, 200, 200);
 	public static final Color COLOR_ERROR_FOREGROUND = new Color(255, 0, 0);
 	public static final Color COLOR_WARNING_FOREGROUND = new Color(200, 100, 0);
-//	public static final Color COLOR_COMPOUND  = new Color(0, 0, 130);
 	public static final Color COLOR_TEST  = new Color(130, 0, 0);
 	public static final Color BGCOLOR_REQUIRED  = new Color(250, 250, 220);
 
@@ -44,5 +49,11 @@ public class LF {
 	
 	public static final Color BGCOLOR_LOCATION = new Color(245,245,255); //blueish
 
+	public static void initComp(JEditorPane editorPane) {
+		StyleSheet stylesheet = ((HTMLEditorKit) editorPane.getEditorKit()).getStyleSheet();
+		stylesheet.addRule("body {font-family: " + FastFont.getDefaultFontFamily() + ";font-size:" + FastFont.getDefaultFontSize() + "px}");
+		stylesheet.addRule("td, th {margin:0px;padding:0px}");
+		stylesheet.addRule("table {font-size:100%;margin:0px;padding:0px}");
+	}
 
 }

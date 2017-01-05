@@ -40,6 +40,7 @@ import javax.swing.event.HyperlinkListener;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.home.LastActivityEditorPane;
+import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.study.Phase;
@@ -59,7 +60,7 @@ public class DashboardPanel extends JPanel {
 
 	public DashboardPanel() {
 		super(new BorderLayout());
-		
+		LF.initComp(editorPane);
 		editorPane.addHyperlinkListener(new SpiritHyperlinkListener());
 		editorPane.addHyperlinkListener(new HyperlinkListener() {
 			
@@ -141,21 +142,21 @@ public class DashboardPanel extends JPanel {
 						if(Phase.isSameDay(p.getAbsoluteDate(), dashDate)) {
 							String d = p.getDescription();
 							if(d.length()>0) {
-								desc += "<br><b>" + p.getShortName() + ":</b><br><span style='font-size:8px'>" + d.replace(" + ", "+") + "</span>";
+								desc += "<br><b>" + p.getShortName() + ":</b><br><span style='font-size:80%'>" + d.replace(" + ", "+") + "</span>";
 							}
 						} else if(p.getAbsoluteDate().after(dashDate)) {
 							if(nextPhase==null || nextPhase.getAbsoluteDate()==null || nextPhase.getAbsoluteDate().after(p.getAbsoluteDate())) {
 								String d = p.getDescription();
 								if(d.length()>0) {
 									nextPhase = p;
-									nextDesc = "<br><b>" + p.getShortName() + ":</b><br><span style='font-size:8px'>" + d.replace(" + ", "+") + "</span>";
+									nextDesc = "<br><b>" + p.getShortName() + ":</b><br><span style='font-size:80%'>" + d.replace(" + ", "+") + "</span>";
 								}								
 							}
 							
 						}
 					}
 					StringBuilder sb = new StringBuilder();
-					sb.append("<td valign=top valign=center style='width:110px;color:#666; font-size:9px; margin:1px; padding:1px'>");
+					sb.append("<td valign=top valign=center style='width:110px;color:#666; font-size:90%; margin:1px; padding:1px'>");
 					//sb.append("<a href='stu:" + s.getId() + "' style='font-size:12px;font-weight:bold'>" + s.getStudyId() + "</a>");
 					if(desc.length()>0) {
 						sb.append("<div style='border:solid 1px #FFAAAA; background:#FFFAFA'>");

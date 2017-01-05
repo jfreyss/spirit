@@ -22,29 +22,21 @@
 package com.actelion.research.spiritapp.spirit.ui.admin;
 
 import java.awt.Dimension;
-import java.awt.Image;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Hashtable;
 import java.util.List;
 
-import javax.swing.JEditorPane;
-
 import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.UIUtils;
 
-public class BioTypeDocumentPane extends JEditorPane {
-	private static Hashtable<URL, Image> imageCache = new Hashtable<URL, Image>();
+public class BioTypeDocumentPane extends ImageEditorPane {
 	
 	public BioTypeDocumentPane() {
-		super("text/html", "");		
-		getDocument().putProperty("imageCache", imageCache);
+		super();		
 		setEditable(false);
-//		showAllBiotypes();
 	}
 	
 	
@@ -85,7 +77,7 @@ public class BioTypeDocumentPane extends JEditorPane {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<table width=100% style='margin:0px 0px 2px 0px ;background:" + UIUtils.getHtmlColor(type.getCategory().getBackground()) + "'>");
 		sb.append("<tr><td style='width:110px' valign=top>");
-		sb.append("<b style='font-size:16px'>" + type.getName() + "</b><br>");
+		sb.append("<b style='font-size:120%'>" + type.getName() + "</b><br>");
 		if(type.isHideSampleId()) {
 			sb.append("No SampleId<br>");			
 		} else {
@@ -94,18 +86,13 @@ public class BioTypeDocumentPane extends JEditorPane {
 		sb.append((type.isAbstract()?"<b>Abstract</b>":"")+"<br><br>");
 		if(type.getAmountUnit()!=null) sb.append("Amount: "+type.getAmountUnit()+"<br>");
 		if(type.getContainerType()!=null) sb.append("Container: "+type.getContainerType()+"<br>");
-		
-		
-		try {
-			URL url = new URL("file://localhost/type_"+type.getName());
-			if(imageCache.get(url)==null) imageCache.put(url, ImageFactory.getImage(type));
-			sb.append("<img height=80 width=100 border=0 src='" + url + "'><br>");
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		}
+				
+		String url = "file://localhost/type_"+type.getName();
+		if(getImageCache().get(url)==null) getImageCache().put(url, ImageFactory.getImage(type));
+		sb.append("<img height=80 width=100 border=0 src='" + url + "'><br>");
 		
 		sb.append("</td>");
-		sb.append("<td style='font-size:9px' valign=top><table>");
+		sb.append("<td style='font-size:90%' valign=top><table>");
 		
 		if(type.getSampleNameLabel()!=null) {
 			sb.append("<tr><td style='white-space:nowrap'><b><u>" + type.getSampleNameLabel() + ":</u></b></td><td>MainField " + (type.isNameAutocomplete()?"Autocomplete":"") + (type.isNameRequired()?"<span style='color:red'> [Req]</span>":"") + "</td></tr>");

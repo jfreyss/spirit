@@ -35,7 +35,7 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 public class StudyGroupColumn extends Column<Biosample, Group> {
 
-	private static GroupLabel groupLabel = new GroupLabel();	
+	private GroupLabel groupLabel = new GroupLabel();	
 	private EditBiosampleTableModel model;
 	
 	/**

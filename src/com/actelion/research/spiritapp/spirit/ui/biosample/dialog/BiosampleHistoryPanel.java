@@ -27,42 +27,30 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.swing.BorderFactory;
-import javax.swing.JEditorPane;
-import javax.swing.text.html.HTMLEditorKit;
-import javax.swing.text.html.StyleSheet;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.IBiosampleDetail;
 import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.util.FormatterUtils;
 
-public class BiosampleHistoryPanel extends JEditorPane implements IBiosampleDetail {
+public class BiosampleHistoryPanel extends ImageEditorPane implements IBiosampleDetail {
 	
 	private int display;
 	private Collection<Biosample> biosamples;
-	private HTMLEditorKit kit = new HTMLEditorKit();
-	
 	public BiosampleHistoryPanel() {
-		super("text/html", "");
+		super();
 		setBorder(BorderFactory.createEmptyBorder());
 		
 		setOpaque(false);
 		setEditable(false);
 		setBackground(Color.white);		
-		setEditorKit(kit);
 		
-		StyleSheet stylesheet = kit.getStyleSheet();
-		stylesheet.addRule("td, th {margin:0px;padding:0px}");
-		stylesheet.addRule(".description th {padding-left:0px;padding-right:2px;margin-top:0px;font-weight:plain;text-align:right;font-size:9px;color:gray}");
-		stylesheet.addRule(".description td {padding-left:0px;margin-top:0px;font-weight:plain;text-align:left; font-size:9px}");
-		
-		setBackground(new java.awt.Color(0,0,0,0));
-	
 		BiosampleActions.attachPopup(this);
 		
 		addHyperlinkListener(new SpiritHyperlinkListener());
@@ -105,12 +93,6 @@ public class BiosampleHistoryPanel extends JEditorPane implements IBiosampleDeta
 		try {						
 		
 			for(Biosample b: biosamples) {
-			
-//				txt.append("<div style='border-bottom: solid 1px #999999; background:#FFFFFF; padding:3px; white-space:nowrap'>");
-//				txt.append("Owner: <i>"+b.getCreUser()+" " +(b.getEmployeeGroup()==null?"": " (" + b.getEmployeeGroup().getName()+")") + "</i>");
-//				txt.append("Last Update: <i>"+b.getUpdUser()+"</i> - <span style='font-size:9px'>" + FormatterUtils.formatDateOrTime(b.getUpdDate()) + "</span>");
-//				txt.append("</div>");
-				
 				txt.append("<b>Change history</b><table>");
 				try {
 					List<Revision> revisions = DAORevision.getRevisions(b);

@@ -45,9 +45,11 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerActions;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerTable;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerTableModel.ContainerTableModelType;
+import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.print.PrintingDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.slide.Template;
@@ -194,7 +196,7 @@ public class ContainerGeneratorPanel extends JPanel {
 		} else {
 			List<Biosample> selectedSamples = JPAUtil.reattach(animalsTable.getSelection());			
 			if(selectedSamples.size()==0) {
-				infoLabel.setText("<html><span style='color:red;font-size:14px'>You must select at least one sample</span></html>");
+				infoLabel.setText("<html><span style='color:red;font-size:110%'>You must select at least one sample</span></html>");
 				return;
 			}
 			infoLabel.setText("");
@@ -226,7 +228,10 @@ public class ContainerGeneratorPanel extends JPanel {
 				
 				//Notify the user
 				infoLabel.setText("<html>" + msgs + "</html>");
-				JScrollPane sp = new JScrollPane(new JEditorPane("text/html", "<html>" + msgs + "</html>"));
+				JEditorPane editorPane = new ImageEditorPane();
+				editorPane.setText("<html>" + msgs + "</html>");
+				LF.initComp(editorPane);
+				JScrollPane sp = new JScrollPane(editorPane);
 				sp.setMaximumSize(new Dimension(600, 600));
 				sp.setPreferredSize(new Dimension(600, 600));
 				if(res.size()==0) {

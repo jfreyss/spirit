@@ -73,7 +73,7 @@ public class LocationBrowser extends JPanel {
 	private Location location = null;
 	
 	private JCustomTextField locationTextField = new JCustomTextField();
-	private List<LocationComboBox> locationComboBoxes = new ArrayList<LocationComboBox>();
+	private List<LocationComboBox> locationComboBoxes = new ArrayList<>();
 	
 	private boolean allowTextEditing = true;
 	private JPanel textPanel = new JPanel(new BorderLayout());
@@ -90,22 +90,22 @@ public class LocationBrowser extends JPanel {
 			for (int i = 0; i < locationComboBoxes.size(); i++) {
 				LocationComboBox c = locationComboBoxes.get(i);
 				Location l = c.getSelection();
-				int w = l==null?50: getFontMetrics(getFont()).stringWidth(l.getName())+36;
+				int w = l==null?50: getFontMetrics(c.getFont()).stringWidth(l.getName())+36;
 				
 				if(first || x+w+5<width) {			
-					c.setBounds(x, y, w, 24);				
+					c.setBounds(x, y, w, FastFont.getDefaultFontSize()+12);				
 					x+=w-2;
 					first = false;
 				} else {
-					y+=24;
+					y+=FastFont.getDefaultFontSize()+12+2;
 					x=0;
-					c.setBounds(x, y, w, 24);				
+					c.setBounds(x, y, w, FastFont.getDefaultFontSize()+12);				
 					x+=w-2;
 				}
 				maxX = Math.max(maxX, x);
 			}	
 			layoutSize.width = width;
-			layoutSize.height = y+26;
+			layoutSize.height = y + FastFont.getDefaultFontSize()+12+2;
 		}
 	};
 	
@@ -241,12 +241,12 @@ public class LocationBrowser extends JPanel {
 	}
 		
 	
-	private Dimension layoutSize = new Dimension(220, 26);
+	private Dimension layoutSize = new Dimension(220, FastFont.getDefaultFontSize()+12+2);
 	
 	private void updateView() {
 		comboPanel.removeAll();		
 		locationComboBoxes.clear();
-		List<Location> hierarchy = new ArrayList<Location>();
+		List<Location> hierarchy = new ArrayList<>();
 		if(location!=null) {
 			location = JPAUtil.reattach(location);
 			hierarchy = location.getHierarchy();
@@ -257,7 +257,7 @@ public class LocationBrowser extends JPanel {
 			final Location parentFinal = parent;
 			
 			//Find possible choices
-			List<Location> nextChildren = new ArrayList<Location>();
+			List<Location> nextChildren = new ArrayList<>();
 			for (Location l : parent==null? DAOLocation.getLocationRoots(): parent.getChildren()) {
 				if(!SpiritRights.canRead(l, Spirit.getUser())) continue;
 				if(filter==LocationBrowserFilter.CONTAINER && l.getLocationType().getPositionType()!=LocationLabeling.NONE) continue;
@@ -271,7 +271,6 @@ public class LocationBrowser extends JPanel {
 			Collections.sort(nextChildren);
 			Location sel = i<hierarchy.size()? hierarchy.get(i): null;
 			final LocationComboBox locComboBox = new LocationComboBox(nextChildren);
-			locComboBox.setFont(getFont());
 			
 			locComboBox.setSelection(sel);
 			locComboBox.addPropertyChangeListener(LocationComboBox.PROPERTY_TEXTCHANGED, new PropertyChangeListener() {				
@@ -299,7 +298,7 @@ public class LocationBrowser extends JPanel {
 			locationComboBoxes.add(locComboBox);
 			comboPanel.add(locComboBox);
 			
-			nextChildren = new ArrayList<Location>();
+			nextChildren = new ArrayList<>();
 			parent = sel;
 		}
 		

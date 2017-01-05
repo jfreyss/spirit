@@ -205,8 +205,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 	private void updateEditorPane() {
 		setText("<html><body style='font-family:Arial'>"
 				+ recentNews
-				+ "<div style='background:#FAFAFA; padding:5px; border:solid 1px #550000; width:100%; font-size:11px'>"
-				+ "<b>Welcome " + Spirit.getUsername()+", </b>"
+				+ "<div style='background:#FAFAFA; padding:5px; border:solid 1px #550000; width:100%'>"
 				+ recentChanges
 				+ "</div>"
 				+ "</body></html>");
@@ -222,11 +221,11 @@ public class LastActivityEditorPane extends ImageEditorPane {
 			try {
 				List<News> news = WikiNewsFeed.getNews("Documentation.Spirit.News");
 				if(news.size()>0) {
-					newsBuilder.append("<div style='margin-bottom:15px;color:#550000;background:#EEEEDD; border:solid 1px #550000; padding:3px;width:100%; font-size:11px'>");
-					newsBuilder.append("<div style='color:black;font-weight:bold;font-size:12px;background:#FFFFAA;width:100%;padding:2px;border-bottom:solid 1px #550000'>Here are some important changes</div>");
+					newsBuilder.append("<div style='margin-bottom:15px;color:#550000;background:#EEEEDD; border:solid 1px #550000; padding:3px;width:100%'>");
+					newsBuilder.append("<div style='color:black;font-weight:bold;background:#FFFFAA;width:100%;padding:2px;border-bottom:solid 1px #550000'>Here are some important changes</div>");
 					for (News n: news) {
 						newsBuilder.append("<div style='padding:5px'>");
-						newsBuilder.append("<span style='font-size:8px'>"+FormatterUtils.formatDate(n.getDate()) + "</span><br>");
+						newsBuilder.append("<span style='font-size:80%'>"+FormatterUtils.formatDate(n.getDate()) + "</span><br>");
 						if(n.getTitle()!=null && n.getTitle().length()>0) newsBuilder.append("<b>" + n.getTitle() + "</b><br>");
 						if(n.getContent()!=null && n.getContent().length()>0) newsBuilder.append(n.getContent());
 						newsBuilder.append("</div>");
@@ -242,8 +241,8 @@ public class LastActivityEditorPane extends ImageEditorPane {
 			try { 
 				List<Study> studies = DAOStudy.queryStudies(StudyQuery.createForState("EXAMPLE"), null);
 				if(studies.size()>0 && (System.currentTimeMillis() - studies.get(0).getUpdDate().getTime()<7*24*3600*1000L)) {
-					newsBuilder.append("<div style='margin-bottom:15px;color:#550000;background:#FFFFDD; border:solid 1px #550000; padding:0px;width:100%; font-size:11px'>");
-					newsBuilder.append("<div style='color:black;font-weight:bold; font-size:12px;background:#FFFFAA;width:100%;padding:2px;border-bottom:solid 1px #550000'>Spirit Biobank</div>");
+					newsBuilder.append("<div style='margin-bottom:15px;color:#550000;background:#FFFFDD; border:solid 1px #550000; padding:0px;width:100%'>");
+					newsBuilder.append("<div style='color:black;font-weight:bold; background:#FFFFAA;width:100%;padding:2px;border-bottom:solid 1px #550000'>Spirit LIMS</div>");
 					newsBuilder.append("<div style='padding:2px'><p>The Spirit database is now created and prefilled with some example data (tests/biotypes/studies).</p>"
 							+ "<p>It is locally available on your computer, but it is recommended to setup your own database and configure it in <i>Admin: Database Settings</i></p>");
 					newsBuilder.append("<p>Spirit is divided into 5 tabs:</p>");
@@ -280,7 +279,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 			Pair<String, Date> last = getLastUserIdDate(s, countBio, countRes);
 			
 			boolean isResp = s.isMentioned(user.getUsername());
-			sb.append("<tr style='margin:0px; padding:0px; border: solid 1px #CCCCCC;" + (isResp?"background:#FFFFEE":"") + "'>");
+			sb.append("<tr style='margin:0px; padding:0px; border: solid 1px #CCCCCC;" + (isResp?"background:#FFFFEE":"background:#FFFFFF") + "'>");
 			
 			if(extraColumn!=null) {
 				if(extraColumn.get(s)!=null) {
@@ -292,12 +291,12 @@ public class LastActivityEditorPane extends ImageEditorPane {
 			sb.append("<td valign=top style='width:50%;white-space:nowrap; margin:0px; padding:0px; border-right: dashed 1px #EEEEEE'>");
 			{
 				//StudyId
-				sb.append("<span style='font-size:12px'><a href='stu:" + s.getId() + "' style='font-weight:bold'>" + s.getStudyId() + "</a> ");
+				sb.append("<span style='font-size:130%'><a href='stu:" + s.getId() + "' style='font-weight:bold'>" + s.getStudyId() + "</a> ");
 				if(s.getIvv()!=null && s.getIvv().length()>0) sb.append(" / <b>" + s.getIvv() + "</b>");
 				sb.append("</span>");
 				
 				//StudyDates / States
-				sb.append("<div style='font-size:8px'>");
+				sb.append("<div style='font-size:100%%'>");
 				sb.append(s.getState());			
 				if(s.getFirstDate()!=null) {
 					Date startDate = s.getFirstDate();
@@ -308,13 +307,13 @@ public class LastActivityEditorPane extends ImageEditorPane {
 				sb.append("</div>");
 
 				//StudyTitle
-				if(s.getTitle()!=null) sb.append(" <div style='font-size:12px;white-space:wrap;'>" + s.getTitle() + "</div>");
+				if(s.getTitle()!=null) sb.append(" <div style='white-space:wrap;'>" + s.getTitle() + "</div>");
 				if(s.getNotes()!=null && s.getNotes().length()>0) {
 					String notes = s.getNotes();
 					if(notes.length()>500) {
 						notes = notes.substring(0, 500);
 					}
-					sb.append(" <div style='font-size:9px;white-space:wrap;color:#444444; margin:2px'>" + MiscUtils.convert2Html(notes) + "</div>");
+					sb.append(" <div style='white-space:wrap;color:#444444; margin:2px'>" + MiscUtils.convert2Html(notes) + "</div>");
 				}
 			}
 			
@@ -380,12 +379,10 @@ public class LastActivityEditorPane extends ImageEditorPane {
 			
 			Map<Biotype, Triple<Integer, String, Date>> m1 = DAOStudy.countRecentSamplesByBiotype(date);
 			if(m1!=null) {
-				sb.append("<tr><td colspan=2><hr></td></tr>");
-				
 				sb.append("<tr style='margin:0.5px 1px 0px 0px; padding:0px'>");				
 				sb.append("<td valign=top>");
 
-				sb.append("<table style='font-size:8px;padding:2px'>");				
+				sb.append("<table style='padding:2px'>");				
 				for (Biotype type: m1.keySet()) {					
 					sb.append("<tr><td>");
 					sb.append("<a href='bios::" + type.getName() + ":" + days + "'><b>" + type.getName() + "</b></a> (" + m1.get(type).getFirst() + ") ");																								
@@ -395,11 +392,11 @@ public class LastActivityEditorPane extends ImageEditorPane {
 				}
 				sb.append("</table>");
 				sb.append("</td></tr>");
-				sb.append("<tr><td colspan=2><hr></td></tr>");
 			}
 			
 			StringBuilder sb2 = new StringBuilder();
-			sb2.append("here are the recent changes made to the database:<br>(");
+			sb2.append("<table width=100%><tr><td width=50%>Welcome, <b>" + MiscUtils.removeHtml(Spirit.getUsername()) + "</b> <br>here are the recent changes made to the database:</td>");
+			sb2.append("<td width=50% style='white-space:nowrap;text-align:right'>(");
 			for(int d: new int[]{1,3,7,15,31,90,365}) {
 				if(d==days) {
 					sb2.append("<b>" + d + " day"+ (d<=1? "": "s") + "</b> | ");
@@ -408,24 +405,24 @@ public class LastActivityEditorPane extends ImageEditorPane {
 				}
 			}
 			sb2.setLength(sb2.length()-3);
-			sb2.append(")");
+			sb2.append(")<br>");
 			if(!showDesign) {
-				sb2.append(" &nbsp;&nbsp; (<a href='design:true'>Show Design</a> | <b>Hide Design</b>)");
+				sb2.append("(<a href='design:true'>Show Design</a> | <b>Hide Design</b>)");
 			} else {
-				sb2.append(" &nbsp;&nbsp; (<b>Show Design</b> | <a href='design:false'>Hide Design</a>)");
+				sb2.append("(<b>Show Design</b> | <a href='design:false'>Hide Design</a>)");
 			}
 			if(showExpertOnly) {
 				sb2.append(" &nbsp;&nbsp; (<a href='expert:false'>With Read Access</a> | <b>With Write Access</b>)");
 			} else {
 				sb2.append(" &nbsp;&nbsp; (<b>With Read Access</b> | <a href='expert:true'>With Write Access</a>)");
 			}
-//			sb2.append(" &nbsp;&nbsp; (<a href='refresh:'>Refresh</a>)");			
+			sb2.append("</td></tr></table>");
 
 			//Display
 			if(sb.length()==0) {
 				sb2.append("<br><br>No changes were made in the last " + days + " day" + (days<=1? "": "s"));
 			} else {			
-				sb2.append("<br><br><table style='width:100%; padding:0px;margin:0px background:#FFFFFF;'>" + sb + "</table>");
+				sb2.append("<br><br><table style='width:100%; background:#EEEEEE;'>" + sb + "</table>");
 			}
 			return sb2.toString();
 		} catch (Throwable e) {

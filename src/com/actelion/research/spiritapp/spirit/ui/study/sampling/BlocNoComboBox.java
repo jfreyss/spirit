@@ -35,7 +35,7 @@ import com.actelion.research.util.ui.JGenericComboBox;
 public class BlocNoComboBox extends JGenericComboBox<Integer> {
 		
 	public BlocNoComboBox(boolean allowNull) {
-		List<Integer> values = new ArrayList<Integer>();
+		List<Integer> values = new ArrayList<>();
 		for (int i = 1; i <= 10; i++) {
 			values.add(i);
 		}
@@ -48,7 +48,7 @@ public class BlocNoComboBox extends JGenericComboBox<Integer> {
 			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 				if(value!=null && value.toString().length()>0) {
-					setFont(FastFont.REGULAR.deriveSize(11));
+					setFont(FastFont.MEDIUM);
 					setText("#"+value);
 				}
 				return this;

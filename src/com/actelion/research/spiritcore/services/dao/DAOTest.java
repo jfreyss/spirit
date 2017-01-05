@@ -236,7 +236,7 @@ public class DAOTest {
 			Cache.getInstance().remove("id2test"+JPAUtil.getManager());
 
 		} finally {
-			if(txn!=null) try{txn.rollback();}catch (Exception e) {}
+			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
 		}	
 	}
 		

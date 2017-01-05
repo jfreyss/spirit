@@ -387,7 +387,7 @@ public class DAOResult {
 			txn.commit();
 			txn = null;
 		} finally {
-			if(txn!=null) if(txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
+			if(txn!=null && txn.isActive()) if(txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
 		}
 	}		
 	
@@ -650,7 +650,7 @@ public class DAOResult {
 			txn.commit();
 			return results.size();
 		} catch (Exception e) {
-			if(txn!=null) txn.rollback();
+			if(txn!=null && txn.isActive()) txn.rollback();
 			throw e;
 		} finally {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}

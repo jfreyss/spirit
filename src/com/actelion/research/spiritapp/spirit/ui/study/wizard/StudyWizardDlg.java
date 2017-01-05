@@ -61,6 +61,7 @@ import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
+import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyEditorPane;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.StudySaveImageDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.sampling.NamedSamplingDlg;
@@ -70,6 +71,7 @@ import com.actelion.research.spiritapp.spirit.ui.study.wizard.treatment.StudyTre
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.Document.DocumentType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -109,7 +111,7 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 	private DefaultListModel<Group> groupModel = new DefaultListModel<>();
 	private JList<Group> groupList = new JList<>(groupModel);
 	
-	private JEditorPane documentEditorPane = new JEditorPane("text/html", "");
+	private JEditorPane documentEditorPane = new ImageEditorPane();
 	
 	private JLabel phaseLabel = new JLabel();
 	private JButton editNameButton =  new JButton(new Action_EditNameDescription());
@@ -130,7 +132,7 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 	public StudyWizardDlg(Study myStudy, boolean duplicateMode) {
 		super(UIUtils.getMainFrame(), "Study - Study Design", StudyWizardDlg.class.getName());		
 		study = JPAUtil.reattach(myStudy);
-	
+		LF.initComp(documentEditorPane);
 		
 		//Duplicate modem open the studyInfoDlg
 		try {

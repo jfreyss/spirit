@@ -53,7 +53,7 @@ public class DateTextField extends JCustomTextField {
 		setToolTipText("Date: yyyy or MM.yyyy or dd.MM.yyyy or Time: dd.MM.yyyy HH:mm:ss");
 		setLayout(null);
 		
-		button.setFont(FastFont.SMALLER_CONDENSED);
+		button.setFont(FastFont.SMALLER);
 		button.setBorder(null);
 		button.setToolTipText("Find Sample");
 		button.setVisible(showToday);

@@ -28,11 +28,13 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -72,7 +74,7 @@ public class LocationPanel extends JPanel {
 	protected static enum Type {PARENT, MAIN, CHILD}
 	private Type type;
 	
-	private final int LEGEND_HEIGHT = 20;
+	private final int LEGEND_HEIGHT = FastFont.BIGGER.getSize() + 8;
 	private final LocationDepictor depictor;
 	private Location location;
 		
@@ -191,15 +193,15 @@ public class LocationPanel extends JPanel {
 		this.depth = depth;
 		this.displayChildrenDepth = displayChildrenDepth;
 		
-		int cols = getWidth() / 300;
-		cols = (int) (Math.sqrt(children.size())+1);
+		int cols = (getWidth()<=0? 1200: getWidth()) / 300;		
+//		cols = (int) (Math.sqrt(children.size())+1);
 		int rows = (children.size()-1) / cols + 1;
 		
 		double width  = ((double)getWidth() - MARGIN*2) / cols; 
 		double height = ((double)getHeight() - LEGEND_HEIGHT - MARGIN) / rows;
 		
-//		if(height>380) height = 380;
-//		if(width>height*3) width = height*3;
+		if(height>350) height = 350;
+		if(width>height*3) width = height*3;
 		int i = 0;
 		
 		removeAll();
@@ -290,6 +292,9 @@ public class LocationPanel extends JPanel {
 					widthChild = (getWidth()-MARGIN*2+PADDING)/cols;
 				}
 				
+//				heightChild = Math.min(heightChild, 400/(depth+1));
+//				widthChild = Math.min(widthChild, 400/(depth+1));
+				
 				offset_positions = offset_children + (int)(rows*heightChild+10);
 				
 				int child = 0;
@@ -338,6 +343,13 @@ public class LocationPanel extends JPanel {
 	public void paint(Graphics graphics) {
 		
 		Graphics2D g = (Graphics2D) graphics;
+		Toolkit tk = Toolkit.getDefaultToolkit();
+  		@SuppressWarnings("rawtypes")
+		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
+  		if (map != null) {
+  		    ((Graphics2D)g).addRenderingHints(map);
+  		}
+		
 		int d = Math.min(depth, 4);
 		
 		if(type==Type.MAIN) {
@@ -361,8 +373,8 @@ public class LocationPanel extends JPanel {
 			Color bg1 = UIUtils.getDilutedColor(bgColor, Color.LIGHT_GRAY, .7);		
 			Color bg2 = UIUtils.getTransparentColor(bg1);
 			
-			g.setPaint(new GradientPaint(0,1, bg1, 0, 30, bg2));
-			g.fillRect(0, 0, getWidth(), 30);
+			g.setPaint(new GradientPaint(0,1, bg1, 0, LEGEND_HEIGHT, bg2));
+			g.fillRect(0, 0, getWidth(), LEGEND_HEIGHT);
 	
 			
 			//Draw Name
@@ -381,9 +393,9 @@ public class LocationPanel extends JPanel {
 				if(location.getDescription()!=null && location.getDescription().length()>0) fullName+=" - "+location.getDescription();
 				
 				//Draw Name
-				g.setFont(type==Type.MAIN? FastFont.BOLD.deriveSize(16): FastFont.REGULAR.deriveSize(16));
+				g.setFont(type==Type.MAIN? FastFont.BIGGEST: FastFont.BIGGER);
 				g.setColor(fgColor);
-				g.drawString(fullName, left, 16);
+				g.drawString(fullName, left, FastFont.BIGGER.getSize()+4);
 				left += g.getFontMetrics().stringWidth(fullName) + 5;
 				
 				
@@ -392,7 +404,7 @@ public class LocationPanel extends JPanel {
 					if(location.getOccupancy()>0) {
 						String s = "(" + location.getOccupancy() + (location.getCols()>0? "/" + (location.getCols()*location.getRows()) :"") + " samples)";
 						g.setFont(FastFont.REGULAR);
-						g.drawString(s, left, 15);
+						g.drawString(s, left, g.getFont().getSize()+4);
 						left += g.getFontMetrics().stringWidth(s)+5;
 					}
 				
@@ -400,7 +412,7 @@ public class LocationPanel extends JPanel {
 					g.setColor(Color.GRAY);
 					g.setFont(FastFont.SMALLER);
 					String s = location.getLocationId();
-					g.drawString(s, Math.max(left+10, getWidth() - g.getFontMetrics().stringWidth(s) - 4), 9);
+					g.drawString(s, Math.max(left+10, getWidth() - g.getFontMetrics().stringWidth(s) - 4), g.getFont().getSize()+2);
 				}				
 	
 				//Privacy
@@ -408,7 +420,7 @@ public class LocationPanel extends JPanel {
 					String s = location.getPrivacy() + " (" + location.getEmployeeGroup().getName() + ")";
 					g.setFont(FastFont.BOLD);
 					g.setColor(inherited.getBgColor().darker().darker());
-					g.drawString(s, left+10, 15);
+					g.drawString(s, left+10, g.getFont().getSize()+4);
 				}
 				
 			} else if(getHeight()>16) { //Child Mode with sufficient height
@@ -423,17 +435,9 @@ public class LocationPanel extends JPanel {
 				g.setColor(fgColor);
 				String s = location.getName();
 				if(location.getDescription()!=null && location.getDescription().length()>0) s+=" - "+location.getDescription();
-				g.setFont(location.getLocationType()==null || location.getLocationType().getCategory()==LocationCategory.ADMIN? FastFont.BOLD: location.getLocationType().getCategory()==LocationCategory.CONTAINER? FastFont.REGULAR: FastFont.MEDIUM_CONDENSED);
-				g.drawString(s, left, 13);
-				
-				
-//				if(getHeight()>22 && location.getChildren().size()==0 && depth<=1) {
-//					int n = location.getBiosamples().size();
-//					g.setColor(n==0? Color.LIGHT_GRAY: location.getSize()<0? Color.DARK_GRAY: n<location.getSize()? Color.GREEN.darker(): Color.RED.darker());
-//					g.setFont(FastFont.SMALL_CONDENSED);
-//					s = n + " samples " + (location.getSize()>0? " / "+location.getSize():"");				
-//					g.drawString(s, left, 22);
-//				}				
+				g.setFont(location.getLocationType()==null || location.getLocationType().getCategory()==LocationCategory.ADMIN? FastFont.BOLD: location.getLocationType().getCategory()==LocationCategory.CONTAINER? FastFont.REGULAR: FastFont.MEDIUM);
+				g.drawString(s, left, g.getFont().getSize()+1);
+								
 			}
 		}
 			
@@ -481,13 +485,10 @@ public class LocationPanel extends JPanel {
 	
 	private Color getChildBackground(int depth) {
 		return UIUtils.getColor(230,230,235);
-//		if(depth>6) depth = 6;
-//		return UIUtils.getColor(230-7*depth, 230-7*depth, 235-7*depth);
 	}
+
 	private Color getBackground(int depth) {
 		return UIUtils.getColor(245, 245, 250);
-//		if(depth>6) depth = 6;
-//		return UIUtils.getColor(245-5*depth, 245-5*depth, 250-5*depth);
 	}
 
 

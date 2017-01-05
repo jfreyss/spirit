@@ -289,11 +289,8 @@ public class ResultSearchTree extends FormTree {
 				
 				studies = query.getStudyIds()==null || query.getStudyIds().length()==0? null: DAOStudy.queryStudies(StudyQuery.createForStudyIds(query.getStudyIds()), user);
 
-				
-				
 				//Inputs
 				inputKeywords = getResultFilters();
-
 			}
 			
 			@Override

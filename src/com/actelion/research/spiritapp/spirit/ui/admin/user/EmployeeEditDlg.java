@@ -26,7 +26,6 @@ import java.awt.event.ActionListener;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import javax.swing.Box;
@@ -43,8 +42,6 @@ import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDia
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
-import com.actelion.research.spiritcore.services.SpiritRights;
-import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;

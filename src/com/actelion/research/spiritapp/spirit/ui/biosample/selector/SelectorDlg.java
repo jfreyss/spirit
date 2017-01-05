@@ -47,8 +47,10 @@ import javax.swing.UIManager;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
+import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils.ExportMode;
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
@@ -76,7 +78,7 @@ public class SelectorDlg extends JEscapeDialog {
 	private JGenericComboBox<BiosampleLinker> discriminatorComboBox;
 	private JGenericComboBox<BiosampleLinker> displayComboBox;
 	
-	private JEditorPane editorPane = new JEditorPane("text/html", "");
+	private JEditorPane editorPane = new ImageEditorPane();
 	
 	//selectorPanel
 	private final JPanel selectorPanel = new JPanel();
@@ -94,6 +96,8 @@ public class SelectorDlg extends JEscapeDialog {
 	public SelectorDlg(List<Biosample> pool, BiosampleLinker querySel, BiosampleLinker discriminatorSel, BiosampleLinker displaySel) {
 		super(UIUtils.getMainFrame(), "Help me select some biosamples");		
 		
+		LF.initComp(editorPane);
+
 		//Validate input
 		try {
 			if(pool.size()<2) throw new Exception("You must select a pool of biosamples to pick from");		

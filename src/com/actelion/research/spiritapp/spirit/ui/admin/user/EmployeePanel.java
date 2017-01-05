@@ -122,6 +122,8 @@ public class EmployeePanel extends JPanel {
 			}
 		});
 		
+		
+		filterField.setOpaque(false);
 		filterField.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {

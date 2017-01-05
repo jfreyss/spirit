@@ -81,7 +81,7 @@ public class SampleIdGenerateField<UNDERLYING> extends JCustomTextField {
 		setLayout(null);
 		generateButton.setBorder(null);
 		setToolTipText("Click here and scan an ID or click GET to generate a new sampleId");
-		generateButton.setFont(FastFont.REGULAR.deriveSize(8));
+		generateButton.setFont(FastFont.SMALLER);
 		generateButton.setToolTipText("Generate a new sampleId");
 		add(generateButton);
 	}

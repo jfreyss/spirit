@@ -52,6 +52,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 
@@ -266,30 +267,32 @@ public class JComboCheckBox extends JCustomTextField {
 		Graphics2D g = (Graphics2D) graphics;
 		super.paint(g);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		Color bg0 = UIUtils.getColor(246, 248, 250);
-		Color bg1 = UIUtils.getColor(170, 190, 207);
-		Color bg2 = UIUtils.getColor(187, 208, 227);
 		Color fg = Color.BLACK;
-		if(!isEnabled()) {
-			bg0 = bg0.darker();
-			bg1 = bg1.darker();
-			bg2 = bg2.darker();
-		} else if(frame!=null && frame.isShowing()) {
-			bg0 = UIUtils.getColor(143, 169, 192);
-			bg1 = UIUtils.getColor(63, 108, 147);
-			bg2 = UIUtils.getColor(90, 139, 182);
-			fg = Color.WHITE;
+		if(UIManager.getLookAndFeel().getName().contains("!!Nimbus")) {
+			Color bg0 = UIUtils.getColor(246, 248, 250);
+			Color bg1 = UIUtils.getColor(170, 190, 207);
+			Color bg2 = UIUtils.getColor(187, 208, 227);
+			if(!isEnabled()) {
+				bg0 = bg0.darker();
+				bg1 = bg1.darker();
+				bg2 = bg2.darker();
+			} else if(frame!=null && frame.isShowing()) {
+				bg0 = UIUtils.getColor(143, 169, 192);
+				bg1 = UIUtils.getColor(63, 108, 147);
+				bg2 = UIUtils.getColor(90, 139, 182);
+				fg = Color.WHITE;
+			}
+			Insets insets = getInsets();
+			g.setPaint(new GradientPaint(0, 0, bg0, 0, getHeight()/2, bg1));
+			g.fillRect(getWidth()-(insets.right-3), insets.top-3,  (insets.right-6), getHeight()/2-(insets.top-3));
+			
+			g.setPaint(new GradientPaint(0, getHeight()/2, bg1, 0, getHeight()-2, bg2));
+			g.fillRect(getWidth()-(insets.right-3), getHeight()/2, (insets.right-6), getHeight()/2-(insets.bottom-4));
+			g.setColor(UIUtils.getColor(139,160,179));
+			g.drawLine(getWidth()-(insets.right-3)-1, insets.top-3+1, getWidth()-(insets.right-3)-1, getHeight()-(insets.bottom-3)-1);
+			g.setColor(fg);
 		}
-		Insets insets = getInsets();
-		g.setPaint(new GradientPaint(0, 0, bg0, 0, getHeight()/2, bg1));
-		g.fillRect(getWidth()-(insets.right-3), insets.top-3,  (insets.right-6), getHeight()/2-(insets.top-3));
-		
-		g.setPaint(new GradientPaint(0, getHeight()/2, bg1, 0, getHeight()-2, bg2));
-		g.fillRect(getWidth()-(insets.right-3), getHeight()/2, (insets.right-6), getHeight()/2-(insets.bottom-4));
-		g.setColor(UIUtils.getColor(139,160,179));
-		g.drawLine(getWidth()-(insets.right-3)-1, insets.top-3+1, getWidth()-(insets.right-3)-1, getHeight()-(insets.bottom-3)-1);
-		g.setColor(fg);
-		g.setFont(FastFont.BIGGER.deriveSize(16));
+		g.setFont(FastFont.BIGGEST);
 		g.drawString("*", getWidth()-9-g.getFontMetrics().stringWidth("*")/2, getHeight()/2+5);
 		g.fillPolygon(new int[] {getWidth()-12, getWidth()-6, getWidth()-9}, new int[] {getHeight()/2, getHeight()/2, getHeight()/2+6}, 3 );
 		

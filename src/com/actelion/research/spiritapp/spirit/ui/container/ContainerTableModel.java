@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.JComponent;
-import javax.swing.SwingConstants;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdLabel;

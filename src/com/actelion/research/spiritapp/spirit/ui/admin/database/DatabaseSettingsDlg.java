@@ -455,11 +455,13 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 			dbproperty2comp.put(property, comp);
 			comps.add(UIUtils.createHorizontalBox(comp, encryptButton));
 			comp.setEnabled(DBAdapter.isConfigurable());
+			encryptButton.setEnabled(DBAdapter.isConfigurable());
 			comp.setText(adapter.getDBProperty(property));
 			return comp;
 		} else {
 			JCustomTextField comp = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 25);
 			comp.setText(adapter.getDBProperty(property));
+			comp.setEnabled(DBAdapter.isConfigurable());
 			dbproperty2comp.put(property, comp);
 			comps.add(comp);
 			return comp;

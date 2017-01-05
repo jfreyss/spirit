@@ -374,32 +374,36 @@ public class JTextComboBox extends JCustomTextField {
 	@Override
 	public void paint(Graphics graphics) {
 		Graphics2D g = (Graphics2D) graphics;
+		UIUtils.applyDesktopProperties(g);
 		super.paint(g);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		Color bg0 = UIUtils.getColor(246, 248, 250);
-		Color bg1 = UIUtils.getColor(170, 190, 207);
-		Color bg2 = UIUtils.getColor(187, 208, 227);
-		Color fg = Color.BLACK;
-		if(!isEnabled()) {
-			bg0 = bg0.darker();
-			bg1 = bg1.darker();
-			bg2 = bg2.darker();
-		} else if(popup!=null && popup.isShowing()) {
-			bg0 = UIUtils.getColor(143, 169, 192);
-			bg1 = UIUtils.getColor(63, 108, 147);
-			bg2 = UIUtils.getColor(90, 139, 182);
-			fg = Color.WHITE;
-		}
-		Insets insets = getInsets();
-		g.setPaint(new GradientPaint(0, 0, bg0, 0, getHeight()/2, bg1));
-		g.fillRect(getWidth()-(insets.right-3), insets.top-3,  (insets.right-6), getHeight()/2-(insets.top-3));
 		
-		g.setPaint(new GradientPaint(0, getHeight()/2, bg1, 0, getHeight()-2, bg2));
-		g.fillRect(getWidth()-(insets.right-3), getHeight()/2, (insets.right-6), getHeight()/2-(insets.bottom-4));
-		g.setColor(UIUtils.getColor(139,160,179));
-		g.drawLine(getWidth()-(insets.right-3)-1, insets.top-3+1, getWidth()-(insets.right-3)-1, getHeight()-(insets.bottom-3)-1);
+		Color fg = Color.BLACK;
+		if(UIManager.getLookAndFeel().getName().contains("!!Nimbus")) {
+			Color bg0 = UIUtils.getColor(246, 248, 250);
+			Color bg1 = UIUtils.getColor(170, 190, 207);
+			Color bg2 = UIUtils.getColor(187, 208, 227);
+			if(!isEnabled()) {
+				bg0 = bg0.darker();
+				bg1 = bg1.darker();
+				bg2 = bg2.darker();
+			} else if(popup!=null && popup.isShowing()) {
+				bg0 = UIUtils.getColor(143, 169, 192);
+				bg1 = UIUtils.getColor(63, 108, 147);
+				bg2 = UIUtils.getColor(90, 139, 182);
+				fg = Color.WHITE;
+			}
+			Insets insets = getInsets();
+			g.setPaint(new GradientPaint(0, 0, bg0, 0, getHeight()/2, bg1));
+			g.fillRect(getWidth()-16, insets.top-3,  13, getHeight()/2-(insets.top-3));
+			g.setPaint(new GradientPaint(0, getHeight()/2, bg1, 0, getHeight()-2, bg2));
+			g.fillRect(getWidth()-16, getHeight()/2, 13, getHeight()/2-(insets.bottom-4));
+			g.setColor(UIUtils.getColor(139,160,179));
+			g.drawLine(getWidth()-16, insets.top-3, getWidth()-16, getHeight()-(insets.bottom-3)-1);
+		}
 		g.setColor(fg);
 		g.fillPolygon(new int[] {getWidth()-12, getWidth()-6, getWidth()-9}, new int[] {getHeight()/2-3, getHeight()/2-3, getHeight()/2+3}, 3 );
+		
 	}
 	
 
@@ -530,7 +534,7 @@ public class JTextComboBox extends JCustomTextField {
 		scrollPane.setPreferredSize(new Dimension(Math.max(100, Math.max(list.getPreferredSize().width+30, getWidth())), Math.min(list.getPreferredSize().height+15, 330) ));
 		scrollPane.setBorder(null);
 		
-		JCustomLabel infoPanel = new JCustomLabel("Use Ctrl for multiple-selection", FastFont.REGULAR_CONDENSED);
+		JCustomLabel infoPanel = new JCustomLabel("Use Ctrl for multiple-selection", FastFont.SMALL);
 		infoPanel.setVisible(list.getSelectionMode()==ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		
 		

@@ -26,7 +26,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Toolkit;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -53,7 +52,7 @@ public class JMapLabelNoRepaint extends JComponentNoRepaint {
 	
 	private Dimension calculateDim(Font font) {
 		Dimension dim = new Dimension();
-		dim.height = 25;
+		dim.height = font.getSize()*2+1;
 		if(map==null) {
 			dim.width = 80;
 		} else {
@@ -81,7 +80,7 @@ public class JMapLabelNoRepaint extends JComponentNoRepaint {
 	
 	@Override
 	public Dimension getMinimumSize() {
-		return calculateDim(FastFont.REGULAR_CONDENSED);
+		return getPreferredSize();
 	}
 	
 	@Override
@@ -92,6 +91,8 @@ public class JMapLabelNoRepaint extends JComponentNoRepaint {
 	@Override
 	protected void paintComponent(Graphics graphics) {
 		Graphics2D g = (Graphics2D) graphics;
+		super.paintComponent(g);
+
 		if(isOpaque()) {
 			g.setBackground(getBackground());
 			g.clearRect(0, 0, getWidth(), getHeight());
@@ -99,24 +100,23 @@ public class JMapLabelNoRepaint extends JComponentNoRepaint {
 		if(map==null) return;
 		
 		
-		int prefWidth = getPreferredSize().width;
-		boolean condense = getWidth()<prefWidth;
-		
 		int x = 1;
+		Font keyFont = FastFont.SMALL;
+		Font valueFont = FastFont.REGULAR;
 		for (Entry<String, String> entry : map.entrySet()) {
 			if(entry.getKey()==null || entry.getValue()==null) continue;
 			g.setColor(getBackground());
 			g.clearRect(x-4, 0, getWidth(), getHeight());
 			g.setColor(Color.GRAY);
-			g.setFont(condense? FastFont.SMALL_CONDENSED:  FastFont.SMALL);
-			g.drawString(entry.getKey(), x, 9);
+			g.setFont(keyFont);
+			g.drawString(entry.getKey(), x, keyFont.getSize()-1);
 
 			g.setColor(Color.LIGHT_GRAY);
 			g.drawLine(x-2, 2, x-2, getHeight()-3);
 			
 			g.setColor(getForeground());
-			g.setFont(condense? FastFont.REGULAR_CONDENSED: FastFont.REGULAR);
-			g.drawString(entry.getValue(), x, 21);
+			g.setFont(valueFont);
+			g.drawString(entry.getValue(), x, keyFont.getSize()+valueFont.getSize());
 			int w = Math.max(20, g.getFontMetrics().stringWidth(entry.getValue()))+4;			
 			x+=w;
 			x+=(separatorPixel-x%separatorPixel)%separatorPixel; //next multiple of separatorPixel

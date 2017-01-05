@@ -39,6 +39,8 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.PhaseFormat;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -56,7 +58,7 @@ public class PhaseAddDlg extends JEscapeDialog {
 	private JSpinner firstMinuteSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 60, 1));		
 	private JSpinner nSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 99, 1));
 	private JSpinner dayIncreaseSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 900, 1));
-	private JEditorPane overviewEditor = new JEditorPane("text/html", "");
+	private JEditorPane overviewEditor = new ImageEditorPane();
 	
 
 	
@@ -66,7 +68,8 @@ public class PhaseAddDlg extends JEscapeDialog {
 		this.study = dlg.getStudy();
 		
 		overviewEditor.setEnabled(false);
-
+		LF.initComp(overviewEditor);
+		
 		JScrollPane sp = new JScrollPane(overviewEditor, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);		
 		sp.setPreferredSize(new Dimension(80, 60));
 		overviewEditor.setEditable(false);

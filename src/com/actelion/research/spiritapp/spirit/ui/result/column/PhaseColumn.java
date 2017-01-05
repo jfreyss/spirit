@@ -54,7 +54,7 @@ public class PhaseColumn extends Column<Result, Phase> {
 	
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
-		phaseLabel.setPhase((Phase) value);
+		phaseLabel.setPhase((Phase) value, row.getGroup());
 		return phaseLabel;
 	}
 	

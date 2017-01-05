@@ -36,15 +36,20 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
+import com.actelion.research.util.ui.FastFont;
 
 public class ImageFactory {
 
 	private static final Map<String, BufferedImage> images = Collections.synchronizedMap(new HashMap<String, BufferedImage>());
 	private static final BufferedImage emptyImage = new BufferedImage(40, 40, BufferedImage.TYPE_INT_ARGB);
 	
+	public static void clearCache() {
+		images.clear();
+	}
 	public static BufferedImage createImage() {
 		return emptyImage;
 	}
+	
 	public static BufferedImage createImage(int width, boolean hasAlpha) {
 		BufferedImage image = images.get("empty_"+width+"_"+hasAlpha);
 		if(image==null) {
@@ -194,8 +199,9 @@ public class ImageFactory {
 	}
 	
 	public static Image getImageThumbnail(Biotype type) {
-		if(type==null) return ImageFactory.createImage(22, true);
-		Image img =  ImageFactory.getImage(type.getName(), 22);
+		int size = FastFont.getAdaptedSize(22);
+		if(type==null) return ImageFactory.createImage(size, true);
+		Image img =  ImageFactory.getImage(type.getName(), size);
 		if(img!=null) return img;
 		if(type.getParent()!=null) return getImageThumbnail(type.getParent());
 		return ImageFactory.createImage(22, true);

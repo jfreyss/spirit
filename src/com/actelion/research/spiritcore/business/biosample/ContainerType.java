@@ -117,7 +117,13 @@ public enum ContainerType {
 	@Transient
 	public static final Map<String, Image> smallImages = new HashMap<>();
 	
-	public Image getImageThumbnail() {
+
+	public Image getImage(int dim) {
+		Image img = getImage();
+		return img==null? null: img.getScaledInstance(dim, dim, Image.SCALE_DEFAULT);		
+	}
+
+	public Image getImage() {
 		Image image = smallImages.get(name);
 		if(image==null) {
 			synchronized (smallImages) {		
@@ -130,14 +136,14 @@ public enum ContainerType {
 					if(url!=null) {
 						try {
 							image = ImageIO.read(url);
-							image = image.getScaledInstance(22, 22, Image.SCALE_DEFAULT);
+//							image = image.getScaledInstance(40, 40, Image.SCALE_DEFAULT);
 						} catch (Exception e) {
 							e.printStackTrace();
 							System.err.println("no image for "+name.toLowerCase()+".png  "+e);
 						}
 					} 
 					if(image==null) {
-						image = new BufferedImage(22, 22, BufferedImage.TYPE_INT_ARGB);
+						image = new BufferedImage(40,40,BufferedImage.TYPE_INT_ARGB);
 						Graphics2D g = (Graphics2D) image.getGraphics();
 						g.setColor(new Color(255,255,255,255));
 						g.dispose();

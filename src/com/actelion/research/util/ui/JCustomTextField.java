@@ -25,7 +25,6 @@ package com.actelion.research.util.ui;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -56,8 +55,8 @@ public class JCustomTextField extends JTextField {
 	 */
 	public static final String PROPERTY_TEXTCHANGED = "text_changed"; 
 
-	protected static final Color LABEL_COLOR = new Color(120, 120, 160);
-	protected static final Color LABEL_COLOR_DISABLED = new Color(180, 180, 200);
+	protected static final Color LABEL_COLOR = new Color(120, 120, 160, 180);
+	protected static final Color LABEL_COLOR_DISABLED = new Color(180, 180, 200, 180);
 	
 	private List<TextChangeListener> textChangeListeners = new ArrayList<>();
 	
@@ -191,7 +190,7 @@ public class JCustomTextField extends JTextField {
 	}
 		
 	private void init() {
-		setMargin(new Insets(0,0,0,0));
+//		setMargin(new Insets(0,0,0,0));
 		
 		setDocument(new MyCustomDocument());
 		
@@ -207,7 +206,7 @@ public class JCustomTextField extends JTextField {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(isEnabled() && warningWhenEdited && !isEditable()) {
-					int res = JOptionPane.showConfirmDialog(JCustomTextField.this, "Would you like to reenter a value?", "Reedit Value", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION);
+					int res = JOptionPane.showConfirmDialog(JCustomTextField.this, "Would you like to re-enter a value?", "Reedit Value", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION);
 					if(res!=JOptionPane.YES_OPTION) return;
 					
 					setEditable(true);
@@ -261,11 +260,10 @@ public class JCustomTextField extends JTextField {
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		
-		if(getText().length()==0 && textWhenEmpty!=null /*&& (!hasFocus() || (getParent()!=null && getParent() instanceof JTable))*/) {
+		UIUtils.applyDesktopProperties(g);
+		if(getText().length()==0 && textWhenEmpty!=null) {
 			g.setColor(isEnabled()? LABEL_COLOR: LABEL_COLOR_DISABLED);
 
-			g.setFont(FastFont.MONO.deriveSize(getFont().getSize()));
 			g.setFont(getFont());
 			if(getHorizontalAlignment()==SwingConstants.RIGHT) {
 				g.drawString(textWhenEmpty, getWidth() - g.getFontMetrics().stringWidth(textWhenEmpty)- 5, getHeight()/2+5);

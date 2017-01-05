@@ -22,11 +22,9 @@
 package com.actelion.research.spiritapp.spirit.ui.util;
 
 import java.awt.Component;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Vector;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JList;

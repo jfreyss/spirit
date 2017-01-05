@@ -26,7 +26,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.util.Date;
 
 import com.actelion.research.spiritcore.business.RightLevel;
@@ -39,9 +38,7 @@ import com.actelion.research.util.ui.exceltable.JComponentNoRepaint;
 public class CreationLabel extends JComponentNoRepaint {
 
 	
-	private final FastFont FONT_DEPT = FastFont.REGULAR_CONDENSED.deriveSize(9).deriveFont(Font.ITALIC);
-	private final FastFont FONT_USER = FastFont.REGULAR;
-	private final FastFont FONT_DATE = FastFont.REGULAR_CONDENSED;
+	private final FastFont FONT_DEPT = FastFont.SMALLER.deriveFont(Font.ITALIC);
 	
 	private String dept = "";
 	private String user = "";
@@ -89,7 +86,7 @@ public class CreationLabel extends JComponentNoRepaint {
 
 	@Override
 	public Dimension getPreferredSize() {
-		return date==null? new Dimension(65,22): new Dimension(100,22);
+		return date==null? new Dimension(65,25): new Dimension(getFontMetrics(FastFont.REGULAR).stringWidth( (user==null?"":user) + "__00/00/00"),25);
 	}
 	
 	
@@ -97,19 +94,15 @@ public class CreationLabel extends JComponentNoRepaint {
 	protected void paintComponent(Graphics graphics) {
 		
 		Graphics2D g = (Graphics2D) graphics;
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g.setBackground(getBackground());
-		g.clearRect(0, 0, getWidth(), getHeight());
-		
+		super.paintComponent(g);
 		if(!isVisible()) return;
 		
-		final int height = getHeight();
 		boolean hasDept = dept!=null && dept.length()>0;
 		
-		int y = height/2+(hasDept?9:4);
+		int y = FastFont.REGULAR.getSize()+(hasDept?FONT_DEPT.getSize():4);
 		if(date!=null) {
 			g.setColor(Color.BLACK);
-			g.setFont(FONT_DATE);
+			g.setFont(FastFont.REGULAR);
 			String s = FormatterUtils.formatDate(date);
 			g.drawString(s, getWidth()-2-g.getFontMetrics().stringWidth(s), y);
 		}
@@ -122,11 +115,11 @@ public class CreationLabel extends JComponentNoRepaint {
 		g.setColor(fgColor);
 		if(hasDept) {
 			g.setFont(FONT_DEPT);
-			g.drawString(dept, 2, height/2-3);
+			g.drawString(dept, 2, FONT_DEPT.getSize());
 		}
 		if(user!=null && user.length()>0) {
-			g.setFont(FONT_USER);
-			g.clearRect(2, y-11, g.getFontMetrics().stringWidth(user), 11);
+			g.setFont(FastFont.REGULAR);
+			g.clearRect(2, y-FastFont.REGULAR.getSize()+1, g.getFontMetrics().stringWidth(user), FastFont.REGULAR.getSize());
 			g.drawString(user, 2, y);
 		}
 

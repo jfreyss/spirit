@@ -39,11 +39,14 @@ public class SQLConverter {
 	public static String convertScript(String script, SQLVendor vendor) {
 		if(vendor==SQLVendor.ORACLE) return script;
 
-		//Replace datatypes
+		//Replace datatypes number(?1,?2) becomes:
+		// - tinyint if ?1=1, ?2=
+		// - integer if ?1<19 and ?2=0,
+		// - integer if ?1>=19, ?2=0,
 		script = script.replaceAll("(?i)NUMBER\\(1\\)", "tinyint");
 		script = script.replaceAll("(?i)NUMBER\\([2-9](,0)?\\)", "integer");
-		script = script.replaceAll("(?i)NUMBER\\([12][0-9](,0)?\\)", "integer");
-		script = script.replaceAll("(?i)NUMBER\\(\\d+\\)", "bigint");
+		script = script.replaceAll("(?i)NUMBER\\(1[0-8](,0)?\\)", "integer");
+		script = script.replaceAll("(?i)NUMBER\\(\\d+(,0)?\\)", "bigint");
 		script = script.replaceAll("(?i)VARCHAR2\\((.*?)(\\schar)?\\)", "varchar($1)");
 				
 		
@@ -58,6 +61,13 @@ public class SQLConverter {
 		
 		//remove Enable
 		script = script.replaceAll("(?i)\\senable", "");
+		
+		
+		if(script.contains("||")) throw new RuntimeException("The script should not concatenate with ||, but with concat(arg1, arg2)");
+		if(vendor==SQLVendor.MYSQL) {
+			//concat gives pb for null value, but not concat_ws (given the '' separator)
+			script = script.replaceAll("(?i)concat\\(", "concat_ws\\('',");
+		}
 		
 		return script;
 	}

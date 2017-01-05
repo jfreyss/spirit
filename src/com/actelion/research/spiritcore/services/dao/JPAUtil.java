@@ -131,24 +131,25 @@ public class JPAUtil {
 			return all;
 		}
 		
-		public void clear() {
-			for(EntityManager em: getAll()) {
-				LoggerFactory.getLogger(JPAUtil.class).debug("Clear EM: "+em);
-				
-				if(em.isOpen()) {				
-		    		try {
-		    			if(em.getTransaction().isActive()) {
-		    				LoggerFactory.getLogger(JPAUtil.class).warn("Rollback unfinished transaction");
-		    				em.getTransaction().rollback();
-		    			}		    			
-		    			em.clear();
-		    		} catch(Exception e) {
-		    			e.printStackTrace();
-		    			em.close();
-		    		}
-				}
-			}
-		}
+//		public void clear() {
+//			for(EntityManager em: getAll()) {
+//				LoggerFactory.getLogger(JPAUtil.class).debug("Clear EM: "+em);
+//				
+//				if(em.isOpen()) {				
+//		    		try {
+//		    			if(em.getTransaction().isActive()) {
+//		    				LoggerFactory.getLogger(JPAUtil.class).warn("Rollback unfinished transaction");
+//		    				em.getTransaction().rollback();
+//		    			}		    			
+//		    			em.clear();
+//		    		} catch(Exception e) {
+//		    			e.printStackTrace();
+//		    			em.close();
+//		    		}
+//				}
+//			}coder
+		
+//		}
 		
 		public void close() {
 			for(final EntityManager em : new ArrayList<>(getAll())) {

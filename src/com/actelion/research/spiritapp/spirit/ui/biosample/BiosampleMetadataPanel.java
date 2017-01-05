@@ -23,23 +23,20 @@ package com.actelion.research.spiritapp.spirit.ui.biosample;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.TreeSet;
 
 import javax.swing.BorderFactory;
-import javax.swing.text.html.HTMLEditorKit;
-import javax.swing.text.html.StyleSheet;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
+import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.DataType;
@@ -60,27 +57,24 @@ import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.FormatterUtils;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.UIUtils;
 
 public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampleDetail {
 	
 	private int display;
 	private Collection<Biosample> biosamples;
-	private final static Hashtable<String, Image> imageCache = new Hashtable<>();
 	private Date now = JPAUtil.getCurrentDateFromDatabase();
 	
 	public BiosampleMetadataPanel() {
-		super(imageCache);
+		super();
 		setBorder(BorderFactory.createEmptyBorder());
 		setMinimumSize(new Dimension(0, 0));
 		setPreferredSize(new Dimension(300, 200));
 		setOpaque(false);
 		setEditable(false);
 		
-		StyleSheet stylesheet = ((HTMLEditorKit) getEditorKit()).getStyleSheet();
-		stylesheet.addRule("td, th {margin:0px;padding:0px}");
-		stylesheet.addRule(".description th {padding-left:0px;padding-right:2px;margin-top:0px;font-weight:plain;text-align:right;font-size:9px;color:gray}");
-		stylesheet.addRule(".description td {padding-left:0px;margin-top:0px;font-weight:plain;text-align:left; font-size:9px}");		
+		LF.initComp(this);
 		setBackground(new Color(0,0,0,0));
 		BiosampleActions.attachPopup(this);		
 		addHyperlinkListener(new SpiritHyperlinkListener());
@@ -121,7 +115,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 		
 				Document consentForm =  b.getInheritedStudy()==null? null: b.getInheritedStudy().getConsentForm();
 				txt.append("<div style='white-space:nowrap;padding-top:1px;padding-left:1px;padding-bottom:1px;background:#" + (consentForm==null?"666666": "FF0000") + "'>");
-				txt.append("<div width=100% class=description style='white-space:nowrap;font-size:9px;background:#DDDDDD'>");					
+				txt.append("<div width=100% class=description style='white-space:nowrap;font-background:#DDDDDD'>");					
 	
 				//Display Sample Hierarchy
 				List<Biosample> hierarchy = b.getParentHierarchy();
@@ -130,10 +124,10 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 					if(caret<=0 && i==hierarchy.size()-1) {
 						//Display Container
 						if((b.getContainerType()!=null && b.getContainerType()!=ContainerType.UNKNOWN) || (b.getContainerId()!=null  && b.getContainerId().length()>0) || b.getLocation()!=null) {
-							txt.append("<div style='font-size:11px; white-space:wrap; background:#CCCCAA; width:100%; padding:1px; border-left:solid 1px black; border-top:solid 1px black'>");
+							txt.append("<div style='white-space:wrap; background:#CCCCAA; width:100%; padding:1px; border-left:solid 1px black; border-top:solid 1px black'>");
 							if(b.getContainerType()!=null || b.getLocation()!=null) {
 								if(b.getScannedPosition()!=null) {
-									txt.append("<span style='font-size:12px'><b>" + b.getScannedPosition() + "</b></span><br>");
+									txt.append("<b>" + b.getScannedPosition() + "</b><br>");
 								}
 								//ContainerType
 								if((b.getContainerType()!=null && b.getContainerType()!=ContainerType.UNKNOWN) || (b.getContainerId()!=null && b.getContainerId().length()>0)) {
@@ -151,7 +145,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 								if(b.getLocation()!=null) {
 									Privacy privacy = b.getLocation().getInheritedPrivacy();
 									if(SpiritRights.canRead(b.getLocation(), Spirit.getUser())) {
-										txt.append("<a style='font-size:8px' href='loc:" + b.getLocation().getId() + ":" + b.getPos() + "'>");
+										txt.append("<a style='font-size:90%' href='loc:" + b.getLocation().getId() + ":" + b.getPos() + "'>");
 										txt.append("<b>" + b.getLocationString(LocationFormat.FULL_POS, Spirit.getUser()).replace("/", "</b>/<b>")+"</b>");		
 										txt.append("</a>");
 									} else if(privacy==Privacy.PROTECTED) {
@@ -170,10 +164,10 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 					
 					Biosample b2 = hierarchy.get(i);
 					if(b2==b) {
-						txt.append("<div style='border-top:solid 1px black;border-left:solid 1px black;padding: 2px 0px 0px 3px;color:black;background:#FFFFEE'>");						
-						txt.append("<a name='sample'>");
+						txt.append("<div style='border-top:solid 1px black;border-left:solid 1px black;padding: 2px 0px 1px 2px;color:black;background:#FFFFEE'>");						
+//						txt.append("<a name='sample'>");
 					} else {
-						txt.append("<div style='border-top:solid 1px #999999;border-left:solid 1px #999999;padding: 2px 0px 0px 3px;color:#666666;background:#DDDDDD'>");
+						txt.append("<div style='border-top:solid 1px #999999;border-left:solid 1px #999999;padding: 2px 0px 1px 2px;color:#666666;background:#DDDDDD'>");
 					}
 					appendBiosample(txt, b2);				
 				}
@@ -195,25 +189,24 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 		txt.append("</body></html>");
 		
 		setText(txt.toString());
-		setCaretPosition(getDocument().getLength()-1);		
-		scrollToReference("sample");
+		setCaretPosition(0);		
+//		scrollToReference("sample");
 		
 	}	
 	
 	private void appendBiosample(StringBuilder txt, Biosample b) {
-		txt.append("<table width=100% style='padding:0px;margin:0px;white-space:nowrap;font-size:9px'>");					
+		txt.append("<table width=100% style='padding:0px;margin:0px;white-space:nowrap'>");					
 		
 		//Main fields
-		{
-			
-			txt.append("<tr><td width=60px style='width:60px;white-space:nowrap; font-size:8px;vertical-align:bottom' valign=bottom>");
+		{			
+			txt.append("<tr><td width=60px style='width:60px;white-space:nowrap;vertical-align:bottom' valign=bottom>");
 			String imgKey = ImageFactory.getImageKey(b);			
 			if(imgKey!=null) {
-				BufferedImage img = ImageFactory.getImage(b, 28);
+				BufferedImage img = ImageFactory.getImage(b, FastFont.getAdaptedSize(32));
 				if(img!=null) {
 					String url = "type_"+imgKey;
-					if(imageCache.get(url)==null) imageCache.put(url, img);
-					txt.append("<img align=left src='" + url + "'>");
+					if(getImageCache().get(url)==null) getImageCache().put(url, img);
+					txt.append("<img align='left' src='" + url + "'/>");
 				}
 			}
 			txt.append("<br>" + (b.getBiotype()==null?"": b.getBiotype().getName().length()>12? b.getBiotype().getName().substring(0, 12)+".":b.getBiotype().getName()));			
@@ -224,7 +217,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 			if(b.getParent()==null || b.getAttachedStudy()!=null || (b.getInheritedPhase()!=null && !b.getInheritedPhase().equals(b.getParent().getInheritedPhase()))) {
 				Color groupColor = b.getInheritedGroup()==null? null: b.getInheritedGroup().getBlindedColor(Spirit.getUsername());
 				Color fgColor = UIUtils.getForeground(groupColor);
-				if(b.getInheritedStudy()!=null /*b.getAttachedStudy()!=null || (first && b.getStudy()!=null)*/) {
+				if(b.getInheritedStudy()!=null) {
 					txt.append("<div style='background:"+ UIUtils.getHtmlColor(groupColor) + ";color:" + UIUtils.getHtmlColor(fgColor) + "'>");
 					txt.append("<b><a href='stu:"+b.getInheritedStudy().getId()+ "'>" + b.getInheritedStudy().getStudyId() + "</a></b><br>" );
 					if(b.getInheritedGroup()!=null) {
@@ -238,22 +231,22 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 			}
 			
 			//SampleId
-			txt.append("<span" + (b.getBiotype()!=null && b.getBiotype().isHideSampleId()?" style='color:gray'":"") + ">" + b.getSampleId() + "</span> ");
+			txt.append("<span" + (b.getBiotype()!=null && b.getBiotype().isHideSampleId()?"":" style='font-weight:bold'") + ">" + b.getSampleId() + "</span> ");
 
 			//Status
 			Pair<Status, Phase> s = b.getLastActionStatus();
 			if(s.getFirst()!=null) { 
-				txt.append("<i style='font-size:8px; background:" + UIUtils.getHtmlColor(s.getFirst().getBackground()) + "; color:#000000'>" + s.getFirst() + (s.getSecond()!=null? (s.getFirst().isAvailable()? " until ": " at ") + s.getSecond().getShortName(): "") + " </i><br>");
+				txt.append(" <i style='background:" + UIUtils.getHtmlColor(s.getFirst().getBackground()) + "; color:#000000'>" + s.getFirst() + (s.getSecond()!=null? (s.getFirst().isAvailable()? " until ": " at ") + s.getSecond().getShortName(): "") + " </i><br>");
 			}
 
 			//Quality
 			if(b.getQuality()!=null && b.getQuality()!=Quality.VALID) {
-				txt.append("<i style='font-size:8px; background:" + UIUtils.getHtmlColor(b.getQuality().getBackground()) + "'>" + b.getQuality().getName() + "</i><br>");
+				txt.append("<i style='background:" + UIUtils.getHtmlColor(b.getQuality().getBackground()) + "'>" + b.getQuality().getName() + "</i><br>");
 			}
 			
 			//Expiry
 			if(b.getExpiryDate()!=null) {
-				txt.append("<i style='font-weight:bold;font-size:8px; foreground:" + (b.getExpiryDate().before(now)?"red":"black") + "'>Expiry Date: " + FormatterUtils.formatDate(b.getExpiryDate()) + "</i><br>");
+				txt.append("<i style='font-weight:bold; foreground:" + (b.getExpiryDate().before(now)?"red":"black") + "'>Expiry Date: " + FormatterUtils.formatDate(b.getExpiryDate()) + "</i><br>");
 			}
 			
 			txt.append("</td></tr>");
@@ -262,12 +255,12 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 
 		//SampleName
 		if(b.getBiotype()!=null && b.getBiotype().getSampleNameLabel()!=null) {
-			txt.append("<tr><td width=60px style='width:60px;font-size:8px'><b>" + b.getBiotype().getSampleNameLabel()+":</b></td><td><b>" + (b.getSampleName()==null || b.getSampleName().length()==0?"":b.getSampleName()) + "</b></td></tr>");
+			txt.append("<tr><td width=60px style='width:60px'><b>" + b.getBiotype().getSampleNameLabel()+":</b></td><td><b>" + (b.getSampleName()==null || b.getSampleName().length()==0?"":b.getSampleName()) + "</b></td></tr>");
 		}
 		
 		//ELB
 		if(b.getElb()!=null && b.getElb().length()>0) {
-			txt.append("<tr><td width=60px style='width:60px;font-size:8px'>ELB:</td><td>" + b.getElb() + "</td></tr>");
+			txt.append("<tr><td width=60px style='width:60px'>ELB:</td><td>" + b.getElb() + "</td></tr>");
 		}
 		//Metadata
 		if(b.getBiotype()!=null) {						
@@ -276,7 +269,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 				if(value!=null && value.length()>0) {
 					txt.append("<tr>");
 					String name = metadataType.getName();
-					txt.append("<td width=60px style='width:60px;font-size:8px;white-space:nowrap' valign=top>" + name  + ":</td>");
+					txt.append("<td width=60px style='width:60px;white-space:nowrap' valign=top>" + name  + ":</td>");
 					if(metadataType.getDataType()==DataType.D_FILE) {
 						if(b.getMetadataDocument(metadataType)!=null) {
 							txt.append("<td><a href='doc:" + b.getMetadataDocument(metadataType).getId() + "'>" + value + "</a></td>");
@@ -284,10 +277,10 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 							txt.append("<td style='color:red'>" + value + "</td>");
 						}
 					} else if(metadataType.getDataType()==DataType.LARGE) {
-						txt.append("<td><div style='font-size:8px; width:100%' disabled>" + MiscUtils.convert2Html(value) + "</textarea></td>");
+						txt.append("<td><div style='width:100%' disabled>" + MiscUtils.convert2Html(value) + "</textarea></td>");
 					} else if(metadataType.getDataType()==DataType.BIOSAMPLE && b.getMetadataBiosample(metadataType)!=null) {
 						Biosample linked = b.getMetadataBiosample(metadataType);						
-						txt.append("<td><a href='bio:" + linked.getId() + "'>" + linked.getSampleId() + "</a><span style='font-size:8px;white-space:nowrap;color:gray'><br>" + linked.getInfos(EnumSet.of(InfoFormat.SAMPLENAME, InfoFormat.METATADATA), InfoSize.ONELINE) + "</span></td>");									
+						txt.append("<td><a href='bio:" + linked.getId() + "'>" + linked.getSampleId() + "</a><span style='white-space:nowrap;color:gray'><br>" + linked.getInfos(EnumSet.of(InfoFormat.SAMPLENAME, InfoFormat.METATADATA), InfoSize.ONELINE) + "</span></td>");									
 					} else if(metadataType.getDataType()==DataType.MULTI) {
 						txt.append("<td>" + value.replace(";", "<br>") + "</td>");
 					} else if((value.startsWith("http://") || value.startsWith("https://")) && value.indexOf("://", 7)<0){
@@ -301,7 +294,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 
 			//Amount
 			if(b.getAmount()!=null && b.getBiotype()!=null && b.getBiotype().getAmountUnit()!=null) {
-				txt.append("<tr><td width=60px style='width:60px;font-size:8px'>" + b.getBiotype().getAmountUnit().getNameUnit() + ": </td><td>");
+				txt.append("<tr><td width=60px style='width:60px'>" + b.getBiotype().getAmountUnit().getNameUnit() + ": </td><td>");
 				if( b.getAmount()!=null) {
 					txt.append("<b>" + b.getAmount() + "</b>");
 				}
@@ -310,16 +303,12 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 			
 			//Comments
 			if(b.getComments()!=null && b.getComments().length()>0) { 
-				txt.append("<tr><td width=60px style='width:60px;font-size:8px'>Comments: </td><td>");
-				txt.append(b.getComments());
-				txt.append("</td></tr>");
+				txt.append("<td colspan=2 style='font-size:90%'><i>" + MiscUtils.removeHtmlAndNewLines(b.getComments()) + "</i></td>");
 			}
 			//LastAction
 			ActionBiosample action = b.getLastAction();
 			if(action!=null) { 
-				txt.append("<tr><td width=60px style='width:60px;font-size:8px'>Last action: </td><td>");
-				txt.append(action.getDetails());
-				txt.append("</td></tr>");
+				txt.append("<td colspan=2 style='font-size:90%'><i>Last " + MiscUtils.removeHtmlAndNewLines(action.getDetails()) + "</i></td>");
 			}
 			txt.append("</table>");
 			

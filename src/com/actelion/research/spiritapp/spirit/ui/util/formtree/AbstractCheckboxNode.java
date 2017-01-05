@@ -38,7 +38,7 @@ public abstract class AbstractCheckboxNode<T> extends AbstractNode<T> {
 	}
 	public AbstractCheckboxNode(FormTree tree, String label, final Strategy<T> accessor) {
 		super(tree, label, accessor);
-		checkbox.setOpaque(false);				
+		checkbox.setOpaque(false);		
 		checkbox.addItemListener(new ItemListener() {			
 			@Override
 			public void itemStateChanged(ItemEvent e) {

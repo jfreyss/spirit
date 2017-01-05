@@ -29,8 +29,6 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Insets;
 
-import javax.swing.SwingConstants;
-
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
 import com.actelion.research.spiritapp.spirit.ui.lf.LF;
@@ -52,7 +50,8 @@ import com.actelion.research.util.ui.exceltable.JComponentNoRepaint;
  *
  */
 public class SampleIdLabel extends JComponentNoRepaint {
-	private static final int iconW = 20;
+	
+	private static final int iconW = FastFont.getAdaptedSize(20);
 
 	private Biosample biosample;
 	private boolean displayName;
@@ -63,7 +62,6 @@ public class SampleIdLabel extends JComponentNoRepaint {
 	private BiosampleLinker extraDisplay = null;
 	private boolean extraSameLine = true;
 	private int sizeIncrement;
-	private int verticalAlignment = SwingConstants.TOP;
 	
 	public SampleIdLabel(boolean displayName, boolean displayGroup) {
 		this.displayName = displayName;
@@ -92,12 +90,13 @@ public class SampleIdLabel extends JComponentNoRepaint {
 	}
 	private void recomputePreferredWidth() {
 		int preferredWidth;
-		int preferredHeight = 24 + sizeIncrement*2;
+		int preferredHeight = 1 + FastFont.getDefaultFontSize()*2 + sizeIncrement*2;
 		if(biosample==null) {
-			preferredWidth = 75;
+			preferredWidth = 60;
 		} else {
 			int textWidth;
-
+			int groupWidth = !displayGroup || biosample.getInheritedGroup()==null || biosample.getInheritedGroup()==null? 0: 
+				Math.max(30, getFontMetrics(FastFont.MEDIUM).stringWidth(biosample.getInheritedGroup().getShortName() + "_" + biosample.getInheritedPhaseString()));
 			boolean paintName = displayName && (biosample.getBiotype()==null || biosample.getBiotype().getSampleNameLabel()!=null);
 			int sampleIdWidth = getFontMetrics(FastFont.REGULAR.increaseSize(sizeIncrement)).stringWidth(biosample.getSampleId()==null?"": biosample.getSampleId());
 			if(paintName) {
@@ -105,19 +104,17 @@ public class SampleIdLabel extends JComponentNoRepaint {
 				if(extraDisplay!=null && !extraSameLine) {
 					nameWidth += getFontMetrics(FastFont.MEDIUM).stringWidth(extraDisplay.getValue(biosample)==null?"":extraDisplay.getValue(biosample));
 				}
-				textWidth = Math.max(sampleIdWidth, nameWidth);
+				textWidth = Math.max(sampleIdWidth + groupWidth, nameWidth);
 			} else {
-				textWidth = sampleIdWidth;				
+				textWidth = sampleIdWidth + groupWidth;				
 			}			
 			
-			preferredWidth =  iconW + 4 + textWidth + (displayGroup && biosample.getInheritedGroup()!=null?35:0);
-			
+			preferredWidth =  iconW + 6 + textWidth;
 			
 			if(preferredWidth>200) preferredWidth = 200;
 		}
 		if(extraDisplay!=null && !extraSameLine) {
-			preferredHeight+=15;
-			
+			preferredHeight+=15;			
 		}
 
 		preferredDim = new Dimension(preferredWidth, preferredHeight);
@@ -148,19 +145,12 @@ public class SampleIdLabel extends JComponentNoRepaint {
 		return super.getPreferredSize();
 	}
 	
-	public int getVerticalAlignment() {
-		return verticalAlignment;
-	}
-	public void setVerticalAlignment(int verticalAlignment) {
-		this.verticalAlignment = verticalAlignment;
-	}
-	
 	@Override
 	protected void paintComponent(Graphics graphics) {		
 		
 		Graphics2D g = (Graphics2D) graphics;
+		super.paintComponent(g);
 		Insets insets = getInsets();
-		
 
 		if(isOpaque()) {
 			g.setBackground(getBackground());
@@ -177,7 +167,7 @@ public class SampleIdLabel extends JComponentNoRepaint {
 		//Quality?
 		if(biosample.getQuality()!=null && biosample.getQuality().getBackground()!=null) {
 			g.setColor(biosample.getQuality().getBackground());
-			g.fillRect(iconW+1, 1, getWidth(), getHeight()-3);	
+			g.fillRect(iconW+1, iconW, getWidth(), getHeight()-3);	
 		}
 		
 
@@ -185,14 +175,13 @@ public class SampleIdLabel extends JComponentNoRepaint {
 		if(biosample.getStatus()!=null) {
 			if(biosample.getStatus().getBackground()!=null) {
 				g.setColor(biosample.getStatus().getBackground());
-				g.fillRect(1, 1, iconW, getHeight()-3);		
+				g.fillRect(0, 2, iconW-2, iconW-2);		
 			}			
 		}		
 		
 		
 		//Some checks on the display 		
 		int x = iconW;		
-		int y = verticalAlignment==SwingConstants.TOP? 1: 1 + (getHeight()-24)/2;		
 		
 		//Name
 		int x2 = x;
@@ -202,7 +191,7 @@ public class SampleIdLabel extends JComponentNoRepaint {
 			if(biosample.getBiotype()!=null && biosample.getBiotype().getSampleNameLabel()!=null && name!=null) {
 				g.setFont(f.increaseSize(sizeIncrement));
 				g.setColor(fgColor);
-				g.drawString(name, x, y + 20 + sizeIncrement*2);
+				g.drawString(name, x, FastFont.SMALL.getSize() + FastFont.REGULAR.getSize() + sizeIncrement*2);
 				x2 = x+g.getFontMetrics().stringWidth(name);
 			}
 		}
@@ -212,16 +201,15 @@ public class SampleIdLabel extends JComponentNoRepaint {
 			if(linked!=biosample && linked.getBiotype()!=null) {
 				Image img = ImageFactory.getImage(linked, iconW);
 				if(img!=null) {
-					g.drawImage(img, 1, 20, this);
+					g.drawImage(img, 1, FastFont.SMALL.getSize() + FastFont.REGULAR.getSize() + sizeIncrement*2, this);
 				}				
 			}
 			g.setFont(FastFont.REGULAR.increaseSize(sizeIncrement));
-			g.setColor(UIUtils.getColor(84, 90, 167));
-			
+			g.setColor(UIUtils.getColor(84, 90, 167));			
 			if(extraSameLine) {
-				g.drawString((biosample.getSampleName()!=null? " | ": "") + extraDisplayValue, x2, 20+sizeIncrement*2);					
+				g.drawString((biosample.getSampleName()!=null? " | ": "") + extraDisplayValue, x2, FastFont.SMALL.getSize() + FastFont.REGULAR.getSize() + sizeIncrement*2);					
 			} else {
-				g.drawString(extraDisplayValue, iconW, 34+sizeIncrement*3);
+				g.drawString(extraDisplayValue, iconW, FastFont.SMALL.getSize() + FastFont.REGULAR.getSize()*2 + sizeIncrement*3);
 			}				
 		}
 			
@@ -234,16 +222,16 @@ public class SampleIdLabel extends JComponentNoRepaint {
 		} else {
 			g.setColor(fgColor);
 		}				
-		g.drawString(s, x, y + 15 + sizeIncrement - (paintName? 7:0));
+		g.drawString(s, x, Math.min(getHeight()-2, paintName? f.getSize() + sizeIncrement: f.getSize() + 4 + sizeIncrement));
 		x += g.getFontMetrics().stringWidth(s)+2;
 		
 		//Group & phase
 		if(paintGroup && biosample.getInheritedGroup()!=null && !SpiritRights.isBlindAll(biosample.getInheritedGroup().getStudy(), Spirit.getUser())) {				
 
 			//Group Background				
-			Font font1 = FastFont.REGULAR.increaseSize(sizeIncrement);
-			Font font2 = FastFont.SMALL.increaseSize(sizeIncrement);
-			Font font3 = FastFont.REGULAR.increaseSize(sizeIncrement);
+			Font font1 = FastFont.MEDIUM.increaseSize(sizeIncrement);
+			Font font2 = FastFont.SMALLER.increaseSize(sizeIncrement);
+			Font font3 = FastFont.SMALL.increaseSize(sizeIncrement);
 			
 			String s1 = biosample.getInheritedGroup().getShortName();
 			String s2 = biosample.getInheritedGroup().getNSubgroups()>1? "'" + (biosample.getInheritedSubGroup()+1): "";
@@ -258,22 +246,22 @@ public class SampleIdLabel extends JComponentNoRepaint {
 			int x1 = getWidth() - Math.max(35, insets.right + w1 + w2 + w3 + 2);
 
 			g.setColor(UIUtils.getDilutedColor(biosample.getInheritedGroup()==null?Color.WHITE: biosample.getInheritedGroup().getColor(), getBackground()));
-			g.fillRect(x1-2, 0, y + w1+w2+w3+3, 13+sizeIncrement);
+			g.fillRect(x1-2, 0, getWidth()-x1, font1.getSize() + 1 + sizeIncrement);
 					
 			//Group
 			g.setFont(font1);
 			g.setColor(Color.BLACK);					
-			g.drawString(s1, x1, y+11+sizeIncrement);
+			g.drawString(s1, x1, font1.getSize() + sizeIncrement - 1);
 			
 			//SubGroup
 			g.setFont(font2);
 			g.setColor(Color.DARK_GRAY);
-			g.drawString(s2, x1+w1, y+8+sizeIncrement);
+			g.drawString(s2, x1+w1, font2.getSize() + sizeIncrement - 1);
 			
 			//Phase
 			g.setFont(font3);
 			g.setColor(Color.BLUE);
-			g.drawString(s3, x1+w1+w2, y+11+sizeIncrement);
+			g.drawString(s3, x1+w1+w2, font3.getSize() + sizeIncrement - 1);
 							
 		}
 		
@@ -281,7 +269,7 @@ public class SampleIdLabel extends JComponentNoRepaint {
 		if(biosample.getBiotype()!=null) {
 			Image img = ImageFactory.getImage(biosample, iconW+sizeIncrement);
 			if(img!=null) {
-				g.drawImage(img, -sizeIncrement, y, this);
+				g.drawImage(img, 0, img.getHeight(this)>getHeight()? (getHeight()-img.getHeight(this))/2: 2, this);
 			}
 		}		
 		

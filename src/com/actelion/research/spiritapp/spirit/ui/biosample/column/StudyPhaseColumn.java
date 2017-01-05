@@ -33,10 +33,10 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 public class StudyPhaseColumn extends Column<Biosample, Phase> {
 	
-	private static PhaseLabel phaseLabel = new PhaseLabel();
+	private PhaseLabel phaseLabel = new PhaseLabel();
 
 	public StudyPhaseColumn() {
-		super("Study\nPhase", Phase.class, 30, 60);
+		super("Study\nPhase", Phase.class, 20);
 	}
 	
 	@Override

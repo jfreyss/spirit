@@ -342,7 +342,7 @@ public class MonitoringCagePanel extends JPanel {
 		}
 		JLabel content = new JLabel("<html>"+sb);
 		content.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1), BorderFactory.createLoweredBevelBorder()));
-		content.setFont(FastFont.SMALLER_CONDENSED);
+		content.setFont(FastFont.SMALLER);
 		content.setOpaque(true);
 		content.setBackground(UIUtils.getDilutedColor(Color.LIGHT_GRAY, group==null? Color.LIGHT_GRAY: group.getBlindedColor(Spirit.getUsername())));
 		

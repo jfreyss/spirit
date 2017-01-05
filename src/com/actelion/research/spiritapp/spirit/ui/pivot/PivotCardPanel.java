@@ -24,10 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui.pivot;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -45,7 +41,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.AbstractButton;
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -67,8 +62,8 @@ import com.actelion.research.spiritapp.spirit.ui.pivot.designer.PivotTemplateDlg
 import com.actelion.research.spiritapp.spirit.ui.result.ResultActions;
 import com.actelion.research.spiritapp.spirit.ui.result.ResultTable;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
-import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils.ExportMode;
+import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -86,6 +81,7 @@ import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CSVUtils;
 import com.actelion.research.util.UsageLog;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
@@ -268,47 +264,13 @@ public class PivotCardPanel extends JPanel {
 		initTemplates();
 
 		// TopPanel
-		JPanel topPanel = new JPanel(new GridBagLayout());
-		topPanel.setBorder(null);
-		topPanel.setPreferredSize(new Dimension(300, 36));
 		{
-			GridBagConstraints c = new GridBagConstraints();
-			c.insets = new Insets(0, 0, 0, 5);
-			c.anchor = GridBagConstraints.WEST;
-			c.fill = GridBagConstraints.NONE;
-			c.gridx = GridBagConstraints.RELATIVE;
-			c.weighty = 0;
-			c.weighty = 1;
-			if (tableTab != null) {
-				c.anchor = GridBagConstraints.WEST;
-				topPanel.add(pivotButton, c);
-			}
-
-			c.fill = GridBagConstraints.VERTICAL;
-			c.anchor = GridBagConstraints.WEST;
-			topPanel.add(viewPanel, c);
-			c.weightx = 1;
-			topPanel.add(new JPanel(), c);
-
-			c.weightx = 0;
-			c.fill = GridBagConstraints.NONE;
-			c.anchor = GridBagConstraints.WEST;
-
-			if (forResults) {
-				statsButton.setToolTipText("Analyze the displayed results and suggest graphs");
-				topPanel.add(UIUtils.createTitleBoxSmall("Stats", UIUtils.createHorizontalBox(statsButton)));
-			}
-
-			c.weightx = 0;
-			c.fill = GridBagConstraints.NONE;
-			c.anchor = GridBagConstraints.WEST;
-			topPanel.add(UIUtils.createTitleBoxSmall("Export", UIUtils.createHorizontalBox(dwButton, csvButton, excelButton)));
-
-			statsButton.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-			dwButton.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-			csvButton.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-			excelButton.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-
+			statsButton.setFont(FastFont.SMALL);
+			dwButton.setFont(FastFont.SMALL);
+			csvButton.setFont(FastFont.SMALL);
+			excelButton.setFont(FastFont.SMALL);
+			
+			statsButton.setToolTipText("Analyze the displayed results and suggest graphs");
 			statsButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent ev) {
@@ -336,6 +298,13 @@ public class PivotCardPanel extends JPanel {
 				}
 			});
 		}
+		JPanel topPanel = UIUtils.createHorizontalBox(
+				(tableTab != null?pivotButton:null), 
+				viewPanel, 
+				Box.createHorizontalGlue(), 
+				forResults? UIUtils.createTitleBoxSmall("Stats", UIUtils.createHorizontalBox(statsButton)): null,
+				UIUtils.createTitleBoxSmall("Export", UIUtils.createHorizontalBox(dwButton, csvButton, excelButton)));
+//		topPanel.setPreferredSize(new Dimension(300, 36));
 
 		add(BorderLayout.NORTH, topPanel);
 		add(BorderLayout.CENTER, cardPanel);

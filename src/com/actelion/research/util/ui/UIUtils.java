@@ -33,8 +33,10 @@ import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.LinearGradientPaint;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
@@ -57,6 +59,7 @@ public final class UIUtils {
 
 	private static Map<Integer, Color> colorMap = new HashMap<Integer, Color>();
 	public static final Color TITLEPANEL_BACKGROUND = UIUtils.getColor(183,204,223);
+	public static final Color TITLEPANEL_BACKGROUND2 = UIUtils.getColor(200,225,240);
 	
 	public static Frame getMainFrame() {
 		Frame res = null;
@@ -216,24 +219,24 @@ public final class UIUtils {
 	}
 	
 	public static JPanel createTitleBoxSmall(final String title, JComponent comp) {
-		return createTitleBox(title, comp, FastFont.SMALL, Color.GRAY, TITLEPANEL_BACKGROUND,  6);
+		return createTitleBox(title, comp, FastFont.SMALL, Color.GRAY, TITLEPANEL_BACKGROUND, FastFont.getDefaultFontSize()*8/12);
 	}
 	
 	public static JPanel createTitleBox(JComponent comp) {
 		return createTitleBox("", comp);
 	}
 	public static JPanel createTitleBox(final String title, JComponent comp) {
-		return createTitleBox(title, comp, FastFont.BIGGER, Color.BLACK, TITLEPANEL_BACKGROUND, 10);
+		return createTitleBox(title, comp, FastFont.BIGGER, Color.BLACK, TITLEPANEL_BACKGROUND, FastFont.getDefaultFontSize()*10/12);
 	}
 	
 	public static JPanel createTitleBoxBigger(final String title, JComponent comp) {
-		return createTitleBox(title, comp, FastFont.BIGGEST, Color.BLACK, TITLEPANEL_BACKGROUND, 12);
+		return createTitleBox(title, comp, FastFont.BIGGEST, Color.BLACK, TITLEPANEL_BACKGROUND, FastFont.getDefaultFontSize());
 	}
 	
 	public static JPanel createTitleBox(final String title, final JComponent comp, final Font font, final Color titleColor, final Color bgColor, final int radius) {
 		final int h = font.getSize();             
-		final int topBorder = h-7; 
-		final int sideBorder = h>12? 5: h>10? 3: 1;
+		final int topBorder = h/2; 
+		final int margins = radius/2;// h>12? 5: 2;
 		final JPanel panel = new JPanel(new GridLayout(1,1)) {
 			@Override
 			protected void paintBorder(Graphics graphics) {
@@ -241,7 +244,7 @@ public final class UIUtils {
 				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 				g.setColor(Color.WHITE);
 				g.drawRoundRect(1, topBorder-1, getWidth()-4, getHeight()-topBorder-1, radius, radius);
-				g.setColor(bgColor);
+				g.setPaint(new LinearGradientPaint(1, 1, getHeight(), getHeight(), new float[]{0,1}, new Color[]{bgColor, TITLEPANEL_BACKGROUND2}));
 				g.fillRoundRect(2, topBorder, getWidth()-6, getHeight()-topBorder-2, radius, radius);
 				g.setColor(Color.GRAY);
 				g.drawRoundRect(2, topBorder, getWidth()-6, getHeight()-topBorder-2, radius, radius);	
@@ -260,8 +263,7 @@ public final class UIUtils {
 		comp.setOpaque(false);
 		comp.setBackground(bgColor);
 		panel.setOpaque(false);
-		panel.setBorder(BorderFactory.createEmptyBorder(7+(h-10)*2, sideBorder+5, sideBorder+1, sideBorder+2));
-//		panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.BLACK), BorderFactory.createEmptyBorder(7+(h-10)*2, sideBorder+2, sideBorder+1, sideBorder+2)));
+		panel.setBorder(BorderFactory.createEmptyBorder(h-1, margins+1, margins-1, margins+1));
 		panel.add(comp);
 		return panel;
 	}
@@ -506,7 +508,7 @@ public final class UIUtils {
 	}
 
 	public static JPanel createHorizontalTitlePanel(final Component comp, final String title, final Color color) {
-		final Font font = FastFont.BOLD.deriveSize(16);
+		final Font font = FastFont.BIGGEST;
 		final int x = 4 + (comp==null?0: comp.getPreferredSize().width);
 		JPanel panel = new JPanel(new BorderLayout()) {
 			@Override
@@ -540,7 +542,7 @@ public final class UIUtils {
 	}
 	
 	public static JPanel createVerticalTitlePanel(String title) {
-		return createVerticalTitlePanel(title, FastFont.BOLD.deriveSize(16), getColor(114, 160, 193));
+		return createVerticalTitlePanel(title, FastFont.BIGGEST, getColor(114, 160, 193));
 	}
 	public static JPanel createVerticalTitlePanel(final String title, final Font font, final Color background) {
 		
@@ -627,6 +629,15 @@ public final class UIUtils {
 			frame.pack();
 		}
 		frame.setLocationRelativeTo(null);		
+	}
+	
+	public static void applyDesktopProperties(Graphics g) {
+		Toolkit tk = Toolkit.getDefaultToolkit();
+  		@SuppressWarnings("rawtypes")
+		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
+  		if (map != null) {
+  		    ((Graphics2D)g).addRenderingHints(map);
+  		}
 	}
 	
 }

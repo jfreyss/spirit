@@ -45,6 +45,8 @@ import javax.swing.JSeparator;
 import javax.swing.JToggleButton;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.pivot.Computed;
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorConfig;
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorExporter;
@@ -73,7 +75,7 @@ public class DataWarriorConfigPanel extends JPanel {
 	private final JGenericComboBox<ChartType> chartTypeComboBox = new JGenericComboBox<ChartType>(ChartType.values(), false);
 	
 	private final JPanel itemPanel = new JPanel(new BorderLayout()); 
-	private final JEditorPane editorPane = new JEditorPane("text/html", "");
+	private final JEditorPane editorPane = new ImageEditorPane();
 	
 	public DataWarriorConfigPanel(List<Result> results, Set<TestAttribute> skippedAttributes) {
 		super(new GridLayout(1,1));		
@@ -115,6 +117,7 @@ public class DataWarriorConfigPanel extends JPanel {
 		c.gridx = 2; panel1.add(UIUtils.createHorizontalBox(yAxisComboBox, logScaleCheckbox), c);
 		
 		
+		LF.initComp(editorPane);
 		editorPane.setEditable(false);
 		JScrollPane sp = new JScrollPane(editorPane);
 		sp.setPreferredSize(new Dimension(200, 120));

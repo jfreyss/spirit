@@ -45,7 +45,7 @@ public class SQLConverterTest {
 	
 	@Test
 	public void testConvert() throws Exception {
-		Assert.assertEquals("integer", SQLConverter.convertScript("number(19)", SQLVendor.HSQL));
+		Assert.assertEquals("bigint", SQLConverter.convertScript("number(19)", SQLVendor.HSQL));
 		Assert.assertEquals("number(19)", SQLConverter.convertScript("number(19)", SQLVendor.ORACLE));		
 	}
 	
@@ -83,8 +83,20 @@ public class SQLConverterTest {
 		String script = "create schema test2;\n"
 				+ "create table test2.spirit_property (id varchar2(64 char) not null, value varchar2(128 char), constraint spp_pk primary key (id));" 
 				+ "insert into test2.spirit_property values('myProp', 'myValue')" 
-				+ "update test2.spirit_property set value = 'VALUE=' || replace(replace(value, '\\', '\\\\'), ';', '\\;');\n";
+				+ "update test2.spirit_property set value = concat('VALUE=', replace(replace(value, '\\', '\\\\'), ';', '\\;'));\n";
 		MigrationScript.executeScript(hsqlConn, SQLConverter.convertScript(script, SQLVendor.HSQL), true, null);
+	}
+	
+	@Test
+	public void testConcat() throws Exception {
+		//Test some table updates on HSQL using Oracle syntax
+		String script = "create schema test3;\n"
+				+ "create table test3.t1 (id varchar2(64 char) not null, value varchar2(128 char));" 
+				+ "insert into test3.t1 values('myProp', 'myValue');\n" 
+				+ "insert into test3.t1 (select id, concat('a', value, value) from test3.t1);\n"; 
+		
+		MigrationScript.executeScript(hsqlConn, SQLConverter.convertScript(script, SQLVendor.HSQL), true, null);
+		
 	}
 	
 	@AfterClass

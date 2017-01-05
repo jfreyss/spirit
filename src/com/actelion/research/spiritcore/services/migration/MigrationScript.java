@@ -153,9 +153,7 @@ public abstract class MigrationScript {
 	/**
 	 * Return the DB Version as stated in the table spirit.spirit_property.
 	 * If the version is not set, this routine will update it
-	 * 
-	 * 
-	 * @return
+	 * @return the DB version
 	 */
 	public static String getDBVersion() throws Exception {
 		Connection conn = null;
@@ -193,19 +191,18 @@ public abstract class MigrationScript {
 	 * @throws Exception
 	 */
 	public static void executeScript(Connection conn, String scripts, boolean failOnError, ILogger logger) throws Exception {
-		Statement stmt = null;
 		
 		for (String script : split(scripts)) {
 			if(script.trim().length()==0) continue;
-			try {
-				stmt = conn.createStatement();
-				LoggerFactory.getLogger(MigrationScript.class).info("script: "+script+"");
+			
+			try (Statement stmt = conn.createStatement()) {
+				LoggerFactory.getLogger(MigrationScript.class).info("execute:  "+script+"");
+				stmt.setQueryTimeout(180);
 				int n = stmt.executeUpdate(script);
-				LoggerFactory.getLogger(MigrationScript.class).info("script: "+script+": OK ("+ n + " rows updated)");
+				LoggerFactory.getLogger(MigrationScript.class).info("executed: "+script+": OK ("+ n + " rows updated)");
 				if(logger!=null) logger.info(script, " rows updated");
-				stmt.close();
 			} catch(Exception ex) {
-				LoggerFactory.getLogger(MigrationScript.class).error("Could not execute: "+script, ex);
+				LoggerFactory.getLogger(MigrationScript.class).error("error: "+script, ex);
 				if(failOnError) throw ex;
 				if(logger!=null) logger.error(script, ex);
 			}

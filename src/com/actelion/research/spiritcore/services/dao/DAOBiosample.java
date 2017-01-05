@@ -640,7 +640,7 @@ public class DAOBiosample {
 			txn.commit();
 			txn = null;
 		} finally {
-			if(txn!=null) if(txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
+			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
 		}
 	}	
 
@@ -695,7 +695,7 @@ public class DAOBiosample {
 			txn.commit();
 			txn = null;
 		} finally {
-			if (txn != null)try {txn.rollback();} catch (Exception e2) {e2.printStackTrace();}
+			if (txn != null && txn.isActive())try {txn.rollback();} catch (Exception e2) {e2.printStackTrace();}
 		}
 	}
 

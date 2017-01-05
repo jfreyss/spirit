@@ -32,7 +32,7 @@ import com.actelion.research.util.ui.JTextComboBox;
 
 public class LocationComboBox extends JTextComboBox {
 	
-	private List<Location> values = new ArrayList<Location>();
+	private List<Location> values = new ArrayList<>();
 
 	public LocationComboBox() {
 		super(false);

@@ -81,7 +81,7 @@ public class BiotypeToggleNode extends BiotypeNode {
 		
 		for(Biotype biotype: biotypes) {
 			button = new JToggleButton(biotype.getName(), new ImageIcon(ImageFactory.getImage(biotype, 28)));
-			button.setFont(FastFont.SMALL_CONDENSED);
+			button.setFont(FastFont.SMALL);
 			button.setHorizontalAlignment(SwingConstants.LEFT);
 			button.setHorizontalTextPosition(SwingConstants.CENTER);
 			button.setVerticalTextPosition(SwingConstants.BOTTOM);

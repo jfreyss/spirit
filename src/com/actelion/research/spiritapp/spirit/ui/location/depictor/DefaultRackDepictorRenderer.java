@@ -84,33 +84,35 @@ public class DefaultRackDepictorRenderer implements RackDepictorRenderer {
 			Shape shape = g.getClip();
 			g.setClip(r.intersection(g.getClipBounds()));
 			//Draw Image
-			if(r.height>50) {
+			boolean small = r.height < FastFont.getDefaultFontSize()*3;
+			if(!small) {
 				if(c.getBiosamples().size()==1) {
 					Biosample b = c.getBiosamples().iterator().next();
-					Image img = ImageFactory.getImage(b, 22);
+					Image img = ImageFactory.getImage(b, FastFont.getDefaultFontSize()*2);
 					if(img!=null) g.drawImage(img, r.x, r.y, depictor);
 				} else if(c.getContainerType()!=null) {
-					g.drawImage(c.getContainerType().getImageThumbnail(), r.x, r.y, depictor);
+					g.drawImage(c.getContainerType().getImage(FastFont.getDefaultFontSize()*2), r.x, r.y, depictor);
 				}
 			}
 			
 			//Draw biosample or containerid
 			g.setColor(Color.DARK_GRAY);
-			g.setFont(FastFont.SMALL);
+			g.setFont(FastFont.MEDIUM);
+			int x = r.x + (!small? Math.min(FastFont.getDefaultFontSize()*2, Math.max(0, (r.width-FastFont.getDefaultFontSize()*3)/5)): 2);
+			int y = r.y+FastFont.MEDIUM.getSize()+2;
 			if(c.getContainerOrBiosampleId().length()>0) {
-				g.drawString(c.getContainerOrBiosampleId(), r.height>50? r.x+24: r.x+1, r.y+13);
+				g.drawString(c.getContainerOrBiosampleId(), x, y);
 			}
 
 			//Print Study info from container
 			g.setColor(Color.BLACK);
 			String info = c.getPrintStudyLabel(Spirit.getUsername());
-			int x = r.x + (r.height>50? Math.min(24, Math.max(0, (r.width-50)/5)): 2);
-			int y = r.y + (r.height>50? Math.min(28, Math.max(22, 22+(r.height-22)/4)): 20);
+			y += FastFont.SMALL.getSize()+1;
 			if(info.length()>0) {
-				g.setFont(FastFont.MEDIUM);
+				g.setFont(FastFont.SMALL);
 				for (String line: info.split("\n")) {
 					g.drawString(line, x, y);
-					y+=11; 
+					y+=g.getFont().getSize(); 
 				}
 			}
 			
@@ -121,9 +123,9 @@ public class DefaultRackDepictorRenderer implements RackDepictorRenderer {
 			String name = infos.substring(0, index);
 			infos = infos.substring(index);
 			g.setColor(Color.BLACK);
-			g.setFont(FastFont.BOLD);
+			g.setFont(FastFont.SMALL);
 			y = UIUtils.drawString(g, name, x, y, r.width-(x-r.x)*3/2, r.height-(y-r.y)-2) + g.getFont().getSize()-1;
-			g.setFont(FastFont.REGULAR);
+			g.setFont(FastFont.SMALL);
 			UIUtils.drawString(g, infos, x, y, r.width-(x-r.x)*3/2, r.height-(y-r.y)-2);
 			g.setClip(shape);
 		}

@@ -54,7 +54,7 @@ public class CustomTabbedPaneUI extends BasicTabbedPaneUI  {
     
     @Override
     protected void paintTabBackground(Graphics g, int tabPlacement, int tabIndex, int x, int y, int w, int h, boolean isSelected) {
-        Graphics2D g2D = (Graphics2D) g;
+        Graphics2D g2D = (Graphics2D) g;        
         GradientPaint gradientShadow;
         int xp[] = null; 
         int yp[] = null;
@@ -103,7 +103,8 @@ public class CustomTabbedPaneUI extends BasicTabbedPaneUI  {
     
     @Override
     protected void paintText(Graphics g, int tabPlacement, Font font, FontMetrics metrics, int tabIndex, String title, Rectangle textRect, boolean isSelected) {
-    	((Graphics2D) g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+    	UIUtils.applyDesktopProperties(g);
+//    	((Graphics2D) g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
     	textRect.x+=2;
     	g.setFont(font);
 

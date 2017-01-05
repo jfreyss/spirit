@@ -25,14 +25,13 @@ import javax.swing.JComponent;
 
 import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritcore.business.result.Result;
-import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class TestNameColumn extends Column<Result, String> {
 	
 	public TestNameColumn() {
-		super("Test", String.class, 40);
+		super("Test", String.class);
 	}
 	
 	@Override
@@ -47,7 +46,6 @@ public class TestNameColumn extends Column<Result, String> {
 	
 	@Override
 	public void postProcess(AbstractExtendTable<Result> table, Result row, int rowNo, Object value, JComponent comp) {
-		comp.setFont(FastFont.REGULAR_CONDENSED);
 		comp.setForeground(LF.COLOR_TEST);
 	}
 }

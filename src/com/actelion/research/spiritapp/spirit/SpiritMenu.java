@@ -38,6 +38,18 @@ import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 
 public class SpiritMenu {
 	
+	public static void addEditMenuItems(JMenu editMenu, Spirit spirit) {
+		editMenu.add(new SpiritAction.Action_Preferences());
+		editMenu.add(new JSeparator());
+		if(DBAdapter.getAdapter().getUserManagedMode()==UserAdministrationMode.READ_WRITE) {
+			editMenu.add(new SpiritAction.Action_ChangePassword());				
+		}
+		editMenu.add(new SpiritAction.Action_Relogin(UIUtils.getMainFrame(), "Spirit"));
+		editMenu.add(new JSeparator());
+		editMenu.add(new SpiritAction.Action_Refresh(spirit));
+		editMenu.add(new SpiritAction.Action_Exit());
+	}
+	
 	public static JMenu getToolsMenu() {
 		JMenu toolsMenu = new JMenu("Tools");
 		toolsMenu.setMnemonic('t');
@@ -66,11 +78,6 @@ public class SpiritMenu {
 		databaseMenu.add(new ResultActions.Action_Find_Duplicate_Results());
 		databaseMenu.add(new AdminActions.Action_ExpiredSamples());
 		databaseMenu.add(new AdminActions.Action_Revisions(Spirit.getUser()==null?"": Spirit.getUser().getUsername()));
-		databaseMenu.add(new JSeparator());
-		if(DBAdapter.getAdapter().getUserManagedMode()==UserAdministrationMode.READ_WRITE) {
-			databaseMenu.add(new SpiritAction.Action_ChangePassword());				
-		}
-		databaseMenu.add(new SpiritAction.Action_Relogin(UIUtils.getMainFrame(), "Spirit"));
 		return databaseMenu;
 	}
 	

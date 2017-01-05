@@ -136,9 +136,6 @@ public class PivotAnalyzer {
 		for (PivotColumn col : cols) {
 						
 			ColumnAnalyser<Group> a = columnAnalysis.get(col);
-			System.out.println("PivotAnalyzer.getReport() "+col+">"+a);
-			System.out.println("PivotAnalyzer.getReport() >"+a.getIndex());
-			System.out.println("PivotAnalyzer.getReport() >"+a.getKruskalWallis());
 			boolean complete = a.getN() == nComplete;
 			
 			sbRows.append("<tr style='background:" + (a.getKruskalWallis()==null?"": a.getKruskalWallis()>.2?"#FFCCCC": a.getKruskalWallis()>.05?"#FFEEDD": a.getKruskalWallis()>.01?"#DDFFDD": "#AAFFAA") + "'>");
@@ -170,36 +167,27 @@ public class PivotAnalyzer {
 		sb.append("<h2>Export Graphs to DataWarrior:</h2>");
 		
 		sb.append("<table width=100%><tr><td width=60% height=100%>");		
-		sb.append("<div style='width:100%; height:60px; background:#FFFFCC;font-size:11px;padding:2px; border: solid 1px #CCCCCC'>");
+		sb.append("<div style='width:100%; height:60px; background:#FFFFCC;padding:2px; border: solid 1px #CCCCCC'>");
 		if(indexes.size()>0) {
 			if(indexes.size()<10) {
-				sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes.sublist(0, indexes.size()), ",")) + "'> Export all (" + indexes.size() + " graphs)</a><br>");
+				sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes.sublist(0, indexes.size()), ",")) + "'> Export all " + indexes.size() + " graphs</a><br>");
 			} else {
-				sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes.sublist(0, 10), ",")) + "'> Export most 10 significant graphs</a><br>");
+				sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes.sublist(0, 10), ",")) + "'> Export the 10 most significant graphs</a><br>");
 			}
 		}
-//		if(indexes3.size()>0) {
-//			sb.append("<td width=30% height=100%>");
-//			sb.append("<div style='width:100%; height:60px; background:#FFFFCC;font-size:11px;padding:2px; border: solid 1px #CCCCCC'><b>Most significant graphs:</b><br> ");
-//			if(indexes1.size()>0) sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes1, ",")) + "'>Export KW&lt;0.01 (" + indexes1.size() + " Graphs)</a><br> ");
-//			if(indexes2.size()>indexes1.size()) sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes2, ",")) + "'>Export KW&lt;0.05 (" + indexes2.size() + " Graphs)</a><br> ");
-//			if(indexes3.size()>indexes2.size()) sb.append("<a href='graphs:" + (MiscUtils.flatten(indexes3, ",")) + "'>Export KW&lt;0.20 (" + indexes3.size() + " Graphs)</a><br> ");
-//			sb.append("</div>");
-//			sb.append("</td>");
-//		}
-				
+		
 		sb.append("</div>");		
 		sb.append("</td>");
 		
 		sb.append("<td width=40% height=100%>");		
-		sb.append("<div style='width:100%; height:60px; background:#DDDDCC;font-size:11px;padding:2px; border: solid 1px #CCCCCC'><b>Principal Component Analysis:</b><br> ");
-		sb.append("<span style='font-size:8px'>(Computes the maximum complete dataset)</span><br>");
+		sb.append("<div style='width:100%; height:60px; background:#DDDDCC;padding:2px; border: solid 1px #CCCCCC'><b>Principal Component Analysis:</b><br> ");
+		sb.append("<span style='font-size:90%'>(Computes the maximum complete dataset)</span><br>");
 		sb.append("<a href='pca:" + (MiscUtils.flatten(indexesPca, ",")) + "'> PCA (" + indexesPca.size() + " Graphs)</a><br>");
 		sb.append("</div>");
 		sb.append("</td></tr></table>");
 		
 		sb.append("<h2>Data</h2>");		
-		sb.append("<table style='font-size:9px; border: solid 1px #DDDDDD'>");
+		sb.append("<table style='font-size:95%; border: solid 1px #DDDDDD'>");
 		sb.append("<tr style='background:#DDDDDD'>");
 		sb.append("<td></td>");
 		sb.append("<td><a href='sort:name'>Column</a></td>");

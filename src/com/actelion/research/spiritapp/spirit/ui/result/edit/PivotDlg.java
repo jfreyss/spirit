@@ -40,6 +40,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -107,7 +109,7 @@ public class PivotDlg extends JEscapeDialog {
 		
 		gridTable.selectAll();
 		
-		JEditorPane helpPane = new JEditorPane("text/html", "<html><body>" + 
+		JEditorPane helpPane = new ImageEditorPane("<html><body>" + 
 				"<div style='margin-left-10px'> Copy and Paste your data in the table below here. The data should be formatted like this:<br>" +
 				" <li> First column: the list of <b>SampleId</b>s.<br>" +
 				(pivotMode!=PivotMode.ANIMAL_PHASE? " <li> If the result is linked to a specific phase, you can add a <b>Phase</b> column.<br>": "") +
@@ -116,6 +118,7 @@ public class PivotDlg extends JEscapeDialog {
 					pivotMode==PivotMode.ANIMAL_INPUT && inputAtt!=null? " <li> Then: the list of <b>" + inputAtt.getName()+"s</b> with the units in brackets (ex: lung [g]).<br>" :
 						"")				
 				);
+		LF.initComp(helpPane);
 		helpPane.setEditable(false);
 		helpPane.setBorder(BorderFactory.createEtchedBorder());
 		

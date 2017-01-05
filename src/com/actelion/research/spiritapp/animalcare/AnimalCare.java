@@ -87,6 +87,7 @@ public class AnimalCare extends JFrame implements ISpiritChangeObserver, ISpirit
 		editMenu.setMnemonic('e');
 		editMenu.add(new StudyActions.Action_New());
 		editMenu.add(new Action_Refresh());
+		SpiritMenu.addEditMenuItems(editMenu, null);
 		menuBar.add(editMenu);
 		
 		menuBar.add(SpiritMenu.getToolsMenu());		
@@ -99,7 +100,7 @@ public class AnimalCare extends JFrame implements ISpiritChangeObserver, ISpirit
 
 		statusBar.setCopyright("AnimalCare - (C) Joel Freyss - Actelion 2012");	
 
-		centerPane.setFont(FastFont.BOLD.deriveSize(14));
+		centerPane.setFont(FastFont.BIGGER);
 		centerPane.add("Dashboard ", dashboardPanel);
 		centerPane.setIconAt(0, IconType.HOME.getIcon());
 

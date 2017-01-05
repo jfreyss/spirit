@@ -59,7 +59,7 @@ public class LocationPosTextField extends JCustomTextField {
 		setFont(FastFont.REGULAR);
 		setLayout(null);
 		
-		setLocationButton.setFont(FastFont.REGULAR.deriveSize(7));
+		setLocationButton.setFont(FastFont.SMALLER);
 		setLocationButton.setBorder(null);
 		setLocationButton.setToolTipText("Set the location (or checkin/relocate)");
 		add(setLocationButton);

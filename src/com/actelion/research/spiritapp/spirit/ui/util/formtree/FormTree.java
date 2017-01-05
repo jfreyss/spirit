@@ -61,7 +61,6 @@ public class FormTree extends JPanel {
 		setLayout(new GridBagLayout());
 		initLayout();
 		
-		
 		addAncestorListener(new AncestorListener() {			
 			@Override
 			public void ancestorRemoved(AncestorEvent arg0) {}			
@@ -145,7 +144,7 @@ public class FormTree extends JPanel {
 		if(node==null || !node.isVisible()) return;
 		
 		GridBagConstraints c = new GridBagConstraints();
-		c.insets = new Insets(0, 0, 0, 0);
+		c.insets = new Insets(1, 0, 0, 0);
 		c.fill = GridBagConstraints.NONE;
 		c.anchor = GridBagConstraints.WEST;
 		c.gridx = 0;

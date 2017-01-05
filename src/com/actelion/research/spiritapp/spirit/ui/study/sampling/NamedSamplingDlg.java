@@ -435,7 +435,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		} else {
 			sb.append("-");
 		}
-		JLabel measurementLabel = new JCustomLabel(sampling.getMeasurements().size()<=1? sb.toString(): sampling.getMeasurements().size() + " meas.", FastFont.REGULAR_CONDENSED);
+		JLabel measurementLabel = new JCustomLabel(sampling.getMeasurements().size()<=1? sb.toString(): sampling.getMeasurements().size() + " meas.", FastFont.REGULAR);
 		measurementLabel.setToolTipText(sb.toString());
 		c.gridx = 37; samplingsPanel.add(UIUtils.createHorizontalBox(measurementLabel, Box.createHorizontalStrut(10)), c);
 

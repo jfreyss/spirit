@@ -111,7 +111,7 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<ROW> table, ROW row, int rowNo, Object value) {
 			lbl.setHorizontalAlignment(SwingConstants.RIGHT);
-			lbl.setText((rowNo+1)+".");
+			lbl.setText(""+(rowNo+1));
 			return lbl;
 		}
 		
@@ -189,14 +189,13 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 	public List<ROW> getRows() {
 		return rows;
 	}
+	
 	public ROW getRow(int row) {
 		return row<0 || row>=rows.size()? null: rows.get(row);
 	}
-	
-	
-	public void setColumns(List<Column<ROW, ?>> allColumns) {		
-		this.allColumns = new ArrayList<Column<ROW,?>>(allColumns);
 		
+	public void setColumns(List<Column<ROW, ?>> allColumns) {		
+		this.allColumns = new ArrayList<>(allColumns);
 		if(this instanceof ExcelTableModel) {
 			notHidden.addAll(allColumns);
 		}
@@ -286,7 +285,7 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 	 * fire structurechange event
 	 */
 	public void removeEmptyColumns() {
-		setColumns(removeEmptyColumns(getColumns()));
+		setColumns(removeEmptyColumns(getAllColumns()));
 	}
 	
 	/**
@@ -299,11 +298,15 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 		List<Column<ROW, ?>> res = new ArrayList<>();
 		for (int i = 0; i < columns.size(); i++) {
 			Column<ROW, ?> col = columns.get(i);
-			exploreRows: for(int row: rows) {
-				Object obj = col.getValue(getRow(row), row);
-				if(obj!=null && obj.toString().length()>0) {
-					res.add(col);
-					break exploreRows;
+			if(col.isHideable()) {
+				res.add(col);
+			} else {
+				exploreRows: for(int row: rows) {
+					Object obj = col.getValue(getRow(row), row);
+					if(obj!=null && obj.toString().length()>0) {
+						res.add(col);
+						break exploreRows;
+					}
 				}
 			}
 		}		

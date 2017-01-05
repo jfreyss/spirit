@@ -218,6 +218,7 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 		putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
 		setSurrendersFocusOnKeystroke(true);
 
+		defaultRenderersByColumnClass.clear();
 		setDefaultRenderer(Object.class, new ExtendTableCellRenderer<ROW>(this));
 		
 		getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "down");

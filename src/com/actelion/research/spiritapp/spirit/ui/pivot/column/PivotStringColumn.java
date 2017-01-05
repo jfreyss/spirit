@@ -21,6 +21,7 @@
 
 package com.actelion.research.spiritapp.spirit.ui.pivot.column;
 
+import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import com.actelion.research.spiritcore.business.pivot.PivotItem;
@@ -33,7 +34,7 @@ public class PivotStringColumn extends Column<PivotRow, String>{
 	private PivotItem item;
 	
 	public PivotStringColumn(PivotItem item) {
-		super(item.getFullName(), String.class, 50, 300);
+		super(item.getFullName(), String.class, 50, 400);
 		this.item = item;
 	}
 	
@@ -49,18 +50,12 @@ public class PivotStringColumn extends Column<PivotRow, String>{
 	}
 	
 	@Override
-	public void postProcess(AbstractExtendTable<PivotRow> table, PivotRow row, int rowNo, Object value, javax.swing.JComponent comp) {
+	public void postProcess(AbstractExtendTable<PivotRow> table, PivotRow row, int rowNo, Object value, JComponent comp) {
 		if(row==null) return;
 		if(comp instanceof JLabelNoRepaint) {
 			//Header
 			((JLabelNoRepaint)comp).setVerticalAlignment(SwingUtilities.TOP);
 		}
-//		if(item==PivotItemFactory.COMPOUND_ACTNO || item==PivotItemFactory.COMPOUND_ELN ) {
-//			comp.setForeground(LF.COLOR_COMPOUND);
-//			if(row.getRepresentative()!=null && row.getRepresentative().getResult().getCompound()!=null) {
-//				comp.setToolTipText("<html><img src='http://ares:8080/dataCenter/viewStructure.do?actNo=" + row.getRepresentative().getResult().getCompound().getActNo() + "&width=160&height=110'></html>");
-//			}
-//		} 
 	}
 	
 

@@ -21,11 +21,7 @@
 
 package com.actelion.research.spiritapp.spirit.ui.study;
 
-import java.awt.Color;
 import java.awt.Desktop;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Toolkit;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -38,13 +34,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.swing.JEditorPane;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkEvent.EventType;
-import javax.swing.text.html.HTMLEditorKit;
-import javax.swing.text.html.StyleSheet;
 
+import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.Document.DocumentType;
@@ -65,7 +60,7 @@ import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.IOUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
 
-public class StudyEditorPane extends JEditorPane {
+public class StudyEditorPane extends ImageEditorPane {
 
 	private Study study;
 	
@@ -75,13 +70,10 @@ public class StudyEditorPane extends JEditorPane {
 	private boolean forRevision;
 	
 	public StudyEditorPane() {
-		super("text/html", "");
+		super();
 		setEditable(false);
 		setOpaque(true);
-		HTMLEditorKit kit = new HTMLEditorKit();
-		StyleSheet stylesheet = kit.getStyleSheet();
-		stylesheet.addRule("td, th {margin:0px;padding-left:2px; vertical-align:top; text-align:left}");
-		setEditorKit(kit);
+		LF.initComp(this);
 
 		
 		addHyperlinkListener(new SpiritHyperlinkListener() {
@@ -145,8 +137,6 @@ public class StudyEditorPane extends JEditorPane {
 
 	}
 	
-	
-	
 	public void setForRevision(boolean forRevision) {
 		this.forRevision = forRevision;
 	}
@@ -170,16 +160,16 @@ public class StudyEditorPane extends JEditorPane {
 			/////////////////////////////////////
 			//Study Infos
 			
-			sb.append("<span style='font-size:12px;font-weight:bold'>" + study.getStudyId() + "</span> ");
-			if(study.getIvv()!=null) sb.append(" <span style='font-size:10px'>  " + MiscUtils.removeHtml(study.getIvv()) + "</span> ");
+			sb.append("<span style='font-size:120%;font-weight:bold'>" + study.getStudyId() + "</span> ");
+			if(study.getIvv()!=null) sb.append(" / " + MiscUtils.removeHtml(study.getIvv()) + "");
 			sb.append("<br>");
 			if(study.getTitle()!=null) {
-				sb.append("<span style='font-size:10px; color:#000000'>" + MiscUtils.removeHtml(study.getTitle()) + "</span><br>");
+				sb.append("<span style='font-size:90%'>" + MiscUtils.removeHtml(study.getTitle()) + "</span><br>");
 			}
-			
+			sb.append("<div style='font-size:100%'>");
 			//Display metadata
 			sb.append("<hr>");
-			sb.append("<table style='font-size:8px'>");
+			sb.append("<table>");
 			for(Entry<String, String> entry: study.getMetadata().entrySet()) {
 				String name = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, entry.getKey());
 				if(name!=null && name.length()>0 && entry.getValue().length()>0) {
@@ -190,36 +180,36 @@ public class StudyEditorPane extends JEditorPane {
 						
 			//Display notes
 			if(study.getNotes()!=null && study.getNotes().length()>0) {
-				sb.append("<div style='margin-top:5px;color:#444444;font-size:8px'>" + MiscUtils.convert2Html(study.getNotes()) + "</div><br>");
+				sb.append("<div style='margin-top:5px;color:#444444;font-size:80%'>" + MiscUtils.convert2Html(study.getNotes()) + "</div><br>");
 			}
 			
 			sb.append("<hr>");
-			sb.append("<table style='font-size:8px'>");
-			sb.append("<tr><td>State:</td><td><b>" + (study.getState()==null?"": MiscUtils.removeHtml(study.getState())) + "</b></td></tr>");
+			sb.append("<table>");
+			sb.append("<tr><td>State:</td><td>" + (study.getState()==null?"": MiscUtils.removeHtml(study.getState())) + "</td></tr>");
 			
 			if(!SpiritProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY)) {
 				Set<String> adminSet = new LinkedHashSet<>();
 				adminSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, study.getState())));
 				adminSet.addAll(study.getAdminUsersAsSet());
-				sb.append("<tr><td>Admin:</td><td><b>" + (adminSet.size()==0?"-": MiscUtils.flatten(adminSet, ", ")) + "</b></td></tr>");
+				sb.append("<tr><td>Admin:</td><td>" + (adminSet.size()==0?"-": MiscUtils.flatten(adminSet, ", ")) + "</td></tr>");
 				
 				Set<String> expertSet = new LinkedHashSet<>();
 				expertSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, study.getState())));
 				expertSet.addAll(study.getExpertUsersAsSet());
 				expertSet.addAll(EmployeeGroup.getNames(study.getEmployeeGroups()));
 				if(expertSet.size()>0) {
-					sb.append("<tr><td>Expert:</td><td><b>" + (expertSet.size()==0? "-": MiscUtils.flatten(expertSet, ", ")) + "</b></td></tr>");
+					sb.append("<tr><td>Expert:</td><td>" + (expertSet.size()==0? "-": MiscUtils.flatten(expertSet, ", ")) + "</td></tr>");
 				}
 				
 				Set<String> viewSet = new LinkedHashSet<>();
 				viewSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState())));
 				if(viewSet.size()>0) {
-					sb.append("<tr><td>View:</td><td><b>" + (viewSet.size()==0? "-": MiscUtils.flatten(viewSet, ", ")) + "</b></td></tr>");
+					sb.append("<tr><td>View:</td><td>" + (viewSet.size()==0? "-": MiscUtils.flatten(viewSet, ", ")) + "</td></tr>");
 				}
 				
-				if(study.getBlindDetailsUsersAsSet().size()>0) sb.append("<tr><td>Blind-Names:</td><td><b>" + MiscUtils.flatten(study.getBlindDetailsUsersAsSet(), ", ") + "</b></td></tr>");
-				if(study.getBlindAllUsersAsSet().size()>0) sb.append("<tr><td>Blind-All:</td><td><b>" + MiscUtils.flatten(study.getBlindAllUsersAsSet(), ", ") + "</b></td></tr>");
-				sb.append("<tr><td>Samples:</td><td><b>" + (study.isSynchronizeSamples()? "are automatically generated": "are created manually") + "</b></td></tr>");
+				if(study.getBlindDetailsUsersAsSet().size()>0) sb.append("<tr><td>Blind-Names:</td><td>" + MiscUtils.flatten(study.getBlindDetailsUsersAsSet(), ", ") + "</td></tr>");
+				if(study.getBlindAllUsersAsSet().size()>0) sb.append("<tr><td>Blind-All:</td><td>" + MiscUtils.flatten(study.getBlindAllUsersAsSet(), ", ") + "</td></tr>");
+				sb.append("<tr><td>Samples:</td><td>" + (study.isSynchronizeSamples()? "are automatically generated": "are created manually") + "</td></tr>");
 
 			}
 			sb.append("</table>");
@@ -243,7 +233,6 @@ public class StudyEditorPane extends JEditorPane {
 				}
 
 				
-				sb.append("<br>");
 				try {
 					//Count Biosamples
 					Map<Study, Map<Biotype, Triple<Integer, String, Date>>> countBio = DAOStudy.countSamplesByStudyBiotype(Collections.singletonList(study));
@@ -264,7 +253,7 @@ public class StudyEditorPane extends JEditorPane {
 					List<ElbLink> elbs = DAOResult.getNiobeLinksForStudy(study);
 					if(elbs.size()>0) {
 						
-						sb.append("<br><hr><span style='font-size:10px'><b>Niobe:</b></span>");
+						sb.append("<br><hr><b>Niobe:</span>");
 	
 						if("date".equals(sort)) {
 							Collections.sort(elbs, new Comparator<ElbLink>() {
@@ -292,7 +281,7 @@ public class StudyEditorPane extends JEditorPane {
 							if(l.isInNiobe()) hasNiobeLinks = true;
 						}
 						if(hasNiobeLinks) {
-							sb.append("    [ <a style='font-size:8px' href='study:" + study.getStudyId() + "'>Query in Niobe</a> ]");
+							sb.append("    [ <a style='font-size:80%' href='study:" + study.getStudyId() + "'>Query in Niobe</a> ]");
 						}
 						sb.append("<br>");
 						
@@ -303,7 +292,7 @@ public class StudyEditorPane extends JEditorPane {
 							ElbLink elbLink = elbs.get(i);
 							sb.append("<tr style='background:#FFFFEE'>");
 							sb.append("<td>&nbsp;<b>" + elbLink.getElb() + "</b></td>"); 
-							sb.append("<td style='white-space:nowrap; font-size:8px'>&nbsp; [ ");
+							sb.append("<td style='white-space:nowrap; font-size:80%'>&nbsp; [ ");
 							if(elbLink.isInSpirit() || elbLink.getTitle()!=null) {
 								if(elbLink.isInSpirit()) {
 									sb.append("<a href='elb:" + elbLink.getElb() + "'>Spirit</a>");
@@ -321,12 +310,12 @@ public class StudyEditorPane extends JEditorPane {
 							}
 							
 							if(elbLink.isInNiobe() && elbLink.getTitle()!=null ) {
-								sb.append("<td style='color:#999999;font-size:8px'>&nbsp;" + elbLink.getScientist() + "</td>");
-								sb.append("<td style='color:#999999;font-size:8px;white-space:nowrap'>&nbsp; " + FormatterUtils.formatDate(elbLink.getCreDate()) + " -> " + (elbLink.getPubDate()==null?" Unsealed": FormatterUtils.formatDate(elbLink.getPubDate()))+"</td>");
+								sb.append("<td style='color:#999999;font-size:80%'>&nbsp;" + elbLink.getScientist() + "</td>");
+								sb.append("<td style='color:#999999;font-size:80%;white-space:nowrap'>&nbsp; " + FormatterUtils.formatDate(elbLink.getCreDate()) + " -> " + (elbLink.getPubDate()==null?" Unsealed": FormatterUtils.formatDate(elbLink.getPubDate()))+"</td>");
 							} 
 							sb.append("</tr>");
 							if(elbLink.isInNiobe() && elbLink.getTitle()!=null ) {
-								sb.append("<tr style='background:#FFFFEE'><td colspan=4 style='background:#FFFFFF; font-size:8px'>");
+								sb.append("<tr style='background:#FFFFEE'><td colspan=4 style='background:#FFFFFF; font-size:80%'>");
 								sb.append(elbLink.getTitle());
 								sb.append("</td></tr>");							
 							}
@@ -337,7 +326,7 @@ public class StudyEditorPane extends JEditorPane {
 				
 			}
 		
-			sb.append("<div style='font-size:8px; color:gray'>");
+			sb.append("<br><div style='font-size:90%; color:gray'>");
 			sb.append("Created the " + FormatterUtils.formatDateTimeShort(study.getCreDate()) + " by " + study.getCreUser() + "<br>");
 			if (study.getUpdDate() != null && study.getUpdDate().getTime() > study.getCreDate().getTime() + 1000) {
 				sb.append("Updated the " + FormatterUtils.formatDateTimeShort(study.getUpdDate()) + " by " + study.getUpdUser() + "<br>");				
@@ -363,7 +352,7 @@ public class StudyEditorPane extends JEditorPane {
 			for (Biotype t: m1.keySet()) {					
 				sb.append("<tr><td><a href='bios:" + study.getStudyId() + ":" + t.getName() + "'>" + t.getName() + "</a> (" + m1.get(t).getFirst() + ")");																								
 				sb.append("</td><td style='padding-left:5px;color:" + getColor(m1.get(t).getThird()) + "'>");
-				sb.append(" <span style='font-size:8px'> [" + FormatterUtils.formatDateOrTime(m1.get(t).getThird()) + " - " + m1.get(t).getSecond() +"]</span>");
+				sb.append(" <span style='font-size:80%'> [" + FormatterUtils.formatDateOrTime(m1.get(t).getThird()) + " - " + m1.get(t).getSecond() +"]</span>");
 				sb.append("</td></tr>");
 			}
 			sb.append("</table>");
@@ -382,7 +371,7 @@ public class StudyEditorPane extends JEditorPane {
 			for (Test t: m2.keySet()) {					
 				sb.append("<tr><td><a href='test:" + study.getStudyId() + ":" + t.getId() + "'>" + t.getName() + "</a>&nbsp;(" + m2.get(t).getFirst() + ")");																								
 				sb.append("</td><td style='padding-left:5px;color:" + getColor(m2.get(t).getThird()) + "'>");
-				sb.append(" <span style='font-size:8px'> [" + FormatterUtils.formatDateOrTime(m2.get(t).getThird()) + " - " + m2.get(t).getSecond() +"]</span>");
+				sb.append(" <span style='font-size:80%'> [" + FormatterUtils.formatDateOrTime(m2.get(t).getThird()) + " - " + m2.get(t).getSecond() +"]</span>");
 				sb.append("</td></tr>");
 			}
 			sb.append("</table>");

@@ -21,67 +21,25 @@
 
 package com.actelion.research.spiritapp.spirit.ui.util.formtree;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Image;
-
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 
-@SuppressWarnings("rawtypes")
 public class CheckboxNode extends AbstractCheckboxNode<Boolean> {
 
-	private final JLabel lbl;
-	private final JPanel res;
-	
 	public CheckboxNode(FormTree tree, String label) {
 		this(tree, label, null);
 	}
-	public CheckboxNode(FormTree tree, String label, Strategy<Boolean> strategy) {
-	
+	public CheckboxNode(FormTree tree, String label, Strategy<Boolean> strategy) {	
 		super(tree, label, strategy);
-		this.lbl = new JLabel(label);
+		checkbox.setText(label);
 		
-		res = new JPanel();		
-		res.setOpaque(false);
-		res.setLayout(new BoxLayout(res, BoxLayout.X_AXIS));
-		res.add(checkbox);
-		res.add(lbl);
 		addEventsToComponent();
 		
 	}	
 	
-	
-	
 	@Override
 	public JComponent getComponent() {		
-		return res;
-	}
-	
-	public CheckboxNode setBold(boolean bold) {
-		lbl.setFont(lbl.getFont().deriveFont(bold ? Font.BOLD: Font.PLAIN));
-		return this;
-	}
-	public AbstractNode setFontSize(int fontSize) {
-		lbl.setFont(lbl.getFont().deriveFont((float)fontSize));
-		return this;
-	}
-	public AbstractNode setForeground(Color color) {
-		lbl.setForeground(color);
-		return this;
-	}
-	
-	public AbstractNode setImage(Image img) {
-		if(img!=null) {
-			lbl.setIcon(new ImageIcon(img));
-		} else {
-			lbl.setIcon(null);			
-		}
-		return this;
-	}
+		return checkbox;
+	}	
 	
 	@Override
 	protected void updateModel() {
@@ -96,12 +54,6 @@ public class CheckboxNode extends AbstractCheckboxNode<Boolean> {
 				checkbox.setSelected(value);
 			}
 		}
-	}
-	
-
-	@Override
-	public String toString() {
-		return lbl.getText();
 	}
 	
 }

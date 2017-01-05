@@ -131,9 +131,9 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		tabbedPane.add("Study Design", studyDetailPanel);
 		tabbedPane.setIconAt(0, IconType.STUDY.getIcon());
 		tabbedPane.add("Embedding", cassettePanel);
-		tabbedPane.setIconAt(1, new ImageIcon(ContainerType.K7.getImageThumbnail()));
+		tabbedPane.setIconAt(1, new ImageIcon(ContainerType.K7.getImage(22)));
 		tabbedPane.add("Sectioning", slidePanel);
-		tabbedPane.setIconAt(2, new ImageIcon(ContainerType.SLIDE.getImageThumbnail()));
+		tabbedPane.setIconAt(2, new ImageIcon(ContainerType.SLIDE.getImage(22)));
 		tabbedPane.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
@@ -243,18 +243,12 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	public void initMenu() {
 		JMenuBar menuBar = new JMenuBar();
 		
-		JMenu edit = new JMenu("Edit");
-		edit.setMnemonic('e');
-		edit.add(new Action_CreateCassette());
-		edit.add(new Action_CreateSlide());
-		edit.add(new SpiritAction.Action_Refresh(new AbstractAction() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				eventUserChanged();
-			}
-		}));
-		menuBar.add(edit);
-		
+		JMenu editMenu = new JMenu("Edit");
+		editMenu.setMnemonic('e');
+		editMenu.add(new Action_CreateCassette());
+		editMenu.add(new Action_CreateSlide());
+		SpiritMenu.addEditMenuItems(editMenu, null);
+		menuBar.add(editMenu);
 
 		menuBar.add(SpiritMenu.getToolsMenu());
 		menuBar.add(SpiritMenu.getDatabaseMenu());
@@ -269,7 +263,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		public Action_CreateCassette() {
 			super("Create Cassettes");			
 			putValue(AbstractAction.MNEMONIC_KEY, (int)'c');
-			putValue(AbstractAction.SMALL_ICON, new ImageIcon(ContainerType.K7.getImageThumbnail()));
+			putValue(AbstractAction.SMALL_ICON, new ImageIcon(ContainerType.K7.getImage(22)));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -288,7 +282,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		public Action_CreateSlide() {
 			super("Create Slides");			
 			putValue(AbstractAction.MNEMONIC_KEY, (int)'s');
-			putValue(AbstractAction.SMALL_ICON, new ImageIcon(ContainerType.SLIDE.getImageThumbnail()));
+			putValue(AbstractAction.SMALL_ICON, new ImageIcon(ContainerType.SLIDE.getImage(22)));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {

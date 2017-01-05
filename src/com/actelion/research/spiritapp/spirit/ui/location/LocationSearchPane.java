@@ -24,8 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui.location;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -38,6 +36,7 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
@@ -61,7 +60,6 @@ public class LocationSearchPane extends JPanel {
 	public static final String PROPERTY_QUERIED = "queried";
 	
 	private final Biotype forcedBiotype;
-	private final JPanel topPanel = new JPanel(new BorderLayout());
 	private final JCustomTextField keywordsTextField = new JCustomTextField(20, "", "Name");
 	private final LocationTable locationTable = new LocationTable();
 	private final StudyComboBox studyComboBox;
@@ -75,31 +73,27 @@ public class LocationSearchPane extends JPanel {
 	private List<Location> acceptedAdminLocations;
 	
 	public LocationSearchPane(Biotype forcedBiotype) {
-		super(new BorderLayout(0, 0));		
-		JPanel filterLocation = new JPanel(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-		filterLocation.setBackground(Color.WHITE);
+		super(new BorderLayout());
+		
 		studyComboBox = new StudyComboBox(RightLevel.WRITE, "StudyId");
+
+		JPanel filterLocation = UIUtils.createTable(1, 0, 1, 
+				studyComboBox,
+				biotypeComboBox,
+				keywordsTextField,
+				UIUtils.createHorizontalBox(emptyCheckbox, nonEmptyCheckbox));
+		filterLocation.setOpaque(true);
+		filterLocation.setBackground(Color.WHITE);
 		viewMineButton.setVisible(Spirit.getUser()!=null && Spirit.getUser().getMainGroup()!=null);
 		
-		c.anchor = GridBagConstraints.WEST;
 		this.forcedBiotype = forcedBiotype;
-		if(forcedBiotype==null) {
-			c.gridwidth = 1; c.gridx = 1; c.gridy = 1; c.weightx = 1; filterLocation.add(studyComboBox, c);
-		} else {
+		if(forcedBiotype!=null) {
+			studyComboBox.setVisible(false);
 			biotypeComboBox.setSelection(forcedBiotype);
 			biotypeComboBox.setEnabled(false);
 		}
-		c.gridwidth = 1; c.gridx = 1; c.gridy = 2; c.weightx = 1; filterLocation.add(biotypeComboBox, c);
-		c.gridwidth = 1; c.gridx = 1; c.gridy = 3; c.weightx = 1; filterLocation.add(keywordsTextField, c);
-		c.gridwidth = 1; c.gridx = 1; c.gridy = 4; c.weightx = 1; filterLocation.add(Box.createVerticalStrut(3), c);
-		c.gridwidth = 1; c.gridx = 1; c.gridy = 5; c.weightx = 1; filterLocation.add(UIUtils.createHorizontalBox(emptyCheckbox, nonEmptyCheckbox), c);
-
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 1; c.gridx = 1; c.gridy = 10; c.weightx = 1; filterLocation.add(UIUtils.createHorizontalBox(viewMineButton, Box.createHorizontalGlue(), resetButton, searchButton), c);			
 		
-		topPanel.add(BorderLayout.CENTER, filterLocation);
-		add(BorderLayout.NORTH, topPanel);
+		add(BorderLayout.NORTH, UIUtils.createBox(new JScrollPane(filterLocation), null, UIUtils.createHorizontalBox(viewMineButton, Box.createHorizontalGlue(), resetButton, searchButton)));
 		add(BorderLayout.CENTER, new JBGScrollPane(locationTable, 2));
 		setMinimumSize(new Dimension(150, 200));
 		setPreferredSize(new Dimension(200, 200));
@@ -110,6 +104,7 @@ public class LocationSearchPane extends JPanel {
 				query();
 			}
 		});
+		emptyCheckbox.setOpaque(false);
 		emptyCheckbox.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -118,6 +113,7 @@ public class LocationSearchPane extends JPanel {
 				}
 			}
 		});
+		nonEmptyCheckbox.setOpaque(false);
 		nonEmptyCheckbox.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {

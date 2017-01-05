@@ -24,15 +24,13 @@ package com.actelion.research.spiritapp.spirit;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import javax.swing.Box;
 import javax.swing.JFrame;
@@ -43,10 +41,10 @@ import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
-import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +55,7 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTab;
 import com.actelion.research.spiritapp.spirit.ui.exchange.ExchangeActions;
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.home.HomeTab;
+import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationActions;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationTab;
 import com.actelion.research.spiritapp.spirit.ui.result.ResultActions;
@@ -104,6 +103,7 @@ import com.actelion.research.util.ui.SplashScreen2;
 import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 /**
@@ -123,7 +123,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	private static List<Action> afterLoginActions = Collections.synchronizedList(new ArrayList<Action>());
 
 	private JStatusBar statusBar;
-	private final JTabbedPane tabbedPane;
+	private JTabbedPane tabbedPane;
 	private HomeTab homeTab;
 	private BiosampleTab biosampleTab;
 	private LocationTab locationTab;
@@ -142,34 +142,6 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		URL url = getClass().getResource("ico.png");
 		if(url!=null) setIconImage(Toolkit.getDefaultToolkit().createImage(url));
 		
-		statusBar = new JStatusBar();
-		tabbedPane = new JCustomTabbedPane();
-		
-		// Keep the same Study when we change tabs
-		final ChangeListener studyListener = new ChangeListener() {
-			private ISpiritTab currentTab;
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				//Reset the current Study
-				String studyIds;
-				if(currentTab==null) {
-					studyIds = "";  
-				} else {
-					studyIds = currentTab.getStudyIds();
-				}
-				statusBar.setInfos("");
-				if(tabbedPane.getSelectedComponent() instanceof ISpiritTab) {		
-					currentTab = ((ISpiritTab)tabbedPane.getSelectedComponent());
-					if(studyIds!=null) currentTab.setStudyIds(studyIds);
-				} 
-			}
-		};
-		tabbedPane.addChangeListener(studyListener);
-	
-		setContentPane(UIUtils.createBox(tabbedPane, null, statusBar));		
-		createMenu();
-		
-		statusBar.setCopyright("Spirit - (C) Joel Freyss - Actelion");		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);				
 		UIUtils.adaptSize(this, 1600, 1200);		
 		setVisible(true);
@@ -181,15 +153,22 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	}
 	
 	/**
-	 * Recreate the menu, the tabs, and apply the actions
+	 * Set the UI preferences, recreate the menu, the tabs
 	 * This function can be called from outside the EventDispatcherThread
 	 */
 	public void recreateUI() {
+		initUI();
+		
 		SwingUtilities.invokeLater(new Runnable() {			
 			@Override
-			public void run() {
+			public void run() {							
+	  			createMenu();
+				recreateTabs();		
+				statusBar = new JStatusBar();
+				statusBar.setCopyright("Spirit - (C) Joel Freyss - Actelion");
+				setContentPane(UIUtils.createBox(tabbedPane, null, statusBar));		
 				createMenu();
-				recreateTabs();						
+				validate();
 			}
 		});		
 	}
@@ -199,7 +178,29 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	 */
 	private void recreateTabs() {
 		try {					 
-			tabbedPane.removeAll();
+			tabbedPane = new JCustomTabbedPane();
+			
+			// Keep the same Study when we change tabs
+			final ChangeListener studyListener = new ChangeListener() {
+				private ISpiritTab currentTab;
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					//Reset the current Study
+					String studyIds;
+					if(currentTab==null) {
+						studyIds = "";  
+					} else {
+						studyIds = currentTab.getStudyIds();
+					}
+					if(statusBar!=null) statusBar.setInfos("");
+					if(tabbedPane!=null && tabbedPane.getSelectedComponent() instanceof ISpiritTab) {		
+						currentTab = ((ISpiritTab)tabbedPane.getSelectedComponent());
+						if(studyIds!=null) currentTab.setStudyIds(studyIds);
+					} 
+				}
+			};
+			tabbedPane.addChangeListener(studyListener);
+		
 			homeTab = new HomeTab(Spirit.this);
 			studyTab = new StudyTab();
 			biosampleTab = new BiosampleTab(null);
@@ -208,7 +209,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 			
 			if(user!=null) {
 				//Add the tabs
-				tabbedPane.setFont(FastFont.BOLD.deriveSize(14));
+				tabbedPane.setFont(FastFont.BIGGER);
 				if(homeTab!=null) {
 					tabbedPane.addTab("", homeTab);		
 					tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.HOME.getIcon());
@@ -268,9 +269,8 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		editMenu.add(new ExchangeActions.Action_ExportExchange(this));
 		editMenu.add(new ExchangeActions.Action_ImportExchange());
 		editMenu.add(new JSeparator());
-		editMenu.add(new SpiritAction.Action_Refresh(this));
-		editMenu.add(new SpiritAction.Action_Exit());
-		
+		SpiritMenu.addEditMenuItems(editMenu, this);
+
 		menuBar.add(Box.createHorizontalStrut(10));
 		
 		menuBar.add(new JSeparator(JSeparator.VERTICAL) {
@@ -317,10 +317,12 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	
 	
 	public ISpiritTab getSelectedTab() {
+		if(tabbedPane==null) return null;
 		return (ISpiritTab) tabbedPane.getSelectedComponent();
 	}
 	
 	void refreshTabs() {
+		if(tabbedPane==null) return;
 		for(Component c: tabbedPane.getComponents()) {
 			if(c instanceof ISpiritTab) {
 				((ISpiritTab) c).refreshFilters();
@@ -328,25 +330,24 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		}
 		createMenu();
 	}
-	
-	public static void initUI() {
 
+	public static void initUI() {
   		try {
-			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");			
-			UIManager.put("nimbusSelectionBackground", new Color(173,207,231));
 			System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
 			System.setProperty("awt.useSystemAAFontSettings","on"); 
 			System.setProperty("swing.aatext", "true");
 
+			UIManager.put("nimbusSelectionBackground", new Color(173,207,231));
+			UIManager.put("Table.alternateRowColor", UIManager.getColor("Table.background"));
+			UIManager.put("Table.background", Color.WHITE);
+//			UIManager.put("Table.alternateRowColor", Color.RED);
+//			UIManager.put("Table:\"Table.cellRenderer\".background", Color.RED);
+			
+			
+
 //			UIManager.setLookAndFeel(new SubstanceDustLookAndFeel());
 			
-//			UIManager.setLookAndFeel(new SubstanceBusinessLookAndFeel());
-//			UIManager.setLookAndFeel(new SubstanceGeminiLookAndFeel());
-//			
-  			listUIProperties();
-			
-//  			UIManager.getLookAndFeelDefaults().put("Table.cellNoFocusBorder", BorderFactory.createLineBorder(Color.GREEN));
-//  			UIManager.getLookAndFeelDefaults().put("Table.gridColor", Color.RED);
+// 			listUIProperties();
 		} catch (Exception e2) {
 			e2.printStackTrace();
 		}  		
@@ -371,23 +372,43 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		
 		//Bind help
 		HelpBinder.bindHelp();		
-	}
-
-	private static void listUIProperties() {
-
-
-		UIDefaults defaults = UIManager.getDefaults();
-		Enumeration newKeys = defaults.keys();
-		Map<String, String> values = new TreeMap<>();
-		while (newKeys.hasMoreElements()) {
-			Object obj = newKeys.nextElement();
-			values.put(obj.toString(), UIManager.get(obj).toString());
-		}
-		for (Map.Entry<String, String> e: values.entrySet()) {
-			System.out.printf("%50s : %s\n", e.getKey(), e.getValue());
-		}
 		
+		try {
+			String lf = Spirit.getConfig().getProperty("preferences.lf", "Nimbus");
+			if(lf.equalsIgnoreCase("System")) {
+				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			} else {
+				UIManager.setLookAndFeel(new NimbusLookAndFeel());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		SwingUtilities.invokeLater(new Runnable() {			
+			@Override
+			public void run() {
+	  			FastFont.setDefaultFontSize(Spirit.getConfig().getProperty("preferences.fontSize", FastFont.getDefaultFontSize()));
+	  			FastFont.setDefaultFontFamily(Spirit.getConfig().getProperty("preferences.fontFamily", FastFont.getDefaultFontFamily()));
+	  			ImageFactory.clearCache();
+	  			JIconButton.IconType.clearCache();
+			}
+		});
 	}
+
+//	private static void listUIProperties() {
+//
+//
+//		UIDefaults defaults = UIManager.getDefaults();
+//		Enumeration<Object> newKeys = defaults.keys();
+//		Map<String, String> values = new TreeMap<>();
+//		while (newKeys.hasMoreElements()) {
+//			Object obj = newKeys.nextElement();
+//			values.put(obj.toString(), ""+UIManager.get(obj));
+//		}
+//		for (Map.Entry<String, String> e: values.entrySet()) {
+//			System.out.printf("%50s : %s\n", e.getKey(), e.getValue());
+//		}
+//		
+//	}
 	
 	
 	public static void preLoadDAO() throws Exception {
@@ -423,7 +444,6 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		return Spirit.getUser();
 	}
 	
-	@Override
 	public void setStatus(String status) {
 		statusBar.setInfos(status);
 	}
@@ -439,6 +459,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		
 	@Override
 	public void query(final BiosampleQuery q) {
+		if(tabbedPane==null) return;
 		tabbedPane.setSelectedComponent(biosampleTab);
 		if(q==null) return;
 		biosampleTab.query(q);
@@ -446,6 +467,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	
 	@Override
 	public void query(final ResultQuery q) {
+		if(tabbedPane==null) return;
 		tabbedPane.setSelectedComponent(resultTab);
 		if(q==null) return;
 		resultTab.query(q);
@@ -474,6 +496,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	
 	@Override
 	public void setRack(Location loc) {
+		if(tabbedPane==null) return;
 		tabbedPane.setSelectedComponent(biosampleTab);
 		biosampleTab.setRack(loc);
 		if(loc!=null) statusBar.setInfos("Rack "+loc + ": "+loc.getBiosamples().size());
@@ -481,6 +504,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	
 	@Override
 	public void setResults(final List<Result> results, final PivotTemplate template) {
+		if(tabbedPane==null) return;
 		tabbedPane.setSelectedComponent(resultTab);
 		resultTab.setResults(results, template);
 		statusBar.setInfos(results.size()+ " results");
@@ -488,6 +512,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	
 	@Override
 	public void setLocation(final Location location, final int pos) {
+		if(tabbedPane==null) return;
 		tabbedPane.setSelectedComponent(locationTab);
 		locationTab.setBioLocation(location, pos);
 		if(location!=null) statusBar.setInfos(location + " selected");
@@ -495,6 +520,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	
 	@Override
 	public void setStudy(final Study study) {
+		if(tabbedPane==null) return;
 		final String studyId = study==null?"": study.getStudyId();
 		studyTab.setStudyIds(studyId);
 		tabbedPane.setSelectedComponent(studyTab);
@@ -531,6 +557,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	 */
 	public Exchange getExchange() {
 		Exchange exchange = new Exchange();
+		if(tabbedPane==null) return exchange;
 		if(tabbedPane.getSelectedComponent()==studyTab) {
 			exchange.addStudies(JPAUtil.reattach(studyTab.getStudies()));
 
@@ -640,6 +667,11 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	
 	public static void addAfterLoginAction(Action action) {
 		afterLoginActions.add(action);
+	}
+	@Override
+	public void paintComponents(Graphics g) {
+		UIUtils.applyDesktopProperties(g);
+		super.paintComponents(g);
 	}
 	
 }	

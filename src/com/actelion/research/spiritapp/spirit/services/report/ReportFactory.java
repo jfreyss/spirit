@@ -50,6 +50,7 @@ import com.actelion.research.spiritapp.spirit.services.report.custom.SpecimenFoo
 import com.actelion.research.spiritapp.spirit.services.report.custom.SpecimenStatusReport;
 import com.actelion.research.spiritapp.spirit.services.report.custom.SpecimenWeighingInVivoReport;
 import com.actelion.research.spiritapp.spirit.services.report.custom.SpecimenWeighingToxicologyReport;
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.util.ui.FastFont;
@@ -148,7 +149,8 @@ public class ReportFactory {
 		reportPanels.add(Box.createVerticalGlue());
 				
 		//Add the description
-		final JEditorPane editorPane = new JEditorPane("text/html", report.getDescription()==null?"":report.getDescription());
+		final JEditorPane editorPane = new ImageEditorPane();
+		editorPane.setText(report.getDescription()==null?"":report.getDescription());
 		editorPane.setEditable(false);
 		editorPane.setCaretPosition(0);
 		editorPane.setOpaque(false);

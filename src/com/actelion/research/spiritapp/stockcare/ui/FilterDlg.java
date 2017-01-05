@@ -108,7 +108,7 @@ public class FilterDlg extends JEscapeDialog {
 		panel.setBorder(BorderFactory.createEtchedBorder());
 		
 		JPanel contentPane = new JPanel(new BorderLayout());
-		contentPane.add(BorderLayout.NORTH, new JCustomLabel(title, FastFont.BOLD.deriveSize(14)));
+		contentPane.add(BorderLayout.NORTH, new JCustomLabel(title, FastFont.BIGGER));
 		contentPane.add(BorderLayout.CENTER, panel);
 		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
 		

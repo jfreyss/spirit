@@ -167,7 +167,7 @@ public class DAOBarcode {
 				txn = null;
 				
 			} finally {			
-				if(txn!=null) try{txn.rollback();}catch (Exception e) {}
+				if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
 				if(session!=null) try{session.close();}catch (Exception e) {}
 			}
 		}

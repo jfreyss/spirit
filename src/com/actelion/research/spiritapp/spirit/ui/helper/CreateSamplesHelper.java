@@ -214,7 +214,7 @@ public class CreateSamplesHelper {
 				table.setRows(toAdd);
 						
 				creationPanel.setBorder(BorderFactory.createEtchedBorder());
-				creationPanel.add(BorderLayout.NORTH, UIUtils.createHorizontalBox(BorderFactory.createEmptyBorder(5, 0, 5, 0), new JCustomLabel("Based on your study design, those " +toAdd.size()+ " samples should be added.", FastFont.BOLD.deriveSize(14)), Box.createHorizontalGlue()));
+				creationPanel.add(BorderLayout.NORTH, UIUtils.createHorizontalBox(BorderFactory.createEmptyBorder(5, 0, 5, 0), new JCustomLabel("Based on your study design, those " +toAdd.size()+ " samples should be added.", FastFont.BIGGER), Box.createHorizontalGlue()));
 				creationPanel.add(BorderLayout.CENTER, new JScrollPane(table));
 				creationPanel.setBackground(Color.GREEN);
 				contentPanel.add(creationPanel);
@@ -229,7 +229,7 @@ public class CreateSamplesHelper {
 				table.setRows(toUpdate);
 						
 				updatePanel.setBorder(BorderFactory.createEtchedBorder());
-				updatePanel.add(BorderLayout.NORTH, UIUtils.createHorizontalBox(BorderFactory.createEmptyBorder(5, 0, 5, 0), new JCustomLabel("Based on your study design, those " +toUpdate.size()+ " samples should be moved to an other phase. ", FastFont.BOLD.deriveSize(14)), Box.createHorizontalGlue()));
+				updatePanel.add(BorderLayout.NORTH, UIUtils.createHorizontalBox(BorderFactory.createEmptyBorder(5, 0, 5, 0), new JCustomLabel("Based on your study design, those " +toUpdate.size()+ " samples should be moved to an other phase. ", FastFont.BIGGER), Box.createHorizontalGlue()));
 				updatePanel.add(BorderLayout.CENTER, new JScrollPane(table));
 				updatePanel.setBackground(Color.PINK);
 				contentPanel.add(updatePanel);
@@ -245,7 +245,7 @@ public class CreateSamplesHelper {
 				table.setRows(toQuestionable);
 				
 				questionablePanel.setBorder(BorderFactory.createEtchedBorder());
-				questionablePanel.add(BorderLayout.NORTH, UIUtils.createHorizontalBox(new JCustomLabel("Based on your study design, " +toDelete.size()+ " samples are questionable and will be ignored.", FastFont.BOLD.deriveSize(14)), Box.createHorizontalGlue()));
+				questionablePanel.add(BorderLayout.NORTH, UIUtils.createHorizontalBox(new JCustomLabel("Based on your study design, " +toDelete.size()+ " samples are questionable and will be ignored.", FastFont.BIGGER), Box.createHorizontalGlue()));
 				questionablePanel.add(BorderLayout.CENTER, new JScrollPane(table));
 				questionablePanel.setOpaque(true);
 				questionablePanel.setBackground(Color.ORANGE);
@@ -266,7 +266,7 @@ public class CreateSamplesHelper {
 				deletionPanel.setBorder(BorderFactory.createEtchedBorder());
 				deletionPanel.add(BorderLayout.NORTH, 
 						UIUtils.createVerticalBox(BorderFactory.createEmptyBorder(5, 0, 5, 0),
-								UIUtils.createHorizontalBox(new JCustomLabel("Based on your study design, " +toDelete.size()+ " samples will be DELETED.", FastFont.BOLD.deriveSize(14)), Box.createHorizontalGlue()),
+								UIUtils.createHorizontalBox(new JCustomLabel("Based on your study design, " +toDelete.size()+ " samples will be DELETED.", FastFont.BIGGER), Box.createHorizontalGlue()),
 								UIUtils.createHorizontalBox(ignoreDeletionCheckBox, Box.createHorizontalGlue())));
 				deletionPanel.add(BorderLayout.CENTER, new JScrollPane(deletionTable));
 				deletionPanel.setOpaque(true);

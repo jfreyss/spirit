@@ -36,7 +36,6 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.UIUtils;
-import com.itextpdf.text.Font;
 
 /**
  * Creates a Biotype ComboBox, displaying the icons and the hierarchy for each type.
@@ -46,11 +45,6 @@ import com.itextpdf.text.Font;
  */
 public class BiotypeComboBox extends JGenericComboBox<Biotype> {
 
-	/**
-	 * FixedChoices can be left to null to use all DB choices.
-	 */
-//	private Collection<Biotype> fixedChoices = null;
-	
 	public BiotypeComboBox() {
 		this("");
 	}
@@ -62,21 +56,25 @@ public class BiotypeComboBox extends JGenericComboBox<Biotype> {
 		this(values, "");
 	}
 	public BiotypeComboBox(Collection<Biotype> values, String label) {
-//		this.fixedChoices = values;
 		this.setTextWhenEmpty(label);
-		setMinimumSize(new Dimension(200, 20));
-		setPreferredSize(new Dimension(200, 20));
 		setMaximumRowCount(35);
 		setValues(values);			
+	}
+	
+	@Override
+	public Dimension getPreferredSize() {
+		Dimension dim = super.getPreferredSize();
+		dim.width+=20;
+		return dim;
 	}
 	
 	@Override
 	public Component processCellRenderer(JLabel comp, Biotype type, int index) {
 		if(type!=null) {
 			int depth = type.getDepth();
-			Image img = ImageFactory.getImageThumbnail(type);
+			Image img = ImageFactory.getImage(type, FastFont.getAdaptedSize(16));
 			comp.setText(type.getName());
-			comp.setFont(FastFont.REGULAR.deriveFont(depth==0? 12f: 11f).deriveFont(depth==0?Font.BOLD: Font.NORMAL));						
+			comp.setFont(depth==0? FastFont.BOLD: FastFont.MEDIUM);						
 			comp.setIcon(new ImageIcon(img));
 			comp.setIconTextGap(1);
 			comp.setBorder(BorderFactory.createEmptyBorder(depth==0?2:0, depth*11, 1, 0));
@@ -90,7 +88,6 @@ public class BiotypeComboBox extends JGenericComboBox<Biotype> {
 	
 	@Override
 	public void setValues(Collection<Biotype> values, String textWhenEmpty) {
-//		this.fixedChoices = values;
 		super.setValues(values, textWhenEmpty);
 	}
 	

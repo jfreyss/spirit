@@ -417,6 +417,16 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 		return Collections.unmodifiableList(res);		
 	}	
 
+	public Map<String, String> getResultValuesAsMap(OutputType outputType) {
+		Map<String, String> res = new LinkedHashMap<>();
+		for (TestAttribute att : test.getAttributes()) {
+			if(att.getOutputType()==outputType) {
+				res.put(att.getName(), getResultValue(att).getValue());
+			}
+		}		
+		return Collections.unmodifiableMap(res);		
+	}	
+
 	/**
 	 * Sets the phase of the result.
 	 * Note: the phase should be null if the biosample has a phase to avoid redundancies.

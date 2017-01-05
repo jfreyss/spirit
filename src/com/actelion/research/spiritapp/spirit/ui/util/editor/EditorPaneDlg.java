@@ -26,20 +26,18 @@ import java.awt.Color;
 import java.awt.Dialog;
 import java.awt.Frame;
 import java.awt.Graphics;
-import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.util.Hashtable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.Box;
 import javax.swing.JButton;
-import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 
+import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.UIUtils;
 
@@ -52,8 +50,7 @@ import com.actelion.research.util.ui.UIUtils;
  */
 public class EditorPaneDlg extends JEscapeDialog {
 
-	private final static Hashtable<String, Image> imageCache = new Hashtable<String, Image>();
-	private JEditorPane editorPane = new ImageEditorPane(imageCache, "");
+	private ImageEditorPane editorPane = new ImageEditorPane();
 
 	public EditorPaneDlg(Frame frame, String title) {
 		super(frame, title, false);
@@ -71,11 +68,12 @@ public class EditorPaneDlg extends JEscapeDialog {
 		init();		
 	}
 	
-	public JEditorPane getEditorPane() {
+	public ImageEditorPane getEditorPane() {
 		return editorPane;
 	}
 	
 	private void init() {
+		LF.initComp(editorPane);
 		JButton closeButton = new  JButton("Close");
 		closeButton.addActionListener(new ActionListener() {			
 			@Override
@@ -102,9 +100,9 @@ public class EditorPaneDlg extends JEscapeDialog {
 		Matcher matcher = pattern.matcher(html);
 		while(matcher.find()) {
 			final String url = matcher.group(1);
-			if(url.startsWith("histo://") && imageCache.get(url)==null) {
+			if(url.startsWith("histo://") && editorPane.getImageCache().get(url)==null) {
 				BufferedImage image = createHisto(url.substring("histo://".length()));
-				imageCache.put(url, image);
+				editorPane.getImageCache().put(url, image);
 			}
 		}
 	}

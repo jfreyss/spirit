@@ -34,22 +34,14 @@ public class ContainerComboBox extends JGenericComboBox<Container> {
 	
 	public ContainerComboBox() {
 		super();
-	}
-	
-	@Override
-	public Dimension getPreferredSize() {
-		return new Dimension(130, 26);
-	}
-	
-	@Override
-	public Dimension getMaximumSize() {
-		return new Dimension(130, 26);
+		setMinimumSize(new Dimension(200, 20));
 	}
 	
 	
+	private ContainerLabel lbl = new ContainerLabel();
+
 	@Override
 	public Component processCellRenderer(JLabel comp, Container b, int index) {
-		ContainerLabel lbl = new ContainerLabel();
 		lbl.setContainer(b);
 		super.processCellRenderer(comp, b, index);
 		return lbl;

@@ -58,20 +58,22 @@ public class MigrationScript1_9 extends MigrationScript {
 			+ "ALTER TABLE SPIRIT.STUDY ADD (METADATA VARCHAR2(4000) );\n"
 			+ "ALTER TABLE SPIRIT.STUDY_AUD ADD (METADATA VARCHAR2(4000) );\n"
 			+ "ALTER TABLE SPIRIT.SPIRIT_PROPERTY MODIFY (ID VARCHAR2(64 CHAR) );\n"
-			+ "update spirit.study set METADATA = 'TYPE=' || replace(replace(type, '\\', '\\\\'), ';', '\\;')"
-			+ "|| ';CLINICAL='  || replace(replace(clinical, '\\', '\\\\'), ';', '\\;')"
-			+ "|| ';PROJECT='  || replace(replace(project, '\\', '\\\\'), ';', '\\;')"
-			+ "|| ';SITE='  || replace(replace(external_site, '\\', '\\\\'), ';', '\\;')"
-			+ "|| ';LICENCENO='  || replace(replace(licenceno, '\\', '\\\\'), ';', '\\;')"
-			+ "|| ';EXPERIMENTER='  || replace(replace(rnd_experimenter, '\\', '\\\\'), ';', '\\;')"
-			+ "|| ';DISEASEAREA='  || replace(replace(diseases, '\\', '\\\\'), ';', '\\;');"
-			+ "update spirit.study_aud set METADATA = 'TYPE=' || replace(replace(type, '\\', '\\\\'), ';', '\\;')"
-			+ "|| ';CLINICAL='  || replace(replace(clinical, '\\', '\\\\'), ';', '\\;')"
-			+ "|| ';PROJECT='  || replace(replace(project, '\\', '\\\\'), ';', '\\;')"
-			+ "|| ';SITE='  || replace(replace(external_site, '\\', '\\\\'), ';', '\\;')"
-			+ "|| ';LICENCENO='  || replace(replace(licenceno, '\\', '\\\\'), ';', '\\;')"
-			+ "|| ';EXPERIMENTER='  || replace(replace(rnd_experimenter, '\\', '\\\\'), ';', '\\;')"
-			+ "|| ';DISEASEAREA='  || replace(replace(diseases, '\\', '\\\\'), ';', '\\;');"
+			+ "update study set METADATA = concat(concat('TYPE=', replace(replace(type, '\\', '\\\\'), ';', '\\;'))"
+			+ ", concat(concat(';CLINICAL=' , replace(replace(clinical, '\\', '\\\\'), ';', '\\;'))"
+			+ ", concat(concat(';PROJECT=' , replace(replace(project, '\\', '\\\\'), ';', '\\;'))"
+			+ ", concat(concat(';SITE=' , replace(replace(external_site, '\\', '\\\\'), ';', '\\;'))"
+			+ ", concat(concat(';LICENCENO=' , replace(replace(licenceno, '\\', '\\\\'), ';', '\\;'))"
+			+ ", concat(concat(';EXPERIMENTER=' , replace(replace(rnd_experimenter, '\\', '\\\\'), ';', '\\;'))"
+			+ ", concat(';DISEASEAREA=' , replace(replace(diseases, '\\', '\\\\'), ';', '\\;'))))))))"
+			+ "where METADATA is null;\n"
+			+ "update study_aud set METADATA = concat(concat('TYPE=', replace(replace(type, '\\', '\\\\'), ';', '\\;'))"
+			+ ", concat(concat(';CLINICAL=' , replace(replace(clinical, '\\', '\\\\'), ';', '\\;'))"
+			+ ", concat(concat(';PROJECT=' , replace(replace(project, '\\', '\\\\'), ';', '\\;'))"
+			+ ", concat(concat(';SITE=' , replace(replace(external_site, '\\', '\\\\'), ';', '\\;'))"
+			+ ", concat(concat(';LICENCENO=' , replace(replace(licenceno, '\\', '\\\\'), ';', '\\;'))"
+			+ ", concat(concat(';EXPERIMENTER=' , replace(replace(rnd_experimenter, '\\', '\\\\'), ';', '\\;'))"
+			+ ", concat(';DISEASEAREA=' , replace(replace(diseases, '\\', '\\\\'), ';', '\\;'))))))))"
+			+ "where METADATA is null;\n"
 			+ "";
 			
 	
@@ -86,13 +88,7 @@ public class MigrationScript1_9 extends MigrationScript {
 		Connection conn = DBAdapter.getAdapter().getConnection();
 		
 		try {			
-//			try {
-//				int n = DBTools.queryAsInteger(conn, "select count(*) from biosample where metadata is not null").get(0);
-//				if(n>0) throw new Exception("Biosample.Metadata should be empty");
-//			} catch(Exception e) {
-//				//OK, DB is clean
-//			}
-			
+
 			StringBuilder sb1 = new StringBuilder();
 			StringBuilder sb2 = new StringBuilder();
 			Statement stmt = conn.createStatement();
@@ -102,14 +98,14 @@ public class MigrationScript1_9 extends MigrationScript {
 				int metaId = rs.getInt(2);
 								
 				sb1.append("update spirit.biosample"
-						+ " set metadata = metadata || ';" + metaId + "=' || (select replace(replace(max(value), '\\', '\\\\'), ';', '\\;') from spirit.biosample_metadata where biosample_metadata.biosample_id = biosample.id and METADATA_TYPE_ID = " + metaId + ")"
+						+ " set metadata = concat(metadata, concat(';" + metaId + "=', (select replace(replace(max(value), '\\', '\\\\'), ';', '\\;') from spirit.biosample_metadata where biosample_metadata.biosample_id = biosample.id and METADATA_TYPE_ID = " + metaId + ")))"
 						+ " where biotype_id = "+biotypeId
 						+ " and exists(select * from spirit.biosample_metadata where value is not null and biosample_metadata.biosample_id = biosample.id and METADATA_TYPE_ID = " + metaId + ")"
 						+ " and (metadata is null or (metadata not like '" + metaId + "=%' and metadata not like '%;" + metaId + "=%'))" 
 						+ ";\r\n");
 				
 				sb1.append("update spirit.biosample_aud"
-						+ " set metadata = metadata || ';" + metaId + "=' || (select replace(replace(max(value), '\\', '\\\\'), ';', '\\;') from spirit.biosample_metadata_aud where biosample_metadata_aud.rev<=biosample_aud.rev and biosample_metadata_aud.biosample_id = biosample_aud.id and METADATA_TYPE_ID = " + metaId + ")"
+						+ " set metadata = concat(metadata, concat(';" + metaId + "=', (select replace(replace(max(value), '\\', '\\\\'), ';', '\\;') from spirit.biosample_metadata where biosample_metadata.biosample_id = biosample.id and METADATA_TYPE_ID = " + metaId + ")))"
 						+ " where biotype_id = "+biotypeId
 						+ " and exists(select * from spirit.biosample_metadata_aud where value is not null and biosample_metadata_aud.rev<=biosample_aud.rev and biosample_metadata_aud.biosample_id = biosample_aud.id and METADATA_TYPE_ID = " + metaId + ")"
 						+ " and (metadata is null or (metadata not like '" + metaId + "=%' and metadata not like '%;" + metaId + "=%'))" 

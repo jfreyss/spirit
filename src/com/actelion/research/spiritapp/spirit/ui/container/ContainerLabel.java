@@ -43,7 +43,6 @@ import com.actelion.research.util.ui.exceltable.JComponentNoRepaint;
 public class ContainerLabel extends JComponentNoRepaint {
 	
 	public static final Color CONTAINERID_COLOR = UIUtils.getColor(0, 0, 128);
-	public static final Color CONTAINERTYPE_COLOR = CONTAINERID_COLOR; //UIUtils.getColor(130, 130, 160);
 
 	private ContainerDisplayMode displayMode;
 	
@@ -112,24 +111,17 @@ public class ContainerLabel extends JComponentNoRepaint {
 	@Override
 	protected void paintComponent(Graphics g2) {
 		Graphics2D g = (Graphics2D) g2;
-		if(isOpaque()) {
-			Color bg = getBackground(); 		
-			g.setBackground(bg);
-			g.clearRect(0, 0, getWidth(), getHeight());
-		} else {
-			super.paintComponent(g);
-		}
+		super.paintComponent(g);
+
 		if(!isVisible()) return;
 		if(amount==null && containerType==null && location==null) return;
-		
-		int height = 24;
 		
 		if(displayMode==ContainerDisplayMode.FULL) {
 			if(containerType!=null) {
 				g.setFont(FastFont.SMALL);
-				g.setColor(CONTAINERTYPE_COLOR);
-				g.drawString((containerType!=ContainerType.UNKNOWN && !containerType.isMultiple()? containerType.getShortName() + " ":"") + (containerId==null?"":containerId),
-						2, 10);
+				g.setColor(CONTAINERID_COLOR);
+				String s = (containerType!=ContainerType.UNKNOWN && !containerType.isMultiple()? containerType.getShortName() + " ":"") + (containerId==null?"":containerId);
+				g.drawString(s, 2, g.getFont().getSize()+1);
 			}
 
 			//Paint amount
@@ -138,8 +130,7 @@ public class ContainerLabel extends JComponentNoRepaint {
 				g.setFont(FastFont.SMALL);
 				g.setColor(Color.BLACK);
 				String s = amount.toString();
-				g.drawString(s, 
-						getWidth()-g.getFontMetrics().stringWidth(s)-2, 10);
+				g.drawString(s, getWidth()-g.getFontMetrics().stringWidth(s)-2, g.getFont().getSize()+1);
 			}
 			
 			//Paint Location
@@ -156,14 +147,13 @@ public class ContainerLabel extends JComponentNoRepaint {
 					g.setColor(LF.FGCOLOR_READ);
 				}		
 				g.setFont(FastFont.REGULAR);
-				g.drawString(fullLocation, 2, 21);
+				g.drawString(fullLocation, 2, FastFont.REGULAR.getSize() + FastFont.SMALL.getSize());
 			}
 			
 			
 		} else if(displayMode==ContainerDisplayMode.NAME_POS) {
 			//Paint Location
 			if(fullLocation!=null) {
-				int h = height/2+5;
 				boolean canView = SpiritRights.canRead(location, Spirit.getUser());
 				
 				
@@ -178,12 +168,11 @@ public class ContainerLabel extends JComponentNoRepaint {
 				}		
 				
 				g.setFont(FastFont.REGULAR);
-				g.drawString(fullLocation, 2, h);
+				g.drawString(fullLocation, 2, FastFont.REGULAR.getSize()+4);
 			}
 		} else if(displayMode==ContainerDisplayMode.NAME_POS) {
 			//Paint Location
 			if(fullLocation!=null) {
-				int h = height/2+5;
 				boolean canView = SpiritRights.canRead(location, Spirit.getUser());
 				
 				
@@ -198,43 +187,43 @@ public class ContainerLabel extends JComponentNoRepaint {
 				}		
 				
 				g.setFont(FastFont.REGULAR);
-				g.drawString(fullLocation, 2, h);
+				g.drawString(fullLocation, 2, FastFont.REGULAR.getSize()+4);
 			}
 		} else {  
 			//display image
 			if(containerType!=null) {
-				Image img = containerType.getImageThumbnail();
-				g.drawImage(img, 1, height/2-img.getHeight(this)/2, this);		
+				Image img = containerType.getImage(FastFont.getDefaultFontSize()*2);
+				g.drawImage(img, 1, 0, this);		
 			}
 			
 			String containerId = displayMode==ContainerDisplayMode.CONTAINERID_OR_BIOSAMPLEID? cidOrBid: this.containerId; 
-			int h = height/2+5;				
 
 			if(displayMode==ContainerDisplayMode.CONTAINER_TYPE ) {
-				g.setColor(CONTAINERTYPE_COLOR);
+				g.setColor(CONTAINERID_COLOR);
 				if(containerType!=null && containerType.getName()!=null) {
 					g.setFont(FastFont.REGULAR);				
-					g.drawString(containerType.getShortName(), 24, h);
+					g.drawString(containerType.getShortName(), 24, FastFont.REGULAR.getSize()+4);
 				}
 			} else if(containerId!=null && containerId.length()>0) {
 				//Check if it is created					
 				g.setColor(CONTAINERID_COLOR); 
 				g.setFont(containerType==ContainerType.CAGE? FastFont.BOLD: FastFont.REGULAR);
-				g.drawString(containerId, 24, h);
+				g.drawString(containerId, 24, FastFont.REGULAR.getSize()+4);
 			}
 		}
 	}
 	
 	@Override
 	public Dimension getPreferredSize() {
+		int height = FastFont.getDefaultFontSize()*2;
 		if(displayMode==ContainerDisplayMode.FULL) {	
-			return new Dimension(Math.max(80, 4 + Math.max(fullLocation==null?0: getFontMetrics(FastFont.REGULAR).stringWidth(fullLocation), containerId==null?0:getFontMetrics(FastFont.SMALL).stringWidth( (containerType==null?"":containerType.getName()+": ") + containerId))), 24);
+			return new Dimension(Math.max(80, 4 + Math.max(fullLocation==null?0: getFontMetrics(FastFont.REGULAR).stringWidth(fullLocation), containerId==null?0:getFontMetrics(FastFont.SMALL).stringWidth( (containerType==null?"":containerType.getName()+": ") + containerId))), height);
 		} else  if(displayMode==ContainerDisplayMode.NAME_POS) {
-			return new Dimension(Math.max(45, 16 + (fullLocation==null?0: getFontMetrics(FastFont.REGULAR).stringWidth(fullLocation))), 24);
+			return new Dimension(Math.max(45, 16 + (fullLocation==null?0: getFontMetrics(FastFont.REGULAR).stringWidth(fullLocation))), height);
 		} else if(displayMode==ContainerDisplayMode.CONTAINERID_OR_BIOSAMPLEID || displayMode==ContainerDisplayMode.CONTAINERID) {
-			return new Dimension(Math.max(45, 24 + (cidOrBid==null?0:getFontMetrics(FastFont.REGULAR).stringWidth(cidOrBid))), 24);
+			return new Dimension(Math.max(45, 24 + (cidOrBid==null?0:getFontMetrics(FastFont.REGULAR).stringWidth(cidOrBid))), height);
 		} else {
-			return new Dimension(45, 24);
+			return new Dimension(45, height);
 		}
 	}
 	

@@ -95,7 +95,6 @@ public class MyHTMLEditorKit extends HTMLEditorKit {
 			}
 		}
 		
-		
 		@Override
 		public float getPreferredSpan(int axis) {
             switch (axis) {

@@ -42,6 +42,7 @@ public class FastHeaderRenderer<T> implements TableCellRenderer {
 	private final JLabelNoRepaintWithArrow label = new JLabelNoRepaintWithArrow();
 	
 	public FastHeaderRenderer() {
+		label.setOpaque(false);
 		label.setVerticalAlignment(SwingConstants.BOTTOM);
 	}
 	
@@ -60,9 +61,6 @@ public class FastHeaderRenderer<T> implements TableCellRenderer {
 			label.setArrow(-1);
 		} else {
 			label.setArrow(0);
-		}
-		if(table instanceof AbstractExtendTable) {
-			label.setCondenseText(((AbstractExtendTable<T>)table).isPreferredCondenseText());
 		}
 		
 		label.setForeground(Color.BLACK);

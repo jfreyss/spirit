@@ -22,9 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.study;
 
 import java.awt.BorderLayout;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
@@ -32,7 +29,6 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -50,6 +46,7 @@ import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 
 public class StudyTab extends JPanel implements ISpiritTab {
+	
 	private final StudyTable studyTable = new StudyTable();
 	private final StudySearchPane searchPane = new StudySearchPane(studyTable);
 	

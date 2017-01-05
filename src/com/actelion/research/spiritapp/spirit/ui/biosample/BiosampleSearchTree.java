@@ -108,17 +108,16 @@ public class BiosampleSearchTree extends FormTree {
 		@Override
 		public void setModel(String modelValue) {
 			query.setStudyIds(modelValue);
-		}
-		
+		}		
 		@Override
 		public void onAction() {
 			updateModel();
 			eventStudyChanged();
 			initLayout();
 			setFocus(studyNode);
-		}
-		
+		}		
 	});
+	
 	private final GroupNode groupNode = new GroupNode(this, new Strategy<String>() {
 		@Override
 		public String getModel() {
@@ -177,7 +176,7 @@ public class BiosampleSearchTree extends FormTree {
 		@Override
 		public JComponent getComponent() {
 			exactCheckBox.setIconTextGap(0);
-			exactCheckBox.setFont(FastFont.SMALL_CONDENSED);
+			exactCheckBox.setFont(FastFont.SMALL);
 			textField.setColumns(13);
 			return UIUtils.createHorizontalBox(textField, UIUtils.createVerticalBox(exactCheckBox), Box.createHorizontalGlue());
 		}
@@ -247,6 +246,7 @@ public class BiosampleSearchTree extends FormTree {
 		setRootVisible(false);
 		this.selectableBiotypes = selectableBiotypes;
 		query.setFilterTrashed(selectableBiotypes!=null && selectableBiotypes.length>0);
+		exactCheckBox.setOpaque(false);
 		
 		//Study Category
 		stuNode.setCanExpand(false);

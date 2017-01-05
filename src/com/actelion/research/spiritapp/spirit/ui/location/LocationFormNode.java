@@ -27,7 +27,6 @@ import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.util.ui.FastFont;
 
 public class LocationFormNode extends AbstractNode<Location> {
 
@@ -35,7 +34,7 @@ public class LocationFormNode extends AbstractNode<Location> {
 	
 	public LocationFormNode(FormTree tree, String label, Strategy<Location> strategy) {
 		super(tree, label, strategy);
-		locationBrowser.setFont(FastFont.SMALL);
+//		locationBrowser.setFont(FastFont.SMALL);
 	}
 
 	@Override

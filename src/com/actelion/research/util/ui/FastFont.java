@@ -24,6 +24,9 @@ package com.actelion.research.util.ui;
 import java.awt.Font;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+
+import javax.swing.UIManager;
 
 /**
  * Class used to cache fonts, thus avoiding the repetitive use of constructors 
@@ -34,29 +37,77 @@ import java.util.Map;
  *
  */
 public class FastFont extends Font {
-	public static String DEFAULT_FONT = "Segoe UI, Tahoma";
-	public static final Map<String, FastFont> fonts = new HashMap<>();
-	public static final FastFont BIGGEST = FastFont.getFont(DEFAULT_FONT, Font.BOLD, 16);
-	public static final FastFont BIGGER = FastFont.getFont(DEFAULT_FONT, Font.BOLD, 14);
-	public static final FastFont REGULAR = FastFont.getFont(DEFAULT_FONT, Font.PLAIN, 12);
-	public static final FastFont BOLD = FastFont.getFont(DEFAULT_FONT, Font.BOLD, 12);
-	public static final FastFont MONO = FastFont.getFont(Font.DIALOG_INPUT, Font.PLAIN, 12);
-	public static final FastFont MEDIUM = FastFont.getFont(DEFAULT_FONT, Font.PLAIN, 11);
-	public static final FastFont SMALL = FastFont.getFont(DEFAULT_FONT, Font.PLAIN, 10);
-	public static final FastFont SMALLER = FastFont.getFont(DEFAULT_FONT, Font.PLAIN, 9);
-
-	public static final FastFont REGULAR_CONDENSED = REGULAR;
-	public static final FastFont MEDIUM_CONDENSED = MEDIUM;
-	public static final FastFont BOLD_CONDENSED = BOLD;
-	public static final FastFont SMALL_CONDENSED = SMALL;
-	public static final FastFont SMALLER_CONDENSED = SMALLER;
-
-//	public static final FastFont REGULAR_CONDENSED = FastFont.getFont("Arial Narrow", Font.PLAIN, 12);
-//	public static final FastFont MEDIUM_CONDENSED = FastFont.getFont("Arial Narrow", Font.PLAIN, 11);
-//	public static final FastFont BOLD_CONDENSED = FastFont.getFont("Arial Narrow Bold", Font.PLAIN, 12);
-//	public static final FastFont SMALL_CONDENSED = FastFont.getFont("Arial Narrow", Font.PLAIN, 10);
-//	public static final FastFont SMALLER_CONDENSED = FastFont.getFont("Arial Narrow", Font.PLAIN, 9);
+	public static String defaultFontFamily = "Segoe UI";
+	public static int defaultFontSize = 12;
 	
+	public static Map<String, FastFont> fonts = new HashMap<>();
+	public static FastFont BIGGEST;
+	public static FastFont BIGGER;
+	public static FastFont REGULAR;
+	public static FastFont BOLD;
+	public static FastFont MONO;
+	public static FastFont MEDIUM;
+	public static FastFont SMALL;
+	public static FastFont SMALLER;
+	public static FastFont SMALLEST;
+
+	static {
+		init();
+	}
+	
+	private static void init() {
+		BIGGEST = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize*16/12);
+		BIGGER = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize*14/12);
+		REGULAR = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize);
+		BOLD = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize);
+		MONO = FastFont.getFont(Font.DIALOG_INPUT, Font.PLAIN, defaultFontSize);
+		MEDIUM = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize*11/12);
+		SMALL = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize*10/12);
+		SMALLER = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize*9/12);
+		SMALLEST = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize*7/12);
+		
+        Set<Object> keySet = UIManager.getLookAndFeelDefaults().keySet();
+        Object[] keys = keySet.toArray(new Object[keySet.size()]);
+        for (Object key : keys) {
+            if (key != null && key.toString().toLowerCase().contains("font")) {
+                Font font = UIManager.getDefaults().getFont(key);
+                if (font != null) {
+                    font = new Font(defaultFontFamily, font.getStyle(), defaultFontSize);
+                    UIManager.put(key, font);
+//                    System.out.println("FastFont.init() "+key+" > "+font);
+                }
+            }
+        }
+	}
+	
+
+	
+	/**
+	 * Sets the default font size
+	 * @param size
+	 */
+	public static void setDefaultFontSize(int size) {
+		FastFont.defaultFontSize = size;
+		init();
+	}
+	
+	public static int getDefaultFontSize() {
+		return defaultFontSize;
+	}
+	
+	public static void setDefaultFontFamily(String defaultFont) {
+		FastFont.defaultFontFamily = defaultFont;
+		init();
+	}
+	
+	public static String getDefaultFontFamily() {
+		return defaultFontFamily;
+	}
+	
+	public static int getAdaptedSize(int size) {
+		return size * defaultFontSize / 12;
+	}	
+
 	private FastFont(String name, int style, int size) {
 		super(name, style, size);
 		fonts.put(getKey(name, style, size), this);

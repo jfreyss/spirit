@@ -53,7 +53,7 @@ public class MetadataComboBox extends JComboBoxBigPopup<String> {
 					setBackground(Color.LIGHT_GRAY);
 				}
 
-				setText("<html><body><div style='white-space:nowrap;font-size:9px" + (currentMain.startsWith("<<")?";color:blue;font-style:italic":"") + ";height:10px;width:150px;padding:0px;margin:0px'>" +  toHTML(current) + "</div></body></html>");
+				setText("<html><body><div style='white-space:nowrap;font-size:90%" + (currentMain.startsWith("<<")?";color:blue;font-style:italic":"") + ";height:10px;width:150px;padding:0px;margin:0px'>" +  toHTML(current) + "</div></body></html>");
 				
 				Image img = ImageFactory.getImage(current, 24);
 				if(img==null) img = ImageFactory.createImage(24, true);

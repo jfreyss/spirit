@@ -48,7 +48,7 @@ public final class SampleIdColumn extends Column<Result, String> {
 	private Map<String, Biosample> id2sampleCache = new HashMap<String, Biosample>();
 	
 	public SampleIdColumn() {
-		super("SampleId", String.class, 80);
+		super("SampleId", String.class);
 	}
 	
 	@Override
@@ -82,14 +82,6 @@ public final class SampleIdColumn extends Column<Result, String> {
 				if(value.length()>3) {
 					b = DAOBiosample.getBiosample(value);					
 				} 
-//				if(b==null) {
-//					//Load the bisoamples from the study/sampleNo, if it is not found
-//					Study study = ((EditResultTable) getTable()).getModel().getStudy();
-//					if(study!=null) {
-//						b = DAOBiosample.getBiosample(study, value);
-//					}
-//				}
-				
 				if(b==null) {
 					//If not found, create a fake biosample
 					b = new Biosample(value);
@@ -109,16 +101,12 @@ public final class SampleIdColumn extends Column<Result, String> {
 		}
 	}
 	
-	
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
 		sampleIdLabel.setBiosample(row==null?null: row.getBiosample());
 		return sampleIdLabel;
 	}
 	
-	
-	
-
 	@Override
 	public void populateHeaderPopup(final AbstractExtendTable<Result> table, JPopupMenu popupMenu) {
 		popupMenu.add(new JSeparator());

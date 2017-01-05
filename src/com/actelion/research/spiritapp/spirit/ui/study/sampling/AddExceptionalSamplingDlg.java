@@ -45,9 +45,11 @@ import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleList;
+import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.study.PhaseComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
@@ -143,10 +145,11 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		});
 
 		//Layout		
-		JEditorPane infoPanel = new JEditorPane("text/html", 
+		JEditorPane infoPanel = new ImageEditorPane( 
 				"<html>Use this dialog to add a sampling not covered by the current study design (ex: sacrifice after some trigger).<br><br>"
 				+ " The study design will then be updated to match this case."
 				+ " </html>");
+		LF.initComp(infoPanel);
 		infoPanel.setEditable(false);
 		infoPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(), BorderFactory.createEmptyBorder(2, 2, 2, 2)));
 

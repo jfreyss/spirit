@@ -69,7 +69,7 @@ public class ResultSearchPane extends JPanel {
 	private final JButton searchButton = new JButton(new Action_Search());
 	
 	public ResultSearchPane(final PivotCardPanel cardPanel, final Biotype forcedBiotype) {
-		super(new BorderLayout(0, 0));
+		super(new BorderLayout());
 		this.cardPanel = cardPanel;
 		this.tree = new ResultSearchTree(forcedBiotype);
 

@@ -163,14 +163,14 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 						allStats.addAll(stats.values());
 						
 						//Create button
-						JButton liveButton = new JButton("<html><span style='font-size:10px;font-weight:bold;'>" + phase.getShortName() + "</span><br>"
-								+ "<span style='font-size:8px'>" + (phase.getAbsoluteDate() == null ? "" :FormatterUtils.formatDate(phase.getAbsoluteDate())) + "</span><br>");
+						JButton liveButton = new JButton("<html><span style='font-size:90%;font-weight:bold;'>" + phase.getShortName() + "</span><br>"
+								+ "<span style='font-size:80%'>" + (phase.getAbsoluteDate() == null ? "" :FormatterUtils.formatDate(phase.getAbsoluteDate())) + "</span><br>");
 						if (Phase.isSameDay(phase.getAbsoluteDate(), now)) liveButton.setBackground(LF.BGCOLOR_TODAY);
 						if (phase.getAbsoluteDate() != null && phase.getAbsoluteDate().before(now)) nowButton = liveButton;
 
 						liveButton.setIcon(MonitoringStats.getIconType(allStats).getIcon());
 						liveButton.setHorizontalAlignment(SwingConstants.LEFT);
-						liveButton.setPreferredSize(new Dimension(92, 44));
+//						liveButton.setPreferredSize(new Dimension(92, 44));
 						liveButton.addActionListener(new ActionListener() {
 							@Override
 							public void actionPerformed(ActionEvent e) {
@@ -200,8 +200,8 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 						}
 
 						comps.add(liveButton);
-						comps.add(new JLabel("<html><span style='font-size:8px;white-space:nowrap'>"+phase.getDescription().replace(" + ", " +<br>")));
-						comps.add(new JLabel("<html><div style='font-size:8px'>"+statsBuilder));
+						comps.add(new JLabel("<html><span style='font-size:80%;white-space:nowrap'>"+phase.getDescription().replace(" + ", " +<br>")));
+						comps.add(new JLabel("<html><div style='font-size:80%'>"+statsBuilder));
 					}
 					
 					JPanel displayPane = UIUtils.createTable(4, 2, 0, comps);
@@ -224,9 +224,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 					}
 					
 					
-					JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, 
-							UIUtils.createTitleBox("Select a phase", displaySp), 
-							UIUtils.createTitleBox("Collected data", tabbedPane));					
+					JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, displaySp, tabbedPane);					
 					splitPane.setDividerLocation(380);
 					contentPanel.add(BorderLayout.CENTER, splitPane);
 					contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue(), new JButton(new CloseAction())));
@@ -243,23 +241,6 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 						});
 
 					}
-
-					
-
-//					//Set rows on measurement tables
-//					Collections.sort(treatments, new Comparator<ActionTreatment>() {
-//						@Override
-//						public int compare(ActionTreatment o1, ActionTreatment o2) {
-//							if(o1.getPhase()==null && o2.getPhase()==null) return 0;
-//							if(o1.getPhase()==null && o2.getPhase()!=null) return 1;
-//							if(o1.getPhase()!=null && o2.getPhase()==null) return -1;
-//							return o1.getPhase().compareTo(o2.getPhase());
-//						}
-//					});
-//					treatmentTable.setRows(treatments);
-//					foodWaterTable.setRows(allFws);
-					
-					
 					contentPanel.revalidate();
 				} catch(Exception e) {
 					JExceptionDialog.showError(e);

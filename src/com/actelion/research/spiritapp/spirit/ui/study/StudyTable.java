@@ -33,7 +33,6 @@ public class StudyTable extends SpiritExtendTable<Study> implements ListSelectio
 	public StudyTable() {
 		super(new StudyTableModel());
 		setBorderStrategy(BorderStrategy.ALL_BORDER);
-		setRowHeight(26);		
 	}
 
 	@Override

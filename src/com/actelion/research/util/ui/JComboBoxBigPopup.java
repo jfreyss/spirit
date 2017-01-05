@@ -54,19 +54,20 @@ public class JComboBoxBigPopup<T> extends JComboBox<T> {
 		return preferredWidth;
 	}
 
-	@Override
-	public Dimension getMaximumSize() {
-		return new Dimension(Math.max(super.getMaximumSize().width, getPreferredWidth()), 26);
-	}
-	@Override
-	public Dimension getMinimumSize() {
-		return new Dimension(Math.max(super.getMinimumSize().width, 50), 26);
-	}
-	
-	@Override
-	public Dimension getPreferredSize() {
-		return new Dimension(Math.min(super.getPreferredSize().width, getPreferredWidth()), 26);
-	}
+//	@Override
+//	public Dimension getMaximumSize() {
+//		Dimension dim = super.getMaximumSize();
+//		return new Dimension(Math.max(super.getMaximumSize().width, getPreferredWidth()), 26);
+//	}
+//	@Override
+//	public Dimension getMinimumSize() {
+//		return new Dimension(Math.max(super.getMinimumSize().width, 50), 26);
+//	}
+//	
+//	@Override
+//	public Dimension getPreferredSize() {
+//		return new Dimension(Math.min(super.getPreferredSize().width, getPreferredWidth()), 26);
+//	}
 	public void setPreferredWidth(int preferredWidth) {
 		this.preferredWidth = preferredWidth;
 	}

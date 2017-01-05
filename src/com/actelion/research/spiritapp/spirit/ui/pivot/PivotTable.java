@@ -52,7 +52,7 @@ import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Aggregation
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Where;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.util.MiscUtils;
-import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.ExtendTable;
 import com.actelion.research.util.ui.exceltable.FastHeaderRenderer;
@@ -69,7 +69,7 @@ public class PivotTable extends ExtendTable<PivotRow> {
 		
 		setBorderStrategy(BorderStrategy.WHEN_DIFFERENT_VALUE);
 		setUseSmartHeight(false);
-		setRowHeight(20);
+		setRowHeight(FastFont.getDefaultFontSize()+2);
 	}
 	
 	@Override
@@ -307,7 +307,6 @@ public class PivotTable extends ExtendTable<PivotRow> {
 				comp.setBackground(PivotTemplateDlg.COLUMN_COLOR);
 				if(comp instanceof JLabelNoRepaint) {
 					((JLabelNoRepaint) comp).setVerticalAlignment(SwingConstants.TOP);
-					((JLabelNoRepaint) comp).setCondenseText(((AbstractExtendTable<?>) table).isPreferredCondenseText());
 				}
 			} else {
 				comp.setBackground(PivotTemplateDlg.ROW_COLOR);

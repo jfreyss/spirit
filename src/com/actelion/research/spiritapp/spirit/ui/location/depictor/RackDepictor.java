@@ -28,7 +28,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.DropTarget;
@@ -52,8 +52,8 @@ import javax.swing.ToolTipManager;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
+import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.location.Direction;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationLabeling;
@@ -338,7 +338,12 @@ public class RackDepictor extends JPanel {
 	@Override
 	protected void paintComponent(Graphics graphics) {
 		Graphics2D g = (Graphics2D) graphics;
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		Toolkit tk = Toolkit.getDefaultToolkit();
+  		@SuppressWarnings("rawtypes")
+		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
+  		if (map != null) {
+  		    ((Graphics2D)g).addRenderingHints(map);
+  		}
 		super.paintComponent(g);
 		
 		for (int pos = 0; pos < maxSize; pos++) {			
@@ -395,13 +400,13 @@ public class RackDepictor extends JPanel {
 						
 			//Draw position
 			if(r.height>30) {
-				g.setFont(FastFont.MEDIUM);
+				g.setFont(FastFont.SMALLER);
 				String s = location.formatPosition(pos);
 				int w = g.getFontMetrics().stringWidth(s);
 				g.setColor(bgColor);
-				g.fillRect(r.x+r.width - 1 - w, r.y+1,  w, 10);
+				g.fillRect(r.x+r.width - 1 - w, r.y+1, w, g.getFont().getSize());
 				g.setColor(Color.BLACK);
-				g.drawString(s, r.x+r.width - w, r.y+10);
+				g.drawString(s, r.x+r.width - w, r.y+g.getFont().getSize());
 			}
 
 		}

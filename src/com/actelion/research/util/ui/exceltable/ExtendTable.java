@@ -72,8 +72,9 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 		setModel(model);
 		setHeaderClickingPolicy(headerClickingPolicy);
 		setBorderStrategy(BorderStrategy.WHEN_DIFFERENT_VALUE);
-		
-		//Set Our custom CellRenderer		
+				
+		//Set Our custom CellRenderer
+		defaultRenderersByColumnClass.clear();
 		setDefaultRenderer(Object.class, new ExtendTableCellRenderer<ROW>(this));
 
 		setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -106,11 +107,7 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 							 if(popupShowWorker!=null) {
 								 popupShowWorker.cancel();
 							 }
-							 popupShowWorker = new SwingWorkerExtended() {
-								 @Override
-								protected void doInBackground() throws Exception {
-									 try {Thread.sleep(300);}catch(Exception ex) {return;}								 								
-								}
+							 popupShowWorker = new SwingWorkerExtended(null, null, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 								@Override
 								protected void done() {
 									if(e.getClickCount()<=1) showPopup(e);
@@ -165,8 +162,11 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 					}
 				}
 				List<Column<ROW, ?>> others = model.getPossibleColumns();
-				if(addableColumns.size()>0 && others!=null) addableColumns.add(null);
-				if(others!=null) addableColumns.addAll(others);
+				if(others!=null) {
+					if(addableColumns.size()>0) addableColumns.add(null);
+					addableColumns.addAll(others);
+				}
+				System.out.println("ExtendTable.ExtendTable(...).new PopupAdapter() {...}.showPopup() "+model.getAllColumns()+addableColumns);
 				if(addableColumns.size()>0) {
 					popupMenu.add(new JSeparator());
 					popupMenu.add(new JCustomLabel("Extra Columns", Font.BOLD));
@@ -373,7 +373,7 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 		if(fireEvents) {
 			if(!expand) {
 				if(minMax!=null) {
-					if(minMax[0]<=minMax[1]) {
+					if(minMax[0]<=minMax[1] && minMax[0]>=0 && minMax[1]<getModel().getRowCount()) {
 						getModel().fireTableRowsDeleted(minMax[0], minMax[1]);
 					} else {
 						getModel().fireTableDataChanged();

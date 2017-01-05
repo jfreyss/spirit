@@ -78,7 +78,7 @@ public class ValuePanel extends JComponentNoRepaint {
 		} else if(valLabel!=null && valLabel.length()>0){ 			
 			//Draw Val
 			g.setColor(valColor);
-			g.setFont(outputType==OutputType.OUTPUT? FastFont.REGULAR: FastFont.REGULAR_CONDENSED);
+			g.setFont(FastFont.REGULAR);
 			int w = g.getFontMetrics().stringWidth(valLabel);			
 			if(outputType==OutputType.OUTPUT) {
 				g.clearRect(width - 1 - w, 0, w, height);
@@ -106,7 +106,7 @@ public class ValuePanel extends JComponentNoRepaint {
 			this.attLabel = v.getAttribute().getName() + ":";
 			this.valLabel = val==null?"": val;			
 		}
-		preferredDim.width = getFontMetrics(FastFont.SMALLER).stringWidth(attLabel + ":") + getFontMetrics(outputType==OutputType.OUTPUT? FastFont.REGULAR: FastFont.REGULAR_CONDENSED).stringWidth(valLabel);
+		preferredDim.width = getFontMetrics(FastFont.SMALLER).stringWidth(attLabel + ":") + getFontMetrics(FastFont.REGULAR).stringWidth(valLabel);
 	}
 	
 	@Override

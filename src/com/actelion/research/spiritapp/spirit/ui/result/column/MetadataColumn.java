@@ -34,7 +34,7 @@ import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 
 public class MetadataColumn extends Column<Result, String> {
 	public MetadataColumn() {
-		super("Metadata", String.class, 60, 260);
+		super("Metadata", String.class);
 		setHideable(true);
 	}
 	

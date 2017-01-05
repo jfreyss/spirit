@@ -37,9 +37,7 @@ import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
-import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JExceptionDialog;

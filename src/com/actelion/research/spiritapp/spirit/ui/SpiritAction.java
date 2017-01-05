@@ -36,6 +36,7 @@ import com.actelion.research.spiritapp.spirit.ui.admin.ChangePasswordDlg;
 import com.actelion.research.spiritapp.spirit.ui.admin.database.DatabaseSettingsDlg;
 import com.actelion.research.spiritapp.spirit.ui.config.ConfigDlg;
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
+import com.actelion.research.spiritapp.spirit.ui.lf.PreferencesDlg;
 import com.actelion.research.spiritapp.spirit.ui.print.BrotherLabelsDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.LoginDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
@@ -55,11 +56,10 @@ public class SpiritAction {
 	public static class Action_Refresh extends AbstractAction {
 		private AbstractAction nextAction; 
 		public Action_Refresh(final Spirit spirit) {			
-			this(new AbstractAction() {
-				
+			this(new AbstractAction() {				
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					spirit.recreateUI();
+					if(spirit!=null) spirit.recreateUI();
 				}
 			});
 		}
@@ -83,6 +83,17 @@ public class SpiritAction {
 		}
 	}
 	
+	public static class Action_Preferences extends AbstractAction {
+		public Action_Preferences() {			
+			super("Preferences");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			new PreferencesDlg();
+		}
+	}
+	
 	public static class Action_Exit extends AbstractAction {
 		public Action_Exit() {
 			super("Exit");
@@ -101,14 +112,14 @@ public class SpiritAction {
 		private String msg;
 		
 		public Action_Relogin(Frame top, String app) {			
-			super("Login");
+			super("Logout");
 			this.top = top;
 			this.app = app;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('o'));
 		}
 		
 		public Action_Relogin(Frame top, String app, String msg) {			
-			super("Login");
+			super("Logout");
 			this.top = top;
 			this.app = app;
 			this.msg = msg;
@@ -118,14 +129,14 @@ public class SpiritAction {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			//Open dialog
+			Spirit.setUser((SpiritUser) null);
 			LoginDlg.openLoginDialog(top, (app==null?"": app + " ") +"Login", msg);
 			SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
 
 			//SatusBar
 			SpiritUser user = Spirit.getUser();
 			if(user==null) {
-				SpiritContextListener.setStatus("");								
-				SpiritContextListener.setUser("No user logged in");								
+				System.exit(1);
 			} else {
 				SpiritContextListener.setStatus(Spirit.getUser().getUsername() +" logged");								
 				SpiritContextListener.setUser(user.getUsername() + " ("+ (user.getMainGroup()==null?"NoDept":user.getMainGroup().getName())+ ") " + (user.getRolesString().length()>0? " - " + user.getRolesString():""));								
@@ -139,7 +150,7 @@ public class SpiritAction {
 			//Record usage and version
 			if(version==null) return;
 			UsageLog.logUsage("Spirit", Spirit.getUsername(), null, UsageLog.ACTION_LOGON, "app=" + app + ";v="+version);
-		} else {
+		} else if(!"false".equalsIgnoreCase(System.getProperty("jnlp.logusage"))) {
 			new Thread() {
 				public void run() {
 					try {

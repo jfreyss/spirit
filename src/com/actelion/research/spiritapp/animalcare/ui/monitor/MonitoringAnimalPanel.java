@@ -47,7 +47,6 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
@@ -65,7 +64,6 @@ import com.actelion.research.spiritcore.business.study.Measurement;
 import com.actelion.research.spiritcore.business.study.NamedTreatment;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.StudyAction;
-import com.actelion.research.spiritcore.business.study.NamedTreatment.TreatmentUnit;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
@@ -330,7 +328,7 @@ public class MonitoringAnimalPanel extends JPanel {
 	public static JPanel createAnimalPanel(int no, Biosample animal, Phase phase) {
 
 		SampleIdLabel sampleIdLabel = new SampleIdLabel(false, false);
-		sampleIdLabel.setVerticalAlignment(SwingUtilities.CENTER);
+//		sampleIdLabel.setVerticalAlignment(SwingUtilities.CENTER);
 		sampleIdLabel.setHighlight(true);
 		sampleIdLabel.setSizeIncrement(2);
 		sampleIdLabel.setBiosample(animal);

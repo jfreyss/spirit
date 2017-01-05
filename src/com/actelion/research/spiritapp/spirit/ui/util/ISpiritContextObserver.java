@@ -49,5 +49,5 @@ public interface ISpiritContextObserver {
 	
 	public void setStatus(String status);
 	
-	public void setUser(String status);
+	public void setUser(String user);
 }

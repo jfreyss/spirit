@@ -39,8 +39,6 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.pivot.ColumnPivotTemplate;
-import com.actelion.research.spiritcore.business.pivot.Computed;
-import com.actelion.research.spiritcore.business.pivot.PivotItem;
 import com.actelion.research.spiritcore.business.pivot.PivotItemFactory;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.result.Result;

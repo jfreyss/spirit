@@ -21,10 +21,13 @@
 
 package com.actelion.research.util.ui.iconbutton;
 
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -104,31 +107,48 @@ public class JIconButton extends JButton {
 		private String img;
 		private String text;
 		private String tooltip;
-		private static Map<String, ImageIcon> mapIcons = new HashMap<>();
+		private static Map<String, Image> mapIcons = new HashMap<>();
 		
 		private IconType(String text, String img) {
 			this(text, img, null); 
 		}
+		
 		private IconType(String text, String img, String tooltip) {
 			this.text = text;
 			this.img = img;
 			this.tooltip = tooltip;
 		}
 		
-		public ImageIcon getIcon() {
-			ImageIcon res = mapIcons.get(img); 
+		public Image getImage() {
+			Image res = mapIcons.get(img); 
 			if(res==null) {
+				int size = FastFont.getAdaptedSize(16);
 				URL url = JIconButton.class.getResource(img);
 				if(url!=null) {
-					res = new ImageIcon(url);
-				} else {
-					res = new ImageIcon();
+					try {
+						res = ImageIO.read(url);
+						res = res.getScaledInstance(size, size, Image.SCALE_SMOOTH);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				if(res==null) {
+					res = new BufferedImage(size, size, BufferedImage.TYPE_INT_RGB);
 				}
 				mapIcons.put(img, res);
 			}
 			return res;
-		}		
+		}
+		
+		public ImageIcon getIcon() {			
+			return new ImageIcon(getImage());
+		}
+		
+		public static void clearCache() {
+			mapIcons.clear();
+		}
 	}
+	
 	
 	public JIconButton() {
 	}
@@ -137,31 +157,28 @@ public class JIconButton extends JButton {
 		super(action);
 	}
 	
-	public JIconButton(IconType iconType, String text) {
-		this(iconType);
-		setText(text);
+	public JIconButton(IconType iconType) {
+		this(iconType, "");
 	}
+	
 	public JIconButton(IconType iconType, String text, String tooltip) {
-		this(iconType);
-		setText(text);
+		this(iconType, text);
 		setToolTipText(tooltip);
 	}
+	
 	public JIconButton(Icon icon, String text) {
 		setIcon(icon);
 		setText(text);
 	}
 	
-	public JIconButton(IconType iconType) {
-		URL url = getClass().getResource(iconType.img);
-		if(url!=null) {
-			setIcon(new ImageIcon(url));
+	public JIconButton(IconType iconType, String text) {
+		ImageIcon icon = iconType==null? null: iconType.getIcon();
+		setText(text);
+		if(icon!=null) {
+			setIcon(icon);
 		} else {
 			setText(iconType.text);
 		}
-		if(iconType.tooltip!=null) setToolTipText(iconType.tooltip);
-	}
-	
-	public void highlight() {
-		setFont(FastFont.BOLD);
-	}
+		if(iconType!=null && iconType.tooltip!=null) setToolTipText(iconType.tooltip);
+	}	
 }

@@ -73,7 +73,6 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 import com.actelion.research.util.ui.exceltable.FastHeaderRenderer;
-import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 
 /**
  * Table for biosample
@@ -536,10 +535,6 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 				comp.setFont(FastFont.REGULAR);
 				comp.setBackground(color);			
 			}		
-			if(table instanceof AbstractExtendTable && comp instanceof JLabelNoRepaint) {
-				((JLabelNoRepaint) comp).setCondenseText(((AbstractExtendTable<Biosample>) table).isPreferredCondenseText());
-			}
-
 			return comp;
 		}
 	};

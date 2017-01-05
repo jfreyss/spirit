@@ -39,8 +39,7 @@ public class ResultTable extends SpiritExtendTable<Result> implements ListSelect
 		init();
 	}
 	
-	
-	
+		
 	/**
 	 * Initialization
 	 */

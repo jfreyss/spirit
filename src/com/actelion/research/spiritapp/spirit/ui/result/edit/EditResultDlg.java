@@ -61,6 +61,7 @@ import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDia
 import com.actelion.research.spiritapp.spirit.ui.util.correction.Correction;
 import com.actelion.research.spiritapp.spirit.ui.util.correction.CorrectionDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.correction.CorrectionMap;
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.ValidationException;
@@ -777,7 +778,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 	}
 	
 	public static int showConfirmDialog(Component parent, String header, String longMessage, String title, String[] options) {
-		JEditorPane textArea = new JEditorPane("text/html", longMessage);
+		JEditorPane textArea = new ImageEditorPane(longMessage);
 		textArea.setEditable(false);
 		textArea.setCaretPosition(0);
 		textArea.setPreferredSize(new Dimension(400, 400));

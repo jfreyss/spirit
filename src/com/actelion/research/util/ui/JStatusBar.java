@@ -34,7 +34,8 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 
 /**
- * Status Bar showing the copytight, the info, the memory
+ * Status Bar showing the copyright, the info, the memory, and the logged user
+ * 
  * @author Joel Freyss
  */
 public class JStatusBar extends JPanel {
@@ -48,7 +49,7 @@ public class JStatusBar extends JPanel {
 		@Override
 		public void run() {
 			while(true) {
-				try {Thread.sleep(2000);} catch (Exception e) {return;}
+				try {Thread.sleep(53000);} catch (Exception e) {return;}
 				final int max = (int)(Runtime.getRuntime().maxMemory() / 1000);
 				final int free = (int)(Runtime.getRuntime().freeMemory() / 1000);
 				final int total = (int)(Runtime.getRuntime().totalMemory() / 1000);
@@ -70,6 +71,7 @@ public class JStatusBar extends JPanel {
 	public JStatusBar() {
 		super(new BorderLayout());
 		Color lineColor = UIUtils.darker(getBackground(), .7);
+		setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, lineColor));
 		copyrightLabel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, lineColor), BorderFactory.createEmptyBorder(0, 4, 0, 4)));
 		infoLabel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, lineColor), BorderFactory.createEmptyBorder(0, 4, 0, 4)));
 		memoryBar.setBorder(null);

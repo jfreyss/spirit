@@ -88,7 +88,7 @@ public class DataWarriorExporterDlg extends JEscapeDialog {
 		});		
 		
 		JPanel centerPanel = new JPanel(new BorderLayout());		
-		centerPanel.add(BorderLayout.NORTH, new JCustomLabel("<html><div style='width:100%; text-align:center'>Please select how you want your data to be exported:</div></html>", FastFont.BOLD.deriveSize(18)));
+		centerPanel.add(BorderLayout.NORTH, new JCustomLabel("<html><div style='width:100%; text-align:center'>Please select how you want your data to be exported:</div></html>", FastFont.BIGGEST));
 		centerPanel.add(BorderLayout.CENTER, dataWarriorModelPanel /*UIUtils.createBox(dataWarriorModelPanel, choicePanel, null, null, null)*/);
 		centerPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
 		centerPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));

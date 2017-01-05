@@ -33,6 +33,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.util.FormatterUtils;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 
 
@@ -52,7 +53,7 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 	private AbstractExtendTable<ROW> table;
 			
 	public Column(String name, Class<VALUE> columnClass) {
-		this(name, columnClass, 15, 125);
+		this(name, columnClass, 15, 400);
 	}
 	public Column(String name, Class<VALUE> columnClass, int minWidth) {
 		this(name, columnClass, minWidth, minWidth*3);		
@@ -65,8 +66,8 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 	 */
 	public Column(String name, Class<VALUE> columnClass, int minWidth, int maxWidth) {
 		this.columnClass = columnClass;
-		this.minWidth = minWidth;
-		this.maxWidth = maxWidth;
+		this.minWidth = FastFont.getAdaptedSize(minWidth);
+		this.maxWidth = FastFont.getAdaptedSize(maxWidth);
 		setName(name);
 	}
 	
@@ -215,7 +216,6 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 	 * Can be overriden to define a custom cell renderer for this column
 	 */
 	public JComponent getCellComponent(AbstractExtendTable<ROW> table, ROW row, int rowNo, Object value) {
-		lbl.setCondenseText(table.getCondenseText());
 		if(value==null) {
 			lbl.setText("");
 		} else if (value instanceof Date) {

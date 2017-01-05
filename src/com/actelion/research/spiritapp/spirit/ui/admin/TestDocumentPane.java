@@ -22,24 +22,17 @@
 package com.actelion.research.spiritapp.spirit.ui.admin;
 
 import java.awt.Dimension;
-import java.awt.Image;
-import java.net.URL;
-import java.util.Hashtable;
 import java.util.List;
 
-import javax.swing.JEditorPane;
-
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.util.FormatterUtils;
 
-public class TestDocumentPane extends JEditorPane {
-	private static Hashtable<URL, Image> imageCache = new Hashtable<URL, Image>();
-	
+public class TestDocumentPane extends ImageEditorPane {
 	public TestDocumentPane() {
-		super("text/html", "");		
-		getDocument().putProperty("imageCache", imageCache);
+		super();		
 		setEditable(false);
 	}
 	
@@ -87,14 +80,14 @@ public class TestDocumentPane extends JEditorPane {
 	}
 	private StringBuilder getHelp(Test test) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("<span style='font-size:11px'>" + test.getCategory()+".<b>"+test.getName() + "</b></span><br>");
+		sb.append("<span style='font-size:110%'>" + test.getCategory()+".<b>"+test.getName() + "</b></span><br>");
 		sb.append("<table style='margin:0px 0px 2px 0px'>");
 		for(TestAttribute ta: test.getAttributes()) {
 			sb.append("<tr>");
 			sb.append("<td>&nbsp;&nbsp;</td>");
-			sb.append("<td style='font-size:9px;color:" + color(ta) + "' valign=top>" + (ta.getOutputType().name()) + ": </td>");
-			sb.append("<td style='font-size:9px;color:" + color(ta) + "' valign=top><b>" + ta.getName() + "</b>: </td>");
-			sb.append("<td style='font-size:9px;color:" + color(ta) + "' valign=top>" + ta.getDataType()+ (ta.getParameters()==null?"": " " + ta.getParameters()) + "</td>");
+			sb.append("<td style='font-size:90%;color:" + color(ta) + "' valign=top>" + (ta.getOutputType().name()) + ": </td>");
+			sb.append("<td style='font-size:90%;color:" + color(ta) + "' valign=top><b>" + ta.getName() + "</b>: </td>");
+			sb.append("<td style='font-size:90%;color:" + color(ta) + "' valign=top>" + ta.getDataType()+ (ta.getParameters()==null?"": " " + ta.getParameters()) + "</td>");
 			sb.append("</tr>");			
 		}
 		sb.append("</table");		

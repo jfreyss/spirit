@@ -75,6 +75,10 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 	protected Set<Integer> calculatedHeights = new HashSet<Integer>();
 	private static final HierarchyPanel hierarchyPanel = new HierarchyPanel();
 
+	/**
+	 * Cache for borders
+	 */
+	private Map<String, Boolean> row_col2BottomBorder = new HashMap<>();
 	
 	static {
 		try {
@@ -130,10 +134,6 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 		});
 	}
 	
-	/**
-	 * Cache for borders
-	 */
-	private Map<String, Boolean> row_col2BottomBorder = new HashMap<String, Boolean>();
 	private void reset() {
 		row_col2BottomBorder.clear();
 		calculatedHeights.clear();
@@ -167,7 +167,7 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 			
 			//Get Component
 			JComponent c = col.getCellComponent(myTable, object, row, value);
-			
+
 			//Autowrap	
 			if(c instanceof JLabelNoRepaint) {
 				if(col.isAutoWrap() && (c instanceof JLabelNoRepaint) ) {
@@ -185,7 +185,7 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 			}
 			
 			//Udate Colors/Borders + Post Process
-			c.setBackground(Color.WHITE);
+			c.setBackground(UIManager.getColor("Table.background"));
 			c.setForeground(foreground);
 			c.setBorder(border);
 			col.postProcess(myTable, object, row, value, c);	
@@ -216,16 +216,24 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 				c.setBackground(UIUtils.getDilutedColor(c.getBackground(), highlightBackground, .7));
 			}
 			
+
+			//Make non-enable table or non-editable cells gray
+			if (!myTable.isEnabled() || (myTable.isEditable() && !isSelected && !model.isCellEditable(row, modelColumn))) {				
+				c.setBackground(UIUtils.darker(c.getBackground(), .9));
+				c.setForeground(UIUtils.getDilutedColor(c.getForeground(), c.getBackground()));
+			}
 			
 			//Add bottom border if value differs
 			//Add right border if category differs
-			boolean rightBorder = nextCol==null  || col.getCategory()=="" || !col.getCategory().equalsIgnoreCase(nextCol.getCategory());
+			boolean rightBorder = nextCol==null || col.getCategory().length()==0 || !col.getCategory().equals(nextCol.getCategory());
+			Color lightBorder = UIManager.getColor("Table.gridColor");
+			if(lightBorder==null) lightBorder = COLOR_LIGHTBORDER;
+			Color darkBorder = UIUtils.darker(lightBorder, .7);
+			
 			if( myTable.getBorderStrategy()==BorderStrategy.ALL_BORDER) {
-				c.setBorder(
-						BorderFactory.createCompoundBorder(
-								BorderFactory.createMatteBorder(0, 0, 1, 0, UIManager.getColor("Table.gridColor")),
-								BorderFactory.createMatteBorder(0, 0, 0, 1, rightBorder?UIManager.getColor("Table.gridColor"):COLOR_LIGHTBORDER))
-						);	
+				c.setBorder(BorderFactory.createCompoundBorder(
+						new ZoneBorder(null, null, darkBorder, rightBorder? darkBorder: lightBorder),
+						c.getBorder()));
 				
 			} else if( myTable.getBorderStrategy()==BorderStrategy.WHEN_DIFFERENT_VALUE) {
 
@@ -254,29 +262,17 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 				
 				
 				boolean merge = shouldMergeWithBottom(myTable, column, row);
-				Color lightBorder = UIManager.getColor("Table.gridColor");
-				if(lightBorder==null) lightBorder = COLOR_LIGHTBORDER;
-				Color darkBorder = UIUtils.darker(lightBorder, .7);
 				if(!merge) {
 					c.setBorder(BorderFactory.createCompoundBorder(
-							BorderFactory.createCompoundBorder(
-									BorderFactory.createMatteBorder(0, 0, 0, 1, rightBorder? darkBorder:lightBorder),
-									BorderFactory.createMatteBorder(0, 0, 1, 0, darkBorder)
-									),
+						new ZoneBorder(null, null, darkBorder, rightBorder? darkBorder: null),
 						c.getBorder()));											
 				} else {
 					c.setBorder(BorderFactory.createCompoundBorder(
-						BorderFactory.createMatteBorder(0, 0, 0, 1, rightBorder?darkBorder:lightBorder ),
-						c.getBorder()));											
+							new ZoneBorder(null, null, null, rightBorder? darkBorder: null),
+							c.getBorder()));											
 				}
 			}
-				
 	
-			//Make non-enable table or non-editable cells gray
-			if (!myTable.isEnabled() || (myTable.isEditable() && !isSelected && !model.isCellEditable(row, modelColumn))) {				
-				c.setBackground(UIUtils.darker(c.getBackground(), .9));
-				c.setForeground(UIUtils.getDilutedColor(c.getForeground(), c.getBackground()));
-			}
 	
 			//Create the hierarchy if enabled
 			if(model.getTreeColumn()==col && model.isTreeViewActive()) {

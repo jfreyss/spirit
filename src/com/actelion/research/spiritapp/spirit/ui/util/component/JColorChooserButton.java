@@ -35,7 +35,6 @@ import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.UIUtils;

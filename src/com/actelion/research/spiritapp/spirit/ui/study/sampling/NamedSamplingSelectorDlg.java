@@ -33,6 +33,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.services.dao.DAONamedSampling;
 import com.actelion.research.spiritcore.util.MiscUtils;
@@ -55,6 +56,7 @@ public class NamedSamplingSelectorDlg extends JEscapeDialog {
 		namedSamplingComboBox.setValues(DAONamedSampling.getNamedSamplings(Spirit.getUser(), null), true);
 		
 		final JEditorPane editorPane = new JEditorPane("text/html", "");
+		LF.initComp(editorPane);
 		editorPane.setEditable(false);
 		
 		final JScrollPane scrollPane = new JScrollPane(editorPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);

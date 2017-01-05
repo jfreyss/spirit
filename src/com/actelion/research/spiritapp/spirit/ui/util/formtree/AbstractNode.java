@@ -70,7 +70,7 @@ public abstract class AbstractNode<T>  {
 	protected int depth;
 	protected boolean expanded = false;
 
-	protected static Font editFont = FastFont.REGULAR;
+	protected Font editFont = FastFont.REGULAR;
 	
 	private JPanel panel = null;
 	private final JToggleButton button = new JToggleButton();

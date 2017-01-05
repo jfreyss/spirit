@@ -57,7 +57,9 @@
 			<property name="jnlp.custom.hdialect" value="org.hibernate.dialect.MySQLDialect"/>
 			<property name="jnlp.custom.driver" value="com.mysql.jdbc.Driver"/>
 			<property name="jnlp.custom.dburl" value="jdbc:mysql://localhost:3306/spirit"/>
+			<property name="jnlp.custom.username" value="spirit"/>
 			<property name="jnlp.custom.password" value="###encrypted password###"/>
+			<property name="jnlp.logusage" value="false"/>
 		-->
 	
 	

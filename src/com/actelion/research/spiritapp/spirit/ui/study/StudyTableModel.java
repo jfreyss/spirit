@@ -62,7 +62,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 
 	private static final Date now = JPAUtil.getCurrentDateFromDatabase();
 
-	public static final Column<Study, String> COLUMN_STUDYID = new Column<Study, String>("StudyId", String.class, 52) {
+	public final Column<Study, String> COLUMN_STUDYID = new Column<Study, String>("StudyId", String.class) {
 		@Override
 		public String getValue(Study row) {
 			return row.getStudyId();
@@ -74,7 +74,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		} 
 	};	
 
-	public static final Column<Study, String> COLUMN_STATUS = new Column<Study, String>("Status", String.class, 50) {
+	public final Column<Study, String> COLUMN_STATUS = new Column<Study, String>("Status", String.class) {
 		@Override
 		public String getValue(Study row) {
 			return row.getState();
@@ -82,14 +82,14 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 				
 	};
 	
-	public static final Column<Study, String> COLUMN_IVV = new Column<Study, String>("InternalId", String.class, 80) {
+	public final Column<Study, String> COLUMN_IVV = new Column<Study, String>("InternalId", String.class) {
 		@Override
 		public String getValue(Study row) {
 			return row.getIvv();
 		}
 	};
 	
-	public static final Column<Study, String> COLUMN_TITLE = new Column<Study, String>("Title", String.class, 100, 1600) {
+	public final Column<Study, String> COLUMN_TITLE = new Column<Study, String>("Title", String.class) {
 		@Override
 		public String getValue(Study row) {
 			return row.getTitle();
@@ -98,10 +98,10 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		public boolean isAutoWrap() {return true;}
 	};
 
-	public static final class MetadataColumn extends Column<Study, String> {
+	public final class MetadataColumn extends Column<Study, String> {
 		private String metaKey;
 		public MetadataColumn(String metaKey) {
-			super(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metaKey), String.class, 80, 140);
+			super(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metaKey), String.class);
 			this.metaKey = metaKey;
 		}
 		@Override
@@ -111,7 +111,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		
 	}
 	
-	public static final Column<Study, String> COLUMN_RESPONSIBLES = new Column<Study, String>("Responsibles", String.class, 50, 120) {
+	public final Column<Study, String> COLUMN_RESPONSIBLES = new Column<Study, String>("Responsibles", String.class) {
 		@Override
 		public String getValue(Study row) {
 			Set<String> resps = row.getAdminUsersAsSet();
@@ -132,7 +132,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 
 	};	
 
-	public static final Column<Study, Date> COLUMN_STARTING_DATE = new Column<Study, Date>("Start", Date.class, 40) {
+	public final Column<Study, Date> COLUMN_STARTING_DATE = new Column<Study, Date>("Start", Date.class) {
 		@Override
 		public Date getValue(Study row) {
 			return row.getFirstDate();
@@ -160,7 +160,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 			return row.getLastDate();
 		}		
 		@Override
-		public void postProcess(com.actelion.research.util.ui.exceltable.AbstractExtendTable<Study> table, Study row, int rowNo, Object value, JComponent comp) {
+		public void postProcess(AbstractExtendTable<Study> table, Study row, int rowNo, Object value, JComponent comp) {
 			Date startDate = row.getFirstDate();
 			Date endDate = row.getLastDate();
 			if(startDate==null) {
@@ -176,7 +176,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		public boolean isHideable() {return true;}
 	};
 	
-	public static final Column<Study, String> COLUMN_DEPT = new Column<Study, String>("Group", String.class) {
+	public final Column<Study, String> COLUMN_DEPT = new Column<Study, String>("Group", String.class) {
 		@Override
 		public String getValue(Study row) {
 			return row.getEmployeeGroupsAsString();
@@ -185,7 +185,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		public boolean isHideable() {return true;}
 	};
 	
-	public static final Column<Study, String> COLUMN_BIOSAMPLES = new Column<Study, String>("Biosamples", String.class) {
+	public final Column<Study, String> COLUMN_BIOSAMPLES = new Column<Study, String>("Biosamples", String.class) {
 		@Override
 		public String getValue(Study study) {
 			StringBuilder sb = new StringBuilder();
@@ -202,7 +202,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		@Override
 		public void postProcess(AbstractExtendTable<Study> table, Study row, int rowNo, Object value, JComponent comp) {
 			((JLabelNoRepaint) comp).setForeground(Color.BLUE);
-			((JLabelNoRepaint) comp).setFont(FastFont.SMALL_CONDENSED);
+			((JLabelNoRepaint) comp).setFont(FastFont.SMALL);
 		}
 		
 		@Override
@@ -213,7 +213,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 	};
 	
 	
-	public static final Column<Study, String> COLUMN_RESULTS = new Column<Study, String>("Results", String.class) {
+	public final Column<Study, String> COLUMN_RESULTS = new Column<Study, String>("Results", String.class) {
 		@Override
 		public String getValue(Study study) {
 			StringBuilder sb = new StringBuilder();
@@ -230,7 +230,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		@Override
 		public void postProcess(AbstractExtendTable<Study> table, Study row, int rowNo, Object value, JComponent comp) {
 			((JLabelNoRepaint) comp).setForeground(Color.BLUE);
-			((JLabelNoRepaint) comp).setFont(FastFont.SMALL_CONDENSED);
+			((JLabelNoRepaint) comp).setFont(FastFont.SMALL);
 		}
 		
 		@Override
@@ -240,12 +240,12 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		public boolean isMultiline() {return true;}
 	};	
 
-	public static class StudyCreationColumn extends Column<Study, String> {
+	public class StudyCreationColumn extends Column<Study, String> {
 		
 		private final boolean creation;
 		
 		public StudyCreationColumn(boolean creation) {
-			super(creation?"\nOwner": "\nLastUpdate", String.class, 40, 100);
+			super(creation?"Owner": "LastUpdate", String.class);
 			this.creation = creation;
 		}
 		
@@ -332,7 +332,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		defaultColumns.add(COLUMN_DEPT);
 		defaultColumns.add(COLUMN_STARTING_DATE);		
 		defaultColumns.add(COLUMN_END_DATE);		
-		defaultColumns.add(COLUMN_BIOSAMPLES);		
+		defaultColumns.add(COLUMN_BIOSAMPLES);
 		defaultColumns.add(COLUMN_RESULTS);		
 		defaultColumns.add(new StudyCreationColumn(true));		
 		defaultColumns.add(new StudyCreationColumn(false));

@@ -165,7 +165,7 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 			//Init TabbedPane
 			tabbedPane.add("", homePanel);
 			tabbedPane.setIconAt(0, IconType.HOME.getIcon());
-			tabbedPane.setFont(FastFont.BOLD.deriveSize(14));
+			tabbedPane.setFont(FastFont.BIGGER);
 			
 			//ContentPane
 			URL url = getClass().getResource("ico.png");
@@ -232,35 +232,22 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	private void initMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
 		
-		JMenu viewMenu = new JMenu("View");
-		viewMenu.setMnemonic('v');
-		menuBar.add(viewMenu);
-		for(StockCareItem item: stockCareItems) {
-			if(item==null) viewMenu.add(new JSeparator());
-			else viewMenu.add(new Action_View(item, false));
-		}
-		viewMenu.add(new JSeparator());
-		viewMenu.add(new SpiritAction.Action_Refresh(new AbstractAction() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JPAUtil.clear();
-				initTabs();				
-			}
-		}));
-		viewMenu.add(new SpiritAction.Action_Exit());
-
-		JMenu createMenu = new JMenu("Edit");
-		menuBar.add(createMenu);
-		createMenu.setMnemonic('c');
+		JMenu editMenu = new JMenu("Edit");
+		editMenu.setMnemonic('v');
+//		for(StockCareItem item: stockCareItems) {
+//			if(item==null) editMenu.add(new JSeparator());
+//			else editMenu.add(new Action_View(item, false));
+//		}
 		if(currentItem!=null) {			
-			createMenu.add(new BiosampleActions.Action_New(currentItem.getMainBiotype()));
+			editMenu.add(new BiosampleActions.Action_New(currentItem.getMainBiotype()));
 			AbstractAction action = new ResultActions.Action_New(currentItem.getDefaultTest());
 			action.setEnabled(currentItem.hasResults());
-			createMenu.add(action);			
-		} else {
-			createMenu.setEnabled(false);
+			editMenu.add(action);			
+			editMenu.add(new JSeparator());
 		}
-		
+		SpiritMenu.addEditMenuItems(editMenu, null);
+
+		menuBar.add(editMenu);
 		menuBar.add(SpiritMenu.getToolsMenu());
 		menuBar.add(SpiritMenu.getDatabaseMenu());
 		menuBar.add(SpiritMenu.getAdminMenu());

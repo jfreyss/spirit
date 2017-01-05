@@ -64,12 +64,15 @@ public class SpiritHyperlinkListener implements HyperlinkListener {
 							JExceptionDialog.showError(ex);
 						}
 					} else if(e.getDescription().startsWith("loc:")) {
-						int index = e.getDescription().indexOf(':', 4);
-						String param1 = e.getDescription().substring(4, index);
-						String param2 = e.getDescription().substring(index+1);
+						System.out.println("SpiritHyperlinkListener.hyperlinkUpdate(...).new SwingWorkerExtended() {...}.done(1) "+e.getDescription());
+						int index = e.getDescription().lastIndexOf(':');
 						try {
+							if(index<4) throw new Exception("Invalid link:" + e.getDescription());
+							String param1 = e.getDescription().substring(4, index);
+							String param2 = e.getDescription().substring(index+1);
 							int id = Integer.parseInt(param1);
 							int pos = Integer.parseInt(param2);
+							System.out.println("SpiritHyperlinkListener.hyperlinkUpdate(...).new SwingWorkerExtended() {...}.done(2) "+id+" "+pos);
 							Location location = DAOLocation.getLocation(id);
 							if(location!=null) {
 								SpiritContextListener.setLocation(location, pos);

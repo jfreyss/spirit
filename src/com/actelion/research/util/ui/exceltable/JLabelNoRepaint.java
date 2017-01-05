@@ -27,11 +27,9 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.Icon;
 import javax.swing.SwingConstants;
@@ -70,7 +68,7 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
     private final Dimension preferredDim = new Dimension();
     
     private Icon icon;
-    private boolean useIconsForKnownExtensions = false;
+    private boolean useIconsForKnownExtensions = true;
     private String extension = null;
 
     static {
@@ -127,16 +125,16 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 
 		//extension?
 		extension = null;
-		if(useIconsForKnownExtensions && getText().length()>4 && getText().indexOf("\n")<0) {
-			if(getText().startsWith("http://") || getText().startsWith("https://")) {
+		if(useIconsForKnownExtensions && text.length()>4 && text.indexOf("\n")<0) {
+			if(text.startsWith("http://") || text.startsWith("https://")) {
 				extension = text;
 				if(text.length()>8) {
 					extension = text.substring(0, 7)+"...";
 				}
 			} else {
-				int ind = getText().lastIndexOf('.');
-				if(ind>=0 && ind>=getText().length()-5) {
-					String tmp  = getText().substring(ind+1).toLowerCase();
+				int ind = text.lastIndexOf('.');
+				if(ind>=0 && ind>=text.length()-5) {
+					String tmp  = text.substring(ind+1).toLowerCase();
 					if(specialExtensions!=null && Arrays.binarySearch(specialExtensions, tmp)>=0) {
 						extension = text;
 						if(text.length()>8) {
@@ -163,15 +161,7 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 		}
 		
 		//Then calculate normal size
-		Font font;
-		if(condenseText==Boolean.TRUE) {
-			font = FastFont.REGULAR_CONDENSED.deriveFont(getFont().getStyle(), getFont().getSize());					
-		} else if(condenseText==Boolean.FALSE) {
-			font = FastFont.REGULAR.deriveFont(getFont().getStyle(), getFont().getSize());		
-		} else {
-			font = getFont();
-		}
-
+		Font font = getFont();
 		FontMetrics fm = getFontMetrics(font);
 		int offset = (icon==null?0: icon.getIconWidth()+2); 
 		
@@ -255,12 +245,7 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 	protected void paintComponent(Graphics graphics) {
 		Graphics2D g = (Graphics2D) graphics;
 
-		Toolkit tk = Toolkit.getDefaultToolkit();
-  		@SuppressWarnings("rawtypes")
-		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
-  		if (map != null) {
-  		    ((Graphics2D)g).addRenderingHints(map);
-  		}
+		super.paintComponent(g);
 		
 		int width = getWidth();
 		int height = getHeight();
@@ -272,14 +257,7 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 				
 		if(lines==null || !isVisible()) return;
 		
-		Font font;
-		if(condenseText==Boolean.TRUE) {
-			font = FastFont.REGULAR_CONDENSED.deriveFont(getFont().getStyle(), getFont().getSize());					
-		} else if(condenseText==Boolean.FALSE) {
-			font = FastFont.REGULAR.deriveFont(getFont().getStyle(), getFont().getSize());
-		} else {
-			font = getFont();
-		}
+		Font font = getFont();
 		g.setFont(font);
 		
 		//First treat special cases
@@ -297,8 +275,7 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 				g.setColor(UIUtils.getColor(50,50,150));
 				g.drawString(extension, 6, y+12);	
 				paintChildren(g);
-				return;
-				
+				return;			
 			}
 		}
 
@@ -313,7 +290,7 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 				int maxWidth = getWrappingWidth();
 				String left = line;
 				while(left.length()>0) {
-					int lineWidth = g.getFontMetrics(font).stringWidth(left)*75/100;
+					int lineWidth = g.getFontMetrics(font).stringWidth(left);
 					if(lineWidth<maxWidth) {
 						wrappedLines.add(left);
 						break;
@@ -322,8 +299,8 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 					int testCut = 0;
 					while(testCut<left.length()) {
 						if(left.charAt(testCut)==' ' || left.charAt(testCut)==';' || left.charAt(testCut)==',' || left.charAt(testCut)==':' || left.charAt(testCut)=='/' ) {							
-							int cutWidth = g.getFontMetrics(font).stringWidth(left.substring(0, testCut+1))*75/100;
-							if(cutWidth<maxWidth) {
+							int cutWidth = g.getFontMetrics(font).stringWidth(left.substring(0, testCut+1));
+							if(cutWidth<=maxWidth+2) {
 								cut = testCut;
 							} else {
 								break;
@@ -405,10 +382,6 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 				g.setColor(Color.DARK_GRAY);
 			} else {
 				g.setFont(font);
-			}
-			
-			if(condenseText==null && (wrappedLines.size()>lines.length  || g.getFontMetrics(font).stringWidth(line)+4>getWidth())) {
-				g.setFont(FastFont.REGULAR_CONDENSED.deriveFont(font.getStyle(), font.getSize()));					
 			}
 			
 			//Draw the line

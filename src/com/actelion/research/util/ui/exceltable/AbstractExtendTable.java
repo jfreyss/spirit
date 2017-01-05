@@ -21,6 +21,7 @@
 
 package com.actelion.research.util.ui.exceltable;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Point;
@@ -59,6 +60,7 @@ import javax.swing.table.TableModel;
 
 import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.FormatterUtils;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.UIUtils;
 
 public abstract class AbstractExtendTable<ROW> extends JTable implements IExportable {
@@ -75,8 +77,8 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 		SELECT,
 		POPUP
 	}
-	
-	
+		
+	private boolean DEBUG = System.getProperty("debug", "false").equals("true"); 
 	private boolean highlightSimilarCells = false;
 	private boolean highlightRows = false;
 	private BorderStrategy borderStrategy = BorderStrategy.ALL_BORDER;
@@ -86,8 +88,6 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 	private boolean useSmartHeight = true;
 	private boolean useAlphaForMergedCells = false;
 	private boolean tableChanged = true;
-	private Boolean condenseText = Boolean.FALSE;
-	private boolean preferredCondenseText = false;
 
 	private HeaderClickingPolicy headerClickingPolicy = HeaderClickingPolicy.POPUP;
 	private final FastHeaderRenderer<ROW> renderer = new FastHeaderRenderer<>();
@@ -119,7 +119,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 	 */
 	public AbstractExtendTable(ExtendTableModel<ROW> model) {
 		super(model);
-		setRowHeight(25);
+		setRowHeight(FastFont.getDefaultFontSize()*2+1);
 		
 		
 		getSelectionModel().addListSelectionListener(new ListSelectionListener() {			
@@ -134,13 +134,13 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 		getColumnModel().getSelectionModel().addListSelectionListener(new ListSelectionListener() {			
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
-				if(e.getValueIsAdjusting()) return;
 				int[] selCols = getSelectedColumns();
 				if(selCols.length==1 && getModel().getColumn(convertColumnIndexToModel(selCols[0]))==getModel().COLUMN_ROWNO) {
-					setColumnSelectionInterval(0, getColumnCount()-1);
+					setColumnSelectionInterval(0, getModel().getColumns().size()-1);
 				} else if(highlightSimilarCells) {
-					repaint();				
+					//OK				
 				}
+				repaint();				
 			}
 		});
 		
@@ -168,7 +168,9 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 			}									
 		});
 		setHeaderRenderers();
-		setShowGrid(false);		
+		
+		setShowGrid(false);
+		setGridColor(new Color(255,255,255,0));
 	}
 
 	public HeaderClickingPolicy getHeaderClickingPolicy() {
@@ -224,15 +226,6 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
         }
     	return tooltip;
 	}
-
-	public void setCondenseText(Boolean condenseText) {
-		this.condenseText = condenseText;
-	}
-	
-	public Boolean getCondenseText() {
-		return condenseText;
-	}
-	
 	
 	protected void setHeaderRenderers() {
 		for (int col = 0; col < getColumnModel().getColumnCount(); col++) {
@@ -283,7 +276,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 		int maxWidth = -1;
 		Component comp = getParent();
 		while(maxWidth<=0 && comp!=null) {
-			maxWidth = comp.getWidth()-20;
+			maxWidth = comp.getWidth()-25;
 			comp = comp.getParent();
 		}
 		if(maxWidth<=0) {
@@ -299,35 +292,40 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 		int totalInWrapping = 0;
 		
 		//For each column, find the preferred width (without considering wrapping)		
-		preferredCondenseText = condenseText==Boolean.TRUE; 
 		List<Integer> explore = selectIndixes(getRows().size(), getModel().getMaxRowsToExplore());
-		int total = 0;
+		int sumMinWidth = 0;
+		int sumPrefWidth = 0; 
 		int[] widths = new int[3];
 		for (int col = 0; col < nColumns; col++) {
 			
-			if(total<maxWidth) {
+			if(sumMinWidth<maxWidth) {
 				widths = getWidthsForColumn(col, explore);
 			}
-			
+			if(widths[1]+10>=widths[2]) widths[1] = widths[2];
 			//update the variables
 			col2MinWidth.put(col, widths[0]); 
 			col2PrefWidth.put(col, widths[1]);
 			col2MaxWidth.put(col, widths[2]);
 			
-			total+=widths[0];
+			sumMinWidth+=widths[0];
+			sumPrefWidth+=widths[1];	
 			Column<ROW, ?> co = getModel().getColumn(convertColumnIndexToModel(col));
 			if(co.isAutoWrap()) {
 				wrappingCol2PrefWidth.put(col, widths[1]);
 				totalInWrapping+=widths[1];
 			}
 		}
-		
-		
+
+		if(DEBUG) {
+			for (int col = 0; col < nColumns; col++) {
+				System.out.println(getClass().getName()+" Col."+col+"\t"+col2MinWidth.get(col)+"\t"+col2PrefWidth.get(col)+"\t"+col2MaxWidth.get(col)+"\t");
+			}
+			System.out.println(getClass().getName()+" Total\t"+sumMinWidth+"\t"+sumPrefWidth);
+			System.out.println(getClass().getName()+" Max\t"+maxWidth);
+		}
 
 		//Adapt columns depending of the preferedSize
 		if(reset && nColumns>0) {
-			int sumPrefWidth = 0; for (int col = 0; col < nColumns; col++) sumPrefWidth+=col2PrefWidth.get(col);			
-			preferredCondenseText = (condenseText==null && sumPrefWidth>maxWidth) || condenseText==Boolean.TRUE;
 			
 			//Adjust col2PrefWidth to limit the width variability.
 			//Ex: if the columns widths are 10,12,20,40,50,80,120,140, then we increase them to 20,20,20,50,50,80,140,140, so that different widths always differ by 20px or more   
@@ -387,22 +385,44 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 //			System.out.println("AbstractExtendTable reset.2 sumPrefWidth=" + sumPrefWidth+" / "+maxWidth);
 				
 			if(sumPrefWidth<maxWidth) {
+				//
 				//If the widths are less than the max, increase the size of some columns
+//				int left = maxWidth-sumPrefWidth;
+//				int nToIncrease = 0;
+//				for (int col = 0; col < nColumns; col++) {
+//					if(col2MaxWidth.get(col)==null || col2MaxWidth.get(col)<=col2PrefWidth.get(col)) continue;
+//					nToIncrease++;
+//				}
+//				for (int col = 0; left>0 && col < nColumns; col++) {
+//					if(col2MaxWidth.get(col)==null || col2MaxWidth.get(col)<=col2PrefWidth.get(col)) continue;
+//					int inc = Math.min(left/nToIncrease, col2MaxWidth.get(col)-col2PrefWidth.get(col));
+//					
+//					int newPrefWidth = col2PrefWidth.get(col) + inc;
+//					left-=inc;
+//					col2PrefWidth.put(col, newPrefWidth);
+//					nToIncrease--;
+//				}				
 				int left = maxWidth-sumPrefWidth;
-				int nToIncrease = 0;
+				double factor = 0;
+				int total = maxWidth;
 				for (int col = 0; col < nColumns; col++) {
-					if(col2MaxWidth.get(col)==null || col2MaxWidth.get(col)<=col2PrefWidth.get(col)) continue;
-					nToIncrease++;
+					if(col2MaxWidth.get(col)==null || col2MaxWidth.get(col)<=col2PrefWidth.get(col)) {
+						total-=col2PrefWidth.get(col);
+					} else {
+						factor += col2MaxWidth.get(col);
+					}
 				}
-				for (int col = 0; left>0 && col < nColumns; col++) {
-					if(col2MaxWidth.get(col)==null || col2MaxWidth.get(col)<=col2PrefWidth.get(col)) continue;
-					int inc = Math.min(left/nToIncrease, col2MaxWidth.get(col)-col2PrefWidth.get(col));
-					
-					int newPrefWidth = col2PrefWidth.get(col) + inc;
-					left-=inc;
-					col2PrefWidth.put(col, newPrefWidth);
-					nToIncrease--;
-				}				
+				if(total>0) {
+					if(DEBUG) {
+						System.out.println("Factor = " + factor + " / " + total + " = " + (factor/total));
+					}
+					for (int col = 0; left>0 && col < nColumns; col++) {
+						if(col2MaxWidth.get(col)==null || col2MaxWidth.get(col)<=col2PrefWidth.get(col)) continue;					
+						int newWidth = Math.min(col2PrefWidth.get(col)+left, Math.max(col2MaxWidth.get(col), (int)(factor * col2PrefWidth.get(col) / total)));
+						left -= (newWidth-col2PrefWidth.get(col));
+						col2PrefWidth.put(col, newWidth);
+					}
+				}
 			} else if(sumPrefWidth>maxWidth) {
 				//reduce prefWidth if sumPrefWidth>maxWidth
 				int totalToReduce = sumPrefWidth-maxWidth;
@@ -413,7 +433,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 					int prefWidth = col2PrefWidth.get(col);
 					if(minWidth>=0 && prefWidth>minWidth) {
 						n++;
-						reducable+=prefWidth-minWidth;
+						reducable += prefWidth-minWidth;
 					}
 				}
 				totalToReduce = Math.min(reducable, totalToReduce);
@@ -424,18 +444,22 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 						if(minWidth>=0 && prefWidth>minWidth) {
 							int toReduce = Math.min(prefWidth-minWidth, totalToReduce/n);
 							col2PrefWidth.put(col, prefWidth-toReduce);
-							totalToReduce-= toReduce;
+							totalToReduce -= toReduce;
 							n--;
 						}
 					}
 				}
 			}
-//			sumPrefWidth = 0; for (int col = 0; col < nColumns; col++) sumPrefWidth+=col2PrefWidth.get(col);
-//			System.out.println("AbstractExtendTable reset.3 sumPrefWidth=" + sumPrefWidth+" / "+maxWidth);
-			
 		}
 
-		
+		if(DEBUG) {
+			for (int col = 0; col < nColumns; col++) {
+				System.out.println(getClass().getName()+" Set Col."+col+"\t"+col2PrefWidth.get(col));
+			}
+			sumPrefWidth = 0; for (int col = 0; col < nColumns; col++) sumPrefWidth+=col2PrefWidth.get(col);
+			System.out.println(getClass().getName()+" Total."+ sumPrefWidth+" / "+maxWidth);
+		}
+
 		//////////////////////////////////////////////////////////////
 		//Update Column Width
 		for (int col = 0; col < nColumns; col++) {
@@ -450,7 +474,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 		
 	
 	private int[] getWidthsForColumn(int col, Collection<Integer> explore) {
-		TableColumn column = getColumnModel().getColumn(col);
+//		TableColumn column = getColumnModel().getColumn(col);
 		Column<ROW, ?> co = getModel().getColumn(convertColumnIndexToModel(col));
 		int colMinWidth;
 		int colPrefWidth;
@@ -467,14 +491,14 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 			colMaxWidth = co.getMinWidth();
 			
 			//Check Header width
-			if(column.getHeaderRenderer()!=null) {
-				Component c = column.getHeaderRenderer().getTableCellRendererComponent(this, column.getHeaderValue(), true, true, -1, col);
-				int cellPrefWidth = c.getPreferredSize().width;
-				colMaxWidth = Math.max(colMaxWidth, cellPrefWidth);
-			}
+//			if(column.getHeaderRenderer()!=null) {
+//				Component c = column.getHeaderRenderer().getTableCellRendererComponent(this, column.getHeaderValue(), true, true, -1, col);
+//				int cellPrefWidth = c.getPreferredSize().width;
+//				colMaxWidth = Math.max(colMaxWidth, cellPrefWidth);
+//			}
 
 			//Check Data width
-			int colAvgWidth = 0; //Average of non empty cells
+			int colAvgWidth = 0;
 			int count = 0;
 
 			setDefaultRenderer(Object.class, new ExtendTableCellRenderer<ROW>(this));
@@ -492,26 +516,28 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 				if(isEditable() && co.isEditable(getRows().get(row))) {
 					isEditable = true;
 					cellPrefWidth = Math.max(60, cellPrefWidth);
-				}
-				
+				}				
 				if(cellPrefWidth<cellMinWidth) cellPrefWidth = cellMinWidth;
+				
 				colMinWidth = Math.max(colMinWidth, cellMinWidth);
-				colAvgWidth+=cellPrefWidth;
-				count++;
+				colAvgWidth += cellPrefWidth;
 				colPrefWidth = Math.max(colPrefWidth, cellPrefWidth);
 				colMaxWidth  = Math.max(colMaxWidth, cellPrefWidth);
+				count++;
 			}
 			if(count>0) {
 				colAvgWidth /= count;
-				colPrefWidth = colAvgWidth/count + (colPrefWidth-colAvgWidth/count)/3; 
+				colPrefWidth = colAvgWidth + (colPrefWidth-colAvgWidth)/5; 
 			} else {
 				colPrefWidth = (colMinWidth + colPrefWidth)/2;
 			}
-			
+			if(DEBUG) {
+				System.out.println(col+" colMinWidth="+colMinWidth+" colPrefWidth=" + colPrefWidth+ " colAvgWidth="+colAvgWidth+" colMaxWidth="+colMaxWidth+" max="+co.getMaxWidth());
+			}
 		}
 		
 		int colPrefWidth2 = Math.max(colMinWidth, colPrefWidth);
-		int colMaxWidth2 = Math.min(co.getMaxWidth(), Math.max(colMaxWidth, isEditable? colPrefWidth*2 : colPrefWidth+15));
+		int colMaxWidth2 = Math.min(co.getMaxWidth(), Math.max(colMaxWidth, isEditable? colPrefWidth*2 : colPrefWidth));
 
 		
 		return new int[] {colMinWidth, colPrefWidth2, colMaxWidth2};
@@ -596,36 +622,39 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 		
 		//Update the selection
 		getSelectionModel().setValueIsAdjusting(true);
-		getSelectionModel().clearSelection();
-		int lastR = -1;
-		if(selection!=null) {
-			for (ROW b : selection) {
-				if(b==null) continue;
-				int r = getModel().getRows().indexOf(b);
-				if(r>=0) {
-					try {
-						getSelectionModel().addSelectionInterval(r, r);
-						lastR = r;
-					} catch (Exception e) {
-						//e.printStackTrace();
+		try {
+			getSelectionModel().clearSelection();
+			int lastR = -1;
+			if(selection!=null) {
+				for (ROW b : selection) {
+					if(b==null) continue;
+					int r = getModel().getRows().indexOf(b);
+					if(r>=0) {
+						try {
+							getSelectionModel().addSelectionInterval(r, r);
+							lastR = r;
+						} catch (Exception e) {
+							//e.printStackTrace();
+						}
+					} else {
+						System.err.println("ExtendTable.setSelection() could not select "+b);
 					}
-				} else {
-					System.err.println("ExtendTable.setSelection() could not select "+b);
 				}
 			}
-		}
-		if(lastR>=0) {
-			scrollRectToVisible(getCellRect(lastR, 0, true));
-			if(getModel().getTreeColumn()!=null) {
-				int selCol = getModel().getColumns().indexOf(getModel().getTreeColumn());
-				selCol = convertColumnIndexToView(selCol);
-				setColumnSelectionInterval(selCol, selCol);
-			} else if(getColumnCount()>0) {
-				setColumnSelectionInterval(0, getColumnCount()-1);
+			if(lastR>=0) {
+				scrollRectToVisible(getCellRect(lastR, 0, true));
+				if(getModel().getTreeColumn()!=null) {
+					int selCol = getModel().getColumns().indexOf(getModel().getTreeColumn());
+					selCol = convertColumnIndexToView(selCol);
+					setColumnSelectionInterval(selCol, selCol);
+				} else if(getColumnCount()>0) {
+					setColumnSelectionInterval(0, getColumnCount()-1);
+				}
 			}
+		} finally {
+			getSelectionModel().setValueIsAdjusting(false);
+			repaint();
 		}
-		getSelectionModel().setValueIsAdjusting(false);
-		repaint();
 	}
 
 	public void scrollToSelection() {
@@ -945,17 +974,4 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 		return res;		
 	}
 	
-	public boolean isPreferredCondenseText() {
-		return preferredCondenseText;
-	}
-	
-//	@Override
-//	protected void paintComponent(Graphics g) {
-//		Toolkit tk = Toolkit.getDefaultToolkit();
-//  		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
-//  		if (map != null) {
-//  		    ((Graphics2D)g).addRenderingHints(map);
-//  		}
-//		super.paintComponent(g);
-//	}
 }

@@ -33,6 +33,7 @@ import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.lf.SpiritExtendTable;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
+import com.actelion.research.util.ui.FastFont;
 
 public class LocationTable extends SpiritExtendTable<Location> {
 	
@@ -44,8 +45,7 @@ public class LocationTable extends SpiritExtendTable<Location> {
 		super(model);
 		LocationActions.attachPopup(this);
 		setBorderStrategy(BorderStrategy.NO_BORDER);
-		setRowHeight(15);
-		
+		setRowHeight(FastFont.getDefaultFontSize()+3);		
 	}
 	
 	@Override
@@ -53,37 +53,36 @@ public class LocationTable extends SpiritExtendTable<Location> {
 		return (LocationTableModel) super.getModel();
 	}
 	
+	/**
+	 * Sets the rows of the table, while adding the complete parent hierarchy
+	 */
 	@Override
 	public void setRows(List<Location> rows) {
-		List<Location> toBeAdded = new ArrayList<Location>();
+		System.out.println("LocationTable.setRows() "+rows);
+		List<Location> rowsWithHierarchy = new ArrayList<>();
+
+		//We must add the roots and the specified rows
+		List<Location> toBeAdded = new ArrayList<>(rows);
 		toBeAdded.addAll(DAOLocation.getLocationRoots(Spirit.getUser()));
-		if(rows!=null) toBeAdded.addAll(rows);
 		
-		List<Location> res = new ArrayList<Location>();
 		//Make sure we have all the parents
-		Set<Location> present = new HashSet<Location>();
+		Set<Location> present = new HashSet<>();
 		for (Location loc : toBeAdded) {
 			while(loc!=null && !present.contains(loc)) {
-				res.add(loc);
+				rowsWithHierarchy.add(loc);
 				present.add(loc);
 				loc = loc.getParent();
 			}
 		}
-		Collections.sort(res);
+		Collections.sort(rowsWithHierarchy);
 
-		super.setRows(res);
+		super.setRows(rowsWithHierarchy);
 	}
 	
 	public void addRow(Location loc) {
-		if(loc==null || getRows().contains(loc)) return;
-		Location l = loc;
 		List<Location> rows = getRows();
-		while(l!=null && !rows.contains(l)) {
-			rows.add(l);
-			l = l.getParent();					
-		}
-		Collections.sort(rows);
-		resetPreferredColumnWidth();
+		rows.add(loc);
+		setRows(rows);
 	}
 	
 	

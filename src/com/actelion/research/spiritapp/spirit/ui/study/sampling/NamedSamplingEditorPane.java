@@ -24,16 +24,15 @@ package com.actelion.research.spiritapp.spirit.ui.study.sampling;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JEditorPane;
-
+import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.Study;
 
 
-public class NamedSamplingEditorPane extends JEditorPane {
+public class NamedSamplingEditorPane extends ImageEditorPane {
 
 	public NamedSamplingEditorPane() {
-		super("text/html", "");
+		super();
 		setEditable(false);
 	}
 	

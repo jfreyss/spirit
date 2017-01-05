@@ -104,7 +104,7 @@ public class PrintingDlg extends JEscapeDialog {
 			PrintingTab tab = new PrintingTab(this, containerType);
 			
 			tabbedPane.add(tabName, tab);
-			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, new ImageIcon(containerType.getImageThumbnail()));
+			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, new ImageIcon(containerType.getImage(22)));
 			tab.setRows(list);
 			
 		}

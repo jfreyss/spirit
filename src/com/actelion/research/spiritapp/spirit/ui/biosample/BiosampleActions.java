@@ -40,6 +40,7 @@ import java.util.Set;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Box;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -64,6 +65,7 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.form.BiosampleFormDlg
 import com.actelion.research.spiritapp.spirit.ui.biosample.selector.SelectorDlg;
 import com.actelion.research.spiritapp.spirit.ui.container.CheckinDlg;
 import com.actelion.research.spiritapp.spirit.ui.container.CheckoutDlg;
+import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
 import com.actelion.research.spiritapp.spirit.ui.lf.UserIdComboBox;
 import com.actelion.research.spiritapp.spirit.ui.pivot.PivotTable;
 import com.actelion.research.spiritapp.spirit.ui.print.PrintingDlg;
@@ -90,6 +92,7 @@ import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.ListHashMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
@@ -105,7 +108,7 @@ public class BiosampleActions {
 		public Action_New(Biotype biotype) {
 			super("New "+biotype.getName());
 			this.biotype = biotype;
-			putValue(AbstractAction.SMALL_ICON, IconType.NEW.getIcon());
+			putValue(AbstractAction.SMALL_ICON, new ImageIcon(ImageFactory.getImage(biotype, FastFont.getAdaptedSize(24))));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {			

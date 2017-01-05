@@ -54,8 +54,6 @@ import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class LocationDepictor extends JPanel {
 
-	public static final String PROPERTY_LOCATIONCHANGED = "locationChanged";
-	
 	private Location location;
 	
 	private boolean showOneEmptyPosition = true;
@@ -76,8 +74,7 @@ public class LocationDepictor extends JPanel {
 		LocationPanel topLocationPanel = new LocationPanel(this);		
 		activeLocationPanel = topLocationPanel;
 		add(BorderLayout.CENTER, topLocationPanel);
-		
-		
+				
 		setPreferredSize(new Dimension(400,400));
 		setMinimumSize(new Dimension(300,300));
 	
@@ -126,13 +123,11 @@ public class LocationDepictor extends JPanel {
 	 * @param loc
 	 */
 	public void setBioLocation(Location loc) {
-		if(!forRevisions && ((this.location == null && loc==null) || (this.location!=null && this.location.equals(loc)))) return;
+//		if(!forRevisions && ((this.location == null && loc==null) || (this.location!=null && this.location.equals(loc)))) return;
 		this.location = loc;
 		
 		if(!forRevisions) location = JPAUtil.reattach(location);
-		updateView();
-		
-		firePropertyChange(PROPERTY_LOCATIONCHANGED, "", this.location);
+		updateView();		
 	}
 	
 	public void updateView() {
@@ -161,11 +156,9 @@ public class LocationDepictor extends JPanel {
 				}
 				active = top.initializeLayoutForTop(roots, 0, depth);
 			} else {
-//				location = JPAUtil.reattach(location);
 				active = top.initializeLayoutForParents(location.getHierarchy(), 0, depth);
 			}
 		} else {
-//			location = JPAUtil.reattach(location);
 			active = top.initializeLayoutForMain(location, 0, 0);
 		}
 		
@@ -182,15 +175,14 @@ public class LocationDepictor extends JPanel {
 	public Location getBioLocation() {
 		return activeLocationPanel.getBioLocation();
 	}
-	
-		
+			
 	public Set<Integer> getSelectedPoses() {
 		return getRackPanel().getSelectedPoses();
 	}
+	
 	public Set<Container> getSelectedContainers() {
 		return getRackPanel().getSelectedContainers();
 	}
-	
 	
 	private int push = 0;
 	public void setSelectedPoses(List<Integer> selectedPoses) {
@@ -221,7 +213,6 @@ public class LocationDepictor extends JPanel {
 		} finally {
 			push--;
 		}
-
 	}
 	
 	public void addRackDepictorListener(RackDepictorListener listener) {

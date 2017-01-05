@@ -128,7 +128,7 @@ public class OrganSamplePanel extends JPanel  implements DragGestureListener, Dr
 		
 		//draw animalNo
 		int animalNo = containerSample.getAnimalNo();
-		g.setFont(FastFont.MONO.deriveSize(18).deriveFont(Font.BOLD));
+		g.setFont(FastFont.MONO.increaseSize(6).deriveFont(Font.BOLD));
 		g.setColor(new Color(160, 175, 235));
 		String s = "Animal "+(animalNo+1);
 		g.drawString(s, getWidth() - g.getFontMetrics().stringWidth(s)-2, height - 4);
@@ -140,17 +140,17 @@ public class OrganSamplePanel extends JPanel  implements DragGestureListener, Dr
 			Image img = ImageFactory.getImage(compatible, 30);
 			g.drawImage(img, 1, 2, this);
 			g.setColor(Color.GRAY);
-			g.setFont(FastFont.REGULAR.deriveSize(9));
+			g.setFont(FastFont.SMALLER);
 			g.drawString(compatible.getBiotype().getName(), 30, 11);
 			
 			//draw container
 			if(containerSample.getContainerType()!=null) {
-				img = containerSample.getContainerType().getImageThumbnail();
+				img = containerSample.getContainerType().getImage(22);
 				g.drawImage(img, 1, height-img.getHeight(this)-3, this);
 
 				//Draw BlocNo
 				if(containerSample.getBlocNo()!=null) {
-					g.setFont(FastFont.MONO.deriveSize(18).deriveFont(Font.BOLD));
+					g.setFont(FastFont.MONO.increaseSize(6).deriveFont(Font.BOLD));
 					g.setColor(Color.LIGHT_GRAY);
 					g.drawString(""+containerSample.getBlocNo(), 5, height - 6);
 					g.setColor(Color.BLACK);
@@ -161,7 +161,7 @@ public class OrganSamplePanel extends JPanel  implements DragGestureListener, Dr
 			
 			//Draw sample info
 			g.setColor(Color.BLACK);
-			g.setFont(FastFont.REGULAR.deriveSize(11));
+			g.setFont(FastFont.MEDIUM);
 			UIUtils.drawString(g, compatible.getInfos(EnumSet.of(InfoFormat.SAMPLENAME, InfoFormat.METATADATA, InfoFormat.COMMENTS), InfoSize.COMPACT), 30, 23, getWidth()-32, height-23);
 		}
 	}

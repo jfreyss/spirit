@@ -125,7 +125,7 @@ public class PivotGroupPanel extends JPanel implements DragGestureListener, Drag
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g.setColor(name.startsWith("[")?  Color.DARK_GRAY: Color.BLACK);
-		g.setFont(name.startsWith("[")?  FastFont.REGULAR_CONDENSED: FastFont.REGULAR);
+		g.setFont(FastFont.REGULAR);
 		g.drawString(name+":", (hover?1:0) + HEADER_WIDTH - g.getFontMetrics().stringWidth(name) - 4, PivotItemPanel.HEIGHT/2+5 + (hover?1:0));
 		super.paintComponent(g);
 		

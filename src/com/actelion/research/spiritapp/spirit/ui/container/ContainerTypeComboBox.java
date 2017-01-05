@@ -30,6 +30,7 @@ import javax.swing.JLabel;
 
 import com.actelion.research.spiritcore.business.biosample.BarcodeType;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JGenericComboBox;
 
 public class ContainerTypeComboBox extends JGenericComboBox<ContainerType> {
@@ -47,7 +48,7 @@ public class ContainerTypeComboBox extends JGenericComboBox<ContainerType> {
 	@Override
 	public Component processCellRenderer(JLabel comp, ContainerType type, int index) {
 		if(type!=null) {
-			comp.setIcon(new ImageIcon(type.getImageThumbnail()));
+			comp.setIcon(new ImageIcon(type.getImage(FastFont.getDefaultFontSize()*2-4)));
 			comp.setIconTextGap(0);
 			if(type.getBarcodeType()==BarcodeType.MATRIX) {
 				comp.setBackground(new Color(235, 245, 255));

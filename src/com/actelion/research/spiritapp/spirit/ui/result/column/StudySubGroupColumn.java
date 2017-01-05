@@ -30,7 +30,7 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 public class StudySubGroupColumn extends Column<Result, Integer> {
 	public StudySubGroupColumn() {
-		super("St.", Integer.class);
+		super("St.", Integer.class, 10, 20);
 		setHideable(true);
 	}
 	

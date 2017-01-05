@@ -31,7 +31,6 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Shape;
-import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -162,11 +161,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 
 	private void draw(Graphics2D g) {
 		try {
-			Toolkit tk = Toolkit.getDefaultToolkit();
-	  		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
-	  		if (map != null) {
-	  		    g.addRenderingHints(map);
-	  		}
+			UIUtils.applyDesktopProperties(g);
 	  		
 			//Refresh actual time
 			Calendar cal = Calendar.getInstance();
@@ -187,11 +182,11 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 				s = study.getStudyId();
 				if (s == null) s = "";
 				g.setColor(Color.BLACK);
-				g.setFont(FastFont.REGULAR.deriveSize(14));
-				g.drawString(s, 4, 15);
+				g.setFont(FastFont.BIGGER);
+				g.drawString(s, 2, FastFont.BIGGER.getSize());
 				if(study.getIvv()!=null && study.getIvv().length()>0) {
 					g.setFont(FastFont.REGULAR);
-					g.drawString(study.getIvv(), 4, 32);
+					g.drawString(study.getIvv(), 2, FastFont.BIGGER.getSize()+FastFont.REGULAR.getSize()+2);
 				}
 			}
 
@@ -507,14 +502,14 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			for (Group group : study.getGroups()) {
 				String s = group.getBlindedName(Spirit.getUsername());
 				if (s.length() > 24) s = s.substring(0, 24);
-				int w = getFontMetrics(f).stringWidth(s) + 17;
-				if(group.getNSubgroups()>1) w+=12;
+				if(group.getNSubgroups()>1) s+="'"+group.getNSubgroups();
+				int w = getFontMetrics(f).stringWidth(s) + 15;
 				marginX = Math.max(marginX, w);
 			}
 
 			emptyPhases = designerMode ? new HashSet<Phase>() : study.getEmptyPhases();
 			int nPhases = study.getPhases().size() - emptyPhases.size();
-			int normalPhaseWidth = 43;
+			int normalPhaseWidth = FastFont.getDefaultFontSize()*2+18;
 			
 			if(adjustZoomFactor) {
 				//estimate zoomfactor so that nPhases*40*1.35^SF=800
@@ -543,20 +538,22 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 
 			// Offset_Y
 			FontMetrics fm1 = getFontMetrics(FastFont.MEDIUM);
-			FontMetrics fm2 = getFontMetrics(FastFont.MEDIUM_CONDENSED);
-			int height = 50;
-			for (Phase phase : study.getPhases()) {
-				int w1 = fm1.stringWidth(phase.getShortName());
-				int w2 = phase.getLabel() == null ? 0 : 2+fm2.stringWidth(phase.getLabel());
-				height = Math.max(height, w1 + w2 + 2);
+			FontMetrics fm2 = getFontMetrics(FastFont.SMALL);
+			int height = fm1.stringWidth("00/00/00 We");
+			for (Phase p : study.getPhases()) {
+				if (!emptyPhases.contains(p)) { 
+					int w1 = fm1.stringWidth(p.getShortName());
+					int w2 = p.getLabel() == null ? 0 : 2+fm2.stringWidth(p.getLabel());
+					height = Math.max(height, w1 + w2 + 2);
+				}
 			}
-			OFFSET_Y = height + 5;
+			OFFSET_Y = height + 2;
 
 			// GroupNo2Y positions
 			groupSubgroup2Y.clear();
 			groupSubgroup2samplingY.clear();
 			groupSubgroup2height.clear();
-			int y = OFFSET_Y + 35; //groupHeight / 2 + 15;
+			int y = OFFSET_Y + FastFont.getDefaultFontSize()*2;
 
 			List<Group> groupsSortedHierarchical = study.getGroupsHierarchical();
 			for (Group group : groupsSortedHierarchical) {
@@ -568,7 +565,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 						groupSubgroup2samplingY.put(new Pair<Group, Integer>(group, subgroupNo), y+10);
 						groupSubgroup2height.put(new Pair<Group, Integer>(group, subgroupNo), 40);
 					}
-					y += 40;
+					y += FastFont.getDefaultFontSize()*3;
 				} else {
 					for (int subgroupNo = 0; subgroupNo < group.getNSubgroups(); subgroupNo++) {
 						
@@ -577,9 +574,9 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 							if(a.getNamedSampling2()!=null) {hasSamplings2 = true; break;}
 						}
 						
-						int groupHeight = 27 + (hasSamplings2?8:0) + (subgroupNo==group.getNSubgroups()-1? 8:0);
+						int groupHeight = FastFont.getDefaultFontSize()*2 + (hasSamplings2?FastFont.SMALL.getSize()-1:0) + (subgroupNo==group.getNSubgroups()-1? FastFont.SMALL.getSize()-1:0);
 						groupSubgroup2Y.put(new Pair<Group, Integer>(group, subgroupNo), y);
-						groupSubgroup2samplingY.put(new Pair<Group, Integer>(group, subgroupNo), y + 10);
+						groupSubgroup2samplingY.put(new Pair<Group, Integer>(group, subgroupNo), y + FastFont.SMALL.getSize()-1);
 						groupSubgroup2height.put(new Pair<Group, Integer>(group, subgroupNo), groupHeight);
 						y += groupHeight;
 					}
@@ -646,13 +643,13 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			g.setColor(c1);
 
 			g.setPaint(new GradientPaint(0, 0, c1, marginX, 0, c2));
-			
-			g.fillRect(1, y1-17, marginX, y2-y1+getHeight(group, group.getNSubgroups()-1)-1 );
+			int offsetTop = FastFont.getDefaultFontSize()+5;
+			g.fillRect(1, y1-offsetTop, marginX, y2-y1+getHeight(group, group.getNSubgroups()-1)-1 );
 			
 			g.setColor(c2);
-			g.fillRect(marginX, y1-17, maxX-marginX, y2-y1+getHeight(group, group.getNSubgroups()-1)-1 );
+			g.fillRect(marginX, y1-offsetTop, maxX-marginX, y2-y1+getHeight(group, group.getNSubgroups()-1)-1 );
 			g.fillPolygon(new int[]{maxX, maxX+20, maxX}, 
-					new int[]{y1-17, (y1-17 + y2-17+getHeight(group, group.getNSubgroups()-1))/2-1, y2-17+getHeight(group, group.getNSubgroups()-1)-1}, 3);
+					new int[]{y1-offsetTop, (y1-offsetTop + y2-offsetTop+getHeight(group, group.getNSubgroups()-1))/2-1, y2-offsetTop+getHeight(group, group.getNSubgroups()-1)-1}, 3);
 
 //			//Paint model
 //			Color col1 = null;
@@ -667,11 +664,11 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 //			
 //			if(col1!=null) {
 //				g.setColor(col1);
-//				g.fillRect(0, y1-17, 2, y2-y1+getHeight(group, group.getNSubgroups()-1)-1);
+//				g.fillRect(0, y1-offsetTop, 2, y2-y1+getHeight(group, group.getNSubgroups()-1)-1);
 //			}
 //			if(col2!=null) {
 //				g.setColor(col1);
-//				g.fillRect(2, y1-17, 2, y2-y1+getHeight(group, group.getNSubgroups()-1)-1);
+//				g.fillRect(2, y1-offsetTop, 2, y2-y1+getHeight(group, group.getNSubgroups()-1)-1);
 //			}
 				
 			
@@ -848,9 +845,6 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			if (date != null && Phase.isSameDay(date, now)) {
 				g.setColor(UIUtils.getColor(255, 255, 0, 60));
 				g.fillRect(x - 12, 1, x2 - x, toY - 1);
-//			} else if (even) {
-//				g.setColor(UIUtils.getColor(180, 180, 180, 60));
-//				g.fillRect(x - 12, 1, x2 - x, toY - 1);
 			}
 			
 
@@ -865,8 +859,6 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			// Draw Relative Date
 			int y1 = date != null? y-4: y;
 			String s = phase.getShortName().replace("_", " ");
-//			String s1 = s.indexOf(' ')<0? s: s.substring(0, s.indexOf(' '));
-//			String s2 = s.indexOf(' ')<0? "": s.substring(s.indexOf(' '));
 			g.setColor(Color.BLACK);
 			g.setFont(FastFont.BOLD);
 			g.drawString(s, x, y1);
@@ -877,7 +869,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 
 			// Draw Label
 			if (phase.getLabel() != null) {
-				g.setFont(FastFont.MEDIUM_CONDENSED);
+				g.setFont(FastFont.SMALL);
 				g.setColor(Color.BLACK);
 				g.drawString(phase.getLabel(), x+w+3, y1);
 			}
@@ -891,7 +883,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 				String day = new String[] { "", "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" }[d];
 				s = FormatterUtils.formatDate(date) + " "+day;
 				
-				g.drawString(s, x, y+4);
+				g.drawString(s, x, y+FastFont.SMALL.getSize()-6);
 			}
 
 			g.setColor(c);
@@ -911,7 +903,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 		Group group = action.getGroup();
 		int subgroupNo = action.getSubGroup();
 		Phase phase = action.getPhase();
-		
+		int arrowSize = FastFont.getDefaultFontSize()/4;
 		if (emptyPhases.contains(phase)) return;
 
 		Shape clip = g.getClip();
@@ -925,20 +917,19 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			// Paint the measurement
 			String abbr = action.getMeasurementAbbreviations();
 			if(abbr.length()>0) {
-				g.setFont(FastFont.SMALLER);
+				g.setFont(FastFont.SMALLEST);
 				g.setTransform(AffineTransform.getRotateInstance(-Math.PI / 2, x, y));
-				int px = x-3-g.getFontMetrics().stringWidth(abbr)*2/3;
+				int px = x-g.getFontMetrics().stringWidth(abbr)-1;
 				g.setColor(Color.WHITE);
 				g.drawString(abbr, px-1, y-3);
 				g.setColor(UIUtils.getColor(0, 60, 220));
-				g.drawString(abbr, px, y-3);
-					
+				g.drawString(abbr, px, y-3);					
 				g.setTransform(AffineTransform.getTranslateInstance(0, 0));
 			}
 
 			if(isBlindAll) return;
 			// Paint the treatment
-			g.setFont(FastFont.MEDIUM_CONDENSED);
+			g.setFont(FastFont.SMALL);
 			if (action.getNamedTreatment() != null) {
 				// Get next action with treatment
 				int nextXWithTreatment = getWidth();
@@ -955,16 +946,16 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 
 				// Draw Treatment Arrow
 				g.setColor(c==null?Color.BLUE: c);
-				g.fillPolygon(new int[] { x, x - 3, x + 3 }, new int[] { y, y - 10, y - 10 }, 3);
+				g.fillPolygon(new int[] { x, x - arrowSize, x + arrowSize }, new int[] { y, y - arrowSize*3, y - arrowSize*3 }, 3);
 
 				// Draw Treatment Name (if not same treatment than before)
 				g.setColor(UIUtils.getDilutedColor(Color.BLACK, g.getColor()));
-				Rectangle r = new Rectangle(x - 3, y - getHeight(group, subgroupNo), nextXWithTreatment - x, getHeight(group, subgroupNo) * 2);
+				Rectangle r = new Rectangle(x - arrowSize, y - getHeight(group, subgroupNo), nextXWithTreatment - x, getHeight(group, subgroupNo) * 2);
 				g.setClip(r);
 
 				String s = action.getNamedTreatment().getName();
 				if (s == null) s = "NoName";
-				g.drawString(s, x + 3, y - 2);
+				g.drawString(s, x + arrowSize, y - 2);
 			}
 			g.setClip(clip);
 			
@@ -981,11 +972,11 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 						break;
 					}
 				}
-				g.setClip(new Rectangle(x - 3, y - getHeight(group, subgroupNo), nextXWithSampling - x, getHeight(group, subgroupNo) * 2));
+				g.setClip(new Rectangle(x - arrowSize, y - getHeight(group, subgroupNo), nextXWithSampling - x, getHeight(group, subgroupNo) * 2));
 
 				// Draw Sampling Arrow
 				g.setColor(Color.RED);
-				g.fillPolygon(new int[] { x - 3, x, x + 3 }, new int[] { y + 1, y + 10, y + 1 }, 3);
+				g.fillPolygon(new int[] { x - arrowSize, x, x + arrowSize }, new int[] { y + 1, y + arrowSize*3, y + 1 }, 3);
 			}
 			
 			y = getSamplingY(group, subgroupNo);
@@ -993,23 +984,23 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 				String s = action.getNamedSampling1().getName() + (action.getNamedSampling1().getStudy() != null && !study.equals(action.getNamedSampling1().getStudy()) ? "(" + action.getNamedSampling1().getStudy() + ")" : "");
 
 				g.setColor(Color.RED);
-				g.drawString(s, x + 3, y);
-				y += 8;
+				g.drawString(s, x + arrowSize, y);
+				y += g.getFont().getSize();
 			}
 			if (action.getNamedSampling2() != null) {
 				String s = action.getNamedSampling2().getName() + (action.getNamedSampling2().getStudy() != null && !study.equals(action.getNamedSampling2().getStudy()) ? "(" + action.getNamedSampling2().getStudy() + ")" : "");
 				g.setColor(Color.RED);
-				g.drawString(s, x + 3, y);
-				y += 8;
+				g.drawString(s, x + arrowSize, y);
+				y += g.getFont().getSize();
 			}
 
 			// Paint Label
-			g.setClip(new Rectangle(x - 3, y - getHeight(group, subgroupNo), x2 - x, getHeight(group, subgroupNo) * 2));
+			g.setClip(new Rectangle(x - arrowSize, y - getHeight(group, subgroupNo), x2 - x, getHeight(group, subgroupNo) * 2));
 			if (action.getLabel() != null) {
 				g.setColor(Color.DARK_GRAY);
 				String s = action.getLabel();
-				g.drawString(s, x + 3, y);
-				y += 8;
+				g.drawString(s, x + arrowSize, y);
+				y += g.getFont().getSize();
 			}
 
 		} catch (Exception e) {

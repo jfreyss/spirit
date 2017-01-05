@@ -26,8 +26,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
-import javax.swing.SwingConstants;
-
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
@@ -39,11 +37,9 @@ public class PhaseLabel extends JComponentNoRepaint {
 
 	private Phase phase;
 	private Group group;
-	private int verticalAlignment;
 	
 	public PhaseLabel() {
-		setMinimumSize(new Dimension(45, 24));
-		setPreferredSize(new Dimension(50, 24));
+		setMinimumSize(new Dimension(40, 22));
 	}
 	public PhaseLabel(Phase phase, Group group) {
 		this();
@@ -52,6 +48,14 @@ public class PhaseLabel extends JComponentNoRepaint {
 		
 	public void setPhase(Phase phase) {
 		setPhase(phase, null);
+	}
+	
+	private Dimension dim = new Dimension();
+	@Override
+	public Dimension getPreferredSize() {
+		dim.width = getFontMetrics(FastFont.REGULAR).stringWidth(phase==null?"":phase.getShortName());
+		dim.height = 22;
+		return dim;
 	}
 	
 	public void setPhase(Phase phase, Group group) {
@@ -63,19 +67,10 @@ public class PhaseLabel extends JComponentNoRepaint {
 		return phase;
 	}
 	
-	public void setVerticalAlignment(int verticalAlignment) {
-		this.verticalAlignment = verticalAlignment;
-	}
-	
-	public int getVerticalAlignment() {
-		return verticalAlignment;
-	}
-	
-	
-	
 	@Override
-	protected void paintComponent(Graphics graphics) {
+	protected void paintComponent(Graphics graphics) {	
 		Graphics2D g = (Graphics2D) graphics;
+		super.paintComponent(g);
 		int width = getWidth();
 		int height = getHeight();
 		if(isOpaque()) {
@@ -89,21 +84,19 @@ public class PhaseLabel extends JComponentNoRepaint {
 		
 		if(phase==null || !isVisible()) return;
 		
-		int y = verticalAlignment==SwingConstants.TOP? 1: 1 + (getHeight()-24)/2;
-		
 		
 		if(phase.getLabel()==null || phase.getLabel().length()==0) {
 			g.setFont(FastFont.REGULAR);
 			g.setColor(getForeground());
-			g.drawString(phase.getShortName(), 2, y+14);
+			g.drawString(phase.getShortName(), 2, FastFont.REGULAR.getSize()+4);
 		} else {
 			g.setFont(FastFont.SMALLER);
 			g.setColor(Color.GRAY);
-			g.drawString(phase.getLabel(), 2, y+18);
+			g.drawString(phase.getLabel(), 2, FastFont.REGULAR.getSize()+FastFont.SMALLER.getSize()-2);
 
 			g.setFont(FastFont.REGULAR);
 			g.setColor(getForeground());
-			g.drawString(phase.getShortName(), 2, y+10);
+			g.drawString(phase.getShortName(), 2, FastFont.REGULAR.getSize()-1);
 			
 		}
 	}

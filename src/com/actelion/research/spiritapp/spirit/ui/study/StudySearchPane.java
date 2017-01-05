@@ -26,6 +26,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -50,6 +51,7 @@ public class StudySearchPane extends JPanel {
 
 	private final StudySearchTree studySearchTree = new StudySearchTree();
 	
+	private final JButton myStudiesButton = new JButton(new Action_MyStudies());
 	private final JButton searchButton = new JButton(new Action_Search());
 	private final JButton resetButton = new JButton(new Action_Reset());
 	
@@ -61,7 +63,7 @@ public class StudySearchPane extends JPanel {
 		
 		
 		add(BorderLayout.CENTER, new JScrollPane(studySearchTree));
-		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), resetButton, searchButton));
+		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(myStudiesButton, Box.createHorizontalGlue(), resetButton, searchButton));
 		
 		studySearchTree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, new PropertyChangeListener() {
 			@Override
@@ -90,6 +92,18 @@ public class StudySearchPane extends JPanel {
 		}
 	}
 	
+	public class Action_MyStudies extends AbstractAction {
+		public Action_MyStudies() {
+			super("MyStudies");
+		}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			StudyQuery q = new StudyQuery();
+			q.setUser(Spirit.getUser()==null? null: Spirit.getUser().getUsername());
+			query(q);
+		}
+	}
+	
 	public class Action_Reset extends AbstractAction {
 		public Action_Reset() {
 			super("");
@@ -104,9 +118,8 @@ public class StudySearchPane extends JPanel {
 	}
 	
 	public void reset() {
-		StudyQuery q = new StudyQuery();
-		q.setUser(Spirit.getUser()==null? null: Spirit.getUser().getUsername());
-		query(q);
+		studySearchTree.setQuery(new StudyQuery());
+		table.setRows(new ArrayList<>());
 	}
 	
 	public void query(final StudyQuery query) {
@@ -114,9 +127,6 @@ public class StudySearchPane extends JPanel {
 			List<Study> studies;
 			@Override
 			protected void doInBackground() throws Exception {
-				//Clear Cache
-//				JPAUtil.clear();
-				
 				//Query Studies
 				studies = DAOStudy.queryStudies(query, Spirit.getUser());
 			}
@@ -129,12 +139,8 @@ public class StudySearchPane extends JPanel {
 					table.setSelection(studies);
 				}
 				SpiritContextListener.setStatus(studies.size() + " Studies");
-			}
-			
-		};
-		
-		
-		
+			}			
+		};		
 	}
 	
 	public JButton getSearchButton() {

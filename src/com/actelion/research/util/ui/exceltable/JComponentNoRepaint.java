@@ -140,4 +140,13 @@ public class JComponentNoRepaint extends JComponent {
 		}
 		paintBorder(g);
 	}
+	
+	@Override
+	protected void paintComponent(Graphics g) {
+		UIUtils.applyDesktopProperties(g);
+		if(isOpaque()) {
+			((Graphics2D)g).setBackground(getBackground());
+			g.clearRect(0, 0, getWidth(), getHeight());
+		}
+  	}
 }
