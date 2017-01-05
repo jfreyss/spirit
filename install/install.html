@@ -36,9 +36,8 @@
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
 			<li><a href="../concept/concept.html">Concept</a></li>
-            <li><a href="../demo/demo.html">Demo</a></li>
+            <li class="active"><a href="../install/install.html">Download & Installation</a></li>
             <li><a href="../doc/index.html">Documentation</a></li>
-            <li class="active"><a href="../install/install.html">Installation</a></li>
             <li><a href="../about/about.html">About</a></li>
 			<li><a id="forkme_banner" href="https://github.com/jfreyss/spirit">View on GitHub</a></li>
           </ul>
@@ -50,52 +49,52 @@
 	<div class="main container">
 	
 <section>
-	<h0>Installation packages</h0>
+	<h0>Download</h0>
 	<p>
 		<i>Spirit is released under the <a href="https://github.com/jfreyss/spirit/blob/master/LICENSE">GPLv3 license</a>. The software is therefore open-source and free to use, as long as any modification to the source code will be exclusively for your sole purpose, or released within the terms of the license. Any commercial sale (standalone or as part of a package) is forbidden.
 		Spirit is made available to the community is delivered without any warranty, as expressed by the terms of this <a href="https://github.com/jfreyss/spirit/blob/master/DISCLAIMER.md">disclaimer</a> 
 		It is implied that you agree with the terms of the license and the disclaimer, if you decide to install and use this software.
 		</i>
 	</p>
-		Please choose one of the option below
-	<div class="row" style="margin-top:30px">
+	<div class="row">
 		<div class="col-sm-4" style="height:100%">
 			<div style="border: solid 1px #425088; border-radius: 10px;height:200px">
-			<h0 style="font-size:20px; border-bottom: border: solid 1px #425088;  margin-top:0; border-radius: 10px 10px 0 0">Option 1: Windows Installer</h0>
+			<h0 style="font-size:20px; border-top: none; margin-top:0; border-radius: 10px 10px 0 0">Option 1: Windows Installer</h0>
 			<p style="padding:5px">
 				If you have a Windows Operating system, run the installer:<br><br>
-				<a href="https://github.com/jfreyss/spirit/releases/download/v2.1.2/spirit-2.1.2.exe" class="btn btn-primary">Spirit-2.1.2.exe</a><br>
+				<a href="https://github.com/jfreyss/spirit/releases/download/v2.1.3/spirit-2.1.3.exe" class="btn btn-primary">Spirit-2.1.3.exe</a><br>
 			</p>
 			</div>
 		</div>
 		<div class="col-sm-4" style="height:100%">
 			<div style="border: solid 1px #425088; border-radius: 10px;height:200px">
-			<h0 style="font-size:20px; border-bottom: border: solid 1px #425088;  margin-top:0; border-radius: 10px 10px 0 0">Option 2: Start from browser</h0>
+			<h0 style="font-size:20px; border-top: none; margin-top:0; border-radius: 10px 10px 0 0">Option 2: Start from browser</h0>
 			<p style="padding:5px">
-				For all Operating Systems.<br> <a href="https://java.com/en/download/">Java 8+</a> must be installed.<br><br>
+				For any Operating System.<br> <a href="https://java.com/en/download/">Java 8+</a> must be installed to open this file:<br><br>
 				<a href="../webstart/spirit.jnlp" class="btn btn-primary">Spirit Webstart</a><br>
 			</p>
 			</div>
 		</div>
 		<div class="col-sm-4" style="height:100%">
 			<div style="border: solid 1px #425088; border-radius: 10px;height:200px">
-			<h0 style="font-size:20px; border-bottom: border: solid 1px #425088; margin-top:0; border-radius: 10px 10px 0 0">Option 3: Binaries</h0>
+			<h0 style="font-size:20px; border-top: none; margin-top:0; border-radius: 10px 10px 0 0">Option 3: Binaries</h0>
 			<p style="padding:5px">
 				For advanced users or to install it in a production environment:<br><br>
-				<a href="https://github.com/jfreyss/spirit/releases/download/v2.1.2/spirit-bin-2.1.2.zip" class="btn btn-primary">Spirit-bin.2.1.2.zip</a><br>
+				<a href="https://github.com/jfreyss/spirit/releases/download/v2.1.3/spirit-bin-2.1.3.zip" class="btn btn-primary">Spirit-bin.2.1.3.zip</a><br>
 			</p>
 			</div>
-		</div>
-		
+		</div>		
 	</div>
+	Don't hesitate to send an <a href=mailto:spirit-bio@outlook.com">email</a> for any question.
 </section>
 <section>
-	<h1>Software requirements</h1>
+	<h0>Custom Installation</h0>
+	<h1>Requirements</h1>
 	<dl>
 		<dt>Operating System</dt>
 		<dd>Spirit, being entirely written in Java, can run on any operating systems. It has been tested on Windows, MacOS, Linux. </dd>
 		<dt>Java</dt>
-		<dd>You must have the <strong>Java JRE 1.7+</strong> installed, which should already have been installed on your operating system. If not, please download the latest version of <a href="https://java.com/download">Java</a> </dd>
+		<dd>You must have the <strong>Java JRE 1.8+</strong> installed, which should already have been installed on your operating system. If not, please download the latest version of <a href="https://java.com/download">Java</a> </dd>
 		<dt>
 		<dt>Database</dt>
 		<dd>Spirit comes preinstalled with the <a href="http://hsqldb.org/">HyperSQL</a> Database, but it can work with the following relational databases: 
@@ -108,47 +107,49 @@
 </section>
 
 <section> 
-	<h1>Spirit Installation</h1> 
-	There are different ways to install Spirit depending of your needs. Option 1 is best for trying, option 3 is best for productive settings.
+	<h1>Spirit advanced installation</h1> 
+	There are different ways to install Spirit depending of your needs. An external database can be configured as shown in the next section.
 	<dl>
-		<dt>Option 1: Spirit from GitHub
-		<dd>
-        <a class="fancybox pull-md-right" href="../concept/install1.png"><img src="../concept/install1.png" title="Local Install"/></a>
-        It is possible to access Spirit without installing the program on your drive. The advantages is that you will always run the latest version, but the disadvantage is that you will have no control on the updates (this option is therefore not recommended).
-		<ul>
-			<li>Install <a href="https://www.java.com/en/download/"> Java JRE </a> if you don't have it already
-			<li>Execute the latest version on the <a href="../demo/demo.html"> Demo </a> page
-			<li>That's all, a local HSQL database is created under the ".spirit" folder under your home folder of your computer.
-		</ul>
-			
-		<dt>Option 2: <b>local installation</b> of Spirit
+		<dt>Option 1: <b>local installation</b> of Spirit through a Windows installer
 		<dd>
         <p>
-        To have a fixed version of Spirit, the best is to download the binaries and to run the program on those binaries. 
-		<ul>
-			<li>Install <a href="https://www.java.com/en/download/"> Java JRE </a> if you don't have it already
-			<li>Download the latest release of Spirit-bin from <a href="https://github.com/jfreyss/spirit/releases"> GitHub </a>
-			<li>Unzip it somewhere on your <b>disk</b>
-			<li>Edit the file "spirit.jnlp" and replace the second line:<br> <code>codebase="https://jfreyss.github.io/spirit/webstart/spirit-bin"</code> by:<br> <code>codebase="spirit-bin"</code>.
-			<li>Run spirit.jnlp by double clicking on it
-			<li>You can can configure an external database as shown in the next section.
-		</ul>
+        This is the simplest option
+		<ol>
+			<li>Download and execute the Exe installer, to have the application and its shortcut installed. Be sure to accept to run the installer even if Windows complain about the application not being secure.
+			<li>Execute spirit.exe
+		</ol>		
         </p>
+		
+		<dt>Option 2: <b>local installation</b> of Spirit
+		<dd>
+        It is possible to access Spirit without installing the program on your drive. The advantages is that you will always run the latest version, but the disadvantage is that you will have no control on the updates (this option is therefore not recommended).
+		<ol>
+			<li>Install <a href="https://www.java.com/en/download/"> Java JRE </a> if you don't have it already
+			<li>Execute the Spirit webstart version, a shortcut will be created for 
+		</ol>
+			
 		<dt>Option 3: <b>server installation</b> of Spirit
 		<dd>
-        <a class="fancybox pull-md-right" href="../concept/install2.png"><img src="../concept/install2.png" title="Server Install"/></a>
         To have a fixed version of Spirit, the best is to download the binaries and to run the program on those binaries. You need the help of an IT specialist for the server installation.
-		<ul>
+		<ol>
 			<li>Install <a href="https://www.java.com/en/download/"> Java JRE </a> if you don't have it already
 			<li>Download the latest release of Spirit-bin from <a href="https://github.com/jfreyss/spirit/releases"> GitHub </a>
 			<li>Unzip it somewhere on your <b>webserver</b>. If you have <a href="http://tomcat.apache.org/">Tomcat</a> installed, you can copy the spirit folder under webapp.
-			<li>Edit the file "spirit.jnlp" and replace the second line:<br> <code>codebase="https://jfreyss.github.io/spirit/webstart/spirit-bin"</code> by:<br> <code>codebase="{http://YourServer:port}/spirit/spirit-bin"</code>.
+			<li>Edit the file "spirit.jnlp" and replace the second line:<br> <code>codebase="https://jfreyss.github.io/spirit/webstart/spirit-bin"</code><br> by:<br> <code>codebase="{http://YourServer:port}/spirit/spirit-bin"</code>.
 			<li>Test the installation by typing {http://YourServer:port}/spirit/" into your browser
 			<li>Configure an external database as shown in the next section.
-		</ul>
+		</ol>
 </section>
 <section>
-	<h1>External Database</h1>
+	<h1>Database configuration</h1>
+    <h2>Hypersonic SQL</h2>
+	<p>
+		The Hypersonic SQL database is a Java database, which comes by default with Spirit. It is good for testing or working with small data. It is nevertheless not advised to use it in productive environment (no backup, lack of administrative features).
+	</p>
+	<p>
+		The first time you start Spirit, a local Hypersonic DB is created by default and you can immediately start working.<br> No configuration settings are needed.
+	</p>
+	
     <h2>MySQL</h2>
     <p>
 	<ol>
