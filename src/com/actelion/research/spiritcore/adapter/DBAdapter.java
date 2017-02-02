@@ -44,6 +44,7 @@ import java.util.Set;
 
 import org.slf4j.LoggerFactory;
 
+import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.Location;
@@ -322,12 +323,15 @@ public abstract class DBAdapter {
 	 * @throws Exception
 	 */
 	public void postInit() throws Exception {
-		LocaleFormat localeFormat = LocaleFormat.SWISS;
 		String format = SpiritProperties.getInstance().getValue(PropertyKey.DATE_MODE);
 		if(format.length()>0) {
-			localeFormat = LocaleFormat.get(format);
-			if(localeFormat==null) throw new Exception("Invalid LocaleFormat in spirit_property: "+format);
-			FormatterUtils.setLocaleFormat(localeFormat);
+			LocaleFormat localeFormat = LocaleFormat.get(format);
+			if(localeFormat==null) {
+				System.err.println("Invalid LocaleFormat in spirit_property: " + PropertyKey.DATE_MODE + " = " + format);
+				FormatterUtils.setLocaleFormat(LocaleFormat.INTL);
+			} else {
+				FormatterUtils.setLocaleFormat(localeFormat);
+			}
 		}
 	}
 
@@ -397,17 +401,32 @@ public abstract class DBAdapter {
 		return conn;
 	}
 
-
+	
 	public Set<Location> getAutomatedStoreLocation() {
 		if(getAutomaticStores()==null) return new HashSet<Location>();
 		return getAutomaticStores().keySet();
 		
 	}
 	
+	/**
+	 * If a biosample is in this location, gives a option to order the sample through a web interface
+	 * @param loc
+	 * @return
+	 */
 	public boolean isInAutomatedStore(Location loc) {
 		return loc!=null && getAutomatedStoreLocation().contains(loc);
 	}
 
+	
+	/**
+	 * Can be overiddent by sublasses to prepopulate the biosample with the data from an external DB.
+	 * This function is called from the UI when a new sample has to be created
+	 * @param sample
+	 * @return true if the sample has been populated
+	 */
+	public boolean populateFromExternalDB(Biosample sample) throws Exception {
+		return false;
+	}
 	
 	
 }

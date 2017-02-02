@@ -21,11 +21,12 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.editor;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.util.Collection;
 
 import javax.swing.AbstractCellEditor;
-import javax.swing.JComponent;
+import javax.swing.BorderFactory;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 
@@ -35,7 +36,6 @@ import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.util.ui.JTextComboBox;
-import com.actelion.research.util.ui.exceltable.AlphaNumericalCellEditor;
 
 /**
  * AutoCompletionCellEditor
@@ -62,10 +62,11 @@ public class AutoCompletionCellEditor extends AbstractCellEditor implements Tabl
 					throw new IllegalArgumentException("Invalid choices");
 				}
 			}
-			return choices;
-				
+			return choices;				
 		}
 	};
+	
+	
 	
 	public AutoCompletionCellEditor(final Biotype biotype) {
 		this.biotype = biotype;
@@ -82,7 +83,8 @@ public class AutoCompletionCellEditor extends AbstractCellEditor implements Tabl
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 		
-		AlphaNumericalCellEditor.initComp(textComboBox, (JComponent) table.getCellRenderer(row, column).getTableCellRendererComponent(table, value, isSelected, isSelected, row, column));		
+		textComboBox.setMargin(null);
+		textComboBox.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
 		textComboBox.setText(value==null?"": value.toString());
 		textComboBox.selectAll();
 		return textComboBox;

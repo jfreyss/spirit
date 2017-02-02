@@ -21,13 +21,18 @@
 
 package com.actelion.research.spiritcore.business.property;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import org.jboss.jandex.Main;
 
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.util.MiscUtils;
@@ -56,7 +61,22 @@ public class PropertyKey {
 	public static final PropertyKey USER_LOGIN_ROLE = new PropertyKey(Tab.SYSTEM, "Login with one specific role", "Are users requested to login with a specic role?<br>(if true, the user will be asked for a role upon login instead of having all roles simultaneously)", "user.login.role", "false", "true,false");
 	public static final PropertyKey RIGHT_ROLEONLY = new PropertyKey(Tab.SYSTEM, "Are user-rights role-based only", "Are the rights only role based??<br>(if true, the rights are purely role based and not user/dept specific)", "user.login.dept", "false", "true,false");
 	public static final PropertyKey RIGHTS_MODE = new PropertyKey(Tab.SYSTEM, "User Rights", "open=all study designs are viewable, all biosamples and their results are readable.<br>restricted=biosamples and their results are limited to department", "rights.mode", "restricted", "open, restricted");
-	public static final PropertyKey DATE_MODE = new PropertyKey(Tab.SYSTEM, "DateTime Format", "Localized DateTime format. Be sure to never change it", "format.date", FormatterUtils.LocaleFormat.SWISS.toString(), MiscUtils.flatten(FormatterUtils.LocaleFormat.values()));
+	public static final PropertyKey DATE_MODE = new PropertyKey(Tab.SYSTEM, "DateTime Format", "Localized DateTime format. Be sure to never change it", "format.date", FormatterUtils.LocaleFormat.SWISS.toString(), MiscUtils.flatten(FormatterUtils.LocaleFormat.values())) {
+		@Override
+		public String getDefaultValue() {
+			DateFormat formatter = DateFormat.getDateInstance(DateFormat.SHORT, Locale.getDefault());
+			try {
+				String pattern       = ((SimpleDateFormat)formatter).toPattern();
+				if(pattern.startsWith("d/") || pattern.startsWith("dd/")) return FormatterUtils.LocaleFormat.EUROPEAN.toString();
+				if(pattern.startsWith("d.") || pattern.startsWith("dd.")) return FormatterUtils.LocaleFormat.SWISS.toString();
+				if(pattern.startsWith("yy") || pattern.startsWith("yyyy")) return FormatterUtils.LocaleFormat.INTL.toString();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return FormatterUtils.LocaleFormat.AMERICAN.toString();
+		}
+	};
+	public static final PropertyKey FILE_SIZE = new PropertyKey(Tab.SYSTEM, "Max FileSize [Mo]:", "Max file size for the documents", "system.document.max", "15");
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// STUDY PROPERTIES

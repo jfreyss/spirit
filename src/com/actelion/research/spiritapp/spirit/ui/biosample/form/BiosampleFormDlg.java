@@ -53,8 +53,6 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.services.dao.DAOBarcode;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
-import com.actelion.research.spiritcore.services.dao.DAOBiotype;
-import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JExceptionDialog;

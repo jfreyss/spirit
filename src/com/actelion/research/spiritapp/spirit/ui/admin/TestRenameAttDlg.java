@@ -77,7 +77,7 @@ public class TestRenameAttDlg extends JSpiritEscapeDialog {
 			if(att.getDataType()==DataType.AUTO || att.getDataType()==DataType.LIST) {
 				atts.add(att);
 			}
-			text += "<tr><td>" + att.getIndex() + "</td><td><b>" + att.getName() + "</td><td>"+ att.getDataType().getDescription() + "</td></tr>";
+			text += "<tr><td>" + att.getIndex() + "</td><td><b>" + att.getName() + "</td><td>"+ att.getDataType().getName() + "</td></tr>";
 		}
 		text += "</table></html>";
 		JLabel testLabel = new JLabel(text);

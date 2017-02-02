@@ -24,12 +24,14 @@ package com.actelion.research.spiritapp.spirit.ui.biosample.column;
 import javax.swing.JComponent;
 import javax.swing.table.TableCellEditor;
 
+import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleTableModel;
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.GroupCellEditor;
 import com.actelion.research.spiritapp.spirit.ui.study.GroupLabel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Study;
+import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
@@ -59,6 +61,7 @@ public class StudyGroupColumn extends Column<Biosample, Group> {
 	
 	@Override
 	public Group getValue(Biosample row) {
+		if(SpiritRights.isBlindAll(row.getInheritedStudy(), Spirit.getUser())) return null;
 		return row.getInheritedGroup();
 	}
 	
@@ -94,7 +97,7 @@ public class StudyGroupColumn extends Column<Biosample, Group> {
 	
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
-		groupLabel.setGroup(row.getInheritedGroup());
+		groupLabel.setGroup((Group)value);
 		return groupLabel;
 	}
 	

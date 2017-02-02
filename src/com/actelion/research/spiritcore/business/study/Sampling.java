@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -127,7 +126,7 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	/**
 	 * attachedSamples: refresh but with orphan removal (so that, remove will delete the samples)
 	 */
-	@OneToMany(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY, mappedBy="attachedSampling")
+	@OneToMany(cascade={}, fetch=FetchType.LAZY, mappedBy="attachedSampling")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OrderBy(value="sampleId")
 	@BatchSize(size=64)

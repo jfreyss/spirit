@@ -25,10 +25,11 @@ import java.util.EventListener;
 
 import javax.swing.JComponent;
 
-public class TextChangeListener implements EventListener {
+@FunctionalInterface
+public interface TextChangeListener extends EventListener {
 	/**
 	 * Only called when changed to a new value
 	 * @param src
 	 */
-	public void textChanged(JComponent src) {}
+	public void textChanged(JComponent src);
 }

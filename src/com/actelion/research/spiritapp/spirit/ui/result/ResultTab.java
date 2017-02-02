@@ -53,7 +53,7 @@ public class ResultTab extends JPanel implements ISpiritTab {
 		this(null);
 	}
 	public ResultTab(Biotype forcedBiotype) {
-		this.pivotCardPanel = new PivotCardPanel(null, true, null);
+		this.pivotCardPanel = new PivotCardPanel(null, null);
 		this.searchPane = new ResultSearchPane(pivotCardPanel, forcedBiotype);
 		
 		JPanel queryPanel = new JPanel(new BorderLayout());

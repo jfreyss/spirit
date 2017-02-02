@@ -97,26 +97,28 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		namedSamplingComboBox = new NamedSamplingComboBox(study.getNamedSamplings(), true);
 		
 		//Components
+//		JButton newSamplingButton = new JButton("New Sampling");
+//		newSamplingButton.addActionListener(e -> {
+//			CreateChildrenDlg
+//		});
+		
 		JButton newPhaseButton = new JButton("New Phase");
-		newPhaseButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				String phaseName = JOptionPane.showInputDialog(AddExceptionalSamplingDlg.this, "Please enter the new phase (Format: " + study.getPhaseFormat() + ")", "New Phase", JOptionPane.QUESTION_MESSAGE);
-				if(phaseName==null) return;
-				try {
-					Phase newPhase = new Phase(phaseName);
-					if(study.getPhase(newPhase.getShortName())!=null) {
-						throw new Exception("The phase "+newPhase+" exists already");
-					}
-							
-					List<Phase> phases = new ArrayList<>();
-					phases.addAll(study.getPhases());
-					phases.add(newPhase);
-					phaseComboBox.setValues(phases);
-					phaseComboBox.setSelection(newPhase);
-				} catch(Exception ex) {
-					JExceptionDialog.showError(ex);
+		newPhaseButton.addActionListener(e-> {
+			String phaseName = JOptionPane.showInputDialog(AddExceptionalSamplingDlg.this, "Please enter the new phase (Format: " + study.getPhaseFormat() + ")", "New Phase", JOptionPane.QUESTION_MESSAGE);
+			if(phaseName==null) return;
+			try {
+				Phase newPhase = new Phase(phaseName);
+				if(study.getPhase(newPhase.getShortName())!=null) {
+					throw new Exception("The phase "+newPhase+" exists already");
 				}
+						
+				List<Phase> phases = new ArrayList<>();
+				phases.addAll(study.getPhases());
+				phases.add(newPhase);
+				phaseComboBox.setValues(phases);
+				phaseComboBox.setSelection(newPhase);
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});		
 		
@@ -159,7 +161,7 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 				UIUtils.createBox(UIUtils.createHorizontalBox(new JLabel("Sample(s): "), sp, Box.createHorizontalGlue()),
 					null,
 					UIUtils.createTable(
-						new JLabel("Apply Template: "), namedSamplingComboBox,
+						new JLabel("Apply Template: "), UIUtils.createHorizontalBox(namedSamplingComboBox/*, newSamplingButton*/),
 						new JLabel("At Phase: "), UIUtils.createHorizontalBox(phaseComboBox, newPhaseButton)				
 						)));
 		
@@ -208,8 +210,12 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		//Proceed with this group/subgroup
 		//Create 2 sets of animals: 1 that will be updated with this sampling (samplesToStayInSubgroup) and 1 that will be moved to a new subgroup (samplesToMoveInNewSubgroup)
 		List<Biosample> toSave = new ArrayList<>();
-		Set<Biosample> samplesToStayInSubgroup = new HashSet<>(study.getTopAttachedBiosamples(group, subgroup));	
-		samplesToStayInSubgroup.removeAll(animals);
+		Set<Biosample> samplesToStayInSubgroup = new HashSet<>(study.getTopAttachedBiosamples(group, subgroup));
+		for (Biosample animal : animals) {
+			if(animal.getStatus().isAvailable()) {
+				samplesToStayInSubgroup.remove(animal);				
+			}
+		}
 		
 		Set<Biosample> samplesToMoveInNewSubgroup = new HashSet<>(animals);
 		

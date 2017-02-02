@@ -23,7 +23,6 @@ package com.actelion.research.spiritapp.spirit;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.net.URL;
@@ -32,7 +31,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.Box;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -143,7 +141,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		if(url!=null) setIconImage(Toolkit.getDefaultToolkit().createImage(url));
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);				
-		UIUtils.adaptSize(this, 1600, 1200);		
+		UIUtils.adaptSize(this, 1920, 1080);		
 		setVisible(true);
 
 		SpiritDB.checkAndLogin();
@@ -162,12 +160,15 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		SwingUtilities.invokeLater(new Runnable() {			
 			@Override
 			public void run() {							
-	  			createMenu();
 				recreateTabs();		
+				int index = tabbedPane.getSelectedIndex();
+				String user = statusBar==null? "": statusBar.getUser();
 				statusBar = new JStatusBar();
 				statusBar.setCopyright("Spirit - (C) Joel Freyss - Actelion");
-				setContentPane(UIUtils.createBox(tabbedPane, null, statusBar));		
+				statusBar.setUser(user);
+				setContentPane(UIUtils.createBox(tabbedPane, null, statusBar));
 				createMenu();
+				tabbedPane.setSelectedIndex(index);
 				validate();
 			}
 		});		
@@ -269,47 +270,16 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		editMenu.add(new ExchangeActions.Action_ExportExchange(this));
 		editMenu.add(new ExchangeActions.Action_ImportExchange());
 		editMenu.add(new JSeparator());
+		
 		SpiritMenu.addEditMenuItems(editMenu, this);
 
-		menuBar.add(Box.createHorizontalStrut(10));
-		
-		menuBar.add(new JSeparator(JSeparator.VERTICAL) {
-			@Override
-			public Dimension getMaximumSize() {return new Dimension(20, 60);}
-		});
-		menuBar.add(Box.createHorizontalStrut(10));
-		
-		
-		menuBar.add(SpiritMenu.getToolsMenu());
-		
+		menuBar.add(SpiritMenu.getToolsMenu());		
 
-		menuBar.add(Box.createHorizontalStrut(10));
-		menuBar.add(new JSeparator(JSeparator.VERTICAL) {
-			@Override
-			public Dimension getMaximumSize() {return new Dimension(20, 60);}
-		});
-		menuBar.add(Box.createHorizontalStrut(10));
 		menuBar.add(SpiritMenu.getDatabaseMenu());
 		
-		menuBar.add(Box.createHorizontalStrut(10));
-		menuBar.add(new JSeparator(JSeparator.VERTICAL) {
-			@Override
-			public Dimension getMaximumSize() {return new Dimension(20, 60);}
-		});
-		menuBar.add(Box.createHorizontalStrut(10));
-
 		menuBar.add(SpiritMenu.getAdminMenu());	
 		
-		menuBar.add(Box.createHorizontalStrut(10));
-		menuBar.add(new JSeparator(JSeparator.VERTICAL) {
-			@Override
-			public Dimension getMaximumSize() {return new Dimension(20, 60);}
-		});
-		menuBar.add(Box.createHorizontalStrut(10));
-
 		menuBar.add(SpiritMenu.getHelpMenu(splashConfig));
-		
-		menuBar.add(Box.createHorizontalGlue());
 		
 		setJMenuBar(menuBar);
 		
@@ -596,13 +566,18 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 		}
 
 
-		//Process arguments
+		//Process arguments		
 		final ArgumentParser argumentParser = new ArgumentParser(args);
-		String studyId = argumentParser.getArgument("studyId");
+		final String studyId = argumentParser.getArgument("studyId");
 		if(studyId!=null) {
-			Study s = DAOStudy.getStudyByStudyId(studyId);
-			LoggerFactory.getLogger(Spirit.class).info("Init with studyId=" + studyId);
-			SpiritContextListener.setStudy(s);
+			new SwingWorkerExtended("Load study", null, SwingWorkerExtended.FLAG_ASYNCHRONOUS500MS) {
+				@Override
+				protected void doInBackground() throws Exception {
+					Study s = DAOStudy.getStudyByStudyId(studyId);
+					LoggerFactory.getLogger(Spirit.class).info("Init with studyId=" + studyId);
+					SpiritContextListener.setStudy(s);
+				}
+			};
 		}
     }
 	

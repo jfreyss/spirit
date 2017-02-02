@@ -21,17 +21,17 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.editor;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.util.List;
 
 import javax.swing.AbstractCellEditor;
-import javax.swing.JComponent;
+import javax.swing.BorderFactory;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.util.ui.JTextComboBox;
-import com.actelion.research.util.ui.exceltable.AlphaNumericalCellEditor;
 
 /**
  * ComboboxCellEditor
@@ -50,11 +50,12 @@ public class MetadataComboboxCellEditor extends AbstractCellEditor implements Ta
 	
 	public MetadataComboboxCellEditor(String csvChoices) {
 		choices = BiotypeMetadata.splitChoices(csvChoices);
+		textComboBox.setMargin(null);
+		textComboBox.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
 	}
 	
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-		AlphaNumericalCellEditor.initComp(textComboBox, (JComponent) table.getCellRenderer(row, column).getTableCellRendererComponent(table, value, isSelected, isSelected, row, column));
 		textComboBox.setText(value==null?"": value.toString());
 		textComboBox.selectAll();
 		return textComboBox;

@@ -55,6 +55,7 @@ import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Phase;
+import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.util.FormatterUtils;
@@ -454,6 +455,12 @@ public class DAORevision {
 			s.setNotes((s.getNotes()==null || s.getNotes().length()==0? "": s + " - ") +  comments);
 			s.setUpdDate(now);
 			s.setUpdUser(user.getUsername());
+//			
+//			for(Biosample b: s.getAttachedBiosamples()) {
+//				if(mapMerged!=null && b.getInheritedStudy()!=null && mapMerged.containsKey(Biosample.class+"_"+b.getId())) {
+//					
+//				}
+//			}
 			
 		} else if(clone instanceof Biosample) {
 			Biosample b = (Biosample) clone;
@@ -464,6 +471,10 @@ public class DAORevision {
 					b.setAttachedStudy(b.getAttachedStudy()==null? null: s);
 					b.setInheritedGroup(b.getInheritedGroup()==null? null: s.getGroup(b.getInheritedGroup().getName()));
 					b.setInheritedPhase(b.getInheritedPhase()==null? null: s.getPhase(b.getInheritedPhase().getName()));
+					if(b.getAttachedSampling()!=null && b.getAttachedSampling().getNamedSampling()!=null) {
+						Sampling sampling = s.getSampling(b.getAttachedSampling().getNamedSampling().getName(), b.getAttachedSampling().getDetailsLong());
+						b.setAttachedSampling(sampling);
+					}
 				} else {
 					success = false;
 				}
@@ -476,13 +487,14 @@ public class DAORevision {
 					success = false;
 				}
 			}
+
 			b.setChildren(new HashSet<Biosample>());
 			b.setUpdDate(now);
 			b.setUpdUser(user.getUsername());
 			
 			//Update linked documents
 			for(BiotypeMetadata bm: b.getBiotype().getMetadata()) {
-				if(bm.getDataType()==DataType.D_FILE) {
+				if(bm.getDataType()==DataType.D_FILE || bm.getDataType()==DataType.FILES) {
 					Document doc = b.getMetadataDocument(bm);
 					b.setMetadataDocument(bm, doc==null? null: new Document(doc.getFileName(), doc.getBytes()));
 				}

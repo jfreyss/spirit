@@ -167,7 +167,7 @@ public class SampleIdLabel extends JComponentNoRepaint {
 		//Quality?
 		if(biosample.getQuality()!=null && biosample.getQuality().getBackground()!=null) {
 			g.setColor(biosample.getQuality().getBackground());
-			g.fillRect(iconW+1, iconW, getWidth(), getHeight()-3);	
+			g.fillRect(iconW+1, 2, getWidth(), iconW);	
 		}
 		
 
@@ -175,7 +175,7 @@ public class SampleIdLabel extends JComponentNoRepaint {
 		if(biosample.getStatus()!=null) {
 			if(biosample.getStatus().getBackground()!=null) {
 				g.setColor(biosample.getStatus().getBackground());
-				g.fillRect(0, 2, iconW-2, iconW-2);		
+				g.fillRect(0, 2, iconW-1, iconW);		
 			}			
 		}		
 		

@@ -79,29 +79,34 @@ public class IOUtils {
 		return sb.toString();
 	}		
 	
-	public static byte[] fileToBytes(File f) throws IOException {
+	public static byte[] getBytes(File f) throws IOException {
 		FileInputStream is = new FileInputStream(f);
 		byte[] res = new byte[(int) f.length()];
-		is.read(res, 0, res.length);
+		is.read(res);
 		is.close();
 		return res;
 	}	
-	public static void bytesToFile(byte[] bytes, File f) throws IOException {
-		ByteArrayInputStream is = new ByteArrayInputStream(bytes);
-		FileOutputStream os = new FileOutputStream(f);		
-		redirect(is, os);
-		is.close();
-		os.close();
-		
+	
+	public static byte[] getBytes(InputStream is) throws IOException {
+		try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+			redirect(is, os);
+			return os.toByteArray();
+		}
 	}	
 	
-	public static void saveStream(InputStream is, OutputStream os) throws IOException {
-		byte[] buf = new byte[512];
-		int c;
-		while(( c = is.read(buf)) > 0) {
-			os.write(buf, 0, c);
+	public static void bytesToFile(byte[] bytes, File f) throws IOException {
+		try(ByteArrayInputStream is = new ByteArrayInputStream(bytes)) {
+			try(FileOutputStream os = new FileOutputStream(f)) {		
+				redirect(is, os);	
+			}
 		}
-	}		
+	}	
+	
+	public static void redirect(byte[] bytes, OutputStream os) throws IOException {
+		try(ByteArrayInputStream is = new ByteArrayInputStream(bytes)) {
+			redirect(is, os);
+		}
+	}	
 
 	public static void redirect(InputStream is, OutputStream os) throws IOException {
 		byte[] buf = new byte[512];
@@ -109,8 +114,7 @@ public class IOUtils {
 		while((c=is.read(buf))>0) {
 			os.write(buf, 0, c);
 		}
-		is.close();
-	}	
+	}		
 
 	public static void redirect(Reader is, Writer os) throws IOException {
 		char[] buf = new char[512];
@@ -118,31 +122,20 @@ public class IOUtils {
 		while((c=is.read(buf))>0) {
 			os.write(buf, 0, c);
 		}
-		is.close();
-	}	
-
-	public static void redirectStream(InputStream is, OutputStream os) throws IOException {
-		byte[] buf = new byte[512];
-		int c;
-		while((c=is.read(buf))>0) {
-			os.write(buf, 0, c);
-		}
-		is.close();
 	}	
 	
 	public static byte[] serialize(Object o) throws IOException {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ObjectOutputStream s = new ObjectOutputStream(out);
-		s.writeObject(o);
-		out.close();
-		return out.toByteArray();
+		try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+			ObjectOutputStream s = new ObjectOutputStream(out);
+			s.writeObject(o);
+			return out.toByteArray();
+		}
 	}
 	
 	public static Object deserialize(byte[] bytes) throws IOException, ClassNotFoundException {
-		ByteArrayInputStream out = new ByteArrayInputStream(bytes);
-		ObjectInputStream s = new ObjectInputStream(out);
-		Object o = s.readObject();
-		out.close();
-		return o;
+		try(ByteArrayInputStream out = new ByteArrayInputStream(bytes)) {
+			ObjectInputStream s = new ObjectInputStream(out);
+			return s.readObject();
+		}
 	}
 }

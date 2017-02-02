@@ -59,7 +59,7 @@ import com.actelion.research.spiritapp.spirit.ui.container.CheckinDlg;
 import com.actelion.research.spiritapp.spirit.ui.container.CheckoutDlg;
 import com.actelion.research.spiritapp.spirit.ui.home.HomeTab;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationTab;
-import com.actelion.research.spiritapp.spirit.ui.location.edit.LocationBatchEditDlg;
+import com.actelion.research.spiritapp.spirit.ui.location.edit.LocationEditDlg;
 import com.actelion.research.spiritapp.spirit.ui.pivot.PivotAnalyzerDlg;
 import com.actelion.research.spiritapp.spirit.ui.result.ResultTab;
 import com.actelion.research.spiritapp.spirit.ui.result.edit.EditResultDlg;
@@ -117,7 +117,7 @@ public class HelpBinder {
 			class2Ref.put(CheckoutDlg.class, "biosample_checkout");
 
 			//these buttons need to be added
-			class2Ref.put(LocationBatchEditDlg.class, "location_edit");
+			class2Ref.put(LocationEditDlg.class, "location_edit");
 			class2Ref.put(EditResultDlg.class, "result_edit");
 			class2Ref.put(PivotDlg.class, "result_customize");
 

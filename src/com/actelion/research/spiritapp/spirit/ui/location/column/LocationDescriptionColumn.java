@@ -26,7 +26,7 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 public class LocationDescriptionColumn extends Column<Location, String> {
 	public LocationDescriptionColumn() {
-		super("Description", String.class, 100);
+		super("Description", String.class, 120);
 	}
 	@Override
 	public String getValue(Location row) {

@@ -109,7 +109,6 @@ public class StudyDetailPanel extends JPanel {
 			}
 		});
 
-		
 		final BiosampleTabbedPane biosamplePane = new BiosampleTabbedPane();
 		biosamplePane.setSelectedTab(BiosampleTabbedPane.HISTORY_TITLE);
 		ListSelectionListener l = new ListSelectionListener() {				
@@ -194,6 +193,7 @@ public class StudyDetailPanel extends JPanel {
 	public StudyDepictor getStudyDepictor() {
 		return studyDepictor;
 	}
+	
 	public StudyEditorPane getStudyPane() {
 		return editorPane;
 	}
@@ -210,7 +210,7 @@ public class StudyDetailPanel extends JPanel {
 			studyDepictor.setStudy(study);
 			refreshTabbedPane();
 		} else {
-			new SwingWorkerExtended("Loading Study", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+			new SwingWorkerExtended("Loading Study", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 				@Override
 				protected void done() {
 					study = JPAUtil.reattach(study);

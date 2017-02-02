@@ -24,8 +24,6 @@ package com.actelion.research.spiritapp.spirit;
 import javax.swing.JMenu;
 import javax.swing.JSeparator;
 
-import com.actelion.research.spiritapp.bioviewer.BioViewer.Action_BatchAliquot;
-import com.actelion.research.spiritapp.bioviewer.BioViewer.Action_BatchAssign;
 import com.actelion.research.spiritapp.spirit.ui.SpiritAction;
 import com.actelion.research.spiritapp.spirit.ui.admin.AdminActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
@@ -33,8 +31,8 @@ import com.actelion.research.spiritapp.spirit.ui.result.ResultActions;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
 import com.actelion.research.util.ui.SplashScreen2;
-import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
+import com.actelion.research.util.ui.UIUtils;
 
 public class SpiritMenu {
 	
@@ -44,9 +42,9 @@ public class SpiritMenu {
 		if(DBAdapter.getAdapter().getUserManagedMode()==UserAdministrationMode.READ_WRITE) {
 			editMenu.add(new SpiritAction.Action_ChangePassword());				
 		}
-		editMenu.add(new SpiritAction.Action_Relogin(UIUtils.getMainFrame(), "Spirit"));
 		editMenu.add(new JSeparator());
 		editMenu.add(new SpiritAction.Action_Refresh(spirit));
+		editMenu.add(new SpiritAction.Action_Relogin(UIUtils.getMainFrame(), "Spirit"));
 		editMenu.add(new SpiritAction.Action_Exit());
 	}
 	
@@ -55,9 +53,10 @@ public class SpiritMenu {
 		toolsMenu.setMnemonic('t');
 		toolsMenu.add(new SpiritAction.Action_PrintLabels());
 		toolsMenu.add(new JSeparator());
-		toolsMenu.add(new BiosampleActions.Action_ScanAndView());
-		toolsMenu.add(new Action_BatchAssign());
-		toolsMenu.add(new Action_BatchAliquot());
+		toolsMenu.add(new SpiritAction.Action_Scan());
+		toolsMenu.add(new SpiritAction.Action_ScanAndView());
+		toolsMenu.add(new SpiritAction.Action_ScanAndAssign());
+		toolsMenu.add(new SpiritAction.Action_ScanAndAliquot());
 		toolsMenu.add(new JSeparator());
 		toolsMenu.add(new SpiritAction.Action_Config());
 		

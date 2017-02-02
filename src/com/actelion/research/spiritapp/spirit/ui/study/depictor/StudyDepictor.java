@@ -29,6 +29,7 @@ import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.RadialGradientPaint;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.event.MouseEvent;
@@ -52,6 +53,7 @@ import javax.swing.ToolTipManager;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Measurement;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
@@ -63,6 +65,7 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.FastFont;
@@ -233,7 +236,25 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			//Paint Groups
 			paintGroups(g);
 
-			// Draw Actions
+			
+			//Show exceptional cases (death, ...): red background
+			if(!SpiritRights.isBlind(study, Spirit.getUser())) {
+				for (Biosample b : study.getAttachedBiosamples()) {
+					if(b.getInheritedGroup()==null) continue;
+					Pair<Status, Phase> lastStatus = b.getLastActionStatus();
+					if(lastStatus.getFirst()!=null && !lastStatus.getFirst().isAvailable()) {
+						Phase p = lastStatus.getSecond();
+						int x = getX(p);
+						int y = getY(b.getInheritedGroup(), b.getInheritedSubGroup());
+						
+						g.setPaint(new RadialGradientPaint(x, y, 14, new float[]{0,1}, new Color[]{UIUtils.getColor(255,0,0,120), UIUtils.getColor(255,255,255,0)}));
+						g.fillOval(x-16, y-12, 32, 24);					
+					}
+				}
+			}
+			
+			
+			//Draw Actions
 			for (Group group : study.getGroups()) {
 				for (int subgroupNo = 0; subgroupNo < group.getNSubgroups(); subgroupNo++) {
 					for (Phase phase : study.getPhases()) {
@@ -241,7 +262,6 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 						paintAction(g, action);
 					}
 					if(isBlind) break;
-
 				}
 			}
 			
@@ -308,14 +328,16 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 		} else if(sel.getPhase()==null && !SpiritRights.isBlind(study, Spirit.getUser())) {
 			StringBuilder sb = new StringBuilder();
 			sb.append("<body><div style='font-size:8px;margin:0;padding:0; background: " + UIUtils.getHtmlColor(UIUtils.getDilutedColor(Color.WHITE, sel.getGroup().getBlindedColor(Spirit.getUsername()))) + "'>");
-			sb.append("<span style='font-size:9px'><b>" + sel.getGroup().getShortName() + "</b> " + sel.getGroup().getNameWithoutShortName() + "</span><br>");
+			sb.append("<span style='font-size:9px'><b>" + MiscUtils.removeHtml(sel.getGroup().getShortName()) + "</b> " + MiscUtils.removeHtml(sel.getGroup().getNameWithoutShortName()) + "</span><br>");
 			Collection<Biosample> biosamples = study.getTopAttachedBiosamples(sel.getGroup());
 			if(biosamples.size()>0 && biosamples.size()<=10) {
 				for (Biosample b : biosamples) {
-					sb.append((sel.getGroup().getNSubgroups()>1?"'"+(1+b.getInheritedSubGroup()):"") + 1 + " - " +b.getSampleIdName()+"<br>");
+//					sb.append((sel.getGroup().getNSubgroups()>1?"'"+(1+b.getInheritedSubGroup()):"") + 1 + " - " +b.getSampleIdName()+"<br>");
+					Pair<Status, Phase> p = b.getLastActionStatus();
+					sb.append(b.getSampleIdName() + (!p.getFirst().isAvailable()? " " + p.getFirst()+ "->" + p.getSecond().getShortName(): "") +  "<br>");
 				}
 			} else {
-				sb.append( - biosamples.size()+" biosamples<br>");
+				sb.append(biosamples.size() + " biosamples<br>");
 			}
 			return "<html><body style='padding:0px;margin:0px'>" + sb.toString();
 			
@@ -328,7 +350,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			try { 
 				StringBuilder sb = new StringBuilder();
 				sb.append("<body><div style='font-size:8px;margin:0;padding:0; background: " + UIUtils.getHtmlColor(UIUtils.getDilutedColor(Color.WHITE, sel.getGroup().getBlindedColor(Spirit.getUsername()))) + "'>");
-				sb.append("<span style='font-size:9px'><b>" + sel.getGroup().getShortName() + (sel.getGroup().getNSubgroups() <= 1 ? "" : "<span style='font-size:8px'> '" + (sel.getSubGroup() + 1) + "</span>") + "</b> / " + sel.getPhase().toString() + "</span>");
+				sb.append("<span style='font-size:9px'><b>" + MiscUtils.removeHtml(sel.getGroup().getShortName()) + (sel.getGroup().getNSubgroups() <= 1 ? "" : "<span style='font-size:8px'> '" + (sel.getSubGroup() + 1) + "</span>") + "</b> / " + sel.getPhase().toString() + "</span>");
 				sb.append("<br>");
 				
 				if (sel.getPhase().equals(sel.getGroup().getFromPhase())) {
@@ -363,7 +385,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 					}	
 					if (action.getNamedSampling2() != null) {
 						NamedSampling s = action.getNamedSampling2();
-						sb.append("<b style='color:#990000'>" + s.getName() + "</u><br>");
+						sb.append("<b style='color:#990000'>" + s.getName() + "</b><br>");
 					}
 					
 					//Label
@@ -374,7 +396,8 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 					List<Biosample> samples =  study.getTopAttachedBiosamples(sel.getGroup(), sel.getSubGroup());
 					if(samples.size()<10) {
 						for (Biosample b : samples) {
-							sb.append((sel.getGroup().getNSubgroups()>1? " '" + (1+b.getInheritedSubGroup()): "") + " " +b.getSampleIdName()+"<br>");
+							Pair<Status, Phase> p = b.getLastActionStatus();
+							sb.append(b.getSampleIdName() + (!p.getFirst().isAvailable()?" " + p.getFirst()+ "->" + p.getSecond().getShortName(): "") +  "<br>");
 						}
 					}
 					
@@ -774,11 +797,16 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 						g.setColor(UIUtils.getForeground(group.getBlindedColor(Spirit.getUser().getUsername())));
 						g.drawString(s1, marginX - g.getFontMetrics().stringWidth(s1) - 2 - 1, y + 3);
 					}
-
-					int nAnimals = group.getSubgroupSize(subgroupNo);
+					int nAnimals; 
+							
+					if(designerMode) {
+						nAnimals = group.getSubgroupSize(subgroupNo);
+					} else {
+						nAnimals = study.getTopAttachedBiosamples(group, subgroupNo).size();
+					}
 					if (nAnimals > 0) {
 						g.setFont(FastFont.MEDIUM);
-						g.setColor(Color.BLACK);					
+						g.setColor(designerMode? Color.BLACK: Color.BLUE);					
 						String s = "" + nAnimals;
 						g.drawString(s, x1 - 3 - g.getFontMetrics().stringWidth(s), y - 1);
 					}

@@ -21,8 +21,6 @@
 
 package com.actelion.research.spiritapp.spirit.ui.util.component;
 
-import java.awt.Color;
-
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 
@@ -34,9 +32,7 @@ public class JHeaderLabel extends JLabel {
 		super();
 		setText(htmlText);
 		setFont(FastFont.BIGGEST);
-		setOpaque(true);
-		setBackground(Color.YELLOW);
-		setBorder(BorderFactory.createCompoundBorder(BorderFactory.createRaisedBevelBorder(), BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+		setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 	}
 	
 	@Override

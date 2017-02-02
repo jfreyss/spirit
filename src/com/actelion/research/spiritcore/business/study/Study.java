@@ -837,7 +837,6 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	
 	@Override
 	public int compareTo(Study s) {
-		if(s==this) return 0;
 		if(s==null) return -1;
 		return -(getStudyId()==null?"":getStudyId()).compareTo(s.getStudyId()==null?"":s.getStudyId());
 	}
@@ -1056,6 +1055,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	}
 	
 	/**
+	 * Returns the attached biosamples (ie those belonging to a group and no phases)
 	 * @return the attachedBiosamples
 	 */
 	public Set<Biosample> getAttachedBiosamples() {

@@ -25,8 +25,10 @@ import javax.swing.JComponent;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.DocumentCellEditor;
+import com.actelion.research.spiritapp.spirit.ui.biosample.editor.DocumentZipCellEditor;
 import com.actelion.research.spiritapp.spirit.ui.util.component.DocumentLabel;
 import com.actelion.research.spiritapp.spirit.ui.util.component.DocumentTextField;
+import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
@@ -69,12 +71,20 @@ public class DocumentColumn extends AbstractLinkerColumn<Document> {
 	
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {
-		return new DocumentCellEditor();
+		if(getType().getDataType()==DataType.FILES) {			
+			return new DocumentZipCellEditor();
+		} else {
+			return new DocumentCellEditor();
+		}
 	}
 	
 	@Override
 	public boolean mouseDoubleClicked(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
-		DocumentTextField.open((Document) value);
-		return true;
+		if(getType().getDataType()==DataType.FILES) {			
+			return false;
+		} else {
+			DocumentTextField.open((Document) value);
+			return true;
+		}
 	}
 }

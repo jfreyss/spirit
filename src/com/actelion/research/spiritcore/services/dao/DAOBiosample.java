@@ -21,10 +21,6 @@
 
 package com.actelion.research.spiritcore.services.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -47,7 +43,6 @@ import javax.persistence.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.ValidationException;
@@ -1058,67 +1053,6 @@ public class DAOBiosample {
 	}
 
 	
-
-	/**
-	 * Connects to the AnimalDB and load the data. The biosample is set to
-	 * "Animal"
-	 * 
-	 * @param sample
-	 * @return
-	 * @throws SQLException
-	 */
-	public static boolean populateFromAnimalDB(Biosample sample) throws Exception {
-		if (sample == null || sample.getSampleId() == null || sample.getSampleId().length() == 0) return false;
-
-
-		Connection conn = null;
-		try {
-			Biotype biotype = DAOBiotype.getBiotype(Biotype.ANIMAL);
-			if (biotype == null) throw new Exception("Cannot find the '" + Biotype.ANIMAL + "' biotype");
-			if (sample.getBiotype() != null && !sample.getBiotype().equals(biotype)) throw new Exception("Populating from animalDB works only for animals");
-			sample.setBiotype(biotype);
-	
-	
-			if(!DBAdapter.getAdapter().isInActelionDomain()) return false;
-			// Make sure the animalId is integer
-			try {
-				Integer.parseInt(sample.getSampleId());
-			} catch (Exception e) {
-				return false;
-			}
-
-			//Load the sampleId form the animal DB
-			conn = DBAdapter.getAdapter().getConnection();
-			String sql = "select type, sex, species, delivery_date, order_id from animal.animal, animal.animal_type where animal_type.short_type = animal.short_type and animal.animal_id = ?";
-			PreparedStatement stmt = conn.prepareStatement(sql);
-			stmt.setString(1, sample.getSampleId());
-			ResultSet rs = stmt.executeQuery();
-			if (!rs.next()) {
-				rs.close();
-				stmt.close();
-				return false;
-			} else {
-
-				sample.setBiotype(biotype);
-				sample.setMetadataValue("PO Number", rs.getString("order_id"));
-				sample.setMetadataValue("Delivery Date", FormatterUtils.formatDate(rs.getDate("delivery_date")));
-				sample.setMetadataValue("Sex", rs.getString("sex") == null ? "" : rs.getString("sex").toUpperCase());
-//				sample.setMetadata("Type", rs.getString("species"));
-				sample.setMetadataValue("Type", rs.getString("species") + "/" + rs.getString("type"));
-				rs.close();
-				stmt.close();
-				return true;
-			}
-		} finally {
-			if (conn != null) {
-				try {
-					conn.close();
-				} catch (Exception e2) {
-				}
-			}
-		}
-	}
-
 	public static enum BiosampleDuplicateMethod {
 		RETURN_ALL("Returns all having duplicate"), RETURN_OLDEST("Returns the oldests"), RETURN_NEWEST("Returns the newests"), RETURN_OLDEST_WITHOUT_RESULT("Returns The oldest, but keep all with results");
 

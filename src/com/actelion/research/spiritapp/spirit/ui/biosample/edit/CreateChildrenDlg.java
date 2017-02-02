@@ -43,12 +43,15 @@ import javax.swing.SpinnerNumberModel;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
+import com.actelion.research.spiritapp.spirit.ui.study.PhaseComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.sampling.NamedSamplingComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.sampling.NamedSamplingDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.sampling.NamedSamplingEditorPane;
+import com.actelion.research.spiritapp.spirit.ui.util.component.JHeaderLabel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
+import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
@@ -57,7 +60,6 @@ import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.helper.BiosampleCreationHelper;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
-import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
@@ -67,28 +69,40 @@ public class CreateChildrenDlg extends JEscapeDialog {
 	private JToggleButton radio1 = new JToggleButton("Manual creation");
 	private JToggleButton radio2 = new JToggleButton("Use a sampling's template");
 	
-	//
 	private final JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
 	private final BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 	
-	//
 	private final NamedSamplingComboBox namedSamplingComboBox = new NamedSamplingComboBox();
 	
 	private final List<Biosample> parents;
 	private List<Biosample> children;
+	private PhaseComboBox phaseComboBox ;
 	
-	public CreateChildrenDlg(List<Biosample> parents) {		
+	public CreateChildrenDlg(List<Biosample> parents, Phase phase) {		
 		super(UIUtils.getMainFrame(), "Add Children", true);
 		
 		this.parents = parents;
 		
 		final Set<Biotype> types = Biosample.getBiotypes(parents);
 		final Biotype type = types.size()==1? types.iterator().next(): null;
+		Set<Study> studies = Biosample.getStudies(parents);
+		Set<Phase> phases = Biosample.getPhases(parents);
+		System.out.println("CreateChildrenDlg.CreateChildrenDlg() "+parents+" > "+studies);
+		if(studies.size()==1) {
+			phaseComboBox = new PhaseComboBox(studies.iterator().next().getPhases());
+			phaseComboBox.setEnabled(phases.size()==0 || (phases.size()==1 && phases.iterator().next()==null));
+			phaseComboBox.setSelection(phases.size()==1? phases.iterator().next(): phase);
+		} else {
+			phaseComboBox = new PhaseComboBox();
+			phaseComboBox.setEnabled(false);
+		}
+		
 		
 		//TopPanel
 		JPanel topPanel = UIUtils.createTitleBox("", 
 				UIUtils.createVerticalBox(
-						new JInfoLabel("How do you want to create the children of " + (parents.size()==1? parents.iterator().next().getSampleId(): " these "+parents.size() + " biosamples")),
+						new JHeaderLabel("How do you want to create the children of " + (parents.size()==1? parents.iterator().next().getSampleIdName(): " these "+parents.size() + " biosamples")),
+						UIUtils.createHorizontalBox(new JLabel("Phase: "), phaseComboBox, Box.createHorizontalGlue()),
 						UIUtils.createGrid(radio1, radio2)));
 		
 		
@@ -268,7 +282,7 @@ public class CreateChildrenDlg extends JEscapeDialog {
 				b.setBiotype(biotypeComboBox.getSelection());			
 				b.setInheritedStudy(parent.getInheritedStudy());
 				b.setInheritedGroup(parent.getInheritedGroup());
-				b.setInheritedPhase(parent.getInheritedPhase());
+				b.setInheritedPhase(parent.getInheritedPhase()==null? phaseComboBox.getSelection(): parent.getInheritedPhase());
 				b.setTopParent(parent.getTopParent());
 				b.setParent(parent);
 				res.add(b);											

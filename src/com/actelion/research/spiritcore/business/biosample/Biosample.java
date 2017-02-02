@@ -83,6 +83,7 @@ import com.actelion.research.spiritcore.business.location.Privacy;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Group;
+import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -591,7 +592,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		assert bType!=null;
 		assert biotype!=null;
 		assert biotype.equals(bType.getBiotype());		
-		if(bType.getDataType()!=DataType.D_FILE) throw new IllegalArgumentException(bType+ " is not a document's type");
+		if(bType.getDataType()!=DataType.D_FILE && bType.getDataType()!=DataType.FILES) throw new IllegalArgumentException(bType+ " is not a document's type");
 		if(doc==null) {
 			linkedDocuments.remove(bType.getId());
 		} else {
@@ -646,7 +647,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 */
 	public Document getMetadataDocument(BiotypeMetadata bType) {
 		assert bType!=null;
-		assert bType.getDataType()==DataType.D_FILE;
+		assert bType.getDataType().isDocument();
 		assert biotype!=null;
 		return linkedDocuments.get(bType.getId());
 	}
@@ -872,7 +873,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			
 			//Compare Scanned Position
 			int c;
-			c = o1.getScannedPosition()==null? (o2.getScannedPosition()==null?0: 1) : (o2.getScannedPosition()==null?-1: o1.getScannedPosition().compareTo(o2.getScannedPosition()));
+			c = (o1.getScannedPosition()==null? "":o1.getScannedPosition()).compareTo(o2.getScannedPosition()==null? "":o2.getScannedPosition());
 			if(c!=0) return c;
 			
 			//Compare TopParent (ie type, date)
@@ -881,7 +882,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			
 			c = p1.compareToNoHierarchyCheck(p2);
 			if(c!=0) return c;
-			
+
 			return o1.compareToNoHierarchyCheck(o2);
 		}
 	};
@@ -920,13 +921,15 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	private int compareToNoHierarchyCheck(Biosample o2) {
 		int c;
 		
+		assert getInheritedGroup()==null || getInheritedGroup().getStudy().compareTo(getInheritedStudy())==0;
 		//Compare study
-		c = CompareUtils.compare(getInheritedStudy(), o2.getInheritedStudy());
+		c = -(getInheritedStudy()==null?"": getInheritedStudy().getStudyId()).compareTo((o2.getInheritedStudy()==null?"": o2.getInheritedStudy().getStudyId()));
 		if(c!=0) return c;
 
 		//Compare groups
 		c = CompareUtils.compare(getInheritedGroup(), o2.getInheritedGroup());
 		if(c!=0) return c;		
+		
 		c = CompareUtils.compare(getInheritedSubGroup(), o2.getInheritedSubGroup());
 		if(c!=0) return c;
 		
@@ -939,7 +942,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		if(c!=0) return c;	
 
 		//Compare SampleId (if not hide), or SampleName (if any) 
-		String s1 = getBiotype()==null?"": !getBiotype().isHideSampleId()? getSampleId(): getBiotype().getSampleNameLabel()!=null? getSampleName():"";
+		String s1 =    getBiotype()==null?"":    !getBiotype().isHideSampleId()?    getSampleId():    getBiotype().getSampleNameLabel()!=null?    getSampleName():"";
 		String s2 = o2.getBiotype()==null?"": !o2.getBiotype().isHideSampleId()? o2.getSampleId(): o2.getBiotype().getSampleNameLabel()!=null? o2.getSampleName():"";
 		c = CompareUtils.compare(s1, s2);
 		if(c!=0) return c;
@@ -951,6 +954,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		//Compare containers
 		c = CompareUtils.compare(getContainerType(), o2.getContainerType());
 		if(c!=0) return c;	
+		
 		c = CompareUtils.compare(getContainerId(), o2.getContainerId());
 		if(c!=0) return c;	
 		
@@ -996,7 +1000,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		Biosample top = getTopParent();
 		
 		//Skip going to the hierarchy if there is not study, or if the study matches
-		if(s==null || top.getInheritedStudy()==null || s.equals(top.getInheritedStudy())) return top; 
+		if(s==null || s.equals(top.getInheritedStudy())) return top; 
 		
 		//If not, go up until we find a parent within the same study
 		top = this;
@@ -1097,48 +1101,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	
 	public String getSampleName() {
 		return name;
-	}		
-	
-//	/**
-//	 * Returns the actions of the given class (most recent is first, unmodifiable)
-//	 * @param claz (null to return all)
-//	 * @param cleaned (true to return max one type of action per phase)
-//	 */
-//	@SuppressWarnings("unchecked")
-//	public<T extends ActionBiosample> List<T> getActions(Class<T> claz, boolean cleaned) {
-//		List<T> res = new ArrayList<>();
-//		Set<String> done = new HashSet<>();
-//		for (ActionBiosample a : actions) {
-//			if(claz==null || a.getClass().isAssignableFrom(claz)) {
-//				if(a.getPhase()==null) {
-//					res.add( (T) a);
-//				} else {
-//					String key = a.getClass().getName()+"_"+a.getPhase().getShortName();
-//					if(cleaned && a.getPhase()!=null && done.contains(key)) continue;
-//					res.add( (T) a);
-//					done.add(key);
-//				}
-//			}
-//		}
-//		return Collections.unmodifiableList(res);		
-//	}
-//	
-//	@SuppressWarnings("unchecked")
-//	/**
-//	 * Returns the first action (most recent) matching the given class and the phase
-//	 * @param claz
-//	 * @param phase
-//	 * @return
-//	 */
-//	public<T extends ActionBiosample> T getAction(Class<T> claz, Phase phase) {
-//		if(actions==null) return null;
-//		for (ActionBiosample a : actions) {
-//			if(a.getClass().isAssignableFrom(claz) && phase.equals(a.getPhase())) {
-//				return (T) a;
-//			}
-//		}
-//		return null;
-//	}
+	}			
 	
 	/**
 	 * @param group the department to set
@@ -1691,7 +1654,8 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 				
 					if(bm.isSecundary()) continue;
 					if(bm.getDataType()==DataType.D_FILE) continue;
-					if(bm.getDataType()==DataType.LARGE) continue;
+					else if(bm.getDataType()==DataType.FILES) continue;
+					else if(bm.getDataType()==DataType.LARGE) continue;
 					String s = b.getMetadataValue(bm);
 					if(s==null || s.length()==0) continue;
 					map.add(bm.getName(), s + bm.extractUnit());
@@ -1754,8 +1718,9 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 				if(b.getBiotype()!=null) {
 					for(BiotypeMetadata m: b.getBiotype().getMetadata()) {
 						if(m.getDataType()==DataType.D_FILE) continue;
-						if(m.getDataType()==DataType.LARGE) continue;
-						if(m.isSecundary()) continue;
+						else if(m.getDataType()==DataType.FILES) continue;
+						else if(m.getDataType()==DataType.LARGE) continue;
+						else if(m.isSecundary()) continue;
 						map.add(m.getName(), b.getMetadataValue(m) + m.extractUnit());
 					}
 				}
@@ -1916,6 +1881,15 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		SortedSet<Group> res = new TreeSet<>();
 		for (Biosample b : biosamples) {
 			if(b.getInheritedGroup()!=null) res.add(b.getInheritedGroup());			
+		}
+		return res;		
+	}
+
+	public static SortedSet<NamedSampling> getNamedSamplings(Collection<Biosample> biosamples) {
+		if(biosamples==null) return null;
+		SortedSet<NamedSampling> res = new TreeSet<>();
+		for (Biosample b : biosamples) {
+			if(b.getAttachedSampling()!=null) res.add(b.getAttachedSampling()==null? null: b.getAttachedSampling().getNamedSampling());			
 		}
 		return res;		
 	}
@@ -2349,9 +2323,9 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 */
 	public Biosample getSample(Sampling sampling, Phase phase) {		
 		assert sampling!=null;
-		for(Biosample b: sampling.getSamples()) {
+		for(Biosample b: getHierarchy(HierarchyMode.ATTACHED_SAMPLES)) {
 			if(phase!=null && !phase.equals(b.getInheritedPhase())) continue;
-			if(!this.equals( b.getTopParentInSameStudy())) continue;
+			if(!sampling.equals(b.getAttachedSampling())) continue;
 			return b;
 		}
 		return null;		
@@ -2647,10 +2621,10 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		this.lastAction = s;
 	}
 	
-	public com.actelion.research.spiritcore.business.biosample.ActionBiosample getLastAction() {
-		return com.actelion.research.spiritcore.business.biosample.ActionBiosample.deserialize(getLastActionSerialized());
+	public ActionBiosample getLastAction() {
+		return ActionBiosample.deserialize(getLastActionSerialized());
 	}
-	public void setLastAction(com.actelion.research.spiritcore.business.biosample.ActionBiosample lastAction) {
+	public void setLastAction(ActionBiosample lastAction) {
 		this.lastAction = lastAction==null? null: lastAction.serialize();
 	}
 	

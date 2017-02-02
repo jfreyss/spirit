@@ -50,8 +50,6 @@ import com.actelion.research.spiritapp.spirit.ui.lf.UserIdComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.StudyDepictor;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachAnimalsManuallyDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.StudyDiscardDlg;
-import com.actelion.research.spiritapp.spirit.ui.study.sampling.AddExceptionalSamplingDlg;
-import com.actelion.research.spiritapp.spirit.ui.study.sampling.ApplySamplingDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyInfoDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyWizardDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
@@ -62,12 +60,12 @@ import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
@@ -290,7 +288,7 @@ public class StudyActions {
 			super(phase.toString());
 			this.phase = phase;
 			putValue(AbstractAction.SMALL_ICON, IconType.LINK.getIcon());			
-			setEnabled(phase.getStudy()!=null && phase.getStudy().getPhasesWithGroupAssignments().size()>0 && SpiritRights.canBlind(phase.getStudy(), Spirit.getUser()));
+			setEnabled(phase.getStudy()!=null && phase.getStudy().getPhasesWithGroupAssignments().size()>0 && SpiritRights.canExpert(phase.getStudy(), Spirit.getUser()));
 		}
 		
 		@Override
@@ -342,7 +340,7 @@ public class StudyActions {
 		}
 	}
 	
-
+	/*
 	public static class Action_ExtraSampling extends AbstractAction {
 		private final Study study;
 		public Action_ExtraSampling(Study study) {
@@ -368,7 +366,7 @@ public class StudyActions {
 			}
 		}
 	}
-	
+	*/
 	public static class Action_ManageSamples extends AbstractAction {
 		private final Study study;
 		public Action_ManageSamples(Study study) {
@@ -557,8 +555,6 @@ public class StudyActions {
 				}
 					
 				editMenu.add(new JMenuItem(new Action_ManualAssignment(study)));
-				editMenu.add(new JSeparator());
-				editMenu.add(new Action_ExtraSampling(study));
 			}
 			
 			popupMenu.add(new JSeparator());

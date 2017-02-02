@@ -72,7 +72,7 @@ public class LocationDepartmentColumn extends Column<Location, EmployeeGroup> {
 		if(value==null || value.length()==0) {
 			row.setEmployeeGroup(null);
 		} else {
-			List<EmployeeGroup> res = new ArrayList<EmployeeGroup>();
+			List<EmployeeGroup> res = new ArrayList<>();
 			for(EmployeeGroup eg: DBAdapter.getAdapter().getEmployeeGroups()) {
 				if(eg.getName().equalsIgnoreCase(value)) {
 					res.add(eg);

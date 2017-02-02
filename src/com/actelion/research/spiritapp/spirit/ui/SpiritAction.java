@@ -24,26 +24,36 @@ package com.actelion.research.spiritapp.spirit.ui;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.KeyStroke;
 
 import com.actelion.research.spiritapp.animalcare.AnimalCare;
 import com.actelion.research.spiritapp.bioviewer.BioViewer;
+import com.actelion.research.spiritapp.bioviewer.ui.batchaliquot.BatchAliquotDlg;
+import com.actelion.research.spiritapp.bioviewer.ui.batchassign.BatchAssignDlg;
 import com.actelion.research.spiritapp.slidecare.SlideCare;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.admin.ChangePasswordDlg;
 import com.actelion.research.spiritapp.spirit.ui.admin.database.DatabaseSettingsDlg;
+import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleDlg;
 import com.actelion.research.spiritapp.spirit.ui.config.ConfigDlg;
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.lf.PreferencesDlg;
 import com.actelion.research.spiritapp.spirit.ui.print.BrotherLabelsDlg;
+import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner;
 import com.actelion.research.spiritapp.spirit.ui.util.LoginDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.stockcare.StockCare;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
+import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
@@ -198,7 +208,6 @@ public class SpiritAction {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			HelpBinder.showHelp("");
-//			new HelpDlg();
 		}		
 	}
 	
@@ -279,6 +288,96 @@ public class SpiritAction {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			new DatabaseSettingsDlg(false);
+		}
+	}
+
+
+	public static class Action_Scan extends AbstractAction {
+		public Action_Scan() {
+			super("Scan");
+			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
+			putValue(Action.SMALL_ICON, IconType.SCANNER.getIcon());
+		}
+	
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				SpiritScanner scanner = new SpiritScanner();				
+				Location rack = scanner.scan(null, false, null);
+				if(rack==null) return;
+				
+				SpiritContextListener.setRack(rack);	
+				
+			} catch (Exception ex) {
+				JExceptionDialog.showError(ex);
+			}	
+		}
+	}
+	
+	public static class Action_ScanAndView extends AbstractAction {
+		public Action_ScanAndView() {
+			super("Scan & Set Location");
+			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
+			putValue(Action.SMALL_ICON, IconType.SCANNER.getIcon());
+		}
+	
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				SpiritScanner scanner = new SpiritScanner();				
+				Location rack = scanner.scan(null, true, null);
+				if(rack==null) return;
+				
+				if(rack.getName()==null || rack.getName().length()==0) {
+					//Simple Scan
+					SpiritContextListener.setRack(rack);	
+				} else {
+					//Scan and save
+					List<Biosample> biosamples = new ArrayList<>(rack.getBiosamples());
+					Collections.sort(biosamples);
+					for (Biosample b : biosamples) {
+						b.setLocPos(rack, rack.parsePosition(b.getScannedPosition()));
+						b.setScannedPosition(null);
+					}
+					try {
+						JPAUtil.pushEditableContext(Spirit.getUser());
+						EditBiosampleDlg.createDialogForEditSameTransaction("Save Rack", biosamples).setVisible(true);
+					} finally {
+						JPAUtil.popEditableContext();
+					}
+					SpiritContextListener.setLocation(rack, -1);
+				}
+				
+				
+			} catch (Exception ex) {
+				JExceptionDialog.showError(ex);
+			}	
+		}
+	}
+
+	public static class Action_ScanAndAssign extends AbstractAction {
+		public Action_ScanAndAssign() {
+			super("Scan & Assign to samples");
+			putValue(Action.SMALL_ICON, IconType.SCANNER.getIcon());
+			putValue(AbstractAction.SHORT_DESCRIPTION, "Scan Tubes in order to assign existing biosamples to containerIds");
+		}
+	
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			new BatchAssignDlg().setVisible(true);
+		}
+	}
+
+	public static class Action_ScanAndAliquot extends AbstractAction {
+		public Action_ScanAndAliquot() {
+			super("Scan & Create aliquots from samples");
+			putValue(Action.SMALL_ICON, IconType.SCANNER.getIcon());
+			putValue(AbstractAction.SHORT_DESCRIPTION, "Scan Tubes in order to create aliquots and assign them to containerIds");
+		}
+	
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			new BatchAliquotDlg().setVisible(true);
 		}
 	}
 	

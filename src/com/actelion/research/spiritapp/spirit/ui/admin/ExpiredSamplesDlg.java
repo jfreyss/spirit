@@ -27,7 +27,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -70,9 +69,7 @@ public class ExpiredSamplesDlg extends JEscapeDialog implements ISpiritChangeObs
 		JPanel contentPane = new JPanel(new BorderLayout());
 		contentPane.add(BorderLayout.CENTER, centerPane);
 		setContentPane(centerPane);
-		setSize(1000, 800);
-		setLocationRelativeTo(UIUtils.getMainFrame());		
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		UIUtils.adaptSize(this, 1000, 800);
 		BiosampleActions.attachPopup(expiredTable);
 		BiosampleActions.attachPopup(goingToExpireTable);
 		refresh();
@@ -83,7 +80,7 @@ public class ExpiredSamplesDlg extends JEscapeDialog implements ISpiritChangeObs
 	}
 	
 	public void refresh() {
-		new SwingWorkerExtended() {			
+		new SwingWorkerExtended(getContentPane(), SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {			
 			List<Biosample> alreadyExpired;
 			List<Biosample> goingtoExpire;
 			
@@ -97,10 +94,12 @@ public class ExpiredSamplesDlg extends JEscapeDialog implements ISpiritChangeObs
 				
 				BiosampleQuery alreadyExpiredQuery = new BiosampleQuery();
 				alreadyExpiredQuery.setExpiryDateMax(now);
+				alreadyExpiredQuery.setFilterTrashed(true);
 				
 				BiosampleQuery goingtoExpireQuery = new BiosampleQuery();
 				goingtoExpireQuery.setExpiryDateMin(now);
 				goingtoExpireQuery.setExpiryDateMax(in3Months);
+				goingtoExpireQuery.setFilterTrashed(true);
 
 				
 				alreadyExpired = DAOBiosample.queryBiosamples(alreadyExpiredQuery, Spirit.getUser());

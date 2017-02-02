@@ -66,7 +66,7 @@ public class AnimalCarePanel extends JPanel {
 	private final JButton markDeadButton = new JBigButton(new BiosampleActions.Action_SetLivingStatus((Study)null));
 
 	private final JButton manageButton = new JBigButton(new StudyActions.Action_ManageSamples(null));
-	private final JButton extraSamplingButton = new JBigButton(new StudyActions.Action_ExtraSampling(null));
+//	private final JButton extraSamplingButton = new JBigButton(new StudyActions.Action_ExtraSampling(null));
 	private final JButton measurementButton = new JBigButton(new StudyActions.Action_MeasurementSamples(null));
 		
 	private final JButton reportButton = new JBigButton(new StudyActions.Action_Report(null));
@@ -98,7 +98,7 @@ public class AnimalCarePanel extends JPanel {
 					markDeadButton,
 					Box.createVerticalStrut(10),
 					manageButton,
-					extraSamplingButton,
+//					extraSamplingButton,
 					measurementButton,
 					Box.createVerticalStrut(10),
 					reportButton
@@ -168,18 +168,18 @@ public class AnimalCarePanel extends JPanel {
 		});
 		
 		
-		extraSamplingButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
-					if(study==null || !SpiritRights.canBlind(study, Spirit.getUser())) throw new Exception("You must select a study");
-					new StudyActions.Action_ExtraSampling(study).actionPerformed(e);
-				} catch (Exception ex) {
-					JExceptionDialog.showError(AnimalCarePanel.this, ex);
-				}
-			}
-		});
+//		extraSamplingButton.addActionListener(new ActionListener() {			
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				try {
+//					Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
+//					if(study==null || !SpiritRights.canBlind(study, Spirit.getUser())) throw new Exception("You must select a study");
+//					new StudyActions.Action_ExtraSampling(study).actionPerformed(e);
+//				} catch (Exception ex) {
+//					JExceptionDialog.showError(AnimalCarePanel.this, ex);
+//				}
+//			}
+//		});
 		
 		manageButton.addActionListener(new ActionListener() {			
 			@Override
@@ -252,7 +252,7 @@ public class AnimalCarePanel extends JPanel {
 			groupAssignButton.setEnabled(canBlind && !SpiritRights.isBlindAll(study, Spirit.getUser()));
 			reportButton.setEnabled(canRead && nAnimals>0);
 			markDeadButton.setEnabled(canBlind && nAnimals>0);
-			extraSamplingButton.setEnabled(canBlind && nAnimals>0);
+//			extraSamplingButton.setEnabled(canBlind && nAnimals>0);
 			weighingButton.setEnabled(canBlind && nAnimals>0);
 			manageButton.setEnabled(canBlind && nAnimals>0);
 			measurementButton.setEnabled(canBlind && nAnimals>0);
@@ -263,29 +263,6 @@ public class AnimalCarePanel extends JPanel {
 			editDesignButton.setEnabled(study!=null);
 	}
 			
-	
-	
-//	private void editNotes() throws Exception{
-//		Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
-//		if(study==null || !SpiritRights.canBlind(study, Spirit.getUser())) throw new Exception("You must select a study");
-//				
-//		JTextArea ta = new JTextArea(study.getNotes());
-//		JScrollPane scrollPane = new JScrollPane(ta);		
-//		scrollPane.setPreferredSize(new Dimension(350, 150));
-//		
-//		// pass the scrollpane to the joptionpane.				
-//		int res = JOptionPane.showConfirmDialog(this, scrollPane, "Edit Notes of "+study, JOptionPane.OK_CANCEL_OPTION);
-//		if(res!=JOptionPane.YES_OPTION) return;
-//		try {
-//			JPAUtil.pushEditableContext(Spirit.getUser());
-//			study.setNotes(ta.getText());
-//			DAOStudy.persistStudy(study, Spirit.askForAuthentication());
-//		} finally {
-//			JPAUtil.popEditableContext();
-//			eventStudyChanged();
-//		}
-//		
-//	}
 	
 	public void refresh() {
 		studyComboBox.reload();

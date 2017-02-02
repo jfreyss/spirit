@@ -64,7 +64,7 @@ public abstract class SwingWorkerExtended  {
 	public static final int FLAG_SYNCHRONOUS = 2;
 	public static final int FLAG_ASYNCHRONOUS20MS = 4;
 	public static final int FLAG_ASYNCHRONOUS100MS = 8;
-	public static final int FLAG_ASYNCHRONOUS1000MS = 16;
+	public static final int FLAG_ASYNCHRONOUS500MS = 16;
 	
 	private final String name;	
 	private JFrame frame = null;
@@ -297,9 +297,9 @@ public abstract class SwingWorkerExtended  {
 						return;
 					}
 					
-					if(comp!=null && (flags & (FLAG_ASYNCHRONOUS20MS | FLAG_ASYNCHRONOUS100MS | FLAG_ASYNCHRONOUS1000MS))>0) {
+					if(comp!=null && (flags & (FLAG_ASYNCHRONOUS20MS | FLAG_ASYNCHRONOUS100MS | FLAG_ASYNCHRONOUS500MS))>0) {
 						try {
-							sleep((flags & FLAG_ASYNCHRONOUS20MS)>0?20: (flags & FLAG_ASYNCHRONOUS1000MS)>0? 1000: 100);
+							sleep((flags & FLAG_ASYNCHRONOUS20MS)>0?20: (flags & FLAG_ASYNCHRONOUS500MS)>0? 500: 100);
 						} catch(Throwable e) {
 							endBgProcess();
 							if(DEBUG) System.out.println("SwingWorkerExtended "+name+" -STOP- " +callingThread);
@@ -339,7 +339,7 @@ public abstract class SwingWorkerExtended  {
 			sw.setDaemon(!callingThread.contains("main"));
 			sw.start();
 			//Interrupt threads with the same name if start was delayed 
-			if(comp!=null && (flags & (FLAG_ASYNCHRONOUS20MS | FLAG_ASYNCHRONOUS100MS  | FLAG_ASYNCHRONOUS1000MS))>0) {				
+			if(comp!=null && (flags & (FLAG_ASYNCHRONOUS20MS | FLAG_ASYNCHRONOUS100MS  | FLAG_ASYNCHRONOUS500MS))>0) {				
 				if(currentThreads.get(comp)==null) currentThreads.put(comp, new HashMap<String, Thread>());
 				Thread t2 = currentThreads.get(comp).get(title);
 				if(t2!=null && !t2.isInterrupted()) {

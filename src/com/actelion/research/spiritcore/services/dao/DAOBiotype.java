@@ -168,9 +168,6 @@ public class DAOBiotype {
 						+ (study!=null? " AND b.inheritedStudy = ?2 ":""));
 				if(study!=null) query.setParameter(2, study);
 				query.setMaxResults(3000);
-//				for (Biosample b : (List<Biosample>) query.getResultList()) {
-//					res.add(b.getMetadataValue(metadataType));
-//				}
 				for (String s : (List<String>) query.getResultList()) {
 					String tok = MiscUtils.deserializeIntegerMap(s).get(id);
 					if(tok!=null) res.add(tok);

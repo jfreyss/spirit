@@ -39,7 +39,7 @@ import javax.swing.JPanel;
 public abstract class LongTaskDlg extends JDialog {
 	
 	
-	public LongTaskDlg(String title) throws Exception {
+	public LongTaskDlg(String title) {
 		
 
 		//Open Dialog

@@ -21,11 +21,16 @@
 
 package com.actelion.research.spiritcore.test;
 
+import java.io.File;
+
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.actelion.research.spiritcore.business.Document;
+import com.actelion.research.spiritcore.business.Document.DocumentType;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
+import com.actelion.research.spiritcore.util.IOUtils;
 
 /**
  * Test functions from the business package
@@ -124,5 +129,52 @@ public class BusinessTest {
 		Assert.assertEquals("ONG", g4.getNameWithoutShortName());
 
 	}
+	
+	
+	@Test
+	public void testDocumentZip() throws Exception {
+		//Add 1st doc
+		Document doc = new Document(DocumentType.ZIP);
+		doc.addZipEntry(new Document("1", "abc".getBytes()));
+
+				
+		Document retrieved = doc.getZipEntry(0);
+		Assert.assertNotNull(retrieved);
+		Assert.assertEquals("1", retrieved.getFileName());
+		Assert.assertEquals("abc", new String(retrieved.getBytes()));
+		Assert.assertNull(doc.getZipEntry(1));
+		
+
+		//Add 2nd doc
+		doc.addZipEntry(new Document("2", "def".getBytes()));
+		IOUtils.bytesToFile(doc.getBytes(), new File("d:\\tmp\\zip.zip"));
+		
+		
+		retrieved = doc.getZipEntry(0);
+		Assert.assertNotNull(retrieved);
+		Assert.assertEquals("1", retrieved.getFileName());
+		Assert.assertEquals("abc", new String(retrieved.getBytes()));
+		retrieved = doc.getZipEntry(1);
+		Assert.assertNotNull(retrieved);
+		Assert.assertEquals("2", retrieved.getFileName());
+		Assert.assertEquals("def", new String(retrieved.getBytes()));
+		Assert.assertNull(doc.getZipEntry(3));
+		
+		//delete 1st entry
+		doc.removeZipEntry(0);
+		
+		retrieved = doc.getZipEntry(0);
+		Assert.assertNotNull(retrieved);
+		Assert.assertEquals("2", retrieved.getFileName());
+		Assert.assertEquals("def", new String(retrieved.getBytes()));
+		Assert.assertNull(doc.getZipEntry(1));
+		
+		//delete again
+		doc.removeZipEntry(0);
+		Assert.assertNull(doc.getZipEntry(0));
+		
+
+	}
+
 
 }

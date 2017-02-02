@@ -23,8 +23,10 @@ package com.actelion.research.spiritapp.spirit.ui.biosample.column;
 
 import javax.swing.JComponent;
 
+import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.study.GroupLabel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
@@ -43,6 +45,7 @@ public class StudySubGroupColumn extends Column<Biosample, Integer> {
 	
 	@Override
 	public Integer getValue(Biosample row) {
+		if(SpiritRights.isBlindAll(row.getInheritedStudy(), Spirit.getUser())) return null;
 		return row.getInheritedGroup()==null || row.getInheritedGroup().getNSubgroups()<=1? null: row.getInheritedSubGroup()+1;
 	}
 	

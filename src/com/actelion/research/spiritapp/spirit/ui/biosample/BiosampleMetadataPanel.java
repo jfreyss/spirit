@@ -142,7 +142,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 								}
 								
 								//Location
-								if(b.getLocation()!=null) {
+								if(b.getLocation()!=null && b.getLocation().getId()>0) {
 									Privacy privacy = b.getLocation().getInheritedPrivacy();
 									if(SpiritRights.canRead(b.getLocation(), Spirit.getUser())) {
 										txt.append("<a style='font-size:90%' href='loc:" + b.getLocation().getId() + ":" + b.getPos() + "'>");
@@ -273,6 +273,22 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 					if(metadataType.getDataType()==DataType.D_FILE) {
 						if(b.getMetadataDocument(metadataType)!=null) {
 							txt.append("<td><a href='doc:" + b.getMetadataDocument(metadataType).getId() + "'>" + value + "</a></td>");
+						} else {
+							txt.append("<td style='color:red'>" + value + "</td>");
+						}
+					} else if(metadataType.getDataType()==DataType.FILES) {
+						if(b.getMetadataDocument(metadataType)!=null) {
+							Document zip = b.getMetadataDocument(metadataType);
+							Document entry;
+							txt.append("<td>");
+							try {
+								for (int i = 0; (entry = zip.getZipEntry(i))!=null; i++) {
+									txt.append("<a href='doc:" + b.getMetadataDocument(metadataType).getId() + ":" + i + "'>" + entry.getFileName() + "</a><br>");									
+								}
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+							txt.append("</td>");
 						} else {
 							txt.append("<td style='color:red'>" + value + "</td>");
 						}

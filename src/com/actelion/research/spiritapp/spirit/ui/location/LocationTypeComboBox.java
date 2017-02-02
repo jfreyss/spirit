@@ -23,14 +23,11 @@ package com.actelion.research.spiritapp.spirit.ui.location;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.ImageIcon;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JPopupMenu;
 
 import com.actelion.research.spiritcore.business.location.LocationType;
 import com.actelion.research.spiritcore.business.location.LocationType.LocationCategory;
@@ -45,27 +42,11 @@ public class LocationTypeComboBox extends JGenericComboBox<LocationType> {
 		setPreferredWidth(100);
 		setMaximumRowCount(35);
 		
-		repopulate();
-		
-		
-        Object comp = getUI().getAccessibleChild(this, 0);
-        if (!(comp instanceof JPopupMenu)) {
-          return;
-        }
-        JComponent scrollPane = (JComponent) ((JPopupMenu) comp).getComponent(0);
-        Dimension size = scrollPane.getPreferredSize();
-        size.width = size.width / 2;
-        scrollPane.setPreferredSize(size);
-        scrollPane.setMaximumSize(size);
-
+		repopulate();		
 	}
-
-	
-
-
 	
 	public void repopulate() {
-		List<LocationType> values = new ArrayList<LocationType>();
+		List<LocationType> values = new ArrayList<>();
 		for (LocationType locType : LocationType.getValues()) {
 			values.add(locType);
 		}
@@ -76,7 +57,11 @@ public class LocationTypeComboBox extends JGenericComboBox<LocationType> {
 	public Component processCellRenderer(JLabel comp, LocationType type, int index) {
 		comp.setIcon(type==null? null: new ImageIcon(type.getImageThumbnail()));
 		comp.setIconTextGap(0);
-		comp.setBackground(UIUtils.getDilutedColor(comp.getBackground(), type==null? Color.WHITE: type.getCategory()==LocationCategory.ADMIN?Color.RED: type.getCategory()==LocationCategory.CONTAINER?Color.CYAN:  Color.WHITE));
+		comp.setBackground(UIUtils.getDilutedColor(comp.getBackground(), 
+				type==null? Color.WHITE: 
+				type.getCategory()==LocationCategory.ADMIN? Color.RED: 
+				type.getCategory()==LocationCategory.CONTAINER?Color.CYAN:  
+				Color.WHITE, .9));
 		return comp;
 	}
 

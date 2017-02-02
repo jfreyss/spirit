@@ -42,6 +42,8 @@ import javax.swing.border.Border;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritcore.business.Document;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.IOUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
@@ -64,10 +66,8 @@ public class DocumentTextField extends JCustomTextField {
 		button.setToolTipText("Upload a file");
 		setFocusable(true);
 		setEditable(false);
-//		setOpaque(true);
 		
 		button.setFont(FastFont.SMALLER);
-//		setBackground(Color.WHITE);
 		add(button);
 		
 		button.addActionListener(new ActionListener() {
@@ -98,7 +98,6 @@ public class DocumentTextField extends JCustomTextField {
 		if(!hasFocus() && !button.hasFocus()) return;
 		JCustomLabel currentLabel = new JCustomLabel(document==null?" ": document.getFileName(), Color.BLUE);
 		currentLabel.setOpaque(true);
-//		currentLabel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLoweredBevelBorder(), BorderFactory.createEmptyBorder(2, 2, 2, 2)));
 		currentLabel.setBackground(Color.WHITE);
 		currentLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -131,10 +130,10 @@ public class DocumentTextField extends JCustomTextField {
 			
 			Spirit.getConfig().setProperty("document.uploadDir", f);
 			try {
-				int maxKilo = 15000;
+				int maxKilo = SpiritProperties.getInstance().getValueInt(PropertyKey.FILE_SIZE) * 1000;
 				if(f.length()>maxKilo*1000) throw new Exception("The file is too large: Max: "+maxKilo+"kb");
 				Document document = new Document();
-				document.setBytes(IOUtils.fileToBytes(f));
+				document.setBytes(IOUtils.getBytes(f));
 				document.setFileName(f.getName());
 				document.setCreDate(new Date());
 				document.setCreUser(Spirit.getUser()==null?"??":Spirit.getUser().getUsername());

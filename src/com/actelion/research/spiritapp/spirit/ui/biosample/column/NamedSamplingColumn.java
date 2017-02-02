@@ -21,8 +21,6 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.column;
 
-import java.awt.Color;
-
 import javax.swing.JComponent;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -44,15 +42,14 @@ public class NamedSamplingColumn extends Column<Biosample, NamedSampling> {
 	public NamedSampling getValue(Biosample row) {
 		return row==null || row.getAttachedSampling()==null? null: row.getAttachedSampling().getNamedSampling();
 	}
-	
+
 	@Override
-	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
-		JLabelNoRepaint lbl = (JLabelNoRepaint) comp;		
-		NamedSampling ns = (NamedSampling) value;
-		lbl.setText(ns==null?"": ns.getName());
-		lbl.setForeground(Color.RED);
+	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
+		NamedSampling ns = getValue(row);
+		JComponent comp = super.getCellComponent(table, row, rowNo, value);
+		((JLabelNoRepaint)comp).setText(ns==null?"": ns.getName());
+		return comp;
 	}
-	
 	
 	@Override
 	public boolean isMultiline() {

@@ -80,6 +80,7 @@ public class ApplicationErrorLog {
 					//Error
 					String error1 = s.toString();
 					if(error1.length()>maxLength) {
+						error1 = error1.replaceAll("com.actelion.research.", "...");
 						error1 = error1.replaceAll("at org.*?\\)", "at org.").replaceAll("(\tat org.\r\n)++", "\tat org...\r\n");
 						error1 = error1.replaceAll("at java.*?\\)", "at java.").replaceAll("(\tat java.\r\n)++", "\tat java..\r\n");
 						int index = error1.lastIndexOf("\n", maxLength);
@@ -94,6 +95,7 @@ public class ApplicationErrorLog {
 						exception.getCause().printStackTrace(pw);
 						error2 = "\n"+s.toString();
 						if(error2.length()>maxLength) {
+							error2 = error2.replaceAll("com.actelion.research.", "...");
 							error2 = error2.replaceAll("at org.*?\\)", "at org.").replaceAll("(\tat org.\r\n)++", "\tat org...\r\n");
 							error2 = error2.replaceAll("at java.*?\\)", "at java.").replaceAll("(\tat java.\r\n)++", "\tat java..\r\n");
 							int index = error2.lastIndexOf("\n", maxLength);

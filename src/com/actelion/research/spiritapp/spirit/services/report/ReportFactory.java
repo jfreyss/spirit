@@ -44,12 +44,12 @@ import javax.swing.JScrollPane;
 import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport.ReportCategory;
-import com.actelion.research.spiritapp.spirit.services.report.custom.SamplesInVivoReport;
-import com.actelion.research.spiritapp.spirit.services.report.custom.SamplesToxicologyReport;
-import com.actelion.research.spiritapp.spirit.services.report.custom.SpecimenFoodWaterReport;
-import com.actelion.research.spiritapp.spirit.services.report.custom.SpecimenStatusReport;
-import com.actelion.research.spiritapp.spirit.services.report.custom.SpecimenWeighingInVivoReport;
-import com.actelion.research.spiritapp.spirit.services.report.custom.SpecimenWeighingToxicologyReport;
+import com.actelion.research.spiritapp.spirit.services.report.custom.SampleMeasurementReport;
+import com.actelion.research.spiritapp.spirit.services.report.custom.SampleMeasurementPerGroupReport;
+import com.actelion.research.spiritapp.spirit.services.report.custom.FoodWaterReport;
+import com.actelion.research.spiritapp.spirit.services.report.custom.StatusReport;
+import com.actelion.research.spiritapp.spirit.services.report.custom.WeighingAllReport;
+import com.actelion.research.spiritapp.spirit.services.report.custom.WeighingPerPhaseReport;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -170,12 +170,12 @@ public class ReportFactory {
 	private static List<AbstractReport> getAbstractReports() throws Exception {
 		List<AbstractReport> res = new ArrayList<>();
 		if(DBAdapter.getAdapter().isInActelionDomain()) {
-			res.add(new SamplesInVivoReport());
-			res.add(new SamplesToxicologyReport());
-			res.add(new SpecimenFoodWaterReport());
-			res.add(new SpecimenStatusReport());
-			res.add(new SpecimenWeighingInVivoReport());
-			res.add(new SpecimenWeighingToxicologyReport());
+			res.add(new SampleMeasurementReport());
+			res.add(new SampleMeasurementPerGroupReport());
+			res.add(new FoodWaterReport());
+			res.add(new StatusReport());
+			res.add(new WeighingAllReport());
+			res.add(new WeighingPerPhaseReport());
 		} else {
 			res.addAll(getAbstractReports("com.actelion.research.spiritapp.spirit.services.report.custom"));
 		}

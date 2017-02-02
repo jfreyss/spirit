@@ -123,12 +123,18 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		}
 		boolean someAbstractComponent = false;
 		for (Biotype biotype : types) {
-			if(biotype.getCategory()==BiotypeCategory.PURIFIED && biotype.isAbstract()) {
+			if(biotype.isAbstract()) {
 				someAbstractComponent = true; break;
 			}
 		}
 
-		boolean hasStudy = false;
+		boolean someLiving = false;
+		for (Biotype biotype : types) {
+			if(biotype.getCategory()==BiotypeCategory.LIVING) {
+				someLiving = true; break;
+			}
+		}
+
 		boolean hasPhases = false;
 		boolean hasDifferentTop = false;
 		boolean hasContainers = false;
@@ -136,9 +142,6 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		for (Biosample b : getRows()) {
 			if (b == null) {
 				continue;
-			}
-			if (b.getInheritedStudy() != null) {
-				hasStudy = true;
 			}
 			if (b.getInheritedPhase() != null) {
 				hasPhases = true;
@@ -177,8 +180,8 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		}
 
 		// Study Info
-		if (mode==Mode.FULL && hasStudy) {
-			if(studies.size()>1) columns.add(new StudyIdColumn());
+		if (mode==Mode.FULL && (studies.size()>0 || someLiving)) {
+			columns.add(new StudyIdColumn());
 			columns.add(new StudyGroupColumn());
 			columns.add(new StudySubGroupColumn());
 		}
@@ -248,7 +251,6 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		
 		//Sampling
 		columns.add(new NamedSamplingColumn());
-
 
 		// children
 		if (type!=null && someAbstractComponent) {

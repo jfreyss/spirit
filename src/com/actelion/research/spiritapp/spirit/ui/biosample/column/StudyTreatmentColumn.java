@@ -37,7 +37,7 @@ public class StudyTreatmentColumn extends Column<Biosample, String> {
 	 * If getStudy is not overriden, the group will not be editable
 	 */
 	public StudyTreatmentColumn() {
-		super("Study\nTreatment", String.class, 60, 140);
+		super("\nTreatment", String.class, 60, 140);
 	}	
 	
 	@Override

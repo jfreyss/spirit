@@ -70,7 +70,6 @@ public class CompareUtils {
 		} else if(!o1.startsWith("-") && o2.startsWith("-")) {
 			return 1;
 		}
-		
 		final String separators = "_/,;-.:\n\t+ ";
 		StringTokenizer st1 = new StringTokenizer(o1, separators, true);
 		StringTokenizer st2 = new StringTokenizer(o2, separators, true);
@@ -159,6 +158,8 @@ public class CompareUtils {
 			return compare((Object[]) o1, (Object[]) o2);
 		} else if((o1 instanceof Comparable) && o2.getClass().isAssignableFrom(o1.getClass())) {			
 			return ((Comparable) o1).compareTo(o2);
+		} else if((o1 instanceof Comparable) && o1.getClass().isAssignableFrom(o2.getClass())) {			
+			return -((Comparable) o2).compareTo(o1);
 		} else {
 			return compare(o1.toString(), o2.toString());			
 		}

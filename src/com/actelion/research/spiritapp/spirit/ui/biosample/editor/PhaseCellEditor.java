@@ -21,13 +21,14 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.editor;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import javax.swing.AbstractCellEditor;
-import javax.swing.JComponent;
+import javax.swing.BorderFactory;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 
@@ -36,7 +37,6 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JTextComboBox;
-import com.actelion.research.util.ui.exceltable.AlphaNumericalCellEditor;
 
 
 /**
@@ -46,11 +46,11 @@ import com.actelion.research.util.ui.exceltable.AlphaNumericalCellEditor;
  */
 public class PhaseCellEditor extends AbstractCellEditor implements TableCellEditor {
 
-	public PhaseCellEditor() {
-	}
-	
 	private JTextComboBox textComboBox;
 	private Biosample b;
+	
+	public PhaseCellEditor() {
+	}
 	
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, final int row, int column) {
@@ -70,6 +70,8 @@ public class PhaseCellEditor extends AbstractCellEditor implements TableCellEdit
 				return choices;
 			}
 		};
+		textComboBox.setMargin(null);
+		textComboBox.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
 		if(value==null) {
 			textComboBox.setText("");
 		} else if(value instanceof Phase) {
@@ -78,7 +80,6 @@ public class PhaseCellEditor extends AbstractCellEditor implements TableCellEdit
 		
 		System.out.println("PhaseCellEditor.getTableCellEditorComponent() "+value);
 		
-		AlphaNumericalCellEditor.initComp(textComboBox, (JComponent) table.getCellRenderer(row, column).getTableCellRendererComponent(table, value, isSelected, isSelected, row, column));		
 		textComboBox.selectAll();
 		return textComboBox;
 	}

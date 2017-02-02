@@ -44,7 +44,7 @@ public class ExpandedPivotTemplate extends PivotTemplate {
 
 		setWhere(PivotItemFactory.STUDY_STUDYID, Where.ASCOL);
 		setWhere(PivotItemFactory.STUDY_GROUP, Where.ASCOL);		
-		setWhere(PivotItemFactory.BIOSAMPLE_SAMPLING, Where.ASCOL);
+		setWhere(PivotItemFactory.BIOSAMPLE_METADATA, Where.ASCOL);
 		setWhere(PivotItemFactory.RESULT_TEST, Where.ASCOL);
 		setWhere(PivotItemFactory.RESULT_INPUT, Where.ASCOL);
 		setWhere(PivotItemFactory.RESULT_OUTPUT, Where.ASCOL);

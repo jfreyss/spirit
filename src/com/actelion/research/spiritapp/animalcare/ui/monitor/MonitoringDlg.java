@@ -72,7 +72,6 @@ import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.CompareUtils;
-import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;

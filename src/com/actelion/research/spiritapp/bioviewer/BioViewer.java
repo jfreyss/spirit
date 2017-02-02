@@ -56,8 +56,6 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 
-import com.actelion.research.spiritapp.bioviewer.ui.batchaliquot.BatchAliquotDlg;
-import com.actelion.research.spiritapp.bioviewer.ui.batchassign.BatchAssignDlg;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.SpiritMenu;
 import com.actelion.research.spiritapp.spirit.ui.SpiritAction;
@@ -66,7 +64,6 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleMetadataPane
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleOrRackTab;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTabbedPane;
 import com.actelion.research.spiritapp.spirit.ui.result.ResultActions;
-import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritChangeObserver;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritContextObserver;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
@@ -93,7 +90,6 @@ import com.actelion.research.util.ui.SplashScreen2;
 import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
-import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritContextObserver {
@@ -134,7 +130,7 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 		});
 
 		JButton b1 = new JButton(new ClearAction());
-		JButton b2 = new JButton(new BiosampleActions.Action_ScanAndView());
+		JButton b2 = new JButton(new SpiritAction.Action_ScanAndView());
 		b1.setText("");
 		b2.setText("");
 		
@@ -543,51 +539,6 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 		}
 	}
 
-	public static class Action_BatchAssign extends AbstractAction {
-		public Action_BatchAssign() {
-			super("Scan & Assign Tubes");
-			putValue(AbstractAction.SHORT_DESCRIPTION, "Scan Tubes in order to assign existing biosamples to containerIds");
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			new BatchAssignDlg().setVisible(true);
-		}
-	}
-
-	public static class Action_BatchAliquot extends AbstractAction {
-		public Action_BatchAliquot() {
-			super("Scan & Create Aliquots");
-			putValue(AbstractAction.SHORT_DESCRIPTION, "Scan Tubes in order to create aliquots and assign them to containerIds");
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			new BatchAliquotDlg().setVisible(true);
-		}
-	}
-
-//	public class Action_Scanner extends AbstractAction {
-//		public Action_Scanner() {
-//			super("Scan Rack");
-//			putValue(AbstractAction.SMALL_ICON, JIconButton.IconType.SCANNER.getIcon());
-//		}
-//
-//		@Override
-//		public void actionPerformed(ActionEvent e) {
-//			try {
-//				
-//				SpiritScanner scanner = new SpiritScanner();
-//				Location rack = scanner.scan(null, true, null);
-//				if(rack==null) return;
-//				newScan(rack);
-//			} catch (Exception ex) {
-//				JExceptionDialog.showError(ex);
-//			}
-//
-//		}
-//	}
-
 	public static void main(String[] args) {
 
 		SplashScreen2.show(splashConfig);
@@ -605,8 +556,7 @@ public class BioViewer extends JFrame implements ISpiritChangeObserver, ISpiritC
 			}
 		};
 	
-	}
-	
+	}	
 	
 	public static void open() {
 		BioViewer app = new BioViewer();

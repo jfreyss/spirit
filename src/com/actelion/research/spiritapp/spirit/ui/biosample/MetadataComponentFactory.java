@@ -33,6 +33,7 @@ import javax.swing.JLabel;
 
 import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.util.component.DocumentTextField;
+import com.actelion.research.spiritapp.spirit.ui.util.component.DocumentZipTextField;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -90,6 +91,9 @@ public class MetadataComponentFactory {
 			break;
 		case D_FILE:
 			res = new FileComponent();
+			break;
+		case FILES:
+			res = new ZipComponent();
 			break;
 		case LARGE:
 			res = new LargeComponent();
@@ -168,6 +172,32 @@ public class MetadataComponentFactory {
 		@Override
 		public void updateView(Biosample b, BiotypeMetadata m) {
 			setBiosample(b==null || m==null? null: b.getMetadataBiosample(m));
+		}
+		@Override
+		public void addTextChangeListener(TextChangeListener listener) {
+			super.addTextChangeListener(listener);
+		}
+	}
+	
+	public static class ZipComponent extends DocumentZipTextField implements MetadataComponent {		
+		public ZipComponent() {
+			super();
+		}				
+		@Override
+		public String getData() {
+			return getText();
+		}			
+		@Override
+		public void setData(String val) {
+			throw new IllegalArgumentException("Not supported");
+		}		
+		@Override
+		public void updateModel(Biosample b, BiotypeMetadata m) {
+			if(b!=null && m!=null) b.setMetadataDocument(m, getSelectedDocument());
+		}
+		@Override
+		public void updateView(Biosample b, BiotypeMetadata m) {
+			setSelectedDocument(b==null || m==null? null: b.getMetadataDocument(m));
 		}
 		@Override
 		public void addTextChangeListener(TextChangeListener listener) {

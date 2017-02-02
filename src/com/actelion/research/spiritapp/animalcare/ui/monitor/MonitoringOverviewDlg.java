@@ -200,8 +200,8 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 						}
 
 						comps.add(liveButton);
-						comps.add(new JLabel("<html><span style='font-size:80%;white-space:nowrap'>"+phase.getDescription().replace(" + ", " +<br>")));
-						comps.add(new JLabel("<html><div style='font-size:80%'>"+statsBuilder));
+						comps.add(new JLabel("<html><span style='font-size:90%;white-space:nowrap'>"+phase.getDescription().replace(" + ", " +<br>")));
+						comps.add(new JLabel("<html><div style='font-size:90%'>"+statsBuilder));
 					}
 					
 					JPanel displayPane = UIUtils.createTable(4, 2, 0, comps);
@@ -217,7 +217,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 
 					JTabbedPane tabbedPane = new JCustomTabbedPane();
 					for(final Test t: mapResults.keySet()) {
-						final PivotCardPanel panel = new PivotCardPanel(null, true, null);
+						final PivotCardPanel panel = new PivotCardPanel(null, null);
 						tabbedPane.add("<html>Result<br><b>"+t.getName()+"</b>", panel);						
 						panel.setResults(mapResults.get(t), null, tpl2, false);
 						

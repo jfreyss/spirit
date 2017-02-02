@@ -77,11 +77,7 @@ public class StudyGroupDlg extends JEscapeDialog {
 			return row.getName();
 		}			
 	};
-//	private Column<Group, String> modelColumn = new Column<Group, String>("Model", String.class) {
-//		public String getValue(Group row) {
-//			return (row.getDiseaseModel()==null?"": row.getDiseaseModel()) + " " + (row.getTreatmentModel()==null?"": row.getTreatmentModel());
-//		}			
-//	};	
+
 	@SuppressWarnings("unchecked")
 	private final ExtendTableModel<Group> groupModel = new ExtendTableModel<Group>(new Column[] {nameColumn}) {
 		@Override

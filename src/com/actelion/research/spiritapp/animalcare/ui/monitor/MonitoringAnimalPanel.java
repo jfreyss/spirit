@@ -320,6 +320,7 @@ public class MonitoringAnimalPanel extends JPanel {
 
 	public ActionTreatment getTreatment(Biosample animal, Phase phase) {
 		StudyAction a = phase.getStudy().getStudyAction(phase, animal);
+		if(a==null) return null;
 		NamedTreatment nt = a.getNamedTreatment();
 		ActionTreatment treatment = bio2history.get(animal)==null? null: bio2history.get(animal).get(phase.getShortName() + "_" + (nt==null?"":nt.getName()));
 		return treatment;

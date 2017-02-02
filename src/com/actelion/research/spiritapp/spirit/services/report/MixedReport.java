@@ -38,7 +38,6 @@ public class MixedReport extends AbstractReport {
 		StringBuilder sb = new StringBuilder();
 		for (AbstractReport rep : reports) {
 			try {
-				System.out.println("MixedReport.populateWorkBook()");
 				rep.initFromReport(this);
 				rep.populateWorkBook();
 			} catch(Exception e) {

@@ -21,7 +21,10 @@
 
 package com.actelion.research.util.ui.exceltable;
 
+import java.awt.Color;
+
 import javax.swing.AbstractCellEditor;
+import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
@@ -35,11 +38,12 @@ public class LargeTextCellEditor extends AbstractCellEditor implements TableCell
 	private JLargeTextField textField = new JLargeTextField();
 	
 	public LargeTextCellEditor() {
+		textField.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
+
 	}
 	
 	@Override
 	public JComponent getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {		
-		AlphaNumericalCellEditor.initComp(textField, (JComponent) table.getCellRenderer(row, column).getTableCellRendererComponent(table, value, isSelected, isSelected, row, column));		
 		textField.setText(value==null?"": value.toString());
 		return textField;
 	}

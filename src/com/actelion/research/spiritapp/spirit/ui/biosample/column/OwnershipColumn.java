@@ -26,7 +26,6 @@ import java.awt.Color;
 import javax.swing.JComponent;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 

@@ -58,7 +58,7 @@ public class NamedSamplingComboBox extends JGenericComboBox<NamedSampling> {
 	@Override
 	public Component processCellRenderer(JLabel comp, NamedSampling ns, int index) {
 		if(ns==null) {
-			comp.setText("");
+			comp.setText(" ");
 			comp.setToolTipText(null);
 		} else {
 			comp.setText("<html>" + (ns.getStudy()==null?"": "<b>" + ns.getStudy().getStudyId() + "</b> - ") +  

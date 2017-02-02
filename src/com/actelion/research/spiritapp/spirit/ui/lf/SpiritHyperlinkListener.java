@@ -55,16 +55,21 @@ public class SpiritHyperlinkListener implements HyperlinkListener {
 				@Override
 				protected void done() {
 					if(e.getDescription().startsWith("doc:")) {
-						String param = e.getDescription().substring(4);
+						String[] params = e.getDescription().substring(4).split(":");
 						try {
-							int id = Integer.parseInt(param);
+							int id = Integer.parseInt(params[0]);
 							Document doc = DAODocument.getDocument(id);
+							
+							if(params.length>1) {
+								int entry = Integer.parseInt(params[1]);
+								doc = doc.getZipEntry(entry);
+							}
+							
 							DocumentTextField.open(doc);
 						} catch (Exception ex) {
 							JExceptionDialog.showError(ex);
 						}
 					} else if(e.getDescription().startsWith("loc:")) {
-						System.out.println("SpiritHyperlinkListener.hyperlinkUpdate(...).new SwingWorkerExtended() {...}.done(1) "+e.getDescription());
 						int index = e.getDescription().lastIndexOf(':');
 						try {
 							if(index<4) throw new Exception("Invalid link:" + e.getDescription());
@@ -72,7 +77,6 @@ public class SpiritHyperlinkListener implements HyperlinkListener {
 							String param2 = e.getDescription().substring(index+1);
 							int id = Integer.parseInt(param1);
 							int pos = Integer.parseInt(param2);
-							System.out.println("SpiritHyperlinkListener.hyperlinkUpdate(...).new SwingWorkerExtended() {...}.done(2) "+id+" "+pos);
 							Location location = DAOLocation.getLocation(id);
 							if(location!=null) {
 								SpiritContextListener.setLocation(location, pos);

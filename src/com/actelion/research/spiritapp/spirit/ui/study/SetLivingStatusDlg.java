@@ -22,7 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.study;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
@@ -47,7 +46,8 @@ import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleComboBox;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleList;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
-import com.actelion.research.spiritapp.spirit.ui.study.sampling.AddExceptionalSamplingDlg;
+import com.actelion.research.spiritapp.spirit.ui.biosample.edit.CreateChildrenDlg;
+import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
@@ -62,18 +62,18 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
+import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.DateTextField;
-import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
+import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.LongTaskDlg;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
-import com.itextpdf.text.Font;
 
 public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 	
@@ -83,11 +83,11 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 	private BiosampleComboBox replaceByComboBox = new BiosampleComboBox();
 	private DateTextField dateField = new DateTextField(true);
 	
-	private JRadioButton removedAnimalRadioButton = new JRadioButton("Move to Reserve ");
+	private JRadioButton unsetGroupRadioButton = new JRadioButton("Move to Reserve ");
 	private JRadioButton statusAliveRadioButton = new JRadioButton("Change Status to: Alive");
-	private JRadioButton statusNecropsiedRadioButton = new JRadioButton("Change Status to: Necropsied (Necropsy samples are generated)");
-	private JRadioButton statusDeadRadioButton = new JRadioButton("Change Status to: Found Dead (Necropsy samples will not be generated)");
-	private JRadioButton statusKilledRadioButton = new JRadioButton("Change Status to: Killed (Necropsy samples will not be generated)");
+	private JRadioButton statusNecropsiedRadioButton = new JRadioButton("Change Status to: Necropsied");
+	private JRadioButton statusDeadRadioButton = new JRadioButton("Change Status to: Found Dead");
+	private JRadioButton statusKilledRadioButton = new JRadioButton("Change Status to: Killed");
 	private PhaseComboBox phaseComboBox;
 	
 	private JCustomTextField observationField = new JCustomTextField();
@@ -101,7 +101,8 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 			return;
 		}
 
-		selectedBiosamples = JPAUtil.reattach(selectedBiosamples);
+		List<Biosample> biosamples = new ArrayList<>(study.getAttachedBiosamples());
+		Collections.sort(biosamples);
 		
 		
 		phaseComboBox = new PhaseComboBox(study.getPhases());	
@@ -112,8 +113,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 		c.fill = GridBagConstraints.VERTICAL;
 		
 		//Find animals in the reserve		
-		java.util.List<Biosample> biosamples = new ArrayList<Biosample>(study.getAttachedBiosamples());
-		java.util.List<Biosample> reserve = new ArrayList<Biosample>();
+		List<Biosample> reserve = new ArrayList<>();
 		for (Biosample b : biosamples) {	
 			if(b.getInheritedGroup()==null) {
 				reserve.add(b);			
@@ -134,12 +134,12 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 		
 		//Action when setting action
 		ButtonGroup group = new ButtonGroup();
-		group.add(removedAnimalRadioButton);
+		group.add(unsetGroupRadioButton);
 		group.add(statusAliveRadioButton);
 		group.add(statusNecropsiedRadioButton);
 		group.add(statusKilledRadioButton);
 		group.add(statusDeadRadioButton);
-		removedAnimalRadioButton.addActionListener(new ActionListener() {			
+		unsetGroupRadioButton.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				replaceByComboBox.setEnabled(true);
@@ -186,23 +186,28 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 			}
 		});
 		JPanel contentPanel = new JPanel(new BorderLayout());
-		contentPanel.add(BorderLayout.NORTH, UIUtils.createTitleBox("Select the biosamples and the action to perform", UIUtils.createVerticalBox(
+		contentPanel.add(BorderLayout.NORTH, UIUtils.createTitleBox("New Status", UIUtils.createBox(
 					new JScrollPane(animalList),
+					null, null, null,
 					UIUtils.createVerticalBox(
-							UIUtils.createHorizontalBox(removedAnimalRadioButton, Box.createHorizontalGlue()),
-							UIUtils.createHorizontalBox(statusAliveRadioButton, Box.createHorizontalGlue()),
-							UIUtils.createHorizontalBox(statusNecropsiedRadioButton, Box.createHorizontalGlue()),
-							UIUtils.createHorizontalBox(statusDeadRadioButton, Box.createHorizontalGlue()),
-							UIUtils.createHorizontalBox(statusKilledRadioButton, Box.createHorizontalGlue())))));
+							UIUtils.createHorizontalBox(unsetGroupRadioButton, Box.createHorizontalGlue()),
+							UIUtils.createHorizontalBox(statusAliveRadioButton, new JInfoLabel(" (set status and reset the previous container)"), Box.createHorizontalGlue()),
+							UIUtils.createHorizontalBox(statusNecropsiedRadioButton, new JInfoLabel(" (set status, remove container and move samples from necropsy to this phase)"), Box.createHorizontalGlue()),
+							UIUtils.createHorizontalBox(statusDeadRadioButton, new JInfoLabel(" (set status and remove container)") , Box.createHorizontalGlue()),
+							UIUtils.createHorizontalBox(statusKilledRadioButton, new JInfoLabel(" (set status and remove container)"), Box.createHorizontalGlue()),
+							Box.createVerticalGlue()
+							))));
 				
-		contentPanel.add(BorderLayout.CENTER, UIUtils.createVerticalBox(
-					
+		contentPanel.add(BorderLayout.CENTER, UIUtils.createVerticalBox(					
 				UIUtils.createTitleBox("When", UIUtils.createVerticalBox(
-						UIUtils.createHorizontalBox(new JLabel("Phase: (optional) "), phaseComboBox, Box.createHorizontalStrut(20), new JLabel("DateOfDeath: "), dateField, Box.createHorizontalGlue()),
-						UIUtils.createHorizontalBox(new JLabel("Observation: "), observationField, Box.createHorizontalGlue()))),
-
-				UIUtils.createTitleBox("Replacement", 
-						UIUtils.createHorizontalBox(new JLabel("To be replaced by: (optional)"), replaceByComboBox, new JCustomLabel(" (optional)", Font.ITALIC, Color.LIGHT_GRAY), Box.createHorizontalGlue()))));
+						UIUtils.createHorizontalBox(new JLabel("Phase: "), phaseComboBox, Box.createHorizontalGlue()), 
+						UIUtils.createHorizontalBox(new JLabel("DateOfDeath: (optional)"), dateField, Box.createHorizontalGlue()))),
+				UIUtils.createTitleBox("Observation", UIUtils.createVerticalBox(
+						new JInfoLabel("The observation will be stored as an observation result at the given phase"),
+						UIUtils.createHorizontalBox(new JLabel("Observation (optional): "), observationField, Box.createHorizontalGlue()))),
+				UIUtils.createTitleBox("Replacement", UIUtils.createVerticalBox(
+						new JInfoLabel("The group/container will be exchanged with this sample"),
+						UIUtils.createHorizontalBox(new JLabel("To be replaced by: (optional)"), replaceByComboBox, Box.createHorizontalGlue())))));
 		
 		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), saveButton));
 		
@@ -214,18 +219,17 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
 		
-		
 	}
 	
 	private void eventAnimalChanged() {
 		List<Biosample> animals = animalList.getSelection();
-		removedAnimalRadioButton.setEnabled(animals.size()>0);
+		unsetGroupRadioButton.setEnabled(animals.size()>0);
 		statusAliveRadioButton.setEnabled(animals.size()>0);
 		statusDeadRadioButton.setEnabled(animals.size()>0);
 		statusKilledRadioButton.setEnabled(animals.size()>0);
 		statusNecropsiedRadioButton.setEnabled(animals.size()>0);
 		for (Biosample a : animals) {
-			removedAnimalRadioButton.setEnabled(removedAnimalRadioButton.isEnabled() && a.getInheritedGroup()!=null  && a.getStatus().isAvailable());
+			unsetGroupRadioButton.setEnabled(unsetGroupRadioButton.isEnabled() && a.getInheritedGroup()!=null  && a.getStatus().isAvailable());
 			statusAliveRadioButton.setEnabled(statusAliveRadioButton.isEnabled() && !a.getStatus().isAvailable());
 			statusDeadRadioButton.setEnabled(statusDeadRadioButton.isEnabled() && a.getStatus().isAvailable());
 			statusKilledRadioButton.setEnabled(statusKilledRadioButton.isEnabled() && a.getStatus().isAvailable());
@@ -247,24 +251,25 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 		final SpiritUser user = Spirit.askForAuthentication();
 		
 		List<Biosample> animals = animalList.getSelection();
-		if(animals.size()==0) throw new Exception("You must select an animal");
+		if(animals.size()==0) throw new Exception("You must select a sample");
 		
 
 		Status status = getSelectedStatus();
-		if(status==null && !removedAnimalRadioButton.isSelected()) {
+		if(status==null && !unsetGroupRadioButton.isSelected()) {
 			throw new Exception("You must select an action");
 		}
 		
+		//Validate replacement (cannot be set if more than 1 sample is selected)
 		Biosample replacement = replaceByComboBox.getSelection();
-		if(replacement!=null && animals.size()>1) throw new Exception("You can only set a replacement if you select one animal");
+		if(replacement!=null && animals.size()>1) throw new Exception("You can only set a replacement if you select one sample");
 		
+		//Validate DOD
 		Date dod = FormatterUtils.parseDate(dateField.getText());
 		if(dateField.getText().length()>0 && dod==null) throw new Exception("You must give a valid date of death");
 		
-		Phase phase = phaseComboBox.getSelection();
-		
-		if(phase!=null && !phase.getStudy().equals(study)) throw new Exception("the phase does not match the study");
-		
+		//Validate Phase (mandatory for dead, killed, necropsy
+		Phase phase = phaseComboBox.getSelection();		
+		if(phase!=null && !phase.getStudy().equals(study)) throw new Exception("the phase does not match the study");		
 		if(status!=null && study!=null && phase==null && (status==Status.DEAD || status==Status.KILLED || status==Status.NECROPSY)) {
 			throw new Exception("You must enter a phase");
 		}
@@ -279,19 +284,27 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 
 		String elb = DAOResult.suggestElb(Spirit.getUsername());
 		for(Biosample animal: animals) {
-			//update the status
 			if(status!=null) {
+				//update the status
 				animal.setStatus(status, phase);
 			}
 			
-	
-			// set the dod if possible
 			if (status!=null && !status.isAvailable() && animal.getMetadataValue(Biotype.DATEOFDEATH) != null) {
+				//set the dod if possible
 				animal.setContainer(null);
 				if (dod != null) {
 					animal.setMetadataValue(Biotype.DATEOFDEATH, FormatterUtils.formatDate(dod));
 				} else {
 					animal.setMetadataValue(Biotype.DATEOFDEATH, null);
+				}
+			} else if(status==null || status.isAvailable()) {
+				//reset the container if possible
+				List<Biosample> history = DAORevision.getHistory(animal);
+				for (Biosample h : history) {
+					if(h.getContainer()!=null && h.getStatus()==null || h.getStatus().isAvailable()) {
+						animal.setContainer(h.getContainer());
+						break;
+					}
 				}
 			}
 			biosamplesToSave.add(animal);
@@ -300,7 +313,6 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 			//Replacement Animal, only valid if one animal was selected
 			if (replacement != null) {
 				
-				// Attach the replacement
 				replacement.setAttached(animal.getInheritedGroup().getStudy(), animal.getInheritedGroup(), animal.getInheritedSubGroup());
 	
 				// Set the comments of the replacement and the animal
@@ -315,7 +327,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 			}
 
 			
-			//Move Necropsied Samples to the given phase		
+			//Find necropsied samples to be moved to the given phase		
 			if(phase!=null) {
 				for(Biosample b: animal.getHierarchy(HierarchyMode.ATTACHED_SAMPLES)) {
 					if(b.getAttachedSampling()==null) continue;
@@ -326,7 +338,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 				}
 			}
 			
-			//Add the Observation?
+			//Add the observation Result
 			if(phase!=null && observation!=null && observation.length()>0) {
 				Test t = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);
 				if(t==null) throw new Exception("The test "+DAOTest.OBSERVATION_TESTNAME+" does not exist");
@@ -339,7 +351,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 				resultsToSave.add(r);
 			}
 			
-			if(removedAnimalRadioButton.isSelected()) {
+			if(unsetGroupRadioButton.isSelected()) {
 				animal.setInheritedGroup(null);
 			}
 
@@ -354,15 +366,13 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 					UIUtils.createBox(new JScrollPane(table), new JLabel("Do you want to reassign the following samples from the scheduled necropsy to "+phase+"?")), 
 					"Samples from Necropsy", 
 					JOptionPane.YES_NO_CANCEL_OPTION, 
-					JOptionPane.PLAIN_MESSAGE, null, new String[] {"Reassign", "Don't Move", "Cancel"},
+					JOptionPane.PLAIN_MESSAGE, null, new String[] {"Reassign", "Cancel"},
 					"Reassign");
 			if(res==0) {
 				for (Biosample b : samplesFromNecropsy) {
 					b.setInheritedPhase(phase);
 					biosamplesToSave.add(b);
 				}				
-//			} else if(res==1) {
-//				//ok
 			} else {
 				return;
 			}
@@ -376,21 +386,35 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 			public void longTask() throws Exception {
 				//Persist biosamples
 				DAOBiosample.persistBiosamples(biosamplesToSave, user);
-				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, biosamplesToSave);
 				
 				//Persist results
 				if(resultsToSave.size()>0) {
 					DAOResult.persistResults(resultsToSave, user);
+				}
+				
+				//Fire events
+				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, biosamplesToSave);
+				if(resultsToSave.size()>0) {
 					SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_ADDED, Result.class, resultsToSave);
 				}
 
 			}
 		};
 
-		if(phase!=null && study.isSynchronizeSamples()) {
-			int res = JOptionPane.showConfirmDialog(this, "The status is now updated to "+status+". Do you want to add an exceptional sampling?", "Add Sampling?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null);
+		if(phase!=null && status!=null && !status.isAvailable() && study.isSynchronizeSamples()) {
+			int res = JOptionPane.showConfirmDialog(this, "The status is now updated to "+status+". Do you want to add some sampling?", "Add Sampling?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null);
 			if(res==JOptionPane.YES_OPTION) {
-				new AddExceptionalSamplingDlg(study, animals, phase);
+				try {
+					CreateChildrenDlg dlg = new CreateChildrenDlg(animals, phase);
+					dlg.setVisible(true);
+					List<Biosample> children = dlg.getChildren();
+					if(children!=null) {
+						EditBiosampleDlg dlg2 = EditBiosampleDlg.createDialogForEditInTransactionMode("Create Children", children);
+						dlg2.setVisible(true);							
+					}
+				} catch (Exception ex) {
+					JExceptionDialog.showError(ex);
+				}				
 			}
 		}
 	

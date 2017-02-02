@@ -39,17 +39,20 @@ public class FlatPivotTemplate extends PivotTemplate {
 		setWhere(PivotItemFactory.STUDY_GROUP, Where.ASROW);
 		setWhere(PivotItemFactory.STUDY_SUBGROUP, Where.ASROW);		
 		setWhere(PivotItemFactory.BIOSAMPLE_SAMPLING, Where.ASROW);
-		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_COMMENTS, results, .1)) {
+		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_COMMENTS, results)) {
 			setWhere(PivotItemFactory.BIOSAMPLE_COMMENTS, Where.ASROW);
 		}
 		setWhere(PivotItemFactory.BIOSAMPLE_TOPID, Where.ASROW);
 		setWhere(PivotItemFactory.BIOSAMPLE_TOPNAME, Where.ASROW);
 		setWhere(PivotItemFactory.RESULT_TEST, Where.ASROW);
 		setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASROW);
+		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_METADATA, results)) {
+			setWhere(PivotItemFactory.BIOSAMPLE_METADATA, Where.ASROW);
+		}		
+
 		setWhere(PivotItemFactory.RESULT_INPUT, Where.ASROW);
-		
 		setWhere(PivotItemFactory.RESULT_TEST, Where.ASROW);
-		if(isDiscriminating(PivotItemFactory.RESULT_COMMENTS, results, .1)) {
+		if(isDiscriminating(PivotItemFactory.RESULT_COMMENTS, results)) {
 			setWhere(PivotItemFactory.RESULT_COMMENTS, Where.ASROW);
 		}
 		setWhere(PivotItemFactory.RESULT_OUTPUT, Where.ASROW);

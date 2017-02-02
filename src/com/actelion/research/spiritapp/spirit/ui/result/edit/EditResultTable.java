@@ -108,7 +108,7 @@ public class EditResultTable extends SpiritExcelTable<Result>  {
 			columns.add(new PhaseColumn());
 			
 			for (final TestAttribute att : test.getAttributes()) {
-				if(att.getDataType()==DataType.D_FILE) {
+				if(att.getDataType()==DataType.D_FILE || att.getDataType()==DataType.FILES) {
 					columns.add(new DocumentColumn(att));
 				} else {
 					columns.add(new AttributeColumn(att));

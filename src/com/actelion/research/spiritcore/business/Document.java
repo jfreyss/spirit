@@ -21,6 +21,8 @@
 
 package com.actelion.research.spiritcore.business;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,6 +31,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -52,6 +57,13 @@ import org.hibernate.envers.RelationTargetAuditMode;
 
 import com.actelion.research.spiritcore.util.IOUtils;
 
+/**
+ * Document represents either:
+ * - one single document (Datatype == File)
+ * - a zip containing several documents (Datatype == Files && DocumentType == Zip)
+ * 
+ * @author Joel Freyss
+ */
 @Entity
 @Table(name="document")
 @Audited
@@ -62,7 +74,8 @@ public class Document {
 		CONSENT_FORM,
 		DESIGN,
 		PRESENTATION,
-		OTHER
+		OTHER,
+		ZIP
 	}
 	
 	
@@ -122,6 +135,10 @@ public class Document {
 	public Document() {
 	}
 	
+	public Document(DocumentType type) {
+		this.type = type;
+	}
+	
 	public Document(String title, byte[] bytes) {
 		setFileName(title);
 		setBytes(bytes);
@@ -129,7 +146,7 @@ public class Document {
 	
 	public Document(File file) throws IOException {
 		setFileName(file.getName());
-		setBytes(IOUtils.fileToBytes(file));
+		setBytes(IOUtils.getBytes(file));
 	}
 		
 	public int getId() {
@@ -174,7 +191,7 @@ public class Document {
 	
 	@Override
 	public int hashCode() {
-		return (int)(id%Integer.MAX_VALUE);
+		return id;
 	}
 	
 	@Override
@@ -187,8 +204,6 @@ public class Document {
 			return getType() == ((Document)obj).getType() && getFileName().equals(((Document)obj).getFileName());
 		}
 	}
-	
-
 	
 	@Override
 	public String toString() {
@@ -208,7 +223,6 @@ public class Document {
 	public void setType(DocumentType type) {
 		this.type = type;
 	}
-
 		
 	public static Map<DocumentType, List<Document>> mapDocumentTypes(Collection<Document> documents) {
 		Map<DocumentType, List<Document>> res = new HashMap<>();
@@ -229,5 +243,115 @@ public class Document {
 		}
 		return res;
 	}	
+
+	/**
+	 * Used to add 1 file if the document represents multiple files
+	 * @param f
+	 * @throws Exception
+	 */
+	public void addZipEntry(File f) throws Exception {
+		addZipEntry(new Document(f));
+	}
+	
+	public void addZipEntry(Document doc) throws Exception {
+		if(getType()!=DocumentType.ZIP) {
+			//Convert the existing document to a zip containing this doc
+			//This case may happen if the datatype has been changed to ZIP
+			Document toAdd = new Document(getFileName(), getBytes());
+			setType(DocumentType.ZIP);
+			setFileName(null);
+			setBytes(null);
+			addZipEntry(toAdd);
+			addZipEntry(doc);
+			return;
+		}
+		
+		try(ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+			int n = 0;
+			ZipOutputStream os = new ZipOutputStream(baos);
+			//Add existing entries
+			if(getBytes()!=null && getBytes().length>0) {				
+				try(ZipInputStream is = new ZipInputStream(new ByteArrayInputStream(getBytes()))) {
+					ZipEntry entry;
+					while((entry = is.getNextEntry())!=null) {
+						os.putNextEntry(entry);
+						IOUtils.redirect(is, os);
+						os.closeEntry();
+						is.closeEntry();
+						n++;
+					}
+				} catch(Exception e2) {
+					e2.printStackTrace();
+				}
+			}
+			//Add new entry
+			os.putNextEntry(new ZipEntry(doc.getFileName()));
+			IOUtils.redirect(doc.getBytes(), os);
+			os.closeEntry();
+
+			//Close Zip stream
+			os.close();
+			n++;
+			this.fileName = n + "_docs.zip";
+			this.setBytes(baos.toByteArray());
+		}
+	}
+	
+	/**
+	 * Used to remove 1 file if the document represents multiple files
+	 * @param f
+	 * @throws Exception
+	 */
+	public void removeZipEntry(int index) throws Exception {
+		if(getType()!=DocumentType.ZIP) throw new Exception("Not a ZIP");
+		//Recreate zip
+		int n = 0;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try(ZipOutputStream os = new ZipOutputStream(baos)) {
+			//Add existing entries
+			try(ZipInputStream is = new ZipInputStream(new ByteArrayInputStream(getBytes()))) {
+				ZipEntry entry;
+				while((entry = is.getNextEntry())!=null) {
+					if(n++!=index) {
+						os.putNextEntry(entry);
+						IOUtils.redirect(is, os);
+						os.closeEntry();
+					}
+					is.closeEntry();
+				}
+			}
+			
+			fileName = (n-1) + "_docs.zip";
+			os.close();
+			setBytes(baos.toByteArray());
+		}
+	}
+
+	/**
+	 * Used to remove 1 file if the document represents multiple files
+	 * @param f
+	 * @throws Exception
+	 */
+	public Document getZipEntry(int index) throws Exception {
+		if(getType()!=DocumentType.ZIP) {
+			//Not a ZIP entry, returns the document itself
+			//This can happen, if a single document is converted to a multiple
+			if(index>0) return null;
+			return this;
+		}
+		int n = 0;
+		try(ZipInputStream is = new ZipInputStream(new ByteArrayInputStream(getBytes()))) {
+			ZipEntry entry;
+			while((entry = is.getNextEntry())!=null) {				
+				if(n++==index) {
+					return new Document(entry.getName(), IOUtils.getBytes(is));
+				}
+			}
+		}			
+		return null;
+	}
+
+	
+	
 }
 

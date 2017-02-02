@@ -43,6 +43,7 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -63,6 +64,7 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.services.SpiritUser;
+import com.actelion.research.spiritcore.services.dao.DAOBarcode;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
@@ -76,6 +78,7 @@ import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.SwingWorkerExtended;
+import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
@@ -321,7 +324,8 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 	private final JCustomTextField biotypeNameTextField = new JCustomTextField(12, "", "");
 	private final JCheckBox nameCheckBox = new JCheckBox("", true);
 	private final JCustomTextField nameLabelTextField = new JCustomTextField(12, "", "No Main Metadata");
-	private final JCustomTextField prefixTextField = new JCustomTextField(5, "", "PREFIX");
+	private final JCustomTextField prefixTextField = new JCustomTextField(7, "", "PREFIX");
+	private final JLabel prefixExampleLabel = new JLabel();
 	private final JGenericComboBox<AmountUnit> amountUnitComboBox = new JGenericComboBox<>(AmountUnit.values(), true);
 	private final JGenericComboBox<BiotypeCategory> categoryComboBox = new JGenericComboBox<>(BiotypeCategory.values(), true);
 	private final MetadataPanel metadataPanel = new MetadataPanel();
@@ -343,6 +347,9 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 		super(UIUtils.getMainFrame(), "Admin - Biotype - " + type.getName(), BiotypeEditDlg.class.getName());
 		this.biotype = JPAUtil.reattach(type);
 		
+		TextChangeListener tl = src -> {prefixExampleLabel.setText(DAOBarcode.getExample(prefixTextField.getText()));};
+		prefixTextField.addTextChangeListener(tl);
+		
 		//ContentPanel
 		parentComboBox.setEnabled(parentComboBox.getValues().size()>0);
 		JPanel contentPanel = UIUtils.createTitleBox("Biotype", 
@@ -351,11 +358,12 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 						new JLabel("Name: "), biotypeNameTextField, new JInfoLabel(" Unique"),						
 						new JLabel("Category: "), categoryComboBox, null,
 						new JLabel("Inherited from: "), parentComboBox, new JInfoLabel(" Only to be used if the samples inherits all the properties of its parent (ex: cells from cellline)"),
-						new JLabel("Prefix: "), prefixTextField, new JInfoLabel(" The generated sampleId is 'Prefix######' where ###### is a number increment")),
+						new JLabel("Prefix: "), UIUtils.createHorizontalBox(prefixTextField, prefixExampleLabel), new JInfoLabel(" Prefix for the automatic generation of ids (possible patterns are {YYYY}, {YY}, {MM}, {DD})")),
 					UIUtils.createTable(2,5,0,
 							null, UIUtils.createHorizontalBox(editSampleIdCheckbox, new JInfoLabel(" Check this box if the user can define the sampleId (ex: patientId, animalId)")),
 							null, hiddenCheckbox))
 				);
+		
 
 		JPanel containerPanelPanel = UIUtils.createTitleBox("Container", 
 				UIUtils.createHorizontalBox(new int[]{3,7},
@@ -366,7 +374,7 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 						
 		
 		prefixTextField.setToolTipText("prefix for automatic generation");
-		prefixTextField.setMaxChars(5);
+		prefixTextField.setMaxChars(16);
 		biotypeNameTextField.setMaxChars(20);
 		containerTypeComboBox.setTextWhenEmpty("No fixed container");
 		amountUnitComboBox.setTextWhenEmpty("No saved amount");

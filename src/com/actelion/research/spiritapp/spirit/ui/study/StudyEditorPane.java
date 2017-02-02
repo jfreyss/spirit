@@ -180,7 +180,7 @@ public class StudyEditorPane extends ImageEditorPane {
 						
 			//Display notes
 			if(study.getNotes()!=null && study.getNotes().length()>0) {
-				sb.append("<div style='margin-top:5px;color:#444444;font-size:80%'>" + MiscUtils.convert2Html(study.getNotes()) + "</div><br>");
+				sb.append("<div style='margin-top:5px;color:#444444;font-size:90%'>" + MiscUtils.convert2Html(study.getNotes()) + "</div><br>");
 			}
 			
 			sb.append("<hr>");
@@ -286,13 +286,13 @@ public class StudyEditorPane extends ImageEditorPane {
 						sb.append("<br>");
 						
 						//Display all Elbs
-						sb.append("<table style='border:0; padding:1px'>");
+						sb.append("<table style='border:0; padding:1px;font-size:95%'>");
 						sb.append("<tr style='background:#EEEEDD;padding:0px'><th colspan=2><a href=\"sort:elb\">ELB<a> / <a href=\"sort:title\">Title<a></th><th><a href=\"sort:scientist\">Scientist<a></th><th><a href=\"sort:date\">Date<a></th></tr>");
 						for (int i = 0; i < elbs.size(); i++) {
 							ElbLink elbLink = elbs.get(i);
 							sb.append("<tr style='background:#FFFFEE'>");
 							sb.append("<td>&nbsp;<b>" + elbLink.getElb() + "</b></td>"); 
-							sb.append("<td style='white-space:nowrap; font-size:80%'>&nbsp; [ ");
+							sb.append("<td style='white-space:nowrap;'>&nbsp; [ ");
 							if(elbLink.isInSpirit() || elbLink.getTitle()!=null) {
 								if(elbLink.isInSpirit()) {
 									sb.append("<a href='elb:" + elbLink.getElb() + "'>Spirit</a>");
@@ -310,12 +310,12 @@ public class StudyEditorPane extends ImageEditorPane {
 							}
 							
 							if(elbLink.isInNiobe() && elbLink.getTitle()!=null ) {
-								sb.append("<td style='color:#999999;font-size:80%'>&nbsp;" + elbLink.getScientist() + "</td>");
-								sb.append("<td style='color:#999999;font-size:80%;white-space:nowrap'>&nbsp; " + FormatterUtils.formatDate(elbLink.getCreDate()) + " -> " + (elbLink.getPubDate()==null?" Unsealed": FormatterUtils.formatDate(elbLink.getPubDate()))+"</td>");
+								sb.append("<td style='color:#999999;>&nbsp;" + elbLink.getScientist() + "</td>");
+								sb.append("<td style='color:#999999;white-space:nowrap'>&nbsp; " + FormatterUtils.formatDate(elbLink.getCreDate()) + " -> " + (elbLink.getPubDate()==null?" Unsealed": FormatterUtils.formatDate(elbLink.getPubDate()))+"</td>");
 							} 
 							sb.append("</tr>");
 							if(elbLink.isInNiobe() && elbLink.getTitle()!=null ) {
-								sb.append("<tr style='background:#FFFFEE'><td colspan=4 style='background:#FFFFFF; font-size:80%'>");
+								sb.append("<tr style='background:#FFFFEE'><td colspan=4 style='background:#FFFFFF'>");
 								sb.append(elbLink.getTitle());
 								sb.append("</td></tr>");							
 							}

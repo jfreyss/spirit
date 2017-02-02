@@ -71,7 +71,7 @@ public class ApplySamplingDlg extends JEscapeDialog {
 	private List<Biosample> biosamples = null;
 	
 	
-	private final JGenericComboBox<NamedSampling> samplingComboBox = new JGenericComboBox<NamedSampling>();
+	private final JGenericComboBox<NamedSampling> samplingComboBox = new JGenericComboBox<>();
 	private final ContainerTypeComboBox containerTypeComboBox = new ContainerTypeComboBox();
 	private final PhaseComboBox phaseComboBox = new PhaseComboBox();
 	private final BiosampleList biosampleList = new BiosampleList();
@@ -113,15 +113,6 @@ public class ApplySamplingDlg extends JEscapeDialog {
 		});
 		
 
-		JPanel centerPanel = UIUtils.createTitleBox("Add sampling for:",
-				UIUtils.createVerticalBox(
-					filterPanel, 
-					new JLabel("Select one or more specimen:"),
-					new JScrollPane(biosampleList),
-					Box.createVerticalGlue()));
-			
-
-		
 		JButton okButton = new JIconButton(IconType.NEW, "Next");
 		okButton.addActionListener(new ActionListener() {
 			@Override
@@ -133,7 +124,11 @@ public class ApplySamplingDlg extends JEscapeDialog {
 		
 		//ContentPane
 		JPanel contentPanel = new JPanel(new BorderLayout());
-		contentPanel.add(BorderLayout.CENTER, centerPanel);
+		contentPanel.add(BorderLayout.CENTER, UIUtils.createTitleBox("Add sampling for:",
+				UIUtils.createVerticalBox(
+						filterPanel, 
+						new JLabel("Select one or more samples:"),
+						new JScrollPane(biosampleList))));
 		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
 		getRootPane().setDefaultButton(okButton);		
 		

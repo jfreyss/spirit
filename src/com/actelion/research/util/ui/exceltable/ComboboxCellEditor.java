@@ -21,6 +21,7 @@
 
 package com.actelion.research.util.ui.exceltable;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -28,7 +29,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.AbstractCellEditor;
-import javax.swing.JComponent;
+import javax.swing.BorderFactory;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableCellEditor;
@@ -59,16 +60,12 @@ public class ComboboxCellEditor<T> extends AbstractCellEditor implements TableCe
 				fireEditingStopped();
 			}
 		});
-					
+		cb.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-		
-		
-		AlphaNumericalCellEditor.initComp(cb, (JComponent) table.getCellRenderer(row, column).getTableCellRendererComponent(table, value, isSelected, isSelected, row, column));
-
 		cb.setSelection((T)value);
 		cb.setEditable(false);
 		if(value==null && cb.isShowing()) {

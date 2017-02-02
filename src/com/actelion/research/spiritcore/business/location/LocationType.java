@@ -112,7 +112,6 @@ public enum LocationType {
 					try {
 						image = ImageIO.read(url);
 					} catch (Exception e) {
-						e.printStackTrace();
 						System.err.println("no image for "+name.toLowerCase()+".png  "+e);
 					}
 				} 

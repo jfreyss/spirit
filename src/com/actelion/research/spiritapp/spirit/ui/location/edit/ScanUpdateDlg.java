@@ -33,7 +33,6 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleOrRackTab;
 import com.actelion.research.spiritapp.spirit.ui.scanner.ScanRackForDepictorAction;
 import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner;
@@ -42,9 +41,6 @@ import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDia
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.DAOLocation;
-import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.scanner.ScannerConfiguration;

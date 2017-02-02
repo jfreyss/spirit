@@ -311,8 +311,10 @@ public class POIUtils {
 		}
 		
 		autoSizeColumns(sheet);
-		for (int c = 0; c < table[0].length; c++) {
-			if(sheet.getColumnWidth(c)>10000) sheet.setColumnWidth(c, 3000);
+		if(table.length>0) {
+			for (int c = 0; c < table[0].length; c++) {
+				if(sheet.getColumnWidth(c)>10000) sheet.setColumnWidth(c, 3000);
+			}
 		}
 		
 		if(exportMode==ExportMode.HEADERS_TOPLEFT) {
@@ -320,8 +322,7 @@ public class POIUtils {
 				sheet.getRow(r).setHeightInPoints(maxRows*16f);
 			}
 		}
-		
-		
+				
 		File reportFile = File.createTempFile("xls_", ".xlsx");
 		FileOutputStream out = new FileOutputStream(reportFile);
 		wb.write(out);

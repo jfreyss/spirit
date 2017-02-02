@@ -24,7 +24,6 @@ package com.actelion.research.spiritapp.spirit;
 import java.awt.Dimension;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.InetAddress;
 import java.util.List;
 
 import javax.swing.JLabel;
@@ -48,7 +47,6 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
@@ -86,15 +84,15 @@ public class SpiritDB {
 			LoggerFactory.getLogger(Spirit.class).debug("check Users");
 			if(DBAdapter.getAdapter().isInActelionDomain()) {
 				//Login freyssj automatically 
-				if(System.getProperty("user.name").equals("freyssj") && InetAddress.getLocalHost().getHostAddress().equals("10.100.227.35") ) {
-					try {
-						user = DAOSpiritUser.loadUser("freyssj");
-						if(user==null) throw new Exception("Could not load user freyssj");
-						Spirit.setUser(user);									
-					} catch (Exception e) {
-						System.err.println(e);
-					}
-				}
+//				if(System.getProperty("user.name").equals("freyssj") && InetAddress.getLocalHost().getHostAddress().equals("10.100.227.35") ) {
+//					try {
+//						user = DAOSpiritUser.loadUser("freyssj");
+//						if(user==null) throw new Exception("Could not load user freyssj");
+//						Spirit.setUser(user);									
+//					} catch (Exception e) {
+//						System.err.println(e);
+//					}
+//				}
 			} else if(DBAdapter.getAdapter().getUserManagedMode()==UserAdministrationMode.READ_WRITE) {
 				List<Employee> employees = DBAdapter.getAdapter().getEmployees();
 				boolean admins = false;

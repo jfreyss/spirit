@@ -21,23 +21,25 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.editor;
 
+import java.awt.Color;
 import java.awt.Component;
 
 import javax.swing.AbstractCellEditor;
-import javax.swing.JComponent;
+import javax.swing.BorderFactory;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdBrowser;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
-import com.actelion.research.util.ui.exceltable.AlphaNumericalCellEditor;
 
 public class BiosampleCellEditor extends AbstractCellEditor implements TableCellEditor {
 	private final SampleIdBrowser sampleIdBrowser;
 	
 	public BiosampleCellEditor(Biotype forcedBiotype) {
 		sampleIdBrowser = new SampleIdBrowser(forcedBiotype);			
+		sampleIdBrowser.setMargin(null);
+		sampleIdBrowser.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
 	}
 
 	@Override
@@ -47,8 +49,6 @@ public class BiosampleCellEditor extends AbstractCellEditor implements TableCell
 
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-		
-		AlphaNumericalCellEditor.initComp(sampleIdBrowser, (JComponent) table.getCellRenderer(row, column).getTableCellRendererComponent(table, value, isSelected, isSelected, row, column));
 		
 		sampleIdBrowser.setBiosample((Biosample) value);
 		sampleIdBrowser.selectAll();

@@ -141,7 +141,7 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 								File f = chooser.getSelectedFile();
 								try (InputStream is = getClass().getResourceAsStream("Spirit Labels.org")) {
 									os = new FileOutputStream(f);
-									IOUtils.saveStream(is, os);
+									IOUtils.redirect(is, os);
 									os.close();
 									JExceptionDialog.showInfo(tab.getDialog(), "File Saved under "+f);
 								} catch (Exception e2) {

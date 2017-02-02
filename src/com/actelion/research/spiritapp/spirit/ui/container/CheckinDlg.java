@@ -54,7 +54,7 @@ import com.actelion.research.spiritapp.spirit.ui.location.LocationBrowser;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.LocationDepictor;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.RackDepictorListener;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.RackDropListener;
-import com.actelion.research.spiritapp.spirit.ui.location.edit.LocationBatchEditDlg;
+import com.actelion.research.spiritapp.spirit.ui.location.edit.LocationEditDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
@@ -223,7 +223,7 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 				location.setCols(12);
 				location.setRows(8);
 				location.setName("Rack-"+System.currentTimeMillis());
-				LocationBatchEditDlg dlg = LocationBatchEditDlg.editInSameTransaction(Collections.singletonList(location));
+				LocationEditDlg dlg = LocationEditDlg.editInSameTransaction(Collections.singletonList(location));
 				
 				List<Location> locs = dlg.getSavedLocations();
 				if(locs!=null && locs.size()>0) {

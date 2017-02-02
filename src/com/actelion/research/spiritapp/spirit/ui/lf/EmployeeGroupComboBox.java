@@ -47,7 +47,7 @@ public class EmployeeGroupComboBox extends JGenericComboBox<EmployeeGroup> {
 		List<EmployeeGroup> res = DBAdapter.getAdapter().getEmployeeGroups();
 		List<EmployeeGroup> depts = new ArrayList<>();
 		for (EmployeeGroup g: res) {
-			if(onlyWithMembership && (Spirit.getUser()==null || !Spirit.getUser().isMember(g))) {
+			if(onlyWithMembership && (Spirit.getUser()==null || !Spirit.getUser().isSuperAdmin() || !Spirit.getUser().isMember(g))) {
 				continue;
 			}
 			depts.add(g);

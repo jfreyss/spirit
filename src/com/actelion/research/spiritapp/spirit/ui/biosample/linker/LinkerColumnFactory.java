@@ -39,6 +39,7 @@ public class LinkerColumnFactory {
 		case METADATA:
 			switch(linker.getBiotypeMetadata().getDataType()) {
 				case D_FILE: return new DocumentColumn(linker);
+				case FILES: return new DocumentColumn(linker);
 				case BIOSAMPLE: return new LinkedBiosampleColumn(linker);
 				default: return new MetadataColumn(linker);
 			}

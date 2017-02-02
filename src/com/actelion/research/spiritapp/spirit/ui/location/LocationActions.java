@@ -38,7 +38,7 @@ import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.print.PrintLabel;
-import com.actelion.research.spiritapp.spirit.ui.location.edit.LocationBatchEditDlg;
+import com.actelion.research.spiritapp.spirit.ui.location.edit.LocationEditDlg;
 import com.actelion.research.spiritapp.spirit.ui.print.BrotherLabelsDlg;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.Privacy;
@@ -87,7 +87,7 @@ public class LocationActions {
 				location.setEmployeeGroup(Spirit.getUser().getMainGroup());
 			}
 			
-			LocationBatchEditDlg.edit(Collections.singletonList(location));
+			LocationEditDlg.edit(Collections.singletonList(location));
 		}
 	}
 	
@@ -110,7 +110,7 @@ public class LocationActions {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if(Spirit.getUser()==null) return;
-			LocationBatchEditDlg.deleteInNewContext(locations);
+			LocationEditDlg.deleteInNewContext(locations);
 		}
 	}
 	
@@ -194,7 +194,7 @@ public class LocationActions {
 			if(Spirit.getUser()==null) return;
 			
 
-			LocationBatchEditDlg.duplicate(locations);
+			LocationEditDlg.duplicate(locations);
 		}
 	}
 	
@@ -226,7 +226,7 @@ public class LocationActions {
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			LocationBatchEditDlg.edit(locations);
+			LocationEditDlg.edit(locations);
 		}
 	}
 	

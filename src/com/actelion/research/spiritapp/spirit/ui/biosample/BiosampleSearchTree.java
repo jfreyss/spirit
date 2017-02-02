@@ -571,6 +571,8 @@ public class BiosampleSearchTree extends FormTree {
 						});
 					} else if(linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().getDataType()==DataType.D_FILE) {
 						continue;
+					} else if(linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().getDataType()==DataType.FILES) {
+						continue;
 					} else if(linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().getDataType()==DataType.MULTI) {					
 						linkerNode.add(new MultiNode(this, label, linker.getBiotypeMetadata().extractChoices(), new Strategy<String>() {
 							@Override public String getModel() {return query.getLinker2values().get(linker);}

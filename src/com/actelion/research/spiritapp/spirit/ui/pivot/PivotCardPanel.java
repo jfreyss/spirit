@@ -104,7 +104,6 @@ public class PivotCardPanel extends JPanel {
 	private JPanel templatePanel = UIUtils.createHorizontalBox();
 
 	// Views
-	private final boolean forResults;
 	private final JPanel viewPanel;
 	private PivotTemplate analysisPivotTemplate = new ColumnPivotTemplate();
 	private PivotTemplate currentPivotTemplate = null;
@@ -131,17 +130,14 @@ public class PivotCardPanel extends JPanel {
 	/**
 	 * Create a panel for displaying pivoted resultsf
 	 * 
-	 * @param tableTab
-	 *            optional
-	 * @param forResults
+	 * @param tableTab optional
 	 * @param externalDetailPane
 	 *            detailPanel to refresh when a biosample is selected, if null
 	 *            the detailpanel will be created
 	 */
-	public PivotCardPanel(final JComponent tableTab, final boolean forResults, BiosampleTabbedPane externalDetailPane) {
+	public PivotCardPanel(final JComponent tableTab, BiosampleTabbedPane externalDetailPane) {
 		super(new BorderLayout());
 
-		this.forResults = forResults;
 		this.tableTab = tableTab;
 
 		pivotButton.addActionListener(new ActionListener() {
@@ -160,7 +156,7 @@ public class PivotCardPanel extends JPanel {
 		/////////////////////////////////
 		// Bottom
 		JBGScrollPane subTableSp;
-		if (forResults) {
+		if (tableTab==null) {
 			subResultTable = new ResultTable();
 			subResultTable.getModel().showAllHideable(true);
 			subTableSp = new JBGScrollPane(subResultTable, 1);
@@ -218,7 +214,7 @@ public class PivotCardPanel extends JPanel {
 					return;
 
 				final List<Result> results = pivotTable.getSelectedResults();
-				if (forResults) {
+				if (tableTab==null) {
 					subResultTable.setRows(results);
 				} else {
 					List<Biosample> list = new ArrayList<Biosample>(Result.getBiosamples(results));
@@ -249,12 +245,13 @@ public class PivotCardPanel extends JPanel {
 		pivotTable.getColumnModel().getSelectionModel().addListSelectionListener(listener);
 
 		// Init cardPanel
-		if (tableTab != null)
+		if (tableTab != null) {
 			cardPanel.add("table", tableTab);
+		}
 		cardPanel.add("pivot", centerPane);
 
 		// init templates
-		if (forResults) {
+		if (tableTab==null) {
 			defaultTemplates = new PivotTemplate[] { new CompactPivotTemplate(), new ColumnPivotTemplate(), new FlatPivotTemplate() };
 		} else {
 			defaultTemplates = new PivotTemplate[] { new InventoryPivotTemplate() };
@@ -271,42 +268,21 @@ public class PivotCardPanel extends JPanel {
 			excelButton.setFont(FastFont.SMALL);
 			
 			statsButton.setToolTipText("Analyze the displayed results and suggest graphs");
-			statsButton.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent ev) {
-					assert pivotTable != null;
-					assert pivotTable.getPivotDataTable() != null;
-					new PivotAnalyzerDlg(pivotTable.getPivotDataTable().getResults(), pivotTable.getPivotDataTable().getSkippedAttributes(), analysisPivotTemplate);
-				}
+			statsButton.addActionListener(e-> {
+				assert pivotTable != null;
+				assert pivotTable.getPivotDataTable() != null;
+				new PivotAnalyzerDlg(pivotTable.getPivotDataTable().getResults(), pivotTable.getPivotDataTable().getSkippedAttributes(), analysisPivotTemplate);
 			});
-			dwButton.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent ev) {
-					exportToDw();
-				}
-			});
-			csvButton.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					exportToExcel(true);
-				}
-			});
-			excelButton.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent ev) {
-					exportToExcel(false);
-				}
-			});
+			dwButton.addActionListener(e -> exportToDw());
+			csvButton.addActionListener(e-> exportToExcel(true));
+			excelButton.addActionListener(e -> exportToExcel(false));
 		}
-		JPanel topPanel = UIUtils.createHorizontalBox(
+		add(BorderLayout.NORTH, UIUtils.createHorizontalBox(
 				(tableTab != null?pivotButton:null), 
 				viewPanel, 
 				Box.createHorizontalGlue(), 
-				forResults? UIUtils.createTitleBoxSmall("Stats", UIUtils.createHorizontalBox(statsButton)): null,
-				UIUtils.createTitleBoxSmall("Export", UIUtils.createHorizontalBox(dwButton, csvButton, excelButton)));
-//		topPanel.setPreferredSize(new Dimension(300, 36));
-
-		add(BorderLayout.NORTH, topPanel);
+				UIUtils.createTitleBoxSmall("Stats", UIUtils.createHorizontalBox(statsButton)),
+				UIUtils.createTitleBoxSmall("Export", UIUtils.createHorizontalBox(dwButton, csvButton, excelButton))));
 		add(BorderLayout.CENTER, cardPanel);
 
 		// Add buttonlistener
@@ -510,7 +486,6 @@ public class PivotCardPanel extends JPanel {
 					// Find the items, which should be displayed
 					currentPivotTemplate.init(results);
 					currentPivotTemplate.removeBlindItems(results, Spirit.getUser());
-//					currentPivotTemplate.simplify(results);
 
 					// Create the pivottable
 					pivotDataTable = new PivotDataTable(results, skippedAttributes, currentPivotTemplate);
@@ -554,9 +529,9 @@ public class PivotCardPanel extends JPanel {
 			currentPivotTemplate = currentPivotTemplate.clone();
 			Window top = SwingUtilities.getWindowAncestor(this);
 			if (top instanceof JFrame) {
-				dlg = new PivotTemplateDlg((JFrame) top, currentPivotTemplate, PivotItemFactory.getPossibleItems(results, Spirit.getUser()), forResults);
+				dlg = new PivotTemplateDlg((JFrame) top, currentPivotTemplate, PivotItemFactory.getPossibleItems(results, Spirit.getUser()), tableTab==null);
 			} else if (top instanceof JDialog) {
-				dlg = new PivotTemplateDlg((JDialog) top, currentPivotTemplate, PivotItemFactory.getPossibleItems(results, Spirit.getUser()), forResults);
+				dlg = new PivotTemplateDlg((JDialog) top, currentPivotTemplate, PivotItemFactory.getPossibleItems(results, Spirit.getUser()), tableTab==null);
 			}
 
 			dlg.addPropertyChangeListener(PivotTemplateDlg.PROPERTY_UPDATED, new PropertyChangeListener() {

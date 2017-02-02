@@ -21,9 +21,6 @@
 
 package com.actelion.research.spiritcore.business;
 
-
-import java.text.SimpleDateFormat;
-
 public enum DataType {	
 	ALPHA("Alphanumeric", null),
 	AUTO("Autocomplete", null),
@@ -31,14 +28,13 @@ public enum DataType {
 	LIST("OneChoice", "List of options"),
 	MULTI("MultiChoice", "List of options"),
 	DATE("Date/Time", null),	
-	D_FILE("File", null),
+	D_FILE("Single File", null),
+	FILES("Multiple Files", null),
 	LARGE("LargeText", null),
 	FORMULA("Formula", "Formula"),	
 	BIOSAMPLE("Biosample", "Biotype")
 	;
 	
-	public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy"); 
-	public static SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("dd.MM.yyyy HH:mm"); 	
 	private final String name;
 	private final String parametersDescription;
 	
@@ -47,8 +43,12 @@ public enum DataType {
 		this.parametersDescription = parametersDescription;
 	}
 	
-	public String getDescription() {
+	public String getName() {
 		return name;
+	}
+	
+	public boolean isDocument() {
+		return this==DataType.D_FILE || this==FILES;
 	}
 	
 	public String getParametersDescription() {

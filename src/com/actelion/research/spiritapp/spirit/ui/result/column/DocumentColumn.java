@@ -25,8 +25,10 @@ import javax.swing.JComponent;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.DocumentCellEditor;
+import com.actelion.research.spiritapp.spirit.ui.biosample.editor.DocumentZipCellEditor;
 import com.actelion.research.spiritapp.spirit.ui.util.component.DocumentLabel;
 import com.actelion.research.spiritapp.spirit.ui.util.component.DocumentTextField;
+import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
@@ -74,13 +76,21 @@ public class DocumentColumn extends Column<Result, Document> {
 	
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Result> table) {
-		return new DocumentCellEditor();
+		if(att.getDataType()==DataType.FILES) {
+			return new DocumentZipCellEditor();			
+		} else {
+			return new DocumentCellEditor();
+		}
 	}
 	
 	@Override
 	public boolean mouseDoubleClicked(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
-		DocumentTextField.open((Document) value);
-		return true;
+		if(att.getDataType()==DataType.FILES) {
+			return false;			
+		} else {
+			DocumentTextField.open((Document) value);
+			return true;
+		}
 	}
 		
 }

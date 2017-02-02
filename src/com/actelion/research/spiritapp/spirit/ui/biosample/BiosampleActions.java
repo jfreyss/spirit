@@ -70,11 +70,9 @@ import com.actelion.research.spiritapp.spirit.ui.lf.UserIdComboBox;
 import com.actelion.research.spiritapp.spirit.ui.pivot.PivotTable;
 import com.actelion.research.spiritapp.spirit.ui.print.PrintingDlg;
 import com.actelion.research.spiritapp.spirit.ui.result.edit.EditResultDlg;
-import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner;
 import com.actelion.research.spiritapp.spirit.ui.study.SetLivingStatusDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
-import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -199,48 +197,6 @@ public class BiosampleActions {
 				JExceptionDialog.showError(ex);
 			}
 
-		}
-	}
-	
-
-	public static class Action_ScanAndView extends AbstractAction {
-		public Action_ScanAndView() {
-			super("Scan Rack");
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
-			putValue(Action.SMALL_ICON, IconType.SCANNER.getIcon());
-		}
-	
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			try {
-				SpiritScanner scanner = new SpiritScanner();				
-				Location rack = scanner.scan(null, true, null);
-				if(rack==null) return;
-				
-				if(rack.getName()==null || rack.getName().length()==0) {
-					//Simple Scan
-					SpiritContextListener.setRack(rack);	
-				} else {
-					//Scan and save
-					List<Biosample> biosamples = new ArrayList<>(rack.getBiosamples());
-					Collections.sort(biosamples);
-					for (Biosample b : biosamples) {
-						b.setLocPos(rack, rack.parsePosition(b.getScannedPosition()));
-						b.setScannedPosition(null);
-					}
-					try {
-						JPAUtil.pushEditableContext(Spirit.getUser());
-						EditBiosampleDlg.createDialogForEditSameTransaction("Save Rack", biosamples).setVisible(true);
-					} finally {
-						JPAUtil.popEditableContext();
-					}
-					SpiritContextListener.setLocation(rack, -1);
-				}
-				
-				
-			} catch (Exception ex) {
-				JExceptionDialog.showError(ex);
-			}	
 		}
 	}
 	
@@ -400,7 +356,7 @@ public class BiosampleActions {
 		 * @param biosamples
 		 */
 		public Action_BatchEdit(List<Biosample> biosamples) {
-			super(biosamples.size()==1?  "Edit "+biosamples.get(0).getSampleIdName(): "Edit All");
+			super(biosamples.size()==1?  "Edit " + (SpiritRights.canRead(biosamples.get(0), Spirit.getUser())? biosamples.get(0).getSampleIdName(): null): "Edit All");
 			this.biosamples = biosamples;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(Action.SMALL_ICON, IconType.EDIT.getIcon());			
@@ -493,7 +449,7 @@ public class BiosampleActions {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				CreateChildrenDlg dlg = new CreateChildrenDlg(biosamples);
+				CreateChildrenDlg dlg = new CreateChildrenDlg(biosamples, null);
 				dlg.setVisible(true);
 				List<Biosample> children = dlg.getChildren();
 				if(children!=null) {

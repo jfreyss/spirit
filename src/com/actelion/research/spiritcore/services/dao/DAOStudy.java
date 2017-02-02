@@ -46,6 +46,7 @@ import org.hibernate.jpa.QueryHints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
@@ -177,26 +178,6 @@ public class DAOStudy {
 		return res;
 	}
 	
-//	public static void fullLoad(Study study) {
-//		if(study==null) return;
-//
-//		study.getPhases().iterator();
-//		study.getGroups().iterator();
-//		study.getNamedTreatments().iterator();
-//
-//		for(NamedSampling ns: study.getNamedSamplings()) {
-//			ns.getAllSamplings().iterator();
-//		}
-//		
-//		for(StudyAction a: study.getStudyActions()) {
-//			a.getGroup();
-//			a.getPhase();
-//			a.getNamedTreatment();
-//			a.getNamedSamplings();
-//		}
-//
-//	}
-	
 	public static Study getStudy(int id) {
 		EntityManager session = JPAUtil.getManager();
 		List<Study> res = (List<Study>) session.createQuery("select s from Study s where s.id = ?1")
@@ -254,8 +235,7 @@ public class DAOStudy {
 		}
 		return res;
 	}
-	
-	
+		
 	public static List<Study> queryStudies(StudyQuery q, SpiritUser user) throws Exception {
 		EntityManager session = JPAUtil.getManager();
 		long s = System.currentTimeMillis();
@@ -353,7 +333,7 @@ public class DAOStudy {
 		if(user!=null) {
 			for (Iterator<Study> iterator = studies.iterator(); iterator.hasNext();) {
 				Study study = iterator.next();
-				if(!SpiritRights.canRead(study, user)) iterator.remove();			
+				if(!SpiritRights.canBlind(study, user)) iterator.remove();			
 			}
 		}
 		LoggerFactory.getLogger(DAOStudy.class).info("queryStudies() in "+(System.currentTimeMillis()-s)+"ms");
@@ -600,11 +580,11 @@ public class DAOStudy {
 			Biosample b = biosamples.get(sampleId);
 			if(b==null) System.err.println(b+" not found");
 			if(b==null) {
-				//Then in AnimalDB
+				//Then in the externaDB
 				b = new Biosample();
 				b.setSampleId(sampleId);
 				try {
-					DAOBiosample.populateFromAnimalDB(b);
+					DBAdapter.getAdapter().populateFromExternalDB(b);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

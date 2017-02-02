@@ -145,7 +145,6 @@ public abstract class AbstractReport {
 	}
 	
 	private void initWorkbook() {
-		System.out.println("AbstractReport.initWorkbook() "+this);
 		
 		wb = new XSSFWorkbook();
 		styles.clear();
@@ -642,7 +641,6 @@ public abstract class AbstractReport {
 		try {		
 			c.setCellFormula(text);
 		} catch(Exception e) {	
-			System.out.println("AbstractReport.setFormula() "+row+"x"+col+" > "+text);
 			e.printStackTrace();
 			c.setCellValue("Err. "+e.getMessage());
 		}

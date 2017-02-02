@@ -35,9 +35,10 @@ import java.util.Date;
 public class FormatterUtils {
 
 	public static enum LocaleFormat {
-		SWISS("dd.MM.yy", "HH:mm"),
+		AMERICAN("MM/dd/yy", "HH:mm"),
 		EUROPEAN("dd/MM/yy", "HH:mm"),
-		AMERICAN("dd/MM/yy", "HH:mm");
+		SWISS("dd.MM.yy", "HH:mm"),
+		INTL("yy-mm-dd", "HH:mm");
 		private String localeDateFormat;
 		private String localeTimeFormat;
 		private LocaleFormat(String localeDateFormat, String localeTimeFormat) {

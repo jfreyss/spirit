@@ -40,7 +40,7 @@ import com.actelion.research.util.ui.TextChangeListener;
  * @author freyssj
  *
  */
-public class MonitorTextChangeListener extends TextChangeListener {
+public class MonitorTextChangeListener implements TextChangeListener {
 	private Result result;
 	private int valueNo;
 	

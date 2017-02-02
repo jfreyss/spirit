@@ -58,6 +58,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.RevisionNumber;
 
+import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.IEntity;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -420,6 +421,7 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 	public Map<String, String> getResultValuesAsMap(OutputType outputType) {
 		Map<String, String> res = new LinkedHashMap<>();
 		for (TestAttribute att : test.getAttributes()) {
+			if(att.getDataType()==DataType.FILES || att.getDataType()==DataType.D_FILE) continue;
 			if(att.getOutputType()==outputType) {
 				res.put(att.getName(), getResultValue(att).getValue());
 			}

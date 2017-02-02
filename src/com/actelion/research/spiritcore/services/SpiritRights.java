@@ -45,8 +45,6 @@ import com.actelion.research.spiritcore.util.MiscUtils;
  */
 public class SpiritRights {
 	
-//	private static boolean openMode = false;
-	
 	/**
 	 * The user can view any location except the protected and private that are not under their department
 	 * @param location
@@ -57,7 +55,6 @@ public class SpiritRights {
 		if(location.getInheritedPrivacy()==Privacy.PUBLIC) return true;
 		if(user==null) return false;
 		if(user.isSuperAdmin() || user.isReadall()) return true; 
-		if(location.getInheritedPrivacy()==Privacy.PROTECTED) return true;		
 		return user.isMember(location.getInheritedEmployeeGroup());
 	}
 	
@@ -78,17 +75,21 @@ public class SpiritRights {
 		if(biosample.getInheritedStudy()!=null) {			
 			return canView(biosample.getInheritedStudy(), user);
 		} else {	
+			//The creator or the manager of the creator/updater has the rights
 			for(String uid: user.getManagedUsers()) {
 				if(uid.equals(biosample.getCreUser()) || uid.equals(biosample.getUpdUser())) return true;
 			}
-	
+			
+			//Everybody in the group has the rights
 			if(biosample.getEmployeeGroup()!=null && user.isMember(biosample.getEmployeeGroup())) return true;			
 			
+			
+			//Otherwise it depends of the location: public, protected (biosample shown without location), or member of private location
 			Location location = biosample.getLocation();
-			if(location==null) return true;
-			if(location.getInheritedPrivacy()==Privacy.PUBLIC) return true;
-			if(location.getInheritedPrivacy()==Privacy.PROTECTED) return true;
-			if(location.getInheritedPrivacy()==Privacy.PRIVATE && location.getInheritedEmployeeGroup()!=null && user.isMember(location.getInheritedEmployeeGroup())) return true;
+			if(location==null) return SpiritProperties.getInstance().isOpen();
+			else if(location.getInheritedPrivacy()==Privacy.PUBLIC) return true;
+			else if(location.getInheritedPrivacy()==Privacy.PROTECTED) return SpiritProperties.getInstance().isOpen();
+			else if(location.getInheritedPrivacy()==Privacy.PRIVATE && location.getInheritedEmployeeGroup()!=null && user.isMember(location.getInheritedEmployeeGroup())) return true;
 		}
 		return false;
 		
@@ -349,14 +350,19 @@ public class SpiritRights {
 		if(study.getId()<=0) return true;
 
 		String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState());
+		
 		if(MiscUtils.contains(roles, "ALL")) {
 			return true;
 		}
 		if(MiscUtils.contains(roles, user.getRoles())) {
 			return true;
 		}
-		if(canExpert(study, user)) return true;
-		
+		if(canExpert(study, user)) {
+			return true;
+		}
+		if(canBlind(study, user)) {
+			return true;
+		}
 		return false;
 	}
 

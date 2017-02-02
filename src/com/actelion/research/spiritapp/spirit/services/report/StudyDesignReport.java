@@ -43,6 +43,7 @@ import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.ui.FastFont;
 
 public class StudyDesignReport extends AbstractReport {
 	
@@ -56,29 +57,31 @@ public class StudyDesignReport extends AbstractReport {
 		
 		//create sheet
 	    Sheet sheet = createSheet(wb, "Design");
+	    sheet.setPrintGridlines(false);
 	    createHeadersWithTitle(sheet, study, "Study Design");
 	    
 	    // Create the drawing patriarch.  This is the top level container for all shapes. 
 	    Drawing drawing = sheet.createDrawingPatriarch();
 	    
 	    ByteArrayOutputStream os = new ByteArrayOutputStream();
-	    BufferedImage img = StudyDepictor.getImage(study, 5000, 5000, 2);
+	    //10.5inches*600 = 6300 pixels, 7.5*600=4500 pixels, on 600dpi
+	    int size = FastFont.getDefaultFontSize();
+	    FastFont.setDefaultFontSize(36);
+	    BufferedImage img = StudyDepictor.getImage(study, 6300, 4500, 1);
 	    ImageIO.write(img, "PNG", os);
+	    FastFont.setDefaultFontSize(size);
 	    
 	    //add a picture shape
 	    int pictureIdx = wb.addPicture(os.toByteArray(), Workbook.PICTURE_TYPE_PNG);
 	    
 	    ClientAnchor anchor = helper.createClientAnchor();
-	    //set top-left corner of the picture,
-	    //subsequent call of Picture#resize() will operate relative to it
-	    anchor.setAnchorType(ClientAnchor.MOVE_AND_RESIZE);
+	    anchor.setAnchorType(ClientAnchor.MOVE_DONT_RESIZE);
 	    anchor.setCol1(0);
 	    anchor.setRow1(3);
 	    Picture pict = drawing.createPicture(anchor, pictureIdx);
-	    
-
+	    final double scaleDown = .33;
 	    //Samplings
-	    int y = img.getHeight()/20 + 5;
+	    int y = (int)(img.getHeight()*scaleDown)/20 + 5;
 	    int nSamplings = 0;
 	    for(NamedSampling ns: study.getNamedSamplings()) {
 	    	nSamplings = Math.max(nSamplings, ns.getAllSamplings().size());
@@ -114,9 +117,9 @@ public class StudyDesignReport extends AbstractReport {
 	    
 
 
-	    POIUtils.autoSizeColumns(sheet,-1, true);
+	    POIUtils.autoSizeColumns(sheet, -1, true);
 	    pict.resize();
-
+	    pict.resize(scaleDown);
 
 	}
 	
@@ -125,7 +128,7 @@ public class StudyDesignReport extends AbstractReport {
 		try {
 			Spirit.setUser(DAOSpiritUser.loadUser("freyssj"));
 			StudyDesignReport wg = new StudyDesignReport();
-			wg.populateReport(DAOStudy.getStudyByStudyId("S-00414"));
+			wg.populateReport(DAOStudy.getStudyByStudyId("S-00627"));
 			wg.export(null);
 		} catch(Exception e) {
 			e.printStackTrace();

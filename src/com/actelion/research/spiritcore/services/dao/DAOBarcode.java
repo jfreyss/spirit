@@ -23,6 +23,7 @@ package com.actelion.research.spiritcore.services.dao;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,7 @@ public class DAOBarcode {
 	 */
 	private static final int MAX_HOLE = 50; //To be increased with the number of users
 	private static Map<String, List<String>> prefix2PrecomputedIds = new HashMap<>();
+	private static DecimalFormat idFormat = new DecimalFormat("000000");
 
 	public static synchronized void reset() {
 		prefix2PrecomputedIds.clear();
@@ -62,11 +64,34 @@ public class DAOBarcode {
 		return DAOBarcode.getNextId(Category.BIOSAMPLE, prefix);
 	}
 
+	
+	public static String formatPattern(String pattern) {
+		//Replace patterns in the prefix
+		if(pattern.indexOf("{")>0) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(JPAUtil.getCurrentDateFromDatabase());
+			pattern = pattern.replace("{YY}", new DecimalFormat("00").format(cal.get(Calendar.YEAR) % 100));
+			pattern = pattern.replace("{YYYY}", new DecimalFormat("0000").format(cal.get(Calendar.YEAR)));
+			pattern = pattern.replace("{MM}", new DecimalFormat("00").format(cal.get(Calendar.MONTH) % 100));
+			pattern = pattern.replace("{DD}", new DecimalFormat("00").format(cal.get(Calendar.DAY_OF_MONTH) % 100));
+		}		
+		return pattern;
+	}
+	
+	public static String getExample(String prefix) {		
+		return formatPattern(prefix) + idFormat.format(1);
+	}
+	
 	@SuppressWarnings("unchecked")
-	public static synchronized String getNextId(Category cat, String prefix) {
+	public static synchronized String getNextId(Category cat, String prefixPattern) {
+		String prefix = formatPattern(prefixPattern);
+
+		//Retrieve next id
 		List<String> list = prefix2PrecomputedIds.get(cat+"_"+prefix);
 		LoggerFactory.getLogger(DAOBarcode.class).debug("getNextId for "+prefix+" list.n="+(list==null?"":list.size())+" next="+(list==null || list.size()==0?"":list.get(0)));
 		boolean newPrefix = list == null;
+		
+		//Generate next id
 		if(list==null || list.size()==0) {
 			
 			
@@ -135,7 +160,7 @@ public class DAOBarcode {
 				if(barcodeSequences.size()==0) {
 					//Create a new sequence
 					for (int i = 0; i < reserveN; i++) {
-						nextBarcode = prefix + new DecimalFormat("000000").format(lastBarcodeN1+i+1);
+						nextBarcode = prefix + idFormat.format(lastBarcodeN1+i+1);
 						list.add(nextBarcode);
 					}
 					BarcodeSequence sequence = new BarcodeSequence(cat, prefix, nextBarcode);
@@ -158,7 +183,7 @@ public class DAOBarcode {
 					
 					
 					for (int i = 0; i < reserveN; i++) {
-						nextBarcode = prefix + new DecimalFormat("000000").format(lastBarcodeN2+i+1);
+						nextBarcode = prefix + idFormat.format(lastBarcodeN2+i+1);
 						list.add(nextBarcode);
 					}
 					sequence.setLastBarcode(nextBarcode);
@@ -185,7 +210,7 @@ public class DAOBarcode {
 			.setParameter(1, prefix)
 			.getResultList();
 		
-		String barcode = prefix + new DecimalFormat("000000").format(maxId);
+		String barcode = prefix + idFormat.format(maxId);
 		BarcodeSequence sequence = null;
 		if(barcodeSequences.size()>0) {
 			sequence = barcodeSequences.get(0);

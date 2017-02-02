@@ -46,7 +46,6 @@ public class DocumentCellEditor extends AbstractCellEditor implements TableCellE
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 		documentTextField.setSelectedDocument((Document)value);
-//		documentTextField.validate();
 		return documentTextField;
 	}
 }

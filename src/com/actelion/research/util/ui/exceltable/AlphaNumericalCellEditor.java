@@ -25,9 +25,7 @@ import java.awt.Color;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
-import javax.swing.JComponent;
 import javax.swing.JTable;
-import javax.swing.SwingConstants;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.util.ui.JCustomTextField;
@@ -41,12 +39,12 @@ public class AlphaNumericalCellEditor extends AbstractCellEditor implements Tabl
 	private JCustomTextField alphaTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC);
 	
 	public AlphaNumericalCellEditor() {
+		alphaTextField.setMargin(null);
+		alphaTextField.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
 	}
 	
 	@Override
 	public JCustomTextField getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {		
-		initComp(alphaTextField, (JComponent) table.getCellRenderer(row, column).getTableCellRendererComponent(table, value, isSelected, isSelected, row, column));
-		
 		alphaTextField.setText(value==null?"": value.toString());
 		alphaTextField.selectAll();
 		return alphaTextField;
@@ -57,18 +55,4 @@ public class AlphaNumericalCellEditor extends AbstractCellEditor implements Tabl
 		return alphaTextField.getText();
 	}						
 	
-	public static void initComp(JComponent comp, JComponent model) {		
-		if(comp instanceof JCustomTextField) {
-			if(comp instanceof JLabelNoRepaint) {
-				((JCustomTextField)comp).setHorizontalAlignment(((JLabelNoRepaint)comp).getHorizontalAlignment());
-			} else {
-				((JCustomTextField)comp).setHorizontalAlignment(SwingConstants.LEFT);
-			}
-			((JCustomTextField)comp).setMargin(null);
-		}
-		
-		comp.setFont(comp.getFont());
-		comp.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
-		
-	}
 }

@@ -270,10 +270,10 @@ public class PivotItemFactory {
 			
 			if(top==null || top.getBiotype()==null || top.getBiotype().getSampleNameLabel()==null) {
 				return null;
-			} else if(topInStudy!=top && top.getSampleName()==null && topInStudy.getSampleName()!=null && top.getBiotype().equals(topInStudy.getBiotype()) && topInStudy.getBiotype().getSampleNameLabel()!=null) {
-				return topInStudy.getSampleName()==null?"": "<b>" + topInStudy.getSampleName(); 
-			} else {			
-				return top.getSampleName()==null?"": "<b>" + top.getSampleName();
+			} else if(!top.equals(topInStudy) && (top.getSampleName()==null || top.getSampleName().length()==0) && (topInStudy.getSampleName()!=null && topInStudy.getSampleName().length()>0) && top.getBiotype().equals(topInStudy.getBiotype()) && topInStudy.getBiotype().getSampleNameLabel()!=null) {
+				return "<b>" + topInStudy.getSampleName(); 
+			} else {
+				return (top.getSampleName()==null || top.getSampleName().length()==0)?"": "<b>" + top.getSampleName();
 			}
 		}
 	};

@@ -41,6 +41,7 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.editor.BiosampleCellE
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.GroupCellEditor;
 import com.actelion.research.spiritapp.spirit.ui.study.GroupLabel;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachedBiosampleTable.CageCellEditor;
+import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -146,9 +147,9 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 			row.setBiosample(b);
 			row.setSampleId(b.getSampleId());
 
-			//The populate the rest of the data (species, ...) from the animalDB 
-			try {					
-				DAOBiosample.populateFromAnimalDB(b);
+			//The populate the rest of the data from external DB 
+			try {			
+				DBAdapter.getAdapter().populateFromExternalDB(b);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}			

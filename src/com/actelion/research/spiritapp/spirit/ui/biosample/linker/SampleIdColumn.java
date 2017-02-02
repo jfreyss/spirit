@@ -38,7 +38,6 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
-import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
@@ -117,16 +116,12 @@ public class SampleIdColumn extends AbstractLinkerColumn<String> {
 			row.setSampleId(value);
 		}
 
-		//Prepopulate the other metadata from animaldb
-		if(row.getBiotype()!=null && row.getBiotype().getName().equals(Biotype.ANIMAL) && DBAdapter.getAdapter().isInActelionDomain()) {
-			try {					
-				DAOBiosample.populateFromAnimalDB(row);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		//Prepopulate the other metadata from external db
+		try {		
+			DBAdapter.getAdapter().populateFromExternalDB(row);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		
-		
 	}
 	
 	@Override

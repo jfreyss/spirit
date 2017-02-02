@@ -93,7 +93,7 @@ public class BiosampleTab extends JPanel implements ISpiritTab {
 		});
 		
 		//PivotTab
-		pivotCardPanel = new PivotCardPanel(tableOrRackTab, false, biosampleDetailPanel);
+		pivotCardPanel = new PivotCardPanel(tableOrRackTab, biosampleDetailPanel);
 		pivotCardPanel.addPropertyChangeListener(PivotCardPanel.PROPERTY_PIVOT_CHANGED, new PropertyChangeListener() {			
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
