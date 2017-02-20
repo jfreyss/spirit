@@ -308,8 +308,9 @@ public class PivotItemFactory {
 			if(r.getBiosample()!=null && r.getBiosample().getBiotype()!=null) {
 				if(r.getBiosample().getBiotype().getSampleNameLabel()!=null && r.getBiosample()!=r.getBiosample().getTopParentInSameStudy() &&  r.getBiosample().getSampleName()!=null) {				
 					return "<b>" + r.getBiosample().getSampleName();
-				}
-				
+				} else {
+					return "<b>" + r.getBiosample().getBiotype().getName();
+				}		
 			}
 			return null;
 		}
@@ -507,7 +508,8 @@ public class PivotItemFactory {
 	public static final PivotItem RESULT_OUTPUT = new PivotItem(PivotItemClassifier.RESULT, "Output") {
 		@Override
 		public String getTitle(ResultValue rv) {
-			if(rv.getAttribute().getName().equals(rv.getAttribute().getTest().getName()) && rv.getAttribute().getTest().getOutputAttributes().size()==1) return "";
+			//Skip the output attribute if it is not discriminant
+			if(rv.getAttribute().getTest().getOutputAttributes().size()==1) return null;
 			return "<y>" + rv.getAttribute().getName();
 		}		
 	};

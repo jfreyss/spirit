@@ -25,7 +25,7 @@ import java.util.List;
 
 import com.actelion.research.spiritcore.business.result.Result;
 
-
+@Deprecated
 public class FlatPivotTemplate extends PivotTemplate {
 
 	public FlatPivotTemplate() {

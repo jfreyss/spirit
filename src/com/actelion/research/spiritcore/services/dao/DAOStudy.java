@@ -414,9 +414,6 @@ public class DAOStudy {
 					a.remove();
 				}
 			}
-			for(Phase p: study.getPhases()) {
-				System.out.println("DAOStudy.persistStudies() "+study+" "+p.getId()+" : "+p.getName());
-			}
 			
 			//Now save the study
 			study.preSave();

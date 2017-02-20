@@ -81,7 +81,7 @@ public class DataWarriorExporter {
 			this.tpl = config.getCustomTemplate();
 		}
 		
-		this.pivotTable = new PivotDataTable(results, config.getSkippedAttributes(), tpl);
+		this.pivotTable = new PivotDataTable(results, tpl);
 		this.generateAllGraphs = true;
 	}
 	
@@ -100,7 +100,7 @@ public class DataWarriorExporter {
 				for(PivotRow r : pivotTable.getPivotRows()) {
 					PivotCell cc = r.getPivotCell(c);
 					if(cc.getNestedKeys().size()>1) {
-						throw new Exception("You cannot export to DW if your data contains nested tables. Please redefine your template");						
+						throw new Exception("You cannot export to DW if your data contains nested tables. Please redefine your data");						
 					}					
 				}
 			}			

@@ -39,11 +39,11 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.ui.study.PhaseComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.Selection;
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.StudyDepictor;
-import com.actelion.research.spiritapp.spirit.ui.study.depictor.ZoomScrollPane;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Measurement;
@@ -78,8 +78,7 @@ public class StudyDesignerPanel extends JPanel {
 				g.fillRect(Math.min(x, toX), Math.min(y, toY), Math.abs(toX-x), Math.abs(toY-y));
 				g.setColor(Color.GRAY);
 				g.drawRect(Math.min(x, toX), Math.min(y, toY), Math.abs(toX-x), Math.abs(toY-y));
-			}
-			
+			}			
 		}
 		
 		@Override
@@ -124,7 +123,7 @@ public class StudyDesignerPanel extends JPanel {
 	};
 
 	private final StudyWizardDlg dlg;
-	private ZoomScrollPane sp = new ZoomScrollPane(depictor);
+	private JScrollPane sp = new JScrollPane(depictor);
 	private JGenericComboBox<String> measurementCombobox = new JGenericComboBox<>();
 	private List<Measurement> extraMeasurements;
 	private JGenericComboBox<NamedTreatment> treatmentCombobox = new JGenericComboBox<>();

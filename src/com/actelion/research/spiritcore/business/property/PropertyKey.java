@@ -32,8 +32,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.jandex.Main;
-
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.FormatterUtils;
@@ -56,7 +54,7 @@ public class PropertyKey {
 	// SYSTEM PROPERTIES
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	public static final PropertyKey LAST_CHANGES = new PropertyKey(Tab.SYSTEM, "Last changes", "Home page shows changes from the last n. days", "system.home.days", "7", "1,3,7,15,31,90,365");	
+	public static final PropertyKey LAST_CHANGES = new PropertyKey(Tab.SYSTEM, "Last changes", "Home page shows changes from the last n. days", "system.home.days", "365", "1,3,7,15,31,90,365,3650");	
 	public static final PropertyKey USER_ROLES = new PropertyKey(Tab.SYSTEM, "Roles", "comma separated list of roles (in addition to admin, readall)", "user.roles", "");	
 	public static final PropertyKey USER_LOGIN_ROLE = new PropertyKey(Tab.SYSTEM, "Login with one specific role", "Are users requested to login with a specic role?<br>(if true, the user will be asked for a role upon login instead of having all roles simultaneously)", "user.login.role", "false", "true,false");
 	public static final PropertyKey RIGHT_ROLEONLY = new PropertyKey(Tab.SYSTEM, "Are user-rights role-based only", "Are the rights only role based??<br>(if true, the rights are purely role based and not user/dept specific)", "user.login.dept", "false", "true,false");

@@ -112,17 +112,15 @@ public class MonitoringAnimalPanel extends JPanel {
 
 		
 		//Weight Field
-		JCustomLabel lastWeightLabel = new JCustomLabel(FastFont.SMALL);	
+		JCustomLabel lastWeightLabel = new JCustomLabel(FastFont.SMALL);
 		{
 			weighResult = animal.getAuxResult(DAOTest.getTest(DAOTest.WEIGHING_TESTNAME), phase);
-			assert weighResult!=null;
-			
-			//Find LastWeight
-			Result prevWeighResult = SpiritRights.isBlind(phase.getStudy(), Spirit.getUser())? null: Result.getPrevious(weighResult, dlg.getAllPreviousResults());
+		
+			Result prevWeighResult = weighResult==null? null: SpiritRights.isBlind(phase.getStudy(), Spirit.getUser())? null: Result.getPrevious(weighResult, dlg.getAllPreviousResults());
 			lastWeightLabel.setPreferredSize(new Dimension(80, 22));
 			lastWeightLabel.setForeground(Color.DARK_GRAY);
 			lastWeightLabel.setText(prevWeighResult==null?"": (prevWeighResult.getPhase().getShortName()+ ": " + (prevWeighResult.getFirstAsDouble()==null?"NA": prevWeighResult.getFirstAsDouble()) + "g"));
-
+	
 			//Init field
 			boolean required = (a!=null && a.isMeasureWeight()) || (a!=null && a.getNamedTreatment()!=null);
 			weighTextField = new MonitorTextField(weighResult, 0, required);
@@ -169,7 +167,7 @@ public class MonitoringAnimalPanel extends JPanel {
 		for (Measurement em : phase.getStudy().getAllMeasurementsFromActions()) {
 			assert em.getTest()!=null;
 			final Result result = animal.getAuxResult(em.getTest(), phase, em.getParameters());
-			assert result!=null;
+//			assert result!=null;
 			
 
 			List<TestAttribute> tas = em.getTest().getOutputAttributes();

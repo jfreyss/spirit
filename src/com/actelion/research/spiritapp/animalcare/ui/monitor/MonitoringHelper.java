@@ -34,7 +34,7 @@ import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.util.ListHashMap;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class MonitoringHelper {
 

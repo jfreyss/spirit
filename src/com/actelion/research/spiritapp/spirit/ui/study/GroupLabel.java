@@ -55,7 +55,7 @@ public class GroupLabel extends JLabelNoRepaint {
 	}
 
 	public void setGroup(Group group) {
-		setText(group == null ? "" : group.getBlindedName(Spirit.getUser().getUsername()), group);
+		setText(group == null ? "" : group.getBlindedName(Spirit.getUsername()), group);
 	}
 
 	public void setText(String txt, Group group) {
@@ -71,7 +71,7 @@ public class GroupLabel extends JLabelNoRepaint {
 		
 		//Set Background
 		if(isOpaque() && group != null) {
-			bgColor = UIUtils.getDilutedColor(bgColor, group.getBlindedColor(Spirit.getUser().getUsername()));
+			bgColor = UIUtils.getDilutedColor(bgColor, group.getBlindedColor(Spirit.getUsername()));
 			setBackground(bgColor);
 		}
 

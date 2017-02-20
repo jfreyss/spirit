@@ -23,16 +23,13 @@ package com.actelion.research.spiritcore.business.pivot.analyzer;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.actelion.research.spiritcore.util.Pair;
+import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.util.StatUtils;
 
-public class ColumnAnalyser<T> {
+public class ColumnAnalyser {
 	
 	public enum Distribution {
 		NORMAL("Normal"),
@@ -52,6 +49,7 @@ public class ColumnAnalyser<T> {
 	
 	private final int index;
 	
+	private List<SimpleResult> simpleResults;
 	private final List<Double> doubles;
 	private int[] norBins;
 	private int[] logBins;
@@ -62,22 +60,14 @@ public class ColumnAnalyser<T> {
 	/**
 	 * Creates an analyzer and calculates statistics
 	 * @param index
-	 * @param pairs a list of (key, value) typically (groupName, value)
+	 * @param keyValues a list of (key, value) typically (groupName, value)
 	 */
-	public ColumnAnalyser(int index, List<Pair<T,Double>> pairs) {
+	public ColumnAnalyser(int index, List<SimpleResult> simpleResults) {
 		this.index = index;
-
-		//Extract keys
-		Set<T> keys = new LinkedHashSet<>();
-		for (Pair<T, Double> pair : pairs) {
-			keys.add(pair.getFirst());
-		}
+		this.simpleResults = simpleResults;
 		
-		//Extract doubles
-		doubles = new ArrayList<>();
-		for (Pair<T, Double> pair : pairs) {
-			doubles.add(pair.getSecond());
-		}
+		//Extract doubles and sort them
+		doubles = SimpleResult.getValues(simpleResults);
 		Collections.sort(this.doubles);
 		 
 		//Calculate Bins and distribution
@@ -107,26 +97,25 @@ public class ColumnAnalyser<T> {
 		}
 		
 		//Calculate KW. Group all values with the same key into a map
-		Map<T, List<Double>> map = new HashMap<>();
-		for (Pair<T, Double> pair: pairs) {
-			List<Double> doubles = map.get(pair.getFirst());
-			if(doubles==null) {
-				map.put(pair.getFirst(), doubles = new ArrayList<>());
-			}
-			doubles.add(pair.getSecond());
-		}
+		Map<Group, List<Double>> map = SimpleResult.groupingValuesPerGroup(simpleResults); 
 		
-		//Transform the map->list<Double> to a List<double[]>
+		//Transform the map->list<Double> to a List<double[]> to calculate KW
+		int maxSize = 0;
 		List<double[]> doublesList = new ArrayList<>();		
-		for (T key : map.keySet()) {
-			List<Double> doubles = map.get(key); 
+		for (Group key : map.keySet()) {
+			List<Double> doubles = map.get(key);
+			if(doubles.size()==0) continue;
 			double[] a = new double[doubles.size()];
-			for (int i = 0; i < a.length; i++) a[i] = doubles.get(i);
-			
-			doublesList.add(a);			
-		}
-		K = doublesList.size()<=1 || pairs.size()<=4? null: StatUtils.getKruskalWallis(doublesList);
+			for (int i = 0; i < a.length; i++) a[i] = doubles.get(i);			
+			doublesList.add(a);
+			maxSize = Math.max(maxSize, a.length);
+		}		
 		nGroups = doublesList.size();
+		K = nGroups<=1 || maxSize<=4? null: StatUtils.getKruskalWallis(doublesList);
+	}
+	
+	public List<SimpleResult> getSimpleResults() {
+		return simpleResults;
 	}
 	
 	public int getNGroups() {
@@ -175,9 +164,9 @@ public class ColumnAnalyser<T> {
 	/**
 	 * @return
 	 */
-	private int[] getBins(boolean log, int nBins, int maxRange) {
+	private int[] getBins(boolean log, int nBins, int maxRange) {		
 		int[] bins = new int[nBins];
-
+		if(doubles.size()==0) return bins;
 		if(getMax()==getMin()) return bins;
 		double min = getMin();
 		double max = getMax();

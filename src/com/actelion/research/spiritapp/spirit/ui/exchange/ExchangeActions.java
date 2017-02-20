@@ -32,7 +32,7 @@ import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritcore.business.Exchange;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.util.ui.UIUtils;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class ExchangeActions {
 

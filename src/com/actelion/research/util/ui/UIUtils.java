@@ -420,7 +420,7 @@ public final class UIUtils {
 	public static int drawString(Graphics g, String s, int x, int y, int width, int height, boolean autowrap) {
 		if(s==null || s.length()==0) return y;
 		
-		if(height<0) height = 1;
+		if(height<=0) height = 1;
 		int offset = 0; 
 		int index = 1;
 		int cy = y;

@@ -49,7 +49,7 @@ import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class LocationActions {
 

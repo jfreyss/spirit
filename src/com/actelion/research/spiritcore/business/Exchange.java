@@ -167,7 +167,8 @@ public class Exchange {
 	public void addStudies(Collection<Study> collection) {
 		List<Study> studies = new ArrayList<>(collection);
 		//Sort studies
-		Collections.sort(studies, Collections.reverseOrder());
+		Collections.sort(studies);
+		Collections.reverse(studies);
 		for (Study study : studies) {
 			if(study==null || this.studies.contains(study)) continue;
 			

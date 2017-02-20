@@ -37,7 +37,7 @@ import javax.swing.JSplitPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.actelion.research.spiritapp.spirit.ui.pivot.PivotCardPanel;
+import com.actelion.research.spiritapp.spirit.ui.pivot.PivotPanel;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritTab;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -55,7 +55,7 @@ import com.actelion.research.util.ui.SwingWorkerExtended;
 
 public class BiosampleTab extends JPanel implements ISpiritTab {
 	
-	private PivotCardPanel pivotCardPanel;
+	private PivotPanel pivotCardPanel;
 	
 	private BiosampleOrRackTab tableOrRackTab;	
 	
@@ -93,8 +93,8 @@ public class BiosampleTab extends JPanel implements ISpiritTab {
 		});
 		
 		//PivotTab
-		pivotCardPanel = new PivotCardPanel(tableOrRackTab, biosampleDetailPanel);
-		pivotCardPanel.addPropertyChangeListener(PivotCardPanel.PROPERTY_PIVOT_CHANGED, new PropertyChangeListener() {			
+		pivotCardPanel = new PivotPanel(true, tableOrRackTab, biosampleDetailPanel);
+		pivotCardPanel.addPropertyChangeListener(PivotPanel.PROPERTY_PIVOT_CHANGED, new PropertyChangeListener() {			
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				pivotBiosamples(pivotCardPanel.isPivotMode());
@@ -322,7 +322,7 @@ public class BiosampleTab extends JPanel implements ISpiritTab {
 				}
 				@Override
 				protected void done() {
-					pivotCardPanel.setResults(toPivot, null, new InventoryPivotTemplate(), true);
+					pivotCardPanel.setResults(toPivot, new InventoryPivotTemplate());
 					
 				}
 			};			

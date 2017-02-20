@@ -25,7 +25,11 @@ import java.util.List;
 
 import com.actelion.research.spiritcore.business.result.Result;
 
-
+/**
+ * The CompactPivotTemplate is used to limit the number of columns by having maximum 1 discriminant column
+ * @author Joel Freyss
+ *
+ */
 public class CompactPivotTemplate extends PivotTemplate {
 
 	public CompactPivotTemplate() {
@@ -40,42 +44,24 @@ public class CompactPivotTemplate extends PivotTemplate {
 		setWhere(PivotItemFactory.STUDY_SUBGROUP, Where.ASROW);
 		setWhere(PivotItemFactory.BIOSAMPLE_TOPID, Where.ASROW);
 		setWhere(PivotItemFactory.BIOSAMPLE_TOPNAME, Where.ASROW);
+		setWhere(PivotItemFactory.RESULT_TEST, Where.ASCOL);
+		setWhere(PivotItemFactory.RESULT_OUTPUT, Where.ASCOL);
 
-		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_BIOTYPE, results)) {
-			setWhere(PivotItemFactory.BIOSAMPLE_BIOTYPE, Where.ASCOL);
-		}
-		
-		if(isDiscriminating(PivotItemFactory.RESULT_TEST, results)) {
-			setWhere(PivotItemFactory.RESULT_TEST, Where.ASCOL);
-		}
-		
 		if(isDiscriminating(PivotItemFactory.STUDY_PHASE_DATE, results)) {
-			setWhere(PivotItemFactory.STUDY_PHASE_DATE, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);			
+			setWhere(PivotItemFactory.STUDY_PHASE_DATE, !isMultiColumns(results)? Where.ASCOL: Where.ASCELL);			
 		}
-
-
-//		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_SAMPLING, results)) {
-//			if(isDiscriminating(PivotItemFactory.RESULT_INPUT, results)) {
-//				setWhere(PivotItemFactory.BIOSAMPLE_SAMPLING, Where.ASCELL);
-//				setWhere(PivotItemFactory.RESULT_INPUT, Where.ASCELL);				
-//			} else {
-//				setWhere(PivotItemFactory.BIOSAMPLE_SAMPLING, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
-//				setWhere(PivotItemFactory.RESULT_INPUT, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
-//			}
-//		} else 
 		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_NAME, results)) {
-			setWhere(PivotItemFactory.BIOSAMPLE_NAME, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
-			setWhere(PivotItemFactory.RESULT_INPUT, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
+			setWhere(PivotItemFactory.BIOSAMPLE_NAME, !isMultiColumns(results)? Where.ASCOL: Where.ASCELL);
+			setWhere(PivotItemFactory.RESULT_INPUT, !isMultiColumns(results)? Where.ASCOL: Where.ASCELL);
 		} else {
-			setWhere(PivotItemFactory.RESULT_INPUT, getPivotItems(Where.ASCOL).size()<=1? Where.ASCOL: Where.ASCELL);
+			setWhere(PivotItemFactory.BIOSAMPLE_NAME, Where.ASCOL);
+			setWhere(PivotItemFactory.RESULT_INPUT, !isMultiColumns(results)? Where.ASCOL: Where.ASCELL);
 		}
 		
 		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_METADATA, results)) {
 			setWhere(PivotItemFactory.BIOSAMPLE_METADATA, Where.ASCELL);
 		}
 
-		setWhere(PivotItemFactory.RESULT_TEST, Where.ASCOL);
-		setWhere(PivotItemFactory.RESULT_OUTPUT, getWhere(PivotItemFactory.RESULT_INPUT));
 		
 		if(isDiscriminating(PivotItemFactory.RESULT_COMMENTS, results)) {
 			setWhere(PivotItemFactory.RESULT_COMMENTS, Where.ASCELL);

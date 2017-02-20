@@ -120,7 +120,7 @@ public enum Computed {
 					Double v2 = sel.getResultValue(att).getDoubleValue();
 					if(v2==null) continue;
 					double val = (v1 - v2) / (r.getPhase().getDays() - sel.getPhase().getDays()); 								
-					val = ((int)(val*100))/100.0; //Round to 2 decimals
+					val = (int)(Math.round(val*100))/100.0; //Round to 2 decimals
 					r.getResultValue(att).setCalculatedValue(val);
 				}
 			}
@@ -160,7 +160,8 @@ public enum Computed {
 					} else { //Absolute increase
 						val = v1 - v2;
 					}
-					val = val==null? null: ((int)(val*100))/100.0; //Round to 2 decimals
+					val = val==null? null: (int)(Math.round(val*100))/100.0; //Round to 2 decimals
+					
 					r.getResultValue(att).setCalculatedValue(val);
 				}
 			}

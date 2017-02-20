@@ -56,8 +56,8 @@ import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 /**
  * Class used to apply a sampling for a non-synchronized study

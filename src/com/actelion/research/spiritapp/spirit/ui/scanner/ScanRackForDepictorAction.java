@@ -25,7 +25,7 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleOrRackTab;
 import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner.Verification;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.scanner.ScannerConfiguration;
 
 /**

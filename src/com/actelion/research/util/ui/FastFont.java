@@ -58,8 +58,8 @@ public class FastFont extends Font {
 	private static void init() {
 		BIGGEST = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize*16/12);
 		BIGGER = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize*14/12);
-		REGULAR = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize);
 		BOLD = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize);
+		REGULAR = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize);
 		MONO = FastFont.getFont(Font.DIALOG_INPUT, Font.PLAIN, defaultFontSize);
 		MEDIUM = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize*11/12);
 		SMALL = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize*10/12);

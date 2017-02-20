@@ -30,7 +30,7 @@ import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner.Verificat
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 /**
  * Scan rack and populate the given EditBiosampleTable.

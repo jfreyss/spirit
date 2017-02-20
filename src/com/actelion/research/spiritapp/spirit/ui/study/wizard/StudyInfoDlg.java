@@ -75,6 +75,7 @@ import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.JTextComboBox;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class StudyInfoDlg extends JEscapeDialog {
@@ -231,7 +232,7 @@ public class StudyInfoDlg extends JEscapeDialog {
 		//Buttons
 		JButton okButton;
 		if(inTransaction) {
-			okButton = new JIconButton(JIconButton.IconType.SAVE, "Save");
+			okButton = new JIconButton(IconType.SAVE, "Save");
 		} else {
 			okButton = new JButton("OK");
 		}

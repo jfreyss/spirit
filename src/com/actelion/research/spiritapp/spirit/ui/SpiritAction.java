@@ -59,7 +59,7 @@ import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.UsageLog;
 import com.actelion.research.util.ui.JExceptionDialog;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class SpiritAction {
 

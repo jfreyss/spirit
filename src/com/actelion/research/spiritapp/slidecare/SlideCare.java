@@ -79,7 +79,7 @@ import com.actelion.research.util.ui.SplashScreen2;
 import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritContextObserver {
 	
@@ -343,7 +343,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	public void setLocation(Location location, int pos) {
 	}
 	@Override
-	public void setResults(List<Result> results, PivotTemplate template) {
+	public void setResults(List<Result> results) {
 	}
 	@Override
 	public void query(BiosampleQuery q) {

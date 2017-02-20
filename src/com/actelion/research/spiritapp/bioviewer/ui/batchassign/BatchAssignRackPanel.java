@@ -61,8 +61,8 @@ import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 import com.actelion.research.util.ui.scanner.ScannerConfiguration;
 import com.itextpdf.text.Font;
 

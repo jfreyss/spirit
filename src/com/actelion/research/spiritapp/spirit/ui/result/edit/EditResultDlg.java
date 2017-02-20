@@ -83,8 +83,8 @@ import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class EditResultDlg extends JSpiritEscapeDialog {
 

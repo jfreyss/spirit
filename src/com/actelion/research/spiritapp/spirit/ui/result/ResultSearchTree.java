@@ -76,7 +76,7 @@ public class ResultSearchTree extends FormTree {
 	private final LabelNode rootTest = new LabelNode(this, "Test");
 	private final LabelNode biotypeNode = new LabelNode(this, "Biotype");
 	private final LabelNode inputNode = new LabelNode(this, "Input");
-	private final LabelNode outputNode = new LabelNode(this, "Output");
+//	private final LabelNode outputNode = new LabelNode(this, "Output");
 	private final LabelNode advancedNode = new LabelNode(this, "Advanced");
 	
 	private TextComboBoxOneNode elbNode; 
@@ -127,8 +127,6 @@ public class ResultSearchTree extends FormTree {
 				public void setModel(String modelValue) {query.setSampleIds(modelValue);};
 			});
 			root.add(sampleIdNode);
-			
-//			root.add(compoundNode);
 		}
 			
 		
@@ -167,8 +165,8 @@ public class ResultSearchTree extends FormTree {
 		//inputNode
 		root.add(inputNode);
 
-		//outputNode
-		root.add(outputNode);
+//		//outputNode
+//		root.add(outputNode);
 		
 		///////////////////////////////////////////////////////////////////////////////
 		//advancedNode
@@ -367,7 +365,7 @@ public class ResultSearchTree extends FormTree {
 					}
 					biotypeNode.setVisible(inputKeywords.types.size()>0);
 					inputNode.setVisible(inputKeywords.inputChoices.size()>0);
-					outputNode.setVisible(inputKeywords.outputDisplays.size()>0);
+//					outputNode.setVisible(inputKeywords.outputDisplays.size()>0);
 					
 					query.getBiotypes().retainAll(inputKeywords.types);
 					for(TestAttribute att: inputKeywords.inputChoices.keySet()) {
@@ -437,7 +435,7 @@ public class ResultSearchTree extends FormTree {
 							});						
 						}				
 					}
-					
+					/*
 					//Add Output Node
 					outputNode.clearChildren();
 					
@@ -458,7 +456,7 @@ public class ResultSearchTree extends FormTree {
 						});
 						outputNode.add(cb);
 					}
-	
+					*/
 					inputNode.setExpanded(true);
 					updateView();
 				}

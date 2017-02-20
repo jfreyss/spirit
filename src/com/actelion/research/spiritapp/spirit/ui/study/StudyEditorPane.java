@@ -366,7 +366,9 @@ public class StudyEditorPane extends ImageEditorPane {
 				count+=m2.get(test).getFirst();
 			}
 			sb.append("<table><tr><td colspan=2>");
-			sb.append("<a style='font-weight:bold' href='test:" + study.getStudyId() + "'>Results:</a>&nbsp;(" + count + ") >> <a href='analyze:" + study.getId() + "'>Analyze</a>");
+			sb.append("<a style='font-weight:bold' href='test:" + study.getStudyId() + "'>Results:</a>&nbsp;(" + count + ") "
+//					+ ">> <a href='analyze:" + study.getId() + "'>Analyze</a>"
+					);
 			sb.append("</td></tr>");
 			for (Test t: m2.keySet()) {					
 				sb.append("<tr><td><a href='test:" + study.getStudyId() + ":" + t.getId() + "'>" + t.getName() + "</a>&nbsp;(" + m2.get(t).getFirst() + ")");																								

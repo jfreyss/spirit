@@ -168,6 +168,9 @@ public class UtilsTest {
 		
 		s = MiscUtils.removeHtmlAndNewLines("<b att='test<>'>Some HTML</b><br>2");
 		Assert.assertEquals("Some HTML 2", s);
+		
+		s = MiscUtils.removeHtmlAndNewLines("<b>Lung\r\n<y>Weighing");
+		Assert.assertEquals("Lung Weighing", s);
 	}
 	
 	@Test

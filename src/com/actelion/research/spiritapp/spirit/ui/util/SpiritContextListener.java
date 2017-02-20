@@ -27,7 +27,6 @@ import java.util.List;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -81,10 +80,10 @@ public class SpiritContextListener {
 		}
 	}
 
-	public static void setResults(List<Result> results, PivotTemplate template) {
+	public static void setResults(List<Result> results) {
 		try {
 			for (ISpiritContextObserver o : observers) {
-				o.setResults(results, template);
+				o.setResults(results);
 			}	
 		} catch(Throwable e) {
 			e.printStackTrace();

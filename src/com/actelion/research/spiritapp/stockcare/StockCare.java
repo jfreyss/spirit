@@ -69,7 +69,6 @@ import com.actelion.research.spiritapp.spirit.ui.result.ResultTab;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritChangeObserver;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritContextObserver;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritTab;
-import com.actelion.research.spiritapp.spirit.ui.util.LoginDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
@@ -85,7 +84,6 @@ import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
@@ -97,8 +95,8 @@ import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.WrapLayout;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritContextObserver {
 	
@@ -182,27 +180,6 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			setVisible(true);
 			
-			//Login
-			if(System.getProperty("user.name").equals("freyssj")) {
-				try {
-					SpiritUser user = DAOSpiritUser.loadUser("freyssj");
-					if(user==null) throw new Exception("Could not load user freyssj");
-					Spirit.setUser(user);
-					eventUserChanged();
-				} catch (Exception e) {
-					System.err.println(e);
-				}
-			} 
-
-			
-			if(Spirit.getUser()==null) {
-				LoginDlg.openLoginDialog(null, "StockCare Login");
-				eventUserChanged();
-				if(Spirit.getUser()==null) System.exit(1);
-			}			
-
-
-
 		} catch(Exception e) {
 			JExceptionDialog.showError(e);
 			System.exit(1);
@@ -410,7 +387,6 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 				}		
 			};
 			if(tpls!=null && tpls.length>0) {
-				resultTab.setAnalysisTemplate(currentItem.getDefaultTemplates()[0]);
 				resultTab.setCurrentPivotTemplate(currentItem.getDefaultTemplates()[0]);
 				resultTab.setDefaultTemplates(currentItem.getDefaultTemplates());
 			}
@@ -474,18 +450,15 @@ public class StockCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	}
 
 	@Override
-	public void setResults(List<Result> results, PivotTemplate template) {
-		
+	public void setResults(List<Result> results) {
 	}
 
 	@Override
 	public void query(BiosampleQuery q) {
-		
 	}
 
 	@Override
 	public void query(ResultQuery q) {
-		
 	}
 
 	@Override

@@ -155,8 +155,6 @@ public class PivotTable extends ExtendTable<PivotRow> {
 		//Find if we have nested cells
 		boolean hasNestedCells = hasNestedCells();
 
-		
-		//
 		//First the headers
 		List<String> row;
 		table.add(row = new ArrayList<String>());

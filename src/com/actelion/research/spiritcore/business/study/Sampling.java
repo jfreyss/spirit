@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -70,7 +71,7 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="sampling_sequence")
 	private int id = 0;
 	
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade={})
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade={CascadeType.PERSIST}) //Use Persist, to avoid a hard-to-reproduce bug
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@JoinColumn(name="parent_sampling_id")
@@ -165,15 +166,6 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	public void setBiotype(Biotype biotype) {
 		this.biotype = biotype;
 	}
-	
-
-//	protected String getSerializedMetadata() {
-//		return serializedMetadata;
-//	}
-//
-//	protected void setSerializedMetadata(String parameters) {
-//		this.serializedMetadata = parameters;
-//	}
 	
 	/**
 	 * Return a Map of BiotypeMetadata -> value
@@ -408,7 +400,7 @@ public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
 	}
 	
 	/**
-	 * Equals is the (=) identity as sampling can be duplicated and still not be equal
+	 * 2 samplings are equals if they have the same id or are == the (=) identity as sampling can be duplicated and still not be equal
 	 */
 	@Override
 	public boolean equals(Object obj) {

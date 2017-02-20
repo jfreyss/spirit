@@ -53,7 +53,7 @@ public class ResultQuery implements Serializable {
 	private Quality minQuality = null;
 	private Set<Integer> testIds = new TreeSet<>();	
 	private SetHashMap<TestAttribute, String> attribute2values = new SetHashMap<>();
-	private Set<TestAttribute> skippedOutputAttributes = new HashSet<>();
+//	private Set<TestAttribute> skippedOutputAttributes = new HashSet<>();
 	private Set<String> inputs = new TreeSet<>();	
 	private Set<String> biotypes = new TreeSet<>();	
 	
@@ -133,7 +133,7 @@ public class ResultQuery implements Serializable {
 		this.biotype = query.biotype;
 		this.updUser = query.updUser;
 		this.updDays = query.updDays;
-		this.skippedOutputAttributes = query.skippedOutputAttributes;
+//		this.skippedOutputAttributes = query.skippedOutputAttributes;
 		
 		this.setQuality(query.minQuality);
 		this.setTestIds(new HashSet<Integer>(query.testIds));
@@ -359,12 +359,9 @@ public class ResultQuery implements Serializable {
 		this.stids = stids;
 	}
 	
-	public Set<TestAttribute> getSkippedOutputAttribute() {
-		return skippedOutputAttributes;
-	}
-	public void setSkippedOutputAttribute(Set<TestAttribute> skippedOutputAttributes) {
-		this.skippedOutputAttributes = skippedOutputAttributes;
-	}
+//	public Set<TestAttribute> getSkippedOutputAttribute() {
+//		return skippedOutputAttributes;
+//	}
 	public String getPhases() {
 		return phases;
 	}
@@ -374,16 +371,11 @@ public class ResultQuery implements Serializable {
 	public String getContainerIds() {
 		return containerIds;
 	}
+	
 	public void setContainerIds(String containerIds) {
 		this.containerIds = containerIds;
 	}
-//	public String getActNoOrElns() {
-//		return actNoOrElns;
-//	}
-//	public void setActNoOrElns(String actNoOrElns) {
-//		this.actNoOrElns = actNoOrElns;
-//	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if(obj==null) return false;

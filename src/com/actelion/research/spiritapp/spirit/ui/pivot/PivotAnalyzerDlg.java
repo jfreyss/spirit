@@ -34,7 +34,6 @@ import java.io.StringReader;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,22 +47,18 @@ import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.business.pivot.ColumnPivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.PivotDataTable;
 import com.actelion.research.spiritcore.business.pivot.PivotItemFactory;
-import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
-import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Aggregation;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Where;
+import com.actelion.research.spiritcore.business.pivot.analyzer.Analyzer;
+import com.actelion.research.spiritcore.business.pivot.analyzer.Analyzer.Sort;
 import com.actelion.research.spiritcore.business.pivot.analyzer.ColumnAnalyser;
-import com.actelion.research.spiritcore.business.pivot.analyzer.PivotAnalyzer;
 import com.actelion.research.spiritcore.business.pivot.analyzer.ColumnAnalyser.Distribution;
-import com.actelion.research.spiritcore.business.pivot.analyzer.PivotAnalyzer.Sort;
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorConfig;
-import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorExporter;
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorConfig.ChartType;
+import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorExporter;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
-import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.util.MiscUtils;
@@ -76,14 +71,12 @@ import com.actelion.research.util.ui.UIUtils;
 public class PivotAnalyzerDlg extends JEscapeDialog {
 	private Study study;
 	private List<Result> results;
-	private Set<TestAttribute> skippedAttributes;
+//	private Set<TestAttribute> skippedAttributes;
 	private ImageEditorPane editorPane = new ImageEditorPane();
-	private PivotTemplate analyzerTemplate;
 
-	private PivotAnalyzerDlg(PivotTemplate analyzerTemplate) {
+	private PivotAnalyzerDlg() {
 		super(UIUtils.getMainFrame(), "Analyze");
 		 
-		this.analyzerTemplate = analyzerTemplate;
 		JButton closeButton = new JButton("Close");
 		closeButton.addActionListener(new ActionListener() {
 			@Override
@@ -98,17 +91,17 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 
 	}
 	public PivotAnalyzerDlg(Study study) {
-		this(new ColumnPivotTemplate());
+		this();
 
 		this.study = study;
 		analyze();
 		setVisible(true);
 	}
-	public PivotAnalyzerDlg(List<Result> results, Set<TestAttribute> skippedAttributes, PivotTemplate analyzerTemplate) {
-		this(analyzerTemplate);
+	public PivotAnalyzerDlg(List<Result> results) {
+		this();
 		
 		this.results = results;
-		this.skippedAttributes = skippedAttributes;
+//		this.skippedAttributes = skippedAttributes;
 		analyze();
 		setVisible(true);
 	}
@@ -120,7 +113,7 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 		new SwingWorkerExtended("Analyzing", editorPane, true) {
 			
 			private PivotDataTable statsTable;
-			private PivotAnalyzer analyzer;
+			private Analyzer analyzer;
 			private String report;
 			
 			@Override
@@ -133,31 +126,8 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 				}
 				if(results==null) throw new Exception("There are no results");
 				
-				PivotTemplate tpl = analyzerTemplate;
-				tpl.init(results);
-				tpl.setWhere(PivotItemFactory.STUDY_STUDYID, Where.ASCOL);
-				
-				if(PivotItemFactory.STUDY_PHASE_SINCEFIRST.isDiscriminating(results)) {
-					tpl.setWhere(PivotItemFactory.STUDY_PHASE_SINCEFIRST, Where.ASROW);
-					tpl.setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.MERGE);
-				} else {
-					tpl.setWhere(PivotItemFactory.STUDY_PHASE_SINCEFIRST, Where.MERGE);
-					tpl.setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASROW);					
-				}
-								
-				tpl.setAggregation(Aggregation.MEDIAN);
-				
-				//Expand all possible columns
-				tpl.expand(results, Spirit.getUser());
-
-
-				//Then, remove all unnecessary columns
-				tpl.simplify(results);
-
-				statsTable = new PivotDataTable(results, skippedAttributes, tpl);
-				
 				//Initializes the analyser
-				analyzer = new PivotAnalyzer(statsTable);
+				analyzer = new Analyzer(results, Spirit.getUser());
 				
 				//Creates the report
 				try {
@@ -199,11 +169,11 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 									if(ids.size()==0) return;
 									
 									//Create DW Config
-									ColumnAnalyser<?> ca = analyzer.getColumn(ids.get(0));
+									ColumnAnalyser ca = analyzer.getColumnFromIndex(ids.get(0));
 									DataWarriorConfig config = new DataWarriorConfig();		
 									config.setType(ChartType.BOXPLOT);
 									config.setLogScale(ca.getDistribution()==Distribution.LOGNORMAL);
-									config.setSkippedAttributes(statsTable.getSkippedAttributes());
+//									config.setSkippedAttributes(statsTable.getSkippedAttributes());
 									config.setCustomTemplate(statsTable.getTemplate());
 									config.setXAxis(null); //automatic
 									config.setExportAll(!pca);

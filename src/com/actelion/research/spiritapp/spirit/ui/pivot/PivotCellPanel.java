@@ -27,6 +27,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
+import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.pivot.Computed;
 import com.actelion.research.spiritcore.business.pivot.PivotCell;
@@ -35,6 +36,8 @@ import com.actelion.research.spiritcore.business.pivot.PivotCellKey;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Aggregation;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Deviation;
+import com.actelion.research.spiritcore.business.result.Result;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.UIUtils;
@@ -59,6 +62,29 @@ public class PivotCellPanel extends JComponentNoRepaint {
 
 	
 	public PivotCellPanel() {
+	}
+	
+	
+	@Override
+	public String getToolTipText() {
+		if(cell.getResults().size()==0) return null;
+		if(cell.getResults().size()>20) return cell.getResults()+" results...";
+		StringBuilder sb = new StringBuilder();
+		sb.append("<html><table border=0 cellpadding=1 cellmargin=0 style='font-size:8px'>");
+		
+		for(Result r: cell.getResults()) {
+			sb.append("<tr>");
+			sb.append("<td>" + MiscUtils.removeHtmlAndNewLines(r.getBiosample().getInheritedGroupString(Spirit.getUsername())) + "</td>");
+			sb.append("<td>" + MiscUtils.removeHtmlAndNewLines(r.getBiosample().getTopParentInSameStudy().getSampleIdName()) + "</td>");
+			sb.append("<td>" + r.getInheritedPhase()==null?"": MiscUtils.removeHtmlAndNewLines(r.getInheritedPhase().getShortName()) + "</td>");
+			sb.append("<td>" + MiscUtils.removeHtmlAndNewLines(r.getBiosample().getSampleIdName()) + "</td>");
+			sb.append("<td>" + MiscUtils.removeHtmlAndNewLines(r.getInputResultValuesAsString()) + "</td>");
+			sb.append("<td>" + MiscUtils.removeHtmlAndNewLines(r.getOutputResultValuesAsString()) + "</td>");
+			sb.append("<td>" + MiscUtils.removeHtmlAndNewLines(r.getInfoResultValuesAsString()) + "</td>");
+			sb.append("</tr>");
+		}
+		sb.append("</table>");
+		return sb.toString();
 	}
 	
 	public void setPivotCell(PivotCell pivotCell) {
@@ -89,7 +115,7 @@ public class PivotCellPanel extends JComponentNoRepaint {
 		for (PivotCellKey key : cell.getNestedKeys()) {
 			String s = key.getKey();
 			if(s.length()>0) {
-				margin.m1Value = Math.max(margin.m1Value, getFontMetrics(f).stringWidth(s+":")+2);
+				margin.m1Value = Math.max(margin.m1Value, getFontMetrics(f).stringWidth(s+":")+4);
 			}
 		}		
 		margin.m1Value = Math.max(4, margin.m1Value); 
@@ -175,8 +201,8 @@ public class PivotCellPanel extends JComponentNoRepaint {
 	 *
 	 */
 	protected void paintComponent(Graphics graphics) {
-		
 		Graphics2D g = (Graphics2D) graphics;
+		UIUtils.applyDesktopProperties(g);
 		super.paintComponent(g);
 
 		Margins margins = cell.getMargins();		
@@ -190,7 +216,7 @@ public class PivotCellPanel extends JComponentNoRepaint {
 
 		//Left-aligned: labels (if needed)
 		g.setFont(FastFont.MEDIUM);
-		g.setColor(UIUtils.getColor(150, 75, 0));
+		g.setColor(UIUtils.getColor(160, 95, 0));
 		int line = 0;
 		for (PivotCellKey key : cell.getNestedKeys()) {
 			String s = key.getKey();
@@ -200,7 +226,8 @@ public class PivotCellPanel extends JComponentNoRepaint {
 			line++;
 		}
 		
-		g.clearRect(Math.max(0, getWidth() - margins.m5Width + margins.m1Value), 1, getWidth(), getHeight());
+		//Clear text to display values
+		g.clearRect(Math.max(0, getWidth() - margins.m5Width + margins.m1Value - 4), 1, getWidth(), getHeight());
 		
 		//Right-aligned
 		//Display N
@@ -266,9 +293,6 @@ public class PivotCellPanel extends JComponentNoRepaint {
 			}
 		}
 		
-		
-		
-
 		//Display values
 		line = 0;
 		g.setFont(FastFont.REGULAR);

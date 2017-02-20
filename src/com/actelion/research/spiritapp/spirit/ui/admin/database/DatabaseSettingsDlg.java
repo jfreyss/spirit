@@ -72,8 +72,8 @@ import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 /**
  * Class responsible for setting/testing the connection (ie. dbadapter.testConnection should be successful) 

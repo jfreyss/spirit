@@ -29,12 +29,15 @@ import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Point;
 import java.awt.RadialGradientPaint;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -49,6 +52,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.swing.JPanel;
+import javax.swing.JViewport;
 import javax.swing.ToolTipManager;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
@@ -105,6 +109,29 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 		addMouseMotionListener(this);
 		setBackground(Color.WHITE);
 		ToolTipManager.sharedInstance().registerComponent(this);
+		
+		
+		//Mouse scroll and zoom
+		addMouseWheelListener(new MouseWheelListener() {				
+			@Override
+			public void mouseWheelMoved(MouseWheelEvent e) {	
+				if(e.isControlDown()) {
+					if(e.getWheelRotation()<0) {
+						setSizeFactor(Math.min(3, getSizeFactor()+1));
+					} else if(e.getWheelRotation()>0) {
+						setSizeFactor(Math.max(-4, getSizeFactor()-1));
+					}					
+					e.consume();
+				} else if(getParent() instanceof JViewport) {
+					Point pt = ((JViewport) getParent()).getViewPosition();
+					if(e.getWheelRotation()<0) {
+						((JViewport) getParent()).setViewPosition(new Point(pt.x, Math.max(0, pt.y-100)));
+					} else {
+						((JViewport) getParent()).setViewPosition(new Point(pt.x, Math.min(getHeight(), pt.y+100)));
+					}
+				}
+			}
+		});
 
 	}
 

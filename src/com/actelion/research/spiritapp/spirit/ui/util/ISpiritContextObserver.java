@@ -26,7 +26,6 @@ import java.util.List;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -41,7 +40,7 @@ public interface ISpiritContextObserver {
 
 	public void setLocation(final Location location, final int pos);
 	
-	public void setResults(final List<Result> results, final PivotTemplate template);
+	public void setResults(final List<Result> results);
 	
 	public void query(final BiosampleQuery q);
 	

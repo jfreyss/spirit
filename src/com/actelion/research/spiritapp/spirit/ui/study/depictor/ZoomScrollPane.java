@@ -28,8 +28,8 @@ import javax.swing.JButton;
 import javax.swing.JLayeredPane;
 import javax.swing.JScrollPane;
 
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class ZoomScrollPane extends JLayeredPane {
 	private JScrollPane sp;

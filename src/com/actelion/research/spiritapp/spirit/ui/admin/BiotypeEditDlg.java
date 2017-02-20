@@ -80,8 +80,8 @@ import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 import net.objecthunter.exp4j.Expression;
 import net.objecthunter.exp4j.ValidationResult;

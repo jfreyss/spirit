@@ -40,8 +40,8 @@ import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class ConfigTab extends WizardPanel {
 	private final RandomizationDlg dlg;

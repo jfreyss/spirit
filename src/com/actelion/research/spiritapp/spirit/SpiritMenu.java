@@ -41,8 +41,8 @@ public class SpiritMenu {
 		editMenu.add(new JSeparator());
 		if(DBAdapter.getAdapter().getUserManagedMode()==UserAdministrationMode.READ_WRITE) {
 			editMenu.add(new SpiritAction.Action_ChangePassword());				
+			editMenu.add(new JSeparator());
 		}
-		editMenu.add(new JSeparator());
 		editMenu.add(new SpiritAction.Action_Refresh(spirit));
 		editMenu.add(new SpiritAction.Action_Relogin(UIUtils.getMainFrame(), "Spirit"));
 		editMenu.add(new SpiritAction.Action_Exit());

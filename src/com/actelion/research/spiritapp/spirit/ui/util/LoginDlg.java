@@ -61,7 +61,7 @@ import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.UIUtils;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 /**
  * Login Dialog

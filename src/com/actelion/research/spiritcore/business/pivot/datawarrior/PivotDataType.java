@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.actelion.research.spiritcore.business.pivot.FlatPivotTemplate;
+import com.actelion.research.spiritcore.business.pivot.PerInputPivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.PivotDataTable;
 import com.actelion.research.spiritcore.business.pivot.PivotItem;
 import com.actelion.research.spiritcore.business.pivot.PivotItemClassifier;
@@ -53,12 +53,12 @@ public enum PivotDataType {
 	public static Set<PivotDataType> getValues(List<Result> results, SpiritUser user) {
 		Set<PivotDataType> res = new TreeSet<PivotDataType>();
 		try {
-			PivotTemplate tpl = new FlatPivotTemplate();			
+			PivotTemplate tpl = new PerInputPivotTemplate();			
 			tpl.init(results);
 			tpl.removeBlindItems(results, user);
 			tpl.simplify(results);
 			
-			PivotDataTable table = new PivotDataTable(results, null, tpl);
+			PivotDataTable table = new PivotDataTable(results, tpl);
 			for(PivotDataType p: values()) {
 				List<String> columns = p.getColumnNames(table);
 				if(columns.size()>0) res.add(p);

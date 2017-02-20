@@ -133,6 +133,8 @@ public class SpiritDB {
 					checkImportExamples(false);
 				}
 			});
+		} else {
+			checkImportExamples(false);
 		}
 	}
 	
@@ -140,7 +142,7 @@ public class SpiritDB {
 	public static void checkImportExamples(boolean force) {
 		//Check emptyness?
 		SpiritUser user = Spirit.getUser();
-		if(user==null || DBAdapter.getAdapter().isInActelionDomain() || !SpiritRights.isSuperAdmin(user)) return;
+		if(DBAdapter.getAdapter().isInActelionDomain() || (user!=null && !SpiritRights.isSuperAdmin(user))) return;
 		try {
 			
 			List<Study> exampleStudies = DAOStudy.queryStudies(StudyQuery.createForState("EXAMPLE"), null);

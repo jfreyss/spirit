@@ -39,7 +39,7 @@ import javax.swing.JPanel;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
-import com.actelion.research.spiritcore.business.pivot.FlatPivotTemplate;
+import com.actelion.research.spiritcore.business.pivot.PerInputPivotTemplate;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOResult.FindDuplicateMethod;
@@ -47,8 +47,8 @@ import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class QueryDuplicatesDlg extends JEscapeDialog {
 	
@@ -105,7 +105,7 @@ public class QueryDuplicatesDlg extends JEscapeDialog {
 					@Override
 					protected void done() {
 						JOptionPane.showMessageDialog(QueryDuplicatesDlg.this, "The query returned " + results.size() + " results", "Results", JOptionPane.INFORMATION_MESSAGE);							
-						SpiritContextListener.setResults(results, new FlatPivotTemplate());
+						SpiritContextListener.setResults(results);
 						dispose();
 					}					
 				};				

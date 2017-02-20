@@ -62,8 +62,8 @@ import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.ExtendTable;
 import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable.BorderStrategy;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class StudyGroupDlg extends JEscapeDialog {
 

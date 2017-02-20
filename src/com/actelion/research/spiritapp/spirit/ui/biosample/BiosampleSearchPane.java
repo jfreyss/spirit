@@ -60,7 +60,7 @@ import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.ExtendTableModel;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class BiosampleSearchPane extends JPanel {
 	

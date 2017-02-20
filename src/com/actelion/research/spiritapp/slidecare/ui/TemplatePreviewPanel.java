@@ -40,8 +40,8 @@ import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.business.slide.ContainerTemplate;
 import com.actelion.research.spiritcore.business.slide.SampleDescriptor;
 import com.actelion.research.spiritcore.business.slide.Template;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 /**
  * Class used to preview a template

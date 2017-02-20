@@ -44,8 +44,8 @@ import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class BiotypeOverviewDlg extends JEscapeDialog {
 

@@ -51,7 +51,7 @@ import com.actelion.research.util.ui.EasyClipboard;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.FillCellAction;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 /**
  * Excel like table to edit results

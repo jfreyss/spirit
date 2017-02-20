@@ -285,14 +285,14 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		return sb.toString();
 	}
 		
-//	/**
-//	 * Return a generic print Label (used in SpiritWeb)
-//	 * If the study is blinded, the group is shown as blinded
-//	 * @return
-//	 */
-//	public String getPrintLabel() {
-//		return getPrintStudyLabel(null) + "\n" + getPrintMetadataLabel();
-//	}
+	/**
+	 * Return a generic print Label (used in SpiritWeb)
+	 * If the study is blinded, the group is shown as blinded
+	 * @return
+	 */
+	public String getPrintLabel() {
+		return getPrintStudyLabel(null) + "\n" + getPrintMetadataLabel();
+	}
 	
 		
 	public String getPrintStudyLabel(String user) {

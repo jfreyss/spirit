@@ -84,8 +84,8 @@ import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.exceltable.ExtendTableCellRenderer;
 import com.actelion.research.util.ui.exceltable.JComponentNoRepaint;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class NamedSamplingDlg extends JSpiritEscapeDialog {
 	

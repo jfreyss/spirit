@@ -24,8 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui.study;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +43,7 @@ import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class StudySearchPane extends JPanel {
 
@@ -65,11 +63,8 @@ public class StudySearchPane extends JPanel {
 		add(BorderLayout.CENTER, new JScrollPane(studySearchTree));
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(myStudiesButton, Box.createHorizontalGlue(), resetButton, searchButton));
 		
-		studySearchTree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {				
-				query(studySearchTree.getQuery());
-			}
+		studySearchTree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, e-> {
+			query(studySearchTree.getQuery());
 		});
 		
 		setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));	
@@ -119,10 +114,12 @@ public class StudySearchPane extends JPanel {
 	
 	public void reset() {
 		studySearchTree.setQuery(new StudyQuery());
-		table.setRows(new ArrayList<>());
+		query(new StudyQuery());
+		
 	}
 	
 	public void query(final StudyQuery query) {
+		table.setRows(new ArrayList<>());
 		new SwingWorkerExtended("Querying Studies", table, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			List<Study> studies;
 			@Override
@@ -133,7 +130,6 @@ public class StudySearchPane extends JPanel {
 
 			@Override
 			protected void done() {
-				studySearchTree.setQuery(query);
 				table.setRows(studies);
 				if(studies.size()==1) {
 					table.setSelection(studies);

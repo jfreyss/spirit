@@ -54,7 +54,7 @@ import com.actelion.research.spiritcore.util.MiscUtils;
  */
 public class PivotDataTable {
 	private PivotTemplate template;
-	private Set<TestAttribute> skippedAttributes;
+//	private Set<TestAttribute> skippedAttributes;
 	private List<PivotRow> pivotRows = new ArrayList<>();
 	private List<PivotColumn> pivotColumns = new ArrayList<>();
 	private List<Result> results;
@@ -65,7 +65,7 @@ public class PivotDataTable {
 	 * @param skippedAttributes
 	 * @param template
 	 */
-	public PivotDataTable(List<Result> results, Set<TestAttribute> skippedAttributes, PivotTemplate template) {
+	public PivotDataTable(List<Result> results, PivotTemplate template) {
 		if(template==null) throw new IllegalArgumentException("Template cannot be null");
 		
 		if(template.getComputed()!=null) {
@@ -73,7 +73,7 @@ public class PivotDataTable {
 		}
 		
 		this.template = template;
-		this.skippedAttributes = skippedAttributes;
+//		this.skippedAttributes = skippedAttributes;
 		this.results = results;
 		pivotRows.clear();
 		pivotColumns.clear();
@@ -146,7 +146,7 @@ public class PivotDataTable {
 			//Put each ResulValue in the appropriate cell
 			for(TestAttribute att: test.getAttributes()) {
 				if(att.getOutputType()!=OutputType.OUTPUT) continue;
-				if(skippedAttributes!=null && skippedAttributes.contains(att)) continue;
+//				if(skippedAttributes!=null && skippedAttributes.contains(att)) continue;
 				
 				for (Result r : e.getValue()) {
 					ResultValue rv = r.getResultValue(att);
@@ -211,9 +211,9 @@ public class PivotDataTable {
 		return template;
 	}
 	
-	public Set<TestAttribute> getSkippedAttributes() {
-		return skippedAttributes;
-	}
+//	public Set<TestAttribute> getSkippedAttributes() {
+//		return skippedAttributes;
+//	}
 	
 	
 	public PivotColumn getPivotColumn(String nameWithoutHtml) {

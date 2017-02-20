@@ -74,7 +74,6 @@ import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMo
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.result.Test;
@@ -101,8 +100,7 @@ import com.actelion.research.util.ui.SplashScreen2;
 import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
-import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 /**
  * Spirit Main application
@@ -359,7 +357,7 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	  			FastFont.setDefaultFontSize(Spirit.getConfig().getProperty("preferences.fontSize", FastFont.getDefaultFontSize()));
 	  			FastFont.setDefaultFontFamily(Spirit.getConfig().getProperty("preferences.fontFamily", FastFont.getDefaultFontFamily()));
 	  			ImageFactory.clearCache();
-	  			JIconButton.IconType.clearCache();
+	  			IconType.clearCache();
 			}
 		});
 	}
@@ -473,10 +471,10 @@ public class Spirit extends JFrame implements ISpiritChangeObserver, ISpiritCont
 	}
 	
 	@Override
-	public void setResults(final List<Result> results, final PivotTemplate template) {
+	public void setResults(final List<Result> results) {
 		if(tabbedPane==null) return;
 		tabbedPane.setSelectedComponent(resultTab);
-		resultTab.setResults(results, template);
+		resultTab.setResults(results);
 		statusBar.setInfos(results.size()+ " results");
 	}
 	

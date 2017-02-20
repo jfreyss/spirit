@@ -45,15 +45,12 @@ public class StudyHistoryDlg extends JEscapeDialog {
 		
 		final RevisionList revisionList = new RevisionList(revisions);
 		final StudyDetailPanel detailPanel = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT);
-
 		detailPanel.setForRevision(true);
-		revisionList.addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if(e.getValueIsAdjusting()) return;
-				Revision s = revisionList.getSelectedValue();
-				detailPanel.setStudy(s.getStudies().size()>0? s.getStudies().get(0): null);								
-			}
+		
+		revisionList.addListSelectionListener(e-> {
+			if(e.getValueIsAdjusting()) return;
+			Revision s = revisionList.getSelectedValue();
+			detailPanel.setStudy(s.getStudies().size()>0? s.getStudies().get(0): null);								
 		});
 		revisionList.addMouseListener(new PopupAdapter() {			
 			@Override

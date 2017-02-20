@@ -23,8 +23,6 @@ package com.actelion.research.spiritapp.spirit.ui.study.sampling;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -63,38 +61,29 @@ public class NamedSamplingSelectorDlg extends JEscapeDialog {
 		scrollPane.setPreferredSize(new Dimension(300, 300));		
 		
 		//Actions
-		namedSamplingComboBox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				namedSampling = namedSamplingComboBox.getSelection();
-				reuseTemplateButton.setEnabled(namedSampling!=null);
-				if(namedSampling==null) {
-					editorPane.setText("");
-				} else {
-					editorPane.setText("<b>" + MiscUtils.removeHtml(namedSampling.getName()) + "</b><br>" + namedSampling.getHtmlBySampling());
-					editorPane.setCaretPosition(0);
-				}
+		namedSamplingComboBox.addActionListener(e-> {
+			namedSampling = namedSamplingComboBox.getSelection();
+			reuseTemplateButton.setEnabled(namedSampling!=null);
+			if(namedSampling==null) {
+				editorPane.setText("");
+			} else {
+				editorPane.setText("<b>" + MiscUtils.removeHtml(namedSampling.getName()) + "</b><br>" + namedSampling.getHtmlBySampling());
+				editorPane.setCaretPosition(0);
 			}
 		});
 		reuseTemplateButton.setEnabled(false);
 		
-		reuseTemplateButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if(namedSamplingComboBox.getSelection()==null) return;
-				success = true;
-				namedSampling = namedSamplingComboBox.getSelection().duplicate();				
-				dispose();
-			}
+		reuseTemplateButton.addActionListener(e-> {			
+			if(namedSamplingComboBox.getSelection()==null) return;
+			success = true;
+			namedSampling = namedSamplingComboBox.getSelection().duplicate();				
+			dispose();
 		});
 		
-		newTemplateButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				success = true;
-				namedSampling = new NamedSampling("");
-				dispose();
-			}
+		newTemplateButton.addActionListener(e->{
+			success = true;
+			namedSampling = new NamedSampling("");
+			dispose();
 		});
 		
 		

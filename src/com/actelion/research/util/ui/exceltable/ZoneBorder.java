@@ -30,6 +30,7 @@ import javax.swing.border.Border;
 
 public class ZoneBorder implements Border {   
     private Color colorTop, colorRight, colorBottom, colorLeft;   
+    private int sizeTop = 1, sizeRight = 1, sizeBottom = 1, sizeLeft = 1;   
 
     public ZoneBorder(Color colorTop, Color colorLeft, Color colorBottom, Color colorRight) {   
         this.colorTop = colorTop;   
@@ -38,31 +39,42 @@ public class ZoneBorder implements Border {
         this.colorLeft = colorLeft;   
     }   
 
+    public ZoneBorder(int sizeTop, Color colorTop, int sizeLeft, Color colorLeft, int sizeBottom, Color colorBottom, int sizeRight, Color colorRight) {   
+        this.colorTop = colorTop;   
+        this.colorRight = colorRight;   
+        this.colorBottom = colorBottom;   
+        this.colorLeft = colorLeft;   
+        this.sizeTop = sizeTop;   
+        this.sizeRight = sizeRight;   
+        this.sizeBottom = sizeBottom;   
+        this.sizeLeft = sizeLeft;   
+    }   
+
     public boolean isBorderOpaque() {   
         return false;   
     }   
 
     public Insets getBorderInsets(Component c) {   
-        return new Insets(colorTop==null?0:1,colorRight==null?0:1,colorBottom==null?0:1,colorLeft==null?0:1);   
+        return new Insets(colorTop==null?0:sizeTop,colorRight==null?0:sizeRight,colorBottom==null?0:sizeBottom,colorLeft==null?0:sizeLeft);   
     }   
 
     public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {   
         Color old = g.getColor();   
         if (colorTop != null) {   
             g.setColor(colorTop);   
-            g.fillRect(x, y, width, 1);   
+            g.fillRect(x, y, width, sizeTop);   
         }   
         if (colorRight != null) {   
             g.setColor(colorRight);   
-            g.fillRect(x+width-1, y, 1, height);   
+            g.fillRect(x+width-sizeRight, y, sizeRight, height);   
         }   
         if (colorBottom != null) {   
             g.setColor(colorBottom);   
-            g.fillRect(x, y+height-1, width, 1);   
+            g.fillRect(x, y+height-sizeBottom, width, sizeBottom);   
         }   
         if (colorLeft != null) {   
             g.setColor(colorLeft);   
-            g.fillRect(x, y, 1, height);   
+            g.fillRect(x, y, sizeLeft, height);   
         }   
         g.setColor(old);   
     }   

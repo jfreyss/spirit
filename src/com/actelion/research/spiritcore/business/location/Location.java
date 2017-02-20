@@ -110,9 +110,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
 	@BatchSize(size=1)
 	private Set<Biosample> biosamples = new LinkedHashSet<>();
-	
-	
-
+		
 	@Column(name="locationType", nullable=false)
 	@Enumerated(EnumType.STRING)
 	private LocationType locationType;

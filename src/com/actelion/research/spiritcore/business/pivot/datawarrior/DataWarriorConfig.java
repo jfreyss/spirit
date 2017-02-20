@@ -195,8 +195,12 @@ public class DataWarriorConfig {
 	public PivotTemplate getCustomTemplate() {
 		return custom;
 	}
-	public void setCustomTemplate(PivotTemplate custom) {
-		PivotTemplate tmp = custom.clone();
+
+	/**
+	 * Set the template and move all nested items to the row level
+	 */
+	public void setCustomTemplate(PivotTemplate tpl) {
+		PivotTemplate tmp = tpl.clone();
 		for (PivotItem pv : tmp.getPivotItems(Where.ASCELL)) {
 			tmp.setWhere(pv, Where.ASROW);
 		}
@@ -213,8 +217,7 @@ public class DataWarriorConfig {
 	}
 	public void setSkippedAttributes(Set<TestAttribute> skippedAttributes) {
 		this.skippedAttributes = skippedAttributes;
-	}
-	
+	}	
 	public void setExportAll(boolean exportAll) {
 		this.exportAll = exportAll;
 	}

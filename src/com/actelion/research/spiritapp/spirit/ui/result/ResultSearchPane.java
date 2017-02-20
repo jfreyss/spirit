@@ -41,7 +41,6 @@ import javax.swing.JScrollPane;
 import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritapp.spirit.ui.pivot.PivotCardPanel;
 import com.actelion.research.spiritapp.spirit.ui.study.ReportDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
@@ -57,20 +56,20 @@ import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class ResultSearchPane extends JPanel {
 	
 	public static final String PROPERTY_SEARCH = "search_update";
 	
-	private final PivotCardPanel cardPanel;
+	private final ResultTab resultTab;
 	
 	private final ResultSearchTree tree;		 
 	private final JButton searchButton = new JButton(new Action_Search());
 	
-	public ResultSearchPane(final PivotCardPanel cardPanel, final Biotype forcedBiotype) {
+	public ResultSearchPane(final ResultTab resultTab, final Biotype forcedBiotype) {
 		super(new BorderLayout());
-		this.cardPanel = cardPanel;
+		this.resultTab = resultTab;
 		this.tree = new ResultSearchTree(forcedBiotype);
 
 		JButton resetButton = new JButton(new Action_Reset());	
@@ -102,20 +101,17 @@ public class ResultSearchPane extends JPanel {
 	}
 	
 	public void search(final ResultQuery query) {
-		cardPanel.clear();
+		resultTab.setResults(new ArrayList<>());
 
 		final SpiritUser user = Spirit.getUser();
 		if(user==null) return;
 		
-		new SwingWorkerExtended("Querying Results", cardPanel, true) {
+		new SwingWorkerExtended("Querying Results", this, true) {
 			private final long s = System.currentTimeMillis();
 			private List<Result> results;
 			
 			@Override
 			protected void doInBackground() throws Exception {				
-				//Clear Cache
-//				JPAUtil.clear();
-				
 				//Query results
 				results = DAOResult.queryResults(query, user);
 			}
@@ -123,12 +119,10 @@ public class ResultSearchPane extends JPanel {
 			@Override
 			protected void done() {
 				LoggerFactory.getLogger(getClass()).debug("Query done in: "+(System.currentTimeMillis()-s)+"ms");
-				cardPanel.setResults(results, query.getSkippedOutputAttribute(), null, false);
+				resultTab.setResults(results);
 				LoggerFactory.getLogger(getClass()).debug("Display done in: "+(System.currentTimeMillis()-s)+"ms");
-			}
-			
-		};
-		
+			}			
+		};		
 	}
 	
 	/**
@@ -169,7 +163,7 @@ public class ResultSearchPane extends JPanel {
 			ResultQuery query = new ResultQuery();
 			tree.expandAll(false);
 			tree.setQuery(query);
-			cardPanel.setResults(new ArrayList<Result>(), null, null, false);
+			resultTab.setResults(new ArrayList<Result>());
 			SpiritContextListener.setStatus("");
 			ResultSearchPane.this.firePropertyChange(PROPERTY_SEARCH, null, "");
 

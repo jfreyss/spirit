@@ -67,6 +67,7 @@ import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.util.ListHashMap;
+import com.actelion.research.spiritcore.util.SetHashMap;
 import com.actelion.research.util.CompareUtils;
 
 @Entity
@@ -409,6 +410,18 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 		return sb.toString();
 	}	
 	
+	public String getInfoResultValuesAsString(){
+		if(test==null) return "No test";
+		List<TestAttribute> atts = test.getInfoAttributes();
+		StringBuilder sb = new StringBuilder();
+		for (TestAttribute att : atts) {
+			if(getResultValue(att)==null || getResultValue(att).getValue()==null  || getResultValue(att).getValue().length()==0) continue;
+			if(sb.length()>0) sb.append(", ");
+			sb.append(att.getName()+"="+getResultValue(att).getValue());
+		}
+		return sb.toString();
+	}	
+	
 	public List<ResultValue> getOutputResultValues() {
 		List<TestAttribute> atts = test.getOutputAttributes();
 		List<ResultValue> res = new ArrayList<>();
@@ -611,8 +624,7 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 	}
 	
 	public static Result getPrevious(Result current, List<Result> from) {
-		assert current!=null;
-		assert current.getInheritedPhase()!=null;
+		if(current==null || current.getInheritedPhase()==null) return null;
 		assert from!=null;
 		
 		Result sel = null;
@@ -718,14 +730,13 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 	 * @return
 	 */
 	public static boolean isPhaseDependant(Collection<Result> results) {
-		ListHashMap<String, Phase> key2phases = new ListHashMap<>();
+		SetHashMap<String, Phase> key2phases = new SetHashMap<>();
 		for (Result r : results) {
 			if(r.getInheritedPhase()==null) continue;
 			if(r.getBiosample()==null) continue;
 			
 			String key = r.getBiosample().getTopParent().getId() + "_" + r.getTest().getId() + "_" +r.getInputResultValues();
 			key2phases.add(key, r.getInheritedPhase());
-			System.out.println("Result.isPhaseDependant() "+key+">"+key2phases.get(key).size());
 			if(key2phases.get(key).size()>1) return true;
 		}
 		return false;

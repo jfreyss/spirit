@@ -49,8 +49,8 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class LocationDepictor extends JPanel {
 

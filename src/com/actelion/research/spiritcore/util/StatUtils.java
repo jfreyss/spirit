@@ -46,7 +46,7 @@ public class StatUtils {
 		//Assign ranks
 		assert values.size()>1;
 		
-		List<Double> allDoubles = new ArrayList<Double>();
+		List<Double> allDoubles = new ArrayList<>();
 		for (double[] a : values) {
 			assert a.length>0;
 			for (double d : a) {

@@ -110,27 +110,19 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 		
 		table.getColumnModel().addColumnModelListener(new TableColumnModelListener() {
 			@Override
-			public void columnSelectionChanged(ListSelectionEvent e) {
-			}
+			public void columnSelectionChanged(ListSelectionEvent e) {}
 			
 			@Override
-			public void columnRemoved(TableColumnModelEvent e) {
-				reset();
-			}
+			public void columnRemoved(TableColumnModelEvent e) {reset();}
 			
 			@Override
-			public void columnMoved(TableColumnModelEvent e) {
-				reset();		
-			}
+			public void columnMoved(TableColumnModelEvent e) {reset();}
 			
 			@Override
-			public void columnMarginChanged(ChangeEvent e) {
-				reset();
-			}
+			public void columnMarginChanged(ChangeEvent e) {reset();}
 			
 			@Override
-			public void columnAdded(TableColumnModelEvent e) {
-			}
+			public void columnAdded(TableColumnModelEvent e) {}
 		});
 	}
 	

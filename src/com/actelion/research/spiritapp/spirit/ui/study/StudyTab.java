@@ -68,7 +68,7 @@ public class StudyTab extends JPanel implements ISpiritTab {
 		contentPane.setDividerLocation(250);
 		contentPane.setOneTouchExpandable(true);
 		
-		studyDetailPanel.showInfos();
+		studyDetailPanel.showGraphs();
 		
 		studyTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
@@ -98,9 +98,11 @@ public class StudyTab extends JPanel implements ISpiritTab {
 		addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentShown(ComponentEvent e) {
-				if(getRootPane()!=null && searchPane!=null){
+				System.out.println("StudyTab.StudyTab().new ComponentAdapter() {...}.componentShown() getRootPane()="+getRootPane()+" "+initialized);
+				if(getRootPane()!=null){
 					getRootPane().setDefaultButton(searchPane.getSearchButton());		
-					if(!initialized && getRootPane()!=null) {
+					if(!initialized) {
+						System.out.println("StudyTab.StudyTab().new ComponentAdapter() {...}.componentShown() "+Spirit.getUsername());
 						searchPane.reset();
 						initialized = true;
 					}
@@ -152,9 +154,10 @@ public class StudyTab extends JPanel implements ISpiritTab {
 	
 	@Override
 	public void setStudyIds(final String studyIds) {
-		this.initialized = true;
 		if(studyIds==null || studyIds.length()==0) return;		
 		if(studyIds.equals(getStudyIds())) return; //no need to refresh
+		
+		this.initialized = true;
 		searchPane.setStudyIds(studyIds);
 		
 		//Execute this thread after the others		

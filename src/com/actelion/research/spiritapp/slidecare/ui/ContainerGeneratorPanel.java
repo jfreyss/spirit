@@ -60,8 +60,8 @@ import com.actelion.research.spiritcore.services.helper.TemplateHelper;
 import com.actelion.research.spiritcore.services.helper.TemplateHelper.BarcodeMemo;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 public class ContainerGeneratorPanel extends JPanel {
 

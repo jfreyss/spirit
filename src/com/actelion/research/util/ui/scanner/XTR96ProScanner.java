@@ -82,7 +82,7 @@ public class XTR96ProScanner {
 	 * @throws IOException
 	 * @throws NoReadException
 	 */
-	public Plate scanPlate(ScannerConfiguration config) throws IOException, NoReadException {
+	public Plate scanPlate(ScannerConfiguration config) throws Exception {
 		Plate res = new Plate(8, 12);
 		
 		//Check that we have write access on the current drive
@@ -192,15 +192,15 @@ public class XTR96ProScanner {
 							//a rack24 that is inverted is still OK
 						} else {
 							//a rack 24 with a read error and a switch ok has an unknown problem
-							throw new IOException("There is an unknown problem with the scanner on the RACK24");
+							throw new Exception("There is an unknown problem with the scanner on the RACK24");
 						}
 					} else {
 						if(error) {
 							//a 96rack with a wrong switch
-							throw new IOException("You should invert the Rack");
+							throw new Exception("You should invert the Rack");
 						} else {
 							//a 96rack with an ok switch
-							throw new IOException("There is an unknown problem with the scanner");
+							throw new Exception("There is an unknown problem with the scanner");
 						}
 					}
 				}
@@ -220,15 +220,15 @@ public class XTR96ProScanner {
 	}
 	
 	
-	public List<RackPos> scanTubes(ScannerConfiguration config) throws IOException, NoReadException {
+	public List<RackPos> scanTubes(ScannerConfiguration config) throws Exception {
 		return scanPlate(config).getTubes();
 	}
 	private static List<RackPos> parseResults(String res) throws NoReadException {
 		int index = res.indexOf("...A01");
 		if(index>0) res = res.substring(index+3);
 		
-		List<RackPos> tubes = new ArrayList<RackPos>();		
-		List<RackPos> noread = new ArrayList<RackPos>();		
+		List<RackPos> tubes = new ArrayList<>();		
+		List<RackPos> noread = new ArrayList<>();		
 		String[] s = res.split("\n");
 		for(String t: s) {
 			String[] v = t.split(",");

@@ -16,12 +16,10 @@ import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.pivot.ColumnPivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.CompactPivotTemplate;
-import com.actelion.research.spiritcore.business.pivot.ExpandedPivotTemplate;
-import com.actelion.research.spiritcore.business.pivot.FlatPivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.InventoryPivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.PivotDataTable;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
-import com.actelion.research.spiritcore.business.pivot.analyzer.PivotAnalyzer;
+import com.actelion.research.spiritcore.business.pivot.analyzer.Analyzer;
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorExporter;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
@@ -249,30 +247,25 @@ public class ResultTest extends AbstractSpiritTest {
 		//Test standard pivot
 		PivotTemplate tpl = new CompactPivotTemplate();
 		tpl.init(results);		
-		PivotDataTable table = new PivotDataTable(results, null, tpl);
-		Assert.assertEquals(2, table.getPivotColumns().size());
+		PivotDataTable table = new PivotDataTable(results, tpl);
+		Assert.assertEquals(8, table.getPivotColumns().size());
 		Assert.assertEquals(17, table.getPivotRows().size());
 		
-		tpl = new ColumnPivotTemplate();
-		tpl.init(results);		
-		table = new PivotDataTable(results, null, tpl);
-		Assert.assertEquals(12, table.getPivotColumns().size());
-		Assert.assertEquals(17, table.getPivotRows().size());
-		
-		tpl = new FlatPivotTemplate();
-		tpl.init(results);		
-		table = new PivotDataTable(results, null, tpl);
-		Assert.assertEquals(1, table.getPivotColumns().size());
-		
-		tpl = new ExpandedPivotTemplate();
-		tpl.init(results);		
-		table = new PivotDataTable(results, null, tpl);
-		Assert.assertTrue(table.getPivotColumns().size()>1);
-		Assert.assertEquals(17, table.getPivotRows().size());
+//		tpl = new ColumnPivotTemplate();
+//		tpl.init(results);		
+//		table = new PivotDataTable(results, tpl);
+//		Assert.assertEquals(12, table.getPivotColumns().size());
+//		Assert.assertEquals(17, table.getPivotRows().size());
+//		
+//		tpl = new ExpandedPivotTemplate();
+//		tpl.init(results);		
+//		table = new PivotDataTable(results, tpl);
+//		Assert.assertTrue(table.getPivotColumns().size()>1);
+//		Assert.assertEquals(17, table.getPivotRows().size());
 		
 		tpl = new InventoryPivotTemplate();
 		tpl.init(results);		
-		table = new PivotDataTable(results, null, tpl);
+		table = new PivotDataTable(results, tpl);
 		Assert.assertEquals(8, table.getPivotColumns().size());
 		Assert.assertEquals(4, table.getPivotRows().size());
 	}
@@ -286,9 +279,9 @@ public class ResultTest extends AbstractSpiritTest {
 
 		PivotTemplate tpl = new ColumnPivotTemplate();
 		tpl.init(results);		
-		PivotDataTable table = new PivotDataTable(results, null, tpl);
+		PivotDataTable table = new PivotDataTable(results, tpl);
 		
-		PivotAnalyzer analyzer = new PivotAnalyzer(table);
+		Analyzer analyzer = new Analyzer(results, user);
 		analyzer.getReport();
 		
 		DataWarriorExporter.getDwar(table);

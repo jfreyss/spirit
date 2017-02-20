@@ -26,14 +26,17 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Quality;
+import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Aggregation;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Deviation;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Where;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultValue;
+import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.util.CompareUtils;
 
@@ -255,6 +258,19 @@ public class PivotCell implements Comparable<PivotCell> {
 		return aggregated;
 	}
 	
+	public Group getGroup() {
+		return Biosample.getGroup(Result.getBiosamples(getResults()));
+	}
+
+	public Phase getPhase() {
+		return Biosample.getPhase(Result.getBiosamples(getResults()));
+	}
+	
+	public Biosample getBiosample() {
+		Set<Biosample> biosamples = Result.getBiosamples(getResults());
+		return biosamples.size()==1? biosamples.iterator().next(): null;
+	}
+	
 	public Double getStd(){
 		calculateStats();
 		return std;		
@@ -370,6 +386,14 @@ public class PivotCell implements Comparable<PivotCell> {
 			}
 		}		
 		return results;
+	}
+	
+	/**
+	 * Returns the associated ResultValues
+	 * @return
+	 */
+	public List<ResultValue> getValues() {
+		return values;
 	}
 	
 	public int getN() {

@@ -138,8 +138,11 @@ public abstract class PivotItem implements Comparable<PivotItem>, Serializable {
 	 */
 	public boolean isDiscriminating(List<Result> results) {
 		if(results==null || results.isEmpty()) return false;
-		boolean isAlwaysShown = this==PivotItemFactory.RESULT_TEST || this==PivotItemFactory.RESULT_INPUT
-				|| (this==PivotItemFactory.STUDY_GROUP);		
+		boolean isAlwaysShown = 
+				this==PivotItemFactory.RESULT_INPUT
+				|| this==PivotItemFactory.STUDY_GROUP		
+				|| this==PivotItemFactory.BIOSAMPLE_NAME
+				|| this==PivotItemFactory.RESULT_TEST;
 		
 		if(isAlwaysShown) {
 			//If it is the ALWAYS_SHOWN list, we display it if one value is not null

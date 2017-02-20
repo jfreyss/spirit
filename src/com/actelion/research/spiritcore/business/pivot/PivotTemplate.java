@@ -60,7 +60,7 @@ public class PivotTemplate implements Serializable, Cloneable {
 	}
 
 	public static enum Aggregation {
-		ALL_VALUES("All Values"),
+		ALL_VALUES("Values"),
 		MEDIAN("Median"),
 		AVERAGE("Average"),
 		GEOMETRIC_MEAN("Geometric Mean"),
@@ -80,7 +80,7 @@ public class PivotTemplate implements Serializable, Cloneable {
 	}
 		
 	public static enum Deviation {
-		NONE("No dispersion"),		
+		NONE(""),		
 		STD("Std.Dev."),
 		COEFF_VAR("Coeff.Of.Var.");
 		private String name;		
@@ -163,17 +163,27 @@ public class PivotTemplate implements Serializable, Cloneable {
 		return Where.MERGE;
 	}
 	
+	public Where getWhere(PivotItemClassifier classifier) {
+		for(Where where: new Where[]{Where.ASCOL, Where.ASROW})
+		for(PivotItem item: where2items.get(where) ) {
+			if(item.getClassifier()==classifier) {
+				return where; 
+			}
+		}
+		return Where.MERGE;
+	}
+	
 	public List<PivotItem> getPivotItems() {
 		return getPivotItems(null);
 	}
 	
 	public synchronized List<PivotItem> getPivotItems(Where where) {		
 		if(where2items.size()==0) {
-			where2items.put(null, new ArrayList<PivotItem>());
-			where2items.put(Where.ASCELL, new ArrayList<PivotItem>());
-			where2items.put(Where.ASCOL, new ArrayList<PivotItem>());
-			where2items.put(Where.ASROW, new ArrayList<PivotItem>());
-			where2items.put(Where.MERGE, new ArrayList<PivotItem>());
+			where2items.put(null, new ArrayList<>());
+			where2items.put(Where.ASCELL, new ArrayList<>());
+			where2items.put(Where.ASCOL, new ArrayList<>());
+			where2items.put(Where.ASROW, new ArrayList<>());
+			where2items.put(Where.MERGE, new ArrayList<>());
 			
 			for(PivotItem item: item2where.keySet()) {
 				where2items.get(item2where.get(item)).add(item);
@@ -184,6 +194,18 @@ public class PivotTemplate implements Serializable, Cloneable {
 			}
 		}
 		return where2items.get(where);
+	}
+	
+	public boolean isMultiColumns(List<Result> results)  {
+		Set<String> columnKeys = new HashSet<>();
+		for (Result result : results) {
+			for (ResultValue rv : result.getOutputResultValues()) {
+				String key = getColKey(rv);
+				columnKeys.add(key);
+				if(columnKeys.size()>1) return true;
+			}
+		}
+		return false;
 	}
 	
 	public Computed getComputed() {

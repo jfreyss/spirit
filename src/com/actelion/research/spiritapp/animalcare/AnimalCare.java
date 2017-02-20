@@ -47,7 +47,6 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -58,10 +57,10 @@ import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JStatusBar;
 import com.actelion.research.util.ui.SplashScreen2;
+import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
-import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class AnimalCare extends JFrame implements ISpiritChangeObserver, ISpiritContextObserver {
 
@@ -220,7 +219,7 @@ public class AnimalCare extends JFrame implements ISpiritChangeObserver, ISpirit
 	}
 
 	@Override
-	public void setResults(List<Result> results, PivotTemplate template) {
+	public void setResults(List<Result> results) {
 	}
 
 	@Override

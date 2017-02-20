@@ -43,21 +43,19 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import com.actelion.research.spiritapp.animalcare.ui.monitor.MonitoringHelper.MonitoringStats;
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.lf.LF;
-import com.actelion.research.spiritapp.spirit.ui.pivot.PivotCardPanel;
+import com.actelion.research.spiritapp.spirit.ui.pivot.graph.GraphPanelWithResults;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyActions;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritChangeObserver;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.FoodWater;
-import com.actelion.research.spiritcore.business.pivot.Computed;
 import com.actelion.research.spiritcore.business.pivot.MonitorPivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -69,7 +67,6 @@ import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.FormatterUtils;
-import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
@@ -112,6 +109,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 		new SwingWorkerExtended("Loading", contentPanel) {
 
 			private List<Biosample> animals;
+			private List<Result> results;
 			private Map<Test, List<Result>> mapResults;
 			private List<Test> tests;
 			private List<FoodWater> allFws;
@@ -126,7 +124,8 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 
 				//Load Results (except foodwater which is loaded separately)
 				DAOResult.attachOrCreateStudyResultsToTops(study, animals, null, null);
-				mapResults = Result.mapTest(extractResults(animals, null));
+				results = extractResults(animals, null);
+				mapResults = Result.mapTest(results);
 				tests = new ArrayList<>();
 				for (Test t : mapResults.keySet()) {
 					if(t.getName().equals(DAOTest.FOODWATER_TESTNAME)) continue;
@@ -213,18 +212,22 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 					
 
 					final PivotTemplate tpl2 = new MonitorPivotTemplate();
-					tpl2.setComputed(Computed.INC_START_PERCENT);
-
-					JTabbedPane tabbedPane = new JCustomTabbedPane();
-					for(final Test t: mapResults.keySet()) {
-						final PivotCardPanel panel = new PivotCardPanel(null, null);
-						tabbedPane.add("<html>Result<br><b>"+t.getName()+"</b>", panel);						
-						panel.setResults(mapResults.get(t), null, tpl2, false);
-						
-					}
+					
+					GraphPanelWithResults graphPanel = new GraphPanelWithResults();
+					graphPanel.setPivotTemplate(tpl2);
+					graphPanel.setResults(results);
+					
+//					JTabbedPane tabbedPane = new JCustomTabbedPane();
+//					for(final Test t: mapResults.keySet()) {
+//						final GraphPanel panel = new GraphPanel();
+//						tabbedPane.add("<html>Result<br><b>"+t.getName()+"</b>", panel);
+//						panel.setPivotTemplate(tpl2);
+//						panel.setResults(mapResults.get(t));
+//						
+//					}
 					
 					
-					JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, displaySp, tabbedPane);					
+					JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, displaySp, graphPanel);					
 					splitPane.setDividerLocation(380);
 					contentPanel.add(BorderLayout.CENTER, splitPane);
 					contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue(), new JButton(new CloseAction())));

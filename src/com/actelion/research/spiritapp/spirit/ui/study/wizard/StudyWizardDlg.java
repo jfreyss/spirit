@@ -90,8 +90,8 @@ import com.actelion.research.util.IOUtils;
 import com.actelion.research.util.StringUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
 
 /**
  * 
@@ -344,7 +344,7 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 				NamedSampling ns = (NamedSampling) value;
-				setText("<html><b><u>" + ns.getName() + "</u></b> " + (ns.getStudy()==null?"": "("+ns.getStudy()+")") + "<br>" +
+				setText("<html><b><u>" + ns.getName() + "</u></b> " + (ns.getStudy()==null?"": "("+ns.getStudy().getStudyId()+")") + "<br>" +
 						ns.getDescription());
 				return this;
 			}

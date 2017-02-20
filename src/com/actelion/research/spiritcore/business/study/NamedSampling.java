@@ -311,7 +311,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 		NamedSampling res = new NamedSampling();
 		res.setName(getName());
 		res.setNecropsy(isNecropsy());
-		IdentityHashMap<Sampling, Sampling> old2new = new IdentityHashMap<>();
+		Map<Sampling, Sampling> old2new = new IdentityHashMap<>();
 
 		//Create new sampling objects
 		for (Sampling existingSampling : getAllSamplings()) {

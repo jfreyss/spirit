@@ -106,7 +106,7 @@ public class PivotColumn implements Comparable<PivotColumn> {
 	 * Util function to get the results associated to this column
 	 */
 	public List<Result> getResults(){
-		List<Result> res = new ArrayList<Result>(); 
+		List<Result> res = new ArrayList<>(); 
 		for(PivotRow r: table.getPivotRows()) {
 			res.addAll(r.getPivotCell(this).getResults());
 		}

@@ -38,17 +38,17 @@ public class MonitorPivotTemplate extends PivotTemplate {
 		clear();
 		setWhere(PivotItemFactory.STUDY_GROUP, Where.ASROW);
 		setWhere(PivotItemFactory.STUDY_SUBGROUP, Where.ASROW);
-//		setWhere(PivotItemFactory.COMPOUND_ACTNO, Where.ASROW);
 		setWhere(PivotItemFactory.BIOSAMPLE_CONTAINERID, Where.ASROW);
 		setWhere(PivotItemFactory.BIOSAMPLE_TOPID, Where.ASROW);
 		setWhere(PivotItemFactory.BIOSAMPLE_TOPNAME, Where.ASROW);
 
-//		setWhere(PivotItemFactory.BIOSAMPLE_SAMPLENAME, Where.ASCOL);
 		setWhere(PivotItemFactory.BIOSAMPLE_BIOTYPE, Where.ASCOL);
 		setWhere(PivotItemFactory.RESULT_TEST, Where.ASCOL);
 		setWhere(PivotItemFactory.RESULT_INPUT, Where.ASCOL);
 		setWhere(PivotItemFactory.RESULT_OUTPUT, Where.ASCOL);
 		setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASCOL);
+		
+		setComputed(Computed.INC_START_PERCENT);
 	}
 
 }

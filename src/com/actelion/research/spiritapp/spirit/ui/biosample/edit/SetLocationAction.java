@@ -26,7 +26,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import com.actelion.research.spiritapp.spirit.ui.container.CheckinDlg;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class SetLocationAction extends AbstractAction {
 	private final EditBiosampleTable table;

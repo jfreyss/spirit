@@ -88,6 +88,7 @@ public class JExceptionDialog {
 	public static void show(final Component parent, final String message, final String title, final int messageType) {
 		if(!SwingUtilities.isEventDispatchThread()) {
 			SwingUtilities.invokeLater(new Runnable() {
+				@Override
 				public void run() {
 					JOptionPane.showMessageDialog(parent, message, title, messageType);
 				}

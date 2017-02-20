@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Where;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultValue;
 
@@ -45,6 +44,10 @@ public class ColumnPivotTemplate extends PivotTemplate {
 		super(name, "column.png");
 	}		
 
+	public ColumnPivotTemplate(String name, String thumbnailName) {
+		super(name, thumbnailName);
+	}		
+
 	@Override
 	public void init(List<Result> results) {
 		clear();
@@ -54,23 +57,20 @@ public class ColumnPivotTemplate extends PivotTemplate {
 		setWhere(PivotItemFactory.STUDY_SUBGROUP, Where.ASROW);
 		setWhere(PivotItemFactory.BIOSAMPLE_TOPID, Where.ASROW);
 		setWhere(PivotItemFactory.BIOSAMPLE_TOPNAME, Where.ASROW);
-//		setWhere(PivotItemFactory.BIOSAMPLE_SAMPLING, Where.ASCOL);
+		setWhere(PivotItemFactory.BIOSAMPLE_NAME, Where.ASCOL);
 		setWhere(PivotItemFactory.RESULT_TEST, Where.ASCOL);
 		setWhere(PivotItemFactory.RESULT_OUTPUT, Where.ASCOL);
 		
-		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_NAME, results)) {
-			setWhere(PivotItemFactory.BIOSAMPLE_NAME, Where.ASCOL);
-		}
 			
 		//We display the phase in the cell only if we don't create nested tables (otherwise in cols)
 		//We display the biomarker in the cell only if we don't create nested tables (otherwise in cols)
 		boolean phaseOnTop = false;
 		boolean markerOnTop = false;
-		Set<String> keysWithAll = new HashSet<String>();
-		Set<String> keysWithPhase = new HashSet<String>();
-		Set<String> keysWithBioMarker = new HashSet<String>();		
+		Set<String> keysWithAll = new HashSet<>();
+		Set<String> keysWithPhase = new HashSet<>();
+		Set<String> keysWithBioMarker = new HashSet<>();		
 		StringBuilder key = new StringBuilder();
-		List<PivotItem> pvs = new ArrayList<PivotItem>();
+		List<PivotItem> pvs = new ArrayList<>();
 		pvs.addAll(getPivotItems(Where.ASROW));
 		pvs.addAll(getPivotItems(Where.ASCOL));
 				
@@ -109,18 +109,16 @@ public class ColumnPivotTemplate extends PivotTemplate {
 		}
 		if(isDiscriminating(PivotItemFactory.STUDY_PHASE_DATE, results)) {
 			setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASCOL);
-			setWhere(PivotItemFactory.RESULT_INPUT, isDiscriminating(PivotItemFactory.RESULT_INPUT, results)? Where.ASCOL: Where.ASCELL);
-
 		} else {
-			setWhere(PivotItemFactory.RESULT_INPUT, Where.ASCOL);
 			setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASCELL);
 		}
+		setWhere(PivotItemFactory.RESULT_INPUT, Where.ASCOL);
 
 		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_COMMENTS, results)) {
 			setWhere(PivotItemFactory.BIOSAMPLE_COMMENTS, Where.ASCOL);
 		}
 		
-//		simplify(results);
+		simplify(results);
 		
 	}
 	

@@ -55,7 +55,7 @@ import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.SwingWorkerExtended;
-import com.actelion.research.util.ui.iconbutton.JIconButton.IconType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 /**
  * Component used to represent the info linked to biosamples/containers

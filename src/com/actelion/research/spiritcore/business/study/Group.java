@@ -149,9 +149,9 @@ public class Group implements Comparable<Group>, Cloneable, IObject {
 	}
 	
 	public String getBlindedName(String user) {
-		if(study==null) {
+		if(study==null || user==null) {
 			return getName()==null?"":getName();
-		} else if(user==null || study.getBlindAllUsers().contains(user)) {
+		} else if(study.getBlindAllUsers().contains(user)) {
 			return "Blinded";
 		} else if(study.getBlindDetailsUsers().contains(user)) {
 			return "Gr. " + getShortName();
@@ -161,9 +161,9 @@ public class Group implements Comparable<Group>, Cloneable, IObject {
 	}
 	
 	public Color getBlindedColor(String user) {		
-		if(study==null) {
+		if(study==null || user==null) {
 			return getColor();
-		} else if(user==null || study.getBlindAllUsers().contains(user)) {
+		} else if(study.getBlindAllUsers().contains(user)) {
 			return Color.LIGHT_GRAY;
 		} else if(study.getBlindDetailsUsers().contains(user)) {
 			return getColor();

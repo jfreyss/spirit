@@ -138,7 +138,9 @@ public class Employee implements Comparable<Employee>, IEntity {
 	}
 	
 	/**
-	 * Return the main group (ie the first one, which is not in capital letters, or not a parent with capital letters)
+	 * Return the topmost group:
+	 * - not a functional group: ie.  name or parent.name is not uppercase
+	 * - if several groups matches, the result is not determined 
 	 * @return
 	 */
 	public EmployeeGroup getMainEmployeeGroup() {
@@ -146,16 +148,16 @@ public class Employee implements Comparable<Employee>, IEntity {
 			
 			//Skip groups, whose parent is FUNCTIONAL (all uppercase)
 			if(gr.getParent()!=null && gr.getParent().getName().toUpperCase().equals(gr.getParent().getName())) continue;
-			return gr;
+			
+			//Skip groups, whose parent is in the list. 
+			if(gr.getParent()!=null && getEmployeeGroups().contains(gr.getParent())) continue;
 		}
 		return null;
 	}
 
-
 	public void setEmployeeGroups(Set<EmployeeGroup> employeeGroups) {
 		this.employeeGroups = employeeGroups;
 	}
-	
 
 	public String getPassword() {
 		return password;
