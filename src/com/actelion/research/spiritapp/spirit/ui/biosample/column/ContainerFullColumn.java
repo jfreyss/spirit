@@ -31,7 +31,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.table.TableCellEditor;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTableModel;
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.ContainerIdCellEditor;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel;
@@ -51,20 +51,20 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class ContainerFullColumn extends Column<Biosample, String> {
-	
+
 	private static ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.FULL);
-	
-	public ContainerFullColumn() {		
-		super("Container\n", String.class, 45);		
+
+	public ContainerFullColumn() {
+		super("Container\n", String.class, 45, 180);
 	}
 
 	@Override
 	public float getSortingKey() {return 2.0f;}
-	
+
 	@Override
-	public String getValue(Biosample row) {		
+	public String getValue(Biosample row) {
 		if(row.getBiotype()!=null && (row.getBiotype().getCategory()==BiotypeCategory.LIBRARY || row.getBiotype().isAbstract())) return null;
-				
+
 		StringBuilder sb = new StringBuilder();
 		sb.append(row.getContainerType()==null?"": row.getContainerType().getName());
 		sb.append("\t");
@@ -72,16 +72,16 @@ public class ContainerFullColumn extends Column<Biosample, String> {
 		sb.append("\t");
 		sb.append(row.getAmount()==null?"": row.getAmount());
 		sb.append("\t");
-		sb.append(row.getLocation()==null?"": row.getLocationString(LocationFormat.FULL_POS, Spirit.getUser()));
+		sb.append(row.getLocation()==null?"": row.getLocationString(LocationFormat.FULL_POS, SpiritFrame.getUser()));
 		return sb.toString();
 	}
-	
+
 	@Override
 	public String getCopyValue(Biosample row, int rowNo) {
 		return row.getContainerId()==null?"": row.getContainerId();
 	}
-	
-	
+
+
 	@Override
 	public void setValue(Biosample row, String value) {
 		if(value==null) {
@@ -96,57 +96,56 @@ public class ContainerFullColumn extends Column<Biosample, String> {
 					if(split.length>1) row.setContainerId(split[1]);
 					if(split.length>2) row.setAmount(split[2].length()>0? Double.parseDouble(split[2]): null);
 					if(split.length>3) {
-						Location loc = DAOLocation.getCompatibleLocation(split[3], Spirit.getUser());
+						Location loc = DAOLocation.getCompatibleLocation(split[3], SpiritFrame.getUser());
 						row.setLocation(loc);
 					}
 				}
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
-			
+
 		}
 	}
-	
-	
-	
+
+
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample b, int rowNo, Object value) {
 		containerLabel.setDisplayMode(ContainerDisplayMode.FULL);
 		containerLabel.setBiosample(b);
 		return containerLabel;
 	}
-	
+
 	@Override
-	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {		
+	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		comp.setBackground(LF.BGCOLOR_LOCATION);
 	}
 	@Override
 	public boolean isEditable(Biosample row) {
 		return false;
-//		return row.getContainerType()!=null && !row.getContainerType().isMultiple() && row.getContainerType().getBarcodeType()!=BarcodeType.NOBARCODE && row.getLocation()==null;
 	}
-	
+
 	@Override
 	public void paste(Biosample row, String value) throws Exception {
 		setValue(row, value);
 	}
-	
+
 
 	@Override
-	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {		
+	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {
 		return new ContainerIdCellEditor();
 	}
-	
+
 	@Override
 	public boolean isMultiline() {
 		return true;
 	}
-	
-	
+
+
 	@Override
 	public void populateHeaderPopup(final AbstractExtendTable<Biosample> table, JPopupMenu popupMenu) {
 		Biotype type = table.getModel() instanceof BiosampleTableModel? ((BiosampleTableModel) table.getModel()).getBiotype():null;
-		
+
 		popupMenu.add(new JSeparator());
 		popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
 		if(type==null || !type.isHideContainer()) {
@@ -188,9 +187,9 @@ public class ContainerFullColumn extends Column<Biosample, String> {
 						public int compare(Biosample o1, Biosample o2) {
 							Container c1 = o1.getContainer();
 							Container c2 = o2.getContainer();
-							if(c1==null && c2==null) return 0; 
-							if(c1==null) return 1; 
-							if(c2==null) return -1; 
+							if(c1==null && c2==null) return 0;
+							if(c1==null) return 1;
+							if(c2==null) return -1;
 							int c = CompareUtils.compare(c1.getAmount(), c2.getAmount());
 							return c;
 						}
@@ -201,8 +200,8 @@ public class ContainerFullColumn extends Column<Biosample, String> {
 		ContainerFullColumn.populateLocationHeaderPopupStatic(this, table, popupMenu);
 	}
 
-	public static void populateLocationHeaderPopupStatic(final Column<Biosample, ?> column, final AbstractExtendTable<Biosample> table, JPopupMenu popupMenu) {		
-		
+	public static void populateLocationHeaderPopupStatic(final Column<Biosample, ?> column, final AbstractExtendTable<Biosample> table, JPopupMenu popupMenu) {
+
 		popupMenu.add(new AbstractAction("Sort by Location/Rows") {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -218,7 +217,7 @@ public class ContainerFullColumn extends Column<Biosample, String> {
 				});
 			}
 		});
-		
+
 		popupMenu.add(new AbstractAction("Sort by Location/Column") {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -234,5 +233,5 @@ public class ContainerFullColumn extends Column<Biosample, String> {
 				});
 			}
 		});
-	}	
+	}
 }

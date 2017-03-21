@@ -32,7 +32,7 @@ import javax.swing.JList;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.study.GroupLabel;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -82,18 +82,18 @@ public abstract class GroupCellEditor extends AbstractCellEditor implements Tabl
 		if(study!=null) {
 			groups.addAll(study.getGroups());
 			for (Group g : groups) {
-				choices.add(g.getBlindedName(Spirit.getUsername()));				
+				choices.add(g.getBlindedName(SpiritFrame.getUsername()));				
 			}
 		}
 		cb.setChoices(choices);		
-		cb.setText(value==null?"": ((Group)value).getBlindedName(Spirit.getUsername()));
+		cb.setText(value==null?"": ((Group)value).getBlindedName(SpiritFrame.getUsername()));
 		return cb;
 	}
 
 	@Override
 	public Group getCellEditorValue() {
 		for (Group group : groups) {
-			if(group.getBlindedName(Spirit.getUsername()).equals(cb.getText())) return group;
+			if(group.getBlindedName(SpiritFrame.getUsername()).equals(cb.getText())) return group;
 		}
 		return null;
 	}		

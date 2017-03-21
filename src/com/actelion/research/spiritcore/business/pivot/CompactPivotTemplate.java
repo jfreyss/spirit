@@ -51,17 +51,16 @@ public class CompactPivotTemplate extends PivotTemplate {
 			setWhere(PivotItemFactory.STUDY_PHASE_DATE, !isMultiColumns(results)? Where.ASCOL: Where.ASCELL);			
 		}
 		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_NAME, results)) {
-			setWhere(PivotItemFactory.BIOSAMPLE_NAME, !isMultiColumns(results)? Where.ASCOL: Where.ASCELL);
-			setWhere(PivotItemFactory.RESULT_INPUT, !isMultiColumns(results)? Where.ASCOL: Where.ASCELL);
+			setWhere(PivotItemFactory.BIOSAMPLE_NAME, !isMultiColumns(results) && !hasMoreOrEqualThanNValues(PivotItemFactory.BIOSAMPLE_NAME, results, 25)? Where.ASCOL: Where.ASCELL);
+			setWhere(PivotItemFactory.RESULT_INPUT, !isMultiColumns(results) && !hasMoreOrEqualThanNValues(PivotItemFactory.RESULT_INPUT, results, 25)? Where.ASCOL: Where.ASCELL);
 		} else {
 			setWhere(PivotItemFactory.BIOSAMPLE_NAME, Where.ASCOL);
-			setWhere(PivotItemFactory.RESULT_INPUT, !isMultiColumns(results)? Where.ASCOL: Where.ASCELL);
+			setWhere(PivotItemFactory.RESULT_INPUT, !isMultiColumns(results) && !hasMoreOrEqualThanNValues(PivotItemFactory.RESULT_INPUT, results, 25)? Where.ASCOL: Where.ASCELL);
 		}
 		
 		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_METADATA, results)) {
 			setWhere(PivotItemFactory.BIOSAMPLE_METADATA, Where.ASCELL);
 		}
-
 		
 		if(isDiscriminating(PivotItemFactory.RESULT_COMMENTS, results)) {
 			setWhere(PivotItemFactory.RESULT_COMMENTS, Where.ASCELL);

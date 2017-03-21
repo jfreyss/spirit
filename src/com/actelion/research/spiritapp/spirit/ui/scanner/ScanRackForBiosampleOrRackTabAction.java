@@ -22,10 +22,7 @@
 package com.actelion.research.spiritapp.spirit.ui.scanner;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleOrRackTab;
-import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner.Verification;
-import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.scanner.ScannerConfiguration;
 
 /**
@@ -35,49 +32,30 @@ import com.actelion.research.util.ui.scanner.ScannerConfiguration;
  * @author freyssj
  *
  */
-public abstract class ScanRackForDepictorAction extends ScanRackAction {
+public abstract class ScanRackForBiosampleOrRackTabAction extends ScanRackAction {
 	
 	private BiosampleOrRackTab tab;
-	private boolean proposeRackCreation;
 	
-	public ScanRackForDepictorAction(SpiritScanner scanner, BiosampleOrRackTab tab, Verification method, boolean proposeRackCreation) {
-		super("Scan Rack", IconType.SCANNER.getIcon(), scanner);
-		scanner.setVerification(method);
+	public ScanRackForBiosampleOrRackTabAction(SpiritScanner scanner, BiosampleOrRackTab tab) {
+		super("Scan Rack", scanner);
 		this.tab = tab;
-		this.proposeRackCreation = proposeRackCreation;
 	}
 	
 	/**
-	 * By default, the program will ask for the configuration (ie returns null)
+	 * If not overriden, this will ask for the configuration before scanning
 	 * @return
 	 */
 	public ScannerConfiguration getScannerConfiguration() {
 		return null;
 	}
+
+	/**
+	 * Scan and set the update the rack
+	 */
 	@Override
 	public Location scan() throws Exception {	
-		//Scan and validate
-		Location rack = scanner.scan(getScannerConfiguration(), false, null);			
+		Location rack = scanner.scan(getScannerConfiguration(), false);			
 		tab.setRack(rack);
 		return rack;		
 	}	
-	
-
-	@Override
-	public void postScan(Location scannedRack) throws Exception {
-		if(proposeRackCreation) {
-			new SelectRackAction(scanner) {				
-				@Override
-				protected void eventRackSelected(Location rack) throws Exception {
-					//Update the containers
-					for (Biosample b : tab.getBiosamples()) {
-						b.setLocPos(rack, rack.parsePosition(b.getContainer().getScannedPosition()));
-					}
-					tab.repaint();					
-				}
-			}.actionPerformed(null);
-		}
-	}
-	
-
 }

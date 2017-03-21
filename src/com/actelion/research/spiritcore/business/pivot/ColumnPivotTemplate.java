@@ -112,7 +112,9 @@ public class ColumnPivotTemplate extends PivotTemplate {
 		} else {
 			setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASCELL);
 		}
-		setWhere(PivotItemFactory.RESULT_INPUT, Where.ASCOL);
+//		if(isDiscriminating(PivotItemFactory.STUDY_PHASE_DATE, results)) {
+			setWhere(PivotItemFactory.RESULT_INPUT, Where.ASCOL);
+//		}
 
 		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_COMMENTS, results)) {
 			setWhere(PivotItemFactory.BIOSAMPLE_COMMENTS, Where.ASCOL);

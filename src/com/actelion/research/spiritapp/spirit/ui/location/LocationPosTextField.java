@@ -32,7 +32,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.border.Border;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.container.CheckinDlg;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
@@ -114,11 +114,11 @@ public class LocationPosTextField extends JCustomTextField {
 		if(biosample==null) return;
 		if(biosample.getContainer()==null) biosample.setContainer(new Container());
 			
-		DAOLocation.updateLocation(biosample, getText(), Spirit.getUser());
+		DAOLocation.updateLocation(biosample, getText(), SpiritFrame.getUser());
 	}
 	
 	private void refreshText() {	
-		String txt = biosample==null || biosample.getLocation()==null? "": biosample.getLocationString(LocationFormat.FULL_POS, Spirit.getUser());			 
+		String txt = biosample==null || biosample.getLocation()==null? "": biosample.getLocationString(LocationFormat.FULL_POS, SpiritFrame.getUser());			 
 		setText(txt);
 	}
 

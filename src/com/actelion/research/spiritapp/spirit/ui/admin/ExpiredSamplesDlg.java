@@ -31,7 +31,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTableModel.Mode;
@@ -102,8 +102,8 @@ public class ExpiredSamplesDlg extends JEscapeDialog implements ISpiritChangeObs
 				goingtoExpireQuery.setFilterTrashed(true);
 
 				
-				alreadyExpired = DAOBiosample.queryBiosamples(alreadyExpiredQuery, Spirit.getUser());
-				goingtoExpire = DAOBiosample.queryBiosamples(goingtoExpireQuery, Spirit.getUser());
+				alreadyExpired = DAOBiosample.queryBiosamples(alreadyExpiredQuery, SpiritFrame.getUser());
+				goingtoExpire = DAOBiosample.queryBiosamples(goingtoExpireQuery, SpiritFrame.getUser());
 			}
 			
 			@Override

@@ -24,10 +24,10 @@ package com.actelion.research.spiritapp.spirit.ui.scanner;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
-import javax.swing.Icon;
 
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.util.ui.JExceptionDialog;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
 /**
  * Scan rack and populate the given EditBiosampleTable.
@@ -41,27 +41,20 @@ public abstract class ScanRackAction extends AbstractAction {
 	
 	protected final SpiritScanner scanner;
 	
-	public ScanRackAction(String label, Icon icon, SpiritScanner scanner) {
-		super(label, icon);
+	public ScanRackAction(String label, SpiritScanner scanner) {
+		super(label, IconType.SCANNER.getIcon());
 		this.scanner = scanner;
 	}
 		
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		try {
-			preScan();
 			Location scannedRack = scan();
 			postScan(scannedRack);
-			
-			//TODO: bug somewhere here
-			
 		} catch(Exception ex) {
 			JExceptionDialog.showError(ex);
 		}
 	}
-	
-	/**Could be overriden*/
-	public void preScan() throws Exception {}
 	
 	/**To be implemented*/
 	public abstract Location scan() throws Exception;

@@ -24,7 +24,7 @@ package com.actelion.research.spiritapp.spirit.ui.location.edit;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationColsColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationDepartmentColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationDescriptionColumn;
@@ -72,7 +72,7 @@ public class LocationEditTableModel extends ExcelTableModel<Location> {
 		try {
 			List<Location> res = new ArrayList<Location>();
 			for (Location loc: row.getChildren()) {
-				if(!SpiritRights.canRead(loc, Spirit.getUser())) continue;
+				if(!SpiritRights.canRead(loc, SpiritFrame.getUser())) continue;
 				res.add(loc);
 			}
 			return res;
@@ -90,7 +90,7 @@ public class LocationEditTableModel extends ExcelTableModel<Location> {
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
 		Location loc = getRows().get(rowIndex);
-		if(!SpiritRights.canEdit(loc, Spirit.getUser())) return false;
+		if(!SpiritRights.canEdit(loc, SpiritFrame.getUser())) return false;
 		return super.isCellEditable(rowIndex, columnIndex);
 	}
 }

@@ -27,11 +27,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
+import com.actelion.research.util.CompareUtils;
 
 /**
  * Class used to represent a simple result, the test/input are supposed fixed
@@ -79,7 +81,7 @@ public class SimpleResult implements Comparable<SimpleResult> {
 	}
 	
 	public String getLabel() {
-    	String lbl =(getBiosample().getInheritedGroup()==null?"":getBiosample().getInheritedGroup().getShortName())
+    	String lbl = (getBiosample().getInheritedGroup()==null?"":getBiosample().getInheritedGroup().getShortName())
     			+ (getBiosample().getInheritedPhase()==null?"": "/" + getBiosample().getInheritedPhase().getShortName())
     			+ getBiosample()==null? "": " " + getBiosample().getTopParent().getSampleId();
     	return lbl;
@@ -87,16 +89,17 @@ public class SimpleResult implements Comparable<SimpleResult> {
 	
 	@Override
 	public String toString() {
-		return getLabel() + " " + value;
+		return getLabel() + " > " + value;
 	}
 	
 	@Override
 	public int compareTo(SimpleResult o) {
-		int c = group==null? (o.getGroup()==null?0: -1): group.compareTo(o.getGroup());
-		if(c!=0) return c;
-		
-		c = phase==null? (o.getPhase()==null?0: -1): phase.compareTo(o.getPhase());
-		if(c!=0) return c;
+		int c;
+//		c = group==null? (o.getGroup()==null?0: -1): group.compareTo(o.getGroup());
+//		if(c!=0) return c;
+//		
+//		c = phase==null? (o.getPhase()==null?0: -1): phase.compareTo(o.getPhase());
+//		if(c!=0) return c;
 
 		c = biosample==null? (o.getBiosample()==null?0: -1): biosample.compareTo(o.getBiosample());
 		if(c!=0) return c;
@@ -113,8 +116,27 @@ public class SimpleResult implements Comparable<SimpleResult> {
 		return groups;
 	}
 	
-	public static Set<Phase> getPhases(Collection<SimpleResult> simpleResults) {
-		Set<Phase> phases = new TreeSet<>();
+	/**
+	 * Gets phases sorted
+	 * @param simpleResults
+	 * @return
+	 */
+	public static List<String> getPhaseStrings(Collection<SimpleResult> simpleResults) {
+		Set<Phase> phases = getPhases(simpleResults);
+		List<String> res = new ArrayList<>();
+		for (Phase p : phases) {
+			res.add(p==null? "": p.getShortName());
+		}
+		return res;
+	}
+	
+	/**
+	 * Gets phases sorted
+	 * @param simpleResults
+	 * @return
+	 */
+	public static SortedSet<Phase> getPhases(Collection<SimpleResult> simpleResults) {
+		SortedSet<Phase> phases = new TreeSet<>(CompareUtils.OBJECT_COMPARATOR);
 		for (SimpleResult r : simpleResults) {
 			phases.add(r.getPhase());
 		}

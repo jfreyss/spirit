@@ -33,7 +33,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
@@ -56,7 +56,7 @@ public class ChangePasswordDlg extends JEscapeDialog {
 	public ChangePasswordDlg() {
 		super(UIUtils.getMainFrame(), "Change Password", true);
 
-		SpiritUser user = Spirit.getUser();
+		SpiritUser user = SpiritFrame.getUser();
 		if(user==null) return;
 		
 		employee = DAOEmployee.getEmployee(user.getUsername());
@@ -107,6 +107,6 @@ public class ChangePasswordDlg extends JEscapeDialog {
 		if(!new String(new1Field.getPassword()).equals(new String(new2Field.getPassword()))) throw new Exception("Your passwords don't match");
 		
 		employee.setPassword(DBAdapter.getAdapter().encryptPassword(new1Field.getPassword()));
-		DAOEmployee.persistEmployees(Collections.singleton(employee), Spirit.getUser());
+		DAOEmployee.persistEmployees(Collections.singleton(employee), SpiritFrame.getUser());
 	}
 }

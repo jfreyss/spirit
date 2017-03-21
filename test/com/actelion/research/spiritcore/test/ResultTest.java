@@ -102,20 +102,19 @@ public class ResultTest extends AbstractSpiritTest {
 		r1.setValue("input", "IL1");
 		r1.setValue("number", "2.0");
 		r1.setValue("large", new String(new char[1000]).replace("\0", "large"));
-		
-		File f = new File("tmp/test.ico");
+
+		File f = new File("tmp/test.txt");
 		f.getParentFile().mkdirs();
 		IOUtils.bytesToFile("Some file content".getBytes(), f);
 		r1.getResultValue("file").setLinkedDocument(new Document(f));
 		DAOResult.persistResults(Collections.singleton(r1), user);
-//		DAOResult.persistExperiment(true, "test", Collections.singleton(r1), user);
 		try {
 			DAOResult.persistExperiment(true, "test", Collections.singleton(r1), user);
 			throw new AssertionError("Deletion should not be possible");
 		} catch (Exception e) {
 			// ok
 		}
-		
+
 
 		// Retrieve result
 		JPAUtil.clear();
@@ -126,7 +125,7 @@ public class ResultTest extends AbstractSpiritTest {
 		Assert.assertEquals("IL1", r1.getInputResultValuesAsString());
 		Assert.assertEquals("2.0", r1.getResultValue("number").getValue());
 		Assert.assertEquals("4.0", r1.getResultValue("formula").getValue());
-		Assert.assertEquals("test.ico", r1.getResultValue("file").getLinkedDocument().getFileName());
+		Assert.assertEquals("test.txt", r1.getResultValue("file").getLinkedDocument().getFileName());
 		Assert.assertEquals(5*1000, r1.getResultValue("large").getValue().length());
 
 		// test filters
@@ -153,7 +152,6 @@ public class ResultTest extends AbstractSpiritTest {
 	@Test
 	public void testFilters() throws Exception {
 		Study s = DAOStudy.getStudyByIvvOrStudyId("IVV2016-1").get(0);
-		Assert.assertTrue(DAOTest.getTestCategories().size() > 0);
 		Assert.assertTrue(DAOTest.getTestsFromElbs("ELB-2016-1").size() > 0);
 		Assert.assertTrue(DAOTest.getTestsFromStudies(Collections.singleton(s)).size() > 0);
 		Assert.assertTrue(DAOResult.getElbsForStudy(s.getStudyId()).size() > 0);
@@ -173,7 +171,7 @@ public class ResultTest extends AbstractSpiritTest {
 		List<Result> results = DAOResult.queryResults(q, user);
 		Assert.assertTrue(results.size() > 0);
 
-		
+
 		//Change ownership
 		DAOResult.changeOwnership(results, DAOSpiritUser.loadUser("admin"), user);
 
@@ -188,19 +186,19 @@ public class ResultTest extends AbstractSpiritTest {
 		r.getResultValue(t.getInputAttributes().get(0)).setValue("Test");
 		r.setFirstOutputValue("3000");
 		DAOResult.persistResults(Collections.singleton(r), user);
-		
+
 		r = DAOResult.getResults(Collections.singleton(r.getId())).get(0);
 		Assert.assertEquals("Test", r.getInputResultValuesAsString());
 		Assert.assertEquals("3000", r.getFirstValue());
-		
+
 		//Rename inputs
 		int n = DAOResult.rename(t.getInputAttributes().get(0), "Test", "Test2", user);
 		Assert.assertEquals(1, n);
 		r = DAOResult.getResults(Collections.singleton(r.getId())).get(0);
 		Assert.assertEquals("Test2", r.getInputResultValuesAsString());
 		Assert.assertEquals("3000", r.getFirstValue());
-		
-		
+
+
 	}
 
 	@Test
@@ -232,12 +230,12 @@ public class ResultTest extends AbstractSpiritTest {
 		q.setKeywords("organ sick");
 		Assert.assertTrue(DAOResult.queryResults(q, user).size() > 0);
 	}
-	
+
 	@Test
 	public void testPivot() throws Exception {
 		SchemaCreator.clearExamples(user);
 		SchemaCreator.createExamples(user);
-		
+
 		// Retrieve some results
 		ResultQuery q = new ResultQuery();
 		q.setKeywords("IVV2016-1");
@@ -246,30 +244,30 @@ public class ResultTest extends AbstractSpiritTest {
 
 		//Test standard pivot
 		PivotTemplate tpl = new CompactPivotTemplate();
-		tpl.init(results);		
+		tpl.init(results);
 		PivotDataTable table = new PivotDataTable(results, tpl);
 		Assert.assertEquals(8, table.getPivotColumns().size());
 		Assert.assertEquals(17, table.getPivotRows().size());
-		
-//		tpl = new ColumnPivotTemplate();
-//		tpl.init(results);		
-//		table = new PivotDataTable(results, tpl);
-//		Assert.assertEquals(12, table.getPivotColumns().size());
-//		Assert.assertEquals(17, table.getPivotRows().size());
-//		
-//		tpl = new ExpandedPivotTemplate();
-//		tpl.init(results);		
-//		table = new PivotDataTable(results, tpl);
-//		Assert.assertTrue(table.getPivotColumns().size()>1);
-//		Assert.assertEquals(17, table.getPivotRows().size());
-		
+
+		//		tpl = new ColumnPivotTemplate();
+		//		tpl.init(results);
+		//		table = new PivotDataTable(results, tpl);
+		//		Assert.assertEquals(12, table.getPivotColumns().size());
+		//		Assert.assertEquals(17, table.getPivotRows().size());
+		//
+		//		tpl = new ExpandedPivotTemplate();
+		//		tpl.init(results);
+		//		table = new PivotDataTable(results, tpl);
+		//		Assert.assertTrue(table.getPivotColumns().size()>1);
+		//		Assert.assertEquals(17, table.getPivotRows().size());
+
 		tpl = new InventoryPivotTemplate();
-		tpl.init(results);		
+		tpl.init(results);
 		table = new PivotDataTable(results, tpl);
 		Assert.assertEquals(8, table.getPivotColumns().size());
 		Assert.assertEquals(4, table.getPivotRows().size());
 	}
-	
+
 	@Test
 	public void testAnalyzer() throws Exception {
 		ResultQuery q = new ResultQuery();
@@ -278,12 +276,12 @@ public class ResultTest extends AbstractSpiritTest {
 		Assert.assertTrue(results.size() > 0);
 
 		PivotTemplate tpl = new ColumnPivotTemplate();
-		tpl.init(results);		
+		tpl.init(results);
 		PivotDataTable table = new PivotDataTable(results, tpl);
-		
+
 		Analyzer analyzer = new Analyzer(results, user);
 		analyzer.getReport();
-		
+
 		DataWarriorExporter.getDwar(table);
 	}
 

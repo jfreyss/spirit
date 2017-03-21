@@ -30,53 +30,53 @@ import com.actelion.research.util.CompareUtils;
 
 /**
  * The BiosampleLinker is used to identify a field in the biosample hierary.
- * 
+ *
  * 				CellLine (parentBiotype)
  * 				/ \   \-Name (type=name)
  * 				 |
  * 				 Cell   <> ------ Plasmid1 (aggregatedMetadata)
  *                                     \-Name (type=name)
- *                                     
- *                                     
+ *
+ *
  * the linker can either be
  * - to itself
  * - to a parent (parentBiotype!=null)
  * - to an aggregated biosample (aggregatedMetadata!=null)
- * 
+ *
  * we cannot combine parent (vertical links) and aggregated (horizontal links) to limit complexity
- * 
+ *
  * @author freyssj
  *
  */
 public class BiosampleLinker implements Comparable<BiosampleLinker> {
-	
+
 	public static enum LinkerType {
-		SAMPLEID, 
-		SAMPLENAME, 
-		METADATA, 
-		COMMENTS, 
+		SAMPLEID,
+		SAMPLENAME,
+		METADATA,
+		COMMENTS,
 	}
-	
+
 	private String label;
 	private final LinkerType type;
 	private final Biotype hierarchyBiotype;
 	private final BiotypeMetadata aggregatedMetadata;
-	
+
 	/** Cannot be null if type=metadata*/
 	private final BiotypeMetadata biotypeMetadata;
-	
+
 	/** Only used for the label (for amount and name), not for the actual linking*/
 	private final Biotype biotypeForLabel;
-	
+
 
 	public enum LinkerMethod {
 		/** No container, no sampleId, no links */
-		DIRECT_LINKS, 
+		DIRECT_LINKS,
 		/** No container, no sampleId, include links */
 		ALL_LINKS,
 		/** No container, no sampleId, include links */
 		INDIRECT_LINKS;
-				
+
 	}
 
 	public static Set<BiosampleLinker> getLinkers(Collection<Biosample> biosamples, LinkerMethod method) {
@@ -86,7 +86,7 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		}
 		return res;
 	}
-	
+
 
 	/**
 	 * Gets all available linkers
@@ -96,8 +96,8 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 	 */
 	public static Set<BiosampleLinker> getLinkers(Biosample biosample, LinkerMethod method) {
 		Set<BiosampleLinker> res = new TreeSet<>();
-		if(biosample==null || biosample.getBiotype()==null) return res; 
-		
+		if(biosample==null || biosample.getBiotype()==null) return res;
+
 		boolean followLinks = method==LinkerMethod.ALL_LINKS || method==LinkerMethod.INDIRECT_LINKS;
 
 		if(followLinks) {
@@ -106,7 +106,7 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 				Biosample b = m1.getDataType()==DataType.BIOSAMPLE? biosample.getMetadataBiosample(m1): null;
 				if(b!=null) {
 					res.add(new BiosampleLinker(m1, LinkerType.SAMPLEID, b.getBiotype()));
-					
+
 					if(b.getBiotype().getSampleNameLabel()!=null && (b.getSampleName()!=null  && b.getSampleName().length()>0) && !b.getBiotype().isHideSampleId()) {
 						res.add(new BiosampleLinker(m1, LinkerType.SAMPLENAME, b.getBiotype()));
 					}
@@ -122,13 +122,13 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 
 				}
 			}
-			
+
 			//Create hierarchical links from this biosample
 			Biosample b2 = biosample.getParent();
 			int count = 0;
 			while(b2!=null && count++<5) {
 				if(!b2.getBiotype().equals(biosample.getBiotype())) {
-					if(!b2.getBiotype().isHideSampleId()) { 
+					if(!b2.getBiotype().isHideSampleId()) {
 						res.add(new BiosampleLinker(b2.getBiotype(), LinkerType.SAMPLEID));
 					}
 					if(b2.getBiotype().getSampleNameLabel()!=null && b2.getSampleName()!=null && b2.getSampleName().length()>0) {
@@ -147,9 +147,9 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 
 				b2 = b2.getParent();
 			}
-			
+
 		}
-		
+
 		if(method==LinkerMethod.ALL_LINKS || method==LinkerMethod.DIRECT_LINKS) {
 			//Create direct links from this biosample
 			if(followLinks) {
@@ -157,12 +157,12 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 			} else {
 				res.add(new BiosampleLinker(LinkerType.SAMPLEID, biosample.getBiotype()));
 			}
-			
+
 			if(biosample.getBiotype().getSampleNameLabel()!=null && biosample.getSampleName()!=null) {
 				if(followLinks) {
 					res.add(new BiosampleLinker(biosample.getBiotype(), LinkerType.SAMPLENAME));
 				} else {
-					res.add(new BiosampleLinker(LinkerType.SAMPLENAME, biosample.getBiotype()));				
+					res.add(new BiosampleLinker(LinkerType.SAMPLENAME, biosample.getBiotype()));
 				}
 			}
 			//Retrieve metadata in the appropriate order
@@ -186,12 +186,12 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 				}
 			}
 		}
-		
+
 		return res;
 	}
 
-	
-	
+
+
 	/**
 	 * Create a linker to an aggregated data (ex cell->plasmid.metadata)
 	 */
@@ -204,8 +204,8 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		this.biotypeMetadata = biotypeMetadata;
 		this.biotypeForLabel = biotypeMetadata.getBiotype();
 	}
-	
-	
+
+
 	/**
 	 * Create a linker to an aggregated data (ex cell->plasmid.comments)
 	 */
@@ -230,15 +230,15 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 	 * Create a linker to an parent data (ex cell->cell line.metadata)
 	 */
 	public BiosampleLinker(Biotype hierarchyBiotype, BiotypeMetadata biotypeMetadata) {
-		if(hierarchyBiotype==null) throw new IllegalArgumentException("hierarchyBiotype cannot be null");	
-		if(biotypeMetadata==null) throw new IllegalArgumentException("biotypeMetadata cannot be null");	
+		if(hierarchyBiotype==null) throw new IllegalArgumentException("hierarchyBiotype cannot be null");
+		if(biotypeMetadata==null) throw new IllegalArgumentException("biotypeMetadata cannot be null");
 		this.hierarchyBiotype = hierarchyBiotype;
 		this.aggregatedMetadata = null;
 		this.type = LinkerType.METADATA;
 		this.biotypeMetadata = biotypeMetadata;
 		this.biotypeForLabel = hierarchyBiotype;
 	}
-	
+
 	/**
 	 * Create a linker to an parent data (ex cell->cell line.comments)
 	 */
@@ -254,44 +254,44 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 	/**
 	 * Create a linker to a non metadata attribute (ex cell.comments)
 	 * The biotypeForLabel should be given to display the header correctly.
-	 */	
+	 */
 	public BiosampleLinker(LinkerType type, Biotype biotypeForLabel) {
 		this.hierarchyBiotype = null;
 		this.aggregatedMetadata = null;
 		this.type = type;
 		this.biotypeMetadata = null;
-		this.biotypeForLabel = biotypeForLabel; 
+		this.biotypeForLabel = biotypeForLabel;
 	}
 	/**
 	 * Create a linker to a metadata attribute (ex cell.metadata)
-	 */	
+	 */
 	public BiosampleLinker(BiotypeMetadata biotypeMetadata) {
 		this.hierarchyBiotype = null;
 		this.aggregatedMetadata = null;
 		this.type = LinkerType.METADATA;
 		this.biotypeMetadata = biotypeMetadata;
-		this.biotypeForLabel = biotypeMetadata.getBiotype(); 
+		this.biotypeForLabel = biotypeMetadata.getBiotype();
 	}
-	
+
 	public boolean isLinked() {
 		return hierarchyBiotype != null || aggregatedMetadata != null;
 	}
-	
+
 	/**
 	 * Not null, to link to a parent of the given biotype
 	 */
 	public Biotype getHierarchyBiotype() {
 		return hierarchyBiotype;
 	}
-	
+
 	public LinkerType getType() {
 		return type;
 	}
-	
+
 	public BiotypeMetadata getBiotypeMetadata() {
 		return biotypeMetadata;
 	}
-	
+
 	/**
 	 * Never null, the expected biotype linked to this display.
 	 */
@@ -304,9 +304,9 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 	public Biosample getLinked(Biosample biosample) {
 		if(biosample==null) return null;
 		if(!isLinked()) return biosample;
-		
+
 		Biosample b2 = biosample;
-		
+
 		if(aggregatedMetadata!=null) {
 			//Aggregation
 			if(b2.getBiotype().equals(aggregatedMetadata.getBiotype())) {
@@ -331,9 +331,9 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 	public BiotypeMetadata getAggregatedMetadata() {
 		return aggregatedMetadata;
 	}
-	
+
 	public String getValue(Biosample b) {
-		b = getLinked(b);		
+		b = getLinked(b);
 		if(b==null) return null;
 
 		switch(type) {
@@ -346,11 +346,11 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 	}
 
 	public boolean setValue(Biosample b, String value) {
-		b = getLinked(b);		
+		b = getLinked(b);
 		if(b==null) return false;
 
 		switch(type) {
-		case SAMPLEID: 
+		case SAMPLEID:
 			b.setSampleId(value);
 			return true;
 		case SAMPLENAME:
@@ -373,7 +373,7 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		if(!(o instanceof BiosampleLinker)) return false;
 		return getLabel().equals(((BiosampleLinker)o).getLabel());
 	}
-	
+
 	/**
 	 * The order should be
 	 * parentType1, parentType2, self, selfName, selfMetadata, selfToAgregratedMetadata, selfComments, selfContainer
@@ -387,29 +387,29 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		} else if(getHierarchyBiotype()!=null && l.getHierarchyBiotype()==null) {
 			return -1;
 		} else if(getHierarchyBiotype()==null && l.getHierarchyBiotype()!=null) {
-			return 1;			
+			return 1;
 		}
-		
+
 		//Compare the next link
-		BiotypeMetadata toCompare1 = getAggregatedMetadata()!=null? getAggregatedMetadata(): getBiotypeMetadata(); 
+		BiotypeMetadata toCompare1 = getAggregatedMetadata()!=null? getAggregatedMetadata(): getBiotypeMetadata();
 		BiotypeMetadata toCompare2 = l.getAggregatedMetadata()!=null? l.getAggregatedMetadata(): l.getBiotypeMetadata();
 		if(toCompare1!=null && toCompare2!=null) {
-			int c = (int)(toCompare1.getIndex() - toCompare2.getIndex());
-			if(c!=0) return c;			
+			int c = toCompare1.getIndex() - toCompare2.getIndex();
+			if(c!=0) return c;
 		}
-		
+
 		//Compare type / and second type if needed
 		if(getType()==LinkerType.METADATA && l.getType()==LinkerType.METADATA) {
-			BiotypeMetadata toCompare1_2 = getAggregatedMetadata()!=null? getBiotypeMetadata(): null; 
+			BiotypeMetadata toCompare1_2 = getAggregatedMetadata()!=null? getBiotypeMetadata(): null;
 			BiotypeMetadata toCompare2_2 = l.getAggregatedMetadata()!=null? l.getBiotypeMetadata(): null;
 			return CompareUtils.compare(toCompare1_2, toCompare2_2);
 		} else {
 			return getType().compareTo(l.getType());
 		}
-		
+
 	}
 
-	
+
 	/**
 	 * Returns the label (one line), used in selectors
 	 */
@@ -417,12 +417,12 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 	public String toString() {
 		return getLabel().replace("\n", ".");
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return getLabel().hashCode();
 	}
-	
+
 	private static String getLabel(LinkerType type, Biotype biotypeForLabel) {
 		switch(type) {
 		case SAMPLEID: return  "SampleId";
@@ -431,14 +431,14 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		default: return "??"+type;
 		}
 	}
-	
-	
+
+
 	/**
 	 * Returns the label: biotypeOrMetadata\nMetadataOrType[.MetadataOrType]
 	 * @return
 	 */
 	public String getLabel() {
-		if(label==null) {			
+		if(label==null) {
 			if(aggregatedMetadata!=null) {
 				if(biotypeMetadata!=null) {
 					label = aggregatedMetadata.getBiotype().getName() + "\n" + aggregatedMetadata.getName() + "." + biotypeMetadata.getName();
@@ -446,29 +446,29 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 					//Careful, make sure that the label is the same as in the other case (or the linker equality will fail)
 					label = aggregatedMetadata.getBiotype().getName() + "\n" + aggregatedMetadata.getName();
 				} else {
-					label = aggregatedMetadata.getBiotype().getName() + "\n" + aggregatedMetadata.getName() + "." + getLabel(type, biotypeForLabel);			
+					label = aggregatedMetadata.getBiotype().getName() + "\n" + aggregatedMetadata.getName() + "." + getLabel(type, biotypeForLabel);
 				}
-	
+
 			} else if(hierarchyBiotype!=null) {
 				if(biotypeMetadata!=null) {
 					label = hierarchyBiotype.getName()+ "\n" + biotypeMetadata.getName();
-				} else { 
+				} else {
 					label = hierarchyBiotype.getName()+ "\n" + getLabel(type, hierarchyBiotype);
 				}
 			} else if(biotypeForLabel!=null) {
 				if(biotypeMetadata!=null) {
 					label = biotypeForLabel.getName()+ "\n" + biotypeMetadata.getName();
-				} else { 
+				} else {
 					label = biotypeForLabel.getName()+ "\n" + getLabel(type, biotypeForLabel);
 				}
 			} else {
 				if(biotypeMetadata!=null) {
 					label = biotypeMetadata.getName();
-				} else { 
+				} else {
 					label = getLabel(type, null);
 				}
-				
-			}		
+
+			}
 		}
 		return label;
 	}
@@ -482,5 +482,5 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 			return "??";
 		}
 	}
-	
+
 }

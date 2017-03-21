@@ -40,6 +40,7 @@ import javax.swing.event.ChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.SetLocationAction;
 import com.actelion.research.spiritapp.spirit.ui.scanner.ScanRackForTableAction;
+import com.actelion.research.spiritapp.spirit.ui.scanner.SelectRackAction;
 import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner;
 import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner.Verification;
 import com.actelion.research.spiritcore.business.biosample.BarcodeType;
@@ -61,16 +62,19 @@ public class BiosampleBatchPanel extends JPanel {
 	
 	private JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 0, 999, 1));
 	private JButton setLocationButton = new JButton(new SetLocationAction(table));
-	private SpiritScanner model = new SpiritScanner();
-	private JButton scanButton = new JButton(new ScanRackForTableAction(model, table, Verification.EMPTY_CONTAINERS, true) {
+	private SpiritScanner model = new SpiritScanner(Verification.EMPTY_CONTAINERS);
+	private JButton scanButton = new JButton(new ScanRackForTableAction(model, table) {
+		
 		@Override
-		public void preScan() {
+		public Location scan() throws Exception {
 			if(!Biosample.isEmpty(table.getRows())) {
 				int res = JOptionPane.showConfirmDialog(BiosampleBatchPanel.this, "Do you want to clear the table?", "Scan", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-				if(res!=JOptionPane.YES_OPTION) return;
+				if(res==JOptionPane.YES_OPTION) {
+					table.clear();
+				}
 			}
-			table.clear();
 			
+			return super.scan();
 		}
 		
 		@Override
@@ -79,9 +83,20 @@ public class BiosampleBatchPanel extends JPanel {
 			for(Biosample b: table.getRows()) {
 				b.setParent(b);
 				formPanel.updateModel();				
-			}
+			}			
+
+			new SelectRackAction(scanner) {				
+				@Override
+				protected void eventRackSelected(Location rack) throws Exception {
+					//Convert the scanned position to the real position
+					for (Biosample b : table.getRows()) {
+						b.setLocation(rack);
+						if(b.getContainer()!=null) b.setPos(rack==null? -1: rack.parsePosition(b.getContainer().getScannedPosition()));
+					}
+					table.repaint();					
+				}
+			}.showDlgForRackCreation();
 			
-			super.postScan(rack);
 			spinner.setValue(table.getRows().size());
 		}
 	});

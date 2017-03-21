@@ -21,13 +21,12 @@
 
 package com.actelion.research.spiritapp.spirit.ui.study;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.StudyNode;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode.FieldType;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.InputNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.LabelNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode.FieldType;
-import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 
 /**
@@ -38,35 +37,37 @@ import com.actelion.research.spiritcore.business.study.StudyQuery;
  */
 public class StudySearchTree extends FormTree {
 
+//	private final SpiritFrame frame;
 	private final StudyQuery query = new StudyQuery();
 	private final LabelNode root = new LabelNode(this, "Study:").setBold(true);
 	
-	private StudyNode studyNode = new StudyNode(this, RightLevel.WRITE, true, new Strategy<String>() {
-		@Override
-		public String getModel() {
-			return query.getStudyIds();
-		}
-		@Override
-		public void setModel(String modelValue) {
-			if(modelValue!=null && modelValue.length()>0) {
-				StudySearchTree.this.query.copyFrom(new StudyQuery());
-			}
-			query.setStudyIds(modelValue);
-		}
-		@Override
-		public void onChange() {
-			if(studyNode.getSelection().length()>0) {
-				StudySearchTree.this.firePropertyChange(FormTree.PROPERTY_SUBMIT_PERFORMED, "", null);
-			}
-		}
-	});
+//	private StudyNode studyNode = new StudyNode(this, RightLevel.WRITE, true, new Strategy<String>() {
+//		@Override
+//		public String getModel() {
+//			return query.getStudyIds();
+//		}
+//		@Override
+//		public void setModel(String modelValue) {
+//			if(modelValue!=null && modelValue.length()>0) {
+//				StudySearchTree.this.query.copyFrom(new StudyQuery());
+//			}
+//			query.setStudyIds(modelValue);
+//		}
+//		@Override
+//		public void onChange() {
+//			if(studyNode.getSelection().length()>0) {
+//				StudySearchTree.this.firePropertyChange(FormTree.PROPERTY_SUBMIT_PERFORMED, "", null);
+//			}
+//		}
+//	});
 		
-	public StudySearchTree() {
+	public StudySearchTree(SpiritFrame frame) {
 		setRootVisible(false);
+//		this.frame = frame;
 
-		root.add(studyNode);
+//		root.add(studyNode);
 		
-		root.add(new InputNode(this, FieldType.OR_CLAUSE, "Study Search", new Strategy<String>() {
+		root.add(new InputNode(this, FieldType.OR_CLAUSE, "Keywords", new Strategy<String>() {
 			@Override
 			public String getModel() {
 				return query.getKeywords();
@@ -83,6 +84,7 @@ public class StudySearchTree extends FormTree {
 	public StudyQuery getQuery() {
 		updateModel();
 		query.setUser(null);
+//		query.setStudyIds(frame==null? null: frame.getStudyId());
 		return query;
 	}
 
@@ -91,14 +93,14 @@ public class StudySearchTree extends FormTree {
 		updateView();
 	}
 
-	public String getStudyIds() {
-		return studyNode.getSelection();
-	}
-
-	public void setStudyIds(String studyIds) {
-		studyNode.setSelection(studyIds);
-		updateView();
-	}
+//	public String getStudyIds() {
+//		return studyNode.getSelection();
+//	}
+//
+//	public void setStudyIds(String studyIds) {
+//		studyNode.setSelection(studyIds);
+//		updateView();
+//	}
 
 
 }

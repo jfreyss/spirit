@@ -29,7 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.lf.SpiritExtendTable;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
@@ -63,7 +63,7 @@ public class LocationTable extends SpiritExtendTable<Location> {
 
 		//We must add the roots and the specified rows
 		List<Location> toBeAdded = new ArrayList<>(rows);
-		toBeAdded.addAll(DAOLocation.getLocationRoots(Spirit.getUser()));
+		toBeAdded.addAll(DAOLocation.getLocationRoots(SpiritFrame.getUser()));
 		
 		//Make sure we have all the parents
 		Set<Location> present = new HashSet<>();

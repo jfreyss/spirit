@@ -50,7 +50,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
 import com.actelion.research.spiritcore.business.biosample.Container;
@@ -222,11 +222,11 @@ public class RackDepictor extends JPanel {
 	public String getToolTipText(MouseEvent event) {
 		int pos = getPosAt(event.getX(), event.getY());
 		Container c = pos2Containers.get(pos);
-		if(c==null || !SpiritRights.canReadBiosamples(c.getBiosamples(), Spirit.getUser())) return null;
+		if(c==null || !SpiritRights.canReadBiosamples(c.getBiosamples(), SpiritFrame.getUser())) return null;
 				
 		return "<html><body><div style='font-size:8px'>" +
 			"<b>" + c.getContainerOrBiosampleId() + "</b>" + 
-			("\n" + c.getPrintStudyLabel(Spirit.getUsername())  + "\n" + c.getPrintMetadataLabel(InfoSize.EXPANDED)).replaceAll("(\n)+", "<br>");
+			("\n" + c.getPrintStudyLabel(SpiritFrame.getUsername())  + "\n" + c.getPrintMetadataLabel(InfoSize.EXPANDED)).replaceAll("(\n)+", "<br>");
 	}
 	
 
@@ -274,15 +274,11 @@ public class RackDepictor extends JPanel {
 		this.location = location;
 		
 		//Create the cache of positions
-		createPosCache();
-		
-		//Set preferred size
-		if(location==null) {
-			return;
-		}
+		createPosCache();		
 	}
 	
-	public void doLayout() {
+	@Override
+	public void doLayout() {		
 		if(location==null) return;
 		maxSize = location.getSize()<=0? pos2Containers.size() + (depictor!=null && depictor.isShowOneEmptyPosition()?1:0) : 
 			Math.max(pos2Containers.size(), location.getSize());
@@ -354,7 +350,7 @@ public class RackDepictor extends JPanel {
 			Container c = pos2Containers.get(pos);
 			boolean selected = selectedPoses.contains(pos);			
 			boolean highlight = highlightPoses.contains(pos) || (c!=null && highlightContainers.contains(c));			
-			boolean canRead = c==null || SpiritRights.canReadBiosamples(c.getBiosamples(), Spirit.getUser());
+			boolean canRead = c==null || SpiritRights.canReadBiosamples(c.getBiosamples(), SpiritFrame.getUser());
 
 			//Draw background
 			Color bgColor = dropListener.getPos2Color().get(pos);			
@@ -456,7 +452,7 @@ public class RackDepictor extends JPanel {
 				Container container = pos2Containers.get(pos);
 				if(container!=null) {
 					StringBuilder sb = new StringBuilder();
-					sb.append(container.getContainerOrBiosampleId() + "\n" + container.getPrintStudyLabel(Spirit.getUsername()) + "\n" +container.getPrintMetadataLabel(InfoSize.EXPANDED));						
+					sb.append(container.getContainerOrBiosampleId() + "\n" + container.getPrintStudyLabel(SpiritFrame.getUsername()) + "\n" +container.getPrintMetadataLabel(InfoSize.EXPANDED));						
 					res[r+1][c+1] = sb.toString();
 				} else {
 					res[r+1][c+1] = "";

@@ -39,10 +39,11 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.admin.AdminActions;
 import com.actelion.research.spiritapp.spirit.ui.lf.UserIdComboBox;
 import com.actelion.research.spiritapp.spirit.ui.pivot.PivotTable;
-import com.actelion.research.spiritapp.spirit.ui.result.dialog.QueryDuplicatesDlg;
+import com.actelion.research.spiritapp.spirit.ui.result.dialog.ResultDuplicatesDlg;
 import com.actelion.research.spiritapp.spirit.ui.result.dialog.ResultHistoryDlg;
 import com.actelion.research.spiritapp.spirit.ui.result.dialog.SetResultQualityDlg;
 import com.actelion.research.spiritapp.spirit.ui.result.edit.EditResultDlg;
@@ -122,7 +123,7 @@ public class ResultActions {
 			
 			boolean enabled = results.size()>0;
 			for (Result result : results) {
-				if(!SpiritRights.canEdit(result, Spirit.getUser())) {
+				if(!SpiritRights.canEdit(result, SpiritFrame.getUser())) {
 					enabled = false;
 					break;
 				}
@@ -152,7 +153,7 @@ public class ResultActions {
 			
 			boolean enabled = results.size()>0;
 			for (Result result : results) {
-				if(!SpiritRights.canDelete(result, Spirit.getUser())) {
+				if(!SpiritRights.canDelete(result, SpiritFrame.getUser())) {
 					enabled = false;
 					break;
 				}
@@ -174,12 +175,12 @@ public class ResultActions {
 		public Action_Find_Duplicate_Results() {
 			super("Find Duplicated Results");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
-			putValue(Action.SMALL_ICON, IconType.SEARCH.getIcon());
+			putValue(Action.SMALL_ICON, IconType.DUPLICATE.getIcon());
 		}
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			new QueryDuplicatesDlg();
+			new ResultDuplicatesDlg();
 		}
 	}
 	
@@ -194,7 +195,7 @@ public class ResultActions {
 			
 			boolean enabled = results.size()>0;
 			for (Result result : results) {
-				if(!SpiritRights.canDelete(result, Spirit.getUser())) {
+				if(!SpiritRights.canDelete(result, SpiritFrame.getUser())) {
 					enabled = false;
 					break;
 				}
@@ -217,7 +218,7 @@ public class ResultActions {
 					null,
 					null);
 			if(res!=JOptionPane.YES_OPTION) return;
-			JPAUtil.pushEditableContext(Spirit.getUser());
+			JPAUtil.pushEditableContext(SpiritFrame.getUser());
 			try {
 				String name = userIdComboBox.getText();
 				if(name.length()==0) return;
@@ -266,7 +267,7 @@ public class ResultActions {
 			this.quality = quality;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)(quality.getName().charAt(0)));
 			for (Result result : results) {
-				if(!SpiritRights.canEdit(result, Spirit.getUser())) setEnabled(false);
+				if(!SpiritRights.canEdit(result, SpiritFrame.getUser())) setEnabled(false);
 			}					
 		}
 		@Override
@@ -386,7 +387,7 @@ public class ResultActions {
 				
 				List<Result> objects = table.getSelection();
 				JPopupMenu popupMenu = new JPopupMenu();
-				String s = Spirit.getUser()!=null && Spirit.getUser().isSuperAdmin() && objects!=null && objects.size()==1? " (id:" + objects.get(0).getId()+")":"";
+				String s = SpiritFrame.getUser()!=null && SpiritFrame.getUser().isSuperAdmin() && objects!=null && objects.size()==1? " (id:" + objects.get(0).getId()+")":"";
 				popupMenu.add(new JCustomLabel("   Result Menu"+s, Font.BOLD));
 				
 				if(objects==null || objects.size()==0) {

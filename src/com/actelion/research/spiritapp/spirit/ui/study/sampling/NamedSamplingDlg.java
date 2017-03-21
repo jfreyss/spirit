@@ -55,6 +55,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerTypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
@@ -734,7 +735,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			}
 		} else {
 			//No study, the name must be globaly unique
-			for(NamedSampling ns: DAONamedSampling.getNamedSamplings(Spirit.getUser(), null)) {
+			for(NamedSampling ns: DAONamedSampling.getNamedSamplings(SpiritFrame.getUser(), null)) {
 				if(ns.equals(namedSamplingProxy)) continue;
 				if(ns.getName().equals(name)) throw new Exception("The name must be unique");				
 			}

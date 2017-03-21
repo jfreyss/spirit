@@ -24,7 +24,7 @@ package com.actelion.research.spiritapp.spirit.ui.biosample.column;
 import javax.swing.JComponent;
 import javax.swing.table.TableCellEditor;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdLabel;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleTableModel;
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.BiosampleCellEditor;
@@ -38,29 +38,32 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 public class ParentBiosampleColumn extends Column<Biosample, Biosample> {
 	private EditBiosampleTableModel model;
-	
+	private static SampleIdLabel sampleIdLabel = new SampleIdLabel();
+
+
 	public ParentBiosampleColumn(EditBiosampleTableModel model) {
-		super((model.getBiotype()==null || model.getBiotype().getCategory()!=BiotypeCategory.PURIFIED || model.getBiotype().getParent()==null?"Sample": model.getBiotype().getParent().getName()) + "\nParentId", Biosample.class, 90, 200);
+		super((model==null || model.getBiotype()==null || model.getBiotype().getCategory()!=BiotypeCategory.PURIFIED || model.getBiotype().getParent()==null?"": model.getBiotype().getParent().getName()) + "\nParentId", Biosample.class, 90, 200);
 		this.model = model;
 	}
-	
+
 	@Override
-	public float getSortingKey() {return 3.85f;}
-	
+	public float getSortingKey() {return 4.4f;}
+
 	@Override
-	public Biosample getValue(Biosample row) {	
+	public Biosample getValue(Biosample row) {
 		return row.getParent();
 	}
-	
+
 	@Override
 	public void setValue(Biosample row, Biosample value) {
-		
+		assert model!=null;
+
 		//Empty?
 		if(value==null || value.getSampleId()==null || value.getSampleId().length()==0) {
-			row.setParent(null);			
+			row.setParent(null);
 			return;
 		}
-		
+
 		//Find parent in current rows
 		for (Biosample b : model.getRows()) {
 			if(b.getSampleId().equals(value.getSampleId())) {
@@ -68,13 +71,13 @@ public class ParentBiosampleColumn extends Column<Biosample, Biosample> {
 				return;
 			}
 		}
-		
+
 		//Otherwise load the sample from the DB
 		Biosample b = DAOBiosample.getBiosample(value.getSampleId());
 		if(b!=null) value = b;
 		row.setParent(value);
 	}
-	
+
 	@Override
 	public void paste(Biosample row, String value) throws Exception {
 		if(value==null || value.length()==0) {
@@ -86,24 +89,22 @@ public class ParentBiosampleColumn extends Column<Biosample, Biosample> {
 
 	@Override
 	public boolean isEditable(Biosample row) {
-		return true;
+		return model!=null;
 	}
-	
-	private static SampleIdLabel sampleIdLabel = new SampleIdLabel();
-	
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
 		sampleIdLabel.setBiosample((Biosample)value);
-		sampleIdLabel.setError(!SpiritRights.canEdit((Biosample)value, Spirit.getUser()));
+		sampleIdLabel.setError(!SpiritRights.canEdit((Biosample)value, SpiritFrame.getUser()));
 		sampleIdLabel.setHighlight(false);
-		return sampleIdLabel;		
+		return sampleIdLabel;
 	}
-	
+
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {
 		Biotype forced = null;
-		if(model.getBiotype()!=null && model.getBiotype().getCategory()==BiotypeCategory.PURIFIED && model.getBiotype().getParent()!=null) {
-			forced = model.getBiotype().getParent();	
+		if(model!=null && model.getBiotype()!=null && model.getBiotype().getCategory()==BiotypeCategory.PURIFIED && model.getBiotype().getParent()!=null) {
+			forced = model.getBiotype().getParent();
 		}
 		return new BiosampleCellEditor(forced);
 	}

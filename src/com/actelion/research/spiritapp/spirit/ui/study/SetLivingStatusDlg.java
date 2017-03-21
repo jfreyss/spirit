@@ -43,6 +43,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleComboBox;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleList;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
@@ -282,7 +283,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 		final List<Biosample> biosamplesToSave = new ArrayList<>();
 		final List<Biosample> samplesFromNecropsy = new ArrayList<>();
 
-		String elb = DAOResult.suggestElb(Spirit.getUsername());
+		String elb = DAOResult.suggestElb(SpiritFrame.getUsername());
 		for(Biosample animal: animals) {
 			if(status!=null) {
 				//update the status

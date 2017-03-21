@@ -27,9 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.BioQualityColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.BiosampleElbColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.BiotypeColumn;
@@ -41,6 +38,7 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.column.ContainerLocat
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.CreationColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.ExpiryDateColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.NamedSamplingColumn;
+import com.actelion.research.spiritapp.spirit.ui.biosample.column.ParentBiosampleColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.ResultColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.ScannedPosColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StatusColumn;
@@ -75,41 +73,37 @@ import com.actelion.research.util.ui.exceltable.Column;
  * sampleId + metadata + comments: combined or specific (sortOrder: 6.#) -
  * calculated data (sortOrder: 8.#) - misc (sortOrder: 9.#) - owner: user, date
  * (sortOrder: 10.#)
- * 
+ *
  * @author freyssj
- * 
+ *
  */
 public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 
-	
+
 	public enum Mode {
 		SHORT, //no container
 		COMPACT, //combined columns
 		FULL
 	}
-	
+
 	/**
 	 * Is the view made for a special biotype or for any generic sample
 	 * (type==null)
 	 */
 	private Biotype type;
 	private Mode mode = Mode.FULL;
-	
+
 	private boolean filterTrashed = false;
 
 	private List<Column<Biosample, ?>> extraColumns = new ArrayList<>();
+	private Set<BiosampleLinker> linkers;
 
 	public BiosampleTableModel() {
-		addTableModelListener(new TableModelListener() {
-			@Override
-			public void tableChanged(TableModelEvent e) {
-				linkers = null;
-			}
-		});
+		addTableModelListener(e-> linkers = null);
 	}
 
 	public void initColumns() {
-		
+
 		Set<Biosample> myRows = new HashSet<>(getRows());
 		Set<Biotype> types = Biosample.getBiotypes(myRows);
 		Set<Biotype> parentTypes = new HashSet<>();
@@ -138,7 +132,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		boolean hasPhases = false;
 		boolean hasDifferentTop = false;
 		boolean hasContainers = false;
-		boolean hasScannedPos = getRows().size()>0 && getRows().get(0).getScannedPosition()!=null;		
+		boolean hasScannedPos = getRows().size()>0 && getRows().get(0).getScannedPosition()!=null;
 		for (Biosample b : getRows()) {
 			if (b == null) {
 				continue;
@@ -165,7 +159,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		if(mode==Mode.FULL) columns.add(new BiosampleElbColumn());
 		if(hasScannedPos) columns.add(new ScannedPosColumn());
 
-		// Container Info		
+		// Container Info
 		if (hasContainers && (type == null || !type.isAbstract())) {
 			if(mode!=Mode.SHORT && type!=null && type.isHideContainer()) {
 				columns.add(new ContainerLocationPosColumn());
@@ -173,9 +167,9 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 					columns.add(new ContainerAmountColumn(type));
 				}
 			} else {
-				ContainerFullColumn col = new ContainerFullColumn(); 
+				ContainerFullColumn col = new ContainerFullColumn();
 				col.setHideable(mode==Mode.SHORT);
-				columns.add(col);				
+				columns.add(col);
 			}
 		}
 
@@ -199,7 +193,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 					}
 				}
 				if(topDifferentLinker) {
-					columns.add(new StudyTopSampleIdColumn());					
+					columns.add(new StudyTopSampleIdColumn());
 				} else {
 					columns.add(LinkerColumnFactory.create(linker));
 				}
@@ -211,8 +205,12 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		// Parent? only if parent <> topparent and parent.type <> this.type and parentType not in types
 		if (parentTypes.size() == 1) {
 			Biotype parentType = parentTypes.iterator().next();
-			if (hasDifferentTop && !parentType.equals(topBiotypes.iterator().next()) && !types.contains(parentType)) {
-				columns.add(LinkerColumnFactory.create(new BiosampleLinker(parentType, LinkerType.SAMPLEID)));
+			if (hasDifferentTop && !parentType.equals(topBiotypes.iterator().next()) /*&& !types.contains(parentType)*/) {
+				if(!types.contains(parentType)) {
+					columns.add(LinkerColumnFactory.create(new BiosampleLinker(parentType, LinkerType.SAMPLEID)));
+				} else {
+					columns.add(new ParentBiosampleColumn(null));
+				}
 			}
 		}
 
@@ -220,7 +218,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		if (mode!=Mode.SHORT && hasPhases) {
 			columns.add(new StudyPhaseColumn());
 		}
-		
+
 		// SampleId/Name
 		Column<Biosample, ?> sampleIdColumn;
 		if(type!=null && (type.getCategory()==BiotypeCategory.LIBRARY || !type.isHideSampleId()) && type.getSampleNameLabel()!=null) {
@@ -236,7 +234,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 			// Combine all Metadata in one column
 			columns.add(new BiotypeColumn());
 			columns.add(new CombinedColumn());
-		} else {			
+		} else {
 			// Expand Metadata
 			for (BiotypeMetadata t : type.getMetadata()) {
 				if (t.getDataType() == DataType.BIOSAMPLE) {
@@ -248,7 +246,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 			// comments
 			columns.add(LinkerColumnFactory.create(new BiosampleLinker(LinkerType.COMMENTS, type)));
 		}
-		
+
 		//Sampling
 		columns.add(new NamedSamplingColumn());
 
@@ -260,10 +258,10 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		//Expiry
 		{
 			ExpiryDateColumn col = new ExpiryDateColumn();
-			col.setHideable(mode!=Mode.FULL);		
+			col.setHideable(mode!=Mode.FULL);
 			columns.add(col);
 		}
-		
+
 		if(extraColumns!=null) {
 			columns.addAll(extraColumns);
 		}
@@ -275,13 +273,11 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 
 		columns = removeEmptyColumns(columns);
 		sortColumns(columns);
-			
+
 		setTreeColumn(sampleIdColumn);
 		setColumns(columns);
-		
-		
 	}
-	
+
 	public List<Column<Biosample, ?>> getExtraColumns() {
 		return extraColumns;
 	}
@@ -291,7 +287,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 	public void addExtraColumn(Column<Biosample, ?> c) {
 		this.extraColumns.add(c);
 	}
-	
+
 
 	@Override
 	public List<Column<Biosample, ?>> getPossibleColumns() {
@@ -302,23 +298,22 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		res.add(new StatusColumn());
 		res.add(new ChildrenColumn());
 		res.add(new ResultColumn());
-//		res.add(new OwnershipColumn());
 		res.add(new CreationColumn(false));
-
-		return res;	
+		return res;
 	}
 
+	@Override
 	public Biosample getTreeParent(Biosample row) {
 		if (row == null) {
 			return null;
 		} else {
 			try {
-				return row.getParent();				
-			} catch (Throwable e) {				
+				return row.getParent();
+			} catch (Throwable e) {
 				row = JPAUtil.reattach(row);
 				try {
 					System.err.println("Failed lazy init in getTreeChildren > Reload [" + e + "]");
-					return row.getParent();	
+					return row.getParent();
 				} catch(Exception ex) {
 					JExceptionDialog.showError(ex);
 					return null;
@@ -333,30 +328,29 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		if (row == null) {
 			return new ArrayList<>();
 		} else {
-			try {				
+			try {
 				Set<Biosample> children = row.getChildren();
 				List<Biosample> res = new ArrayList<>();
 				for (Biosample b : children) {
 					if(!filterTrashed || b.getStatus().isAvailable()) res.add(b);
-				}					
+				}
 				return res;
-				
+
 			} catch (Throwable e) {
-				
+
 				System.err.println("Failed lazy init in getTreeChildren > Reload [" + e + "]");
 				row = JPAUtil.reattach(row);
 				try {
 					List<Biosample> res = new ArrayList<>();
 					for (Biosample b : row.getChildren()) {
 						if(!filterTrashed || b.getStatus().isAvailable()) res.add(b);
-					}					
+					}
 					return res;
 				} catch(Exception ex) {
 					JExceptionDialog.showError(ex);
 					return new ArrayList<Biosample>();
 				}
 			}
-
 		}
 	}
 
@@ -370,8 +364,10 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		return null;
 	}
 
-	private Set<BiosampleLinker> linkers;
-
+	/**
+	 * Returns all the linked data from the biosamples
+	 * @return
+	 */
 	public Set<BiosampleLinker> getLinkers() {
 		if (linkers == null) {
 			linkers = new HashSet<>();
@@ -403,7 +399,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 	public void setMode(Mode mode) {
 		this.mode = mode;
 	}
-	
+
 	public void setFilterTrashed(boolean filterTrashed) {
 		this.filterTrashed = filterTrashed;
 	}

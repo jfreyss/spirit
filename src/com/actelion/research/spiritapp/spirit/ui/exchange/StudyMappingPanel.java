@@ -32,7 +32,7 @@ import javax.swing.JRadioButton;
 
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
-import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.MappingAction;
+import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.EntityAction;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.UIUtils;
 
@@ -72,7 +72,7 @@ public class StudyMappingPanel extends JPanel implements IMappingPanel {
 	public void updateView() {
 		ExchangeMapping mapping = dlg.getMapping();
 		mappedStudy = mapping.getStudyId2mappedStudy().get(fromStudy.getStudyId());
-		MappingAction action = mapping.getStudyId2action().get(fromStudy.getStudyId());
+		EntityAction action = mapping.getStudyId2action().get(fromStudy.getStudyId());
 		commentLabel.setFont(FastFont.BOLD);
 		if(mappedStudy==null) {
 			commentLabel.setText("This study is new");
@@ -89,7 +89,7 @@ public class StudyMappingPanel extends JPanel implements IMappingPanel {
 			setOpaque(true);
 			
 		}
-		if(action==MappingAction.CREATE) {
+		if(action==EntityAction.CREATE) {
 			r3.setSelected(true);
 		} else {
 			r1.setSelected(true);
@@ -99,7 +99,7 @@ public class StudyMappingPanel extends JPanel implements IMappingPanel {
 	
 	public void updateMapping() {
 		ExchangeMapping mapping = dlg.getMapping();
-		MappingAction action = mappedStudy==null?  MappingAction.CREATE: r1.isSelected()? MappingAction.SKIP: r3.isSelected()? MappingAction.CREATE: null;
+		EntityAction action = mappedStudy==null?  EntityAction.CREATE: r1.isSelected()? EntityAction.SKIP: r3.isSelected()? EntityAction.CREATE: null;
 		mapping.getStudyId2mappedStudy().put(fromStudy.getStudyId(), mappedStudy);
 		mapping.getStudyId2action().put(fromStudy.getStudyId(), action);
 	}

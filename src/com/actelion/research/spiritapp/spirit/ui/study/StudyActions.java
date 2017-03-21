@@ -25,7 +25,6 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import javax.swing.AbstractAction;
@@ -43,15 +42,15 @@ import com.actelion.research.spiritapp.animalcare.ui.monitor.MonitoringOverviewD
 import com.actelion.research.spiritapp.animalcare.ui.randomize.RandomizationDlg;
 import com.actelion.research.spiritapp.animalcare.ui.sampleweighing.SampleWeighingDlg;
 import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritapp.spirit.ui.SpiritAction;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions.Action_SetLivingStatus;
-import com.actelion.research.spiritapp.spirit.ui.lf.StudyComboBox;
 import com.actelion.research.spiritapp.spirit.ui.lf.UserIdComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.StudyDepictor;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachAnimalsManuallyDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.StudyDiscardDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyInfoDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyWizardDlg;
+import com.actelion.research.spiritapp.spirit.ui.util.SpiritAction;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
@@ -60,8 +59,6 @@ import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.DAORevision;
-import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
@@ -80,16 +77,16 @@ public class StudyActions {
 			super("New Study");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(AbstractAction.SMALL_ICON, IconType.STUDY.getIcon());
-			setEnabled(SpiritRights.canAdmin((Study)null, Spirit.getUser()));
+			setEnabled(SpiritRights.canAdmin((Study)null, SpiritFrame.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			Study study = new Study();
 			study.setState(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATE_DEFAULT));
-			if(Spirit.getUser()!=null) {
-				study.setAdminUsers(Spirit.getUser().getUsername());
+			if(SpiritFrame.getUser()!=null) {
+				study.setAdminUsers(SpiritFrame.getUser().getUsername());
 			}
-			if(Spirit.getUser().getMainGroup()!=null) study.setEmployeeGroups(Collections.singletonList(Spirit.getUser().getMainGroup()));
+			if(SpiritFrame.getUser().getMainGroup()!=null) study.setEmployeeGroups(Collections.singletonList(SpiritFrame.getUser().getMainGroup()));
 			StudyWizardDlg.editStudy(study);
 			SpiritContextListener.setStudy(study);
 		}
@@ -102,7 +99,7 @@ public class StudyActions {
 			this.study = study;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			putValue(AbstractAction.SMALL_ICON, IconType.EDIT.getIcon());
-			setEnabled(SpiritRights.canAdmin(study, Spirit.getUser()));
+			setEnabled(SpiritRights.canAdmin(study, SpiritFrame.getUser()));
 		}
 		
 		@Override
@@ -118,7 +115,7 @@ public class StudyActions {
 			this.study = study;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			putValue(AbstractAction.SMALL_ICON, IconType.STUDY.getIcon());
-			setEnabled(SpiritRights.canAdmin(study, Spirit.getUser()));
+			setEnabled(SpiritRights.canAdmin(study, SpiritFrame.getUser()));
 		}
 		
 		@Override
@@ -134,7 +131,7 @@ public class StudyActions {
 			this.study = study;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('s'));
 			putValue(AbstractAction.SMALL_ICON, IconType.STATUS.getIcon());
-			setEnabled(SpiritRights.canPromote(study, Spirit.getUser()));
+			setEnabled(SpiritRights.canPromote(study, SpiritFrame.getUser()));
 		}
 		
 		@Override
@@ -149,7 +146,7 @@ public class StudyActions {
 			super("Duplicate Study");
 			this.study = study;
 			putValue(AbstractAction.SMALL_ICON, IconType.DUPLICATE.getIcon());
-			setEnabled(SpiritRights.canRead(study, Spirit.getUser()));
+			setEnabled(SpiritRights.canRead(study, SpiritFrame.getUser()));
 		}
 		
 		@Override
@@ -167,7 +164,7 @@ public class StudyActions {
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			putValue(Action.SMALL_ICON, IconType.DELETE.getIcon());
 
-			setEnabled(SpiritRights.canDelete(study, Spirit.getUser()));
+			setEnabled(SpiritRights.canDelete(study, SpiritFrame.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {			
@@ -187,7 +184,7 @@ public class StudyActions {
 			
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
 			putValue(AbstractAction.MNEMONIC_KEY, (int)'o');
-			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()));
+			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
 		}
 		
 		@Override
@@ -208,7 +205,7 @@ public class StudyActions {
 			
 			String name = userIdComboBox.getText();
 			if(name==null) return;
-			JPAUtil.pushEditableContext(Spirit.getUser());
+			JPAUtil.pushEditableContext(SpiritFrame.getUser());
 			try {
 				study = JPAUtil.reattach(study);
 				SpiritUser admin = Spirit.askForAuthentication();
@@ -235,7 +232,7 @@ public class StudyActions {
 			this.study = study;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));			
 			putValue(AbstractAction.SMALL_ICON, IconType.LINK.getIcon());			
-			setEnabled(SpiritRights.canExpert(study, Spirit.getUser()));
+			setEnabled(SpiritRights.canExpert(study, SpiritFrame.getUser()));
 		}
 		
 		@Override
@@ -243,42 +240,6 @@ public class StudyActions {
 			new AttachAnimalsManuallyDlg(study);
 		}
 	}
-	
-	public static class Action_GroupAssignmentSelecter extends AbstractAction {
-		private StudyComboBox comboBox;
-		
-		public Action_GroupAssignmentSelecter(StudyComboBox comboBox) {			
-			super("Group Assignment");
-			putValue(AbstractAction.SMALL_ICON, IconType.LINK.getIcon());
-			this.comboBox = comboBox;
-		}
-		
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			Study study = DAOStudy.getStudyByStudyId(comboBox.getText());
-			System.out.println("StudyActions.Action_GroupAssignmentSelecter.actionPerformed() "+study+" / "+comboBox.getText());			
-			if(study==null || !SpiritRights.canBlind(study, Spirit.getUser())) return;
-			
-			Phase phase;
-			Set<Phase> phases = study.getPhasesWithGroupAssignments();
-			PhaseComboBox phaseComboBox = new PhaseComboBox(phases);
-			
-			if(phases.size()==1) {
-				phase = phases.iterator().next();
-			} else {					
-				int res = JOptionPane.showOptionDialog(null, UIUtils.createVerticalBox(
-						UIUtils.createHorizontalBox(new JLabel("Please select a phase for the group assignment: "), Box.createHorizontalGlue()),
-						UIUtils.createHorizontalBox(new JLabel("Phase: "), phaseComboBox, Box.createHorizontalGlue())), "Group Assignment", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, null, null);
-				
-				if(res!=JOptionPane.YES_OPTION || phaseComboBox.getSelection()==null) return;					
-				phase = phaseComboBox.getSelection();
-			}
-			
-			new RandomizationDlg(phase);
-			
-		}
-	}
-	
 	
 	
 	public static class Action_GroupAssignment extends AbstractAction {
@@ -288,14 +249,14 @@ public class StudyActions {
 			super(phase.toString());
 			this.phase = phase;
 			putValue(AbstractAction.SMALL_ICON, IconType.LINK.getIcon());			
-			setEnabled(phase.getStudy()!=null && phase.getStudy().getPhasesWithGroupAssignments().size()>0 && SpiritRights.canExpert(phase.getStudy(), Spirit.getUser()));
+			setEnabled(phase.getStudy()!=null && phase.getStudy().getPhasesWithGroupAssignments().size()>0 && SpiritRights.canExpert(phase.getStudy(), SpiritFrame.getUser()));
 		}
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			Study study = phase.getStudy();
 			
-			if(study==null || !SpiritRights.canBlind(study, Spirit.getUser())) return;
+			if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) return;
 			
 			if(phase==null) {
 				Set<Phase> phases = study.getPhasesWithGroupAssignments();
@@ -327,7 +288,7 @@ public class StudyActions {
 			putValue(AbstractAction.SMALL_ICON, IconType.FOOD.getIcon());			
 			
 			this.study = study;
-			setEnabled(study!=null && study.getPhases().size()>0 && SpiritRights.canBlind(study, Spirit.getUser()) && study.getAttachedBiosamples().size()>0 );
+			setEnabled(study!=null && study.getPhases().size()>0 && SpiritRights.canBlind(study, SpiritFrame.getUser()) && study.getAttachedBiosamples().size()>0 );
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -375,7 +336,7 @@ public class StudyActions {
 			
 			this.study = study;
 			putValue(AbstractAction.SMALL_ICON, IconType.PRINT.getIcon());
-			setEnabled(study!=null && (SpiritRights.canExpert(study, Spirit.getUser()) || SpiritRights.canBlind(study, Spirit.getUser())) && study.getAttachedBiosamples().size()>0);
+			setEnabled(study!=null && (SpiritRights.canExpert(study, SpiritFrame.getUser()) || SpiritRights.canBlind(study, SpiritFrame.getUser())) && study.getAttachedBiosamples().size()>0);
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -396,7 +357,7 @@ public class StudyActions {
 			
 			this.study = study;
 			putValue(AbstractAction.SMALL_ICON, IconType.BALANCE.getIcon());
-			setEnabled(study!=null && (study.getPhases().size()>0 && SpiritRights.canBlind(study, Spirit.getUser())) && study.getAttachedBiosamples().size()>0);
+			setEnabled(study!=null && (study.getPhases().size()>0 && SpiritRights.canBlind(study, SpiritFrame.getUser())) && study.getAttachedBiosamples().size()>0);
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -416,7 +377,7 @@ public class StudyActions {
 			super("Reports");
 			this.study = study;
 			putValue(Action.SMALL_ICON, IconType.EXCEL.getIcon());
-			setEnabled(study!=null && SpiritRights.canExpert(study, Spirit.getUser()));
+			setEnabled(study!=null && SpiritRights.canExpert(study, SpiritFrame.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -432,13 +393,12 @@ public class StudyActions {
 			this.study = study;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('h'));
 			putValue(Action.SMALL_ICON, IconType.HISTORY.getIcon());
-			setEnabled(SpiritRights.canExpert(study, Spirit.getUser()));
+			setEnabled(SpiritRights.canExpert(study, SpiritFrame.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				List<Revision> revisions = DAORevision.getRevisions(study);
-				new StudyHistoryDlg(revisions);
+				new StudyHistoryDlg(study);
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
@@ -511,7 +471,7 @@ public class StudyActions {
 			popupMenu.add(new JCustomLabel("    Study: " + study.getStudyId(), Font.BOLD));	
 			popupMenu.add(new JSeparator());
 			
-			if(Spirit.getUser()==null) {
+			if(SpiritFrame.getUser()==null) {
 				popupMenu.add(new SpiritAction.Action_Relogin(null, null));			
 				return popupMenu;
 			}

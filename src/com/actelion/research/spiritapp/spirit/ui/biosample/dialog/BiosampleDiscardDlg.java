@@ -37,6 +37,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTableModel.Mode;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
@@ -128,7 +129,7 @@ public class BiosampleDiscardDlg {
 		final SpiritUser user = Spirit.askForAuthentication();
 		
 		try {
-			JPAUtil.pushEditableContext(Spirit.getUser());			
+			JPAUtil.pushEditableContext(SpiritFrame.getUser());			
 			final List<Biosample> biosamples = JPAUtil.reattach(bios);
 			
 			List<Biosample> toAdd = new ArrayList<Biosample>();

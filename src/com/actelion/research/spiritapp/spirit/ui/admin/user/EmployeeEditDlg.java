@@ -35,7 +35,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.lf.EmployeeGroupComboBox;
 import com.actelion.research.spiritapp.spirit.ui.lf.UserIdComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
@@ -182,7 +182,7 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 					
 					emp.setDisabled(disabledCheckBox.isSelected());
 					
-					DAOEmployee.persistEmployees(Collections.singleton(emp), Spirit.getUser());
+					DAOEmployee.persistEmployees(Collections.singleton(emp), SpiritFrame.getUser());
 					dispose();
 				} catch (Exception e) {
 					JExceptionDialog.showError(e);

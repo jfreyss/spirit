@@ -63,24 +63,24 @@ import com.actelion.research.util.ui.JExceptionDialog;
 public class StudyEditorPane extends ImageEditorPane {
 
 	private Study study;
-	
+
 	private boolean displayResults = true;
 	private final String NIOBE_LINK = "\\\\actelch02\\PGM\\ActelionResearch\\Niobe\\Niobe.lnk";
 	private String sort = "date";
 	private boolean forRevision;
-	
+
 	public StudyEditorPane() {
 		super();
 		setEditable(false);
 		setOpaque(true);
 		LF.initComp(this);
 
-		
+
 		addHyperlinkListener(new SpiritHyperlinkListener() {
 			@Override
 			public void hyperlinkUpdate(HyperlinkEvent e) {
 				if(e.getEventType()==EventType.ACTIVATED) {
-					String desc = e.getDescription(); 
+					String desc = e.getDescription();
 					if(desc.startsWith("file:")) {
 						study = JPAUtil.reattach(study);
 						int docId = Integer.parseInt(desc.substring("file:".length()));
@@ -90,14 +90,14 @@ public class StudyEditorPane extends ImageEditorPane {
 						}
 						try {
 							if(d==null) throw new Exception("Invalid document");
-							
+
 							//Save the doc in tmp dir
 							File f = new File(System.getProperty("java.io.tmpdir"), d.getFileName());
-							f.deleteOnExit();	
+							f.deleteOnExit();
 							IOUtils.bytesToFile(d.getBytes(), f);
 							//Execute on windows platform
 							Desktop.getDesktop().open(f);
-						} catch (Exception ex) {							
+						} catch (Exception ex) {
 							JExceptionDialog.showError(ex);
 						}
 						return;
@@ -107,7 +107,7 @@ public class StudyEditorPane extends ImageEditorPane {
 						File f = new File(NIOBE_LINK);
 						try {
 							if(!f.exists()) throw new Exception(f+" could not be found");
-							Runtime.getRuntime().exec("cmd /c " + NIOBE_LINK + " -elb " + param);							
+							Runtime.getRuntime().exec("cmd /c " + NIOBE_LINK + " -elb " + param);
 						} catch (Exception e2) {
 							JExceptionDialog.showError(e2);
 						}
@@ -118,110 +118,113 @@ public class StudyEditorPane extends ImageEditorPane {
 						File f = new File(NIOBE_LINK);
 						try {
 							if(!f.exists()) throw new Exception(f+" could not be found");
-							Runtime.getRuntime().exec("cmd /c " + NIOBE_LINK + " -study " + param);							
+							Runtime.getRuntime().exec("cmd /c " + NIOBE_LINK + " -study " + param);
 						} catch (Exception e2) {
 							JExceptionDialog.showError(e2);
 						}
 						return;
 					} else if(desc.startsWith("sort:")) {
 						setSort(desc.substring("sort:".length()));
-						return;					
+						return;
 					} else {
 						super.hyperlinkUpdate(e);
 					}
-					
+
 				}
 			}
 		});
-		
+
 
 	}
-	
+
 	public void setForRevision(boolean forRevision) {
 		this.forRevision = forRevision;
 	}
-		
+
 	public void setDisplayResults(boolean displayResults) {
 		this.displayResults = displayResults;
 	}
-	
+
 	public void setSort(String sort) {
 		this.sort = sort;
 		setStudy(study);
 	}
-	
+
 	public void setStudy(final Study study) {
 		this.study = study;
 		//Set the editor pane text
 		final StringBuilder sb = new StringBuilder();
 		if(study!=null) {
-			sb.append("<html><body style='white-space:nowrap'>");
-			
+			sb.append("<html><body>");
+
 			/////////////////////////////////////
 			//Study Infos
-			
+
 			sb.append("<span style='font-size:120%;font-weight:bold'>" + study.getStudyId() + "</span> ");
 			if(study.getIvv()!=null) sb.append(" / " + MiscUtils.removeHtml(study.getIvv()) + "");
 			sb.append("<br>");
 			if(study.getTitle()!=null) {
-				sb.append("<span style='font-size:90%'>" + MiscUtils.removeHtml(study.getTitle()) + "</span><br>");
+				sb.append("<span style='font-size:95%'>" + MiscUtils.removeHtml(study.getTitle()) + "</span><br>");
 			}
-			sb.append("<div style='font-size:100%'>");
-			//Display metadata
-			sb.append("<hr>");
-			sb.append("<table>");
-			for(Entry<String, String> entry: study.getMetadata().entrySet()) {
-				String name = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, entry.getKey());
-				if(name!=null && name.length()>0 && entry.getValue().length()>0) {
-					sb.append("<tr><td>" + MiscUtils.removeHtml(name) + ":</td><td>" + MiscUtils.removeHtml(entry.getValue()) + "</td></tr>");
+			sb.append("<table style='width:100%;font-size:95%;border-top:solid 1px gray;border-bottom:solid 1px gray'><tr><td valign=top>");
+			{
+				//Display metadata
+				sb.append("<table>");
+				for(Entry<String, String> entry: study.getMetadata().entrySet()) {
+					String name = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, entry.getKey());
+					if(name!=null && name.length()>0 && entry.getValue().length()>0) {
+						sb.append("<tr><td style='white-space:nowrap'>" + MiscUtils.removeHtml(name) + ":</td><td>" + MiscUtils.removeHtml(entry.getValue()) + "</td></tr>");
+					}
 				}
+				sb.append("</table>");
 			}
-			sb.append("</table>");
-						
+			sb.append("</td><td>&nbsp;&nbsp;</td><td valign=top style='border-left:solid 1px light-gray'>&nbsp;</td><td valign=top>");
+			{
+				//Display state/rights
+				sb.append("<table>");
+				sb.append("<tr><td>State:</td><td>" + (study.getState()==null?"": MiscUtils.removeHtml(study.getState())) + "</td></tr>");
+
+				if(!SpiritProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY)) {
+					Set<String> adminSet = new LinkedHashSet<>();
+					adminSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, study.getState())));
+					adminSet.addAll(study.getAdminUsersAsSet());
+					sb.append("<tr><td>Admin:</td><td>" + (adminSet.size()==0?"-": MiscUtils.flatten(adminSet, ", ")) + "</td></tr>");
+
+					Set<String> expertSet = new LinkedHashSet<>();
+					expertSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, study.getState())));
+					expertSet.addAll(study.getExpertUsersAsSet());
+					expertSet.addAll(EmployeeGroup.getNames(study.getEmployeeGroups()));
+					if(expertSet.size()>0) {
+						sb.append("<tr><td>Expert:</td><td>" + (expertSet.size()==0? "-": MiscUtils.flatten(expertSet, ", ")) + "</td></tr>");
+					}
+
+					Set<String> viewSet = new LinkedHashSet<>();
+					viewSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState())));
+					if(viewSet.size()>0) {
+						sb.append("<tr><td>View:</td><td>" + (viewSet.size()==0? "-": MiscUtils.flatten(viewSet, ", ")) + "</td></tr>");
+					}
+
+					if(study.getBlindDetailsUsersAsSet().size()>0) sb.append("<tr><td>Blind-Names:</td><td>" + MiscUtils.flatten(study.getBlindDetailsUsersAsSet(), ", ") + "</td></tr>");
+					if(study.getBlindAllUsersAsSet().size()>0) sb.append("<tr><td>Blind-All:</td><td>" + MiscUtils.flatten(study.getBlindAllUsersAsSet(), ", ") + "</td></tr>");
+					sb.append("<tr><td>Samples:</td><td>" + (study.isSynchronizeSamples()? "Automatic creation": "Manal creation") + "</td></tr>");
+
+				}
+				sb.append("</table>");
+			}
+			sb.append("</tr></td></table>");
+
 			//Display notes
 			if(study.getNotes()!=null && study.getNotes().length()>0) {
-				sb.append("<div style='margin-top:5px;color:#444444;font-size:90%'>" + MiscUtils.convert2Html(study.getNotes()) + "</div><br>");
+				sb.append("<div style='width:100%;padding-top:5px;font-size:95%;padding-bottom:5px;border-bottom:solid 1px gray'>" + MiscUtils.convert2Html(study.getNotes()) + "</div>");
 			}
-			
-			sb.append("<hr>");
-			sb.append("<table>");
-			sb.append("<tr><td>State:</td><td>" + (study.getState()==null?"": MiscUtils.removeHtml(study.getState())) + "</td></tr>");
-			
-			if(!SpiritProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY)) {
-				Set<String> adminSet = new LinkedHashSet<>();
-				adminSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, study.getState())));
-				adminSet.addAll(study.getAdminUsersAsSet());
-				sb.append("<tr><td>Admin:</td><td>" + (adminSet.size()==0?"-": MiscUtils.flatten(adminSet, ", ")) + "</td></tr>");
-				
-				Set<String> expertSet = new LinkedHashSet<>();
-				expertSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, study.getState())));
-				expertSet.addAll(study.getExpertUsersAsSet());
-				expertSet.addAll(EmployeeGroup.getNames(study.getEmployeeGroups()));
-				if(expertSet.size()>0) {
-					sb.append("<tr><td>Expert:</td><td>" + (expertSet.size()==0? "-": MiscUtils.flatten(expertSet, ", ")) + "</td></tr>");
-				}
-				
-				Set<String> viewSet = new LinkedHashSet<>();
-				viewSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState())));
-				if(viewSet.size()>0) {
-					sb.append("<tr><td>View:</td><td>" + (viewSet.size()==0? "-": MiscUtils.flatten(viewSet, ", ")) + "</td></tr>");
-				}
-				
-				if(study.getBlindDetailsUsersAsSet().size()>0) sb.append("<tr><td>Blind-Names:</td><td>" + MiscUtils.flatten(study.getBlindDetailsUsersAsSet(), ", ") + "</td></tr>");
-				if(study.getBlindAllUsersAsSet().size()>0) sb.append("<tr><td>Blind-All:</td><td>" + MiscUtils.flatten(study.getBlindAllUsersAsSet(), ", ") + "</td></tr>");
-				sb.append("<tr><td>Samples:</td><td>" + (study.isSynchronizeSamples()? "are automatically generated": "are created manually") + "</td></tr>");
-
-			}
-			sb.append("</table>");
-			sb.append("<hr>");
 
 			if(displayResults && !forRevision) {
-				
+
 				//Display Documents
 				Map<DocumentType, List<Document>> docs = Document.mapDocumentTypes(study.getDocuments());
 				if(study.getDocuments().size()>0) {
 					for (DocumentType docType : docs.keySet()) {
-						sb.append("<div style='margin-top:5px'><b>"+(docType!=null? docType: "")+"</b>:<br>");
+						sb.append("<div style='margin-top:5px;font-size:95%'><b>"+(docType!=null? docType + "</b>:<br>": ""));
 						for (Document doc : docs.get(docType)) {
 							String name = doc.getFileName();
 							if(name.length()>40) name = name.substring(0, 30) + "..." + name.substring(name.length()-8);
@@ -229,32 +232,34 @@ public class StudyEditorPane extends ImageEditorPane {
 						}
 						sb.append("</div>");
 					}
-					sb.append("<hr>");
 				}
 
-				
+
 				try {
+					sb.append("<table style='white-space:nowrap;width:100%;padding-top:5px;padding-bottom:5px;font-size:98%;border-bottom:solid 1px gray'><tr><td valign=top>");
 					//Count Biosamples
 					Map<Study, Map<Biotype, Triple<Integer, String, Date>>> countBio = DAOStudy.countSamplesByStudyBiotype(Collections.singletonList(study));
 					formatNumberBiosamples(sb, study, countBio.get(study));
-					sb.append("<br>");
+
+					sb.append("</td><td>&nbsp;&nbsp;</td><td style='border-left:solid 1px lightgray'>&nbsp;</td><td valign=top>");
+
 					//Count Results
 					Map<Study, Map<Test, Triple<Integer, String, Date>>> countRes = DAOStudy.countResultsByStudyTest(Collections.singletonList(study));
 					formatNumberResults(sb, study, countRes.get(study));
-					
+					sb.append("</td></tr></table>");
 				} catch(Exception e) {
 					e.printStackTrace();
 					sb.append(e.getMessage());
 				}
-				
-				
+
+
 				if(DBAdapter.getAdapter().isInActelionDomain()) {
 					//Find related ELBs
 					List<ElbLink> elbs = DAOResult.getNiobeLinksForStudy(study);
 					if(elbs.size()>0) {
-						
-						sb.append("<br><hr><b>Niobe:</span>");
-	
+
+						sb.append("<b>Niobe:</b");
+
 						if("date".equals(sort)) {
 							Collections.sort(elbs, new Comparator<ElbLink>() {
 								@Override public int compare(ElbLink o1, ElbLink o2) {return CompareUtils.compare(o1.getCreDate(), o2.getCreDate());}
@@ -274,7 +279,7 @@ public class StudyEditorPane extends ImageEditorPane {
 						} else {
 							System.err.println("Invalid sort: "+sort);
 						}
-	
+
 						//Check if we have niobe experiments
 						boolean hasNiobeLinks = false;
 						for (ElbLink l: elbs) {
@@ -284,64 +289,63 @@ public class StudyEditorPane extends ImageEditorPane {
 							sb.append("    [ <a style='font-size:80%' href='study:" + study.getStudyId() + "'>Query in Niobe</a> ]");
 						}
 						sb.append("<br>");
-						
+
 						//Display all Elbs
 						sb.append("<table style='border:0; padding:1px;font-size:95%'>");
 						sb.append("<tr style='background:#EEEEDD;padding:0px'><th colspan=2><a href=\"sort:elb\">ELB<a> / <a href=\"sort:title\">Title<a></th><th><a href=\"sort:scientist\">Scientist<a></th><th><a href=\"sort:date\">Date<a></th></tr>");
 						for (int i = 0; i < elbs.size(); i++) {
 							ElbLink elbLink = elbs.get(i);
 							sb.append("<tr style='background:#FFFFEE'>");
-							sb.append("<td>&nbsp;<b>" + elbLink.getElb() + "</b></td>"); 
+							sb.append("<td>&nbsp;<b>" + elbLink.getElb() + "</b></td>");
 							sb.append("<td style='white-space:nowrap;'>&nbsp; [ ");
 							if(elbLink.isInSpirit() || elbLink.getTitle()!=null) {
 								if(elbLink.isInSpirit()) {
 									sb.append("<a href='elb:" + elbLink.getElb() + "'>Spirit</a>");
-								}					
+								}
 								if(elbLink.isInNiobe()) {
 									if(elbLink.isInSpirit()) sb.append(" | ");
-									
+
 									sb.append("<a href='niobe:" + elbLink.getElb() + "'>Open in Niobe</a>");
-	
+
 									if(elbLink.getUrl()!=null) {
 										sb.append(" | <a href='" + elbLink.getUrl().toString() + "'>PDF</a>");
 									}
-								}						
+								}
 								sb.append(" ] </td> ");
 							}
-							
+
 							if(elbLink.isInNiobe() && elbLink.getTitle()!=null ) {
 								sb.append("<td style='color:#999999;>&nbsp;" + elbLink.getScientist() + "</td>");
 								sb.append("<td style='color:#999999;white-space:nowrap'>&nbsp; " + FormatterUtils.formatDate(elbLink.getCreDate()) + " -> " + (elbLink.getPubDate()==null?" Unsealed": FormatterUtils.formatDate(elbLink.getPubDate()))+"</td>");
-							} 
+							}
 							sb.append("</tr>");
 							if(elbLink.isInNiobe() && elbLink.getTitle()!=null ) {
 								sb.append("<tr style='background:#FFFFEE'><td colspan=4 style='background:#FFFFFF'>");
 								sb.append(elbLink.getTitle());
-								sb.append("</td></tr>");							
+								sb.append("</td></tr>");
 							}
 						}
 						sb.append("</table>");
 					}
 				}
-				
+
 			}
-		
-			sb.append("<br><div style='font-size:90%; color:gray'>");
+
+			sb.append("<div style='font-size:90%; color:gray'>");
 			sb.append("Created the " + FormatterUtils.formatDateTimeShort(study.getCreDate()) + " by " + study.getCreUser() + "<br>");
 			if (study.getUpdDate() != null && study.getUpdDate().getTime() > study.getCreDate().getTime() + 1000) {
-				sb.append("Updated the " + FormatterUtils.formatDateTimeShort(study.getUpdDate()) + " by " + study.getUpdUser() + "<br>");				
+				sb.append("Updated the " + FormatterUtils.formatDateTimeShort(study.getUpdDate()) + " by " + study.getUpdUser() + "<br>");
 			}
-			sb.append("</div>");
 
 			sb.append("</body></html>");
 		}
-		
+
 		setText(sb.toString());
 		setCaretPosition(0);
-				
+
 	}
 
-	public static void formatNumberBiosamples(StringBuilder sb, Study study, Map<Biotype, Triple<Integer, String, Date>> m1) {		
+	public static void formatNumberBiosamples(StringBuilder sb, Study study, Map<Biotype, Triple<Integer, String, Date>> m1) {
 		if(m1!=null && m1.size()>0) {
 			int count=0; for (Biotype type: m1.keySet()) {
 				if(m1.get(type)!=null) count+=m1.get(type).getFirst();
@@ -349,31 +353,31 @@ public class StudyEditorPane extends ImageEditorPane {
 			sb.append("<table><tr><td colspan=2>");
 			sb.append("<a style='font-weight:bold' href='bios:" + study.getStudyId() + "'>Biosamples:</a>&nbsp;(" + count + ")");
 			sb.append("</td></tr>");
-			for (Biotype t: m1.keySet()) {					
-				sb.append("<tr><td><a href='bios:" + study.getStudyId() + ":" + t.getName() + "'>" + t.getName() + "</a> (" + m1.get(t).getFirst() + ")");																								
+			for (Biotype t: m1.keySet()) {
+				sb.append("<tr><td><a href='bios:" + study.getStudyId() + ":" + t.getName() + "'>" + t.getName() + "</a>&nbsp;<span style='font-size:90%'>(" + m1.get(t).getFirst() + ")</span>");
 				sb.append("</td><td style='padding-left:5px;color:" + getColor(m1.get(t).getThird()) + "'>");
-				sb.append(" <span style='font-size:80%'> [" + FormatterUtils.formatDateOrTime(m1.get(t).getThird()) + " - " + m1.get(t).getSecond() +"]</span>");
+				sb.append(" <span style='font-size:90%'> [" + FormatterUtils.formatDateOrTime(m1.get(t).getThird()) + " - " + m1.get(t).getSecond() +"]</span>");
 				sb.append("</td></tr>");
 			}
 			sb.append("</table>");
 		}
 	}
 
-	public static void formatNumberResults(StringBuilder sb, Study study, Map<Test, Triple<Integer, String, Date>> m2) {		
+	public static void formatNumberResults(StringBuilder sb, Study study, Map<Test, Triple<Integer, String, Date>> m2) {
 		if(m2!=null && m2.size()>0) {
 			int count=0; for (Test test: m2.keySet()) {
-				assert m2.get(test)!=null: test+" gives null in "+m2+" for "+study; 
+				assert m2.get(test)!=null: test+" gives null in "+m2+" for "+study;
 				count+=m2.get(test).getFirst();
 			}
 			sb.append("<table><tr><td colspan=2>");
 			sb.append("<a style='font-weight:bold' href='test:" + study.getStudyId() + "'>Results:</a>&nbsp;(" + count + ") "
-//					+ ">> <a href='analyze:" + study.getId() + "'>Analyze</a>"
+					//					+ ">> <a href='analyze:" + study.getId() + "'>Analyze</a>"
 					);
 			sb.append("</td></tr>");
-			for (Test t: m2.keySet()) {					
-				sb.append("<tr><td><a href='test:" + study.getStudyId() + ":" + t.getId() + "'>" + t.getName() + "</a>&nbsp;(" + m2.get(t).getFirst() + ")");																								
+			for (Test t: m2.keySet()) {
+				sb.append("<tr><td><a href='test:" + study.getStudyId() + ":" + t.getId() + "'>" + t.getName() + "</a>&nbsp;<span style='font-size:90%'>(" + m2.get(t).getFirst() + ")</span>");
 				sb.append("</td><td style='padding-left:5px;color:" + getColor(m2.get(t).getThird()) + "'>");
-				sb.append(" <span style='font-size:80%'> [" + FormatterUtils.formatDateOrTime(m2.get(t).getThird()) + " - " + m2.get(t).getSecond() +"]</span>");
+				sb.append(" <span style='font-size:90%'> [" + FormatterUtils.formatDateOrTime(m2.get(t).getThird()) + " - " + m2.get(t).getSecond() +"]</span>");
 				sb.append("</td></tr>");
 			}
 			sb.append("</table>");
@@ -390,14 +394,14 @@ public class StudyEditorPane extends ImageEditorPane {
 			//Set the last date to 0h
 			Calendar cal = Calendar.getInstance();
 			cal.setTime(JPAUtil.getCurrentDateFromDatabase());
-			
+
 			cal.set(Calendar.HOUR_OF_DAY, cal.get(Calendar.HOUR_OF_DAY)-4);
 			cal.set(Calendar.MINUTE, 0);
 			cal.set(Calendar.SECOND, 0);
-			
+
 			cal.set(Calendar.HOUR_OF_DAY, 0);
 			lastDay = cal.getTime();
-			
+
 			cal.set(Calendar.DAY_OF_YEAR, cal.get(Calendar.DAY_OF_YEAR)-1);
 			yesterday = cal.getTime();
 		}

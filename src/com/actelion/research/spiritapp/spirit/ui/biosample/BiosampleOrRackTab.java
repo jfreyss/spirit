@@ -194,50 +194,40 @@ public class BiosampleOrRackTab extends JPanel implements IExportable {
 	public Location getRack() {
 		return rackDepictor.getBioLocation();
 	}
-	
-	
+		
 	public void setBiosamples(List<Biosample> biosamples) {
 		setTabPaneVisible(false);
 		biosampleTable.setRows(biosamples);
 		rackDepictor.setBiolocation(null);
 	}
-	
-	public void setContainers(List<Container> containers) {
-		if(containers==null) throw new IllegalArgumentException("containers cannot be null");
-		setTabPaneVisible(isRackTabVisible());
-		biosampleTable.setRows(Container.getBiosamples(containers));
-	}
-	
+		
 	public List<Biosample> getBiosamples() {
 		return biosampleTable.getRows();
 	}
 
 	public void reload() {
 		biosampleTable.reload();
-	}
-	
+	}	
 	
 	public BiosampleTable getBiosampleTable() {
 		return biosampleTable;
 	}
+	
 	public RackDepictor getRackDepictor() {
 		return rackDepictor;
 	}
 
 	public void linkBiosamplePane(final IBiosampleDetail biosampleDetailPanel) {
-		ListSelectionListener listener = new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if(e.getValueIsAdjusting()) return;
-				if(push>0) return;
-				try {
-					push++;
-					List<Biosample> sel = getSelection(Biosample.class);
-					SpiritContextListener.setStatus(sel.size()+"/"+getBiosampleTable().getRowCount()+" Biosamples");				
-					biosampleDetailPanel.setBiosamples(sel);
-				} finally {
-					push--;
-				}
+		ListSelectionListener listener = e-> {
+			if(e.getValueIsAdjusting()) return;
+			if(push>0) return;
+			try {
+				push++;
+				List<Biosample> sel = getSelection(Biosample.class);
+				SpiritContextListener.setStatus(sel.size()+"/"+getBiosampleTable().getRowCount()+" Biosamples");				
+				biosampleDetailPanel.setBiosamples(sel);
+			} finally {
+				push--;
 			}
 		};
 		addListSelectionListener(listener);

@@ -29,8 +29,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -78,8 +76,6 @@ class BatchAliquotRackPanel extends JPanel {
 	
 	private JCustomLabel infoLabel = new JCustomLabel("", Font.NORMAL, 12f);
 	private RackDepictor plateDepictor = new RackDepictor();
-	
-//	private BiosampleOrRackTab rackTab = new BiosampleOrRackTab();
 	
 	private ScannerConfigurationComboBox scannerConfigComboBox = new ScannerConfigurationComboBox(true);
 	
@@ -148,51 +144,36 @@ class BatchAliquotRackPanel extends JPanel {
 		parentButton.setBorder(BorderFactory.createEmptyBorder(10,6,10,6));
 		
 		
-		childButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {				
-				dlg.refresh();
-			}
+		childButton.addActionListener(e-> {		
+			dlg.refresh();
 		});
-		parentButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				dlg.refresh();
-			}
+		parentButton.addActionListener(e-> {	
+			dlg.refresh();
 		});
 		
 		
 		JButton scanButton = new JButton("Scan");
-		scanButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					Location rack = new SpiritScanner().scan(scannerConfigComboBox.getSelection(), false, null);
-					if(rack==null) return;
-					
-					setRack(rack);
-					dlg.refresh();
-				} catch(Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
+		scanButton.addActionListener(e-> {
+			try {
+				Location rack = new SpiritScanner().scan(scannerConfigComboBox.getSelection(), false);
+				if(rack==null) return;
+				System.out.println("BatchAliquotRackPanel.BatchAliquotRackPanel() scan="+rack.getContainers());
 				
+				setRack(rack);
+				dlg.refresh();
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		}); 
 		JButton clearButton = new JIconButton(IconType.CLEAR, "");
-		clearButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				clear();
-				dlg.refresh();
-			}
+		clearButton.addActionListener(e-> {
+			clear();
+			dlg.refresh();
 		}); 
 		
-		metadataButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				editAttributes();
-				refresh();
-			}
+		metadataButton.addActionListener(e-> {
+			editAttributes();
+			refresh();
 		});
 		
 		//SouthPanel
@@ -245,7 +226,6 @@ class BatchAliquotRackPanel extends JPanel {
 		
 		EditAttributesDlg dlg = new EditAttributesDlg(sampling);
 		if(dlg.isSuccess()) {
-//			containerTypeComboBox.setSelection(sampling.getContainerType());
 			refreshSharedInfoLabel();
 		}
 	}

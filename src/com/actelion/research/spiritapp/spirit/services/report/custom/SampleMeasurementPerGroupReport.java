@@ -29,9 +29,9 @@ import java.util.TreeSet;
 
 import org.apache.poi.ss.usermodel.Sheet;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport;
 import com.actelion.research.spiritapp.spirit.services.report.ReportParameter;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -122,7 +122,7 @@ public class SampleMeasurementPerGroupReport extends AbstractReport {
 			//Start the report
 			Sheet sheet = createSheet(wb, "Sampling Gr. " + group.getShortName());
 			sheet.setFitToPage(true);		
-			createHeadersWithTitleSubtitle(sheet, study, "Organ Weights", group.getBlindedName(Spirit.getUsername()) + (group.getTreatmentDescription().length()>0?" ("+group.getTreatmentDescription()+")":""));
+			createHeadersWithTitleSubtitle(sheet, study, "Organ Weights", group.getBlindedName(SpiritFrame.getUsername()) + (group.getTreatmentDescription().length()>0?" ("+group.getTreatmentDescription()+")":""));
 			
 			///////////////
 			//		0		1		2		3			4		5
@@ -276,7 +276,7 @@ public class SampleMeasurementPerGroupReport extends AbstractReport {
 	
 	public static void main(String[] args)  {
 		try {
-			Spirit.setUser(DAOSpiritUser.loadUser("freyssj"));
+			SpiritFrame.setUser(DAOSpiritUser.loadUser("freyssj"));
 			SampleMeasurementPerGroupReport wg = new SampleMeasurementPerGroupReport();
 			wg.populateReport(DAOStudy.getStudyByStudyId("S-00677"));
 			wg.export(null);

@@ -29,7 +29,7 @@ import java.util.TreeSet;
 
 import org.apache.poi.ss.usermodel.Sheet;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.pivot.PivotItemFactory;
@@ -71,7 +71,7 @@ public class SamplesMeasurementReport extends AbstractReport {
 		//Query Results
 		ResultQuery q = new ResultQuery();
 		q.setSid(study.getId());
-		List<Result> results = DAOResult.queryResults(q, Spirit.getUser());
+		List<Result> results = DAOResult.queryResults(q, SpiritFrame.getUser());
 		Map<Test, List<Result>> test2results = Result.mapTest(results);
 		
 		

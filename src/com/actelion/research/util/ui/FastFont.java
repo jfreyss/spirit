@@ -29,9 +29,9 @@ import java.util.Set;
 import javax.swing.UIManager;
 
 /**
- * Class used to cache fonts, thus avoiding the repetitive use of constructors 
+ * Class used to cache fonts, thus avoiding the repetitive use of constructors
  * (don't abuse it with as it can create memory leaks)
- * 
+ *
  *  Use getFont to retrieve the font from the cache
  * @author freyssj
  *
@@ -39,7 +39,7 @@ import javax.swing.UIManager;
 public class FastFont extends Font {
 	public static String defaultFontFamily = "Segoe UI";
 	public static int defaultFontSize = 12;
-	
+
 	public static Map<String, FastFont> fonts = new HashMap<>();
 	public static FastFont BIGGEST;
 	public static FastFont BIGGER;
@@ -54,7 +54,7 @@ public class FastFont extends Font {
 	static {
 		init();
 	}
-	
+
 	private static void init() {
 		BIGGEST = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize*16/12);
 		BIGGER = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize*14/12);
@@ -65,23 +65,23 @@ public class FastFont extends Font {
 		SMALL = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize*10/12);
 		SMALLER = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize*9/12);
 		SMALLEST = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize*7/12);
-		
-        Set<Object> keySet = UIManager.getLookAndFeelDefaults().keySet();
-        Object[] keys = keySet.toArray(new Object[keySet.size()]);
-        for (Object key : keys) {
-            if (key != null && key.toString().toLowerCase().contains("font")) {
-                Font font = UIManager.getDefaults().getFont(key);
-                if (font != null) {
-                    font = new Font(defaultFontFamily, font.getStyle(), defaultFontSize);
-                    UIManager.put(key, font);
-//                    System.out.println("FastFont.init() "+key+" > "+font);
-                }
-            }
-        }
-	}
-	
 
-	
+		Set<Object> keySet = UIManager.getLookAndFeelDefaults().keySet();
+		Object[] keys = keySet.toArray(new Object[keySet.size()]);
+		for (Object key : keys) {
+			if (key != null && key.toString().toLowerCase().contains("font")) {
+				Font font = UIManager.getDefaults().getFont(key);
+				if (font != null) {
+					font = new Font(defaultFontFamily, font.getStyle(), defaultFontSize);
+					UIManager.put(key, font);
+					//                    System.out.println("FastFont.init() "+key+" > "+font);
+				}
+			}
+		}
+	}
+
+
+
 	/**
 	 * Sets the default font size
 	 * @param size
@@ -90,23 +90,23 @@ public class FastFont extends Font {
 		FastFont.defaultFontSize = size;
 		init();
 	}
-	
+
 	public static int getDefaultFontSize() {
 		return defaultFontSize;
 	}
-	
+
 	public static void setDefaultFontFamily(String defaultFont) {
 		FastFont.defaultFontFamily = defaultFont;
 		init();
 	}
-	
+
 	public static String getDefaultFontFamily() {
 		return defaultFontFamily;
 	}
-	
+
 	public static int getAdaptedSize(int size) {
 		return size * defaultFontSize / 12;
-	}	
+	}
 
 	private FastFont(String name, int style, int size) {
 		super(name, style, size);
@@ -120,29 +120,37 @@ public class FastFont extends Font {
 
 		return new FastFont(name, style, size);
 	}
-	
+
+	public static FastFont getFont(int size) {
+		String key = getKey(getDefaultFontFamily(), 0, size);
+		FastFont font = fonts.get(key);
+		if(font!=null) return font;
+
+		return new FastFont(getDefaultFontFamily(), 0, size);
+	}
+
 	@Override
 	public FastFont deriveFont(float size) {
 		return getFont(name, style, (int) size);
 	}
-	
+
 	@Override
 	public FastFont deriveFont(int style) {
 		return getFont(name, style, size);
 	}
-	
+
 	public FastFont deriveSize(int size) {
 		return getFont(name, style, size);
 	}
-	
+
 	public FastFont increaseSize(int increment) {
 		if(increment==0) return this;
 		return getFont(name, style, size + increment);
 	}
-	
+
 	private static String getKey(String name, int style, int size) {
 		return name+"_"+style+"_"+size;
 	}
-	
-	
+
+
 }

@@ -41,6 +41,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerActions;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerTable;
@@ -217,7 +218,7 @@ public class ContainerGeneratorPanel extends JPanel {
 			try {
 				//Generate the containers
 				StringBuilder msgs = new StringBuilder();
-				List<Biosample> res = TemplateHelper.applyTemplate(tpl, groups, barcodeMemo, Spirit.getUsername(), msgs);
+				List<Biosample> res = TemplateHelper.applyTemplate(tpl, groups, barcodeMemo, SpiritFrame.getUsername(), msgs);
 				
 				//Add the container to the table
 				generated.addAll(res);

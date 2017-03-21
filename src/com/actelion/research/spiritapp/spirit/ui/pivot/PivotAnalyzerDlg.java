@@ -43,7 +43,7 @@ import javax.swing.JScrollPane;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
@@ -71,12 +71,12 @@ import com.actelion.research.util.ui.UIUtils;
 public class PivotAnalyzerDlg extends JEscapeDialog {
 	private Study study;
 	private List<Result> results;
-//	private Set<TestAttribute> skippedAttributes;
+	//	private Set<TestAttribute> skippedAttributes;
 	private ImageEditorPane editorPane = new ImageEditorPane();
 
 	private PivotAnalyzerDlg() {
 		super(UIUtils.getMainFrame(), "Analyze");
-		 
+
 		JButton closeButton = new JButton("Close");
 		closeButton.addActionListener(new ActionListener() {
 			@Override
@@ -87,7 +87,7 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 		add(BorderLayout.CENTER, new JScrollPane(editorPane));
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue(), closeButton));
 		setSize(1050, 740);
-		setLocationRelativeTo(UIUtils.getMainFrame());		
+		setLocationRelativeTo(UIUtils.getMainFrame());
 
 	}
 	public PivotAnalyzerDlg(Study study) {
@@ -99,48 +99,48 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 	}
 	public PivotAnalyzerDlg(List<Result> results) {
 		this();
-		
+
 		this.results = results;
-//		this.skippedAttributes = skippedAttributes;
+		//		this.skippedAttributes = skippedAttributes;
 		analyze();
 		setVisible(true);
 	}
-	 
+
 	public void analyze() {
-		if(DBAdapter.getAdapter().isInActelionDomain()) UsageLog.logUsage("Spirit", Spirit.getUsername(), null, "Analyze", study==null?"": study.getStudyId());
-		
+		if(DBAdapter.getAdapter().isInActelionDomain()) UsageLog.logUsage("Spirit", SpiritFrame.getUsername(), null, "Analyze", study==null?"": study.getStudyId());
+
 		//Analyze in a thread
-		new SwingWorkerExtended("Analyzing", editorPane, true) {
-			
+		new SwingWorkerExtended("Analyzing", editorPane) {
+
 			private PivotDataTable statsTable;
 			private Analyzer analyzer;
 			private String report;
-			
+
 			@Override
 			protected void doInBackground() throws Exception {
 
 				if(results==null && study!=null) {
 					ResultQuery q = new ResultQuery();
 					q.setSid(study.getId());
-					results = DAOResult.queryResults(q, Spirit.getUser());
+					results = DAOResult.queryResults(q, SpiritFrame.getUser());
 				}
 				if(results==null) throw new Exception("There are no results");
-				
+
 				//Initializes the analyser
-				analyzer = new Analyzer(results, Spirit.getUser());
-				
+				analyzer = new Analyzer(results, SpiritFrame.getUser());
+
 				//Creates the report
 				try {
 					report = analyzer.getReport();
 				} catch(Exception e) {
 					e.printStackTrace();
 					report = "<div style='color:red'>Error: " + e.getMessage() + "</div>";
-				}				
+				}
 			}
-			
+
 			@Override
 			protected void done() {
-				editorPane.addHyperlinkListener(new HyperlinkListener() {					
+				editorPane.addHyperlinkListener(new HyperlinkListener() {
 					@Override
 					public void hyperlinkUpdate(HyperlinkEvent e) {
 						if(e.getEventType()==HyperlinkEvent.EventType.ACTIVATED) {
@@ -165,38 +165,38 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 										ids = MiscUtils.splitIntegers(e.getDescription().substring("graphs:".length()));
 									}
 									List<Result> results = statsTable.getResults();
-									
+
 									if(ids.size()==0) return;
-									
+
 									//Create DW Config
 									ColumnAnalyser ca = analyzer.getColumnFromIndex(ids.get(0));
-									DataWarriorConfig config = new DataWarriorConfig();		
+									DataWarriorConfig config = new DataWarriorConfig();
 									config.setType(ChartType.BOXPLOT);
 									config.setLogScale(ca.getDistribution()==Distribution.LOGNORMAL);
-//									config.setSkippedAttributes(statsTable.getSkippedAttributes());
+									//									config.setSkippedAttributes(statsTable.getSkippedAttributes());
 									config.setCustomTemplate(statsTable.getTemplate());
 									config.setXAxis(null); //automatic
 									config.setExportAll(!pca);
-									
-									List<String> allViewNames = DataWarriorExporter.getViewNames(results, config, Spirit.getUser());
-									
+
+									List<String> allViewNames = DataWarriorExporter.getViewNames(results, config, SpiritFrame.getUser());
+
 									//Select views
 									List<String> views = new ArrayList<>();
 									for (int id : ids) {
-										if(id>=0 && id<allViewNames.size()) views.add(allViewNames.get(id));										
+										if(id>=0 && id<allViewNames.size()) views.add(allViewNames.get(id));
 									}
-									config.setViewNames(views);	
-									
+									config.setViewNames(views);
+
 									//Export to DW
-									StringBuilder sb = DataWarriorExporter.getDwar(results, config, Spirit.getUser());																		
+									StringBuilder sb = DataWarriorExporter.getDwar(results, config, SpiritFrame.getUser());
 									File f = File.createTempFile("spirit_", ".dwar");
 									FileWriter w = new FileWriter(f);
 									com.actelion.research.util.IOUtils.redirect(new StringReader(sb.toString()), w);
 									w.close();
-									
+
 									Desktop.getDesktop().open(f);
 
-									
+
 									return;
 								} else if(e.getDescription().startsWith("http")) {
 									Desktop.getDesktop().browse(new URI(e.getDescription()));
@@ -204,21 +204,21 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 								setHtml(analyzer.getReport());
 							} catch(Exception ex ) {
 								JExceptionDialog.showError(ex);
-							}							
+							}
 						}
 					}
 				});
-				setHtml(report);				
+				setHtml(report);
 			}
 		};
 	}
-	
+
 	public void setHtml(String html) {
 		createImages(html);
 		editorPane.setText(html);
 		editorPane.setCaretPosition(0);
 	}
-	
+
 
 	private void createImages(String html) {
 		Pattern pattern = Pattern.compile("<img src=['\"](.*?)['\"].*?>");
@@ -231,10 +231,10 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 			}
 		}
 	}
-	
+
 	private BufferedImage createHisto(String code) {
 		int max = 5;
-		
+
 		BufferedImage img = new BufferedImage(4*code.length(), max*3, BufferedImage.TYPE_INT_RGB);
 		Graphics g = img.getGraphics();
 		g.setColor(UIUtils.getColor(240,240,240));
@@ -246,9 +246,9 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 			char c = code.charAt(i);
 			int n = c-'0';
 			if(n<0 || n>=10) continue;
-			
+
 			g.fillRect(i*4, img.getHeight()-3*n, 4, 3*n);
-			
+
 		}
 		g.dispose();
 		return img;

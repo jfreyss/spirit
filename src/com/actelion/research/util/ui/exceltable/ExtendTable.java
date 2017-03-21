@@ -57,8 +57,8 @@ import com.actelion.research.util.ui.exceltable.ExtendTableModel.Node;
 public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 
 	private SwingWorkerExtended popupShowWorker;
-	
-	
+
+
 	public ExtendTable(List<Column<ROW, ?>> columns) {
 		this(new ExtendTableModel<ROW>(columns), HeaderClickingPolicy.SORT);
 	}
@@ -66,13 +66,13 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 	public ExtendTable(final ExtendTableModel<ROW> model) {
 		this(model, HeaderClickingPolicy.SORT);
 	}
-	
+
 	public ExtendTable(final ExtendTableModel<ROW> model, final HeaderClickingPolicy headerClickingPolicy) {
 		super(model);
 		setModel(model);
 		setHeaderClickingPolicy(headerClickingPolicy);
 		setBorderStrategy(BorderStrategy.WHEN_DIFFERENT_VALUE);
-				
+
 		//Set Our custom CellRenderer
 		defaultRenderersByColumnClass.clear();
 		setDefaultRenderer(Object.class, new ExtendTableCellRenderer<ROW>(this));
@@ -83,14 +83,14 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 		setCellSelectionEnabled(true);
 		setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		setAutoscrolls(true);
-		
-		
-		getTableHeader().addMouseListener(new PopupAdapter() {		
-			
+
+
+		getTableHeader().addMouseListener(new PopupAdapter() {
+
 			@Override
 			public void mouseClicked(final MouseEvent e) {
 				if (!SwingUtilities.isLeftMouseButton(e))  return;
-			
+
 				switch(getHeaderClickingPolicy()) {
 				case SORT:
 					if (SwingUtilities.isLeftMouseButton(e)) {
@@ -99,29 +99,29 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 					}
 					break;
 				case POPUP:
-					 {
-						 //Trick to:
-						 // - open popup on one click (wait 200ms and then open)
-						 // - trigger dbl click, without openin popup when dbl clicking faster than 200ms
-						 synchronized (this) {
-							 if(popupShowWorker!=null) {
-								 popupShowWorker.cancel();
-							 }
-							 popupShowWorker = new SwingWorkerExtended(null, null, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
-								@Override
-								protected void done() {
-									if(e.getClickCount()<=1) showPopup(e);
-									popupShowWorker = null;
-								}
-							};
-						 }
+				{
+					//Trick to:
+					// - open popup on one click (wait 200ms and then open)
+					// - trigger dbl click, without openin popup when dbl clicking faster than 200ms
+					synchronized (this) {
+						if(popupShowWorker!=null) {
+							popupShowWorker.cancel();
+						}
+						popupShowWorker = new SwingWorkerExtended(null, null, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
+							@Override
+							protected void done() {
+								if(e.getClickCount()<=1) showPopup(e);
+								popupShowWorker = null;
+							}
+						};
 					}
-						
-					break;
+				}
+
+				break;
 				case SELECT:
 					final int col = columnAtPoint(e.getPoint());
 					if(col<0 || getRowCount()<=0) return;
-					
+
 					setRowSelectionInterval(0, getRowCount()-1);
 					setColumnSelectionInterval(col, col);
 					break;
@@ -129,7 +129,7 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 					//Nothing
 				}
 			}
-			
+
 			/**
 			 * Show Popup.
 			 * First specific column items
@@ -138,22 +138,22 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 			@Override
 			protected void showPopup(MouseEvent e) {
 				JPopupMenu popupMenu = new JPopupMenu();
-				
+
 				final int col = columnAtPoint(e.getPoint());
 				Column<ROW, ?> column = null;
 				if(col>=0) {
 					column = model.getColumn(convertColumnIndexToModel(col));
-					
+
 					popupMenu.add(new JCustomLabel(column.getName().replace("\n", ".").replaceAll("<.>|^\\.|\\.$", ""), Font.BOLD));
 					popupMenu.add(new JSeparator());
-					
+
 					//Popup: Add sorting Columns
 					column.populateHeaderPopup(ExtendTable.this, popupMenu);
 
 				}
 
 				populateHeaderPopup(popupMenu, column);
-				
+
 				//Popup: Add possible columns
 				List<Column<ROW, ?>> addableColumns = new ArrayList<>();
 				for (Column<ROW, ?> c : model.getAllColumns()) {
@@ -177,9 +177,9 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 						} else {
 							popupMenu.add(new ColumnCheckbox(column2));
 						}
-					}							
+					}
 				}
-				
+
 				//Popup: Add Hierarchy menu
 				if(model.isTreeViewEnabled()) {
 					popupMenu.add(new JSeparator());
@@ -195,26 +195,26 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 						expandMenu.add(new TreeViewExpandAll(false, false));
 					}
 				}
-				
+
 				//HeaderPopup
 
 				if(popupMenu.getComponentCount()==0) return;
-				
-	            popupMenu.show(e.getComponent(), e.getX(), e.getY());
-	        }
+
+				popupMenu.show(e.getComponent(), e.getX(), e.getY());
+			}
 		});
-	
+
 		addMouseListener( new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if (SwingUtilities.isRightMouseButton(e)) {
 					Point p = e.getPoint();
 					int rowNumber = rowAtPoint( p );
-					int colNumber = columnAtPoint( p );					
+					int colNumber = columnAtPoint( p );
 					if(rowNumber>=0 && colNumber>=0) {
 						if(!isRowSelected(rowNumber)) getSelectionModel().setSelectionInterval(rowNumber, rowNumber);
 						if(!isColumnSelected(colNumber)) setColumnSelectionInterval(colNumber, colNumber);
-					}					
+					}
 				}
 			}
 			@Override
@@ -222,29 +222,29 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 				int col = getSelectedColumn();
 				int row = getSelectedRow();
 				if(col<0 || row<0 || e.getClickCount()<2) return;
-				
-				
+
+
 				Column<ROW, ?> column = getModel().getColumn(convertColumnIndexToModel(col));
 				boolean consume = column.mouseDoubleClicked(ExtendTable.this, getModel().getRow(row), row, getModel().getValueAt(row, convertColumnIndexToModel(col)));
 				if(consume) {
 					e.consume();
 					return;
 				}
-				
+
 				if(getModel().isCanExpand()) {
 					eventTreeExpand();
 				}
 			}
 		});
-		
+
 		getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK), "copy");
 		getActionMap().put("copy", new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				copySelection();
 			}
-		});		
-		
+		});
+
 		//Tree Expand / Collapse on Enter / doubleClick
 		getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "enter");
 		getActionMap().put("enter", new AbstractAction() {
@@ -252,21 +252,21 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 			public void actionPerformed(ActionEvent e) {
 				if(getModel().isCanExpand()) eventTreeExpand();
 			}
-		});		
-		
+		});
+
 	}
-	
+
 	public class TreeViewExpandAll extends AbstractAction {
 		private final boolean expandAll;
 		private final boolean selectedOnly;
-		public TreeViewExpandAll(final boolean expandAll, final boolean selectedOnly) {			
+		public TreeViewExpandAll(final boolean expandAll, final boolean selectedOnly) {
 			super((expandAll?"Expand": "Collapse") + " " + (selectedOnly?"Selection": "All"));
 			this.expandAll = expandAll;
 			this.selectedOnly = selectedOnly;
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			new SwingWorkerExtended("Hierarchy", ExtendTable.this, false) {
+			new SwingWorkerExtended("Hierarchy", ExtendTable.this) {
 				@Override
 				protected void doInBackground() throws Exception {
 					List<ROW> sel = new ArrayList<ROW>(selectedOnly? getSelection(): getRows());
@@ -275,33 +275,33 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 					}
 				}
 				@Override
-				protected void done() {					
+				protected void done() {
 					getModel().fireTableDataChanged();
 					resetPreferredColumnWidth();
 				}
 			};
-		
+
 		}
 	}
-	
-	
+
+
 	protected synchronized void eventTreeExpand() {
 		if(!getModel().isTreeViewActive() || getModel().getTreeColumn()==null) return;
-		
-		
+
+
 		final int[] sRows = getSelectedRows();
 		if(sRows.length!=1) return;
-		
+
 		final int[] sCols = getSelectedColumns();
 		if(sCols.length!=1 || getModel().getColumn(convertColumnIndexToModel(sCols[0]))!=getModel().getTreeColumn()) return;
-		
+
 		final ROW obj = getModel().getRow(sRows[0]);
 		final Node info = getModel().getNode(obj);
 		if(info==null || info.leaf==Boolean.TRUE) return;
-		
+
 		new SwingWorkerExtended("Expand", ExtendTable.this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			@Override
-			protected void done() {				
+			protected void done() {
 				expandRow(obj, !info.expanded, 1, true);
 				int selCol = getModel().getColumns().indexOf(getModel().getTreeColumn());
 				if(selCol>=0) {
@@ -310,23 +310,23 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 				}
 			}
 		};
-		
-	}	
-	
+
+	}
+
 	protected void expandRow(final ROW obj, final boolean expand, final int maxDepth, final boolean fireEvents) {
 		final int[] sRows = getSelectedRows();
 
-		
+
 		int[] minMax = null;
 		if(maxDepth<=0) {
 			return;
 		} else if(!expand) {
-			List<ROW> toRemove = new ArrayList<>(); 
+			List<ROW> toRemove = new ArrayList<>();
 			getChildrenRec(obj, toRemove);
 
 			Map<ROW, Integer> obj2index = new HashMap<>();
 			for (int i = 0; i < getModel().getRows().size(); i++) {
-				obj2index.put(getModel().getRow(i), i);			
+				obj2index.put(getModel().getRow(i), i);
 			}
 			List<Integer> indexes = new ArrayList<>();
 			for (ROW row : toRemove) {
@@ -338,18 +338,18 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 				}
 			}
 			if(indexes.size()==0) return;
-			
+
 			Collections.sort(indexes);
-			
-			
+
+
 			for (int i = indexes.size()-1; i >= 0; i--) {
 				getModel().getRows().remove((int)indexes.get(i));
 			}
-			
+
 			minMax = new int[] {indexes.get(0), indexes.get(indexes.size()-1) - (indexes.size()-1) };
-			
+
 		} else if(expand) {
-			
+
 			Node node = getModel().getNode(obj);
 			if(node!=null) {
 				node.expanded=true;
@@ -360,7 +360,7 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 			if(children.size()>0) {
 				Collections.sort(children, CompareUtils.OBJECT_COMPARATOR);
 				for (ROW elt : children) {
-					//Add or move the children to the end				
+					//Add or move the children to the end
 					getModel().getRows().remove(elt);
 					getModel().getRows().add(elt);
 					expandRow(elt, expand, maxDepth-1, false);
@@ -369,7 +369,7 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 			}
 		}
 
-		
+
 		if(fireEvents) {
 			if(!expand) {
 				if(minMax!=null) {
@@ -384,16 +384,16 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 			}
 			resetPreferredColumnWidth();
 			int index = getModel().getColumns().indexOf(getModel().getTreeColumn());
-			
+
 			if(index>=0) {
 				index = convertColumnIndexToView(index);
 				setColumnSelectionInterval(index, index);
 			}
-			if(sRows[0]<getRowCount()) setRowSelectionInterval(sRows[0], sRows[0]);		
+			if(sRows[0]<getRowCount()) setRowSelectionInterval(sRows[0], sRows[0]);
 		}
 
 	}
-	
+
 	/**
 	 * Add the children of obj into toPopulate (does not add obj)
 	 * @param obj
@@ -405,14 +405,14 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 		for (ROW c : children) {
 			toPopulate.add(c);
 			getChildrenRec(c, toPopulate);
-		}		
+		}
 	}
-	
+
 	protected void copySelection() {
 		StringBuilder sb = new StringBuilder();
 		int[] rows = getSelectedRows();
 		int[] cols = getSelectedColumns();
-		
+
 		if(cols.length>1) {
 			//Add headers
 			for (int c = 0; c<cols.length; c++) {
@@ -422,11 +422,11 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 				String s = column.getName();
 				if(s!=null) {
 					sb.append(s.replaceAll("[\\s+]", " ").replaceAll("<.>", ""));
-				}				
+				}
 			}
 			sb.append("\n");
 		}
-		
+
 		for (int r = 0; r<rows.length; r++) {
 			if(r>0) sb.append("\n");
 			for (int c = 0; c<cols.length; c++) {
@@ -437,46 +437,46 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 				if(s!=null) {
 					sb.append(s);
 				}
-			}					
+			}
 		}
-		EasyClipboard.setClipboard(sb.toString());		
+		EasyClipboard.setClipboard(sb.toString());
 	}
-	
-	
 
-	
+
+
+
 	@Override
 	protected JTableHeader createDefaultTableHeader() {
 		return new JTableHeader(columnModel) {
 			@Override
 			public String getToolTipText(MouseEvent event) {
-                java.awt.Point p = event.getPoint();
-                int index = columnModel.getColumnIndexAtX(p.x);
-                if(index<0) return null;
-                int realIndex = columnModel.getColumn(index).getModelIndex();
-                if(realIndex<0 || realIndex>=getModel().getColumnCount()) return null;
-                Column<ROW, ?> col = getModel().getColumn(realIndex);
-                return col.getToolTipText()==null? "<html>" + col.getName().replace("\n", "<br>") : "<html>" + col.getToolTipText().replace("\n", "<br>");
+				java.awt.Point p = event.getPoint();
+				int index = columnModel.getColumnIndexAtX(p.x);
+				if(index<0) return null;
+				int realIndex = columnModel.getColumn(index).getModelIndex();
+				if(realIndex<0 || realIndex>=getModel().getColumnCount()) return null;
+				Column<ROW, ?> col = getModel().getColumn(realIndex);
+				return col.getToolTipText()==null? "<html>" + col.getName().replace("\n", "<br>") : "<html>" + col.getToolTipText().replace("\n", "<br>");
 			}
 		};
 	}
 
 	@Override
 	public Object getValueAt(int row, int column) {
-		
+
 		int modelCol = convertColumnIndexToModel(column);
 		if(modelCol>=(2<<16)) {
 			System.err.println("Maximum "+(2<<16) + "columns");
 			return super.getValueAt(row, column);
 		}
 		int key = (row*(2<<16)) + modelCol; //allows up to 1024 column, should be enough
-		
+
 		Object res;
 		if(valuesCacheMap.containsKey(key)) {
 			res = valuesCacheMap.get(key);
 		} else {
 			//Not in cache
-			
+
 			if(modelCol<0 || modelCol>=getModel().getColumnCount()) {
 				res = null;
 			} else {

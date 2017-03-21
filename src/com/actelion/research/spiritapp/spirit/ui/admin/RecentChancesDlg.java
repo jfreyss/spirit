@@ -79,17 +79,17 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class RecentChancesDlg extends JEscapeDialog {
-	
-	
+
+
 	private final DefaultListModel<Revision> revisionModel = new DefaultListModel<Revision>();
 	private final JList<Revision> revisionList = new JList<Revision>(revisionModel);
-	
+
 	private SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy");
 	private JCustomTextField userTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 6);
 	private DateTextField dateTextField = new DateTextField(true);
 	private JSpinner daySpinner = new JSpinner(new SpinnerNumberModel(1, 1, 365, 1));
 	private JPanel contentPanel = new JPanel(new GridLayout());
-	
+
 	private JCheckBox studyCheckBox = new JCheckBox("Studies  ", true);
 	private JCheckBox sampleCheckBox = new JCheckBox("Biosamples  ", true);
 	private JCheckBox resultCheckBox = new JCheckBox("Results  ", true);
@@ -98,7 +98,7 @@ public class RecentChancesDlg extends JEscapeDialog {
 	private JCheckBox skipSmallChanges = new JCheckBox("Show only big changes", false);
 
 	private Date now = JPAUtil.getCurrentDateFromDatabase();
-	
+
 	public RecentChancesDlg(String userId) {
 		super(UIUtils.getMainFrame(), "Recent Changes");
 		if(userId==null) {
@@ -107,13 +107,13 @@ public class RecentChancesDlg extends JEscapeDialog {
 		} else {
 			userTextField.setText(userId==""?"NA": userId);
 			userTextField.setEnabled(false);
-			
+
 		}
 		userTextField.setTextWhenEmpty("UserId");
-		
+
 		//RevisionPanel
 		JButton filterButton = new JIconButton(IconType.SEARCH, "Query");
-		filterButton.addActionListener(new ActionListener() {			
+		filterButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				loadRevisions();
@@ -121,39 +121,39 @@ public class RecentChancesDlg extends JEscapeDialog {
 		});
 		dateTextField.setText(df.format(now));
 		daySpinner.setPreferredSize(new Dimension(50, 24));
-		JPanel revisionQueryPanel = UIUtils.createTitleBox("Filters", 
+		JPanel revisionQueryPanel = UIUtils.createTitleBox("Filters",
 				UIUtils.createTable(
 						new JLabel("UserId: "), UIUtils.createHorizontalBox(userTextField),
 						Box.createVerticalStrut(5), null,
-						new JLabel("From: "), UIUtils.createHorizontalBox(dateTextField, new JLabel(" and up to: "), daySpinner, new JLabel("days later")),
+						new JLabel("From: "), UIUtils.createHorizontalBox(dateTextField, new JLabel(" and up to: "), daySpinner, new JLabel("days before")),
 						Box.createVerticalStrut(5), null,
 						null, UIUtils.createVerticalBox(
-								UIUtils.createHorizontalBox(studyCheckBox, sampleCheckBox, resultCheckBox, Box.createHorizontalGlue()), 
+								UIUtils.createHorizontalBox(studyCheckBox, sampleCheckBox, resultCheckBox, Box.createHorizontalGlue()),
 								UIUtils.createHorizontalBox(locationCheckBox, adminCheckBox, Box.createHorizontalGlue()),
 								UIUtils.createHorizontalBox(skipSmallChanges, Box.createHorizontalGlue())),
 						null, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), filterButton)));
 		getRootPane().setDefaultButton(filterButton);
-		
-		JPanel revisionPanel = new JPanel(new BorderLayout());		
+
+		JPanel revisionPanel = new JPanel(new BorderLayout());
 		revisionPanel.add(BorderLayout.NORTH, revisionQueryPanel);
 		revisionPanel.add(BorderLayout.CENTER, new JScrollPane(revisionList));
 		revisionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		revisionList.addListSelectionListener(new ListSelectionListener() {			
+		revisionList.addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if(e.getValueIsAdjusting()) return;
 				refreshSelection();
 			}
-		});		
-		revisionList.addMouseListener(new PopupAdapter() {			
+		});
+		revisionList.addMouseListener(new PopupAdapter() {
 			@Override
 			protected void showPopup(MouseEvent e) {
-				Revision rev = (Revision) revisionList.getSelectedValue();
+				Revision rev = revisionList.getSelectedValue();
 				if(rev==null) return;
-				JPopupMenu popupMenu = new JPopupMenu();	
-				popupMenu.add(new AdminActions.Action_Revert(rev));				
+				JPopupMenu popupMenu = new JPopupMenu();
+				popupMenu.add(new AdminActions.Action_Revert(rev));
 				popupMenu.show(revisionList, e.getX(), e.getY());
-				
+
 			}
 		});
 		revisionList.setCellRenderer(new DefaultListCellRenderer() {
@@ -161,16 +161,16 @@ public class RecentChancesDlg extends JEscapeDialog {
 			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 				Revision rev = (Revision) value;
-				if(!isSelected) {					
+				if(!isSelected) {
 					if(rev.getRevisionType()==RevisionType.ADD) {
 						setForeground(new Color(0, 80, 0));
 					} else if(rev.getRevisionType()==RevisionType.DEL) {
 						setForeground(new Color(170, 0, 0));
-					} else {						
-						setForeground(new Color(150, 100, 0));						
+					} else {
+						setForeground(new Color(150, 100, 0));
 					}
 				}
-				
+
 				if(rev.getStudies().size()>0) {
 					setIcon(IconType.STUDY.getIcon());
 				} else if(rev.getBiosamples().size()>0) {
@@ -185,21 +185,21 @@ public class RecentChancesDlg extends JEscapeDialog {
 				return this;
 			}
 		});
-		
-		
+
+
 		//ContentPanel
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, revisionPanel, contentPanel);
 		splitPane.setDividerLocation(400);
 		setContentPane(splitPane);
-		
+
 		loadRevisions();
-		
-		setSize(1500, 850);		
+
+		setSize(1500, 850);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
 	}
-	
-	
+
+
 	private void loadRevisions() {
 		revisionList.setSelectedIndex(-1);
 		final String user = userTextField.getText().toLowerCase();
@@ -210,11 +210,11 @@ public class RecentChancesDlg extends JEscapeDialog {
 			d = now;
 		}
 		final Date date = d;
-		
-		new SwingWorkerExtended("Loading recent revisions", contentPanel, true) {
-			
+
+		new SwingWorkerExtended("Loading recent revisions", contentPanel) {
+
 			List<Revision> revisions;
-			
+
 			@Override
 			protected void doInBackground() throws Exception {
 				revisions = new ArrayList<>();
@@ -228,7 +228,7 @@ public class RecentChancesDlg extends JEscapeDialog {
 					}
 				}
 			}
-			
+
 			@Override
 			protected void done() {
 				revisionModel.clear();
@@ -240,28 +240,28 @@ public class RecentChancesDlg extends JEscapeDialog {
 				revisionList.repaint();
 			}
 		};
-		
+
 	}
-	
+
 	private void refreshSelection() {
-		new SwingWorkerExtended("Loading Revision", contentPanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS | SwingWorkerExtended.FLAG_CANCELABLE) {
+		new SwingWorkerExtended("Loading Revision", contentPanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 			private Revision rev;
 			private JTabbedPane detailPanel = new JCustomTabbedPane();
 			@Override
 			protected void doInBackground() throws Exception {
-				rev = (Revision) revisionList.getSelectedValue();
-				
+				rev = revisionList.getSelectedValue();
+
 				if(rev==null) return;
-				
-				
+
+
 				rev = DAORevision.getRevision(rev.getRevId());
 				if(rev.getTests().size()>0) {
 					Box panel = Box.createVerticalBox();
 					for (Test t : rev.getTests()) {
 						TestDocumentPane doc = new TestDocumentPane();
-						panel.add(doc);							
+						panel.add(doc);
 
-						doc.setTest(t);
+						doc.setSelection(t);
 					}
 					detailPanel.addTab(rev.getTests().size()+ " Tests", new JScrollPane(panel));
 				}
@@ -269,45 +269,45 @@ public class RecentChancesDlg extends JEscapeDialog {
 					Box panel = Box.createVerticalBox();
 					for (Biotype t : rev.getBiotypes()) {
 						BioTypeDocumentPane doc = new BioTypeDocumentPane();
-						panel.add(doc);				
+						panel.add(doc);
 
-						doc.setBiotype(t);
+						doc.setSelection(t);
 					}
 					detailPanel.addTab(rev.getBiotypes().size()+ " Biotypes", new JScrollPane(panel));
 				}
-				
+
 				if(rev.getStudies().size()>0) {
-					
-					
+
+
 					if(rev.getStudies().size()==1) {
 						rev.getStudies().get(0).getAttachedBiosamples();
 						final StudyDetailPanel detail = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT);
 						detail.setForRevision(true);
-						detailPanel.addTab(rev.getStudies().get(0).getStudyId(), detail);			
+						detailPanel.addTab(rev.getStudies().get(0).getStudyId(), detail);
 
 						detail.setStudy(rev.getStudies().get(0));
 					} else {
 						final StudyTable table = new StudyTable();
-						detailPanel.addTab(rev.getStudies().size()+ " Studies", new JScrollPane(table));			
+						detailPanel.addTab(rev.getStudies().size()+ " Studies", new JScrollPane(table));
 						Collections.sort(rev.getStudies());
 						table.setRows(rev.getStudies());
-						
+
 					}
 				}
 				if(rev.getBiosamples().size()>0) {
 					final BiosampleTable table = new BiosampleTable();
 					final BiosampleTabbedPane detail = new BiosampleTabbedPane(true);
 					BiosampleActions.attachRevisionPopup(table);
-					table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {							
+					table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 						@Override
 						public void valueChanged(ListSelectionEvent e) {
 							detail.setBiosamples(table.getSelection());
 						}
 					});
-					
+
 					JSplitPane panel = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(table), detail);
 					panel.setDividerLocation(420);
-					
+
 					detailPanel.addTab(rev.getBiosamples().size()+ " Biosample", panel);
 					Collections.sort(rev.getBiosamples());
 					table.setRows(rev.getBiosamples());
@@ -316,7 +316,7 @@ public class RecentChancesDlg extends JEscapeDialog {
 				if(rev.getLocations().size()>0) {
 					Box panel = Box.createVerticalBox();
 					LocationTable table = new LocationTable();
-					panel.add(new JScrollPane(table));		
+					panel.add(new JScrollPane(table));
 					table.setRows(rev.getLocations());
 					detailPanel.addTab(rev.getLocations().size()+ " Locations", new JScrollPane(panel));
 				}
@@ -329,7 +329,7 @@ public class RecentChancesDlg extends JEscapeDialog {
 					table.setRows(rev.getResults());
 				}
 			}
-			
+
 			@Override
 			protected void done() {
 				contentPanel.removeAll();
@@ -338,7 +338,7 @@ public class RecentChancesDlg extends JEscapeDialog {
 				contentPanel.repaint();
 			}
 		};
-		
+
 	}
-	
+
 }

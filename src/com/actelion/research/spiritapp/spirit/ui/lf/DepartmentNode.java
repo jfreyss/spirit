@@ -24,7 +24,7 @@ package com.actelion.research.spiritapp.spirit.ui.lf;
 import java.util.Collection;
 import java.util.Collections;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxOneNode;
@@ -36,10 +36,10 @@ public class DepartmentNode extends TextComboBoxOneNode {
 		
 	@Override
 	public Collection<String> getChoices() {
-		if(Spirit.getUser()==null || Spirit.getUser().getMainGroup()==null) {
+		if(SpiritFrame.getUser()==null || SpiritFrame.getUser().getMainGroup()==null) {
 			return null;			
 		} else {
-			return Collections.singletonList(Spirit.getUser().getMainGroup().getName());
+			return Collections.singletonList(SpiritFrame.getUser().getMainGroup().getName());
 		}
 	}
 	

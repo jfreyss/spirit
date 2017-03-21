@@ -34,11 +34,15 @@ public class PerInputPivotTemplate extends PivotTemplate {
 
 	public PerInputPivotTemplate() {
 		super("PerInput", "column.png");
-	}		
+	}
 
 	@Override
 	public void init(List<Result> results) {
-		setWhere(PivotItemFactory.STUDY_STUDYID, Where.ASROW);
+		clear();
+		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_METADATA, results)) {
+			setWhere(PivotItemFactory.STUDY_STUDYID, Where.ASCOL);
+		}
+
 		setWhere(PivotItemFactory.STUDY_GROUP, Where.ASROW);
 		setWhere(PivotItemFactory.STUDY_SUBGROUP, Where.ASROW);
 		setWhere(PivotItemFactory.BIOSAMPLE_TOPID, Where.ASROW);
@@ -46,37 +50,46 @@ public class PerInputPivotTemplate extends PivotTemplate {
 		setWhere(PivotItemFactory.BIOSAMPLE_NAME, Where.ASCOL);
 		setWhere(PivotItemFactory.RESULT_TEST, Where.ASCOL);
 		setWhere(PivotItemFactory.RESULT_OUTPUT, Where.ASCOL);
-		
-		
+
+
 		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_METADATA, results)) {
 			setWhere(PivotItemFactory.BIOSAMPLE_METADATA, Where.ASCOL);
 		}
+
 		if(isDiscriminating(PivotItemFactory.STUDY_PHASE_DATE, results)) {
 			setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASCOL);
 		} else {
 			setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASCELL);
 		}
-		setWhere(PivotItemFactory.RESULT_INPUT, Where.ASCOL);
+
+		if(isDiscriminating(PivotItemFactory.RESULT_INPUT, results) || !hasMoreOrEqualThanNValues(PivotItemFactory.RESULT_INPUT, results, 2)) {
+			setWhere(PivotItemFactory.RESULT_INPUT, Where.ASCOL);
+		} else {
+			setWhere(PivotItemFactory.RESULT_INPUT, Where.ASCELL);
+		}
 
 		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_COMMENTS, results)) {
 			setWhere(PivotItemFactory.BIOSAMPLE_COMMENTS, Where.ASCOL);
 		}
-		
-		
+
 		if(PivotItemFactory.STUDY_PHASE_SINCEFIRST.isDiscriminating(results)) {
 			setWhere(PivotItemFactory.STUDY_PHASE_SINCEFIRST, Where.ASROW);
 			setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASROW);
 		} else {
 			setWhere(PivotItemFactory.STUDY_PHASE_SINCEFIRST, Where.MERGE);
-			setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASROW);					
+			setWhere(PivotItemFactory.STUDY_PHASE_DATE, Where.ASROW);
 		}
-		
+
 		setWhere(PivotItemFactory.BIOSAMPLE_METADATA, Where.MERGE);
+
+		if(isDiscriminating(PivotItemFactory.RESULT_COMMENTS, results)) {
+			setWhere(PivotItemFactory.RESULT_COMMENTS, Where.ASCOL);
+		}
+
 		setAggregation(Aggregation.ALL_VALUES);
 		simplify(results);
-
 	}
-	
-	
+
+
 
 }

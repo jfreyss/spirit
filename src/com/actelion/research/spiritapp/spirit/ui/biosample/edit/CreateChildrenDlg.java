@@ -40,7 +40,7 @@ import javax.swing.JSpinner;
 import javax.swing.JToggleButton;
 import javax.swing.SpinnerNumberModel;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.PhaseComboBox;
@@ -148,15 +148,15 @@ public class CreateChildrenDlg extends JEscapeDialog {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					NamedSampling sel = namedSamplingComboBox.getSelection();
-					if(sel==null || sel.getStudy()!=null || !SpiritRights.canEdit(sel, Spirit.getUser())) {
+					if(sel==null || sel.getStudy()!=null || !SpiritRights.canEdit(sel, SpiritFrame.getUser())) {
 						JExceptionDialog.showError(CreateChildrenDlg.this, "You must select an editable template");
 						return;
 					} 
 					int res = JOptionPane.showOptionDialog(CreateChildrenDlg.this, "Are you sure you want to delete "+sel+"?", "Delete Template", JOptionPane.NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {"Delete", "Cancel"}, "Cancel");
 					if(res==0) {
 						try {
-							JPAUtil.pushEditableContext(Spirit.getUser());
-							DAONamedSampling.deleteNamedSampling(sel, Spirit.getUser());
+							JPAUtil.pushEditableContext(SpiritFrame.getUser());
+							DAONamedSampling.deleteNamedSampling(sel, SpiritFrame.getUser());
 						} catch(Exception ex) {
 							JExceptionDialog.showError(ex);
 						} finally {
@@ -182,7 +182,7 @@ public class CreateChildrenDlg extends JEscapeDialog {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					NamedSampling sel = namedSamplingComboBox.getSelection();
-					if(sel==null || sel.getStudy()!=null || !SpiritRights.canEdit(sel, Spirit.getUser())) {
+					if(sel==null || sel.getStudy()!=null || !SpiritRights.canEdit(sel, SpiritFrame.getUser())) {
 						JExceptionDialog.showError(CreateChildrenDlg.this, "You must select an editable template");
 						return;
 					} 
@@ -200,7 +200,7 @@ public class CreateChildrenDlg extends JEscapeDialog {
 					NamedSampling sel = namedSamplingComboBox.getSelection();
 					previewTemplate.setNamedSampling(sel);
 					
-					boolean enable = sel!=null && sel.getStudy()==null && SpiritRights.canEdit(sel, Spirit.getUser());
+					boolean enable = sel!=null && sel.getStudy()==null && SpiritRights.canEdit(sel, SpiritFrame.getUser());
 					deleteTemplateButton.setEnabled(enable);
 					editTemplateButton.setEnabled(enable);
 					editTemplateButton.setToolTipText(enable? null: "Edition is only possible if you are the creator of the template, and it is not associated to a study");
@@ -264,7 +264,7 @@ public class CreateChildrenDlg extends JEscapeDialog {
 	private void refreshSamplings() {
 		
 		Study study = Biosample.getStudy(parents);
-		List<NamedSampling> samplings = DAONamedSampling.getNamedSamplings(Spirit.getUser(), study);			
+		List<NamedSampling> samplings = DAONamedSampling.getNamedSamplings(SpiritFrame.getUser(), study);			
 		namedSamplingComboBox.setValues(samplings, true);
 	}
 

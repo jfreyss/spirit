@@ -33,12 +33,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeNode;
 import com.actelion.research.spiritapp.spirit.ui.lf.CreUserNode;
 import com.actelion.research.spiritapp.spirit.ui.lf.PhaseNode;
 import com.actelion.research.spiritapp.spirit.ui.lf.QualityComboBox;
-import com.actelion.research.spiritapp.spirit.ui.lf.StudyNode;
 import com.actelion.research.spiritapp.spirit.ui.lf.UpdDateNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode.FieldType;
@@ -51,7 +50,6 @@ import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxMultipleNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxOneNode;
 import com.actelion.research.spiritcore.business.Quality;
-import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.result.Test;
@@ -67,70 +65,66 @@ import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 
-public class ResultSearchTree extends FormTree {	
+public class ResultSearchTree extends FormTree {
 
+	private final SpiritFrame frame;
 	private final Biotype forcedBiotype;
-	
+	private List<Test> tests;
+
 	private final ResultQuery query = new ResultQuery();
 	private final LabelNode root = new LabelNode(this, "Query Results:");
 	private final LabelNode rootTest = new LabelNode(this, "Test");
 	private final LabelNode biotypeNode = new LabelNode(this, "Biotype");
 	private final LabelNode inputNode = new LabelNode(this, "Input");
-//	private final LabelNode outputNode = new LabelNode(this, "Output");
+	//	private final LabelNode outputNode = new LabelNode(this, "Output");
 	private final LabelNode advancedNode = new LabelNode(this, "Advanced");
-	
-	private TextComboBoxOneNode elbNode; 
-		
-	private StudyNode studyNode = new StudyNode(this, RightLevel.WRITE, true, new Strategy<String>() {
-		@Override
-		public String getModel() {return query.getStudyIds();}
-		@Override
-		public void setModel(String modelValue) {query.setStudyIds(modelValue);}				
-		@Override
-		public void onChange() {
-			updateQuery();
-			refreshFilters(false);
-		}			
-	});
-	
+
+	private TextComboBoxOneNode elbNode;
+	private Map<String, ResultFilters> memoLastResultFilters = new HashMap<>();
+
 	private int push = 0;
-	
+
 	private static class ResultFilters {
 		public final Set<String> types = new HashSet<>();
 		public final Map<TestAttribute, Set<String>> inputChoices = new LinkedHashMap<>();
 		public final Set<TestAttribute> outputDisplays = new LinkedHashSet<>();
-		
+
 	}
-		
-	public ResultSearchTree(Biotype forcedBiotype) {		
+
+	public ResultSearchTree(SpiritFrame frame, Biotype forcedBiotype) {
 		super();
+		this.frame = frame;
 		this.forcedBiotype = forcedBiotype;
 		setRootVisible(false);
 
 		if(forcedBiotype==null) {
 			//General Spirit Search
-			root.add(studyNode);
+			//			root.add(studyNode);
 		} else {
 			//StockCare Biotype Search
 			BiotypeNode biotypeComboNode = new BiotypeNode(this, Collections.singleton(forcedBiotype), new Strategy<Biotype>(){
+				@Override
 				public Biotype getModel() {return query.getBiotype()==null? null: DAOBiotype.getBiotype(query.getBiotype());};
+				@Override
 				public void setModel(Biotype modelValue) {query.setBiotype(modelValue==null? null: modelValue.getName());};
 			});
 			query.setBiotype(forcedBiotype.getName());
 			biotypeComboNode.setSelection(forcedBiotype);
 			biotypeComboNode.setEnabled(false);
 			root.add(biotypeComboNode);
-			
-			
+
+
 			InputNode sampleIdNode = new InputNode(this, FieldType.OR_CLAUSE, forcedBiotype.getName()+"Ids", new Strategy<String>(){
+				@Override
 				public String getModel() {return query.getSampleIds();};
+				@Override
 				public void setModel(String modelValue) {query.setSampleIds(modelValue);};
 			});
 			root.add(sampleIdNode);
 		}
-			
-		
-		
+
+
+
 		root.add(new InputNode(this, FieldType.AND_CLAUSE, "TopIds", new Strategy<String>() {
 			@Override
 			public String getModel() {
@@ -139,10 +133,10 @@ public class ResultSearchTree extends FormTree {
 			@Override
 			public void setModel(String modelValue) {
 				query.setTopSampleIds(modelValue);
-			}			
+			}
 		}));
-				
-				
+
+
 		root.add(new InputNode(this, FieldType.AND_CLAUSE, "Keywords", new Strategy<String>() {
 			@Override
 			public String getModel() {
@@ -151,23 +145,23 @@ public class ResultSearchTree extends FormTree {
 			@Override
 			public void setModel(String modelValue) {
 				query.setKeywords(modelValue);
-			}			
+			}
 		}));
-		
-		
+
+
 		//TestNode
 		root.add(rootTest);
 
 		//biotypeNode
 		biotypeNode.setCanExpand(false);
 		root.add(biotypeNode);
-		
+
 		//inputNode
 		root.add(inputNode);
 
-//		//outputNode
-//		root.add(outputNode);
-		
+		//		//outputNode
+		//		root.add(outputNode);
+
 		///////////////////////////////////////////////////////////////////////////////
 		//advancedNode
 		PhaseNode phaseNode = new PhaseNode(this, new Strategy<String>() {
@@ -178,14 +172,14 @@ public class ResultSearchTree extends FormTree {
 			@Override
 			public void setModel(String modelValue) {
 				query.setPhases(modelValue);
-			}			
-			
+			}
+
 		}) {
 			@Override
 			public Collection<String> getChoices() {
 				Set<String> res = new TreeSet<String>();
 				try {
-					for(Study s: DAOStudy.queryStudies(StudyQuery.createForStudyIds(studyNode.getSelection()), Spirit.getUser())){
+					for(Study s: DAOStudy.queryStudies(StudyQuery.createForStudyIds(frame==null? null: frame.getStudyId()), SpiritFrame.getUser())){
 						for(Phase p: s.getPhases()) {
 							res.add(p.getShortName());
 						}
@@ -194,11 +188,11 @@ public class ResultSearchTree extends FormTree {
 					e.printStackTrace();
 				}
 				return new ArrayList<String>(res);
-				
+
 			}
 		};
 		advancedNode.add(phaseNode);
-		
+
 		//ELB
 		elbNode = new TextComboBoxOneNode(this, "ELBs", true, new Strategy<String>() {
 			@Override
@@ -208,7 +202,7 @@ public class ResultSearchTree extends FormTree {
 			@Override
 			public void setModel(String modelValue) {
 				query.setElbs(modelValue);
-			}							
+			}
 			@Override
 			public void onAction() {
 				if(push>0) return;
@@ -224,8 +218,8 @@ public class ResultSearchTree extends FormTree {
 		}) {
 			@Override
 			public Collection<String> getChoices() {
-				return DAOResult.getElbsForStudy(studyNode.getSelection());
-				
+				return DAOResult.getElbsForStudy(frame==null? null: frame.getStudyId());
+
 			}
 		};
 		advancedNode.add(elbNode);
@@ -238,8 +232,8 @@ public class ResultSearchTree extends FormTree {
 			@Override
 			public void setModel(String modelValue) {
 				query.setUpdUser(modelValue);
-			}			
-		}));		
+			}
+		}));
 		advancedNode.add(new UpdDateNode(this, new Strategy<String>() {
 			@Override
 			public String getModel() {
@@ -248,8 +242,8 @@ public class ResultSearchTree extends FormTree {
 			@Override
 			public void setModel(String modelValue) {
 				query.setUpdDate(modelValue);
-			}			
-		}));		
+			}
+		}));
 		ComboBoxNode<Quality> qualityNode = new ComboBoxNode<Quality>(this, new QualityComboBox(), "Min Quality", new Strategy<Quality>() {
 			@Override
 			public Quality getModel() {
@@ -258,56 +252,51 @@ public class ResultSearchTree extends FormTree {
 			@Override
 			public void setModel(Quality modelValue) {
 				query.setQuality(modelValue);
-			}						
+			}
 		});
 		qualityNode.getComboBox().setEditable(false);
 		advancedNode.add(qualityNode);
 
 		root.add(advancedNode);
-		
+
 
 		setRoot(root);
-		
+
 		expandAll(false);
 
 	}
 
-	
-	private List<Test> tests;
+	public SwingWorkerExtended refreshFilters(final boolean onlyFilters) {
+		final SpiritUser user = SpiritFrame.getUser();
+		if(user==null || frame==null) return new SwingWorkerExtended();
 
-	private void refreshFilters(final boolean onlyFilters) {
-		final SpiritUser user = Spirit.getUser();
-		if(user==null || studyNode==null) return;
-		
-		new SwingWorkerExtended("Updating Filters", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+		return new SwingWorkerExtended("Updating Filters", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 			ResultFilters inputKeywords;
 			List<Study> studies;
 			@Override
 			protected void doInBackground() throws Exception {
-				
+
 				studies = query.getStudyIds()==null || query.getStudyIds().length()==0? null: DAOStudy.queryStudies(StudyQuery.createForStudyIds(query.getStudyIds()), user);
 
 				//Inputs
 				inputKeywords = getResultFilters();
 			}
-			
+
 			@Override
 			protected void done() {
 				synchronized (ResultSearchTree.class) {
 					//Add the test nodes
 					if(!onlyFilters) {
 						String elbs = query.getElbs();
-						
+
 						Map<Test, Integer> counter = null;
 						if(elbs!=null && elbs.length()>0) {
 							tests = DAOTest.getTestsFromElbs(elbs);
 						} else {
 							counter = DAOStudy.countResults(studies, forcedBiotype);
-							tests = new ArrayList<Test>(counter.keySet());
+							tests = DAOTest.getTests();
 						}
-						
-						
-						
+
 						rootTest.clearChildren();
 						String oldCategory = null;
 						LabelNode catNode = null;
@@ -317,22 +306,22 @@ public class ResultSearchTree extends FormTree {
 								System.err.println("Null category for: "+test);
 								continue;
 							}
-		
+
 							//Define the Test Node
-							final CheckboxNode testNode = new CheckboxNode(ResultSearchTree.this, test.getName() + (counter!=null? " ("+counter.get(test)+")":""));
-							
+							final CheckboxNode testNode = new CheckboxNode(ResultSearchTree.this, test.getName() + (counter!=null && counter.get(test)!=null? " ("+counter.get(test)+")":""));
+
 							//Define The Category Node
 							if(catNode==null || oldCategory==null || !oldCategory.equals(category)) {
 								final LabelNode n = new LabelNode(ResultSearchTree.this, category);
 								n.setCanExpand(false);
 								rootTest.add(n);
 								oldCategory = category;
-								catNode = n;	
-							}			
+								catNode = n;
+							}
 							catNode.add(testNode);
-							
+
 							//Add the test strategy
-							testNode.setCanExpand(false);			
+							testNode.setCanExpand(false);
 							testNode.setStrategy(new Strategy<Boolean>() {
 								@Override
 								public Boolean getModel() {
@@ -341,21 +330,21 @@ public class ResultSearchTree extends FormTree {
 								@Override
 								public void setModel(Boolean modelValue) {
 									if(modelValue!=null && modelValue) {
-										query.getTestIds().add(test.getId());						
+										query.getTestIds().add(test.getId());
 									} else {
 										query.getTestIds().remove(test.getId());
 									}
 								}
 								@Override
 								public void onAction() {
-									updateQuery();
+									getQuery();
 									refreshFilters(true);
 								}
-							});			
-							
+							});
+
 						}
 					}
-					
+
 					if(!onlyFilters) {
 						rootTest.setCanExpand(false);
 						rootTest.setVisible(rootTest.getChildren().size()>0);
@@ -365,13 +354,13 @@ public class ResultSearchTree extends FormTree {
 					}
 					biotypeNode.setVisible(inputKeywords.types.size()>0);
 					inputNode.setVisible(inputKeywords.inputChoices.size()>0);
-//					outputNode.setVisible(inputKeywords.outputDisplays.size()>0);
-					
+					//					outputNode.setVisible(inputKeywords.outputDisplays.size()>0);
+
 					query.getBiotypes().retainAll(inputKeywords.types);
 					for(TestAttribute att: inputKeywords.inputChoices.keySet()) {
-						if(query.getAttribute2Values().get(att)!=null) query.getAttribute2Values().get(att).retainAll(inputKeywords.inputChoices.get(att));					
+						if(query.getAttribute2Values().get(att)!=null) query.getAttribute2Values().get(att).retainAll(inputKeywords.inputChoices.get(att));
 					}
-					
+
 					biotypeNode.clearChildren();
 					for (final String biotype : new TreeSet<String>(inputKeywords.types)) {
 						biotypeNode.add(new CheckboxNode(ResultSearchTree.this, biotype, new Strategy<Boolean>() {
@@ -389,11 +378,11 @@ public class ResultSearchTree extends FormTree {
 					inputNode.clearChildren();
 					for(final TestAttribute ta: inputKeywords.inputChoices.keySet()) {
 						if(inputKeywords.inputChoices.get(ta)==null || inputKeywords.inputChoices.get(ta).size()<=0) continue;
-						
+
 						//Add Input Node
-						LabelNode inputNode2 = new LabelNode(ResultSearchTree.this, ta.getTest().getName()+"."+ta.getName());					
+						LabelNode inputNode2 = new LabelNode(ResultSearchTree.this, ta.getTest().getName()+"."+ta.getName());
 						inputNode.add(inputNode2);
-						
+
 						final Set<String> choices = new TreeSet<String>(inputKeywords.inputChoices.get(ta));
 						if(choices.size()<20) {
 							for (final String input : choices) {
@@ -427,18 +416,18 @@ public class ResultSearchTree extends FormTree {
 										return new String[0];
 									}
 								}
-							}) {														
+							}) {
 								@Override
 								public Collection<String> getChoices() {
 									return choices;
 								}
-							});						
-						}				
+							});
+						}
 					}
 					/*
 					//Add Output Node
 					outputNode.clearChildren();
-					
+
 					for(final TestAttribute ta: inputKeywords.outputDisplays) {
 						CheckboxNode cb = new CheckboxNode(ResultSearchTree.this, ta.getTest().getName()+"."+ta.getName(), new Strategy<Boolean>() {
 							@Override
@@ -456,86 +445,86 @@ public class ResultSearchTree extends FormTree {
 						});
 						outputNode.add(cb);
 					}
-					*/
+					 */
 					inputNode.setExpanded(true);
 					updateView();
 				}
-			}			
-			
-		};
+			}
 
-		
-		
+		};
 	}
-	
-	public ResultQuery updateQuery() {
+
+	/**
+	 * Gets the query and update the model
+	 * @return
+	 */
+	public ResultQuery getQuery() {
 		updateModel();
 		return query;
 	}
 
+	/**
+	 * Sets the query and update the view
+	 * @param query
+	 */
 	public void setQuery(ResultQuery query) {
 		setSelection(null);
 		this.query.copyFrom(query);
-		refreshFilters(false);
-		updateView();
+		if(frame!=null) {
+			frame.setStudyId(query.getStudyIds());
+		}
+		refreshFilters(false).afterDone(() -> updateView());
 	}
 
 	public void repopulate() {
-		studyNode.repopulate();
-		refreshFilters(false);
-		updateView();
-		memoLastResultFilters.clear();
-	}
-	
-	
-	public String getStudyId() {
-		return studyNode.getSelection();		
+		refreshFilters(false).afterDone(() -> {
+			updateView();
+			memoLastResultFilters.clear();
+		});
 	}
 
-	private Map<String, ResultFilters> memoLastResultFilters = new HashMap<String, ResultFilters>();
-	
 	/**
 	 * Suggest possibilities for filters: biotype, gene
 	 */
 	private ResultFilters getResultFilters() {
 		ResultQuery q = query;
-		
-		
+
+
 		if(q.isEmpty()) return new ResultFilters();
-		
-		try {		
+
+		try {
 			//For faster queries, memorize the last 5 entries
 			String keyQuery = q.getQueryKey();
-			ResultFilters res = memoLastResultFilters.get(keyQuery);						
+			ResultFilters res = memoLastResultFilters.get(keyQuery);
 			if(res!=null) return res;
-			
+
 			res = new ResultFilters();
 			Set<Integer> testIds = new HashSet<>(q.getTestIds());
-			
+
 			//Find possible biotypes
 			if(forcedBiotype==null) {
 				for (Biotype biotype : DAOResult.getBiotypes(q.getStudyIds(), testIds)) {
 					res.types.add(biotype.getName());
 				}
 			}
-			
+
 			//Find possible inputs
 			for(int testId: testIds) {
 				Map<TestAttribute, Collection<String>> inputChoices = DAOTest.getInputFields(testId, q.getStudyIds());
 				for (Map.Entry<TestAttribute, Collection<String>> e : inputChoices.entrySet()) {
-					res.inputChoices.put(e.getKey(), new LinkedHashSet<>(e.getValue()));					
+					res.inputChoices.put(e.getKey(), new LinkedHashSet<>(e.getValue()));
 				}
 			}
 			for(Test t: DAOTest.getTests(testIds)) {
 				List<TestAttribute> tas = t.getOutputAttributes();
 				if(tas.size()>1) res.outputDisplays.addAll(tas);
-				
+
 			}
-			
+
 			if(memoLastResultFilters.size()>5) memoLastResultFilters.clear();
-			memoLastResultFilters.put(keyQuery, res);				
+			memoLastResultFilters.put(keyQuery, res);
 			return res;
-			
+
 		} catch(Exception e) {
 			JExceptionDialog.showError(e);
 			return new ResultFilters();

@@ -34,15 +34,15 @@ import com.actelion.research.util.ui.UIUtils;
  *
  */
 public class JComponentNoRepaint extends JComponent {
-	
+
 	private float alpha = 0f;
 	private boolean opaque = true;
 
 	@Override
 	public void setOpaque(boolean isOpaque) {
 		this.opaque = isOpaque;
-	}	
-	
+	}
+
 	/**
 	 * Overridden for performance reasons. See the <a
 	 * href="#override">Implementation Note</a> for more information.
@@ -71,32 +71,6 @@ public class JComponentNoRepaint extends JComponent {
 	@Override
 	public void revalidate() {
 	}
-
-//	/**
-//	 * Overridden for performance reasons. See the <a
-//	 * href="#override">Implementation Note</a> for more information.
-//	 */
-//	@Override
-//	public void repaint(long tm, int x, int y, int width, int height) {
-//	}
-//
-//	/**
-//	 * Overridden for performance reasons. See the <a
-//	 * href="#override">Implementation Note</a> for more information.
-//	 */
-//	@Override
-//	public void repaint(Rectangle r) {
-//	}
-//
-//	/**
-//	 * Overridden for performance reasons. See the <a
-//	 * href="#override">Implementation Note</a> for more information.
-//	 * 
-//	 * @since 1.5
-//	 */
-//	@Override
-//	public void repaint() {
-//	}
 
 	/**
 	 * Overridden for performance reasons. See the <a
@@ -128,11 +102,11 @@ public class JComponentNoRepaint extends JComponent {
 	public void setAlpha(float alpha) {
 		this.alpha = alpha;
 	}
-	
+
 	@Override
 	public void paint(Graphics g) {
 		paintComponent(g);
-		
+
 		if(alpha>0) {
 			Graphics2D g2d = (Graphics2D) g;
 			g2d.setColor(UIUtils.getColor(getBackground(), (int)(255*alpha)));
@@ -140,7 +114,7 @@ public class JComponentNoRepaint extends JComponent {
 		}
 		paintBorder(g);
 	}
-	
+
 	@Override
 	protected void paintComponent(Graphics g) {
 		UIUtils.applyDesktopProperties(g);
@@ -148,5 +122,5 @@ public class JComponentNoRepaint extends JComponent {
 			((Graphics2D)g).setBackground(getBackground());
 			g.clearRect(0, 0, getWidth(), getHeight());
 		}
-  	}
+	}
 }

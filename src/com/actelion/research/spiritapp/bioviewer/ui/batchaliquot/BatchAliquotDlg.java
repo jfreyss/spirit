@@ -21,10 +21,7 @@
 
 package com.actelion.research.spiritapp.bioviewer.ui.batchaliquot;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -32,10 +29,8 @@ import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.print.PrintLabel;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleDlg;
 import com.actelion.research.spiritapp.spirit.ui.print.BrotherLabelsDlg;
@@ -61,13 +56,6 @@ public class BatchAliquotDlg extends JEscapeDialog {
 	public BatchAliquotDlg() {
 		super(UIUtils.getMainFrame(), "Batch Aliquot Creation");
 		
-		try {
-			Spirit.askForAuthentication();
-		} catch(Exception e) {
-			return;
-		}
-		
-
 		//RackPanels
 		JPanel centerPane = new JPanel(new GridLayout(2, 2));
 		for (BatchAliquotRackPanel rackPanel : rackPanels) {
@@ -99,33 +87,19 @@ public class BatchAliquotDlg extends JEscapeDialog {
 		
 		//SAVE Button
 		JButton okButton = new JIconButton(IconType.SAVE, "Create");
-		okButton.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					eventCreateAliquots();
-				} catch(Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
-				
+		okButton.addActionListener(e-> {
+			try {
+				eventCreateAliquots();
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});
 		
 		//ContentPane
-		JPanel contentPane = new JPanel(new BorderLayout());
-		contentPane.add(BorderLayout.CENTER, centerPane);		
-		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), printButton, okButton));		
-		setContentPane(contentPane);
+		setContentPane(UIUtils.createBox(centerPane, null, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), printButton, okButton)));
 		
 		
-		
-		
-		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-		setSize((dim.height-100)*4/3, dim.height-100);
-		setLocationRelativeTo(UIUtils.getMainFrame());
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		
+		UIUtils.adaptSize(this, 1400, 900);		
 	}
 	
 	public void refresh() {

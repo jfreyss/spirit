@@ -31,7 +31,7 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
@@ -52,7 +52,7 @@ public class PromoteDlg extends JSpiritEscapeDialog {
 		super(UIUtils.getMainFrame(), "Study - Promote", PromoteDlg.class.getName());
 		this.study = JPAUtil.reattach(myStudy);
 		
-		List<String> nextStates = WorkflowHelper.getNextStates(study, Spirit.getUser());
+		List<String> nextStates = WorkflowHelper.getNextStates(study, SpiritFrame.getUser());
 		if(study.getState()!=null) nextStates.remove(study.getState());
 		final JGenericComboBox<String> stateComboBox = new JGenericComboBox<>(nextStates, true);
 		stateComboBox.setEnabled(nextStates.size()>0);
@@ -61,7 +61,7 @@ public class PromoteDlg extends JSpiritEscapeDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					promote(study, stateComboBox.getSelection(), Spirit.getUser());
+					promote(study, stateComboBox.getSelection(), SpiritFrame.getUser());
 					dispose();
 				} catch(Exception e2) {
 					JExceptionDialog.showError(PromoteDlg.this, e2);

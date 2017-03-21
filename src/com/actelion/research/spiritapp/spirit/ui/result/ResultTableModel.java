@@ -57,7 +57,7 @@ import com.actelion.research.util.ui.exceltable.JMapLabelNoRepaint;
 
 public class ResultTableModel extends ExtendTableModel<Result> {
 
-	
+
 	/**
 	 * Create Column to display all values from the givnen type,
 	 * documents are excluded
@@ -65,49 +65,49 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 	 * @return
 	 */
 	public Column<Result, String> createValueColumn(final OutputType type) {
-		
-		
+
+
 		return new Column<Result, String>((type==OutputType.OUTPUT? "Output": type==OutputType.INPUT? "Input": "Info"), String.class) {
-			
+
 			private JMapLabelNoRepaint lbl = new JMapLabelNoRepaint();
 
 			@Override
 			public float getSortingKey() {
 				return 6f + type.ordinal();
 			}
-			
+
 			@Override
 			public String getValue(Result row) {
-				return MiscUtils.flatten(row.getResultValuesAsMap(type));	
+				return MiscUtils.flatten(row.getResultValuesAsMap(type));
 			}
-						
+
 			@Override
-			public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {				
+			public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
 				lbl.setMap(row.getResultValuesAsMap(type));
 				return lbl;
 			}
-			
+
 			@Override
 			public void postProcess(AbstractExtendTable<Result> table, Result row, int rowNo, Object value, JComponent comp) {
-				if(row.getQuality()!=null && row.getQuality().getBackground()!=null) {				
+				if(row.getQuality()!=null && row.getQuality().getBackground()!=null) {
 					comp.setBackground(row.getQuality().getBackground());
 				}
 			}
-			
-//			@Override
-//			public boolean mouseDoubleClicked(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
-//				
-//				TestAttribute ta = type==OutputType.OUTPUT? row.getTest().getOutputAttributes().get(index):
-//					type==OutputType.INPUT? row.getTest().getInputAttributes().get(index):
-//						row.getTest().getInfoAttributes().get(index);
-//						
-//				if((ta.getDataType()==DataType.D_FILE || ta.getDataType()==DataType.FILES) && row.getResultValue(ta).getLinkedDocument()!=null) {
-//					DocumentTextField.open(row.getResultValue(ta).getLinkedDocument());
-//					return true;
-//				}
-//				return false;
-//			}
-			
+
+			//			@Override
+			//			public boolean mouseDoubleClicked(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
+			//
+			//				TestAttribute ta = type==OutputType.OUTPUT? row.getTest().getOutputAttributes().get(index):
+			//					type==OutputType.INPUT? row.getTest().getInputAttributes().get(index):
+			//						row.getTest().getInfoAttributes().get(index);
+			//
+			//				if((ta.getDataType()==DataType.D_FILE || ta.getDataType()==DataType.FILES) && row.getResultValue(ta).getLinkedDocument()!=null) {
+			//					DocumentTextField.open(row.getResultValue(ta).getLinkedDocument());
+			//					return true;
+			//				}
+			//				return false;
+			//			}
+
 			@Override
 			public boolean isMultiline() {
 				return true;
@@ -116,24 +116,24 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 			public boolean shouldMerge(Result r1, Result r2) {
 				return false;
 			}
-		};			
-	}		
-	
+		};
+	}
+
 	/**
 	 * Creates a clickable column
 	 * @param index
 	 * @return
 	 */
 	public Column<Result, Document> createDocColumn(final int index) {
-		
-		return new Column<Result, Document>("Document " + (index+1), Document.class, 30) {			
+
+		return new Column<Result, Document>("Document " + (index+1), Document.class, 30) {
 			private DocumentLabel lbl = new DocumentLabel();
 
 			@Override
 			public float getSortingKey() {
 				return 9f;
 			}
-			
+
 			@Override
 			public Document getValue(Result row) {
 				Set<TestAttribute> atts = row.getTest().getAttributes();
@@ -146,26 +146,26 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 						n++;
 					}
 				}
-				return null;	
+				return null;
 			}
-						
+
 			@Override
-			public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {				
+			public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
 				lbl.setSelectedDocument((Document)value);
 				return lbl;
 			}
-			
+
 			@Override
 			public boolean mouseDoubleClicked(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
 				Document doc = getValue(row);
-						
+
 				if(doc!=null) {
 					DocumentTextField.open(doc);
 					return true;
 				}
 				return false;
 			}
-			
+
 			@Override
 			public boolean isMultiline() {
 				return true;
@@ -174,10 +174,10 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 			public boolean shouldMerge(Result r1, Result r2) {
 				return false;
 			}
-		};			
-	}		
-	
-	
+		};
+	}
+
+
 	private List<Column<Result, ?>> inputOutputColumns = new ArrayList<>();
 	private final boolean compact;
 
@@ -186,16 +186,16 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 		this.compact = compact;
 		initColumns();
 	}
-	
-	
+
+
 	protected void initColumns() {
-		
+
 		Set<Biosample> biosamples = Result.getBiosamples(getRows());
 		Set<Biosample> topSamples = Biosample.getTopParentsInSameStudy(biosamples);
 		boolean differentParents = !biosamples.equals(topSamples);
-		
-		
-		
+
+
+
 		List<Column<Result, ?>> columns = new ArrayList<>();
 		columns.add(COLUMN_ROWNO);
 		if(!compact) columns.add(new ElbColumn());
@@ -210,14 +210,14 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 
 		columns.addAll(createInputOutputColumns());
 
-		columns.add(new CommentsColumn());		
+		columns.add(new CommentsColumn());
 		columns.add(new CreationColumn(true));
-		
+
 		setColumns(columns);
-				
+
 	}
-	
-	
+
+
 	@Override
 	public List<Column<Result, ?>> getPossibleColumns() {
 		List<Column<Result, ?>> res = new ArrayList<>();
@@ -226,7 +226,7 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 		res.add(new CreationColumn(false));
 		return res;
 	}
-	
+
 	public List<Column<Result, ?>> createInputOutputColumns() {
 		int maxInput = 0;
 		int maxOutput = 0;
@@ -234,13 +234,13 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 		int maxDocs = 0;
 		Set<Test> tests = Result.getTests(getRows());
 		for (Test t : tests) {
-			maxInput = Math.max(maxInput, t.getInputAttributes().size());
-			maxOutput = Math.max(maxOutput, t.getOutputAttributes().size());
-			maxInfos = Math.max(maxInfos, t.getInfoAttributes().size());			
+			maxInput = Math.max(maxInput, t.getAttributes(OutputType.INPUT).size());
+			maxOutput = Math.max(maxOutput, t.getAttributes(OutputType.OUTPUT).size());
+			maxInfos = Math.max(maxInfos, t.getAttributes(OutputType.INFO).size());
 			maxDocs = Math.max(maxDocs, (int) t.getAttributes().stream().filter(p->p.getDataType()==DataType.D_FILE || p.getDataType()==DataType.FILES).count());
 		}
-		
-		inputOutputColumns.clear();		
+
+		inputOutputColumns.clear();
 		if(maxInput>0) {
 			inputOutputColumns.add(createValueColumn(OutputType.INPUT));
 		}
@@ -251,12 +251,12 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 			inputOutputColumns.add(createValueColumn(OutputType.INFO));
 		}
 		for (int i = 0; i < maxDocs; i++) {
-			inputOutputColumns.add(createDocColumn(i));			
+			inputOutputColumns.add(createDocColumn(i));
 		}
-		
-		return inputOutputColumns;		
+
+		return inputOutputColumns;
 	}
-	
-	
-	
+
+
+
 }

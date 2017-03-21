@@ -32,7 +32,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.swing.JOptionPane;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -269,14 +269,14 @@ public class AttachBiosamplesHelper {
 			if(dividingBiosamplesToRemove.size()>0) {
 				int res = JOptionPane.showConfirmDialog(UIUtils.getMainFrame(), "There are "+dividingBiosamplesToRemove.size()+" extra samples derived from those animals that need to be deleted. Do you confirm", "Extra samples", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
 				if(res==JOptionPane.YES_OPTION) {
-					DAOBiosample.deleteBiosamples(session, dividingBiosamplesToRemove, Spirit.getUser());
+					DAOBiosample.deleteBiosamples(session, dividingBiosamplesToRemove, SpiritFrame.getUser());
 				}
 			}
 
 			//Persist the weights into the result table
 			if(saveWeights) {
 				//Load existing results
-				DAOResult.attachOrCreateStudyResultsToTops(study, toSave, phase, DAOResult.suggestElb(Spirit.getUsername()));
+				DAOResult.attachOrCreateStudyResultsToTops(study, toSave, phase, DAOResult.suggestElb(SpiritFrame.getUsername()));
 				List<Result> weighings = new ArrayList<Result>();
 				
 				//Update results if the samples have a weight
@@ -290,11 +290,11 @@ public class AttachBiosamplesHelper {
 					
 					r.getOutputResultValues().get(0).setValue(s.getWeight()==null?"": "" + s.getWeight());
 					r.setUpdDate(new java.util.Date());
-					r.setUpdUser(Spirit.getUser().getUsername());
+					r.setUpdUser(SpiritFrame.getUser().getUsername());
 					weighings.add(r);
 				}
 				
-				DAOResult.persistResults(session, weighings, Spirit.getUser());
+				DAOResult.persistResults(session, weighings, SpiritFrame.getUser());
 			}
 			
 			txn.commit();

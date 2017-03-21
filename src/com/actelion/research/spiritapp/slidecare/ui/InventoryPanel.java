@@ -56,19 +56,19 @@ public abstract class InventoryPanel extends JPanel {
 	private ContainerType containerType;
 	private Study study;
 	private ContainerTable table = new ContainerTable(ContainerTableModelType.EXPANDED);
-	
+
 	private BiosampleComboBox animalComboBox = new BiosampleComboBox();
 	private ContentComboBox contentComboBox = new ContentComboBox();
 	private List<Container> containers;
 
 
-	public InventoryPanel(ContainerType containerType) {		
+	public InventoryPanel(ContainerType containerType) {
 		super(new BorderLayout());
 		this.containerType = containerType;
 		ContainerActions.attachPopup(table);
-		
+
 		//FiltersPanel
-		ActionListener searchAction = new ActionListener() {			
+		ActionListener searchAction = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				search();
@@ -78,15 +78,15 @@ public abstract class InventoryPanel extends JPanel {
 		contentComboBox.addActionListener(searchAction);
 		JPanel northPanel = new JPanel(new BorderLayout());
 		northPanel.add(BorderLayout.WEST, UIUtils.createHorizontalBox(
-				new JLabel("Filter by Animal: "), animalComboBox, Box.createHorizontalStrut(10), 
+				new JLabel("Filter by Animal: "), animalComboBox, Box.createHorizontalStrut(10),
 				new JLabel("Bloc-No: "), contentComboBox, Box.createHorizontalStrut(10),
-				createEastPanel(), 
+				createEastPanel(),
 				Box.createHorizontalGlue()));
-		
+
 		add(BorderLayout.NORTH, northPanel);
 		add(BorderLayout.CENTER, new JBGScrollPane(table, 1));
 	}
-	
+
 	public void synchroFiltersFrom(InventoryPanel inventoryPanel) {
 		animalComboBox.setSelection(inventoryPanel.animalComboBox.getSelection());
 		String c = inventoryPanel.contentComboBox.getSelection();
@@ -99,10 +99,10 @@ public abstract class InventoryPanel extends JPanel {
 			}
 		}
 	}
-	
-	
+
+
 	public void updateFilters(final Study study, final InventoryPanel lastInventoryPanel) {
-		
+
 		if(study==null) {
 			this.study = study;
 			this.containers = null;
@@ -113,30 +113,30 @@ public abstract class InventoryPanel extends JPanel {
 			}
 		} else if(!study.equals(this.study)){
 			this.study = study;
-			new SwingWorkerExtended("Loading Containers", this, false) {				
+			new SwingWorkerExtended("Loading Containers", this) {
 				List<Biosample> animals;
 				Map<String, Integer> content2count;
 				@Override
 				protected void doInBackground() throws Exception {
-					animals = study.getTopAttachedBiosamples();	
-					
+					animals = study.getTopAttachedBiosamples();
+
 					BiosampleQuery q = new BiosampleQuery();
 					q.setStudyIds(study.getStudyId());
 					q.setContainerType(containerType);
 					containers = Biosample.getContainers(DAOBiosample.queryBiosamples(q, null));
 					Collections.sort(containers);
-					
+
 					content2count = new LinkedHashMap<String, Integer>();
 					for (Container c : containers) {
-						String content =  c.getBlocDescription(); 
-						
+						String content =  c.getBlocDescription();
+
 						Integer n = content2count.get(content);
 						if(n==null) content2count.put(content, 1);
 						else content2count.put(content, n+1);
 					}
-					
+
 				}
-				
+
 				@Override
 				protected void done() {
 					animalComboBox.setValues(animals, "Animal...");
@@ -155,7 +155,7 @@ public abstract class InventoryPanel extends JPanel {
 			}
 		}
 	}
-	
+
 	public void search() {
 		if(containers==null) {
 			table.setRows(new ArrayList<Container>());
@@ -165,7 +165,7 @@ public abstract class InventoryPanel extends JPanel {
 			for (Container container : containers) {
 				if(animalComboBox.getSelection()!=null && !Biosample.getTopParents(container.getBiosamples()).contains(animalComboBox.getSelection())) continue;
 				if(contentComboBox.getSelection()!=null && !contentComboBox.getSelection().equals(container.getBlocDescription())) continue;
-				
+
 				filtered.add(container);
 			}
 			table.setRows(filtered);
@@ -173,7 +173,7 @@ public abstract class InventoryPanel extends JPanel {
 		}
 
 	}
-	
+
 
 	public abstract JComponent createEastPanel();
 

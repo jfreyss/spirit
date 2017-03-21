@@ -33,7 +33,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.study.Group;
@@ -61,7 +61,7 @@ public class ConfigTab extends WizardPanel {
 		
 		
 		//RandomizePanel
-		experimenterTextField.setText(Spirit.getUser()==null?"":Spirit.getUser().getUsername());
+		experimenterTextField.setText(SpiritFrame.getUser()==null?"":SpiritFrame.getUser().getUsername());
 		
 		//GroupPanel
 		refreshGroupPanel();
@@ -95,7 +95,7 @@ public class ConfigTab extends WizardPanel {
 	private void refreshGroupPanel() {
 		StringBuilder sb = new StringBuilder();
 		Set<Group> seen = new HashSet<Group>();
-		String user = Spirit.getUsername();
+		String user = SpiritFrame.getUsername();
 		for (Group group : dlg.getGroups()) {
 			
 			if(!dlg.getPhase().equals(group.getFromPhase())) continue;
@@ -146,7 +146,7 @@ public class ConfigTab extends WizardPanel {
 		
 		if(dlg.getStudy()!=null) {
 			String experimenter = dlg.getStudy().getMetadata().get("EXPERIMENTER");
-			if(experimenter==null || experimenter.length()==0) experimenter = Spirit.getUsername();
+			if(experimenter==null || experimenter.length()==0) experimenter = SpiritFrame.getUsername();
 			experimenterTextField.setText(experimenter);
 			licenseNoTextField.setText(dlg.getStudy().getMetadata().get("LICENSENO"));
 		}

@@ -31,8 +31,8 @@ import java.util.TreeSet;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.WorkbookUtil;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritcore.business.biosample.ActionTreatment;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -165,7 +165,7 @@ public class WeighingPerPhaseReport extends AbstractReport {
 				ActionTreatment t = getTreatment(h);
 				
 				col = 0;
-				set(sheet, line, col++, animal==null? null: animal.getInheritedGroupString(Spirit.getUsername()), Style.S_TD_LEFT);				
+				set(sheet, line, col++, animal==null? null: animal.getInheritedGroupString(SpiritFrame.getUsername()), Style.S_TD_LEFT);				
 				set(sheet, line, col++, animal==null? null: animal.getContainerId(), Style.S_TD_CENTER);				
 				set(sheet, line, col++, animal==null? null: animal.getTopParent().getSampleId(), Style.S_TD_CENTER);				
 				set(sheet, line, col++, animal==null? null: animal.getSampleName(), Style.S_TD_CENTER);	
@@ -208,7 +208,7 @@ public class WeighingPerPhaseReport extends AbstractReport {
 				
 				List<Integer> lines = group2Lines.get(group);
 				col = 0;
-				set(sheet, line, col++, group.getBlindedName(Spirit.getUsername()), Style.S_TD_LEFT);
+				set(sheet, line, col++, group.getBlindedName(SpiritFrame.getUsername()), Style.S_TD_LEFT);
 				set(sheet, line, col++, "" , Style.S_TD_LEFT);
 				set(sheet, line, col++, "" , Style.S_TD_LEFT);
 				set(sheet, line, col++, "" , Style.S_TD_LEFT);
@@ -251,7 +251,7 @@ public class WeighingPerPhaseReport extends AbstractReport {
 				
 				//Display data
 				col = 0;
-				set(sheet, line, col++, biosample.getInheritedGroupString(Spirit.getUsername()), Style.S_TD_LEFT);
+				set(sheet, line, col++, biosample.getInheritedGroupString(SpiritFrame.getUsername()), Style.S_TD_LEFT);
 				set(sheet, line, col++, biosample.getContainerId(), Style.S_TD_CENTER);				
 				set(sheet, line, col++, biosample.getTopParent().getSampleId(), Style.S_TD_CENTER);
 				set(sheet, line, col++, biosample.getSampleName(), Style.S_TD_CENTER);
@@ -314,7 +314,7 @@ public class WeighingPerPhaseReport extends AbstractReport {
 	
 	public static void main(String[] args)  {
 		try {
-			Spirit.setUser(DAOSpiritUser.loadUser("freyssj"));
+			SpiritFrame.setUser(DAOSpiritUser.loadUser("freyssj"));
 			WeighingPerPhaseReport wg = new WeighingPerPhaseReport();
 			wg.populateReport(DAOStudy.getStudyByStudyId("S-00677"));
 			wg.export(null);

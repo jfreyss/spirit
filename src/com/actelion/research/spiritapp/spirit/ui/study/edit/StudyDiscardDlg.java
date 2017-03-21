@@ -29,6 +29,7 @@ import javax.persistence.EntityTransaction;
 import javax.swing.JOptionPane;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -63,7 +64,7 @@ public class StudyDiscardDlg {
 		new LongTaskDlg("Deleting Study") {				
 			@Override
 			public void longTask() throws Exception {
-				JPAUtil.pushEditableContext(Spirit.getUser());
+				JPAUtil.pushEditableContext(SpiritFrame.getUser());
 				EntityTransaction txn = null;
 				try {
 					EntityManager session = JPAUtil.getManager();

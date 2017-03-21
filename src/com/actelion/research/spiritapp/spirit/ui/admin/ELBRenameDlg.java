@@ -39,7 +39,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -116,13 +116,13 @@ public class ELBRenameDlg extends JEscapeDialog {
 	
 	
 	private void eventOk() {
-		if(!Spirit.getUser().isSuperAdmin()) {
+		if(!SpiritFrame.getUser().isSuperAdmin()) {
 			JExceptionDialog.showError(ELBRenameDlg.this, "Only an admin can rename an ELB");
 			return;
 		}
 		try {
-			JPAUtil.pushEditableContext(Spirit.getUser());
-			String user = Spirit.getUser().getUsername();
+			JPAUtil.pushEditableContext(SpiritFrame.getUser());
+			String user = SpiritFrame.getUser().getUsername();
 			EntityManager em = JPAUtil.getManager();
 			EntityTransaction txn = null;
 			try {

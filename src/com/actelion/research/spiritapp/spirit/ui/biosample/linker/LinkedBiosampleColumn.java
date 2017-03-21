@@ -37,9 +37,9 @@ import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 
 public class LinkedBiosampleColumn extends AbstractLinkerColumn<Biosample> {
-	
-	private static SampleIdLabel sampleIdLabel = new SampleIdLabel();
-	
+
+	private static SampleIdLabel sampleIdLabel = new SampleIdLabel(true, true);
+
 	protected LinkedBiosampleColumn(BiosampleLinker linker) {
 		super(linker, Biosample.class, 70, 250);
 	}
@@ -54,7 +54,7 @@ public class LinkedBiosampleColumn extends AbstractLinkerColumn<Biosample> {
 	public void setValue(Biosample row, Biosample value) {
 		row.setMetadataBiosample(getType(), value);
 	}
-	
+
 	@Override
 	public void paste(Biosample row, String value) throws Exception {
 		if(!isEditable(row)) return;
@@ -66,16 +66,14 @@ public class LinkedBiosampleColumn extends AbstractLinkerColumn<Biosample> {
 			setValue(row, b);
 		}
 	}
-	
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
-		sampleIdLabel.setDisplayName(true);
-		sampleIdLabel.setDisplayGroup(true);
-		sampleIdLabel.setBiosample((Biosample) value);			
+		sampleIdLabel.setBiosample((Biosample) value);
 		sampleIdLabel.setHighlight(false);
-		return sampleIdLabel;	
+		return sampleIdLabel;
 	}
-	
+
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {
 		String typeName = getType().getParameters();
@@ -85,7 +83,7 @@ public class LinkedBiosampleColumn extends AbstractLinkerColumn<Biosample> {
 		}
 		return new BiosampleCellEditor(type);
 	}
-	
+
 	@Override
 	public boolean mouseDoubleClicked(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
 		Biosample v = (Biosample) value;

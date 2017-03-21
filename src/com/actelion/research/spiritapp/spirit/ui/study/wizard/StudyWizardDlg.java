@@ -60,6 +60,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyEditorPane;
@@ -178,7 +179,7 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 		
 		studyEditorPane.setDisplayResults(false);
 		
-		if(!SpiritRights.canAdmin(study, Spirit.getUser())) {
+		if(!SpiritRights.canAdmin(study, SpiritFrame.getUser())) {
 			JOptionPane.showMessageDialog(this, "You cannot edit this study", "Error", JOptionPane.ERROR_MESSAGE);
 		}
 		
@@ -212,7 +213,7 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 							
 							Document document = new Document(f);
 							document.setType(docType);
-							document.setCreUser(Spirit.getUser().getUsername());
+							document.setCreUser(SpiritFrame.getUser().getUsername());
 							study.getDocuments().add(document);
 							
 							refresh();
@@ -390,11 +391,11 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 						DAOStudy.persistStudies(session, Collections.singletonList(study), Spirit.askForAuthentication());
 						
 						if(getToUpdate().size()>0) {
-							DAOBiosample.persistBiosamples(session, getToUpdate(), Spirit.getUser());
+							DAOBiosample.persistBiosamples(session, getToUpdate(), SpiritFrame.getUser());
 						}
 
 						if(getToDelete().size()>0) {
-							DAOBiosample.deleteBiosamples(session, getToDelete(), Spirit.getUser());
+							DAOBiosample.deleteBiosamples(session, getToDelete(), SpiritFrame.getUser());
 						}
 							
 						txn.commit();

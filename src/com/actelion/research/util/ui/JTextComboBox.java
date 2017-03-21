@@ -51,10 +51,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
-import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.DefaultListModel;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JList;
@@ -74,16 +74,16 @@ import javax.swing.text.Document;
 
 /**
  * Component used to work like comboboxes but made editable.
- * If the user is not allowed to enter custom text, it works like the swingX autocomplete combobox. 
+ * If the user is not allowed to enter custom text, it works like the swingX autocomplete combobox.
  * If the user is allowed to enter his own text, it works like a textfield, with a popup coming suggesting the possible input.
- *  
+ *
  * @author freyssj
  *
  */
 @SuppressWarnings("rawtypes")
 public class JTextComboBox extends JCustomTextField {
-	
-	private TreeSet<String> choices = new TreeSet<String>(new Comparator<String>() {
+
+	private TreeSet<String> choices = new TreeSet<>(new Comparator<String>() {
 		@Override
 		public int compare(String o1, String o2) {
 			if(o1==null && o2==null) return 0;
@@ -92,24 +92,59 @@ public class JTextComboBox extends JCustomTextField {
 			return o1.compareToIgnoreCase(o2);
 		}
 	});
+
 	private JDialog popup;
-	private JList<String> list;
+	private final DefaultListModel<String> model = new DefaultListModel<>();
+	private final JList<String> list = new JList<>(model);
 	private ListCellRenderer renderer = new DefaultListCellRenderer();
-	private boolean allowTyping;
+	private boolean allowTyping = true;
+	private boolean progressiveFiltering = true;
 	private int push = 0;
 
 	private boolean preferMultipleChoices = false; //set by the user
 	private static final String DEFAULT_SEPARATORS = ",; ";
 	private String separators = DEFAULT_SEPARATORS;
-	
+
 	public JTextComboBox() {
 		this(true);
 
 	}
-	public JTextComboBox(boolean editable) {
+
+
+	public JTextComboBox(List<String> choices) {
+		this();
+		setChoices(choices);
+	}
+
+	@SuppressWarnings("unchecked")
+	public JTextComboBox(boolean allowTyping) {
 		super(JCustomTextField.ALPHANUMERIC);
-		setAllowTyping(editable);
-		
+		setAllowTyping(allowTyping);
+
+
+		list.setCellRenderer(getListCellRenderer());
+		list.setSelectionMode(preferMultipleChoices && separators.length()>0? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION: ListSelectionModel.SINGLE_SELECTION);
+		list.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				if(e.getValueIsAdjusting()) return;
+				if(push>0) return;
+				push++;
+				try {
+					setTextFromList();
+					if(!ctrlDown) {
+						hidePopup();
+						fireTextChanged();
+						fireActionPerformed();
+					}
+				} finally{
+					push--;
+				}
+			}
+		});
+
+		list.setAutoscrolls(true);
+
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -120,12 +155,16 @@ public class JTextComboBox extends JCustomTextField {
 
 		addFocusListener(new FocusAdapter() {
 			@Override
+			public void focusGained(FocusEvent e) {
+				selectAll();
+			}
+			@Override
 			public void focusLost(FocusEvent e) {
 				hidePopup();
 				fireTextChanged();
-			}					
+			}
 		});
-		
+
 		final Document doc = new MyCustomDocument() {
 			private String olderSel = null;
 			@Override
@@ -135,8 +174,8 @@ public class JTextComboBox extends JCustomTextField {
 				}
 				selectAndScroll();
 			}
-			
-			
+
+
 			@Override
 			public void insertString(int offs, String str, AttributeSet a) throws BadLocationException {
 				if(str==null) return;
@@ -149,10 +188,10 @@ public class JTextComboBox extends JCustomTextField {
 						String prefix = JTextComboBox.this.getText().substring(0, offs) + str;
 						selectWithPrefix(offs, prefix);
 					}
-			    } 
+				}
 				selectAndScroll();
 			}
-			
+
 			/**
 			 * Update the selection
 			 * @param offs
@@ -198,11 +237,11 @@ public class JTextComboBox extends JCustomTextField {
 					olderSel = prefix;
 					showPopup(); //show popup because the initial string does not match anything
 				}
-				
+
 			}
 		};
 		setDocument(doc);
-		
+
 		addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
@@ -216,7 +255,7 @@ public class JTextComboBox extends JCustomTextField {
 				} else if(e.getKeyCode()==34) { //down key
 					dir = 10;
 				}
-				
+
 				if(dir!=0) {
 					push++;
 					try {
@@ -249,7 +288,7 @@ public class JTextComboBox extends JCustomTextField {
 						e.consume();
 					}
 				} else if(e.getKeyChar()==8) {
-					if(!isAllowTyping()) {					
+					if(!isAllowTyping()) {
 						//move the caret
 						int caret = Math.min(getSelectionStart(), getCaretPosition())-1;
 						if(caret<=0) {
@@ -271,19 +310,19 @@ public class JTextComboBox extends JCustomTextField {
 				}
 			}
 		});
-		
+
 		addAncestorListener(new AncestorListener(){
 			@Override
-            public void ancestorAdded(AncestorEvent event){ hidePopup();}
+			public void ancestorAdded(AncestorEvent event){ hidePopup();}
 			@Override
-            public void ancestorRemoved(AncestorEvent event){ hidePopup();}
+			public void ancestorRemoved(AncestorEvent event){ hidePopup();}
 			@Override
-            public void ancestorMoved(AncestorEvent event){ 
+			public void ancestorMoved(AncestorEvent event){
 				hidePopup();
-            }
+			}
 		});
-		
-		final AWTEventListener listener = new AWTEventListener() {			
+
+		final AWTEventListener listener = new AWTEventListener() {
 			@Override
 			public void eventDispatched(AWTEvent event) {
 				if((event instanceof MouseEvent ) && ((MouseEvent)event).getID()==MouseEvent.MOUSE_CLICKED) {
@@ -294,16 +333,15 @@ public class JTextComboBox extends JCustomTextField {
 				if((event instanceof KeyEvent)) {
 					//is ctrl down?
 					ctrlDown = ((KeyEvent) event).isControlDown() ||  ((KeyEvent) event).isShiftDown();
-					
+
 					//consume enter, to avoid closing
 					if(((KeyEvent) event).getKeyCode()==10 && (popup!=null && popup.isVisible())) ((KeyEvent) event).consume();
 				}
 			}
 		};
-		
-		
+
+
 		addFocusListener(new FocusListener() {
-			
 			@Override
 			public void focusGained(FocusEvent e) {
 				Toolkit.getDefaultToolkit().addAWTEventListener(listener, AWTEvent.MOUSE_EVENT_MASK | AWTEvent.KEY_EVENT_MASK);
@@ -312,18 +350,15 @@ public class JTextComboBox extends JCustomTextField {
 			public void focusLost(FocusEvent e) {
 				Toolkit.getDefaultToolkit().removeAWTEventListener(listener);
 			}
-			
-
 		});
-		
+
 		setMargin(new Insets(0, 0, 0, 12));
 	}
-	
+
 	public void setMultipleChoices(boolean multipleMode) {
 		this.preferMultipleChoices = multipleMode;
 	}
-	
-	
+
 	public void testAllowMultipleMode() {
 		Collection<String> choices = getChoices();
 		if(preferMultipleChoices && choices!=null && choices.size()>0) {
@@ -339,7 +374,7 @@ public class JTextComboBox extends JCustomTextField {
 			}
 		}
 	}
-	
+
 	@Override
 	public void setText(String t) {
 		push++;
@@ -352,20 +387,20 @@ public class JTextComboBox extends JCustomTextField {
 			push--;
 		}
 	}
-	
+
+	/**
+	 * Is the user allow to enter a text, which is not in the list of choices
+	 * @param allowTyping
+	 */
 	public void setAllowTyping(boolean allowTyping) {
 		this.allowTyping = allowTyping;
-		setBackground(allowTyping?Color.WHITE: new Color(245,245,245));
+		setBackground(allowTyping?Color.WHITE: UIUtils.WHITESMOKE);
 	}
-	
+
 	public boolean isAllowTyping() {
 		return allowTyping;
 	}
-	
-	public JTextComboBox(List<String> choices) {
-		this();
-		setChoices(choices);
-	}
+
 
 	/**
 	 * Draw with a Nimbus style
@@ -377,7 +412,7 @@ public class JTextComboBox extends JCustomTextField {
 		UIUtils.applyDesktopProperties(g);
 		super.paint(g);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		
+
 		Color fg = Color.BLACK;
 		if(UIManager.getLookAndFeel().getName().contains("!!Nimbus")) {
 			Color bg0 = UIUtils.getColor(246, 248, 250);
@@ -403,15 +438,17 @@ public class JTextComboBox extends JCustomTextField {
 		}
 		g.setColor(fg);
 		g.fillPolygon(new int[] {getWidth()-12, getWidth()-6, getWidth()-9}, new int[] {getHeight()/2-3, getHeight()/2-3, getHeight()/2+3}, 3 );
-		
+
 	}
-	
 
-
+	/**
+	 * Can be overriden by classes to get choices on popup opening
+	 * @return
+	 */
 	public Collection<String> getChoices() {
 		return choices;
 	}
-	
+
 	/**
 	 * Set the choices.
 	 * Disable multiple choices if some have spaces
@@ -422,42 +459,64 @@ public class JTextComboBox extends JCustomTextField {
 			this.choices.clear();
 			if(choices!=null) this.choices.addAll(choices);
 		}
-		
+
 		//Check if we can allow multiplechoices
 		testAllowMultipleMode();
 	}
-	
+
 	public ListCellRenderer getListCellRenderer() {
 		return renderer;
 	}
+
 	public void setListCellRenderer(ListCellRenderer renderer) {
 		this.renderer = renderer;
 	}
-	
+
 	public void hidePopup() {
 		if(popup!=null) {
 			popup.dispose();
 			repaint();
 		}
 	}
-	
+
 	/**
 	 * Scroll to the current selected token
 	 */
 	private void selectAndScroll() {
+
+		if(progressiveFiltering) {
+			String[] typed = splitText(getText().substring(0, getCaretPosition()));
+			String last = typed.length>0? typed[typed.length-1]: null;
+			Collection<String> choices = getChoices();
+			model.clear();
+			model.addElement(" ");
+			for (String s : choices) {
+				if(getCaretPosition()==getText().length() || last==null || s.startsWith(last)) {
+					model.addElement(s);
+				}
+			}
+		} else {
+			model.clear();
+			model.addElement(" ");
+			for (String s : choices) {
+				model.addElement(s);
+			}
+		}
+
 		if(popup==null || !popup.isVisible()) return;
+
 		try {
 			push++;
 
 			String text = getText();
-			TreeSet<String> tokens = new TreeSet<String>(Arrays.asList(splitText(text)));
+			TreeSet<String> tokens = new TreeSet<>(Arrays.asList(splitText(text)));
 			list.clearSelection();
-			
+
 
 			int firstIndex = -1;
 			int lastIndex = -1;
 			for (int i = 0; i < list.getModel().getSize(); i++) {
-				String s = (String) list.getModel().getElementAt(i);
+				String s = list.getModel().getElementAt(i);
 				if(s!=null && tokens.contains(s)) {
 					list.getSelectionModel().addSelectionInterval(i, i);
 					if(firstIndex<0) {
@@ -467,7 +526,7 @@ public class JTextComboBox extends JCustomTextField {
 					}
 				}
 			}
-			
+
 			if(firstIndex>=0) {
 				int v1 = list.getFirstVisibleIndex();
 				int v2 = list.getLastVisibleIndex();
@@ -480,96 +539,66 @@ public class JTextComboBox extends JCustomTextField {
 		} finally {
 			push--;
 		}
-		
+
 	}
-	
+
 	@Override
 	public Dimension getMinimumSize() {
 		return getPreferredSize();
 	}
 
-	
+
 	private boolean ctrlDown = false;
-	@SuppressWarnings("unchecked")
 	public void showPopup() {
-		if(!isVisible() || (popup!=null && popup.isVisible())) {
-			selectAndScroll();
-			return;
-		}
-		
 		final Point p = getLocationOnScreen();
 		testAllowMultipleMode();
-		
-		//Create the list of suggestions
-		final Vector<String> v = new Vector<String>();
-		v.add(" "); //Use a space for the rendering, the returned value will be trimmed anyways		
-		v.addAll(getChoices());
-		list = new JList<String>(v);
-		list.setCellRenderer(getListCellRenderer());
-		list.setSelectionMode(preferMultipleChoices && separators.length()>0? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION: ListSelectionModel.SINGLE_SELECTION);
-		
-		list.addListSelectionListener(new ListSelectionListener() {						
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if(e.getValueIsAdjusting()) return;
-				if(push>0) return;
-				push++;
-				try {
-					setTextFromList();
-					if(!ctrlDown) {
-						hidePopup();
-						fireTextChanged();
-						fireActionPerformed();
-					}
-				} finally{
-					push--;
-				}
-			}
-		});
-		
-		list.setAutoscrolls(true);
-	
-		
+		selectAndScroll();
+
+		if(!isVisible() || (popup!=null && popup.isVisible())) {
+			return;
+		}
+
+
 		final JScrollPane scrollPane = new JScrollPane(list);
 		scrollPane.setPreferredSize(new Dimension(Math.max(100, Math.max(list.getPreferredSize().width+30, getWidth())), Math.min(list.getPreferredSize().height+15, 330) ));
 		scrollPane.setBorder(null);
-		
+
 		JCustomLabel infoPanel = new JCustomLabel("Use Ctrl for multiple-selection", FastFont.SMALL);
 		infoPanel.setVisible(list.getSelectionMode()==ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		
-		
-		final JPanel contentPane = UIUtils.createBox(scrollPane, null, infoPanel, null, null);		
+
+
+		final JPanel contentPane = UIUtils.createBox(scrollPane, null, infoPanel, null, null);
 		contentPane.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-		
+
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				
-				final WindowFocusListener wl = new WindowFocusListener() {									
-					@Override public void windowLostFocus(WindowEvent e) {hidePopup();}					
+
+				final WindowFocusListener wl = new WindowFocusListener() {
+					@Override public void windowLostFocus(WindowEvent e) {hidePopup();}
 					@Override public void windowGainedFocus(WindowEvent e) {}
 				};
-				
+
 				if(popup!=null) popup.dispose();
 				if(getTopLevelAncestor() instanceof JDialog) {
 					if(popup==null) ((JDialog)getTopLevelAncestor()).addWindowFocusListener(wl);
-					popup = new JDialog((JDialog)getTopLevelAncestor(), false);					
+					popup = new JDialog((JDialog)getTopLevelAncestor(), false);
 				} else if(getTopLevelAncestor() instanceof JFrame) {
 					if(popup==null) ((JFrame)getTopLevelAncestor()).addWindowFocusListener(wl);
-					popup = new JDialog((JFrame)getTopLevelAncestor(), false);					
+					popup = new JDialog((JFrame)getTopLevelAncestor(), false);
 				} else {
 					return;
 				}
-				
-					
+
+
 				popup.setUndecorated(true);
 				popup.setContentPane(contentPane);
 				popup.setAlwaysOnTop(true);
 				popup.pack();
-				
-				
-				
-				
+
+
+
+
 				int x = p.x;
 				int y = p.y+getBounds().height;
 				if(y+popup.getHeight()>Toolkit.getDefaultToolkit().getScreenSize().height) {
@@ -582,40 +611,43 @@ public class JTextComboBox extends JCustomTextField {
 				popup.setFocusableWindowState(false);
 				popup.setLocation(x, y);
 				popup.setVisible(true);
-				
+
 				selectAndScroll();
 			}
-		});		
+		});
 		repaint();
 	}
-	
-	
-	
+
+
+
 	private void setTextFromList() {
 		String text = getText();
 		if(list==null || popup==null || !popup.isVisible()) return;
 		if(preferMultipleChoices && separators.length()>0) {
 
 			//Find current entered tokens
+			String[] enteredText = splitText(text);
 			Set<String> tokens = new TreeSet<>();
-			for(String t: splitText(text)) tokens.add(t);
-	
-			
+			if(ctrlDown || list.getSelectedIndices().length==0) {
+				for(String t: enteredText) tokens.add(t);
+			}
+
+
 			//If an existing token is no more selected -> remove it
 			//If a non existing token is selected -> add it
 			int[] indices = list.getSelectedIndices();
 			for (int i = 0; i < list.getModel().getSize(); i++) {
-				String s = ((String) list.getModel().getElementAt(i)).trim();
+				String s = list.getModel().getElementAt(i).trim();
 				if(s.length()==0) continue;
-	
+
 				boolean selected = Arrays.binarySearch(indices, i)>=0;
-				if(tokens.contains(s.trim())) {
-					if(!selected) tokens.remove(s.trim());
-				} else if(selected) {				
+				if(!selected && tokens.contains(s)) {
+					tokens.remove(s);
+				} else if(selected && !tokens.contains(s)) {
 					tokens.add(s);
 				}
 			}
-			
+
 			StringBuilder sb = new StringBuilder();
 			for (String s : tokens) {
 				sb.append((sb.length()>0? separators.charAt(0)+" ": "")+s);
@@ -623,22 +655,22 @@ public class JTextComboBox extends JCustomTextField {
 			setText(sb.toString());
 		} else {
 			if(list.getSelectedValue()!=null) {
-				setText((String) list.getSelectedValue()); 
+				setText(list.getSelectedValue());
 			}
 		}
 
 	}
-	
+
 	public static void main(String[] args) {
-		
+
 		try {
-			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");			
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
 			UIManager.put("nimbusSelectionBackground", new Color(173,207,231));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		
+
 		List<String> choices = new ArrayList<String>();
 		choices.add("0.OK");
 		choices.add("1.NOK");
@@ -647,7 +679,7 @@ public class JTextComboBox extends JCustomTextField {
 		choices.add("3.unknown");
 		choices.add("Sol1");
 		choices.add("Sol2");
-		
+
 		List<String> choices2 = new ArrayList<String>();
 		choices2.add("IL-1");
 		choices2.add("IL-1 srf");
@@ -655,7 +687,7 @@ public class JTextComboBox extends JCustomTextField {
 		choices2.add("Igh 1");
 		choices2.add("Igh2");
 		choices2.add("Srf");
-		
+
 		List<String> choices3 = new ArrayList<String>();
 		for (int i = 0; i < 200; i++) {
 			String s = "";
@@ -665,7 +697,7 @@ public class JTextComboBox extends JCustomTextField {
 			}
 			choices3.add(s);
 		}
-		
+
 		JTextComboBox cb1 = new JTextComboBox(false);
 		JTextComboBox cb2 = new JTextComboBox(false);
 		JTextComboBox cb3 = new JTextComboBox(false);
@@ -679,8 +711,8 @@ public class JTextComboBox extends JCustomTextField {
 		cb4.setChoices(choices);
 		cb5.setChoices(choices2);
 		cb6.setChoices(choices3);
-		
-		JFrame testFrame = new JFrame();		
+
+		JFrame testFrame = new JFrame();
 		JPanel contentPane = new JPanel(new GridLayout(2, 3, 5, 5));
 		contentPane.add(cb1);
 		contentPane.add(cb2);
@@ -688,7 +720,7 @@ public class JTextComboBox extends JCustomTextField {
 		contentPane.add(cb4);
 		contentPane.add(cb5);
 		contentPane.add(cb6);
-		
+
 		if(true) {
 			cb1.setMultipleChoices(true);
 			cb2.setMultipleChoices(true);
@@ -697,17 +729,18 @@ public class JTextComboBox extends JCustomTextField {
 			cb5.setMultipleChoices(true);
 			cb6.setMultipleChoices(true);
 		}
-		
+
 		testFrame.setContentPane(UIUtils.createBox(contentPane, UIUtils.createHorizontalTitlePanel("Test of Comboboxes")));
 		testFrame.pack();
 		testFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		testFrame.setVisible(true);
-		
+
 	}
-	
+
 
 	/**
-	 * To be used when escapeSpaceWithQuotes=true
+	 * Split the text for multiplechoices, based on the used separator
+	 * Otherwise return the text
 	 * @param text
 	 * @return
 	 */
@@ -722,8 +755,8 @@ public class JTextComboBox extends JCustomTextField {
 			return text.length()>0? new String[] {text}: new String[0];
 		}
 	}
-	
-	
+
+
 	/**
 	 * To be used when escapeSpaceWithQuotes=true
 	 */
@@ -744,15 +777,15 @@ public class JTextComboBox extends JCustomTextField {
 	public String[] getSelectionArray() {
 		return splitText(getText());
 	}
-	
+
 
 	public void setSelectionArray(String[] tokens) {
 		setText(flattenTokens(tokens));
 	}
-	
 
-	
-	
+
+
+
 	///Util function copied from dd_spirit
 	private static String[] split(String s, String separators) {
 		if(s==null) return new String[0];
@@ -772,12 +805,12 @@ public class JTextComboBox extends JCustomTextField {
 				}
 			} else if(!inQuote && separators.indexOf(token)>=0) {
 				if(sb.toString().trim().length()>0) res.add(sb.toString().trim());
-				sb.setLength(0);    			
+				sb.setLength(0);
 			} else {
 				sb.append(token);
-			}    				
+			}
 		}
 		if(sb.toString().trim().length()>0) res.add(sb.toString().trim());
 		return res.toArray(new String[res.size()]);
-	}	
+	}
 }

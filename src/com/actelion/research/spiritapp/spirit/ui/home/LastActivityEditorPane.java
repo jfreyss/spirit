@@ -44,7 +44,7 @@ import javax.swing.event.HyperlinkListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyActions;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyEditorPane;
@@ -78,7 +78,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 	private int days;
 	private final static Hashtable<String, Image> imageCache = new Hashtable<>();
 	
-	public LastActivityEditorPane(final Spirit spirit) {
+	public LastActivityEditorPane(final SpiritFrame spirit) {
 		super(imageCache);
 		setOpaque(false);
 		setEditable(false);
@@ -274,7 +274,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 		Map<Study, Map<Biotype, Triple<Integer, String, Date>>> countBio = DAOStudy.countSamplesByStudyBiotype(studies);
 		Map<Study, Map<Test, Triple<Integer, String, Date>>> countRes = DAOStudy.countResultsByStudyTest(studies);
 		
-		SpiritUser user = Spirit.getUser();
+		SpiritUser user = SpiritFrame.getUser();
 		for(Study s: studies) {
 			Pair<String, Date> last = getLastUserIdDate(s, countBio, countRes);
 			
@@ -370,8 +370,8 @@ public class LastActivityEditorPane extends ImageEditorPane {
 			
 			List<Study> studies = new ArrayList<>();
 			for(Study s: DAOStudy.getRecentChanges(date)) {
-				if(showExpertOnly && !SpiritRights.canBlind(s, Spirit.getUser())) continue;
-				if(!showExpertOnly && !SpiritRights.canView(s, Spirit.getUser())) continue;
+				if(showExpertOnly && !SpiritRights.canBlind(s, SpiritFrame.getUser())) continue;
+				if(!showExpertOnly && !SpiritRights.canView(s, SpiritFrame.getUser())) continue;
 				studies.add(s);				
 			}
 			StringBuilder sb = new StringBuilder();
@@ -395,7 +395,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 			}
 			
 			StringBuilder sb2 = new StringBuilder();
-			sb2.append("<table width=100%><tr><td width=50%>Welcome, <b>" + MiscUtils.removeHtml(Spirit.getUsername()) + "</b> <br>here are the recent changes made to the database:</td>");
+			sb2.append("<table width=100%><tr><td width=50%>Welcome, <b>" + MiscUtils.removeHtml(SpiritFrame.getUsername()) + "</b> <br>here are the recent changes made to the database:</td>");
 			sb2.append("<td width=50% style='white-space:nowrap;text-align:right'>(");
 			for(int d: new int[]{1,3,7,15,31,90,365}) {
 				if(d==days) {

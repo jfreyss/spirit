@@ -409,14 +409,18 @@ public class PivotTemplate implements Serializable, Cloneable {
 		return key.toString();
 	}
 	
-	public static boolean isPopulated(PivotItem discrimator, List<Result> results) {
+	public static boolean hasMoreOrEqualThanNValues(PivotItem discrimator, List<Result> results, int n) {
+		Set<String> values = new HashSet<>();
 		for(Result result: results) {
 			for(ResultValue rv: result.getOutputResultValues()) {
 			
 				if(rv.getValue()==null || rv.getValue().length()==0) continue;
 				
-				String key = discrimator.getTitle(rv);
-				if(key!=null && key.length()>0) return true;
+				String value = discrimator.getTitle(rv);
+				if(value!=null && value.length()>0) {
+					values.add(value);
+					if(values.size()>=n) return true;
+				}
 			}
 		}
 		return false;
@@ -428,11 +432,12 @@ public class PivotTemplate implements Serializable, Cloneable {
 	
 	/**
 	 * Checks if the given discriminator helps to categorizes more than 10% of the results
-	 * @param discrimator
+	 * @param item
 	 * @param results
+	 * @param percentage
 	 * @return
 	 */
-	public boolean isDiscriminating(PivotItem discrimator, List<Result> results, double percentage) {
+	public boolean isDiscriminating(PivotItem item, List<Result> results, double percentage) {
 		Set<String> keysWithout = new HashSet<>();
 		Set<String> keysWith = new HashSet<>();
 
@@ -444,13 +449,12 @@ public class PivotTemplate implements Serializable, Cloneable {
 				if(rv.getValue()==null || rv.getValue().length()==0) continue;
 				
 				String key = getRowKey(rv) + "|" + getColKey(rv) + "|" + getCellKey(rv);
-				String key2 = key + "|" + discrimator.getTitle(rv);
+				String key2 = key + "|" + item.getTitle(rv);
 				if(keysWithout.contains(key)) {
 					if(!keysWith.contains(key2)) {
+						//The item will led to more than 2 new keys, and it is threrefore discriminating
+						if(percentage==0) return true;
 						count++;
-						if(percentage==0) {
-							return true;
-						}
 					}
 					keysWith.add(key2);
 				} else {

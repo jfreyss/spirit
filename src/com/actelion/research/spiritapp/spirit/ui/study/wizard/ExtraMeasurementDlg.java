@@ -37,6 +37,7 @@ import javax.swing.JPanel;
 import com.actelion.research.spiritapp.spirit.ui.result.TestChoice;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
+import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
 import com.actelion.research.spiritcore.business.study.Measurement;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JEscapeDialog;
@@ -44,24 +45,24 @@ import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 
 public class ExtraMeasurementDlg extends JEscapeDialog {
-	
+
 	private final TestChoice testChoice = new TestChoice();
 	private final JPanel centerPanel = new JPanel(new BorderLayout());
 	private final JButton okButton = new JButton("OK");
 	private final List<JCustomTextField> tas = new ArrayList<JCustomTextField>();
-	private Measurement extraMeasurement; 
-	
+	private Measurement extraMeasurement;
+
 	public ExtraMeasurementDlg() {
 		super(UIUtils.getMainFrame(), "Extra Measurement", true);
-		
-		testChoice.addActionListener(new ActionListener() {			
+
+		testChoice.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				initUI();
 			}
 		});
 		okButton.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -71,36 +72,36 @@ public class ExtraMeasurementDlg extends JEscapeDialog {
 				}
 			}
 		});
-		
-		
-		
+
+
+
 		JPanel contentPane = new JPanel(new BorderLayout());
 		contentPane.add(BorderLayout.NORTH, UIUtils.createHorizontalBox(new JLabel("Test: "), testChoice, Box.createHorizontalGlue()));
 		contentPane.add(BorderLayout.CENTER, centerPanel);
 		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
-		
+
 		setContentPane(contentPane);
 		initUI();
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setVisible(true);
 
-		
+
 	}
-	
+
 	private void initUI() {
 		Test t = testChoice.getSelection();
-		int n = t==null?0: t.getInputAttributes().size();
-		List<Component> comps = new ArrayList<Component>();
+		int n = t==null?0: t.getAttributes(OutputType.INPUT).size();
+		List<Component> comps = new ArrayList<>();
 		while(tas.size()<n) {
 			tas.add(new JCustomTextField());
 		}
 		while(tas.size()>n) {
 			tas.remove(n);
 		}
-		
+
 		for (int i = 0; i < Math.max(2, n); i++) {
-			TestAttribute ta = t==null || i>=n? null: t.getInputAttributes().get(i);
+			TestAttribute ta = t==null || i>=n? null: t.getAttributes(OutputType.INPUT).get(i);
 			if(ta==null) {
 				comps.add(new JLabel());
 				comps.add(new JLabel());
@@ -109,12 +110,12 @@ public class ExtraMeasurementDlg extends JEscapeDialog {
 				comps.add(tas.get(i));
 			}
 		}
-		
-		
+
+
 		centerPanel.removeAll();
 		centerPanel.add(BorderLayout.CENTER, UIUtils.createTable(comps.toArray(new Component[0])));
 		pack();
-		
+
 	}
 	private void eventOk() throws Exception {
 		Test t = testChoice.getSelection();
@@ -123,11 +124,11 @@ public class ExtraMeasurementDlg extends JEscapeDialog {
 		for (int i = 0; i < parameters.length; i++) {
 			parameters[i] = tas.get(i).getText();
 		}
-		
+
 		extraMeasurement = new Measurement(t, parameters);
 		dispose();
 	}
-	
+
 	public Measurement getExtraMeasurement() {
 		return extraMeasurement;
 	}

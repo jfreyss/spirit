@@ -32,6 +32,7 @@ import java.util.TreeSet;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
+import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
 import com.actelion.research.spiritcore.util.ListHashMap;
 import com.actelion.research.spiritcore.util.Pair;
 
@@ -42,32 +43,32 @@ public class PivotHelper {
 		public ResultMap(Result r) {
 			super();
 			TestAttribute outAtt = r.getTest().getOutputAttributes().get(0);
-			
+
 			if(r.getPhase()!=null || (r.getBiosample()!=null && r.getBiosample().getInheritedStudy()!=null)) {
 				String phase = r.getPhase()==null?null: r.getPhase().getShortName();
 				if(phase!=null && phase.length()>0) put("Phase", phase);
 				else put("Phase", "");
 			}
-			
+
 			String sampleId = r.getBiosample()==null?null: r.getBiosample().getSampleId();
 			if(sampleId!=null && sampleId.length()>0) put("SampleId", sampleId);
-			
-			for (TestAttribute inputAtt : r.getTest().getInputAttributes()) {
+
+			for (TestAttribute inputAtt : r.getTest().getAttributes(OutputType.INPUT)) {
 				String input = r.getResultValue(inputAtt).getValue()==null?"": r.getResultValue(inputAtt).getValue();
-				put(inputAtt.getName(), input);				
+				put(inputAtt.getName(), input);
 			}
-			
+
 			String output = r.getResultValue(outAtt).getValue();
 			if(output!=null && output.length()>0) put("output", output);
 		}
 	}
-	
+
 	private static class RowElement extends ArrayList<String> implements Comparable<RowElement> {
 		public RowElement(ResultMap item, List<String> headerKeyCols) {
 			for (String k : headerKeyCols) {
-				add(item.get(k)); 
+				add(item.get(k));
 			}
-		}		
+		}
 		@Override
 		public int compareTo(RowElement o) {
 			for (int i = 0; i < size() && i<o.size(); i++) {
@@ -77,44 +78,44 @@ public class PivotHelper {
 			return 0;
 		}
 	}
-	
+
 	private List<ResultMap> items = new ArrayList<>();
-	
-	
+
+
 	public PivotHelper(Collection<Result> results) {
-		for (Result result : results) {	
+		for (Result result : results) {
 			items.add(new ResultMap(result));
 		}
 	}
-	
+
 	public List<String> getPivotableColumns() {
 		Set<String> res = new LinkedHashSet<>();
 		for (ResultMap item : items) {
-			res.addAll(item.keySet());			
+			res.addAll(item.keySet());
 		}
 		res.remove("output");
 		return new ArrayList<>(res);
 	}
-	
+
 	/**
 	 * Pivot the items like:
-	 * 
-	 * <pre> 
+	 *
+	 * <pre>
 	 * headerKeyCols			headerPivotCols
 	 * sampleId	input			phase1	phase2	phase3
 	 * blah		blah			output	output	output
 	 * blah		blah			output	output	output
 	 * </pre>
-	 * 
+	 *
 	 * @param pivot
 	 * @return
 	 * @throws Exception
 	 */
 	public String[][] pivot(String pivot) throws Exception {
-		
+
 		List<String> headerKeyCols = getPivotableColumns();
-		
-		
+
+
 		if(!headerKeyCols.contains(pivot)) throw new Exception("You can only pivot on "+headerKeyCols);
 		headerKeyCols.remove(pivot);
 		if(headerKeyCols.contains("SampleId")) {
@@ -124,34 +125,34 @@ public class PivotHelper {
 
 		//
 		Set<String> headerPivotCols = new TreeSet<>();
-		
+
 		Set<RowElement> rowElts = new TreeSet<>();
 		ListHashMap<Pair<RowElement, String>, String> vals = new ListHashMap<>();
 
 		//Analyze the data
 		for (ResultMap item : items) {
-			
-			String pivotValue = item.get(pivot);			
+
+			String pivotValue = item.get(pivot);
 			if(pivotValue==null) pivotValue = "";
 			RowElement rowElement = new RowElement(item, headerKeyCols);
-			
+
 			rowElts.add(rowElement);
 			headerPivotCols.add(pivotValue);
-			
+
 			vals.add(new Pair<RowElement, String>(rowElement, pivotValue), item.get("output"));
 		}
-		
+
 		///////////////////////////////////////////////////////
 		//Create the Headers for the pivot table
 		///////////////////////////////////////////////////////
 		List<List<String>> rows = new ArrayList<List<String>>();
-		List<String> row = new ArrayList<String>(); 
+		List<String> row = new ArrayList<String>();
 		rows.add(row);
 		//Add the items shown by row
 		for (String s : headerKeyCols) row.add(s);
 		//Add the items shown by col
 		for (String s : headerPivotCols) row.add(s);
-		
+
 		///////////////////////////////////////////////////////
 		//Data
 		///////////////////////////////////////////////////////
@@ -159,24 +160,24 @@ public class PivotHelper {
 			boolean mustNext = true;
 			for(int index = 0; mustNext; index++) {
 				mustNext = false;
-				
-				row = new ArrayList<String>(); 
+
+				row = new ArrayList<String>();
 				rows.add(row);
 				for (String s : rowElt) row.add(s);
 
 				for (String s : headerPivotCols) {
 					List<String> vs = vals.get(new Pair<RowElement, String>(rowElt, s));
 					if(vs!=null && index<vs.size()) {
-						row.add(vs.get(index));										
+						row.add(vs.get(index));
 						if(index+1<vs.size()) mustNext = true;
-					} else {						
-						row.add("");				
+					} else {
+						row.add("");
 					}
 				}
 			}
 		}
-		
+
 		return POIUtils.convertTable(rows);
 	}
-	
+
 }

@@ -310,8 +310,7 @@ public class PivotCell implements Comparable<PivotCell> {
 				PivotCellKey key = getCellKey(table.getTemplate(), v);
 				PivotCell values = nestedMap.get(key);
 				if(values==null) {
-					values = new PivotCell(table);
-					nestedMap.put(key, values);
+					nestedMap.put(key, values = new PivotCell(table));
 				}
 				values.values.add(v);			
 			}
@@ -322,11 +321,11 @@ public class PivotCell implements Comparable<PivotCell> {
 	}	
 
 	private static PivotCellKey getCellKey(PivotTemplate template, ResultValue rv) {
-		StringBuilder sb = new StringBuilder();
 		Result r = rv.getResult();
 		if(r==null) return new PivotCellKey(null, "");		
 		
 		Phase phase = null;
+		StringBuilder sb = new StringBuilder();
 		for (PivotItem item : template.getPivotItems(Where.ASCELL)) {
 			if(phase==null && item.getClassifier()==PivotItemClassifier.STUDY_PHASE) {
 				phase = rv.getResult().getInheritedPhase(); 

@@ -19,12 +19,13 @@
  * @author Joel Freyss
  */
 
-package com.actelion.research.spiritapp.spirit.ui.study;
+package com.actelion.research.spiritapp.spirit.ui;
 
 import com.actelion.research.spiritcore.business.study.Study;
 
-public interface IStudy {
-
-	public Study getStudy();
+public interface IStudyTab {
+	
 	public void setStudy(Study study);
+	public Study getStudy();
+		
 }

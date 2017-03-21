@@ -59,22 +59,22 @@ import com.actelion.research.util.ui.exceltable.ExcelTableModel;
 
 public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 
-	private Biotype type;	
-	
-	private boolean compactView = false; 
-	
+	private Biotype type;
+
+	private boolean compactView = false;
+
 	public EditBiosampleTableModel() {
 		setBiotype(null);
 	}
-	
+
 	public void setCompactView(boolean compactView) {
 		this.compactView = compactView;
 	}
-	
+
 	public boolean isCompactView() {
 		return compactView;
 	}
-	
+
 	/**
 	 * Should be called after setrows
 	 * @param type
@@ -83,14 +83,14 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 		this.type = type;
 		initColumns();
 	}
-		
+
 	public void initColumns() {
 		//Analyze the data
 		boolean hasParents2 = false;
 		boolean hasScanPos = false;
 		boolean hasAttachedSamples = false;
 		boolean hasStudiedSamples = false;
-		Set<Biosample> myRows = new HashSet<>(getRows());				
+		Set<Biosample> myRows = new HashSet<>(getRows());
 		for (Biosample b : getRows()) {
 			if(b.getParent()!=null && b.getParent().getParent()!=null && !myRows.contains(b.getParent().getParent())) {
 				hasParents2 = true;
@@ -107,14 +107,14 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 		}
 
 		List<Column<Biosample, ?>> defaultColumns = new ArrayList<>();
-		
+
 		//Generic Elements
 		defaultColumns.add(COLUMN_ROWNO);
-		
+
 		if(hasScanPos) {
 			defaultColumns.add(new ScannedPosColumn());
 		}
-		
+
 		//StudyId
 		if(hasStudiedSamples) {
 			defaultColumns.add(new StudyIdColumn());
@@ -133,75 +133,75 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 			if(type.getAmountUnit()!=null) defaultColumns.add(new ContainerAmountColumn(type));
 		} else {
 			//When sampling or other type, we condensed the container's infos in one column
-			defaultColumns.add(new ContainerFullColumn());				
+			defaultColumns.add(new ContainerFullColumn());
 		}
 
 		//Study Elements
 		if(type!=null && type.getCategory()==BiotypeCategory.LIVING || hasAttachedSamples) {
 			defaultColumns.add(new StudyGroupColumn(this));
 			defaultColumns.add(new StudySubGroupColumn());
-		} 
+		}
 		if(type==null || type.getCategory()==BiotypeCategory.SOLID || type.getCategory()==BiotypeCategory.LIQUID) {
 			defaultColumns.add(new StudyPhaseColumn());
 		}
-		
+
 		if(type!=null && type.getCategory()==BiotypeCategory.PURIFIED && type.getParent()==null) {
 			//Don't add parents columns
 		} else if(!compactView) {
 			//Top
-			if(hasParents2) {		
+			if(hasParents2) {
 				defaultColumns.add(new StudyTopSampleIdColumn());
 			}
-			
+
 			//Parent (must always be displayed except for living)
 			if(type==null || type.getCategory()!=BiotypeCategory.LIVING) {
-				defaultColumns.add(new ParentBiosampleColumn(this));			
+				defaultColumns.add(new ParentBiosampleColumn(this));
 			}
 		}
 
-		Column<Biosample, String> sampleIdColumn = new SampleIdColumn(new BiosampleLinker(LinkerType.SAMPLEID, type), false, false);
-		defaultColumns.add(sampleIdColumn);		
+		Column<Biosample, String> sampleIdColumn = new SampleIdColumn(new BiosampleLinker(LinkerType.SAMPLEID, type), false, true);
+		defaultColumns.add(sampleIdColumn);
 		setTreeColumn(sampleIdColumn);
-		
+
 		if(type!=null && type.getSampleNameLabel()!=null && !compactView) {
 			defaultColumns.add(LinkerColumnFactory.create(new BiosampleLinker(LinkerType.SAMPLENAME, type)));
 		}
 
-		if(type!=null && !compactView) {			
+		if(type!=null && !compactView) {
 
 			for (BiotypeMetadata t : type.getMetadata()) {
 				defaultColumns.add(LinkerColumnFactory.create(new BiosampleLinker(t)));
 			}
-			
+
 			//Comments
-			defaultColumns.add(LinkerColumnFactory.create(new BiosampleLinker(LinkerType.COMMENTS, type)));		
-			
+			defaultColumns.add(LinkerColumnFactory.create(new BiosampleLinker(LinkerType.COMMENTS, type)));
+
 		} else {
-			defaultColumns.add(new CombinedColumn());						
+			defaultColumns.add(new CombinedColumn());
 		}
-		setColumns(defaultColumns);		
+		setColumns(defaultColumns);
 	}
-	
+
 	@Override
 	public List<Column<Biosample, ?>> getPossibleColumns() {
-		List<Column<Biosample, ?>> res = new ArrayList<Column<Biosample,?>>();		
-		res.add(new BiosampleElbColumn());	
-		res.add(new ContainerTypeColumn());	
-		res.add(new ContainerIdColumn());	
-		res.add(new ContainerLocationPosColumn());	
-		res.add(new ContainerAmountColumn(null));	
-		res.add(new StudyIdColumn());	
-		res.add(new StudyGroupColumn(this));	
-		res.add(new StudySubGroupColumn());	
-		res.add(new StudyPhaseColumn());	
-		res.add(new StudyTopSampleIdColumn());	
-		res.add(new ParentBiosampleColumn(this));	
+		List<Column<Biosample, ?>> res = new ArrayList<Column<Biosample,?>>();
+		res.add(new BiosampleElbColumn());
+		res.add(new ContainerTypeColumn());
+		res.add(new ContainerIdColumn());
+		res.add(new ContainerLocationPosColumn());
+		res.add(new ContainerAmountColumn(null));
+		res.add(new StudyIdColumn());
+		res.add(new StudyGroupColumn(this));
+		res.add(new StudySubGroupColumn());
+		res.add(new StudyPhaseColumn());
+		res.add(new StudyTopSampleIdColumn());
+		res.add(new ParentBiosampleColumn(this));
 		res.add(new BioQualityColumn());
 		res.add(new ExpiryDateColumn());
 		res.add(new CreationColumn(false));
 		return res;
 	}
-	
+
 	public Biotype getBiotype() {
 		return type;
 	}
@@ -209,31 +209,31 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 	@Override
 	public Biosample createRecord() {
 		if(type==null) return null;
-		return new Biosample(type);			
+		return new Biosample(type);
 	}
-	
+
 	@Override
 	public List<Biosample> getTreeChildren(Biosample row) {
 		return new ArrayList<Biosample>(row.getChildren());
 	}
-	
-	
+
+
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		
+
 		try {
 			Column<Biosample, ?> column = getColumn(columnIndex);
 			Biosample row = getRows().get(rowIndex);
 			if(column instanceof SampleIdColumn && row.getBiotype()==null) return false;
-			
+
 			if(getReadOnlyColumns().contains(column)) return false;
-			
+
 			return getColumn(columnIndex).isEditable(rows.get(rowIndex));
 		} catch (Exception e) {
-			return false;			
+			return false;
 		}
 	}
-	
+
 	@Override
 	public Column<Biosample, ?> getTreeColumn() {
 		Column<Biosample, ?> col = super.getTreeColumn();
@@ -248,13 +248,13 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 		}
 		return col;
 	}
-	
+
 	@Override
 	public void setValueAt(Object newValue, int rowIndex, int columnIndex) {
-		super.setValueAt(newValue, rowIndex, columnIndex);		
+		super.setValueAt(newValue, rowIndex, columnIndex);
 		Biosample b = getRow(rowIndex);
-		DAOBiosample.computeFormula(Collections.singleton(b));				
+		DAOBiosample.computeFormula(Collections.singleton(b));
 	}
 
-	
+
 }

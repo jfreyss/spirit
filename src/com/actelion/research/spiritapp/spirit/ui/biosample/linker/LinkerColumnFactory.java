@@ -33,18 +33,18 @@ public class LinkerColumnFactory {
 	public static AbstractLinkerColumn<?> create(BiosampleLinker linker) {
 		switch(linker.getType()) {
 		case SAMPLEID:
-			return new SampleIdColumn(linker, true, false);
+			return new SampleIdColumn(linker, true, true);
 		case SAMPLENAME:
 			return new SampleNameColumn(linker);
 		case METADATA:
 			switch(linker.getBiotypeMetadata().getDataType()) {
-				case D_FILE: return new DocumentColumn(linker);
-				case FILES: return new DocumentColumn(linker);
-				case BIOSAMPLE: return new LinkedBiosampleColumn(linker);
-				default: return new MetadataColumn(linker);
+			case D_FILE: return new DocumentColumn(linker);
+			case FILES: return new DocumentColumn(linker);
+			case BIOSAMPLE: return new LinkedBiosampleColumn(linker);
+			default: return new MetadataColumn(linker);
 			}
 		case COMMENTS:
-			return new CommentsColumn(linker); 
+			return new CommentsColumn(linker);
 		default: throw new IllegalArgumentException("Not implemented");
 		}
 	}

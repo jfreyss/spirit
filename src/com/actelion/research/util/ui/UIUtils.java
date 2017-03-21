@@ -57,14 +57,18 @@ import javax.swing.border.Border;
 
 public final class UIUtils {
 
+
 	private static Map<Integer, Color> colorMap = new HashMap<Integer, Color>();
 	public static final Color TITLEPANEL_BACKGROUND = UIUtils.getColor(183,204,223);
 	public static final Color TITLEPANEL_BACKGROUND2 = UIUtils.getColor(200,225,240);
-	
+
+	public static Color WHITESMOKE = UIUtils.getColor(245, 245, 245);
+
+
 	public static Frame getMainFrame() {
 		Frame res = null;
 		for(Frame f:  Frame.getFrames()) {
-			if(f.isShowing() && !f.isUndecorated()) {res = f; } 
+			if(f.isShowing() && !f.isUndecorated()) {res = f; }
 		}
 		return res;
 	}
@@ -72,7 +76,7 @@ public final class UIUtils {
 	public static Color getDilutedColor(Color color1, Color color2) {
 		return getDilutedColor(color1, color2, .5);
 	}
-	
+
 	/**
 	 * Get Colors from (small) cache
 	 */
@@ -94,22 +98,22 @@ public final class UIUtils {
 			colorMap.put(rgb, res);
 		}
 		return res;
-		
+
 	}
-	
+
 	public static Color getDilutedColor(Color color1, Color color2, double coeff) {
 		if(color1==null) return color2;
 		if(color2==null) return color1;
 		return getColor((int)((color1.getRed() - color2.getRed())*coeff+color2.getRed()),
-				(int)((color1.getGreen() - color2.getGreen())*coeff+color2.getGreen()), 
-						(int)((color1.getBlue() - color2.getBlue())*coeff+color2.getBlue()),
-						(int)((color1.getAlpha() - color2.getAlpha())*coeff+color2.getAlpha()));
+				(int)((color1.getGreen() - color2.getGreen())*coeff+color2.getGreen()),
+				(int)((color1.getBlue() - color2.getBlue())*coeff+color2.getBlue()),
+				(int)((color1.getAlpha() - color2.getAlpha())*coeff+color2.getAlpha()));
 	}
-	
+
 	public static void drawRoundRect3D(Graphics2D g, int x, int y, int width, int height, int radius) {
 		height -=1;
 		width -=1;
-		
+
 		g.drawLine(x+radius, y, x+width-radius, y);
 		g.drawLine(x+radius, y+height, x+width-radius, y+height);
 		g.drawLine(x, y+radius, x, y+height-radius);
@@ -118,7 +122,7 @@ public final class UIUtils {
 		g.drawArc(x, y, radius*2, radius*2, 90, 90);
 		g.drawArc(x+width-2*radius, y, radius*2, radius*2, 0, 90);
 		g.drawArc(x, y+height-2*radius, radius*2, radius*2, 180, 90);
-		g.drawArc(x+width-2*radius, y+height-2*radius, radius*2, radius*2, 270, 90);				
+		g.drawArc(x+width-2*radius, y+height-2*radius, radius*2, radius*2, 270, 90);
 	}
 	public static void fillRoundRect3D(Graphics2D g, int x, int y, int width, int height, int radius) {
 		height -=1;
@@ -129,15 +133,15 @@ public final class UIUtils {
 		area.add(new Area(new Ellipse2D.Double(x+width-2*radius, y, radius*2, radius*2)));
 		area.add(new Area(new Ellipse2D.Double(x, y+height-2*radius, radius*2, radius*2)));
 		area.add(new Area(new Ellipse2D.Double(x+width-2*radius, y+height-2*radius, radius*2, radius*2)));
-		g.fill(area);		
+		g.fill(area);
 	}
-	
+
 	public static Color getRandomBackground(int seed) {
 		return getRandomBackground(seed, .6f, .9f);
 	}
 	public static Color getRandomBackground(int seed, float maxSaturation, float minBrightness) {
 		Random rand = new Random(seed*7);
-		
+
 		if(seed==0) {
 			return getColor(240, 240, 240);
 		} else {
@@ -148,14 +152,14 @@ public final class UIUtils {
 			Color c2 = getColor(c);
 			return c2;
 		}
-		
+
 	}
 	public static Color getRandomForeground(int seed) {
 		return getRandomBackground(seed, .7f, .3f);
 	}
 	public static Color getRandomForeground(int seed, float minSaturation, float maxBrightness) {
 		Random rand = new Random(seed*7);
-		
+
 		if(seed==0) {
 			return Color.BLACK;
 		} else {
@@ -166,7 +170,7 @@ public final class UIUtils {
 			Color c2 = getColor(c);
 			return c2;
 		}
-		
+
 	}
 	public static JPanel createTable(List<? extends Component> comps) {
 		return createTable(comps.toArray(new Component[comps.size()]));
@@ -178,8 +182,8 @@ public final class UIUtils {
 	 * comp1	comp2
 	 * comp3	comp4
 	 * </pre>
-	 * 
-	 * 
+	 *
+	 *
 	 * @param comps (an even number of components)
 	 * @return
 	 */
@@ -189,15 +193,15 @@ public final class UIUtils {
 	public static JPanel createTable(int columns, List<? extends Component> comps) {
 		return createTable(columns, 0, 0, comps.toArray(new Component[comps.size()]));
 	}
-	
+
 	public static JPanel createTable(int columns, int ipadx, int ipady, List<? extends Component> comps) {
 		return createTable(columns, ipadx, ipady, comps.toArray(new Component[comps.size()]));
 	}
-	
+
 	public static JPanel createTable(int columns, Component... comps) {
 		return createTable(columns, 0, 0, comps);
 	}
-	
+
 	public static JPanel createTable(int columns, int ipadx, int ipady, Component... comps) {
 		JPanel panel = new JPanel(new GridBagLayout());
 		panel.setOpaque(false);
@@ -217,25 +221,25 @@ public final class UIUtils {
 		c.gridy++; c.weighty= 1; panel.add(Box.createGlue(), c);
 		return panel;
 	}
-	
+
 	public static JPanel createTitleBoxSmall(final String title, JComponent comp) {
 		return createTitleBox(title, comp, FastFont.SMALL, Color.GRAY, TITLEPANEL_BACKGROUND, FastFont.getDefaultFontSize()*8/12);
 	}
-	
+
 	public static JPanel createTitleBox(JComponent comp) {
 		return createTitleBox("", comp);
 	}
 	public static JPanel createTitleBox(final String title, JComponent comp) {
 		return createTitleBox(title, comp, FastFont.BIGGER, Color.BLACK, TITLEPANEL_BACKGROUND, FastFont.getDefaultFontSize()*10/12);
 	}
-	
+
 	public static JPanel createTitleBoxBigger(final String title, JComponent comp) {
 		return createTitleBox(title, comp, FastFont.BIGGEST, Color.BLACK, TITLEPANEL_BACKGROUND, FastFont.getDefaultFontSize());
 	}
-	
+
 	public static JPanel createTitleBox(final String title, final JComponent comp, final Font font, final Color titleColor, final Color bgColor, final int radius) {
-		final int h = font.getSize();             
-		final int topBorder = h/2; 
+		final int h = font.getSize();
+		final int topBorder = h/2;
 		final int margins = radius/2;// h>12? 5: 2;
 		final JPanel panel = new JPanel(new GridLayout(1,1)) {
 			@Override
@@ -247,14 +251,14 @@ public final class UIUtils {
 				g.setPaint(new LinearGradientPaint(1, 1, getHeight(), getHeight(), new float[]{0,1}, new Color[]{bgColor, TITLEPANEL_BACKGROUND2}));
 				g.fillRoundRect(2, topBorder, getWidth()-6, getHeight()-topBorder-2, radius, radius);
 				g.setColor(Color.GRAY);
-				g.drawRoundRect(2, topBorder, getWidth()-6, getHeight()-topBorder-2, radius, radius);	
-				
+				g.drawRoundRect(2, topBorder, getWidth()-6, getHeight()-topBorder-2, radius, radius);
+
 				if(title!=null && title.length()>0) {
 					g.setFont(font);
 					g.setColor(bgColor);
 					g.drawLine(radius-1, topBorder-1, radius + 3 + g.getFontMetrics().stringWidth(title), topBorder-1);
 					g.setColor(bgColor);
-					g.drawLine(radius-1, topBorder, radius + 3 + g.getFontMetrics().stringWidth(title), topBorder);					
+					g.drawLine(radius-1, topBorder, radius + 3 + g.getFontMetrics().stringWidth(title), topBorder);
 					g.setColor(titleColor);
 					g.drawString(title, radius+1, h-2);
 				}
@@ -268,7 +272,7 @@ public final class UIUtils {
 		return panel;
 	}
 
-	
+
 	public static JPanel createGrid(Component... components) {
 		JPanel res = new JPanel(new GridLayout(1, components.length));
 		res.setOpaque(false);
@@ -297,7 +301,7 @@ public final class UIUtils {
 	public static JPanel createBox(Component center, Component north, Component south, Component west, Component east) {
 		return createBox(null, center, north, south, west, east);
 	}
-	
+
 	public static JPanel createBox(Border border, Component center, Component north, Component south, Component west, Component east) {
 		JPanel panel = new JPanel(new BorderLayout());
 		panel.setOpaque(false);
@@ -321,56 +325,56 @@ public final class UIUtils {
 	public static JPanel createHorizontalBox(int[] ratios, Component... comps) {
 		JPanel panel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
-		
+
 		c.gridx = GridBagConstraints.RELATIVE;
 		c.gridy = 0;
 		c.fill = GridBagConstraints.BOTH;
-		for (int i = 0; i < comps.length; i++) {			
+		for (int i = 0; i < comps.length; i++) {
 			Component comp = comps[i];
 			if(comp==null) continue;
 			if(comp instanceof Filler && ((Filler)comp).getMinimumSize().width==0) {
 				c.weightx = c.weighty = 1;
 			} else {
-				c.weightx = ratios==null || i>=comps.length? 0.01: ratios[i];; 
-				c.weighty = 1;				
+				c.weightx = ratios==null || i>=comps.length? 0.01: ratios[i];;
+				c.weighty = 1;
 			}
-			panel.add(comp, c);			
+			panel.add(comp, c);
 		}
 		panel.setOpaque(false);
 
 		return panel;
 	}
-	
+
 	public static JPanel createVerticalBox(Border border, Component... comps) {
 		JPanel res = createVerticalBox(comps);
 		res.setBorder(border);
 		return res;
 	}
-	
+
 	public static JPanel createVerticalBox(Border border, List<? extends Component> comps) {
 		JPanel res = createVerticalBox(comps);
 		res.setBorder(border);
 		return res;
 	}
-	
+
 	public static JPanel createVerticalBox(List<? extends Component> comps) {
 		return createVerticalBox(comps.toArray(new Component[0]));
 	}
-	
+
 
 	public static JPanel createVerticalBox(Component... comps) {
-		return createVerticalBox((int[])null, comps);		
+		return createVerticalBox((int[])null, comps);
 	}
-	
+
 	public static JPanel createVerticalBox(int[] ratios, Component... comps) {
 		JPanel panel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
-		
+
 		c.gridx = 0;
 		c.gridy = GridBagConstraints.RELATIVE;
 		c.anchor = GridBagConstraints.WEST;
 		c.fill = GridBagConstraints.BOTH;
-		for (int i = 0; i < comps.length; i++) {			
+		for (int i = 0; i < comps.length; i++) {
 			Component comp = comps[i];
 			if(comp==null) {
 				continue;
@@ -380,18 +384,18 @@ public final class UIUtils {
 				c.weightx = 1;
 				c.weighty = ratios==null || i>=comps.length? 0.01: ratios[i];
 			}
-			panel.add(comp, c);			
+			panel.add(comp, c);
 		}
 		panel.setOpaque(false);
 
 		return panel;
 	}
 
-	
-	public static JPanel createTopLeftPanel(Component comp) {		
+
+	public static JPanel createTopLeftPanel(Component comp) {
 		return UIUtils.createVerticalBox(UIUtils.createHorizontalBox(comp, Box.createHorizontalGlue()), Box.createVerticalGlue());
 	}
-	
+
 
 	public static JPanel createCenterPanel(Component comp, boolean alignTop) {
 		JPanel panel = new JPanel(new GridBagLayout());
@@ -405,7 +409,7 @@ public final class UIUtils {
 		c.gridx = 3; c.gridy = 3; panel.add(new JLabel(), c);
 		return panel;
 	}
-	
+
 	public static JPanel createCenterPanel(Border border, Component comp, boolean alignTop) {
 		JPanel panel = createCenterPanel(comp, alignTop);
 		panel.setBorder(border);
@@ -413,21 +417,32 @@ public final class UIUtils {
 	}
 
 
+	/**
+	 * Draws a string starting at coordinate x,y and try to fit it in the given width and height.
+	 * The string is automatically wrapped on new lines and when needed
+	 * @param g
+	 * @param s
+	 * @param x
+	 * @param y
+	 * @param width
+	 * @param height
+	 * @return
+	 */
 	public static int drawString(Graphics g, String s, int x, int y, int width, int height) {
 		return drawString(g, s, x, y, width, height, true);
 	}
-	
+
 	public static int drawString(Graphics g, String s, int x, int y, int width, int height, boolean autowrap) {
 		if(s==null || s.length()==0) return y;
-		
+
 		if(height<=0) height = 1;
-		int offset = 0; 
+		int offset = 0;
 		int index = 1;
 		int cy = y;
 		for(;index<s.length() && cy<y+height; index++) {
 			if(s.charAt(index)=='\n') {
 				g.drawString(s.substring(offset, index), x, cy);
-				offset = index;					
+				offset = index;
 				cy+=g.getFont().getSize() - 1;
 			} else if(g.getFontMetrics().stringWidth(s.substring(offset, index))>width) {
 				g.drawString(s.substring(offset, index-1), x, cy);
@@ -445,17 +460,17 @@ public final class UIUtils {
 		}
 		return cy;
 	}
-	
+
 	public static Color getTransparentColor(Color c) {
 		return getTransparentColor(c, 0);
 	}
 	public static Color getTransparentColor(Color c, int alpha) {
 		return new Color(c.getRed(), c.getGreen(), c.getBlue(), alpha);
 	}
-	
-	
 
-	
+
+
+
 	public static Color getForeground(Color c) {
 		if(c==null || (c.getRed()+ c.getBlue()+c.getGreen())>96*3) {
 			return Color.BLACK;
@@ -463,21 +478,21 @@ public final class UIUtils {
 			return Color.WHITE;
 		}
 	}
-	
+
 	public static Color getInverseColor(Color c) {
 		return new Color(255-c.getRed(), 255-c.getGreen(), 255-c.getBlue());
 	}
-	
+
 	/**
 	 * Returns the HTML color (#RRGGBB) of the given color
 	 * @param color (null means white)
-	 * @return String 
+	 * @return String
 	 */
 	public static String getHtmlColor(Color color) {
 		if(color==null) color = Color.WHITE;
 		return "#"+ Integer.toHexString(color.getRGB()).substring(2).toUpperCase();
 	}
-	
+
 
 	/**
 	 * Makes the color darker
@@ -502,7 +517,7 @@ public final class UIUtils {
 	public static JPanel createHorizontalTitlePanel(String title) {
 		return createHorizontalTitlePanel(title, getColor(114, 160, 193));
 	}
-	
+
 	public static JPanel createHorizontalTitlePanel(String title, Color color) {
 		return createHorizontalTitlePanel(null, title, color);
 	}
@@ -522,11 +537,11 @@ public final class UIUtils {
 				}
 				g.fillRect(0, 0, getWidth(), getHeight());
 				g.setFont(font);
-//				g.setColor(Color.LIGHT_GRAY);
-//				g.drawString(title, x+1, 18);
+				//				g.setColor(Color.LIGHT_GRAY);
+				//				g.drawString(title, x+1, 18);
 				g.setColor(Color.BLACK);
 				g.drawString(title, x, 17);
-				
+
 				g.setColor(Color.GRAY);
 				g.drawLine(0, 0, getWidth(), 0);
 				g.drawLine(0, getHeight()-1, getWidth(), getHeight()-1);
@@ -538,14 +553,14 @@ public final class UIUtils {
 		panel.setOpaque(true);
 		if(comp!=null) panel.add(BorderLayout.WEST, comp);
 		return panel;
-		
+
 	}
-	
+
 	public static JPanel createVerticalTitlePanel(String title) {
 		return createVerticalTitlePanel(title, FastFont.BIGGEST, getColor(114, 160, 193));
 	}
 	public static JPanel createVerticalTitlePanel(final String title, final Font font, final Color background) {
-		
+
 		JPanel panel = new JPanel();
 		final int x = 4;
 		final int panelWidth = font.getSize()+8;
@@ -564,20 +579,20 @@ public final class UIUtils {
 				g.fillRect(0, 0, getWidth(), getHeight());
 				g.setFont(font);
 				AffineTransform initial = g.getTransform();
-				
+
 				g.translate(0, getHeight());
 				g.rotate(-Math.PI/2);
-				
-				
+
+
 				if(title!=null) {
 					g.setColor(Color.LIGHT_GRAY);
 					g.drawString(title, getHeight() - getFontMetrics(font).stringWidth(title)-6 , font.getSize()+1);
 					g.setColor(Color.BLACK);
 					g.drawString(title, getHeight() - getFontMetrics(font).stringWidth(title)-6+1, font.getSize()+2);
 				}
-				
+
 				g.setTransform(initial);
-				
+
 				g.setColor(Color.LIGHT_GRAY);
 				g.drawLine(0, 0, getWidth(), 0);
 				g.drawLine(0, 0, 0, getHeight()-1);
@@ -591,7 +606,7 @@ public final class UIUtils {
 		panel.setOpaque(true);
 		return panel;
 	}
-	
+
 	/**
 	 * Set the size of the frame to the given size, or the size of the screen if it the screen is too small.
 	 * If the size is bigger than the screen, the frame is maximized
@@ -611,11 +626,11 @@ public final class UIUtils {
 			frame.pack();
 		}
 		frame.setLocationRelativeTo(null);
-		
+
 	}
-	
+
 	/**
-	 * Set the size of the dialog to the given size, or the size of the screen if it the screen is too small.	 * 
+	 * Set the size of the dialog to the given size, or the size of the screen if it the screen is too small.	 *
 	 * @param frame
 	 * @param preferredWidth
 	 * @param preferredHeight
@@ -628,16 +643,16 @@ public final class UIUtils {
 		} else {
 			frame.pack();
 		}
-		frame.setLocationRelativeTo(null);		
+		frame.setLocationRelativeTo(null);
 	}
-	
+
 	public static void applyDesktopProperties(Graphics g) {
 		Toolkit tk = Toolkit.getDefaultToolkit();
-  		@SuppressWarnings("rawtypes")
+		@SuppressWarnings("rawtypes")
 		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
-  		if (map != null) {
-  		    ((Graphics2D)g).addRenderingHints(map);
-  		}
+		if (map != null) {
+			((Graphics2D)g).addRenderingHints(map);
+		}
 	}
-	
+
 }

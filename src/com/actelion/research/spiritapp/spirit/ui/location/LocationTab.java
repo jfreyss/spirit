@@ -26,8 +26,6 @@ import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -46,14 +44,14 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
+import com.actelion.research.spiritapp.spirit.ui.SpiritTab;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTabbedPane;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerActions;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.LocationDepictor;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.RackDepictorListener;
-import com.actelion.research.spiritapp.spirit.ui.util.ISpiritTab;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -70,7 +68,7 @@ import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
-public class LocationTab extends JPanel implements ISpiritTab {
+public class LocationTab extends SpiritTab {
 	
 	//West Components
 	private final JSplitPane westPane;
@@ -85,8 +83,14 @@ public class LocationTab extends JPanel implements ISpiritTab {
 	private boolean first = true;
 	private int push = 0;
 	
-	public LocationTab(Biotype forcedBiotype) {		
-		searchPane = new LocationSearchPane(forcedBiotype);
+	public LocationTab(SpiritFrame frame) {
+		this(frame, null);
+	}
+	
+	public LocationTab(SpiritFrame frame, Biotype forcedBiotype) {		
+		super(frame, "Locations", IconType.LOCATION.getIcon());
+
+		searchPane = new LocationSearchPane(frame, forcedBiotype);
 		
 		locationDepictor.setDisplayChildren(true);
 		locationDepictor.setShowOneEmptyPosition(false);
@@ -190,7 +194,7 @@ public class LocationTab extends JPanel implements ISpiritTab {
 			@Override
 			public void onSelect(Collection<Integer> pos, Container lastSelect, boolean dblClick) {		
 				Set<Container> sel = locationDepictor.getSelectedContainers();
-				if(sel.size()==1 && SpiritRights.canReadBiosamples(sel.iterator().next().getBiosamples(), Spirit.getUser())) {
+				if(sel.size()==1 && SpiritRights.canReadBiosamples(sel.iterator().next().getBiosamples(), SpiritFrame.getUser())) {
 					if(westPane.getDividerLocation()>getHeight()-100) {
 						westPane.setDividerLocation(580);
 					}
@@ -244,7 +248,7 @@ public class LocationTab extends JPanel implements ISpiritTab {
 			public void valueChanged(ListSelectionEvent e) {
 				if(e.getValueIsAdjusting()) return;
 				
-				if(biosampleTable.getSelection().size()>0 && SpiritRights.canReadBiosamples(biosampleTable.getSelection(), Spirit.getUser())) {
+				if(biosampleTable.getSelection().size()>0 && SpiritRights.canReadBiosamples(biosampleTable.getSelection(), SpiritFrame.getUser())) {
 					if(westPane.getDividerLocation()>getHeight()-100) {
 						westPane.setDividerLocation(580);
 					}
@@ -260,25 +264,7 @@ public class LocationTab extends JPanel implements ISpiritTab {
 		
 		setLayout(new BorderLayout());
 		add(BorderLayout.CENTER, contentPane);
-		
-		
-		addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentShown(ComponentEvent e) {
-				if(getRootPane()!=null){
-					getRootPane().setDefaultButton(searchPane.getSearchButton());		
-				}
-				if(first) {
-					first = false;
-					if(getStudyIds().length()>0) {
-						searchPane.query();
-					} else {
-						searchPane.queryMyLocations();
-					}
-				}
-			}
-		});
-	
+			
 	}	
 	
 	/**
@@ -330,7 +316,7 @@ public class LocationTab extends JPanel implements ISpiritTab {
 			List<Biosample> biosamples = new ArrayList<>();
 			if(location!=null) {
 				for (Biosample b: location.getBiosamples()) {
-					if(SpiritRights.canRead(b, Spirit.getUser())) {
+					if(SpiritRights.canRead(b, SpiritFrame.getUser())) {
 						biosamples.add(b);
 					}
 				}
@@ -396,26 +382,6 @@ public class LocationTab extends JPanel implements ISpiritTab {
 		setBioLocation(l);
 	}
 	
-	@Override
-	public void refreshFilters() {
-		searchPane.repopulate();
-		searchPane.query();
-	}
-
-	@Override
-	public String getStudyIds() {
-		return searchPane.getStudyId();
-	}
-	
-	@Override
-	public void setStudyIds(String s) {
-		if(s==null) return;
-		String currentStudy = searchPane.getStudyId();
-		if(currentStudy!=null && currentStudy.equals(s)) return; //no need to refresh
-		
-		searchPane.setStudyId(s);		
-	}
-	
 	public LocationDepictor getLocationDepictor() {
 		return locationDepictor;
 	}
@@ -431,6 +397,27 @@ public class LocationTab extends JPanel implements ISpiritTab {
 	protected JPanel createButtonsPanel() {
 		return null;
 	}
+
+	@Override
+	public void onTabSelect() {
+		if(getRootPane()!=null){
+			getRootPane().setDefaultButton(searchPane.getSearchButton());		
+		}
+		if(first) {
+			first = false;
+			if(getFrame()!=null && getFrame().getStudyId().length()>0) {
+				searchPane.query();
+			} else {
+				searchPane.queryMyLocations();
+			}
+		}
+	}
+	
+	@Override
+	public void onStudySelect() {		
+		searchPane.query();
+	}
+	
 	
 	
 }

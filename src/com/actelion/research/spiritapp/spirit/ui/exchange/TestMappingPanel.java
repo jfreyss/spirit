@@ -41,7 +41,7 @@ import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
-import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.MappingAction;
+import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.EntityAction;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.UIUtils;
 
@@ -94,7 +94,7 @@ public class TestMappingPanel extends JPanel implements IMappingPanel {
 				updateLayout();
 			}
 		});
-		if(possibleMatches.size()==0) testMappingPanel.setMappingAction(MappingAction.CREATE);
+		if(possibleMatches.size()==0) testMappingPanel.setMappingAction(EntityAction.CREATE);
 
 		testComboBox.addActionListener(new ActionListener() {			
 			@Override
@@ -109,7 +109,7 @@ public class TestMappingPanel extends JPanel implements IMappingPanel {
 					}
 					attributeMappingPanels.get(index).setMappingComponent(comboBox);
 					if(comboBox!=null && comboBox.getSelectedIndex()>0) {
-						attributeMappingPanels.get(index).setMappingAction(MappingAction.MAP_REPLACE);
+						attributeMappingPanels.get(index).setMappingAction(EntityAction.MAP_REPLACE);
 						attributeMappingPanels.get(index).setCreationEnabled(false);
 					} else {
 						attributeMappingPanels.get(index).setCreationEnabled(true);
@@ -127,7 +127,7 @@ public class TestMappingPanel extends JPanel implements IMappingPanel {
 		//Preselection
 		testComboBox.setSelectionString(test.getName());
 		if(testComboBox.getSelectedIndex()>0) {
-			testMappingPanel.setMappingAction(MappingAction.MAP_REPLACE);
+			testMappingPanel.setMappingAction(EntityAction.MAP_REPLACE);
 			testMappingPanel.setCreationEnabled(false);
 		} else {
 			testMappingPanel.setCreationEnabled(true);
@@ -150,14 +150,14 @@ public class TestMappingPanel extends JPanel implements IMappingPanel {
 		
 		centerPanel.removeAll();
 		List<JComponent> formComponents = new ArrayList<>();
-		MappingAction action = testMappingPanel.getMappingAction();
-		if(action!=MappingAction.SKIP) {
+		EntityAction action = testMappingPanel.getMappingAction();
+		if(action!=EntityAction.SKIP) {
 			for (int index = 0; index < attributes.size(); index++) {
 				TestAttribute m = attributes.get(index);
 				formComponents.add(new JLabel("<html>Attribute '<b>"+m.getName()+"</b>': "));
 				formComponents.add(attributeMappingPanels.get(index));
-				if(action==MappingAction.CREATE) {
-					attributeMappingPanels.get(index).setMappingAction(MappingAction.CREATE);
+				if(action==EntityAction.CREATE) {
+					attributeMappingPanels.get(index).setMappingAction(EntityAction.CREATE);
 					attributeMappingPanels.get(index).setMappingComponent(null);
 				}
 			}

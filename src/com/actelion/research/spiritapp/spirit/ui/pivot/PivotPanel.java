@@ -52,7 +52,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTabbedPane;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
@@ -78,7 +78,6 @@ import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorCo
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorConfig.ChartType;
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorExporter;
 import com.actelion.research.spiritcore.business.result.Result;
-import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.IOUtils;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CSVUtils;
@@ -96,7 +95,7 @@ public class PivotPanel extends JPanel {
 	public static final String PROPERTY_PIVOT_CHANGED = "pivot_changed";
 	private boolean pivotMode;
 	private List<Result> results = new ArrayList<>();
-//	private Set<TestAttribute> skippedAttributes;
+	//	private Set<TestAttribute> skippedAttributes;
 
 	// CardPanel
 	private CardLayout cardLayout = new CardLayout();
@@ -114,7 +113,7 @@ public class PivotPanel extends JPanel {
 
 	// Buttons
 	private final JCheckBox pivotButton = new JCheckBox("Pivot Data");
-	private final JButton reportButton = new JIconButton(IconType.STATS, "Report");
+	//	private final JButton reportButton = new JIconButton(IconType.STATS, "Report");
 	private final JButton dwButton = new JIconButton(IconType.DATAWARRIOR, "");
 	private final JButton csvButton = new JIconButton(IconType.CSV, "");
 	private final JButton excelButton = new JIconButton(IconType.EXCEL, "");
@@ -130,7 +129,7 @@ public class PivotPanel extends JPanel {
 
 	/**
 	 * Create a panel for displaying pivoted results
-	 * 
+	 *
 	 * @param tableTab optional
 	 * @param externalDetailPane
 	 *            detailPanel to refresh when a biosample is selected, if null
@@ -164,7 +163,7 @@ public class PivotPanel extends JPanel {
 				subTableSp = new JBGScrollPane(subResultTable, 1);
 				ResultActions.attachPopup(subResultTable);
 				ResultActions.attachPopup(subTableSp);
-	
+
 				subResultTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
@@ -176,10 +175,10 @@ public class PivotPanel extends JPanel {
 			} else {
 				subBiosampleTable = new BiosampleTable();
 				subTableSp = new JBGScrollPane(subBiosampleTable, 1);
-	
+
 				BiosampleActions.attachPopup(subBiosampleTable);
 				BiosampleActions.attachPopup(subTableSp);
-	
+
 				subBiosampleTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
@@ -189,7 +188,7 @@ public class PivotPanel extends JPanel {
 					}
 				});
 			}
-	
+
 			JComponent subListPane;
 			if (externalDetailPane == null) {
 				biosampleDetail = new BiosampleTabbedPane();
@@ -199,7 +198,7 @@ public class PivotPanel extends JPanel {
 				biosampleDetail = externalDetailPane;
 				subListPane = subTableSp;
 			}
-	
+
 			// CenterPane
 			centerPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JBGScrollPane(pivotTable, 1), subListPane);
 			((JSplitPane)centerPane).setOneTouchExpandable(true);
@@ -264,28 +263,27 @@ public class PivotPanel extends JPanel {
 
 		// TopPanel
 		{
-			reportButton.setFont(FastFont.SMALL);
-			reportButton.setVisible(allDataMode);
+			//			reportButton.setFont(FastFont.SMALL);
+			//			reportButton.setVisible(allDataMode);
 			dwButton.setFont(FastFont.SMALL);
 			csvButton.setFont(FastFont.SMALL);
 			excelButton.setFont(FastFont.SMALL);
-			
-			reportButton.setToolTipText("Analyze the displayed results and suggest graphs");
-			reportButton.addActionListener(e-> {
-				assert pivotTable != null;
-				assert pivotTable.getPivotDataTable() != null;
-				new PivotAnalyzerDlg(pivotTable.getPivotDataTable().getResults());
-			});
+
+			//			reportButton.setToolTipText("Analyze the displayed results and suggest graphs");
+			//			reportButton.addActionListener(e-> {
+			//				assert pivotTable != null;
+			//				assert pivotTable.getPivotDataTable() != null;
+			//				new PivotAnalyzerDlg(pivotTable.getPivotDataTable().getResults());
+			//			});
 			dwButton.addActionListener(e -> exportToDw());
 			csvButton.addActionListener(e-> exportToExcel(true));
 			excelButton.addActionListener(e -> exportToExcel(false));
 		}
 		add(BorderLayout.NORTH, UIUtils.createHorizontalBox(
-				(tableTab != null?pivotButton:null), 
-				viewPanel, 
-				Box.createHorizontalGlue(), 
-				UIUtils.createTitleBoxSmall("Graphs", UIUtils.createHorizontalBox(reportButton, dwButton)),
-				UIUtils.createTitleBoxSmall("Export", UIUtils.createHorizontalBox(csvButton, excelButton))));
+				(tableTab != null?pivotButton:null),
+				viewPanel,
+				Box.createHorizontalGlue(),
+				UIUtils.createTitleBoxSmall("Export", UIUtils.createHorizontalBox(dwButton, csvButton, excelButton))));
 		add(BorderLayout.CENTER, cardPanel);
 
 		// Add buttonlistener
@@ -342,39 +340,39 @@ public class PivotPanel extends JPanel {
 			String dwar = null;
 			if (isPivotMode()) {
 				if (DBAdapter.getAdapter().isInActelionDomain()) {
-					UsageLog.logUsage("Spirit", Spirit.getUsername(), null, "DWExport", "");
+					UsageLog.logUsage("Spirit", SpiritFrame.getUsername(), null, "DWExport", "");
 				}
-//				if (pivotTable.getPivotDataTable() == null || pivotTable.getPivotDataTable().getTemplate() == null) return;
-//				dwar = DataWarriorExporter.getDwar(pivotTable.getPivotDataTable()).toString();
-				
-				
+				//				if (pivotTable.getPivotDataTable() == null || pivotTable.getPivotDataTable().getTemplate() == null) return;
+				//				dwar = DataWarriorExporter.getDwar(pivotTable.getPivotDataTable()).toString();
+
+
 				PivotTemplate tpl = new PerInputPivotTemplate();
 				tpl.init(results);
-				
-				Analyzer analyzer = new Analyzer(results, Spirit.getUser());
-				DataWarriorConfig config = new DataWarriorConfig();		
+
+				Analyzer analyzer = new Analyzer(results, SpiritFrame.getUser());
+				DataWarriorConfig config = new DataWarriorConfig();
 				config.setType(ChartType.BOXPLOT);
 				config.setLogScale(analyzer.getColumnFromIndex(0).getDistribution()==Distribution.LOGNORMAL);
-//				config.setSkippedAttributes(statsTable.getSkippedAttributes());
+				//				config.setSkippedAttributes(statsTable.getSkippedAttributes());
 				config.setCustomTemplate(tpl);
-//				config.setXAxis(null); //automatic
-//				config.setExportAll(true);
-				
-//				//Select views
-//				List<String> allViewNames = DataWarriorExporter.getViewNames(results, config, Spirit.getUser());				
-//				List<String> views = new ArrayList<>();
-//				for (int id : ids) {
-//					if(id>=0 && id<allViewNames.size()) views.add(allViewNames.get(id));										
-//				}
-//				config.setViewNames(views);	
-				
+				//				config.setXAxis(null); //automatic
+				//				config.setExportAll(true);
+
+				//				//Select views
+				//				List<String> allViewNames = DataWarriorExporter.getViewNames(results, config, Spirit.getUser());
+				//				List<String> views = new ArrayList<>();
+				//				for (int id : ids) {
+				//					if(id>=0 && id<allViewNames.size()) views.add(allViewNames.get(id));
+				//				}
+				//				config.setViewNames(views);
+
 				//Export to DW
-				StringBuilder sb = DataWarriorExporter.getDwar(results, config, Spirit.getUser());																		
+				StringBuilder sb = DataWarriorExporter.getDwar(results, config, SpiritFrame.getUser());
 				File f = File.createTempFile("spirit_", ".dwar");
 				FileWriter w = new FileWriter(f);
 				IOUtils.redirect(new StringReader(sb.toString()), w);
 				w.close();
-				
+
 				Desktop.getDesktop().open(f);
 				return;
 			} else if (tableTab instanceof IExportable) {
@@ -411,7 +409,7 @@ public class PivotPanel extends JPanel {
 				throw new Exception("Exporting to CSV/Excel is not supported in this view");
 			}
 
-			new SwingWorkerExtended("Exporting", PivotPanel.this, true) {
+			new SwingWorkerExtended("Exporting", PivotPanel.this) {
 				String[][] table;
 
 				@Override
@@ -466,7 +464,7 @@ public class PivotPanel extends JPanel {
 	}
 	/**
 	 * Update the CardPanel with the given results
-	 * 
+	 *
 	 * @param results
 	 * @param template
 	 *            (null to use the current template)
@@ -512,13 +510,13 @@ public class PivotPanel extends JPanel {
 				protected void doInBackground() throws Exception {
 					if (currentPivotTemplate == null) return;
 					currentPivotTemplate.init(results);
-					currentPivotTemplate.removeBlindItems(results, Spirit.getUser());
+					currentPivotTemplate.removeBlindItems(results, SpiritFrame.getUser());
 					pivotDataTable = new PivotDataTable(results, currentPivotTemplate);
 				}
 
 				@Override
 				protected void done() {
-					results = JPAUtil.reattach(results);
+					//					results = JPAUtil.reattach(results);
 					if (currentPivotTemplate == null) {
 						SpiritContextListener.setStatus("No Results");
 						return;
@@ -530,7 +528,7 @@ public class PivotPanel extends JPanel {
 
 		}
 
-		reportButton.setEnabled(!pivotMode || (results != null && results.size() > 0));
+		//		reportButton.setEnabled(!pivotMode || (results != null && results.size() > 0));
 		setupButton.setEnabled(!pivotMode || (results != null && results.size() > 0));
 		excelButton.setEnabled(!pivotMode || (results != null && results.size() > 0));
 		csvButton.setEnabled(!pivotMode || (results != null && results.size() > 0));
@@ -540,7 +538,7 @@ public class PivotPanel extends JPanel {
 
 	/**
 	 * openEditTemplateDlg
-	 * 
+	 *
 	 * @param view
 	 */
 	public void openEditTemplateDlg() {
@@ -551,9 +549,9 @@ public class PivotPanel extends JPanel {
 			currentPivotTemplate = currentPivotTemplate.clone();
 			Window top = SwingUtilities.getWindowAncestor(this);
 			if (top instanceof JFrame) {
-				dlg = new PivotTemplateDlg((JFrame) top, currentPivotTemplate, PivotItemFactory.getPossibleItems(results, Spirit.getUser()), tableTab==null);
+				dlg = new PivotTemplateDlg((JFrame) top, currentPivotTemplate, PivotItemFactory.getPossibleItems(results, SpiritFrame.getUser()), tableTab==null);
 			} else if (top instanceof JDialog) {
-				dlg = new PivotTemplateDlg((JDialog) top, currentPivotTemplate, PivotItemFactory.getPossibleItems(results, Spirit.getUser()), tableTab==null);
+				dlg = new PivotTemplateDlg((JDialog) top, currentPivotTemplate, PivotItemFactory.getPossibleItems(results, SpiritFrame.getUser()), tableTab==null);
 			}
 
 			dlg.addPropertyChangeListener(PivotTemplateDlg.PROPERTY_UPDATED, e-> {

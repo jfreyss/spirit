@@ -22,26 +22,26 @@
 package com.actelion.research.spiritapp.animalcare.ui;
 
 import java.awt.BorderLayout;
-import java.awt.Image;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.JEditorPane;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkEvent.EventType;
 import javax.swing.event.HyperlinkListener;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.IHomeTab;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
+import com.actelion.research.spiritapp.spirit.ui.SpiritTab;
 import com.actelion.research.spiritapp.spirit.ui.home.LastActivityEditorPane;
 import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
+import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -51,19 +51,20 @@ import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.SwingWorkerExtended;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
-public class DashboardPanel extends JPanel {
+public class DashboardTab extends SpiritTab implements IHomeTab {
 
-	private final Hashtable<String, Image> imageCache = new Hashtable<>();
-	private JEditorPane editorPane = new ImageEditorPane(imageCache);
+	private JEditorPane editorPane = new ImageEditorPane();
 	private int dayOffset = 0;
 
-	public DashboardPanel() {
-		super(new BorderLayout());
+	public DashboardTab(SpiritFrame frame) {
+		super(frame, "", IconType.HOME.getIcon());
+		setLayout(new BorderLayout());
 		LF.initComp(editorPane);
 		editorPane.addHyperlinkListener(new SpiritHyperlinkListener());
 		editorPane.addHyperlinkListener(new HyperlinkListener() {
-			
+
 			@Override
 			public void hyperlinkUpdate(HyperlinkEvent e) {
 				if(e.getEventType()==EventType.ACTIVATED) {
@@ -79,25 +80,25 @@ public class DashboardPanel extends JPanel {
 		add(BorderLayout.CENTER, new JScrollPane(editorPane));
 		refresh();
 	}
-	
+
 	public void refresh() {
 		new SwingWorkerExtended("Loading...", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
-			private StringBuilder sb; 
-			
+			private StringBuilder sb;
+
 			@Override
 			protected void doInBackground() throws Exception {
-				
+
 				Calendar cal = Calendar.getInstance();
 				cal.set(Calendar.DAY_OF_YEAR, cal.get(Calendar.DAY_OF_YEAR)-10);
-				Date d0 = cal.getTime(); 
-				
+				Date d0 = cal.getTime();
+
 				cal = Calendar.getInstance();
 				cal.set(Calendar.DAY_OF_YEAR, cal.get(Calendar.DAY_OF_YEAR)+10);
-				Date d1 = cal.getTime(); 
+				Date d1 = cal.getTime();
 				Date now = JPAUtil.getCurrentDateFromDatabase();
-				String user = Spirit.getUsername();
+				String user = SpiritFrame.getUsername();
 				if(user==null) return;
-				
+
 				sb = new StringBuilder();
 				sb.append("Dashboard for: ");
 				if(dayOffset==-1) sb.append("<b>yesterday</b> | ");
@@ -108,32 +109,31 @@ public class DashboardPanel extends JPanel {
 					if(dayOffset==i) sb.append(" | <b>day+"+i+"</b>");
 					else sb.append(" | <a href='date:"+i+"'>day+"+i+"</a>");
 				}
-//				sb.append(" | <a href='refresh:'>Refresh</a>");
 				sb.append("<br><br>");
-				
+
 				cal.setTime(now);
 				cal.set(Calendar.DAY_OF_YEAR, cal.get(Calendar.DAY_OF_YEAR)+dayOffset);
 				Date dashDate = cal.getTime();
-				
-				
+
+
 				StudyQuery q = new StudyQuery();
 				q.setRecentStartDays(365);
-				
-				List<Study> studies = new ArrayList<>(); 
-				for(Study s: DAOStudy.queryStudies(q, Spirit.getUser())) {
-					if(!SpiritRights.canBlind(s, Spirit.getUser())) continue;
+
+				List<Study> studies = new ArrayList<>();
+				for(Study s: DAOStudy.queryStudies(q, SpiritFrame.getUser())) {
+					if(!SpiritRights.canBlind(s, SpiritFrame.getUser())) continue;
 					Date startDate = s.getFirstDate();
 					if(startDate==null || startDate.after(d1)) continue;
 
 					Date endDate = s.getLastDate();
 					if(endDate==null || endDate.before(d0)) continue;
-					
+
 					studies.add(s);
 				}
-				
-				Map<Study, String> extraColumn = new HashMap<>(); 
+
+				Map<Study, String> extraColumn = new HashMap<>();
 				for (Study s : studies) {
-					
+
 					//Is there something to do today?
 					String desc = "";
 					Phase nextPhase = null;
@@ -142,7 +142,7 @@ public class DashboardPanel extends JPanel {
 						if(Phase.isSameDay(p.getAbsoluteDate(), dashDate)) {
 							String d = p.getDescription();
 							if(d.length()>0) {
-								desc += "<br><b>" + p.getShortName() + ":</b><br><span style='font-size:80%'>" + d.replace(" + ", "+") + "</span>";
+								desc += "<br><b>" + p.getShortName() + ":</b><br><span style='font-size:90%'>" + d.replace(" + ", "+") + "</span>";
 							}
 						} else if(p.getAbsoluteDate().after(dashDate)) {
 							if(nextPhase==null || nextPhase.getAbsoluteDate()==null || nextPhase.getAbsoluteDate().after(p.getAbsoluteDate())) {
@@ -150,17 +150,16 @@ public class DashboardPanel extends JPanel {
 								if(d.length()>0) {
 									nextPhase = p;
 									nextDesc = "<br><b>" + p.getShortName() + ":</b><br><span style='font-size:80%'>" + d.replace(" + ", "+") + "</span>";
-								}								
+								}
 							}
-							
+
 						}
 					}
 					StringBuilder sb = new StringBuilder();
-					sb.append("<td valign=top valign=center style='width:110px;color:#666; font-size:90%; margin:1px; padding:1px'>");
-					//sb.append("<a href='stu:" + s.getId() + "' style='font-size:12px;font-weight:bold'>" + s.getStudyId() + "</a>");
+					sb.append("<td valign=top valign=center style='width:110px;color:#666; font-size:100%; margin:1px; padding:1px'>");
 					if(desc.length()>0) {
 						sb.append("<div style='border:solid 1px #FFAAAA; background:#FFFAFA'>");
-						sb.append("<u>" + (dayOffset==0?"(" + FormatterUtils.formatDate(dashDate)  + ")": "Day"+ (dayOffset>0?"+":"")+dayOffset) + "</u> - " + desc);
+						sb.append("<u>" + (dayOffset==0?"(" + FormatterUtils.formatDate(dashDate)  + ")": "Day"+ (dayOffset>0?"+":"")+dayOffset) + "</u> " + desc);
 						sb.append("</div");
 					}
 					if(nextPhase!=null && nextDesc.length()>0) {
@@ -171,22 +170,37 @@ public class DashboardPanel extends JPanel {
 					sb.append("</td>");
 					extraColumn.put(s, sb.toString());
 				}
-				
+
 				String table = LastActivityEditorPane.getStudyTableRows(studies, false, extraColumn);
 				sb.append("<table style='background:#F5F5F50'>");
-				sb.append(table);				
+				sb.append(table);
 				sb.append("</table>");
 			}
-			
-			
+
+
 			@Override
 			protected void done() {
 				if(sb==null) return;
 				editorPane.setText(sb.toString());
 				editorPane.setCaretPosition(0);
 			}
-			
+
 		};
 	}
-	
+
+	@Override
+	public void onTabSelect() {
+	}
+
+	@Override
+	public void onStudySelect() {
+	}
+
+	@Override
+	public <T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
+		if(isShowing()) {
+			refresh();
+		}
+	}
+
 }

@@ -32,11 +32,10 @@ import java.util.List;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.lf.StudyComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JFileBrowser;
 import com.actelion.research.spiritcore.business.Exchange;
@@ -59,7 +58,6 @@ import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
-import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
 
 public class ExporterDlg extends JEscapeDialog {
@@ -71,92 +69,85 @@ public class ExporterDlg extends JEscapeDialog {
 	private StudyComboBox studyComboBox = new StudyComboBox();
 	private JRadioButton exportCurrentViewRadioButton = new JRadioButton("Export all data from the current view");
 	private JRadioButton exportStudyRadioButton = new JRadioButton("Export all entities from the following studies: ");
-	private JRadioButton exportAdminRadioButton = new JRadioButton("Export all biotypes/tests");
+	private JRadioButton exportAdminRadioButton = new JRadioButton("Export all biotypes/tests (not hidden)");
 	private JRadioButton exportAllRadioButton = new JRadioButton("Export the complete database");
-	
+
 	public ExporterDlg(Exchange currentView) {
 		super(UIUtils.getMainFrame(), "Export Data", true);
-		
-		
+
 		studyComboBox = new StudyComboBox(RightLevel.ADMIN);
-		
+
 		this.currentView = currentView;
 		this.exchange = currentView;
 		JButton okButton = new JButton("Export");
 		okButton.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				try { 
+				try {
 					export();
 					dispose();
 					JExceptionDialog.showInfo(ExporterDlg.this, fileBrowser.getFile()+" saved ");
 				} catch(Exception ex) {
 					JExceptionDialog.showError(ex);
-				}				
+				}
 			}
 		});
 		fileBrowser.setExtension(".spirit");
-		
-		
-		ActionListener al = new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				eventButtonClicked();
-			}
+
+
+		ActionListener al = e-> {
+			eventButtonClicked();
 		};
 		exportCurrentViewRadioButton.addActionListener(al);
 		exportStudyRadioButton.addActionListener(al);
 		exportAdminRadioButton.addActionListener(al);
 		exportAllRadioButton.addActionListener(al);
-		studyComboBox.addTextChangeListener(new TextChangeListener() {
-			@Override
-			public void textChanged(JComponent src) {
-				eventButtonClicked();
-			}
+		studyComboBox.addTextChangeListener(src-> {
+			eventButtonClicked();
 		});
 
 		ButtonGroup group = new ButtonGroup();
 		group.add(exportCurrentViewRadioButton);
 		group.add(exportStudyRadioButton);
-		group.add(exportAdminRadioButton);		
-		group.add(exportAllRadioButton);		
-		
-		
+		group.add(exportAdminRadioButton);
+		group.add(exportAllRadioButton);
+
+
 		exportCurrentViewRadioButton.setEnabled(currentView!=null);
 		if(currentView!=null) {
 			exportCurrentViewRadioButton.setSelected(true);
 		} else {
 			exportStudyRadioButton.setSelected(true);
 		}
-		exportAdminRadioButton.setEnabled(Spirit.getUser().isSuperAdmin());
-		
+		exportAdminRadioButton.setEnabled(SpiritFrame.getUser().isSuperAdmin());
+
 		setContentPane(UIUtils.createBox(
-				panel, 
+				panel,
 				UIUtils.createTitleBox("Query",
-					UIUtils.createVerticalBox(
-						UIUtils.createHorizontalBox(exportCurrentViewRadioButton, Box.createHorizontalStrut(26), Box.createHorizontalGlue()),
-						UIUtils.createHorizontalBox(exportStudyRadioButton, studyComboBox, Box.createHorizontalStrut(26), Box.createHorizontalGlue()),
-						UIUtils.createHorizontalBox(exportAdminRadioButton, Box.createHorizontalStrut(26), Box.createHorizontalGlue()),
-						UIUtils.createHorizontalBox(exportAllRadioButton, Box.createHorizontalStrut(26), Box.createHorizontalGlue()))),						
+						UIUtils.createVerticalBox(
+								UIUtils.createHorizontalBox(exportCurrentViewRadioButton, Box.createHorizontalStrut(26), Box.createHorizontalGlue()),
+								UIUtils.createHorizontalBox(exportStudyRadioButton, studyComboBox, Box.createHorizontalStrut(26), Box.createHorizontalGlue()),
+								UIUtils.createHorizontalBox(exportAdminRadioButton, Box.createHorizontalStrut(26), Box.createHorizontalGlue()),
+								UIUtils.createHorizontalBox(exportAllRadioButton, Box.createHorizontalStrut(26), Box.createHorizontalGlue()))),
 				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), new JLabel("Destination File: "), fileBrowser, okButton)));
 		UIUtils.adaptSize(this, 1000, 750);
 		eventButtonClicked();
 		setVisible(true);
 	}
-	
+
 	private void eventButtonClicked() {
-		new SwingWorkerExtended("Loading", getContentPane(), SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS | SwingWorkerExtended.FLAG_CANCELABLE) {
-			private Exchange tmpExchange = null;			
+		new SwingWorkerExtended("Loading", getContentPane()) {
+			private Exchange tmpExchange = null;
 			@Override
 			protected void doInBackground() throws Exception {
-				SpiritUser user = Spirit.getUser();
+				SpiritUser user = SpiritFrame.getUser();
 				String parent = new File(fileBrowser.getFile()).getParent();
 				if(parent==null) parent = System.getProperty("user.home");
 				studyComboBox.setEnabled(exportStudyRadioButton.isSelected());
 				studyComboBox.setMultipleChoices(true);
 				if(exportCurrentViewRadioButton.isSelected()) {
-					if(currentView.getStudies()!=null && currentView.getStudies().size()==1) {			
+					if(currentView.getStudies()!=null && currentView.getStudies().size()==1) {
 						fileBrowser.setFile(new File(parent, currentView.getStudies().iterator().next().getStudyId()+".spirit").getAbsolutePath());
 					}
 					this.tmpExchange = currentView;
@@ -166,15 +157,15 @@ public class ExporterDlg extends JEscapeDialog {
 						StudyQuery q = new StudyQuery();
 						q.setStudyIds(studyComboBox.getText());
 						tmpExchange.addStudies(DAOStudy.queryStudies(q, user));
-						
+
 						BiosampleQuery q2 = BiosampleQuery.createQueryForStudyIds(MiscUtils.flatten(Study.mapStudyId(tmpExchange.getStudies()).keySet(), " "));
 						tmpExchange.addBiosamples(DAOBiosample.queryBiosamples(q2, user));
-						
+
 						ResultQuery q3 = ResultQuery.createQueryForStudyIds(MiscUtils.flatten(Study.mapStudyId(tmpExchange.getStudies()).keySet(), " "));
 						tmpExchange.addResults(DAOResult.queryResults(q3, user));
 					}
 					fileBrowser.setFile(new File(parent, studyComboBox.getText()+".spirit").getAbsolutePath());
-					
+
 				} else if(exportAdminRadioButton.isSelected()) {
 					fileBrowser.setFile(new File(parent, System.currentTimeMillis()+".spirit").getAbsolutePath());
 					this.tmpExchange = new Exchange();
@@ -188,11 +179,11 @@ public class ExporterDlg extends JEscapeDialog {
 					tmpExchange.addStudies(studies);
 					tmpExchange.addBiosamples(DAOBiosample.queryBiosamples(new BiosampleQuery(), user));
 					tmpExchange.addLocations(DAOLocation.queryLocation(new LocationQuery(), user));
-					tmpExchange.addResults(DAOResult.queryResults(new ResultQuery(), user));					
+					tmpExchange.addResults(DAOResult.queryResults(new ResultQuery(), user));
 					tmpExchange.addBiotypes(DAOBiotype.getBiotypes());
 					tmpExchange.addTests(DAOTest.getTests());
-				}				
-				
+				}
+
 			}
 			@Override
 			protected void done() {
@@ -202,20 +193,20 @@ public class ExporterDlg extends JEscapeDialog {
 		};
 
 	}
-	
-	
+
+
 	private void export() throws Exception {
 		//Check non emptyness
 		if(exchange.isEmpty()) throw new Exception("The exchange file is empty");
-		
+
 		//Check Rights
 		for(Study s: exchange.getStudies()) {
-			if(!SpiritRights.canAdmin(s, Spirit.getUser())) {
+			if(!SpiritRights.canAdmin(s, SpiritFrame.getUser())) {
 				throw new Exception("You must have admin rights on "+s+" to export it");
 			}
 		}
-		
-		
+
+
 		if(fileBrowser.getFile().length()==0) throw new Exception("You must enter a file");
 		Writer writer = new BufferedWriter(new FileWriter(fileBrowser.getFile()));
 		Exporter.write(exchange, writer);

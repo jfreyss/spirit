@@ -24,11 +24,14 @@ package com.actelion.research.spiritcore.services.helper;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.actelion.research.spiritcore.adapter.DBAdapter;
+import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.ui.UIUtils;
 
 public class WorkflowHelper {
 
@@ -70,28 +73,36 @@ public class WorkflowHelper {
 		String[] states = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES);
 		boolean hasWorkflow = SpiritProperties.getInstance().hasStudyWorkflow();
 		StringBuilder sb = new StringBuilder();
-		sb.append("<html><table border=0 padding=0 margin=0>");
-		sb.append("<tr><td></td>");
-		sb.append("<td width=120 style='background:#DDDDDDAA; white-space:nowrap'><u>Admin Rights</u><br>(edit design/users)</td>"
-				+ "<td width=120 style='background:#DDDDDDAA; white-space:nowrap'><u>Experimenter</u><br>(add samples/results)</td>"
-				+ "<td width=90 style='background:#DDDDDDAA; white-space:nowrap'><u>View Rights</u><br>(only read access)</td>");
-		if(hasWorkflow) {sb.append("<td style='background:#DDDDDDAA'><u>Promoters</u></td>"
-				+ "<td style='background:#DDDDDDAA'><u>From</u></td>");}
+		sb.append("<html><table style='background:" + UIUtils.getHtmlColor(UIUtils.TITLEPANEL_BACKGROUND2)+ "' border=0 padding=0 margin=0>");
+		sb.append("<tr><td>User rights/<br>state</td>");
+		sb.append("<td width=120 style='background:#DDDDEA; white-space:nowrap'><b>Admin Rights</b><br><i>(edit design/users)</i></td>"
+				+ "<td width=120 style='background:#DDDDEA; white-space:nowrap'><b>Expert Rights</b><br><i>(add samples/results)</i></td>"
+				+ "<td width=90 style='background:#DDDDEA; white-space:nowrap'><b>View Rights</b><br><i>(only read access)</i></td>");
+		if(hasWorkflow) {
+			sb.append("<td style='background:#DDDDEA'><u>Promoters</u></td>");
+			sb.append("<td style='background:#DDDDEA'><u>From</u></td>");
+		}
 		sb.append("</tr>");
+		
+		boolean specificRights = DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && !SpiritProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY);
+		
 		for (String state : states) {
 			String view = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_READ, state);
+			if(view.length()==0) view = "NONE";
 			String expert = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_EXPERT, state);
+			if(specificRights && !expert.contains("ALL") && !expert.contains("NONE")) expert = "custom" + (expert.length()>0?"+" + expert:"");
 			String admin = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_ADMIN, state);
+			if(specificRights && !admin.contains("ALL") && !admin.contains("NONE")) admin = "custom" + (admin.length()>0?"+" + admin:"");
 			String[] from = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_FROM, state);
 			String[] promoters = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_PROMOTERS, state);
 			
-			sb.append("<tr><td style='background:#DDDDDDAA'><b>&nbsp;"+state+"&nbsp;</b></td>");
-			sb.append("<td style='background:#DDDDDDAA'>&nbsp;"+admin+"&nbsp;</td>");
-			sb.append("<td style='background:#DDDDDDAA'>&nbsp;"+expert+"&nbsp;</td>");
-			sb.append("<td style='background:#DDDDDDAA'>&nbsp;"+view+"&nbsp;</td>");
+			sb.append("<tr><td style='background:#EAEAEF'><b>" + state + "</b></td>");
+			sb.append("<td style='background:#EAEAEF'>" + admin + "</td>");
+			sb.append("<td style='background:#EAEAEF'>" + expert + "</td>");
+			sb.append("<td style='background:#EAEAEF'>" + view + "</td>");
 			if(hasWorkflow) {
-				sb.append("<td style='background:#DDDDDDAA'>&nbsp;"+MiscUtils.flatten(promoters, ", ")+"&nbsp;</td>");
-				sb.append("<td style='background:#DDDDDDAA'>&nbsp;"+MiscUtils.flatten(from, ", ")+"&nbsp;</td>");
+				sb.append("<td style='background:#EAEAEF'>"+MiscUtils.flatten(promoters, ", ")+"&nbsp;</td>");
+				sb.append("<td style='background:#EAEAEF'>"+MiscUtils.flatten(from, ", ")+"&nbsp;</td>");
 			}
 			sb.append("</tr>");					
 		}

@@ -45,29 +45,30 @@ import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
+import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.EntityAction;
 import com.actelion.research.spiritcore.services.exchange.Importer;
 import com.actelion.research.spiritcore.services.migration.MigrationScript;
 
 public class SchemaCreator {
 
 	private static final String CREATE_BEFORE = "create schema spirit;";
-	private static final String CREATE_AFTER = "" 
+	private static final String CREATE_AFTER = ""
 			+ "create index aud_1_idx on spirit.assay_result_aud (biosample_id);\n "
 			+ "create index aud_2_idx on spirit.assay_result_value_aud (assay_result_id);\n "
 			+ "create index aud_3_idx on spirit.biosample_aud (attachedstudy_id);\n "
 			+ "create index aud_4_idx on spirit.biosample_aud (parent_id);\n "
 			+ "create index aud_5_idx on spirit.biosample_action_aud (biosample_id);\n"
 			+ "";
-	
+
 	public static void recreateTables(DBAdapter adapter) throws Exception {
 		LoggerFactory.getLogger(SchemaCreator.class).warn("Creating tables");
-		
+
 		try {
 			adapter.executeScripts(CREATE_BEFORE, false);
-			
+
 			//Use JPA system to recreate the tables
 			JPAUtil.initFactory(adapter, "update");
-						
+
 			//Create one group
 			SpiritUser admin = SpiritUser.getFakeAdmin();
 			EmployeeGroup group = DAOEmployee.getEmployeeGroup("Group");
@@ -81,9 +82,9 @@ public class SchemaCreator {
 				employee = new Employee("admin");
 				employee.getEmployeeGroups().add(group);
 				employee.setRoles(Collections.singleton("admin"));
-				DAOEmployee.persistEmployees(Collections.singleton(employee), admin);			
+				DAOEmployee.persistEmployees(Collections.singleton(employee), admin);
 			}
-			
+
 			//The version is now the latest: update the version
 			String version = MigrationScript.getExpectedDBVersion();
 			SpiritProperties.getInstance().setDBVersion(version);
@@ -95,11 +96,11 @@ public class SchemaCreator {
 			throw e2;
 		}
 	}
-	
-	
+
+
 	public static void displayTables(DBAdapter adapter) {
 		try {
-			Connection conn = adapter.getConnection();			
+			Connection conn = adapter.getConnection();
 			{
 				Statement stmt = conn.createStatement();
 				ResultSet rs =  stmt.executeQuery("SELECT * FROM INFORMATION_SCHEMA.SYSTEM_CROSSREFERENCE");
@@ -114,7 +115,7 @@ public class SchemaCreator {
 							System.out.print(rs.getMetaData().getColumnName(i)+"\t");
 						}
 					}
-											
+
 					for (int i = 1; i<=n; i++) {
 						System.out.print(rs.getString(i)+"\t");
 					}
@@ -138,7 +139,7 @@ public class SchemaCreator {
 							System.out.print(rs.getMetaData().getColumnName(i)+"\t");
 						}
 					}
-											
+
 					for (int i = 1; i<=n; i++) {
 						System.out.print(rs.getString(i)+"\t");
 					}
@@ -149,26 +150,26 @@ public class SchemaCreator {
 			}
 
 		} catch(Exception e) {
-			
+
 			e.printStackTrace();
 		}
-		
+
 	}
-	
+
 	public static void clearExamples(SpiritUser user) throws Exception {
 		List<Study> exampleStudies = DAOStudy.queryStudies(StudyQuery.createForState("EXAMPLE"),  user);
 		EntityManager session = JPAUtil.getManager();
 		try {
 			session.getTransaction().begin();
 			DAOStudy.deleteStudies(session, exampleStudies, true, user);
-			LoggerFactory.getLogger(SchemaCreator.class).info("examples deleted: "+exampleStudies);						
+			LoggerFactory.getLogger(SchemaCreator.class).info("examples deleted: "+exampleStudies);
 			session.getTransaction().commit();
 		} catch(Exception e) {
 			if(session.getTransaction().isActive()) {
 				session.getTransaction().rollback();
 			}
 			throw e;
-		} 
+		}
 	}
 
 	public static Exchange createExamples(SpiritUser user) throws Exception {
@@ -176,14 +177,14 @@ public class SchemaCreator {
 			if(is==null) {
 				throw new Exception("The system could not find the default configuration. The system is therefore empty");
 			}
-			Exchange exchange = Importer.read(new InputStreamReader(is));			
-			ExchangeMapping mapping = new ExchangeMapping(exchange);
+			Exchange exchange = Importer.read(new InputStreamReader(is));
+			ExchangeMapping mapping = new ExchangeMapping(exchange, EntityAction.CREATE, EntityAction.SKIP);
 			DAOExchange.persist(mapping, user);
 			LoggerFactory.getLogger(SchemaCreator.class).info("examples persisted");
 			return exchange;
 		} catch(Exception e) {
 			LoggerFactory.getLogger(SchemaCreator.class).error("Could not persist examples: replace old examples", e);
-			throw e;	
+			throw e;
 		}
 	}
 }

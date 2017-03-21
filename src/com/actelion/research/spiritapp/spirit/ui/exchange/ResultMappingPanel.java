@@ -42,7 +42,7 @@ import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
-import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.MappingAction;
+import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.EntityAction;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.UIUtils;
 import com.itextpdf.text.Font;
@@ -109,15 +109,15 @@ public class ResultMappingPanel extends JPanel implements IMappingPanel {
 	
 	public void updateView() {
 		ExchangeMapping mapping = dlg.getMapping();
-		MappingAction action = mapping.getTest2existingResultAction().get(inputTest.getName());
-		if(action==MappingAction.SKIP) r1.setSelected(true);
-		if(action==MappingAction.MAP_REPLACE) r2.setSelected(true);
-		if(action==MappingAction.CREATE) r3.setSelected(true);
+		EntityAction action = mapping.getTest2existingResultAction().get(inputTest.getName());
+		if(action==EntityAction.SKIP) r1.setSelected(true);
+		if(action==EntityAction.MAP_REPLACE) r2.setSelected(true);
+		if(action==EntityAction.CREATE) r3.setSelected(true);
 	}
 	
 	public void updateMapping() {
 		ExchangeMapping mapping = dlg.getMapping();
-		MappingAction action = r1.isSelected()? MappingAction.SKIP: r2.isSelected()? MappingAction.MAP_REPLACE: r3.isSelected()? MappingAction.CREATE: MappingAction.SKIP;
+		EntityAction action = r1.isSelected()? EntityAction.SKIP: r2.isSelected()? EntityAction.MAP_REPLACE: r3.isSelected()? EntityAction.CREATE: EntityAction.SKIP;
 		mapping.getTest2existingResultAction().put(inputTest.getName(), action);
 	}
 

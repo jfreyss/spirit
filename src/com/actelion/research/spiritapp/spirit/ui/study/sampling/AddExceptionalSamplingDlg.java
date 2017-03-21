@@ -43,7 +43,7 @@ import javax.swing.JScrollPane;
 
 import org.slf4j.LoggerFactory;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleList;
 import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.study.PhaseComboBox;
@@ -265,15 +265,15 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		LoggerFactory.getLogger(getClass()).debug("add sampling to " + group + " " + phase + " " + subgroup);
 		
 		//Save in a transaction
-		JPAUtil.pushEditableContext(Spirit.getUser());
+		JPAUtil.pushEditableContext(SpiritFrame.getUser());
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {
 			txn = session.getTransaction();
 			txn.begin();
-			DAOStudy.persistStudies(session, Collections.singletonList(study), Spirit.getUser());
+			DAOStudy.persistStudies(session, Collections.singletonList(study), SpiritFrame.getUser());
 			if(toSave.size()>0) {
-				DAOBiosample.persistBiosamples(session, toSave, Spirit.getUser());
+				DAOBiosample.persistBiosamples(session, toSave, SpiritFrame.getUser());
 			}
 			
 			//Fire change Event

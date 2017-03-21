@@ -43,6 +43,7 @@ import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.report.StudyGroupAssignmentReport;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.helper.AttachBiosamplesHelper;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachedBiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachedBiosampleTableModel;
@@ -248,7 +249,7 @@ public class SummaryTab extends WizardPanel {
 
 		
 		//save
-		DAOStudy.persistStudies(Collections.singleton(study), Spirit.getUser());
+		DAOStudy.persistStudies(Collections.singleton(study), SpiritFrame.getUser());
 		AttachBiosamplesHelper.attachSamples(study, randomization.getSamples(), saveWeights? dlg.getPhase(): null, saveWeights, user);
 
 	}

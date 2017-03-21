@@ -34,7 +34,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleOrRackTab;
-import com.actelion.research.spiritapp.spirit.ui.scanner.ScanRackForDepictorAction;
+import com.actelion.research.spiritapp.spirit.ui.scanner.ScanRackForBiosampleOrRackTabAction;
 import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner;
 import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner.Verification;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
@@ -67,14 +67,14 @@ public class ScanUpdateDlg extends JSpiritEscapeDialog {
 		this.rack = JPAUtil.reattach(rackLocation);
 
 		//Buttons
-		JButton scanButton = new JButton(new ScanRackForDepictorAction(scanner, currentRackTab, Verification.NONE, false) {			
+		JButton scanButton = new JButton(new ScanRackForBiosampleOrRackTabAction(scanner, currentRackTab) {			
 			@Override
 			public ScannerConfiguration getScannerConfiguration() {
 				//Find compatible ScannerConfiguratoin
 				Set<ContainerType> types = Biosample.getContainerTypes(rack.getBiosamples());
 				if(types.size()!=1) return null;
 				ContainerType type = types.iterator().next();
-				List<ScannerConfiguration> res = new ArrayList<ScannerConfiguration>();
+				List<ScannerConfiguration> res = new ArrayList<>();
 				for (ScannerConfiguration c : ScannerConfiguration.valuesForBiosamples()) {
 					if(c.getCols()!=rack.getCols()) continue;
 					if(c.getRows()!=rack.getRows()) continue;

@@ -28,7 +28,7 @@ import java.util.List;
 
 import javax.swing.JLabel;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.util.ui.JGenericComboBox;
@@ -53,7 +53,7 @@ public class GroupComboBox extends JGenericComboBox<Group> {
 			List<Group> res = new ArrayList<Group>();
 			
 			for (Group group : values) {
-				if(!SpiritRights.isBlindAll(group.getStudy(), Spirit.getUser())) {
+				if(!SpiritRights.isBlindAll(group.getStudy(), SpiritFrame.getUser())) {
 					res.add(group);		
 				}
 			}

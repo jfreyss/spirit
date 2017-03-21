@@ -26,7 +26,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.util.ui.FastFont;
@@ -35,8 +35,11 @@ import com.actelion.research.util.ui.exceltable.JComponentNoRepaint;
 
 public class PhaseLabel extends JComponentNoRepaint {
 
-	private Phase phase;
-	private Group group;
+	private Color groupColor;
+	private String phaseLabel;
+	private String shortName;
+	
+	private Dimension dim = new Dimension();
 	
 	public PhaseLabel() {
 		setMinimumSize(new Dimension(40, 22));
@@ -50,21 +53,18 @@ public class PhaseLabel extends JComponentNoRepaint {
 		setPhase(phase, null);
 	}
 	
-	private Dimension dim = new Dimension();
+	
 	@Override
 	public Dimension getPreferredSize() {
-		dim.width = getFontMetrics(FastFont.REGULAR).stringWidth(phase==null?"":phase.getShortName());
+		dim.width = getFontMetrics(FastFont.REGULAR).stringWidth(shortName==null?"":shortName);
 		dim.height = 22;
 		return dim;
 	}
 	
-	public void setPhase(Phase phase, Group group) {
-		this.phase = phase;
-		this.group = group;
-	}
-	
-	public Phase getPhase() {
-		return phase;
+	public void setPhase(Phase phase, Group group) {		
+		this.groupColor = group==null? null: group.getBlindedColor(SpiritFrame.getUsername());
+		this.shortName  = phase==null? null: phase.getShortName();
+		this.phaseLabel = phase==null? null: phase.getLabel();
 	}
 	
 	@Override
@@ -75,28 +75,28 @@ public class PhaseLabel extends JComponentNoRepaint {
 		int height = getHeight();
 		if(isOpaque()) {
 			Color bgColor = getBackground();
-			if(group!=null) {
-				bgColor = UIUtils.getDilutedColor(getBackground(), group.getBlindedColor(Spirit.getUsername()));
+			if(groupColor!=null) {
+				bgColor = UIUtils.getDilutedColor(getBackground(), groupColor);
 			}
 			g.setBackground(bgColor);
 			g.clearRect(0, 0, width, height);
 		}
 		
-		if(phase==null || !isVisible()) return;
+		if(shortName==null || !isVisible()) return;
 		
 		
-		if(phase.getLabel()==null || phase.getLabel().length()==0) {
+		if(phaseLabel==null || phaseLabel.length()==0) {
 			g.setFont(FastFont.REGULAR);
 			g.setColor(getForeground());
-			g.drawString(phase.getShortName(), 2, FastFont.REGULAR.getSize()+4);
+			g.drawString(shortName, 2, FastFont.REGULAR.getSize()+4);
 		} else {
 			g.setFont(FastFont.SMALLER);
 			g.setColor(Color.GRAY);
-			g.drawString(phase.getLabel(), 2, FastFont.REGULAR.getSize()+FastFont.SMALLER.getSize()-2);
+			g.drawString(phaseLabel, 2, FastFont.REGULAR.getSize()+FastFont.SMALLER.getSize()-2);
 
 			g.setFont(FastFont.REGULAR);
 			g.setColor(getForeground());
-			g.drawString(phase.getShortName(), 2, FastFont.REGULAR.getSize()-1);
+			g.drawString(shortName, 2, FastFont.REGULAR.getSize()-1);
 			
 		}
 	}

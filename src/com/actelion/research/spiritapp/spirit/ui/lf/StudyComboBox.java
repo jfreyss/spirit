@@ -24,6 +24,8 @@ package com.actelion.research.spiritapp.spirit.ui.lf;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Collection;
@@ -34,7 +36,7 @@ import java.util.Map;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JList;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
@@ -48,23 +50,28 @@ public class StudyComboBox extends JTextComboBox {
 	private Map<String, Study> quickCache = new LinkedHashMap<>();
 	
 	public StudyComboBox() {
-		this(null, null);
+		this(RightLevel.READ, "StudyId");
 	}
 	
 	public StudyComboBox(String label) {
-		this(null, label);
+		this(RightLevel.READ, label);
 	}
 	
 	public StudyComboBox(RightLevel level) {
-		this(level, null);
+		this(level, "StudyId");
 	}
 	
 	public StudyComboBox(RightLevel level, final String label) {
 		super(true);
 		setTextWhenEmpty(label);
+		addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				selectAll();
+			}
+		});
 
 		this.level = level;
-		reload();
 		
 		setListCellRenderer(new DefaultListCellRenderer() {
 	
@@ -73,7 +80,7 @@ public class StudyComboBox extends JTextComboBox {
 			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 				Study study = quickCache==null? null: quickCache.get((String)value);
-				String user = Spirit.getUser()==null? null: Spirit.getUser().getUsername();
+				String user = SpiritFrame.getUser()==null? null: SpiritFrame.getUser().getUsername();
 				if(study==null) {
 					setText("<html><div>" + value +"<br></html>");
 				} else {
@@ -105,6 +112,11 @@ public class StudyComboBox extends JTextComboBox {
 		});
 	}
 	
+	public void setLevel(RightLevel level) {
+		this.level = level;
+		quickCache = null;
+	}
+	
 	public void reload() {
 		quickCache = null;
 		loadStudies();
@@ -112,7 +124,7 @@ public class StudyComboBox extends JTextComboBox {
 	
 	public void loadStudies() {
 		if(quickCache==null) {
-			setValues(DAOStudy.getRecentStudies(Spirit.getUser(), level));
+			setValues(DAOStudy.getRecentStudies(SpiritFrame.getUser(), level));
 		}
 	}
 	

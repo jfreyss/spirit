@@ -27,7 +27,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.pivot.Computed;
 import com.actelion.research.spiritcore.business.pivot.PivotCell;
@@ -68,15 +68,17 @@ public class PivotCellPanel extends JComponentNoRepaint {
 	@Override
 	public String getToolTipText() {
 		if(cell.getResults().size()==0) return null;
-		if(cell.getResults().size()>20) return cell.getResults()+" results...";
+		if(cell.getResults().size()>20) {
+			return cell.getResults().size()+" results...";
+		}
 		StringBuilder sb = new StringBuilder();
 		sb.append("<html><table border=0 cellpadding=1 cellmargin=0 style='font-size:8px'>");
 		
 		for(Result r: cell.getResults()) {
 			sb.append("<tr>");
-			sb.append("<td>" + MiscUtils.removeHtmlAndNewLines(r.getBiosample().getInheritedGroupString(Spirit.getUsername())) + "</td>");
+			sb.append("<td>" + MiscUtils.removeHtmlAndNewLines(r.getBiosample().getInheritedGroupString(SpiritFrame.getUsername())) + "</td>");
 			sb.append("<td>" + MiscUtils.removeHtmlAndNewLines(r.getBiosample().getTopParentInSameStudy().getSampleIdName()) + "</td>");
-			sb.append("<td>" + r.getInheritedPhase()==null?"": MiscUtils.removeHtmlAndNewLines(r.getInheritedPhase().getShortName()) + "</td>");
+			sb.append("<td>" + (r.getInheritedPhase()==null?"": MiscUtils.removeHtmlAndNewLines(r.getInheritedPhase().getShortName())) + "</td>");
 			sb.append("<td>" + MiscUtils.removeHtmlAndNewLines(r.getBiosample().getSampleIdName()) + "</td>");
 			sb.append("<td>" + MiscUtils.removeHtmlAndNewLines(r.getInputResultValuesAsString()) + "</td>");
 			sb.append("<td>" + MiscUtils.removeHtmlAndNewLines(r.getOutputResultValuesAsString()) + "</td>");

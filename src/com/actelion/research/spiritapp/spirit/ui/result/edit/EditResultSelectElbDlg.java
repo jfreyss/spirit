@@ -33,7 +33,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.util.ui.JEscapeDialog;
@@ -50,7 +50,7 @@ public class EditResultSelectElbDlg extends JEscapeDialog {
 	public EditResultSelectElbDlg() {
 		super(UIUtils.getMainFrame(), "Results - New", true);
 		
-		final List<String> recentElbs = DAOResult.getRecentElbs(Spirit.getUser());
+		final List<String> recentElbs = DAOResult.getRecentElbs(SpiritFrame.getUser());
 		comboBox.setChoices(recentElbs);
 
 		JLabel header = new JLabel(
@@ -101,7 +101,7 @@ public class EditResultSelectElbDlg extends JEscapeDialog {
 		if(DBAdapter.getAdapter().isInActelionDomain()) {
 			comboBox.setText("ELB9999-9999");
 		} else {
-			comboBox.setText(DAOResult.suggestElb(Spirit.getUsername()));
+			comboBox.setText(DAOResult.suggestElb(SpiritFrame.getUsername()));
 		}
 
 		comboBox.selectAll();

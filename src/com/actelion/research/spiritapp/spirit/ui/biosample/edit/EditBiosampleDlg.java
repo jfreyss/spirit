@@ -38,6 +38,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils.ExportMode;
@@ -81,13 +82,13 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 	 * @throws Exception
 	 */
 	public static EditBiosampleDlg createDialogForEditInTransactionMode(String title, List<Biosample> biosamples) throws Exception {
-		return new EditBiosampleDlg(title, biosamples, true);			
+		return new EditBiosampleDlg(title, biosamples, true);
 	}
-	
+
 	/**
 	 * Create an edit dialog without creating a new session.
 	 * the biosamples are still saved at the end
-	 * 
+	 *
 	 * @param biosamples
 	 * @return
 	 * @throws Exception
@@ -95,14 +96,14 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 	public static EditBiosampleDlg createDialogForEditSameTransaction(String title, List<Biosample> biosamples) throws Exception {
 		return new EditBiosampleDlg(title, biosamples, false);
 	}
-		
+
 	/**
-	 * 
+	 *
 	 * @param biosamples
 	 */
 	private EditBiosampleDlg(String title, List<Biosample> biosamplesInput, boolean transactionMode) throws Exception {
 		super(UIUtils.getMainFrame(), title==null? "Biosample - Batch Edit": title, transactionMode? EditBiosampleDlg.class.getName(): null);
-		
+
 		//Make sure the user is logged
 		try {
 			Spirit.askForAuthentication();
@@ -110,10 +111,10 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 			JExceptionDialog.showError(e);
 			return;
 		}
-		
-		//Reload Objects		
-		List<Biosample> biosamples = transactionMode? JPAUtil.reattach(biosamplesInput): biosamplesInput;		
-		
+
+		//Reload Objects
+		List<Biosample> biosamples = transactionMode? JPAUtil.reattach(biosamplesInput): biosamplesInput;
+
 		excelButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent ev) {
@@ -122,57 +123,58 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 					POIUtils.exportToExcel(table.getTabDelimitedTable(), ExportMode.HEADERS_TOP);
 				} catch (Exception e) {
 					JExceptionDialog.showError(EditBiosampleDlg.this, e);
-				}					
+				}
 			}
 		});
 
 		okButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent ev) {
-				new SwingWorkerExtended("Saving", editPanel, false) {
+				new SwingWorkerExtended("Saving", editPanel) {
 					private List<Biosample> toSave;
-					private String selCol;	
+					private String selCol;
 					private boolean isAddOp = false;
-					
+
 					@Override
 					protected void doInBackground() throws Exception {
 						try {
+							if(editPanel.getBiotype()==null) throw new Exception("You must select a biotype");
 							SpiritUser user = Spirit.askForAuthentication();
 
 							toSave = validate(EditBiosampleDlg.this, editPanel.getTable().getBiosamples(), editPanel.getTable(), true);
 
-							if(toSave==null) return;		
-							if(toSave.size()==0) throw new Exception("There are no samples to save");								
-								
+							if(toSave==null) return;
+							if(toSave.size()==0) throw new Exception("There are no samples to save");
+
 							for (Biosample b : toSave) {
 								if(b.getId()<=0) { isAddOp = true; break;}
 							}
-							
+
 							DAOBiosample.persistBiosamples(toSave, user);
 							resSavedBiosamples.addAll(toSave);
-							
+
 						} catch (ValidationException e) {
 							e.printStackTrace();
-							selCol = e.getCol();	
+							selCol = e.getCol();
 							Biosample selBiosample = (e.getRow() instanceof Biosample)? (Biosample) e.getRow(): null;
 							editPanel.getTable().setSelection(selBiosample, selCol);
 							throw e;
 						}
-					
+
 					}
 					@Override
 					protected void done() {
-						if(toSave==null) return;		
+						if(toSave==null) return;
 						SpiritChangeListener.fireModelChanged(isAddOp? SpiritChangeType.MODEL_ADDED : SpiritChangeType.MODEL_UPDATED, Biosample.class, toSave);
 						dispose();
 
 					}
 				};
 
-				
+
 			}
 		});
-		
+
 		//
 		//Init Dialog
 		infoLabel.setVisible(false);
@@ -181,17 +183,17 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 		contentPanel.add(BorderLayout.CENTER, editPanel);
 		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), excelButton, Box.createHorizontalGlue(), /*validateButton,*/ okButton));
 		setContentPane(contentPanel);
-		
+
 		UIUtils.adaptSize(this, 1400, 800);
 		setLocationRelativeTo(UIUtils.getMainFrame());
-		
+
 		//Init Data
 		editPanel.setRows(biosamples);
 
-	}	
-	
+	}
+
 	/**
-	 * 
+	 *
 	 * @param opener
 	 * @param biosamples -not null
 	 * @param editor -nullable
@@ -200,18 +202,18 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 	 * @throws Exception
 	 */
 	public static List<Biosample> validate(JDialog opener, List<Biosample> biosamples, EditBiosampleTable editor, boolean allowDialogs) throws Exception {
-		
+
 		//Check sampleId to be generated
 		if(allowDialogs) {
 			List<Biosample> toGenerateSampleId = new ArrayList<>();
-			for (Biosample b : biosamples) {		
+			for (Biosample b : biosamples) {
 				if(b==null) continue;
-				
+
 				if(b.getSampleId()==null || b.getSampleId().length()==0) {
 					toGenerateSampleId.add(b);
 				}
 			}
-			if(toGenerateSampleId.size()>0) {				
+			if(toGenerateSampleId.size()>0) {
 				for (Biosample b : toGenerateSampleId) {
 					if(editor!=null) {
 						editor.generateSampleId(b);
@@ -223,31 +225,31 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 				opener.repaint();
 			}
 		}
-		
+
 		//Validation
 		Map<String, Biosample> sampleId2sample = new HashMap<>();
 		boolean askValidChoice = true;
-		List<Biosample> toSave = new ArrayList<>();		
+		List<Biosample> toSave = new ArrayList<>();
 		Map<String, Integer> sampleId2Ids = DAOBiosample.getIdFromSampleIds(Biosample.getSampleIds(biosamples));
-		
+
 		for (Biosample b : biosamples) {
-			
+
 			if(b==null || b.isEmpty()) continue;
 			try {
 				if(editor!=null && editor.getModel().getReadOnlyRows().contains(b)) continue;
-	
+
 				//Check that we have edit rights
-				boolean canEdit = SpiritRights.canEdit(b, Spirit.getUser());
+				boolean canEdit = SpiritRights.canEdit(b, SpiritFrame.getUser());
 				if(!canEdit) throw new ValidationException("You cannot allowed to update " + b, b, "SampleId");
-				
+
 				//Validate
-				if(b.getSampleId()==null || b.getSampleId().length()==0) throw new ValidationException("The sampleId cannot be empty", b, "SampleId");			
-				if(b.getBiotype()==null) throw new ValidationException("Biotype cannot be empty", b, "SampleId");			
-				
+				if(b.getSampleId()==null || b.getSampleId().length()==0) throw new ValidationException("The sampleId cannot be empty", b, "SampleId");
+				if(b.getBiotype()==null) throw new ValidationException("Biotype cannot be empty", b, "SampleId");
+
 				if(b.getBiotype().getSampleNameLabel()!=null && b.getBiotype().isNameRequired() && (b.getSampleName()==null || b.getSampleName().length()==0)){
 					throw new ValidationException("The field '" + b.getBiotype().getSampleNameLabel() + "' is required", b, "Name");
 				}
-	
+
 				for (BiotypeMetadata metadataType : b.getBiotype().getMetadata()) {
 					String val = b.getMetadataValue(metadataType);
 					if(metadataType.isRequired() && (val==null || val.length()==0)) {
@@ -263,13 +265,13 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 						}
 					}
 				}
-								
+
 				//Check uniqueness
-				if(sampleId2sample.get(b.getSampleId())!=null) throw new ValidationException("The sampleId "+b.getSampleId()+" is duplicated", b, "SampleId");				
-	
+				if(sampleId2sample.get(b.getSampleId())!=null) throw new ValidationException("The sampleId "+b.getSampleId()+" is duplicated", b, "SampleId");
+
 				Integer existingId = sampleId2Ids.get(b.getSampleId());
 				if(existingId!=null && existingId!=b.getId()) throw new ValidationException("The sampleId "+b.getSampleId()+" exists already in Spirit", b, "SampleId");
-	 			
+
 				toSave.add(b);
 				sampleId2sample.put(b.getSampleId(), b);
 			} catch(ValidationException e) {
@@ -287,7 +289,7 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 						b.setParent(ref);
 					}
 				}
-			}							
+			}
 		}
 
 		//BiotypeName: Check the autocompletion fields for approximate spelling
@@ -297,12 +299,12 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 				if(b.getBiotype().getSampleNameLabel()!=null && b.getBiotype().isNameAutocomplete()) {
 					String value = b.getSampleName();
 					if(value==null || value.length()==0) continue;
-					
-					Set<String> possibleValues = new TreeSet<>(DAOBiotype.getAutoCompletionFieldsForName(b.getBiotype(), null));					
+
+					Set<String> possibleValues = new TreeSet<>(DAOBiotype.getAutoCompletionFieldsForName(b.getBiotype(), null));
 					if(possibleValues.contains(value)) continue;
-					
+
 					Correction<Biotype, Biosample> correction = correctionMap1.getCorrection(b.getBiotype(), value);
-					if(correction==null) correction = correctionMap1.addCorrection(b.getBiotype(), value, new ArrayList<>(possibleValues), false);					
+					if(correction==null) correction = correctionMap1.addCorrection(b.getBiotype(), value, new ArrayList<>(possibleValues), false);
 					correction.getAffectedData().add(b);
 				}
 			}
@@ -320,8 +322,8 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 					@Override
 					protected void performCorrection(Correction<Biotype, Biosample> correction, String newValue) {
 						for (Biosample b : correction.getAffectedData()) {
-							b.setSampleName(newValue);							
-						}						
+							b.setSampleName(newValue);
+						}
 					}
 				};
 				if(dlg.getReturnCode()!=CorrectionDlg.OK) return null;
@@ -336,17 +338,17 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 					if(att.getDataType()==DataType.AUTO) {
 						String value = b.getMetadataValue(att);
 						if(value==null || value.length()==0) continue;
-						
-						Set<String> possibleValues = DAOBiotype.getAutoCompletionFields(att, null);					
+
+						Set<String> possibleValues = DAOBiotype.getAutoCompletionFields(att, null);
 						if(possibleValues.contains(value)) continue;
-						
+
 						Correction<BiotypeMetadata, Biosample> correction = correctionMap2.getCorrection(att, value);
-						if(correction==null) correction = correctionMap2.addCorrection(att, value, new ArrayList<String>( possibleValues), false);					
+						if(correction==null) correction = correctionMap2.addCorrection(att, value, new ArrayList<String>( possibleValues), false);
 						correction.getAffectedData().add(b);
 					}
 				}
-			}			
-			
+			}
+
 			//BiotypeMetadata: Display Correction Dlg
 			if(correctionMap2.getItemsWithSuggestions()>0) {
 				CorrectionDlg<BiotypeMetadata, Biosample> dlg = new CorrectionDlg<BiotypeMetadata, Biosample>(opener, correctionMap2) {
@@ -361,8 +363,8 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 					@Override
 					protected void performCorrection(Correction<BiotypeMetadata, Biosample> correction, String newValue) {
 						for (Biosample b : correction.getAffectedData()) {
-							b.setMetadataValue(correction.getAttribute(), newValue);							
-						}						
+							b.setMetadataValue(correction.getAttribute(), newValue);
+						}
 					}
 				};
 				if(dlg.getReturnCode()!=CorrectionDlg.OK) return null;
@@ -370,26 +372,26 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 		}
 		return toSave;
 	}
-	
+
 
 	@Override
 	protected boolean mustAskForExit() {
 		if(super.mustAskForExit() || editPanel.getTable().getUndoManager().hasChanges()) return true;
 		return false;
 	}
-	
+
 	public List<Biosample> getSaved() {
 		return resSavedBiosamples;
 	}
-	
+
 	public void setForcedBiotype(Biotype biotype) {
 		editPanel.setForcedBiotype(biotype);
-		
+
 	}
-	
+
 	public void setLabel(String html) {
 		infoLabel.setVisible(html!=null);
 		infoLabel.setText(html);
 	}
-	
+
 }

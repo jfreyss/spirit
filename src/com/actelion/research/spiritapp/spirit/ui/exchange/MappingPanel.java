@@ -32,7 +32,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 
-import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.MappingAction;
+import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.EntityAction;
 import com.actelion.research.util.ui.UIUtils;
 
 public class MappingPanel extends JPanel {
@@ -100,7 +100,7 @@ public class MappingPanel extends JPanel {
 		}		
 	}
 	
-	public void setMappingAction(MappingAction action) {
+	public void setMappingAction(EntityAction action) {
 		if(action==null) {
 			b1.setSelected(true);
 			return;
@@ -119,10 +119,10 @@ public class MappingPanel extends JPanel {
 		if(mappingComponent!=null) mappingPanel.setVisible(b3.isSelected());
 	}
 	
-	public MappingAction getMappingAction() {
-		if(b1.isSelected()) return MappingAction.CREATE;
-		if(b2.isSelected()) return MappingAction.SKIP;
-		return MappingAction.MAP_REPLACE;
+	public EntityAction getMappingAction() {
+		if(b1.isSelected()) return EntityAction.CREATE;
+		if(b2.isSelected()) return EntityAction.SKIP;
+		return EntityAction.MAP_REPLACE;
 	}
 	
 	public void setCreationEnabled(boolean enabled) {

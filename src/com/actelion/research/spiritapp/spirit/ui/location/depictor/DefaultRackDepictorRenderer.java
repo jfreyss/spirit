@@ -27,7 +27,7 @@ import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Shape;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
@@ -49,7 +49,7 @@ public class DefaultRackDepictorRenderer implements RackDepictorRenderer {
 		} else {
 			if(c.getStudy()!=null) {
 				Group gr = c.getFirstGroup();
-				bgColor = gr==null? Color.WHITE: UIUtils.getDilutedColor(gr.getBlindedColor(Spirit.getUsername()), Color.WHITE, .2);
+				bgColor = gr==null? Color.WHITE: UIUtils.getDilutedColor(gr.getBlindedColor(SpiritFrame.getUsername()), Color.WHITE, .2);
 			} else {
 				Biosample b = c.getBiosamples().isEmpty()? null: c.getBiosamples().iterator().next();
 				if(b==null) {
@@ -106,7 +106,7 @@ public class DefaultRackDepictorRenderer implements RackDepictorRenderer {
 
 			//Print Study info from container
 			g.setColor(Color.BLACK);
-			String info = c.getPrintStudyLabel(Spirit.getUsername());
+			String info = c.getPrintStudyLabel(SpiritFrame.getUsername());
 			y += FastFont.SMALL.getSize()+1;
 			if(info.length()>0) {
 				g.setFont(FastFont.SMALL);

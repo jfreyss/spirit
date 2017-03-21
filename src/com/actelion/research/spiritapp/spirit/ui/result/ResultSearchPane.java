@@ -40,8 +40,7 @@ import javax.swing.JScrollPane;
 
 import org.slf4j.LoggerFactory;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritapp.spirit.ui.study.ReportDlg;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
@@ -49,37 +48,33 @@ import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
-import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
-import com.actelion.research.spiritcore.services.dao.DAOStudy;
-import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class ResultSearchPane extends JPanel {
-	
+
 	public static final String PROPERTY_SEARCH = "search_update";
-	
-	private final ResultTab resultTab;
-	
-	private final ResultSearchTree tree;		 
+
+	private final ResultTab tab;
+	private final ResultSearchTree tree;
 	private final JButton searchButton = new JButton(new Action_Search());
-	
+
 	public ResultSearchPane(final ResultTab resultTab, final Biotype forcedBiotype) {
 		super(new BorderLayout());
-		this.resultTab = resultTab;
-		this.tree = new ResultSearchTree(forcedBiotype);
+		this.tab = resultTab;
+		this.tree = new ResultSearchTree(resultTab.getFrame(), forcedBiotype);
 
-		JButton resetButton = new JButton(new Action_Reset());	
+		JButton resetButton = new JButton(new Action_Reset());
 
 		//Layout
 		add(BorderLayout.CENTER, new JScrollPane(tree));
-		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), resetButton, searchButton));		
-		setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));		
+		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), resetButton, searchButton));
+		setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
 		setPreferredSize(new Dimension(200, 200));
-		
+
 		tree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
@@ -87,44 +82,59 @@ public class ResultSearchPane extends JPanel {
 			}
 		});
 	}
-	
+
 	@Override
 	public Dimension getMinimumSize() {
 		return new Dimension(0,0);
 	}
-	
-	public void query(ResultQuery query) {
+
+	/**
+	 * Sets the query by updating the filter, and retrieves the results
+	 * @param query
+	 * @return
+	 */
+	public SwingWorkerExtended setQuery(ResultQuery query) {
 		tree.expandAll(false);
 		tree.setQuery(query);
-		
-		search(query);		
+		return query(query);
 	}
-	
-	public void search(final ResultQuery query) {
-		resultTab.setResults(new ArrayList<>());
 
-		final SpiritUser user = Spirit.getUser();
-		if(user==null) return;
-		
-		new SwingWorkerExtended("Querying Results", this, true) {
+	/**
+	 * Retrieves the results without updating the filters
+	 * @param query
+	 * @return
+	 */
+	public SwingWorkerExtended query(final ResultQuery query) {
+		tab.setResults(new ArrayList<>());
+
+		final SpiritUser user = SpiritFrame.getUser();
+		if(user==null) return new SwingWorkerExtended() {};
+
+		return new SwingWorkerExtended("Querying Results", tab, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			private final long s = System.currentTimeMillis();
 			private List<Result> results;
-			
+
 			@Override
-			protected void doInBackground() throws Exception {				
-				//Query results
-				results = DAOResult.queryResults(query, user);
+			protected void doInBackground() throws Exception {
+				LoggerFactory.getLogger(getClass()).debug("ResultQuery results: " + query);
+				results = query.isEmpty()? new ArrayList<>(): DAOResult.queryResults(query, user);
+				LoggerFactory.getLogger(getClass()).debug("ResultQuery queried in: "+(System.currentTimeMillis()-s)+"ms");
+				DAOResult.fullLoad(results);
+				LoggerFactory.getLogger(getClass()).debug("ResultQuery loaded in: "+(System.currentTimeMillis()-s)+"ms");
 			}
 
 			@Override
 			protected void done() {
-				LoggerFactory.getLogger(getClass()).debug("Query done in: "+(System.currentTimeMillis()-s)+"ms");
-				resultTab.setResults(results);
-				LoggerFactory.getLogger(getClass()).debug("Display done in: "+(System.currentTimeMillis()-s)+"ms");
-			}			
-		};		
+				if(query.getMaxResults()>0 && results.size()>=query.getMaxResults()) {
+					tab.setErrorText("There are more than "+query.getMaxResults()+" results. Please use the filters");
+				} else {
+					tab.setResults(results);
+				}
+				LoggerFactory.getLogger(getClass()).debug("ResultQuery done in: "+(System.currentTimeMillis()-s)+"ms");
+			}
+		};
 	}
-	
+
 	/**
 	 * Query Biosamples
 	 * @author freyssj
@@ -137,16 +147,17 @@ public class ResultSearchPane extends JPanel {
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			final ResultQuery query = tree.updateQuery();
+			final ResultQuery query = tree.getQuery();
+			query.setMaxResults(100000);
 			if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && query.isEmpty()) {
 				JOptionPane.showMessageDialog(ResultSearchPane.this, "Please enter more criteria", "Search", JOptionPane.ERROR_MESSAGE);
 			} else {
-				search(query);
+				query(query);
 			}
 			ResultSearchPane.this.firePropertyChange(PROPERTY_SEARCH, null, "");
 		}
 	}
-	
+
 	/**
 	 * Reset Query
 	 * @author freyssj
@@ -159,59 +170,18 @@ public class ResultSearchPane extends JPanel {
 			setToolTipText("Reset all query fields");
 		}
 		@Override
-		public void actionPerformed(ActionEvent e) {		
-			ResultQuery query = new ResultQuery();
+		public void actionPerformed(ActionEvent e) {
+			ResultQuery q = new ResultQuery();
+			q.setStudyIds(tab.getFrame()==null?null: tab.getFrame().getStudyId());
 			tree.expandAll(false);
-			tree.setQuery(query);
-			resultTab.setResults(new ArrayList<Result>());
+			tree.setQuery(q);
+			tab.setResults(new ArrayList<Result>());
 			SpiritContextListener.setStatus("");
 			ResultSearchPane.this.firePropertyChange(PROPERTY_SEARCH, null, "");
 
 		}
 	}
-	
-	
-	public class Action_Report extends AbstractAction {
-		public Action_Report() {
-			super("Report");
-			putValue(Action.SMALL_ICON, IconType.EXCEL.getIcon());
-			setToolTipText("Generate a predefined report");
-		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			Study s = tree.getStudyId().length()==0? null: DAOStudy.getStudyByStudyId(tree.getStudyId());
-			if(s==null) {
-				JExceptionDialog.showError("You must select exactly one study");
-				return;
-			} else {
-				new ReportDlg(s);
-			}
-			
 
-		}
-	}
-
-	
-//	public class Action_Export extends AbstractAction {
-//		public Action_Export() {
-//			super();
-//			putValue(AbstractAction.SHORT_DESCRIPTION, "Save Query");
-//			putValue(AbstractAction.SMALL_ICON, IconType.SAVE.getIcon());
-//		}
-//		@Override
-//		public void actionPerformed(ActionEvent e) {		
-//			ResultQuery query = tree.getQuery();
-//			try {
-//				ExportResultQueryModel model = new ExportResultQueryModel(query, cardPanel.getCurrentTemplate());
-//				new ExportQueryDlg<ExportResultQueryModel>(ExportResultQueryModel.class, model, null);				
-//			} catch (Exception ex) {
-//				JExceptionDialog.show(ex);			
-//			}
-//			refreshCombobox();			
-//		}
-//	}
-	
-	
 	public ResultSearchTree getSearchTree() {
 		return tree;
 	}
@@ -219,5 +189,5 @@ public class ResultSearchPane extends JPanel {
 	public JButton getSearchButton() {
 		return searchButton;
 	}
-	
+
 }

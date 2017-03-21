@@ -28,6 +28,7 @@ import java.util.Date;
 import javax.swing.JComponent;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
@@ -54,14 +55,14 @@ public class MonitorTextChangeListener implements TextChangeListener {
 		assert s instanceof JCustomTextField;
 		JCustomTextField src = (JCustomTextField) s;
 		try {
-			JPAUtil.pushEditableContext(Spirit.getUser());
+			JPAUtil.pushEditableContext(SpiritFrame.getUser());
 			
 			Date now = JPAUtil.getCurrentDateFromDatabase();
 			result.getOutputResultValues().get(valueNo).setValue(src.getText());
 			result.setUpdUser(Spirit.askForAuthentication().getUsername());
 			result.setUpdDate(now);
 			
-			DAOResult.persistResults(Collections.singletonList(result), Spirit.getUser());
+			DAOResult.persistResults(Collections.singletonList(result), SpiritFrame.getUser());
 			src.setBorderColor(Color.BLUE);					
 			src.setToolTipText((src.getToolTipText()==null?"<html>":src.getToolTipText()+"<br>") + "Updated value: "+MonitoringCagePanel.formatTooltipText(src.getText(), result.getUpdUser(), result.getUpdDate()));
 		} catch(Exception ex) {

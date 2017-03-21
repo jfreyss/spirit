@@ -45,6 +45,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.LogEntry;
 import com.actelion.research.spiritcore.business.employee.Employee;
@@ -203,7 +204,7 @@ public class LoginDlg extends JEscapeDialog {
 	        config.setProperty("username", username);
 	        
 			if(user!=null) {
-				Spirit.setUser(user);
+				SpiritFrame.setUser(user);
 			}
 			return user;
 			

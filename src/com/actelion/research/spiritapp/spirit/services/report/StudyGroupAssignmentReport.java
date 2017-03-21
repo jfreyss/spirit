@@ -28,7 +28,7 @@ import java.util.List;
 
 import org.apache.poi.ss.usermodel.Sheet;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -160,7 +160,7 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 				set(sheet, line, col++, r.getSampleId(), Style.S_TD_CENTER);
 				set(sheet, line, col++, r.getSampleName(), Style.S_TD_CENTER);
 				set(sheet, line, col++, r.getContainerId(), Style.S_TD_CENTER);
-				set(sheet, line, col++, g==null?"": g.getBlindedName(Spirit.getUsername()) , Style.S_TD_LEFT);
+				set(sheet, line, col++, g==null?"": g.getBlindedName(SpiritFrame.getUsername()) , Style.S_TD_LEFT);
 				set(sheet, line, col++, g==null || g.getNSubgroups()<=1?"": (r.getSubGroup()+1), Style.S_TD_CENTER);
 				if(biotype!=null) {
 					for (BiotypeMetadata bm : biotype.getMetadata()) {

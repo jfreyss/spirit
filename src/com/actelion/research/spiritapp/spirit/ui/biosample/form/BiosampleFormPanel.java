@@ -37,7 +37,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleFinder;
 import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -47,6 +47,11 @@ import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 
+/**
+ * BiosampleFormPanel is the class responsible for the form edition of one or a batch of biosamples of the same type 
+ * @author Joel Freyss
+ *
+ */
 public class BiosampleFormPanel extends JPanel {
 
 	public enum EditMode {
@@ -62,7 +67,7 @@ public class BiosampleFormPanel extends JPanel {
 	private BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 	
 	private JButton changeButton = new JButton("Select Existing Parent"); //only mode==edit
-	private JButton createButton = new JButton("Create New Parent"); //only mode==edit
+	private JButton createButton = new JButton("Reset"); //only mode==edit
 	private JButton removeButton = new JButton("Unset"); //only for first and last
 	private JRadioButton createOneButton = new JRadioButton("Create One", true); //only for leave-node
 	private JRadioButton createBatchButton = new JRadioButton("Batch");  //only for leave-node
@@ -105,25 +110,22 @@ public class BiosampleFormPanel extends JPanel {
 		add(BorderLayout.CENTER, cardPanel);
 		add(BorderLayout.SOUTH, Box.createVerticalGlue());
 		//Events
-		biotypeComboBox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		biotypeComboBox.addActionListener(e-> {
 				
-				if(push>0) return;
-				if(biotype==biotypeComboBox.getSelection()) return;
-				
-				try {
-					if(mode==ViewMode.FORM && !getBiosampleFromFormMode().isEmpty()) {
-						throw new Exception("You cannot change the type if you already have some data");
-					} else if(mode==ViewMode.BATCH && getBiosampleFromScannerMode().size()>1) {
-						throw new Exception("You cannot change the type if you already have some data");
-					} else {
-						setBiotype(biotypeComboBox.getSelection());					
-					}
-				} catch(Exception ex) {
-					biotypeComboBox.setSelection(biotype);
-					JExceptionDialog.showError(ex);
+			if(push>0) return;
+			if(biotype==biotypeComboBox.getSelection()) return;
+			
+			try {
+				if(mode==ViewMode.FORM && !getBiosampleFromFormMode().isEmpty()) {
+					throw new Exception("You cannot change the type if you already have some data");
+				} else if(mode==ViewMode.BATCH && getBiosampleFromScannerMode().size()>1) {
+					throw new Exception("You cannot change the type if you already have some data");
+				} else {
+					setBiotype(biotypeComboBox.getSelection());					
 				}
+			} catch(Exception ex) {
+				biotypeComboBox.setSelection(biotype);
+				JExceptionDialog.showError(ex);
 			}
 		});
 		
@@ -171,10 +173,7 @@ public class BiosampleFormPanel extends JPanel {
 		});
 
 		setViewMode(ViewMode.FORM);
-		
-	
-	}
-	
+	}	
 
 	public Biotype getBiotype() {
 		return biotypeComboBox.getSelection();
@@ -200,15 +199,12 @@ public class BiosampleFormPanel extends JPanel {
 		BiosampleFormPanel next = dlg.getNext(this);
 		
 		biotypeComboBox.setEnabled(editMode==EditMode.NEW);
-		System.out.println("BiosampleFormPanel.updateComponent() "+biosample+" "+highlightBiosample+ "  " + editMode+" "+null);
 		changeButton.setVisible(!highlightBiosample && editMode!=EditMode.READ && next!=null);
 		createButton.setVisible(!highlightBiosample && editMode!=EditMode.READ && next!=null);
 		createOneButton.setVisible(biotype!=null && !biotype.isAbstract() && !biotype.isHideContainer() && editMode==EditMode.NEW && next==null);
 		createBatchButton.setVisible(biotype!=null && !biotype.isAbstract() && !biotype.isHideContainer() && editMode==EditMode.NEW && next==null);
-		removeButton.setVisible(!highlightBiosample && ((previous==null && next!=null) || (previous!=null && next==null)));
-		
-		formPanel.setEditable(editMode!=EditMode.READ);
-		
+		removeButton.setVisible(!highlightBiosample && ((previous==null && next!=null) || (previous!=null && next==null)));		
+		formPanel.setEditable(editMode!=EditMode.READ);		
 	}
 	
 	public void setViewMode(ViewMode mode) {
@@ -240,7 +236,7 @@ public class BiosampleFormPanel extends JPanel {
 			setBiotype(b==null? null: b.getBiotype());
 			this.biosample = b;
 			setViewMode(ViewMode.FORM);
-			setEditMode(biosample.getId()>0? (SpiritRights.canEdit(b, Spirit.getUser())? EditMode.EDIT:  EditMode.READ): EditMode.NEW);
+			setEditMode(biosample.getId()>0? (SpiritRights.canEdit(b, SpiritFrame.getUser())? EditMode.EDIT:  EditMode.READ): EditMode.NEW);
 			initFormUI();			
 //			updateComponent();
 		} finally {

@@ -65,6 +65,7 @@ public class PropertyKey {
 			DateFormat formatter = DateFormat.getDateInstance(DateFormat.SHORT, Locale.getDefault());
 			try {
 				String pattern       = ((SimpleDateFormat)formatter).toPattern();
+				System.out.println("PropertyKey.DATE_MODE.new PropertyKey() {...}.getDefaultValue() "+pattern+" /"+Locale.getDefault());
 				if(pattern.startsWith("d/") || pattern.startsWith("dd/")) return FormatterUtils.LocaleFormat.EUROPEAN.toString();
 				if(pattern.startsWith("d.") || pattern.startsWith("dd.")) return FormatterUtils.LocaleFormat.SWISS.toString();
 				if(pattern.startsWith("yy") || pattern.startsWith("yyyy")) return FormatterUtils.LocaleFormat.INTL.toString();
@@ -124,16 +125,17 @@ public class PropertyKey {
 	public static final PropertyKey STUDY_STATES_FROM = new PropertyKey(STUDY_STATES, "From", "Previous workflow states (opt.)", "from", "", STUDY_STATES);
 	public static final PropertyKey STUDY_STATES_PROMOTERS = new PropertyKey(STUDY_STATES, "Promoters", "Roles of users who can promote to this state (opt.)", 	"promoters", "ALL", USER_ROLES);
 	public static final PropertyKey STUDY_STATES_READ = new PropertyKey(STUDY_STATES, "Read", "Roles of readers (can query results/biosamples)", "read", "ALL", USER_ROLES) {
-		@Override public String getDefaultValue(String nestedValue) {return nestedValue.equalsIgnoreCase("PUBLISHED")?"ALL": "";};
-		@Override public String[] getSpecialChoices() {return new String[]{"ALL"};}
+		@Override public String getDefaultValue(String nestedValue) {return nestedValue.equalsIgnoreCase("PUBLISHED")?"ALL": nestedValue.equalsIgnoreCase("STOPPED")?"NONE": "";};
+		@Override public String[] getSpecialChoices() {return new String[]{"ALL", "NONE"};}
 	};
 	public static final PropertyKey STUDY_STATES_EXPERT = new PropertyKey(STUDY_STATES, "Experimenter", "Roles of experimenters (can add biosamples/results)", "expert", "", USER_ROLES) {
-		@Override public String getDefaultValue(String nestedValue) {return nestedValue.equalsIgnoreCase("PUBLISHED")?"ALL": "";};
-		@Override public String[] getSpecialChoices() {return new String[]{"ALL"};}
+		@Override public String getDefaultValue(String nestedValue) {return nestedValue.equalsIgnoreCase("EXAMPLE")?"NONE": nestedValue.equalsIgnoreCase("PUBLISHED")?"ALL": nestedValue.equalsIgnoreCase("STOPPED")?"NONE": "";};
+		@Override public String[] getSpecialChoices() {return new String[]{"ALL", "NONE"};}
 
 	};
 	public static final PropertyKey STUDY_STATES_ADMIN = new PropertyKey(STUDY_STATES, "Admin", "Roles of administrators (can edit study design/rights)", "admin", "",	USER_ROLES) {
-		public String[] getSpecialChoices() {return new String[]{"ALL"};}
+		@Override public String getDefaultValue(String nestedValue) {return nestedValue.equalsIgnoreCase("EXAMPLE")?"NONE": "";};
+		@Override public String[] getSpecialChoices() {return new String[]{"ALL", "NONE"};}
 	};
 	public static final PropertyKey STUDY_STATES_SEALED = new PropertyKey(STUDY_STATES, "Sealed", "Should we seal the study in this state? (no more editable except by an admin)", "seal", "false", "true,false");
 
@@ -276,6 +278,5 @@ public class PropertyKey {
 	public String toString() {
 		return key;
 	}
-
 	
 }

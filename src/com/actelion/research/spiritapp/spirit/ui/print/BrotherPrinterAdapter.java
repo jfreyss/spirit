@@ -65,6 +65,7 @@ import com.actelion.research.spiritapp.spirit.services.print.PrintableOfContaine
 import com.actelion.research.spiritapp.spirit.services.print.PrintableOfLines;
 import com.actelion.research.spiritapp.spirit.services.print.SpiritPrinter;
 import com.actelion.research.spiritapp.spirit.services.print.PrintableOfContainers.Model;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.EditorPaneDlg;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
@@ -266,7 +267,7 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 			container.getContainerId(),
 			container.getStudy()==null?"": container.getStudy().getIvvOrStudyId(),
 			tops.size()!=1?"": tops.get(0).getSampleId() + (tops.get(0).getSampleName()!=null && tops.get(0).getSampleName().length()>0? " [" + tops.get(0).getSampleName() + "]":""),
-			container.getFirstGroup()==null?"": container.getFirstGroup().getBlindedName(Spirit.getUsername()),
+			container.getFirstGroup()==null?"": container.getFirstGroup().getBlindedName(SpiritFrame.getUsername()),
 			container.getPhase()==null?"": container.getPhase().getAbsoluteDateAndName(),
 			types,
 			staining,

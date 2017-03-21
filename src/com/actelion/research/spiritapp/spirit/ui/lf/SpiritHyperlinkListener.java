@@ -85,7 +85,7 @@ public class SpiritHyperlinkListener implements HyperlinkListener {
 							JExceptionDialog.showError(ex);
 						}
 					} else if(e.getDescription().startsWith("stu:")) {
-						SpiritContextListener.setStudy(null);
+//						SpiritContextListener.setStudy(null);
 						String param = e.getDescription().substring(4);
 						try {
 							int id = Integer.parseInt(param);
@@ -117,15 +117,14 @@ public class SpiritHyperlinkListener implements HyperlinkListener {
 						if(s.length>2) q.setUpdDays(Integer.parseInt(s[2]));
 						SpiritContextListener.query(q);
 					} else if(e.getDescription().startsWith("test:")) {
-						SpiritContextListener.query((ResultQuery)null);
 						String[] s = e.getDescription().substring("test:".length()).split(":");						
 						ResultQuery q = new ResultQuery();
 						q.setStudyIds(s[0]);
 						if(s.length>1) q.getTestIds().add(Integer.parseInt(s[1]));
-						SpiritContextListener.query(q);
+						SpiritContextListener.query(q, -1);
 					} else if(e.getDescription().startsWith("elb:")) {
 						String elb = e.getDescription().substring("elb:".length());
-						SpiritContextListener.query(ResultQuery.createQueryForElb(elb));
+						SpiritContextListener.query(ResultQuery.createQueryForElb(elb), -1);
 					} else if(e.getDescription().startsWith("http:") || e.getDescription().startsWith("https:")) {
 						try {
 							Desktop.getDesktop().browse(new URI(e.getDescription()));

@@ -35,7 +35,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerTypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
 import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeNode;
@@ -50,6 +50,7 @@ import com.actelion.research.spiritapp.spirit.ui.lf.StudyNode;
 import com.actelion.research.spiritapp.spirit.ui.lf.UpdDateNode;
 import com.actelion.research.spiritapp.spirit.ui.lf.UpdUserNode;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationFormNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode.FieldType;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.CheckboxNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.ComboBoxNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
@@ -58,17 +59,16 @@ import com.actelion.research.spiritapp.spirit.ui.util.formtree.LabelNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.MultiNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxOneNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode.FieldType;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
+import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
-import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
@@ -97,7 +97,7 @@ public class BiosampleSearchTree extends FormTree {
 	private LabelNode catSelectOneNode = new LabelNode(this, "Select One Sample per TopParent");
 	private CheckboxNode cb1, cb2; 
 	private Biotype[] selectableBiotypes;
-
+	private SpiritFrame frame;
 
 
 	private final StudyNode studyNode = new StudyNode(this, RightLevel.READ, true, new Strategy<String>() {
@@ -237,24 +237,26 @@ public class BiosampleSearchTree extends FormTree {
 	});
 
 	
-	public BiosampleSearchTree() {
-		this(null, false);
+	public BiosampleSearchTree(SpiritFrame frame) {
+		this(frame, null, false);
 	}
 	
-	public BiosampleSearchTree(final Biotype[] selectableBiotypes, final boolean autoQuery) {		
+	public BiosampleSearchTree(SpiritFrame frame, final Biotype[] selectableBiotypes, final boolean autoQuery) {		
 		super();
+		this.frame = frame;
 		setRootVisible(false);
 		this.selectableBiotypes = selectableBiotypes;
 		query.setFilterTrashed(selectableBiotypes!=null && selectableBiotypes.length>0);
 		exactCheckBox.setOpaque(false);
 		
 		//Study Category
-		stuNode.setCanExpand(false);
-		stuNode.add(studyNode);
-		stuNode.add(groupNode);
-		stuNode.add(phaseNode);
-		
-		top.add(stuNode);
+		if(frame==null) {
+			stuNode.setCanExpand(false);
+			stuNode.add(studyNode);
+			stuNode.add(groupNode);
+			stuNode.add(phaseNode);
+			top.add(stuNode);
+		}
 		
 
 		//Container
@@ -367,6 +369,11 @@ public class BiosampleSearchTree extends FormTree {
 				
 		top.add(moreNode);
 
+		if(frame!=null) {
+			advancedNode.add(groupNode);
+			advancedNode.add(phaseNode);
+		}
+
 		//Creation
 		advancedNode.add(new CreUserNode(this, new Strategy<String>() {
 			@Override
@@ -426,7 +433,6 @@ public class BiosampleSearchTree extends FormTree {
 //		advancedNode.add(maxQualityNode);	
 		advancedNode.add(onlyContainerCheckbox);
 		advancedNode.add(onlyLocationCheckbox);
-
 		
 		//Quality
 		minQualityNode.getComboBox().setEditable(false);
@@ -461,15 +467,15 @@ public class BiosampleSearchTree extends FormTree {
 
 		setRoot(top);
 
-//		eventStudyChanged();
+		eventStudyChanged();
 	}
 		
 	
 	public void eventStudyChanged() {		
 				
-		List<Study> studies = new ArrayList<Study>();
+		List<Study> studies = new ArrayList<>();
 		try {
-			if(query.getStudyIds()!=null && query.getStudyIds().length()>0) studies = DAOStudy.queryStudies(StudyQuery.createForStudyIds(query.getStudyIds()), Spirit.getUser());
+			if(query.getStudyIds()!=null && query.getStudyIds().length()>0) studies = DAOStudy.queryStudies(StudyQuery.createForStudyIds(query.getStudyIds()), SpiritFrame.getUser());
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -566,7 +572,7 @@ public class BiosampleSearchTree extends FormTree {
 						}) {
 							@Override
 							public Collection<String> getChoices() {
-								return DAOBiotype.getAutoCompletionFields(linker.getBiotypeMetadata(), studyNode.getStudy());
+								return DAOBiotype.getAutoCompletionFields(linker.getBiotypeMetadata(), frame==null? studyNode.getStudy(): frame.getStudy());
 							}
 						});
 					} else if(linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().getDataType()==DataType.D_FILE) {
@@ -591,7 +597,7 @@ public class BiosampleSearchTree extends FormTree {
 						}) {
 							@Override
 							public Collection<String> getChoices() {
-								return DAOBiotype.getAutoCompletionFieldsForName(biotype2, studyNode.getStudy());
+								return DAOBiotype.getAutoCompletionFieldsForName(biotype2, frame==null? studyNode.getStudy(): frame.getStudy());
 							}
 						});
 					} else if(linker.getType()==LinkerType.COMMENTS) {
@@ -602,7 +608,7 @@ public class BiosampleSearchTree extends FormTree {
 								else query.getLinker2values().put(linker, modelValue);
 							}						
 						}) {
-							@Override public Collection<String> getChoices() {return DAOBiotype.getAutoCompletionFieldsForComments(biotype2, studyNode.getStudy());} 			
+							@Override public Collection<String> getChoices() {return DAOBiotype.getAutoCompletionFieldsForComments(biotype2, frame==null? studyNode.getStudy(): frame.getStudy());} 			
 						});
 					} else {							
 						linkerNode.add(new InputNode(this, FieldType.AND_CLAUSE, label, new Strategy<String>() {
@@ -632,7 +638,9 @@ public class BiosampleSearchTree extends FormTree {
 
 		
 	public BiosampleQuery getQuery() {
-		query.setSelectOneMode(BiosampleQuery.SELECT_ALL);
+		query.setSelectOneMode(BiosampleQuery.SELECT_ALL);		
+		query.setStudyIds(frame==null? null: frame.getStudyId());
+		
 		updateModel();
 		return query;
 	}
@@ -640,6 +648,9 @@ public class BiosampleSearchTree extends FormTree {
 	public void setQuery(BiosampleQuery query) {
 		//update our model
 		this.query.copyFrom(query);		
+		if(frame!=null) {
+			frame.setStudyId(query.getStudyIds());
+		}
 		updateView();
 		
 		//recreate the study tab
@@ -650,10 +661,11 @@ public class BiosampleSearchTree extends FormTree {
 	}
 	
 	public String getStudyId() {
-		return studyNode.getSelection();
+		return frame==null? studyNode.getSelection(): frame.getStudyId();
 	}
+	
 	public void setStudyId(String v) {
-		if(v==null || v.equals(studyNode.getSelection())) return;
+		if(v==null || v.equals(frame==null? studyNode.getSelection(): frame.getStudyId())) return;
 		setQuery(BiosampleQuery.createQueryForStudyIds(v));
 	}
 	

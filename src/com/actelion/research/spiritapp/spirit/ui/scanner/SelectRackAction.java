@@ -29,6 +29,7 @@ import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.util.ui.JExceptionDialog;
 
 public abstract class SelectRackAction extends AbstractAction {
+	
 	private final SpiritScanner model;
 	
 	public SelectRackAction(SpiritScanner model) {
@@ -63,7 +64,7 @@ public abstract class SelectRackAction extends AbstractAction {
 	}
 	
 	/**
-	 * To be overidden by implementing class
+	 * To be overridden by implementing class
 	 * @param rack
 	 */
 	protected abstract void eventRackSelected(Location rack) throws Exception;

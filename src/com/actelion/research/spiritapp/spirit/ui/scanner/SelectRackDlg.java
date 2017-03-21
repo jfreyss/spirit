@@ -39,7 +39,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationBrowser;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationBrowser.LocationBrowserFilter;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.LocationDepictor;
@@ -175,7 +175,7 @@ public class SelectRackDlg extends JEscapeDialog {
 		if(scannedRack==null) return;
 		assert config!=null;
 
-		Set<Integer> poses = new HashSet<Integer>();		
+		Set<Integer> poses = new HashSet<>();		
 //		if(toLoc.getCols()==config.getCols() && toLoc.getRows()==config.getRows() && toLoc.isEmpty()) {
 //			//Same positions			
 //			poses.addAll(Container.getPoses(scannedRack.getContainers()));
@@ -206,7 +206,7 @@ public class SelectRackDlg extends JEscapeDialog {
 			if(!loc.isEmpty()) throw new Exception("The rack is not empty");
 			if(loc.getCols()!=config.getCols() || loc.getRows()!=config.getRows()) throw new Exception("The rack'size is invalid");
 			
-			loc.setContainers(scannedRack.getContainers());
+			loc.setBiosamples(scannedRack.getBiosamples());
 			
 			
 			
@@ -228,7 +228,7 @@ public class SelectRackDlg extends JEscapeDialog {
 			}
 			
 			if(parent!=null) {
-				if(!SpiritRights.canEdit(parent, Spirit.getUser())) throw new Exception("You don't have rights over "+parent);
+				if(!SpiritRights.canEdit(parent, SpiritFrame.getUser())) throw new Exception("You don't have rights over "+parent);
 				
 				Set<String> existingNames = new HashSet<String>();
 				for(Location l: parent.getChildren()) {
@@ -240,7 +240,7 @@ public class SelectRackDlg extends JEscapeDialog {
 			//Update the rack
 			scannedRack.setName(name);
 			scannedRack.setParent(parent);
-			scannedRack.setUpdUser(Spirit.getUser().getUsername());
+			scannedRack.setUpdUser(SpiritFrame.getUser().getUsername());
 			scannedRack.setUpdDate(new Date());
 			scannedRack.setWasUpdated(true);
 			

@@ -50,7 +50,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.text.JTextComponent;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.ContainerComboBox;
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.study.NamedTreatmentComboBox;
@@ -112,7 +112,7 @@ public class MonitoringDlg extends JEscapeDialog {
 		this.phase = p;
 		this.study = JPAUtil.reattach(phase.getStudy());
 		List<Biosample> animals = study.getTopAttachedBiosamples();
-		this.elb = DAOResult.suggestElb(Spirit.getUsername()); 
+		this.elb = DAOResult.suggestElb(SpiritFrame.getUsername()); 
 
 		// Reload results
 		try {
@@ -132,12 +132,12 @@ public class MonitoringDlg extends JEscapeDialog {
 		};
 		cageComboBox = new ContainerComboBox();
 		treatmentComboBox = new NamedTreatmentComboBox(getNamedTreatments(), "");
-		treatmentComboBox.setEnabled(!SpiritRights.isBlindAll(study, Spirit.getUser()));
+		treatmentComboBox.setEnabled(!SpiritRights.isBlindAll(study, SpiritFrame.getUser()));
 		cageComboBox.addActionListener(queryListener);
 		treatmentComboBox.addActionListener(queryListener);
 		onlyRequiredCheckBox.addActionListener(queryListener);
 		sortComboBox1.addActionListener(queryListener);
-		sortComboBox1.setEnabled(!SpiritRights.isBlindAll(study, Spirit.getUser()));
+		sortComboBox1.setEnabled(!SpiritRights.isBlindAll(study, SpiritFrame.getUser()));
 		sortComboBox2.addActionListener(queryListener);
 		
 		// Filter Panel

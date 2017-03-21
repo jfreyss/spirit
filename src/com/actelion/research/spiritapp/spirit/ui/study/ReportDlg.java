@@ -38,10 +38,10 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport;
 import com.actelion.research.spiritapp.spirit.services.report.MixedReport;
 import com.actelion.research.spiritapp.spirit.services.report.ReportFactory;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
@@ -66,11 +66,11 @@ public class ReportDlg extends JEscapeDialog {
 		s = DAOStudy.getStudy(s.getId());
 		this.s = s;
 		
-		if(!SpiritRights.canExpert(s, Spirit.getUser())) {
+		if(!SpiritRights.canExpert(s, SpiritFrame.getUser())) {
 			JExceptionDialog.showError("You must have read rights on the study to view the reports");
 			return;
 		}
-		if(SpiritRights.isBlind(s, Spirit.getUser())) {
+		if(SpiritRights.isBlind(s, SpiritFrame.getUser())) {
 			JExceptionDialog.showError("Blind users cannot view the reports");
 			return;
 		}

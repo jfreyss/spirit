@@ -48,12 +48,13 @@ import javax.swing.event.ChangeListener;
 import com.actelion.research.spiritapp.slidecare.ui.ContainerCreatorDlg;
 import com.actelion.research.spiritapp.slidecare.ui.InventoryPanel;
 import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritapp.spirit.SpiritMenu;
-import com.actelion.research.spiritapp.spirit.ui.SpiritAction;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
+import com.actelion.research.spiritapp.spirit.ui.SpiritMenu;
 import com.actelion.research.spiritapp.spirit.ui.lf.StudyComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyDetailPanel;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritChangeObserver;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritContextObserver;
+import com.actelion.research.spiritapp.spirit.ui.util.SpiritAction;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
@@ -62,7 +63,6 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -180,7 +180,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 			try {
 				final SpiritUser user = DAOSpiritUser.loadUser("freyssj");
 				if(user==null) throw new Exception("Could not load user birkood1");
-				Spirit.setUser(user);
+				SpiritFrame.setUser(user);
 				SwingUtilities.invokeLater(new Runnable() {				
 					@Override
 					public void run() {
@@ -192,14 +192,14 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 			}
 		} 
 		
-		if(Spirit.getUser()==null) {
+		if(SpiritFrame.getUser()==null) {
 			SwingUtilities.invokeLater(new Runnable() {				
 				@Override
 				public void run() {
 					new SpiritAction.Action_Relogin(SlideCare.this, "SlideCare").actionPerformed(null);
-					if(Spirit.getUser()==null) System.exit(1);
+					if(SpiritFrame.getUser()==null) System.exit(1);
 					
-					statusBar.setUser(Spirit.getUser().getUsername()+ " logged in");
+					statusBar.setUser(SpiritFrame.getUser().getUsername()+ " logged in");
 				}
 			});
 		}		
@@ -215,10 +215,10 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	public void updateStatus() {
 
 		String userStatus;
-		if(Spirit.getUser()==null) {
+		if(SpiritFrame.getUser()==null) {
 			userStatus = "No user logged in";
 		} else {
-			userStatus = Spirit.getUser().getUsername() + " ("+ (Spirit.getUser().getMainGroup()==null?"NoDept":Spirit.getUser().getMainGroup().getName())+ ") logged in";
+			userStatus = SpiritFrame.getUser().getUsername() + " ("+ (SpiritFrame.getUser().getMainGroup()==null?"NoDept":SpiritFrame.getUser().getMainGroup().getName())+ ") logged in";
 		}
 		statusBar.setUser(userStatus);	
 	
@@ -250,8 +250,8 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		SpiritMenu.addEditMenuItems(editMenu, null);
 		menuBar.add(editMenu);
 
+		menuBar.add(SpiritMenu.getDevicesMenu());
 		menuBar.add(SpiritMenu.getToolsMenu());
-		menuBar.add(SpiritMenu.getDatabaseMenu());
 		menuBar.add(SpiritMenu.getAdminMenu());
 		menuBar.add(SpiritMenu.getHelpMenu(splashConfig));
 		
@@ -269,7 +269,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		public void actionPerformed(ActionEvent e) {
 			try {
 				Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
-				if(study==null || !SpiritRights.canAdmin(study, Spirit.getUser())) throw new Exception("You must select a study");				
+				if(study==null || !SpiritRights.canAdmin(study, SpiritFrame.getUser())) throw new Exception("You must select a study");				
 				new ContainerCreatorDlg(study, ContainerType.K7);
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
@@ -288,7 +288,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		public void actionPerformed(ActionEvent e) {
 			try {
 				Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
-				if(study==null || !SpiritRights.canAdmin(study, Spirit.getUser())) throw new Exception("You must select a study");				
+				if(study==null || !SpiritRights.canAdmin(study, SpiritFrame.getUser())) throw new Exception("You must select a study");				
 				new ContainerCreatorDlg(study, ContainerType.SLIDE);
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
@@ -349,7 +349,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	public void query(BiosampleQuery q) {
 	}
 	@Override
-	public void query(ResultQuery q) {
+	public void query(ResultQuery q, int graphIndex) {
 	}
 	@Override
 	public void setStatus(String status) {

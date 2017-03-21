@@ -24,8 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui.biosample.form;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,7 +34,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.MetadataComponent;
 import com.actelion.research.spiritapp.spirit.ui.biosample.MetadataComponentFactory;
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdGenerateField;
@@ -56,7 +54,7 @@ import com.actelion.research.util.ui.TextChangeListener;
 import com.itextpdf.text.Font;
 
 public class MetadataFormPanel extends JPanel {
-	
+
 	private boolean showContainerLocationSample;
 	private final boolean multicolumns;
 	private Biosample biosample;
@@ -64,55 +62,47 @@ public class MetadataFormPanel extends JPanel {
 
 	private final GroupLabel groupLabel = new GroupLabel();
 	private final JCustomTextField elbTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 10);
-	
-	private final SampleIdGenerateField<Biosample> sampleIdTextField = new SampleIdGenerateField<Biosample>();
+
+	private final SampleIdGenerateField<Biosample> sampleIdTextField = new SampleIdGenerateField<>();
 	private final ContainerTypeComboBox containerTypeComboBox = new ContainerTypeComboBox();
 	private final ContainerTextField containerIdTextField = new ContainerTextField();
 	private final JCustomTextField amountTextField = new JCustomTextField(JCustomTextField.DOUBLE, 5);
 	private final LocationPosTextField locationTextField = new LocationPosTextField();
 	private JCustomTextField nameTextField = null;
-	private final List<JComponent> components = new ArrayList<JComponent>();
+	private final List<JComponent> components = new ArrayList<>();
 	private final JCustomTextField commentsTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 18);
 
 	private boolean editable = true;
-	
-	private TextChangeListener listener = new TextChangeListener() {
-		@Override
-		public void textChanged(JComponent src) {
-			eventTextChanged();
-		}
-	};
-	
-	public MetadataFormPanel(boolean showContainerLocationSample, boolean multicolumns) {		
-		this(showContainerLocationSample, multicolumns, null);		
+
+	private TextChangeListener listener = src -> eventTextChanged();
+
+	public MetadataFormPanel(boolean showContainerLocationSample, boolean multicolumns) {
+		this(showContainerLocationSample, multicolumns, null);
 	}
 
 	public MetadataFormPanel(boolean showContainerLocationSample, boolean multicolumns, Biosample biosample) {
 		super(new GridBagLayout());
 		this.showContainerLocationSample = showContainerLocationSample;
 		this.multicolumns = multicolumns;
-		
+
 		setOpaque(false);
-		
+
 
 		//Add TextChangeListener
-		containerTypeComboBox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				eventTextChanged();
-				containerIdTextField.setEnabled(containerTypeComboBox.getSelection()!=null && containerTypeComboBox.getSelection().getBarcodeType()!=BarcodeType.NOBARCODE);
-			}
+		containerTypeComboBox.addActionListener(e-> {
+			eventTextChanged();
+			containerIdTextField.setEnabled(containerTypeComboBox.getSelection()!=null && containerTypeComboBox.getSelection().getBarcodeType()!=BarcodeType.NOBARCODE);
 		});
 		locationTextField.addTextChangeListener(listener);
 		containerIdTextField.addTextChangeListener(listener);
 		amountTextField.addTextChangeListener(listener);
-		
+
 		commentsTextField.addTextChangeListener(listener);
-		
+
 		setBiosample(biosample);
 	}
-	
-		
+
+
 	public void setEditable(boolean editable) {
 		if(this.editable==editable) return;
 		this.editable = editable;
@@ -122,14 +112,14 @@ public class MetadataFormPanel extends JPanel {
 		return editable;
 	}
 
-	
+
 	/**
 	 * updateView is called by this function
 	 */
-	private void initUI() {	
+	private void initUI() {
 		boolean refresh = getComponentCount()>0;
 		if(refresh) {removeAll(); components.clear();}
-		
+
 		if(biosample!=null && biosample.getBiotype()!=null) {
 			final Biotype biotype = biosample.getBiotype();
 			GridBagConstraints c = new GridBagConstraints();
@@ -138,25 +128,13 @@ public class MetadataFormPanel extends JPanel {
 			c.ipady = -1;
 			c.insets = new Insets(0, 0, 0, 0);
 			int n = 0;
-			
-			
+
 			containerTypeComboBox.setEnabled(false);
 			//ELB/Study
-			c.gridy = 0; 
+			c.gridy = 0;
 			c.gridx = 0; c.gridwidth=2; c.fill=GridBagConstraints.BOTH; add(groupLabel, c);
 			c.gridwidth=1; c.fill=GridBagConstraints.NONE;
 
-			/*
-			c.gridy = multicolumns? 0: 1;
-			c.gridx = multicolumns? 3: 0; add(new JLabel("ELB: "), c);
-			c.gridx = multicolumns? 4: 1; add(elbTextField, c);						
-			
-			c.weightx = 1;
-			c.gridy = 2; c.gridwidth = multicolumns?99:2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 0, 5, 0); c.ipady = 2;
-			c.gridx = 0; add(new JSeparator(JSeparator.HORIZONTAL), c);
-			c.weightx = 0; c.fill = GridBagConstraints.NONE; c.gridwidth=1;  c.insets = new Insets(0, 0, 0, 0); ; c.ipady = 0;
-*/
-			
 			//Container
 			if(!biotype.isAbstract()) {
 				if(showContainerLocationSample) {
@@ -164,14 +142,14 @@ public class MetadataFormPanel extends JPanel {
 						//ContainerType
 						c.gridy = 5;
 						c.gridx = 0; add(new JLabel("ContainerType: "), c);
-						c.gridx = 1; add(containerTypeComboBox, c);						
+						c.gridx = 1; add(containerTypeComboBox, c);
 						if(biotype.getContainerType()!=null) {
 							containerTypeComboBox.setSelection(biotype.getContainerType());
-							containerTypeComboBox.setEnabled(false);						
+							containerTypeComboBox.setEnabled(false);
 						} else {
-							containerTypeComboBox.setEnabled(editable);	
+							containerTypeComboBox.setEnabled(editable);
 						}
-			
+
 						//ContainerId
 						if((biotype.getContainerType()==null || biotype.getContainerType().getBarcodeType()==BarcodeType.MATRIX) && !biotype.isHideContainer()) {
 							containerIdTextField.setContainerType(containerTypeComboBox.getSelection());
@@ -182,7 +160,7 @@ public class MetadataFormPanel extends JPanel {
 						}
 					}
 				}
-							
+
 				//Amount
 				if(biotype.getAmountUnit()!=null) {
 					c.gridy = multicolumns? 5: 7;
@@ -190,7 +168,7 @@ public class MetadataFormPanel extends JPanel {
 					c.gridx = multicolumns? 4: 1; add(amountTextField, c);
 					amountTextField.setEnabled(editable);
 				}
-				
+
 				if(showContainerLocationSample) {
 					//Location
 					c.gridy = multicolumns? 6: 8;
@@ -198,9 +176,9 @@ public class MetadataFormPanel extends JPanel {
 					c.gridx = multicolumns? 4: 1; add(locationTextField, c);
 					locationTextField.setEnabled(editable);
 				}
-				
+
 			}
-	
+
 			//Separator
 			c.weightx = 1;
 			c.gridy = 9; c.gridwidth = multicolumns?99:2; c.fill = GridBagConstraints.BOTH; c.insets = new Insets(5, 0, 5, 0); ; c.ipady = 2;
@@ -209,21 +187,21 @@ public class MetadataFormPanel extends JPanel {
 
 			//Spacer for proper alignment
 			c.gridy = 10; c.gridx = 1; add(Box.createHorizontalStrut(240), c); //Name
-			
+
 			c.gridy = 11;
 			if(showContainerLocationSample) {
 				//SampleId
 				c.gridx = 0; add(new JCustomLabel("SampleId: ", Font.BOLD), c); //Name
 				c.gridx = 1; add(sampleIdTextField, c);
 				sampleIdTextField.setEnabled(editable && !biotype.isHideSampleId());
-			
+
 				c.gridy++;
 			}
 
 			int offsetY = 12;
 			int offsetX = 0;
 			c.gridy = offsetY;
-			
+
 			//Name
 			if(biotype.getSampleNameLabel()!=null) {
 				String text = nameTextField==null?"": nameTextField.getText();
@@ -245,59 +223,59 @@ public class MetadataFormPanel extends JPanel {
 				c.gridy++;
 				nameTextField.setEnabled(editable);
 			}
-			
+
 			//Metadata
-			for(BiotypeMetadata bm: biotype.getMetadata()) { //Metadata		
+			for(BiotypeMetadata bm: biotype.getMetadata()) { //Metadata
 				if(multicolumns && biotype.getMetadata().size()>=2 && (n++)==(biotype.getMetadata().size()+1)/2) {
 					c.gridy = offsetY;
-					c.gridx = offsetX+2;	
+					c.gridx = offsetX+2;
 					offsetX+=3;
 					add(Box.createHorizontalStrut(15), c);
 				}
-				
+
 				JComponent comp = MetadataComponentFactory.getComponentFor(bm);
 				if(comp instanceof MetadataComponent) {
 					((MetadataComponent) comp).addTextChangeListener(listener);
 				}
 				components.add(comp);
-	
-				c.gridx = offsetX; add(new JLabel(bm.getName()+": "), c);			
+
+				c.gridx = offsetX; add(new JLabel(bm.getName()+": "), c);
 				c.gridx = offsetX+1; add(comp, c);
 				c.gridy++;
 				comp.setEnabled(editable);
 
 			}
-			
+
 			//Comments
-			c.gridx = offsetX; add(new JLabel("Comments: "), c); 
+			c.gridx = offsetX; add(new JLabel("Comments: "), c);
 			c.gridx = offsetX+1; add(commentsTextField, c);
-			c.gridy++;			
+			c.gridy++;
 			commentsTextField.setEnabled(editable);
 
 			//Spacer
 			c.weightx = 1;
 			c.weighty = 1;
-			c.gridx = 20; add(Box.createHorizontalGlue(), c); 
-		
+			c.gridx = 20; add(Box.createHorizontalGlue(), c);
+
 		}
 
 		updateView();
-		
-		validate(); 
+
+		super.validate();
 		repaint();
 	}
 
 	@Override
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
-		if(nameTextField!=null) nameTextField.setEnabled(enabled);	
+		if(nameTextField!=null) nameTextField.setEnabled(enabled);
 		for (JComponent c : components) {
-			c.setEnabled(enabled);			
+			c.setEnabled(enabled);
 		}
 		commentsTextField.setEnabled(enabled);
-		amountTextField.setEnabled(enabled);	
+		amountTextField.setEnabled(enabled);
 	}
-	
+
 	/**
 	 * This function calls initUI
 	 * @param biosample
@@ -307,7 +285,7 @@ public class MetadataFormPanel extends JPanel {
 		initUI();
 
 	}
-	
+
 	public void updateModel() {
 		updateModel(biosample);
 	}
@@ -320,12 +298,12 @@ public class MetadataFormPanel extends JPanel {
 		Biotype biotype = b.getBiotype();
 		if(biotype==null) return;
 		assert b.getBiotype().equals(biotype);
-		
+
 		b.setElb(elbTextField.getText());
 		if(!biotype.isAbstract()) {
-			
+
 			if(containerTypeComboBox.isVisible() && containerTypeComboBox.isEnabled()) b.setContainerType(containerTypeComboBox.getSelection());
-			else b.setContainerType(biotype.getContainerType()); 
+			else b.setContainerType(biotype.getContainerType());
 			if(containerIdTextField.isEnabled()) b.setContainerId(containerIdTextField.getText());
 			if(amountTextField.isShowing() && biotype.getAmountUnit()!=null) {
 				b.setAmount(amountTextField.getTextDouble());
@@ -350,10 +328,10 @@ public class MetadataFormPanel extends JPanel {
 			}
 		}
 		b.setComments(commentsTextField.getText());
-		if(amountTextField!=null) b.setAmount(amountTextField.getTextDouble());	
+		if(amountTextField!=null) b.setAmount(amountTextField.getTextDouble());
 
 	}
-	
+
 	/**
 	 * Updates View
 	 * @param b
@@ -362,13 +340,13 @@ public class MetadataFormPanel extends JPanel {
 		Biosample b = biosample;
 		if(b==null || b.getBiotype()==null) return;
 		Biotype biotype = b.getBiotype();
-		
-		
+
+
 		if(b.getAttachedStudy()!=null || (b.getParent()!=null && b.getInheritedPhase()!=null && !b.getInheritedPhase().equals(b.getParent().getInheritedPhase()))) {
 			groupLabel.setVisible(true);
 			groupLabel.setBorder(BorderFactory.createLoweredSoftBevelBorder());
 			groupLabel.setText(b.getInheritedStudy()==null?"":
-				b.getInheritedStudy().getStudyId() + (b.getInheritedGroup()==null?"": " " + b.getInheritedGroupString(Spirit.getUsername()) + " " + b.getInheritedPhaseString()), b.getInheritedGroup());
+				b.getInheritedStudy().getStudyId() + (b.getInheritedGroup()==null?"": " " + b.getInheritedGroupString(SpiritFrame.getUsername()) + " " + b.getInheritedPhaseString()), b.getInheritedGroup());
 		} else {
 			groupLabel.setVisible(false);
 			groupLabel.setText("");
@@ -381,7 +359,7 @@ public class MetadataFormPanel extends JPanel {
 			if(biotype.getAmountUnit()!=null) {
 				amountTextField.setTextDouble(b.getAmount());
 			}
-			locationTextField.setBiosample(b);			
+			locationTextField.setBiosample(b);
 		}
 
 		sampleIdTextField.putCachedSampleId(b, biotype.getPrefix(), b.getId()<=0? null: b.getSampleId());
@@ -390,7 +368,7 @@ public class MetadataFormPanel extends JPanel {
 		if(biotype.getSampleNameLabel()!=null) {
 			nameTextField.setText(b.getSampleName());
 		}
-		
+
 		int n = 0;
 		for(BiotypeMetadata bm: biotype.getMetadata()) {
 			JComponent c = components.get(n++);
@@ -400,15 +378,15 @@ public class MetadataFormPanel extends JPanel {
 		}
 		commentsTextField.setText(b.getComments());
 	}
-	
+
 	public List<JComponent> getMetadataComponents() {
 		return components;
 	}
-	
+
 	/**
 	 * Can be overidden
 	 */
 	public void eventTextChanged() {
-		
+
 	}
 }

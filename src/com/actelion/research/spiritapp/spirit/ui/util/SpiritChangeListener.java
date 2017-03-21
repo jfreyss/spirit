@@ -30,7 +30,7 @@ import com.actelion.research.spiritcore.services.dao.JPAUtil;
 
 public class SpiritChangeListener {
 
-	private static final List<ISpiritChangeObserver> observers = new ArrayList<ISpiritChangeObserver>();
+	private static final List<ISpiritChangeObserver> observers = new ArrayList<>();
 	
 	
 	public static void register(ISpiritChangeObserver observer) {

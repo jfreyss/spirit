@@ -35,7 +35,7 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.util.component.AutosaveDecorator;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
@@ -165,7 +165,7 @@ public class RandomizationDlg extends JSpiritEscapeDialog {
 	
 	protected void saveForLater() throws Exception {
 		WizardPanel.updateModel(wizardPane, false);		
-		DAOStudy.persistStudies(Collections.singleton(study), Spirit.getUser());
+		DAOStudy.persistStudies(Collections.singleton(study), SpiritFrame.getUser());
 	}	
 		
 	public Phase getPhase() {

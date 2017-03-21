@@ -38,11 +38,9 @@ import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
-import com.actelion.research.spiritapp.spirit.ui.lf.StudyComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
-import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationQuery;
@@ -59,10 +57,11 @@ public class LocationSearchPane extends JPanel {
 
 	public static final String PROPERTY_QUERIED = "queried";
 	
+	private final SpiritFrame frame;
 	private final Biotype forcedBiotype;
 	private final JCustomTextField keywordsTextField = new JCustomTextField(20, "", "Name");
 	private final LocationTable locationTable = new LocationTable();
-	private final StudyComboBox studyComboBox;
+//	private final StudyComboBox studyComboBox;
 	private final BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 	private final JCheckBox emptyCheckbox = new JCheckBox("Empty", false);
 	private final JCheckBox nonEmptyCheckbox = new JCheckBox("Non Empty", false);
@@ -72,23 +71,23 @@ public class LocationSearchPane extends JPanel {
 	
 	private List<Location> acceptedAdminLocations;
 	
-	public LocationSearchPane(Biotype forcedBiotype) {
+	public LocationSearchPane(SpiritFrame frame, Biotype forcedBiotype) {
 		super(new BorderLayout());
-		
-		studyComboBox = new StudyComboBox(RightLevel.WRITE, "StudyId");
+		this.frame = frame;
+//		studyComboBox = new StudyComboBox(RightLevel.WRITE, "StudyId");
 
 		JPanel filterLocation = UIUtils.createTable(1, 0, 1, 
-				studyComboBox,
+//				studyComboBox,
 				biotypeComboBox,
 				keywordsTextField,
 				UIUtils.createHorizontalBox(emptyCheckbox, nonEmptyCheckbox));
 		filterLocation.setOpaque(true);
 		filterLocation.setBackground(Color.WHITE);
-		viewMineButton.setVisible(Spirit.getUser()!=null && Spirit.getUser().getMainGroup()!=null);
+		viewMineButton.setVisible(SpiritFrame.getUser()!=null && SpiritFrame.getUser().getMainGroup()!=null);
 		
 		this.forcedBiotype = forcedBiotype;
 		if(forcedBiotype!=null) {
-			studyComboBox.setVisible(false);
+//			studyComboBox.setVisible(false);
 			biotypeComboBox.setSelection(forcedBiotype);
 			biotypeComboBox.setEnabled(false);
 		}
@@ -128,7 +127,7 @@ public class LocationSearchPane extends JPanel {
 		//Create a standard query
 		LocationQuery query = new LocationQuery();
 		
-		query.setStudyId(studyComboBox.getText());
+		query.setStudyId(frame==null? null: frame.getStudyId());
 		query.setName(keywordsTextField.getText());
 		query.setBiotype(biotypeComboBox.getSelection());
 		query.setOnlyOccupied(emptyCheckbox.isSelected() && !nonEmptyCheckbox.isSelected()? Boolean.FALSE:
@@ -144,7 +143,7 @@ public class LocationSearchPane extends JPanel {
 	public void reset() {
 		keywordsTextField.setText("");
 		if(biotypeComboBox.isEnabled()) biotypeComboBox.setSelection(null);
-		studyComboBox.setText(null);
+//		studyComboBox.setText(null);
 		emptyCheckbox.setSelected(true);
 		nonEmptyCheckbox.setSelected(true);
 		query();
@@ -161,7 +160,7 @@ public class LocationSearchPane extends JPanel {
 			@Override
 			protected void doInBackground() throws Exception {
 				if(keywordsTextField.getText().length()>0) {
-					res = new ArrayList<>(DAOLocation.getCompatibleLocations(keywordsTextField.getText(), Spirit.getUser()));
+					res = new ArrayList<>(DAOLocation.getCompatibleLocations(keywordsTextField.getText(), SpiritFrame.getUser()));
 					
 					if(res.size()>0) {					
 						locationTable.setRows(res);		
@@ -173,10 +172,10 @@ public class LocationSearchPane extends JPanel {
 				}
 				//Query
 				if(query.isEmpty()) {
-					res = DAOLocation.getLocationRoots(Spirit.getUser());
+					res = DAOLocation.getLocationRoots(SpiritFrame.getUser());
 					acceptedAdminLocations = null;
 				} else {			
-					res = DAOLocation.queryLocation(query, Spirit.getUser());
+					res = DAOLocation.queryLocation(query, SpiritFrame.getUser());
 					acceptedAdminLocations = res;
 				}
 			}
@@ -199,12 +198,8 @@ public class LocationSearchPane extends JPanel {
 		};		
 	}
 	
-	public void repopulate() {
-		studyComboBox.reload();
-	}
-	
 	public void setQuery(LocationQuery filter) {
-		studyComboBox.setText(filter.getStudyId()==null? null: filter.getStudyId());
+//		studyComboBox.setText(filter.getStudyId()==null? null: filter.getStudyId());
 		keywordsTextField.setText(filter.getName());
 		query();
 	}
@@ -217,16 +212,6 @@ public class LocationSearchPane extends JPanel {
 		return locationTable.getSelection().size()>0? locationTable.getSelection().get(0): null; 
 	}
 	
-	public String getStudyId() {
-		return studyComboBox.getText();
-	}
-	
-	public void setStudyId(String v) {
-		if(!v.startsWith("S")) v = ""; 
-		studyComboBox.setText(v);
-		query();
-	}
-	
 	public JButton getSearchButton() {
 		return searchButton;
 	}
@@ -237,7 +222,7 @@ public class LocationSearchPane extends JPanel {
 	
 	public void queryMyLocations() {
 		LocationQuery query = new LocationQuery();
-		query.setEmployeeGroup(Spirit.getUser().getMainGroup());
+		query.setEmployeeGroup(SpiritFrame.getUser().getMainGroup());
 		query.setBiotype(forcedBiotype);
 		query(query);
 	}

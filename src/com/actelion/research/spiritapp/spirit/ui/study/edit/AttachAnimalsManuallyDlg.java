@@ -32,7 +32,6 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -63,14 +62,14 @@ public class AttachAnimalsManuallyDlg extends JSpiritEscapeDialog {
 
 	private Study study;
 	private AttachedBiosampleTable animalTable;
-	private BiotypeComboBox biotypeComboBox; 
-	
+	private BiotypeComboBox biotypeComboBox;
+
 	public AttachAnimalsManuallyDlg(Study myStudy) {
 		super(UIUtils.getMainFrame(), "Study - Assign Samples", AttachAnimalsManuallyDlg.class.getName());
 		this.study = JPAUtil.reattach(myStudy);
-			
+
 		AttachedBiosampleTableModel model = new AttachedBiosampleTableModel(Mode.MANUALASSIGN, study);
-		
+
 		animalTable = new AttachedBiosampleTable(model, false);
 		animalTable.setCanAddRow(true);
 		animalTable.setCanSort(true);
@@ -78,46 +77,45 @@ public class AttachAnimalsManuallyDlg extends JSpiritEscapeDialog {
 		JTextField studyField = new JTextField(8);
 		studyField.setText(study.getStudyId());
 		studyField.setEnabled(false);
-		
-		
+
+
 		//biotype
 		biotypeComboBox = new BiotypeComboBox(Biotype.removeAbstract(DAOBiotype.getBiotypes()), "Biotype");
-		
+
 		//CenterPane
 		JButton attachButton = new JIconButton(IconType.SAVE, "Attach samples");
 		attachButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				new SwingWorkerExtended("Saving", animalTable, false) {
+				new SwingWorkerExtended("Saving", animalTable) {
 					@Override
 					protected void done() {
 						try {
 							AttachBiosamplesHelper.attachSamples(study, animalTable.getRows(), null, false, Spirit.askForAuthentication());
 							dispose();
-							SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, study);			
+							SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, study);
 						} catch (Exception ex) {
-							ex.printStackTrace();
-							JOptionPane.showMessageDialog(AttachAnimalsManuallyDlg.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+							JExceptionDialog.showError(ex);
 						}
-					}					
+					}
 				};
 			}
 		});
-		
-		
-		
+
+
+
 		JPanel centerPanel = new JPanel(new BorderLayout());
-		centerPanel.add(BorderLayout.NORTH, UIUtils.createVerticalBox(BorderFactory.createEtchedBorder(), 
+		centerPanel.add(BorderLayout.NORTH, UIUtils.createVerticalBox(BorderFactory.createEtchedBorder(),
 				UIUtils.createHorizontalBox(new JLabel("StudyId: "), studyField, Box.createHorizontalGlue()),
-				UIUtils.createHorizontalBox(new JLabel("Biotype: "), biotypeComboBox, Box.createHorizontalGlue())));		
-		centerPanel.add(BorderLayout.CENTER, new JScrollPane(animalTable));	
+				UIUtils.createHorizontalBox(new JLabel("Biotype: "), biotypeComboBox, Box.createHorizontalGlue())));
+		centerPanel.add(BorderLayout.CENTER, new JScrollPane(animalTable));
 		centerPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue(), new JButton(animalTable.new RegenerateSampleIdAction()), attachButton));
 		setContentPane(centerPanel);
-		
+
 		refreshTable();
 		initBiotype();
-		
-		biotypeComboBox.addActionListener(new ActionListener() {			
+
+		biotypeComboBox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -127,42 +125,42 @@ public class AttachAnimalsManuallyDlg extends JSpiritEscapeDialog {
 					initBiotype();
 					JExceptionDialog.showError(ex);
 				}
-				
+
 			}
 		});
 
-		
 
-		
+
+
 		UIUtils.adaptSize(this, 1050, 800);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setVisible(true);
-		
+
 	}
-	
+
 	private void initBiotype() {
 		Biotype biotype = null;
 		List<Biosample> biosamples = AttachedBiosample.getBiosamples(animalTable.getRows());
 		if(biosamples.size()>0) {
-//			canChooseBiotype = true;
+			//			canChooseBiotype = true;
 			for(Biosample b: biosamples) {
 				if(b.getBiotype()==null) continue;
-//				if(b.getMetadataAsString().length()>0) canChooseBiotype = false;
+				//				if(b.getMetadataAsString().length()>0) canChooseBiotype = false;
 				if(biotype==null) {
 					biotype = b.getBiotype();
 				} else if(!biotype.equals(b.getBiotype())) {
 					biotype = null;
-//					canChooseBiotype = false;
+					//					canChooseBiotype = false;
 					break;
 				}
 			}
 		} else {
 			biotype = DAOBiotype.getBiotype(Biotype.ANIMAL);
-//			canChooseBiotype = true;
+			//			canChooseBiotype = true;
 		}
 		biotypeComboBox.setSelectedItem(biotype);
-		
+
 		try {
 			animalTable.getModel().setBiotype(biotype);
 			animalTable.resetPreferredColumnWidth();
@@ -170,10 +168,10 @@ public class AttachAnimalsManuallyDlg extends JSpiritEscapeDialog {
 			ex.printStackTrace();
 		}
 	}
-	
+
 	public void refreshTable() {
-		
-		
+
+
 		//Recreate animal table, group per group
 		List<AttachedBiosample> rows = new ArrayList<>();
 		List<Biosample> topAttached = study.getTopAttachedBiosamples();
@@ -181,7 +179,7 @@ public class AttachAnimalsManuallyDlg extends JSpiritEscapeDialog {
 
 			//Create a template from the existing animals
 			for (Biosample b : topAttached) {
-							
+
 				AttachedBiosample row = new AttachedBiosample();
 				row.setSampleId(b.getSampleId());
 				row.setGroup(b.getInheritedGroup());
@@ -191,15 +189,15 @@ public class AttachAnimalsManuallyDlg extends JSpiritEscapeDialog {
 				if(b.getBiotype().getCategory()==BiotypeCategory.LIVING) {
 					row.setContainerId(b.getContainerId());
 				} else {
-					row.setContainerId(null);					
+					row.setContainerId(null);
 				}
 				rows.add(row);
 			}
-			
+
 		} else {
-			
+
 			//Create an empty template from the existing animals
-			for (Group group : study.getGroups()) {			
+			for (Group group : study.getGroups()) {
 				for(int subgroup=0; subgroup<Math.max(1, group.getNSubgroups()); subgroup++) {
 					int subgroupNo = group.getNSubgroups()<=1? 0: subgroup;
 					List<AttachedBiosample> subRows = new ArrayList<AttachedBiosample>();
@@ -209,28 +207,28 @@ public class AttachAnimalsManuallyDlg extends JSpiritEscapeDialog {
 						row.setSubGroup(subgroupNo);
 						subRows.add(row);
 					}
-					
+
 					rows.addAll(subRows);
 				}
 			}
 		}
-				
-		
+
+
 		//always add some empty rows
 		for(int n=0;n<10; n++) {
 			rows.add(new AttachedBiosample());
 		}
-			
-		animalTable.setRows(rows);
-		
-	}
-	
-	
-		
-	
-	
-	
 
-			
-	
+		animalTable.setRows(rows);
+
+	}
+
+
+
+
+
+
+
+
+
 }

@@ -53,66 +53,67 @@ import com.actelion.research.spiritcore.util.MiscUtils;
 @Table(name="employee", indexes= {@Index(name="employeegroup_username_index", columnList="user_name")})
 @SequenceGenerator(name="employee_sequence", sequenceName="employee_sequence", allocationSize=1)
 public class Employee implements Comparable<Employee>, IEntity {
-	
+
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="employee_sequence")
 	@Column(name="employee_id")
-	private int id = 0;	
-	
-	@Column(name="user_name", length=20, nullable=false, unique=true)	
+	private int id = 0;
+
+	@Column(name="user_name", length=20, nullable=false, unique=true)
 	private String userName;
-	
+
 	@Column(name="disabled")
 	private Boolean disabled = false;
-	
+
 	/**
 	 * Encrypted password
 	 */
 	@Column(name="password", length=64)
 	private String password;
-	
+
 	@Column(name="roles")
 	private String roles;
 
 	@ManyToOne(cascade=CascadeType.REFRESH, optional=true, fetch=FetchType.LAZY)
 	@JoinColumn(name="manager_id")
 	private Employee manager;
-	
+
 	@OneToMany(cascade=CascadeType.REFRESH, mappedBy="manager", fetch=FetchType.LAZY)
 	private Set<Employee> children = new HashSet<>();
-	
-	@ManyToMany(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY)	
-	@JoinTable(name = "employee_group_link",  
-			joinColumns = {@JoinColumn(name="employee_id")},
-			inverseJoinColumns = {@JoinColumn(name="group_id")})
+
+	@ManyToMany(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY)
+	@JoinTable(name = "employee_group_link",
+	joinColumns = {@JoinColumn(name="employee_id")},
+	inverseJoinColumns = {@JoinColumn(name="group_id")})
 	private Set<EmployeeGroup> employeeGroups = new HashSet<>();
 
 
 	@Column(name="upd_user", length=20)
 	private String updUser;
-	
+
 	@Column(name="upd_date")
-	@Temporal(TemporalType.TIMESTAMP)	
+	@Temporal(TemporalType.TIMESTAMP)
 	private Date updDate;
-	
-	
+
+
 	public Employee() {
 	}
 
 	public Employee(String name) {
 		this.userName = name;
 	}
-	
+
 	public Employee(String name, Set<String> roles) {
 		this.userName = name;
 		setRoles(roles);
 	}
-	
+
 	@Override
 	public int getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(int id) {
 		this.id = id;
 	}
@@ -136,21 +137,22 @@ public class Employee implements Comparable<Employee>, IEntity {
 	public Set<EmployeeGroup> getEmployeeGroups() {
 		return employeeGroups;
 	}
-	
+
 	/**
 	 * Return the topmost group:
 	 * - not a functional group: ie.  name or parent.name is not uppercase
-	 * - if several groups matches, the result is not determined 
+	 * - if several groups matches, the result is not determined
 	 * @return
 	 */
 	public EmployeeGroup getMainEmployeeGroup() {
 		for (EmployeeGroup gr : getEmployeeGroups()) {
-			
+
 			//Skip groups, whose parent is FUNCTIONAL (all uppercase)
 			if(gr.getParent()!=null && gr.getParent().getName().toUpperCase().equals(gr.getParent().getName())) continue;
-			
-			//Skip groups, whose parent is in the list. 
+
+			//Skip groups, whose parent is in the list.
 			if(gr.getParent()!=null && getEmployeeGroups().contains(gr.getParent())) continue;
+			return gr;
 		}
 		return null;
 	}
@@ -177,9 +179,9 @@ public class Employee implements Comparable<Employee>, IEntity {
 		for (EmployeeGroup eg : getEmployeeGroups()) {
 			res += eg.getName() + " ";
 		}
-		return res.trim();		
+		return res.trim();
 	}
-	
+
 	@Override
 	public int compareTo(Employee o) {
 		if(o==null) return 1;
@@ -201,6 +203,7 @@ public class Employee implements Comparable<Employee>, IEntity {
 	}
 
 
+	@Override
 	public String getUpdUser() {
 		return updUser;
 	}
@@ -209,6 +212,7 @@ public class Employee implements Comparable<Employee>, IEntity {
 		this.updUser = updUser;
 	}
 
+	@Override
 	public Date getUpdDate() {
 		return updDate;
 	}
@@ -216,8 +220,8 @@ public class Employee implements Comparable<Employee>, IEntity {
 	public void setUpdDate(Date updDate) {
 		this.updDate = updDate;
 	}
-	
-	
+
+
 	@Override
 	public boolean equals(Object o) {
 		if(this==o) return true;
@@ -225,7 +229,7 @@ public class Employee implements Comparable<Employee>, IEntity {
 		if(id>0 && id==((Employee)o).getId()) return true;
 		return false;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return id;
@@ -234,7 +238,7 @@ public class Employee implements Comparable<Employee>, IEntity {
 	public Set<Employee> getChildren() {
 		return children;
 	}
-	
+
 	/**
 	 * Return itself + children until given depth (depth=0 means no children)
 	 * @param maxDepth
@@ -249,15 +253,15 @@ public class Employee implements Comparable<Employee>, IEntity {
 		}
 		return res;
 	}
-		
+
 	public Set<String> getRoles() {
 		return new TreeSet<String>(Arrays.asList(MiscUtils.split(this.roles, ",")));
 	}
-	
+
 	public void setRoles(Set<String> roles) {
 		this.roles = MiscUtils.unsplit(roles.toArray(new String[roles.size()]), ",");
 	}
-	
+
 	public boolean isRole(String role) {
 		return Arrays.asList(getRoles()).contains(role);
 	}

@@ -29,6 +29,7 @@ import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.Exchange;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.util.ui.UIUtils;
@@ -37,13 +38,13 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 public class ExchangeActions {
 
 	public static class Action_ExportExchange extends AbstractAction {
-		private Spirit spirit;
-		public Action_ExportExchange(Spirit spirit) {
+		private SpiritFrame spirit;
+		public Action_ExportExchange(SpiritFrame spirit) {
 			super("Export Spirit Data");
 			this.spirit = spirit;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(AbstractAction.SMALL_ICON, IconType.EXCHANGE.getIcon());
-			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()));
+			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
 		}
 		
 		@Override
@@ -59,7 +60,7 @@ public class ExchangeActions {
 			super("Import Spirit Data");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('i'));
 			putValue(AbstractAction.SMALL_ICON, IconType.EXCHANGE.getIcon());
-			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()));
+			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
 		}
 		
 		@Override

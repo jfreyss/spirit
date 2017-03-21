@@ -76,16 +76,16 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 /**
- * Class responsible for setting/testing the connection (ie. dbadapter.testConnection should be successful) 
- * 
+ * Class responsible for setting/testing the connection (ie. dbadapter.testConnection should be successful)
+ *
  * @author freyssj
  *
  */
 public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
-	
-	private JComboBox<String> adapterComboBox = null;	
+
+	private JComboBox<String> adapterComboBox = null;
 	private final JPanel specificConfigPane = new JPanel(new GridLayout());
-	
+
 	private DBAdapter adapter;
 	private final DBAdapter initialAdapter;
 	private Map<String, String> propertyMap;
@@ -95,11 +95,11 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 	private JPanel userPanel = new JPanel(new GridLayout());
 	private JPanel studyPanel = new JPanel(new GridLayout());
 
-	
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public DatabaseSettingsDlg(boolean testImmediately) {
 		super(UIUtils.getMainFrame(), "Database Settings", DatabaseSettingsDlg.class.getName());
-		
+
 		//Initialize with current adapter
 		adapter = DBAdapter.getAdapter();
 		initialAdapter = adapter;
@@ -107,159 +107,150 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 
 		//Buttons
 		JButton okButton = new JIconButton(IconType.SAVE, "Save");
-		okButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				new SwingWorkerExtended("Test Connection", specificConfigPane, SwingWorkerExtended.FLAG_CANCELABLE | SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
-					@Override
-					protected void doInBackground() throws Exception {
-						try {
-							save();
-						} catch(Exception ex) {
-							JExceptionDialog.showError(DatabaseSettingsDlg.this, ex); 
-						}
+		okButton.addActionListener(e-> {
+			new SwingWorkerExtended("Test Connection", specificConfigPane) {
+				@Override
+				protected void doInBackground() throws Exception {
+					try {
+						save();
+					} catch(Exception ex) {
+						JExceptionDialog.showError(DatabaseSettingsDlg.this, ex);
 					}
-				};
-			}
-		});
-		
-		JButton testConnectionButton = new JButton("Test Connection");
-		testConnectionButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				new SwingWorkerExtended("Test Connection", getContentPane(), SwingWorkerExtended.FLAG_CANCELABLE | SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
-					@Override
-					protected void doInBackground() throws Exception {
-						try {
-							label.setText("<html><div style='color:blue'>Testing Connection...</div></html>");
-							updateDBProperties();
-							testConnection();
-							label.setText("<html><div style='color:green'>Successful</div></html>");
-						} catch(Exception ex) {
-							label.setText("<html><div style='color:red'>Error</div></html>");
-							throw ex;
-						}
-					}
-				};
-			}
-		});
-		
-		JButton testSchemaButton = new JButton("Test Schema");
-		testSchemaButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				new SwingWorkerExtended("Test/Create Schema", getContentPane(), SwingWorkerExtended.FLAG_CANCELABLE | SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
-					@Override
-					protected void doInBackground() throws Exception {
-						try {
-							label.setText("<html><div style='color:blue'>Testing Schema...</div></html>");
-							updateDBProperties();
-							DatabaseMigrationDlg.testSchema(adapter);
-							label.setText("<html><div style='color:green'>Successful</div></html>");
-						} catch(Exception ex) {
-							label.setText("<html><div style='color:red'>Error</div></html>");
-							throw ex;
-						}
-					}
-				};
-			}
-		});
-		JButton examplesButton = new JButton("Recreate Examples");
-		examplesButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int res = JOptionPane.showConfirmDialog(DatabaseSettingsDlg.this, "Are you sure you want to delete the existing examples and reimport the original ones?", "Recreate examples", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-				if(res==JOptionPane.YES_OPTION) {
-					new SwingWorkerExtended("Recreate Examples", getContentPane(), SwingWorkerExtended.FLAG_CANCELABLE | SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
-						@Override
-						protected void doInBackground() throws Exception {
-							try {
-								label.setText("<html><div style='color:blue'>Recreate Examples...</div></html>");
-								SpiritDB.checkImportExamples(true);
-								label.setText("<html><div style='color:green'>Successful</div></html>");
-								SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
-							} catch(Exception ex) {
-								label.setText("<html><div style='color:red'>Error</div></html>");
-								throw ex;
-							}
-						}
-					};
 				}
+			};
+		});
+
+		JButton testConnectionButton = new JButton("Test Connection");
+		testConnectionButton.setToolTipText("Test the connection (correct URL/username/password), without testing the schema");
+		testConnectionButton.addActionListener(e-> {
+			new SwingWorkerExtended("Test Connection", getContentPane()) {
+				@Override
+				protected void doInBackground() throws Exception {
+					try {
+						label.setText("<html><div style='color:blue'>Testing Connection...</div></html>");
+						updateDBProperties();
+						testConnection();
+						label.setText("<html><div style='color:green'>Successful</div></html>");
+					} catch(Exception ex) {
+						label.setText("<html><div style='color:red'>Error</div></html>");
+						throw ex;
+					}
+				}
+			};
+		});
+
+		JButton testSchemaButton = new JButton("Test Schema");
+		testSchemaButton.setToolTipText("Validate the DB schema");
+		testSchemaButton.addActionListener(e-> {
+			new SwingWorkerExtended("Test/Create Schema", getContentPane()) {
+				@Override
+				protected void doInBackground() throws Exception {
+					try {
+						label.setText("<html><div style='color:blue'>Testing Schema...</div></html>");
+						updateDBProperties();
+						DatabaseMigrationDlg.testSchema(adapter);
+						label.setText("<html><div style='color:green'>Successful</div></html>");
+					} catch(Exception ex) {
+						label.setText("<html><div style='color:red'>Error</div></html>");
+						throw ex;
+					}
+				}
+			};
+		});
+		JButton examplesButton = new JButton("Recreate Types/Examples");
+		examplesButton.setToolTipText("Recreate the examples and reimport the missing types. ");
+		examplesButton.addActionListener(e-> {
+			int res = JOptionPane.showConfirmDialog(DatabaseSettingsDlg.this, "Are you sure you want to delete the existing examples and reimport the original ones?\nNote: the entities created by the user will no be updated/deleted", "Recreate examples", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+			if(res==JOptionPane.YES_OPTION) {
+				new SwingWorkerExtended("Recreate Examples", getContentPane()) {
+					@Override
+					protected void doInBackground() throws Exception {
+						try {
+							label.setText("<html><div style='color:blue'>Recreate Examples...</div></html>");
+							SpiritDB.checkImportExamples(true);
+							label.setText("<html><div style='color:green'>Successful</div></html>");
+							SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
+						} catch(Exception ex) {
+							label.setText("<html><div style='color:red'>Error</div></html>");
+							throw ex;
+						}
+					}
+				};
 			}
 		});
-		
-		
+
+
 		//generalConfigPane
 		List<JComponent> comps = new ArrayList<>();
 		if(DBAdapter.isConfigurable()) {
-			adapterComboBox = (JComboBox) addComp(DBAdapter.ADAPTER_PROPERTY, comps);			
+			adapterComboBox = (JComboBox) addComp(DBAdapter.ADAPTER_PROPERTY, comps);
 			adapterComboBox.setSelectedItem(DBAdapter.ADAPTER_PROPERTY.getDisplayFromKey(adapter.getDBProperty(DBAdapter.ADAPTER_PROPERTY)));
-			adapterComboBox.addActionListener(new ActionListener() {			
+			adapterComboBox.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					try {
 						String adapterClassName = DBAdapter.ADAPTER_PROPERTY.getKeyFromDisplay((String) adapterComboBox.getSelectedItem());
 						if(adapterClassName==null || adapterClassName.length()==0) {
-							adapter = null;							
+							adapter = null;
 						} else {
 							adapter = DBAdapter.getAdapter(adapterClassName);
 						}
 					} catch(Exception ex) {
-						JExceptionDialog.showError(DatabaseSettingsDlg.this, ex); 
-						adapter = new HSQLFileAdapter();							
+						JExceptionDialog.showError(DatabaseSettingsDlg.this, ex);
+						adapter = new HSQLFileAdapter();
 					}
-					initUISpecificProperties();					
+					initUISpecificProperties();
 				}
 			});
 		} else {
 			comps.add(new JLabel(DBAdapter.ADAPTER_PROPERTY.getDisplayName()+": "));
-			comps.add(new JCustomLabel(initialAdapter==null?"":initialAdapter.getClass().getSimpleName(), Font.BOLD));			
+			comps.add(new JCustomLabel(initialAdapter==null?"":initialAdapter.getClass().getSimpleName(), Font.BOLD));
 		}
-		
+
 		//specificConfigPane
 		specificConfigPane.setPreferredSize(new Dimension(450, 340));
-		
+
 		//initialization
 		initUISpecificProperties();
-		
-		
+
+
 		refreshConfigPanels();
-		
+
 		//TabbedPane
 		JTabbedPane tabbedPane = new JCustomTabbedPane();
 		tabbedPane.setFont(FastFont.BOLD);
 		tabbedPane.add("Database", UIUtils.createBox(
-				UIUtils.createTitleBox("DB Connection",specificConfigPane), 
+				UIUtils.createTitleBox("DB Connection",specificConfigPane),
 				UIUtils.createTitleBox("DB Type", UIUtils.createTable(comps)),
 				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), testConnectionButton, testSchemaButton, examplesButton)));
 		tabbedPane.add("User Settings", new JScrollPane(userPanel));
 		tabbedPane.add("Study Settings", new JScrollPane(studyPanel));
-		
+
 		//contentpane
 		setContentPane(UIUtils.createBox(tabbedPane, null, UIUtils.createHorizontalBox(label, Box.createHorizontalGlue(), okButton)));
 		UIUtils.adaptSize(this, 840, 750);
 		setVisible(true);
-		
+
 		if(testImmediately) {
 			try {
 				testSchema();
 			} catch(Exception ex) {
-				JExceptionDialog.showError(DatabaseSettingsDlg.this, ex); 
-			}			
+				JExceptionDialog.showError(DatabaseSettingsDlg.this, ex);
+			}
 		}
 	}
-	
+
 	private void refreshConfigPanels() {
 		createPropertyPanel(userPanel, "", "", PropertyKey.getPropertyKeys(Tab.SYSTEM), new String[0]);
 		createPropertyPanel(studyPanel, "", "", PropertyKey.getPropertyKeys(Tab.STUDY), new String[0]);
 	}
-	
+
 	private Map<PropertyKey, JComponent> prop2comp = new HashMap<>();
 	private void createPropertyPanel(final JPanel panel, final String propertyPrefix, final String labelPrefix, final List<PropertyKey> properties, final String[] nestedValues) {
 		List<JComponent> tableComps = new ArrayList<>();
 		List<Component> panels = new ArrayList<>();
 		for (final PropertyKey p : properties) {
-			
+
 			//PropertyEditor
 			List<PropertyKey> toPropertyKeys = p.getNestedProperties();
 			String val = propertyMap.get(propertyPrefix + p.getKey())==null? p.getDefaultValue(nestedValues): propertyMap.get(propertyPrefix + p.getKey());
@@ -270,7 +261,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 				c.setSelected("true".equals(val));
 				c.addActionListener(new ActionListener() {
 					@Override
-					public void actionPerformed(ActionEvent e) {					
+					public void actionPerformed(ActionEvent e) {
 						propertyMap.put(propertyPrefix + p.getKey(), c.isSelected()?"true":"false");
 					}
 				});
@@ -311,7 +302,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 				});
 			}
 			prop2comp.put(p, parentComp);
-			
+
 			if(p.getLinkedOptions()!=null && prop2comp.get(p.getLinkedOptions())!=null) {
 				prop2comp.get(p.getLinkedOptions()).addFocusListener(new FocusAdapter() {
 					private String t;
@@ -323,7 +314,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 					}
 					@Override
 					public void focusGained(FocusEvent e) {
-						t = getValue(prop2comp.get(p.getLinkedOptions()));						
+						t = getValue(prop2comp.get(p.getLinkedOptions()));
 					}
 				});
 			}
@@ -333,7 +324,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 			labelComp.setToolTipText(p.getTooltip()==null? null: "<html>" + p.getTooltip());
 			parentComp.setToolTipText(p.getTooltip()==null? null: "<html>" + p.getTooltip());
 			tooltipComp.setToolTipText(p.getTooltip()==null? null: "<html>" + p.getTooltip());
-			
+
 			//Are there derived properties?
 			if(toPropertyKeys.size()>0) {
 				parentComp.addFocusListener(new FocusAdapter() {
@@ -342,11 +333,11 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 					public void focusLost(FocusEvent e) {
 						if(!t.equals(getValue(parentComp))) {
 							createPropertyPanel(panel, propertyPrefix, labelPrefix, properties, nestedValues);
-						}						
-					}					
+						}
+					}
 					@Override
 					public void focusGained(FocusEvent e) {
-						t = getValue(parentComp);						
+						t = getValue(parentComp);
 					}
 				});
 				List<JPanel> nestedPanels = new ArrayList<>();
@@ -362,12 +353,12 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 					createPropertyPanel(nestedPanel, propertyPrefix + p.getKey() + "." + token +".", token, toPropertyKeys, nestedValues2);
 					nestedPanels.add(nestedPanel);
 				}
-				
-				panels.add(UIUtils.createTitleBox(p.getLabel(), 
-						UIUtils.createBox(UIUtils.createHorizontalBox(labelComp, parentComp, tooltipComp, Box.createHorizontalGlue()), 
+
+				panels.add(UIUtils.createTitleBox(p.getLabel(),
+						UIUtils.createBox(UIUtils.createHorizontalBox(labelComp, parentComp, tooltipComp, Box.createHorizontalGlue()),
 								null, UIUtils.createVerticalBox(nestedPanels))));
 			} else {
-				
+
 				//Standard components: add them to the table
 				tableComps.add(tooltipComp);
 				tableComps.add(labelComp);
@@ -380,10 +371,10 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 				JPanel nestedPanel;
 				if(tableComps.size()>=3*6) {
 					int n = (tableComps.size()/3+1)/2;
-					
+
 					nestedPanel =  UIUtils.createGrid(
-									UIUtils.createTable(3, 5, 0, tableComps.subList(0, n*3)),
-									UIUtils.createTable(3, 5, 0, tableComps.subList(n*3, tableComps.size())));					
+							UIUtils.createTable(3, 5, 0, tableComps.subList(0, n*3)),
+							UIUtils.createTable(3, 5, 0, tableComps.subList(n*3, tableComps.size())));
 				} else {
 					nestedPanel = UIUtils.createTable(3, 5, 0, tableComps);
 				}
@@ -395,12 +386,12 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 			}
 		}
 		panels.add(Box.createVerticalGlue());
-		
+
 		panel.removeAll();
 		panel.add(UIUtils.createVerticalBox(panels));
 		panel.validate();
 	}
-	
+
 	private void initUISpecificProperties() {
 		List<JComponent> comps = new ArrayList<>();
 		if(adapter!=null) {
@@ -416,20 +407,20 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 		sp.setPreferredSize(new Dimension(450, 200));
 		specificConfigPane.removeAll();
 		specificConfigPane.add(UIUtils.createBox(
-				UIUtils.createTable(comps), 
+				UIUtils.createTable(comps),
 				sp));
 	}
-	
+
 	private JComponent addComp(PropertyDescriptor property, List<JComponent> comps) {
-		comps.add(new JLabel(property.getDisplayName()+": "));		
-		
+		comps.add(new JLabel(property.getDisplayName()+": "));
+
 		Map<String, String> optionMap = property.getOptionMap();
 		if(optionMap.size()>0) {
 			//Add a combobox
 			Vector<String> options = new Vector<>();
 			options.add("");
 			options.addAll(optionMap.values());
-					
+
 			JComboBox<String> comp = new JComboBox<>(options);
 			comp.setSelectedItem(property.getDisplayFromKey(adapter.getDBProperty(property)));
 			dbproperty2comp.put(property, comp);
@@ -442,14 +433,14 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 			final JCustomTextField comp = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 22);
 			comp.setTextWhenEmpty("Encrypted password");
 			JButton encryptButton = new JButton("...");
-			encryptButton.addActionListener(new ActionListener() {				
+			encryptButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					String res = JOptionPane.showInputDialog(DatabaseSettingsDlg.this, "Please enter the DB password (clear text) to encrypt it", "Encrypt password", JOptionPane.QUESTION_MESSAGE);
 					if(res==null) return;
 					StringEncrypter encrypter = new StringEncrypter("program from joel");
 					comp.setText(encrypter.encrypt(res.trim().toCharArray()));
-					
+
 				}
 			});
 			dbproperty2comp.put(property, comp);
@@ -467,21 +458,21 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 			return comp;
 		}
 	}
-	
-	
+
+
 	/**
 	 * Updates settings linked to the DB connection (stored in config file or in adapter)
 	 */
 	@SuppressWarnings("rawtypes")
 	private void updateDBProperties() {
 		Map<String, String> map = new HashMap<>();
-		
+
 		if(adapter!=null) {
 			//Adapter
 			if(adapterComboBox!=null) {
 				map.put(DBAdapter.ADAPTER_PROPERTY.getPropertyName(), DBAdapter.ADAPTER_PROPERTY.getKeyFromDisplay((String) adapterComboBox.getSelectedItem()));
 			}
-			
+
 			//Specific properties
 			for (PropertyDescriptor prop : adapter.getSpecificProperties()) {
 				assert dbproperty2comp.get(prop)!=null;
@@ -489,78 +480,78 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 				if(dbproperty2comp.get(prop) instanceof JTextField) {
 					map.put(prop.getPropertyName(),  ((JTextField)dbproperty2comp.get(prop)).getText());
 				} else if(dbproperty2comp.get(prop) instanceof JComboBox) {
-					map.put(prop.getPropertyName(), prop.getKeyFromDisplay((String) ((JComboBox)dbproperty2comp.get(prop)).getSelectedItem()));				
+					map.put(prop.getPropertyName(), prop.getKeyFromDisplay((String) ((JComboBox)dbproperty2comp.get(prop)).getSelectedItem()));
 				}
 			}
 		}
 		DBAdapter.setDBProperty(map);
 		DBAdapter.setAdapter(null);
 	}
-	
+
 	private String getValue(JComponent c) {
 		if(c instanceof JComboBox) {
-			return (String) ((JComboBox<?>)c).getSelectedItem();				
+			return (String) ((JComboBox<?>)c).getSelectedItem();
 		} else if(c instanceof JTextComponent) {
 			return ((JTextComponent)c).getText();
 		} else {
 			throw new RuntimeException("Invalid component: "+c);
 		}
 	}
-	
-	private void testConnection() throws Exception {		
+
+	private void testConnection() throws Exception {
 		if(adapter==null) throw new Exception("You must select an adapter");
-		updateDBProperties();	
+		updateDBProperties();
 
 		//Init adapter without testing (start server if needed)
 		adapter.preInit();
-		
+
 		//Simply test the connection
 		adapter.testConnection();
 	}
-	
 
-	private void testSchema() throws Exception {		
+
+	private void testSchema() throws Exception {
 		if(adapter==null) throw new Exception("You must select an adapter");
 		updateDBProperties();
-		
+
 		try {
 			MigrationScript.assertLatestVersion();
 		} catch(MigrationScript.MismatchDBException e) {
-			new DatabaseMigrationDlg();			
+			new DatabaseMigrationDlg();
 		}
-		
+
 		//Init adapter with testing (start server if needed)
 		adapter.preInit();
 		adapter.validate();
 	}
-	
-	
+
+
 	private void save() throws Exception {
 		if(adapter==null) throw new Exception("You must select an adapter");
 
 		//Update properties
 		updateDBProperties();
-		
+
 		//Simply test the connection, or forbids saving
 		adapter.testConnection();
-		
+
 		//Success->Save
 		//DBProperties in config file (if configurable)
 		if(DBAdapter.isConfigurable()) {
 			DBAdapter.saveDBProperties();
 		}
-		
+
 		//ConfigProperties in DB
 		SpiritProperties.getInstance().setValues(propertyMap);
 		SpiritProperties.getInstance().saveValues();
 		dispose();
 		SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
-		
+
 		//Reset Spirit
 		DBAdapter.setAdapter(null);
 		JPAUtil.closeFactory();
 		SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
 	}
-	
-	
+
+
 }

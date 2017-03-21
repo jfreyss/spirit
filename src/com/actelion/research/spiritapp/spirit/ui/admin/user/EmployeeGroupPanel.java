@@ -35,7 +35,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
@@ -64,7 +64,7 @@ public class EmployeeGroupPanel extends JPanel {
 					if(res!=JOptionPane.YES_OPTION) return;
 					
 					try {
-						DAOEmployee.removeEmployeeGroup(sel.get(0), Spirit.getUser());
+						DAOEmployee.removeEmployeeGroup(sel.get(0), SpiritFrame.getUser());
 						refresh();
 					} catch (Exception e) {
 						JExceptionDialog.showError(e);

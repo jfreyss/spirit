@@ -47,6 +47,7 @@ import javax.swing.JTextArea;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.print.SpiritPrinter;
 import com.actelion.research.spiritapp.spirit.services.print.PrintableOfContainers.Model;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JFileBrowser;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
@@ -281,7 +282,7 @@ public class CassettePrinterAdapter extends PrintAdapter {
 			File archiveDir = new File(destDir, "Archive");
 			if(!archiveDir.exists()) archiveDir.mkdirs();
 			
-			String fileName = Spirit.getUser()+"-" + new SimpleDateFormat("yyyyMMDD-HHmmss").format(new Date())+ ".txt";
+			String fileName = SpiritFrame.getUser()+"-" + new SimpleDateFormat("yyyyMMDD-HHmmss").format(new Date())+ ".txt";
 			
 			String content = getPrint(containers).toString();
 			IOUtils.stringToFile(content, new File(destDir, fileName));

@@ -130,12 +130,15 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		return (BiosampleTableModel) super.getModel();		
 	}
 	
+	/**
+	 * Sets the rows, init the columns (if smartColumns==true) and reset the column widths 
+	 */
 	@Override
 	public void setRows(final List<Biosample> data) {	
 		if(data!=null && !data.isEmpty()) {
-			getModel().setRows(new ArrayList<Biosample>(data));
+			getModel().setRows(new ArrayList<>(data));
 		} else {
-			getModel().setRows(new ArrayList<Biosample>());
+			getModel().setRows(new ArrayList<>());
 		}
 		if(smartColumns) {
 			//Smart column selections
@@ -145,6 +148,13 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		resetPreferredColumnWidth();
 	}
 	
+	/**
+	 * Inits columns based on the data.
+	 * - Container is only shown if one column has a container
+	 * - Parent is only shown if one sample has a parent not contained in the model
+	 * - If the data model is based on one biotype, each metadata will be shown in its own column
+	 * - Otherwise, all metadata will be shown in one column
+	 */
 	public void initColumns() {
 		//Memorize the orders of columns
 		Map<Column<Biosample,?>, Integer> formerColumnOrder = new HashMap<>();

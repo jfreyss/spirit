@@ -28,7 +28,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.admin.user.UserAdminDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
@@ -54,7 +54,7 @@ public class AdminActions {
 			super("Edit Biotypes (Admin)");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('t'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
-			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()));
+			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -67,7 +67,7 @@ public class AdminActions {
 			super("Edit Tests (Admin)");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('t'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
-			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()));
+			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -81,7 +81,7 @@ public class AdminActions {
 		public Action_Revert(Revision revision) {
 			super("Cancel this change");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('v'));
-			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()) || (revision.getUser()!=null && revision.getUser().equals(Spirit.getUsername())));
+			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()) || (revision.getUser()!=null && revision.getUser().equals(SpiritFrame.getUsername())));
 			this.revision = revision;
 			
 		}
@@ -92,7 +92,7 @@ public class AdminActions {
 				new SwingWorkerExtended("Revert", UIUtils.getMainFrame()) {
 					@Override
 					protected void doInBackground() throws Exception {
-						DAORevision.revert(revision, Spirit.getUser(), "Revert" + (reason.length()==0?"":"(" + reason + ")"));
+						DAORevision.revert(revision, SpiritFrame.getUser(), "Revert" + (reason.length()==0?"":"(" + reason + ")"));
 					}
 					@Override
 					protected void done() {
@@ -115,7 +115,7 @@ public class AdminActions {
 			super("Restore this version");
 			this.objects = objects;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
-			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()));
+			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
 		}
 
 		@Override
@@ -140,7 +140,7 @@ public class AdminActions {
 				new SwingWorkerExtended("Rollback", UIUtils.getMainFrame()) {
 					@Override
 					protected void doInBackground() throws Exception {
-						DAORevision.restore(objects, Spirit.getUser(), "Rollback" + (reason.length()==0?"":"(" + reason + ")"));
+						DAORevision.restore(objects, SpiritFrame.getUser(), "Rollback" + (reason.length()==0?"":"(" + reason + ")"));
 					}
 					protected void done() {
 						JExceptionDialog.showInfo(UIUtils.getMainFrame(), objects.size()+" objects rollbacked");
@@ -168,7 +168,7 @@ public class AdminActions {
 			super("Recent Changes (" + (userId==null?"Admin": userId==""?"NA": userId) + ")");
 			this.userId = userId;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
-			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
+			putValue(AbstractAction.SMALL_ICON, userId==null? IconType.ADMIN.getIcon(): IconType.HISTORY.getIcon());
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -181,7 +181,7 @@ public class AdminActions {
 			super("Rename ELB (Admin)");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
-			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()));
+			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -194,7 +194,7 @@ public class AdminActions {
 			super("Recent Connections (Admin)");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('c'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
-			setEnabled(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && (Spirit.getUser()==null || SpiritRights.isSuperAdmin(Spirit.getUser())));
+			setEnabled(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && (SpiritFrame.getUser()==null || SpiritRights.isSuperAdmin(SpiritFrame.getUser())));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -207,7 +207,7 @@ public class AdminActions {
 			super("Edit Users/Groups (Admin)");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
-			setEnabled(DBAdapter.getAdapter().getUserManagedMode()==UserAdministrationMode.READ_WRITE && (Spirit.getUser()==null || SpiritRights.isSuperAdmin(Spirit.getUser())));
+			setEnabled(DBAdapter.getAdapter().getUserManagedMode()==UserAdministrationMode.READ_WRITE && (SpiritFrame.getUser()==null || SpiritRights.isSuperAdmin(SpiritFrame.getUser())));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -221,7 +221,7 @@ public class AdminActions {
 			super("Query Expired Samples");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(AbstractAction.SMALL_ICON, IconType.SANDGLASS.getIcon());
-			setEnabled(Spirit.getUser()==null || SpiritRights.isSuperAdmin(Spirit.getUser()));
+			setEnabled(SpiritFrame.getUser()==null || SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {

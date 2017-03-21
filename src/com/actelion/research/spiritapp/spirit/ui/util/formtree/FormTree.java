@@ -42,49 +42,49 @@ import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 
 public class FormTree extends JPanel {
-		
+
 	public static final String PROPERTY_SUBMIT_PERFORMED = "action";
 	public static final String PROPERTY_CHANGED = "change";
 	private AbstractNode<?> root;
 	private boolean rootVisible = true;
 	private boolean rightClickEnabled = true;
 	private Component lastComponent = null;
-	
-	
-	
+
+
+
 	/**
 	 * Constructor
-	 */	
-	public FormTree() {		
+	 */
+	public FormTree() {
 		setOpaque(true);
 		setBackground(Color.WHITE);
 		setLayout(new GridBagLayout());
 		initLayout();
-		
-		addAncestorListener(new AncestorListener() {			
+
+		addAncestorListener(new AncestorListener() {
 			@Override
-			public void ancestorRemoved(AncestorEvent arg0) {}			
+			public void ancestorRemoved(AncestorEvent arg0) {}
 			@Override
-			public void ancestorMoved(AncestorEvent arg0) {}			
+			public void ancestorMoved(AncestorEvent arg0) {}
 			@Override
 			public void ancestorAdded(AncestorEvent arg0) {
 				//Update the mousewheel scroll if enabled
 				if(FormTree.this.getParent() instanceof JScrollPane) {
-					((JScrollPane) FormTree.this.getParent()).getVerticalScrollBar().setUnitIncrement(22);					
+					((JScrollPane) FormTree.this.getParent()).getVerticalScrollBar().setUnitIncrement(22);
 				} else if(FormTree.this.getParent() instanceof JViewport && ((JViewport) FormTree.this.getParent()).getParent() instanceof JScrollPane) {
-					((JScrollPane)((JViewport) FormTree.this.getParent()).getParent()).getVerticalScrollBar().setUnitIncrement(22);										
+					((JScrollPane)((JViewport) FormTree.this.getParent()).getParent()).getVerticalScrollBar().setUnitIncrement(22);
 				}
 			}
 		});
-		
+
 	}
-	
+
 	public synchronized void expandAll(boolean expand) {
 		expandAll(root, expand);
 		root.recomputeProperties();
 		initLayout();
 	}
-	
+
 	public synchronized void expandAll(AbstractNode<?> node, boolean expand) {
 		if(node.isCanExpand()) {
 			node.setExpanded(expand);
@@ -93,20 +93,16 @@ public class FormTree extends JPanel {
 			expandAll(child, expand);
 		}
 	}
-	
+
 	protected void initLayout() {
 		if(!SwingUtilities.isEventDispatchThread()) {
-			SwingUtilities.invokeLater(new Runnable() {				
-				@Override
-				public void run() {
-					initLayout();
-				}
-			});
+			SwingUtilities.invokeLater(() -> initLayout());
 			return;
 		}
-		//Memorize the focus		
+
+		//Memorize the focus
 		final Component comp = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
-		
+
 		//Reset the layout
 		removeAll();
 		if(root!=null) {
@@ -115,11 +111,11 @@ public class FormTree extends JPanel {
 			c.gridy = 5000;
 			c.weighty = c.weightx = 1;
 			add(new JLabel(), c);
-			
+
 			if(rootVisible) {
 				initRec(root);
 			} else {
-				for (AbstractNode<?> node : root.getChildren()) {				
+				for (AbstractNode<?> node : root.getChildren()) {
 					initRec(node);
 				}
 			}
@@ -133,16 +129,16 @@ public class FormTree extends JPanel {
 				}
 			});
 		}
-		
-		
+
+
 		if(getParent()!=null && getParent() instanceof JComponent) ((JComponent)getParent()).revalidate(); //update scrollpane if available
 		else validate();
 		repaint();
-	}	
+	}
 
 	private void initRec(final AbstractNode<?> node) {
 		if(node==null || !node.isVisible()) return;
-		
+
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(1, 0, 0, 0);
 		c.fill = GridBagConstraints.NONE;
@@ -150,13 +146,13 @@ public class FormTree extends JPanel {
 		c.gridx = 0;
 		c.gridy = node.row;
 		c.weightx = 1;
-		c.weighty = 0; 
+		c.weighty = 0;
 
 		if(node.isFilledRec()) {
 			node.setExpanded(true);
 		}
-		
-		add(node.getView(), c);		
+
+		add(node.getView(), c);
 		if(node.isExpanded()) {
 			for (AbstractNode<?> child : node.getChildren()) {
 				initRec(child);
@@ -164,8 +160,8 @@ public class FormTree extends JPanel {
 		}
 
 	}
-	
-	
+
+
 	protected synchronized void expand(AbstractNode<?> node) {
 		final Component toFocus = lastComponent;
 		setSelection(node);
@@ -176,17 +172,17 @@ public class FormTree extends JPanel {
 			if(!node.isExpanded() && node.getExpandStrategy()!=null) node.getExpandStrategy().onExpand();
 			if(node.isExpanded() && node.getExpandStrategy()!=null) node.getExpandStrategy().onCollapse();
 		}
-		
+
 		initLayout();
 		if(toFocus!=null) {
-			SwingUtilities.invokeLater(new Runnable() {		
+			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
 					toFocus.requestFocusInWindow();
 				}
 			});
 		}
-	}		
+	}
 
 	protected void setLastComponent(Component lastComponent) {
 		this.lastComponent = lastComponent;
@@ -200,29 +196,29 @@ public class FormTree extends JPanel {
 		}
 		initLayout();
 	}
-	
+
 	public synchronized void updateModel() {
 		if(root!=null) root.updateModelRec();
 	}
-	
+
 	public synchronized void setRoot(AbstractNode<?> root) {
 		this.root = root;
 		root.updateViewRec();
 		initLayout();
-	}	
-	
+	}
+
 
 	public AbstractNode<?> getRoot() {
 		return root;
 	}
-	
+
 	/**
 	 * @param rootVisible the rootVisible to set
 	 */
 	public void setRootVisible(boolean rootVisible) {
 		this.rootVisible = rootVisible;
 	}
-	
+
 	/**
 	 * @return the rootVisible
 	 */
@@ -256,14 +252,14 @@ public class FormTree extends JPanel {
 	}
 	public synchronized void setFocus(final AbstractNode<?> n) {
 		if(n==null || n.getFocusable()==null) return;
-		SwingUtilities.invokeLater(new Runnable() {					
+		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
 				n.getFocusable().requestFocusInWindow();
 			}
 		});
 	}
-	
+
 	public synchronized void setSelectionRow(int row) {
 		updateUI();
 		LinkedList<AbstractNode<?>> nodes = new LinkedList<AbstractNode<?>>();
@@ -276,32 +272,32 @@ public class FormTree extends JPanel {
 				return;
 			}
 			for (AbstractNode<?> child : n.getChildren()) {
-				nodes.addFirst(child);				
+				nodes.addFirst(child);
 			}
 		}
 	}
-	
+
 	public static void main(String[] args) {
 		try {
 			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
-			
+
 			UIManager.put("nimbusSelectionBackground", Color.LIGHT_GRAY);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		
+
 		FormTree tree = new FormTree();
 		tree.setRootVisible(false);
 		LabelNode root = new LabelNode(tree, "TEST");
-		
+
 		LabelNode cat1 = new LabelNode(tree, "CAT1");
 		LabelNode cat2 = new LabelNode(tree, "CAT2");
 		LabelNode cat3 = new LabelNode(tree, "CAT3");
 		root.add(cat1);
 		cat1.add(cat2);
 		cat1.add(cat3);
-		
+
 		InputNode in0 = new InputNode(tree, null, "INPUT", null);
 		InputNode in1 = new InputNode(tree, null, "INPUT1", null);
 		InputNode in2 = new InputNode(tree, null, "INPUT2", null);
@@ -309,7 +305,7 @@ public class FormTree extends JPanel {
 		InputNode in4 = new InputNode(tree, null, "SUBINPUT4", null);
 		InputNode in5 = new InputNode(tree, null, "SUBINPUT5", null);
 		InputNode in6 = new InputNode(tree, null, "SUBINPUT6", null);
-		InputNode in7 = new InputNode(tree, null, "SUBINPUT7", null);		
+		InputNode in7 = new InputNode(tree, null, "SUBINPUT7", null);
 		root.add(in0);
 		in0.add(in1);
 		in0.add(in2);
@@ -318,7 +314,7 @@ public class FormTree extends JPanel {
 		in2.add(in5);
 		in3.add(in6);
 		in3.add(in7);
-		
+
 		CheckboxNode cb = new CheckboxNode(tree, "CB");
 		CheckboxNode cb1 = new CheckboxNode(tree, "CB1");
 		CheckboxNode cb2 = new CheckboxNode(tree, "CB2");
@@ -329,18 +325,18 @@ public class FormTree extends JPanel {
 		cb.add(cb2);
 		cb2.add(cb3);
 		cb2.add(cb4);
-		
-		
+
+
 		tree.setRoot(root);
 		tree.expandAll(false);
 		tree.setSelectionRow(4);
-		
+
 		JFrame f = new JFrame();
 		f.setContentPane(tree);
 		f.setSize(400,400);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setVisible(true);
-		
+
 	}
 
 	/**

@@ -39,7 +39,7 @@ import java.util.Map;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationType.Disposition;
@@ -237,7 +237,7 @@ public class LocationPanel extends JPanel {
 	protected void updateView() {
 		removeAll();
 		if(getWidth()<=0) return;
-		if(location==null || !SpiritRights.canRead(location, Spirit.getUser())) return;
+		if(location==null || !SpiritRights.canRead(location, SpiritFrame.getUser())) return;
 		
 		offset_children = LEGEND_HEIGHT;
 		offset_positions = offset_children; 
@@ -258,7 +258,7 @@ public class LocationPanel extends JPanel {
 					continue;
 				}
 				//Skip location if we don't have sufficient rights
-				if(!SpiritRights.canRead(l, Spirit.getUser())) continue; 				
+				if(!SpiritRights.canRead(l, SpiritFrame.getUser())) continue; 				
 				children.add(l);
 			}
 			Collections.sort(children);

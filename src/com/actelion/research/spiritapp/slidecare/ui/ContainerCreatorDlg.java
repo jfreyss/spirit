@@ -50,9 +50,9 @@ import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 
 public class ContainerCreatorDlg extends JSpiritEscapeDialog {
-	
+
 	public static int MAX_SAMPLES = 6;
-	
+
 	private JTabbedPane tabbedPane = new JCustomTabbedPane();
 	private ContainerType containerTypeToCreate;
 	private Study study;
@@ -63,19 +63,19 @@ public class ContainerCreatorDlg extends JSpiritEscapeDialog {
 	/** 2nd Tab to generate the containers */
 	private ContainerGeneratorPanel containerGeneratorPanel;
 
-	
+
 	public ContainerCreatorDlg(final Study myStudy, ContainerType containerTypeToCreate) {
 		super(UIUtils.getMainFrame(), "SlideCare - Create " + containerTypeToCreate.getName(), ContainerCreatorDlg.class.getName());
 		this.study = DAOStudy.getStudy(myStudy.getId());
 		this.containerTypeToCreate = containerTypeToCreate;
-		
+
 		//OrganPanel
 		for (int i=0; i<MAX_SAMPLES; i++) {
 			OrganTab organPanel = new OrganTab(this, i, containerTypeToCreate==ContainerType.SLIDE);
 			organPanels.add(organPanel);
 			samplePoolTabs.add("Sample #"+(i+1), new JScrollPane(organPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED));
 		}
-		
+
 		//Find the starting index
 		BiosampleQuery q = new BiosampleQuery();
 		q.setSids(java.util.Collections.singleton(study.getId()));
@@ -89,99 +89,99 @@ public class ContainerCreatorDlg extends JSpiritEscapeDialog {
 			//Should not happen
 			e.printStackTrace();
 		}
-		
+
 		//NewContainerPreview
 		templatePreviewPanel = new TemplatePreviewPanel(containerTypeToCreate, maxBlocNo+1);
-		templatePreviewPanel.addPropertyChangeListener(TemplatePreviewOnePanel.PROPERTY_UPDATED, new PropertyChangeListener() {			
+		templatePreviewPanel.addPropertyChangeListener(TemplatePreviewOnePanel.PROPERTY_UPDATED, new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				containerGeneratorPanel.setTemplate(templatePreviewPanel.getTemplate());
 			}
 		});
-		
-	
+
+
 		JButton nextButton = new JButton("Next >>>");
-		nextButton.addActionListener(new ActionListener() {			
+		nextButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				tabbedPane.setSelectedIndex(1);
 			}
 		});
-		
+
 		JPanel centerFirstPane = new JPanel(new BorderLayout());
 		centerFirstPane.add(BorderLayout.CENTER, new JScrollPane(templatePreviewPanel));
 		centerFirstPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), nextButton));
-		
+
 		JSplitPane firstPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, samplePoolTabs, centerFirstPane);
 		firstPane.setDividerLocation(250);
-		
+
 		//SlideGenerator
 		containerGeneratorPanel = new ContainerGeneratorPanel(this);
-		
-		
+
+
 		tabbedPane.add("<html><br><b>1. Create the template<br><br>", firstPane);
 		tabbedPane.add("<html><br><b>2. Create the "+containerTypeToCreate.getName()+"s<br><br>", containerGeneratorPanel);
-		
-		
-		templatePreviewPanel.addPropertyChangeListener(TemplatePreviewOnePanel.PROPERTY_UPDATED, new PropertyChangeListener() {			
+
+
+		templatePreviewPanel.addPropertyChangeListener(TemplatePreviewOnePanel.PROPERTY_UPDATED, new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				enableTabs();
 			}
 		});
-		
+
 		//Update UI later
 		refreshStudy();
 		enableTabs();
 		containerGeneratorPanel.refresh();
 
-		
+
 		setContentPane(tabbedPane);
-		
+
 		UIUtils.adaptSize(this, 1550, 1150);
-   		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setVisible(true);
 
 	}
-	
+
 	public ContainerType getContainerTypeToCreate() {
 		return containerTypeToCreate;
 	}
-	
+
 	public void enableTabs() {
 		int n = templatePreviewPanel.getTemplate().getNAnimals();
 		for(int i=0; i<samplePoolTabs.getTabCount(); i++) {
 			samplePoolTabs.setEnabledAt(i, i<n+1);
-		}		
+		}
 	}
-	
+
 	public Study getStudy() {
 		return study;
 	}
-	
-	
+
+
 	private void refreshStudy() {
-		
-		new SwingWorkerExtended("Refreshing", samplePoolTabs, false) {
+
+		new SwingWorkerExtended("Refreshing", samplePoolTabs) {
 			@Override
 			protected void doInBackground() throws Exception {
 				study = DAOStudy.getStudy(study.getId());
 
 				//Load all samples (for faster loading)
-//				DAOStudy.fullLoad(study);
+				//				DAOStudy.fullLoad(study);
 			}
-			
+
 			@Override
 			protected void done() {
 				for (OrganTab sp : organPanels) {
 					sp.refresh();
-				}				
+				}
 				containerGeneratorPanel.refresh();
 			}
 		};
-		
+
 	}
-	
+
 	public Template getTemplate() {
 		return templatePreviewPanel.getTemplate();
 	}

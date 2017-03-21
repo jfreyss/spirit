@@ -27,7 +27,6 @@ import java.awt.Dimension;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Point;
 import java.awt.Toolkit;
@@ -51,6 +50,7 @@ import java.util.List;
 import javax.swing.JPanel;
 
 import com.actelion.research.spiritcore.business.pivot.PivotItem;
+import com.actelion.research.spiritcore.business.pivot.PivotItemFactory;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Where;
 import com.actelion.research.util.ui.FastFont;
 
@@ -64,17 +64,13 @@ public class PivotItemPanel extends JPanel implements DragGestureListener, DragS
 	private final ItemPanelControler controler;
 	private final PivotItem item;
 	private boolean hover;
-	
+	private boolean highlight;
 	
 	public PivotItemPanel(final ItemPanelControler controler, final PivotItem item) {	
 		super(new GridBagLayout());
 		this.item = item;
 		this.controler =  controler;
-		GridBagConstraints c = new GridBagConstraints();
-		c.fill = GridBagConstraints.BOTH;
-		c.anchor = GridBagConstraints.CENTER;
-		c.weightx = 1;
-		c.weighty = 1;
+		this.highlight = PivotItemFactory.MAIN.contains(item);
 
 		setOpaque(false);
 		addMouseListener(new MouseAdapter() {
@@ -92,9 +88,9 @@ public class PivotItemPanel extends JPanel implements DragGestureListener, DragS
 	
 	
 	@Override
-	public void paint(Graphics graphics) {
+	public void paintComponent(Graphics graphics) {
 		Graphics2D g = (Graphics2D) graphics;
-		super.paint(g);
+//		super.paint(g);
 		Color c1, c2;
 		if(hover) {
 			c1 = item.getClassifier().getBgcolor();// new Color(242, 242, 252);
@@ -123,13 +119,13 @@ public class PivotItemPanel extends JPanel implements DragGestureListener, DragS
 		
 		
 		g.setColor(Color.BLACK);
-		g.setFont(FastFont.BOLD);
+		g.setFont(highlight? FastFont.BOLD: FastFont.REGULAR);
 		g.drawString(name, 4 + 2 + (hover?1:0), getHeight()/2+4 + (hover?1:0));
 	}
 	
 	@Override
 	public Dimension getPreferredSize() {		
-		return new Dimension(getFontMetrics(FastFont.BOLD).stringWidth(item.getShortName())+10, HEIGHT);
+		return new Dimension(getFontMetrics(highlight? FastFont.BOLD: FastFont.REGULAR).stringWidth(item.getShortName())+10, HEIGHT);
 	}
 	
 	

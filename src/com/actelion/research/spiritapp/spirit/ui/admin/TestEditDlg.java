@@ -84,14 +84,14 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 	private final Test test;
 	private JTextField testNameTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 14);
 	private JGenericComboBox<String> testCategoryComboBox;
-	
+
 	private JPanel inputPanel = new JPanel(new GridBagLayout());
 	private JPanel outputPanel = new JPanel(new GridBagLayout());
 	private JPanel infoPanel = new JPanel(new GridBagLayout());
 	private List<AttributeRow> inputRows = new ArrayList<>();
 	private List<AttributeRow> outputRows = new ArrayList<>();
 	private List<AttributeRow> infoRows = new ArrayList<>();
-	
+
 	class AttributeRow {
 		TestAttribute model;
 		JTextField name;
@@ -99,16 +99,16 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 		JCheckBox required;
 		JButton paramButton = new JButton("View/Edit");
 		int index;
-		
+
 		public AttributeRow(final TestAttribute att){
 			this.model = att;
 			name = new JCustomTextField(JCustomTextField.ALPHANUMERIC, att.getName(), 12);
 			dataTypeComboBox = new JGenericComboBox<DataType>(DataType.values(), true);
 			required = new JCheckBox("Req.", att.isRequired());
 			index = att.getIndex();
-			
+
 			dataTypeComboBox.setSelection(att.getDataType());
-			
+
 			dataTypeComboBox.addItemListener(new ItemListener() {
 				@Override
 				public void itemStateChanged(ItemEvent e) {
@@ -116,7 +116,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 				}
 			});
 			refresh();
-			
+
 			paramButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
@@ -134,22 +134,22 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 				}
 			});
 		}
-		
+
 		public void refresh() {
 			if(dataTypeComboBox.getSelection()==DataType.AUTO) {
 				paramButton.setText("View Entered");
 				paramButton.setVisible(true);
-			} else if(dataTypeComboBox.getSelection()==DataType.MULTI || dataTypeComboBox.getSelection()==DataType.LIST) {				
-				paramButton.setText("Edit Choices ("+model.getParametersArray().length+")");				
+			} else if(dataTypeComboBox.getSelection()==DataType.MULTI || dataTypeComboBox.getSelection()==DataType.LIST) {
+				paramButton.setText("Edit Choices ("+model.getParametersArray().length+")");
 				paramButton.setVisible(true);
 			} else if(dataTypeComboBox.getSelection()==DataType.BIOSAMPLE) {
-				paramButton.setText(model.getParameters()==null || model.getParameters().length()==0? "Select": model.getParameters());				
+				paramButton.setText(model.getParameters()==null || model.getParameters().length()==0? "Select": model.getParameters());
 				paramButton.setVisible(true);
 			} else if(dataTypeComboBox.getSelection()==DataType.FORMULA) {
 				paramButton.setText(model.getParameters()==null || model.getParameters().length()==0? "Edit": model.getParameters().substring(0, Math.min(model.getParameters().length(), 15)));
 				paramButton.setToolTipText(model.getParameters());
 				paramButton.setVisible(true);
-				
+
 			} else if(dataTypeComboBox.getSelection()!=null && dataTypeComboBox.getSelection().getParametersDescription()!=null) {
 				paramButton.setText("Edit");
 				paramButton.setVisible(true);
@@ -157,7 +157,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 				paramButton.setVisible(false);
 			}
 		}
-		
+
 		public TestAttribute updateAtt(OutputType outputType) {
 			model.setOutputType(outputType);
 			model.setName(name.getText());
@@ -165,7 +165,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			model.setRequired(required.isSelected());
 			return model;
 		}
-		
+
 		public void remove() {
 			if(model.getTest()!=null) {
 				model.getTest().getAttributes().remove(model);
@@ -173,15 +173,15 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			}
 		}
 	}
-	
+
 	public TestEditDlg(Test t) {
 		super(UIUtils.getMainFrame(), "Admin - Tests", TestEditDlg.class.getName());
 		this.test = JPAUtil.reattach(t);
-		testCategoryComboBox = new JGenericComboBox<String>(DAOTest.getTestCategories(), true);
+		testCategoryComboBox = new JGenericComboBox<String>(Test.getTestCategories(DAOTest.getTests()), true);
 		testCategoryComboBox.setEditable(true);
-		
+
 		testNameTextField.setText(test.getName());
-		testCategoryComboBox.setSelection(test.getCategory());		
+		testCategoryComboBox.setSelection(test.getCategory());
 
 		//Test Panel
 		JPanel testPanel = new JPanel(new GridBagLayout());
@@ -189,17 +189,17 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 		c.anchor = GridBagConstraints.WEST;
 		c.insets = new Insets(1,1,1,1);
 		c.gridx = 0; c.gridy = 0; testPanel.add(new JLabel("Category: "), c);
-		c.gridx = 0; c.gridy = 2; testPanel.add(new JLabel("TestName: "), c);	
-		
+		c.gridx = 0; c.gridy = 2; testPanel.add(new JLabel("TestName: "), c);
+
 		c.weightx = 0;
 		c.gridx = 1; c.gridy = 0; testPanel.add(testCategoryComboBox, c);
 		c.gridx = 1; c.gridy = 2; testPanel.add(testNameTextField, c);
-		
+
 		c.weightx = 1;
 		c.gridx = 2; c.gridy = 0; testPanel.add(new JInfoLabel("Ex: Physiology, Genetics, ..."), c);
 		c.gridx = 2; c.gridy = 2; testPanel.add(new JInfoLabel("Unique"), c);
 
-		
+
 
 		inputRows.clear();
 		for (TestAttribute att : test.getAttributes()) {
@@ -213,25 +213,25 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 		//Input Panel
 		JScrollPane inputScrollPane = new JScrollPane(inputPanel);
 		inputScrollPane.setPreferredSize(new Dimension(500, 190));
-		
+
 		//Output Panel
 		JScrollPane outputScrollPane = new JScrollPane(outputPanel);
 		outputScrollPane.setPreferredSize(new Dimension(500, 200));
-		
+
 		//Info Panel
 		JScrollPane infoScrollPane = new JScrollPane(infoPanel);
 		outputScrollPane.setPreferredSize(new Dimension(500, 180));
-		
+
 		for (OutputType outputType : OutputType.values()) {
-			refreshPanel(outputType);			
+			refreshPanel(outputType);
 		}
-		
+
 		JPanel centerPanel = UIUtils.createVerticalBox(
 				UIUtils.createTitleBox("Test Name", testPanel),
 				UIUtils.createTitleBox("Input Attributes", UIUtils.createBox(inputScrollPane, new JInfoLabel("Input attributes are optional and describe the test conditions (biomarker, method, ...)"))),
 				UIUtils.createTitleBox("Output Attributes", UIUtils.createBox(outputScrollPane, new JInfoLabel("You must have at least one output attribute"))),
 				UIUtils.createTitleBox("Info Attributes", UIUtils.createBox(infoScrollPane, new JInfoLabel("Info attributes are optional and are used to give extra information about a result (comments, raw value, ...)"))));
-		
+
 		JButton okButton = new JIconButton(IconType.SAVE, "Save");
 		okButton.addActionListener(new ActionListener() {
 			@Override
@@ -241,27 +241,27 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 				} catch (Exception ex) {
 					ex.printStackTrace();
 					JOptionPane.showMessageDialog(TestEditDlg.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-				} 
-				
+				}
+
 			}
 		});
-		
+
 		JPanel content = new JPanel(new BorderLayout());
 		content.add(BorderLayout.CENTER, centerPanel);
 		content.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
 		setContentPane(content);
-		
+
 		UIUtils.adaptSize(this, 820, 770);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setVisible(true);
-		
+
 	}
-	
+
 	public void updateModel() {
 		test.setName(testNameTextField.getText());
 		test.setCategory(testCategoryComboBox.getSelection());
-		test.getAttributes().clear();		
+		test.getAttributes().clear();
 		for (AttributeRow row : inputRows) {
 			test.getAttributes().add(row.updateAtt(OutputType.INPUT));
 		}
@@ -272,8 +272,8 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			test.getAttributes().add(row.updateAtt(OutputType.INFO));
 		}
 	}
-	
-	public void refreshPanel(final OutputType outputType) {		
+
+	public void refreshPanel(final OutputType outputType) {
 		final JPanel panel;
 		final List<AttributeRow> rows;
 		switch (outputType) {
@@ -296,10 +296,10 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 		panel.removeAll();
 		panel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
-		
+
 		c.insets = new Insets(0, 3, 1, 3);
-		c.anchor = GridBagConstraints.NORTHWEST; 
-		c.weightx = 0; 
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.weightx = 0;
 		c.insets = new Insets(0, 0, 0, 10);
 		c.gridx = 0; c.gridy = 0; panel.add(new JLabel("#"), c);
 		c.insets = new Insets(0, 0, 0, 95);
@@ -311,11 +311,11 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 		c.insets = new Insets(0,0,0,0);
 		c.insets = new Insets(0,0,0,10);
 		c.gridx = 7; c.gridy = 0; panel.add(new JLabel(" "), c);
-		
+
 		c.weightx=1; c.gridx = 10; c.gridy = 0; panel.add(new JLabel(" "), c); c.weightx=0;
 		c.insets = new Insets(0,0,0,0);
 		for (int i = 0; i < rows.size(); i++) {
-			final AttributeRow row = rows.get(i);			
+			final AttributeRow row = rows.get(i);
 			final int index = i;
 			JButton addButton = new JButton("+");
 			addButton.addActionListener(new ActionListener() {
@@ -344,7 +344,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 				}
 			});
 			final JComboBox<String> moveButton = new JComboBox<String>(new String[] {"Move", "Up", "Down", "To Input", "To Output", "To Info"});
-			moveButton.addActionListener(new ActionListener() {				
+			moveButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					if(moveButton.getSelectedIndex()==1 && index>0) {
@@ -361,7 +361,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 						infoRows.add(rows.remove(index));
 						refreshPanel(OutputType.INFO);
 					}
-					
+
 					moveButton.setSelectedIndex(0);
 					refreshPanel(outputType);
 				}
@@ -369,9 +369,9 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			c.gridx = 0; c.gridy = i+1; panel.add(new JLabel((i+1)+"."), c);
 			c.gridx = 1; c.gridy = i+1; panel.add(row.name, c);
 			c.gridx = 2; c.gridy = i+1; panel.add(row.dataTypeComboBox, c);
-			c.gridx = 3; c.gridy = i+1; panel.add(row.paramButton, c);			
-			c.gridx = 5; c.gridy = i+1; panel.add(row.required, c);			
-			c.gridx = 6; c.gridy = i+1; panel.add(addButton, c);			
+			c.gridx = 3; c.gridy = i+1; panel.add(row.paramButton, c);
+			c.gridx = 5; c.gridy = i+1; panel.add(row.required, c);
+			c.gridx = 6; c.gridy = i+1; panel.add(addButton, c);
 			c.gridx = 7; c.gridy = i+1; panel.add(delButton, c);
 			c.gridx = 8; c.gridy = i+1; panel.add(moveButton, c);
 		}
@@ -384,38 +384,38 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 				refreshPanel(outputType);
 			}
 		});
-		c.gridx = 6; c.gridy = rows.size()+1; panel.add(addButton, c);			
+		c.gridx = 6; c.gridy = rows.size()+1; panel.add(addButton, c);
 
 		c.weighty = 1;
 		c.gridx = 10; c.gridy = rows.size()+1; panel.add(new JLabel(" "), c);
 		panel.updateUI();
-	}	
-	
+	}
+
 	public void eventOk() {
 		boolean create = test.getId()<=0;
 		try {
 			if(testCategoryComboBox.getSelection()==null) throw new Exception("Category is required");
-			if(!DAOTest.getTestCategories().contains(testCategoryComboBox.getSelection())) {
+			if(!Test.getTestCategories(DAOTest.getTests()).contains(testCategoryComboBox.getSelection())) {
 				int res = JOptionPane.showConfirmDialog(this, "The category "+testCategoryComboBox.getSelection()+" is new.\n Are you sure you want to create it?", "New category", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 				if(res!=JOptionPane.YES_OPTION) return;
-				
+
 			}
-			
+
 			if(testNameTextField.getText().trim().length()==0) throw new Exception("Test Name is required");
-			
+
 			SpiritUser user = Spirit.askForAuthentication();
-			
+
 			updateModel();
 
 			DAOTest.persistTests(Collections.singleton(test), user);
 			JOptionPane.showMessageDialog(this, "Test '" + test + "' " + (create? "created": "updated"), "Success", JOptionPane.INFORMATION_MESSAGE);
 			dispose();
-			SpiritChangeListener.fireModelChanged(create? SpiritChangeType.MODEL_ADDED: SpiritChangeType.MODEL_UPDATED, Test.class, test);			
+			SpiritChangeListener.fireModelChanged(create? SpiritChangeType.MODEL_ADDED: SpiritChangeType.MODEL_UPDATED, Test.class, test);
 		} catch (Exception e) {
 			JExceptionDialog.showError(e);
 		}
 	}
-		
+
 	private void editParametersBiotype(TestAttribute att) {
 		BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 		biotypeComboBox.setSelectionString(att.getParameters());
@@ -427,40 +427,40 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 
 	private void editParametersFormula(TestAttribute att) {
 		String formula = att.getParameters();
-		
+
 		final JCustomTextArea paramTextArea = new JCustomTextArea(2, 15);
 		final JLabel okLabel = new JLabel("");
 		final JPanel contentPane = new JPanel(new BorderLayout());
-		
-		contentPane.add(BorderLayout.NORTH, 
+
+		contentPane.add(BorderLayout.NORTH,
 				new JLabel("<html><b>Enter the formula to be calculated:</b><ul>"
 						+ "<li> Variables 'I1', 'I2' reference the 1st, 2nd input (numeric only)"
 						+ "<li> Variables 'O1', 'O2' reference the 1st, 2nd output (numeric only)<br>"
 						+ "<li> ^ for exponentation, % for modulo"
 						+ "<li> sqrt(), log(), exp(), abs() can be used"
-						+ "<li> round(expression, n) to round to n decimals<br>"						
+						+ "<li> round(expression, n) to round to n decimals<br>"
 						+ "</ul>Example:<br>"
 						+ "round(sqrt(O1*O2), 2) to calculate a geometric average"));
 		contentPane.add(BorderLayout.CENTER, new JScrollPane(paramTextArea));
 		contentPane.add(BorderLayout.SOUTH, okLabel);
 		contentPane.add(new JScrollPane(paramTextArea));
 		contentPane.setPreferredSize(new Dimension(500, 300));
-	
-		
-		paramTextArea.setText(att.getParameters());						
+
+
+		paramTextArea.setText(att.getParameters());
 		paramTextArea.setEditable(true);
 		paramTextArea.setVisible(true);
 		paramTextArea.setBackground(Color.WHITE);
-		
-		
-		CaretListener l = new CaretListener() {						
+
+
+		CaretListener l = new CaretListener() {
 			@Override
 			public void caretUpdate(CaretEvent e) {
 				try {
 					validateFormula(paramTextArea.getText());
 					okLabel.setForeground(Color.GREEN);
 					okLabel.setText("Valid");
-				} catch(Exception ex2) { 
+				} catch(Exception ex2) {
 					okLabel.setForeground(Color.RED);
 					String s = ex2.getMessage();
 					okLabel.setText("Error: "+(s.length()>30? s.substring(0, 30): s));
@@ -469,10 +469,10 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 		};
 		paramTextArea.addCaretListener(l);
 		l.caretUpdate(null);
-		
+
 
 		while(true) {
-		
+
 			int res = JOptionPane.showOptionDialog(TestEditDlg.this, contentPane, "Parameters", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
 			if(res==JOptionPane.YES_OPTION) {
 				formula = paramTextArea.getText();
@@ -480,7 +480,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 					validateFormula(formula);
 					att.setParameters(formula);
 					return;
-				} catch(Exception e) { 
+				} catch(Exception e) {
 					JExceptionDialog.showError("The formula is not correct: "+e);
 				}
 			} else {
@@ -488,7 +488,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			}
 		}
 	}
-	
+
 	private void validateFormula(String expr) throws Exception {
 		Set<String> variables = new HashSet<>();
 		for (int i = 0; i < inputRows.size(); i++) {
@@ -502,21 +502,21 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 		ValidationResult res = e.validate(false);
 		if(!res.isValid()) throw new Exception(MiscUtils.flatten(res.getErrors(), ", "));
 	}
-	
+
 	private void editParametersChoice(TestAttribute att, DataType dataType) {
 		final JCustomTextArea paramTextArea = new JCustomTextArea(2, 15);
 		final JLabel nLabel = new JLabel();
 		final JButton sortButton = new JButton("Sort");
-	
+
 		final JPanel contentPane = new JPanel(new BorderLayout());
 		contentPane.add(BorderLayout.NORTH, new JLabel(dataType.getParametersDescription()));
 		contentPane.add(BorderLayout.CENTER, new JScrollPane(paramTextArea));
 		contentPane.add(BorderLayout.EAST, UIUtils.createVerticalBox(nLabel, sortButton, Box.createVerticalGlue()));
 		contentPane.add(new JScrollPane(paramTextArea));
 		contentPane.setPreferredSize(new Dimension(500, 300));
-	
-		
-		paramTextArea.addCaretListener(new CaretListener() {						
+
+
+		paramTextArea.addCaretListener(new CaretListener() {
 			@Override
 			public void caretUpdate(CaretEvent e) {
 				String[] items = MiscUtils.split(paramTextArea.getText());
@@ -524,7 +524,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			}
 		});
 		sortButton.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String[] items = MiscUtils.split(paramTextArea.getText());
@@ -532,7 +532,7 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 				paramTextArea.setText(MiscUtils.unsplit(items, "\n"));
 			}
 		});
-	
+
 		if(dataType==DataType.AUTO) {
 			paramTextArea.setBackground(Color.LIGHT_GRAY);
 			Set<String> items = DAOTest.getAutoCompletionFields(att);
@@ -541,14 +541,14 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			paramTextArea.setVisible(true);
 		} else {
 			String[] params = att.getParametersArray();
-			paramTextArea.setText(MiscUtils.unsplit(params, "\n"));						
+			paramTextArea.setText(MiscUtils.unsplit(params, "\n"));
 			paramTextArea.setEditable(true);
 			paramTextArea.setVisible(true);
 			paramTextArea.setBackground(Color.WHITE);
-		}			
-		
-		
-		
+		}
+
+
+
 		int res = JOptionPane.showOptionDialog(TestEditDlg.this, contentPane, "Parameters", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
 		if(res==JOptionPane.YES_OPTION) {
 			att.setParametersArray(MiscUtils.split(paramTextArea.getText()));

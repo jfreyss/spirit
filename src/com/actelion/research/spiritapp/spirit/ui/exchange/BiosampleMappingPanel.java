@@ -47,7 +47,7 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
-import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.MappingAction;
+import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.EntityAction;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.UIUtils;
 import com.itextpdf.text.Font;
@@ -126,15 +126,15 @@ public class BiosampleMappingPanel extends JPanel implements IMappingPanel {
 	
 	public void updateView() {
 		ExchangeMapping mapping = dlg.getMapping();
-		MappingAction action = mapping.getBiotype2existingBiosampleAction().get(inputBiotype.getName());		
-		if(action==MappingAction.SKIP) r1.setSelected(true);
-		if(action==MappingAction.MAP_REPLACE) r2.setSelected(true);
-		if(action==MappingAction.CREATE) r3.setSelected(true);		
+		EntityAction action = mapping.getBiotype2existingBiosampleAction().get(inputBiotype.getName());		
+		if(action==EntityAction.SKIP) r1.setSelected(true);
+		if(action==EntityAction.MAP_REPLACE) r2.setSelected(true);
+		if(action==EntityAction.CREATE) r3.setSelected(true);		
 	}
 	
 	public void updateMapping() {
 		ExchangeMapping mapping = dlg.getMapping();
-		MappingAction action = r1.isSelected()? MappingAction.SKIP: r2.isSelected()? MappingAction.MAP_REPLACE: r3.isSelected()? MappingAction.CREATE: MappingAction.SKIP;
+		EntityAction action = r1.isSelected()? EntityAction.SKIP: r2.isSelected()? EntityAction.MAP_REPLACE: r3.isSelected()? EntityAction.CREATE: EntityAction.SKIP;
 		mapping.getBiotype2existingBiosampleAction().put(inputBiotype.getName(), action);
 	}
 

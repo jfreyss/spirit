@@ -28,7 +28,7 @@ import java.awt.Graphics2D;
 
 import javax.swing.SwingUtilities;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
@@ -55,7 +55,7 @@ public class GroupLabel extends JLabelNoRepaint {
 	}
 
 	public void setGroup(Group group) {
-		setText(group == null ? "" : group.getBlindedName(Spirit.getUsername()), group);
+		setText(group == null ? "" : group.getBlindedName(SpiritFrame.getUsername()), group);
 	}
 
 	public void setText(String txt, Group group) {
@@ -71,7 +71,7 @@ public class GroupLabel extends JLabelNoRepaint {
 		
 		//Set Background
 		if(isOpaque() && group != null) {
-			bgColor = UIUtils.getDilutedColor(bgColor, group.getBlindedColor(Spirit.getUsername()));
+			bgColor = UIUtils.getDilutedColor(bgColor, group.getBlindedColor(SpiritFrame.getUsername()));
 			setBackground(bgColor);
 		}
 

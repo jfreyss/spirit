@@ -41,7 +41,7 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
-import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.MappingAction;
+import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.EntityAction;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.UIUtils;
 
@@ -106,7 +106,7 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 					}
 					metadataMappingPanels.get(index).setMappingComponent(comboBox);
 					if(comboBox!=null && comboBox.getSelectedIndex()>0) {
-						metadataMappingPanels.get(index).setMappingAction(MappingAction.MAP_REPLACE);
+						metadataMappingPanels.get(index).setMappingAction(EntityAction.MAP_REPLACE);
 						metadataMappingPanels.get(index).setCreationEnabled(false);
 					} else {
 						metadataMappingPanels.get(index).setCreationEnabled(true);
@@ -137,7 +137,7 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 		biotypeMappingPanel.setMappingAction(mapping.getBiotype2action().get(biotype.getName()));
 		biotypeComboBox.setSelectionString(mapping.getBiotype2mappedBiotype().get(biotype.getName())==null?"":mapping.getBiotype2mappedBiotype().get(biotype.getName()).getName());
 		if(biotypeComboBox.getSelectedIndex()>0) {
-			biotypeMappingPanel.setMappingAction(MappingAction.MAP_REPLACE);
+			biotypeMappingPanel.setMappingAction(EntityAction.MAP_REPLACE);
 			biotypeMappingPanel.setCreationEnabled(false);
 		} else {
 			biotypeMappingPanel.setCreationEnabled(true);
@@ -150,8 +150,8 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 	private void updateLayout() {
 		centerPanel.removeAll();
 		List<JComponent> formComponents = new ArrayList<>();
-		MappingAction action = biotypeMappingPanel.getMappingAction();
-		if(action!=MappingAction.SKIP) {
+		EntityAction action = biotypeMappingPanel.getMappingAction();
+		if(action!=EntityAction.SKIP) {
 			if(biotype.getSampleNameLabel()!=null) {
 				formComponents.add(new JLabel("<html>MainField '<b>"+biotype.getSampleNameLabel()+"</b>':"));
 				formComponents.add(new JLabel("MAP TO NAME"));
@@ -160,8 +160,8 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 				BiotypeMetadata m = metadatas.get(index);
 				formComponents.add(new JLabel("<html>Metadata '<b>"+m.getName()+"</b>': "));
 				formComponents.add(metadataMappingPanels.get(index));
-				if(action==MappingAction.CREATE) {
-					metadataMappingPanels.get(index).setMappingAction(MappingAction.CREATE);
+				if(action==EntityAction.CREATE) {
+					metadataMappingPanels.get(index).setMappingAction(EntityAction.CREATE);
 					metadataMappingPanels.get(index).setMappingComponent(null);
 				}
 			}

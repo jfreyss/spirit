@@ -34,7 +34,7 @@ import org.apache.poi.ss.usermodel.Picture;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.StudyDepictor;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
@@ -126,7 +126,7 @@ public class StudyDesignReport extends AbstractReport {
 	
 	public static void main(String[] args)  {
 		try {
-			Spirit.setUser(DAOSpiritUser.loadUser("freyssj"));
+			SpiritFrame.setUser(DAOSpiritUser.loadUser("freyssj"));
 			StudyDesignReport wg = new StudyDesignReport();
 			wg.populateReport(DAOStudy.getStudyByStudyId("S-00627"));
 			wg.export(null);

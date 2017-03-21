@@ -29,7 +29,7 @@ import java.util.Set;
 
 import javax.swing.JComponent;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdLabel;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel.ContainerDisplayMode;
 import com.actelion.research.spiritapp.spirit.ui.study.GroupLabel;
@@ -109,7 +109,7 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 		public String getValue(Container row) {
 			StringBuilder sb = new StringBuilder();
 			for (Group gr : row.getGroups()) {
-				sb.append((sb.length() > 0 ? ", " : "") + gr.getBlindedName(Spirit.getUsername()));
+				sb.append((sb.length() > 0 ? ", " : "") + gr.getBlindedName(SpiritFrame.getUsername()));
 			}
 			return sb.toString();
 		}
@@ -206,7 +206,7 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 
 		@Override
 		public String getValue(Container row) {
-			return row == null || row.getFirstBiosample() == null ? null : row.getFirstBiosample().getLocationString(LocationFormat.MEDIUM_POS, Spirit.getUser());
+			return row == null || row.getFirstBiosample() == null ? null : row.getFirstBiosample().getLocationString(LocationFormat.MEDIUM_POS, SpiritFrame.getUser());
 		}
 
 		@Override
@@ -251,7 +251,7 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 
 		@Override
 		public String getValue(Container row) {
-			String sLabel = row.getPrintStudyLabel(Spirit.getUsername());
+			String sLabel = row.getPrintStudyLabel(SpiritFrame.getUsername());
 			return (sLabel.length() > 0 ? sLabel + (sLabel.endsWith("\n") ? "" : "\n") : "") + "<B>" + row.getPrintMetadataLabel();
 		}
 
@@ -266,7 +266,7 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 			if (row != null) {
 				Group g = row.getFirstGroup();
 				if (g != null)
-					comp.setBackground(UIUtils.getDilutedColor(g.getBlindedColor(Spirit.getUsername()), comp.getBackground()));
+					comp.setBackground(UIUtils.getDilutedColor(g.getBlindedColor(SpiritFrame.getUsername()), comp.getBackground()));
 			}
 
 		}

@@ -50,7 +50,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritapp.spirit.ui.SpiritAction;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.admin.AdminActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.BiosampleDiscardDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.BiosampleDuplicatesDlg;
@@ -71,6 +71,7 @@ import com.actelion.research.spiritapp.spirit.ui.pivot.PivotTable;
 import com.actelion.research.spiritapp.spirit.ui.print.PrintingDlg;
 import com.actelion.research.spiritapp.spirit.ui.result.edit.EditResultDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.SetLivingStatusDlg;
+import com.actelion.research.spiritapp.spirit.ui.util.SpiritAction;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
@@ -169,7 +170,7 @@ public class BiosampleActions {
 			this.biosamples = biosamples;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			putValue(Action.SMALL_ICON, IconType.DUPLICATE.getIcon());
-			setEnabled(SpiritRights.canEditBiosamples(biosamples, Spirit.getUser()));
+			setEnabled(SpiritRights.canEditBiosamples(biosamples, SpiritFrame.getUser()));
 		}
 		
 		@Override
@@ -320,7 +321,7 @@ public class BiosampleActions {
 			
 			boolean enabled = biosamples.size()>0;
 			for (Biosample biosample : biosamples) {
-				if(!SpiritRights.canDelete(biosample, Spirit.getUser())) {enabled = false; break;}
+				if(!SpiritRights.canDelete(biosample, SpiritFrame.getUser())) {enabled = false; break;}
 			}
 			setEnabled(enabled);
 		}
@@ -356,11 +357,11 @@ public class BiosampleActions {
 		 * @param biosamples
 		 */
 		public Action_BatchEdit(List<Biosample> biosamples) {
-			super(biosamples.size()==1?  "Edit " + (SpiritRights.canRead(biosamples.get(0), Spirit.getUser())? biosamples.get(0).getSampleIdName(): null): "Edit All");
+			super(biosamples.size()==1?  "Edit " + (SpiritRights.canRead(biosamples.get(0), SpiritFrame.getUser())? biosamples.get(0).getSampleIdName(): null): "Edit All");
 			this.biosamples = biosamples;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(Action.SMALL_ICON, IconType.EDIT.getIcon());			
-			setEnabled(SpiritRights.canEditBiosamples(biosamples,Spirit.getUser()));
+			setEnabled(SpiritRights.canEditBiosamples(biosamples,SpiritFrame.getUser()));
 		}
 		
 		public List<Biosample> getBiosamples() {
@@ -411,7 +412,7 @@ public class BiosampleActions {
 			Set<Study> studies = new HashSet<>();
 			boolean canEdit = true;
 			for (Biosample b : biosamples) {
-				canEdit = canEdit && SpiritRights.canEdit(b, Spirit.getUser());
+				canEdit = canEdit && SpiritRights.canEdit(b, SpiritFrame.getUser());
 				studies.add(b.getAttachedStudy());
 			}
 			study = studies.size()==1? studies.iterator().next(): null;					
@@ -439,9 +440,9 @@ public class BiosampleActions {
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
 			putValue(AbstractAction.SMALL_ICON, IconType.BIOSAMPLE.getIcon());
 			
-			boolean canEdit = Spirit.getUser()!=null;
+			boolean canEdit = SpiritFrame.getUser()!=null;
 			for (Biosample b : biosamples) {
-				canEdit = canEdit && SpiritRights.canEdit(b, Spirit.getUser()) && b.getBiotype()!=null;
+				canEdit = canEdit && SpiritRights.canEdit(b, SpiritFrame.getUser()) && b.getBiotype()!=null;
 			}
 			setEnabled(canEdit);
 		}
@@ -471,9 +472,9 @@ public class BiosampleActions {
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
 			putValue(AbstractAction.SMALL_ICON, IconType.RESULT.getIcon());
 			
-			boolean canEdit = Spirit.getUser()!=null;
+			boolean canEdit = SpiritFrame.getUser()!=null;
 			for (Biosample b : biosamples) {
-				canEdit = canEdit && SpiritRights.canEdit(b, Spirit.getUser()) && b.getBiotype()!=null;
+				canEdit = canEdit && SpiritRights.canEdit(b, SpiritFrame.getUser()) && b.getBiotype()!=null;
 			}
 			setEnabled(canEdit);
 		}
@@ -503,7 +504,7 @@ public class BiosampleActions {
 			
 			boolean canEdit = true;
 			for (Biosample b : biosamples) {
-				canEdit = canEdit && SpiritRights.canEdit(b, Spirit.getUser()) && b.getBiotype()!=null && !b.isAbstract() && b.getBiotype().getAmountUnit()!=null;
+				canEdit = canEdit && SpiritRights.canEdit(b, SpiritFrame.getUser()) && b.getBiotype()!=null && !b.isAbstract() && b.getBiotype().getAmountUnit()!=null;
 			}
 			setEnabled(canEdit);
 		}
@@ -545,7 +546,7 @@ public class BiosampleActions {
 			this.quality = quality;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)(quality.getName().charAt(0)));
 			for (Biosample b : biosamples) {
-				if(!SpiritRights.canEdit(b, Spirit.getUser())) setEnabled(false);
+				if(!SpiritRights.canEdit(b, SpiritFrame.getUser())) setEnabled(false);
 			}
 
 		}
@@ -564,7 +565,7 @@ public class BiosampleActions {
 			this.biosamples = biosamples;
 			this.status = status;
 			for (Biosample b : biosamples) {
-				if(b.isAbstract() || !SpiritRights.canEdit(b, Spirit.getUser())) setEnabled(false);
+				if(b.isAbstract() || !SpiritRights.canEdit(b, SpiritFrame.getUser())) setEnabled(false);
 			}
 			
 			if(status==Status.TRASHED) {
@@ -585,7 +586,7 @@ public class BiosampleActions {
 			super("Set Expiry Date");
 			this.biosamples = biosamples;
 			for (Biosample b : biosamples) {
-				if(b.isAbstract() || !SpiritRights.canEdit(b, Spirit.getUser())) setEnabled(false);
+				if(b.isAbstract() || !SpiritRights.canEdit(b, SpiritFrame.getUser())) setEnabled(false);
 			}
 			
 			putValue(AbstractAction.SMALL_ICON, IconType.SANDGLASS.getIcon());
@@ -610,7 +611,7 @@ public class BiosampleActions {
 			if(biosamples!=null) {
 				boolean enabled = biosamples.size()>0;
 				for (Biosample biosample : biosamples) {
-					if(!SpiritRights.canDelete(biosample, Spirit.getUser())) {enabled = false; break;}
+					if(!SpiritRights.canDelete(biosample, SpiritFrame.getUser())) {enabled = false; break;}
 				}
 				setEnabled(enabled);
 			}
@@ -636,11 +637,11 @@ public class BiosampleActions {
 					null);
 			if(res!=JOptionPane.YES_OPTION) return;
 			try {
-				JPAUtil.pushEditableContext(Spirit.getUser());
+				JPAUtil.pushEditableContext(SpiritFrame.getUser());
 				String name = userIdComboBox.getText();
 				if(name.length()==0) return;
 				List<Biosample> biosamples = JPAUtil.reattach(getBiosamples());
-				if(!SpiritRights.canEditBiosamples(biosamples, Spirit.getUser())) throw new Exception("You are not allowed to edit those biosamples");
+				if(!SpiritRights.canEditBiosamples(biosamples, SpiritFrame.getUser())) throw new Exception("You are not allowed to edit those biosamples");
 				SpiritUser admin = Spirit.askForAuthentication();
 				SpiritUser u = DAOSpiritUser.loadUser(name);
 				if(u==null) throw new Exception(name + " is an invalid user");
@@ -663,7 +664,7 @@ public class BiosampleActions {
 		public Action_Find_Duplicate_Biosamples() {
 			super("Find Duplicated Biosamples");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
-			putValue(Action.SMALL_ICON, IconType.SEARCH.getIcon());
+			putValue(Action.SMALL_ICON, IconType.DUPLICATE.getIcon());
 		}
 
 		@Override
@@ -688,7 +689,7 @@ public class BiosampleActions {
 			boolean haveLocation = false;
 			if(biosamples!=null) for (Biosample b : biosamples) {
 				if(b.getLocation()!=null) haveLocation = true;
-				if(b.getId()<=0 || b.isAbstract() || !SpiritRights.canEdit(b, Spirit.getUser())) {
+				if(b.getId()<=0 || b.isAbstract() || !SpiritRights.canEdit(b, SpiritFrame.getUser())) {
 					enabled = false; break;
 				}
 			}
@@ -723,7 +724,7 @@ public class BiosampleActions {
 			boolean someLoc = false;
 			if(biosamples!=null) for (Biosample b : biosamples) {
 				if(b.getLocation()!=null) someLoc = true;
-				if(!SpiritRights.canEdit(b, Spirit.getUser())) {
+				if(!SpiritRights.canEdit(b, SpiritFrame.getUser())) {
 					enabled = false; break;
 				}
 			}
@@ -826,7 +827,7 @@ public class BiosampleActions {
 		if(biosamples==null || biosamples.size()==0) {
 			return menu;
 		}
-		if(Spirit.getUser()==null) {
+		if(SpiritFrame.getUser()==null) {
 			menu.add(new SpiritAction.Action_Relogin(null, null));			
 			return menu;
 		}

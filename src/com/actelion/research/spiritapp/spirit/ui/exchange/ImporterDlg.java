@@ -41,6 +41,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.Exchange;
@@ -53,7 +54,7 @@ import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOExchange;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
-import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.MappingAction;
+import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.EntityAction;
 import com.actelion.research.spiritcore.services.exchange.Importer;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
@@ -68,79 +69,88 @@ public class ImporterDlg extends JEscapeDialog {
 	private Exchange exchange;
 
 	private ExchangeMapping mapping;
-	
+
 	private List<IMappingPanel> mappingPanels = new ArrayList<>();
 	private List<StudyMappingPanel> studyMappingPanels = new ArrayList<>();
 	private List<BiotypeMappingPanel> biotypeMappingPanels = new ArrayList<>();
 	private List<BiosampleMappingPanel> biosampleMappingPanels = new ArrayList<>();
-	
+
 	private LocationMappingPanel locationMappingPanel;
-	
+
 	private List<TestMappingPanel> testMappingPanels = new ArrayList<>();
 	private List<ResultMappingPanel> resultMappingPanels = new ArrayList<>();
 
-	
+
 	public ImporterDlg(File file) {
 		super(UIUtils.getMainFrame(), "Import Data", true);
 		JTabbedPane tabbedPane = new JCustomTabbedPane();
-		
+
 		//Read exchange file
 		try(FileReader reader = new FileReader(file)) {
-			exchange = Importer.read(reader);			
+			exchange = Importer.read(reader);
 		} catch (Exception e) {
 			JExceptionDialog.showError(e);
 			return;
 		}
-		mapping = new ExchangeMapping(exchange);
+		mapping = new ExchangeMapping(exchange, EntityAction.SKIP, EntityAction.SKIP);
 
-		
+
 		//Prepare panel for batch action
-		JRadioButton r1Button = new JRadioButton("Keep the existing entity / ignore");
-		JRadioButton r2Button = new JRadioButton("Replace");
-		JRadioButton r3Button = new JRadioButton("Create a copy of the entity");
-		ButtonGroup buttonGroup = new ButtonGroup();
-		buttonGroup.add(r1Button);
-		buttonGroup.add(r2Button);
-		buttonGroup.add(r3Button);
-		JPanel batchPanel = UIUtils.createVerticalBox(
-				new JCustomLabel("What do you want to do for existing studies/biosamples/locations/results?", FastFont.BOLD),
-				r1Button,
-				r2Button,
-				r3Button
-				);
-		r1Button.setSelected(true);
-		r1Button.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				mapping.initializeMappingFromDb(MappingAction.SKIP);
-				updateView();
-			}
-		});
-		r2Button.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				mapping.initializeMappingFromDb(MappingAction.MAP_REPLACE);
-				updateView();
-			}
-		});
-		r3Button.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				mapping.initializeMappingFromDb(MappingAction.CREATE);
-				updateView();
-			}
-		});
-		batchPanel.setEnabled(mapping.hasExistingEntities());
-		r1Button.setEnabled(mapping.hasExistingEntities());
-		r2Button.setEnabled(mapping.hasExistingEntities());
-		r3Button.setEnabled(mapping.hasExistingEntities());
-		
-		if(!mapping.hasExistingEntities()) r2Button.setSelected(true);
-		
+		JRadioButton ignoreAdminButton = new JRadioButton("Ignore / don't import");
+		JRadioButton createAdminButton = new JRadioButton("Create / Import");
+		JRadioButton keepExistingButton = new JRadioButton("Keep the existing entity / ignore");
+		JRadioButton replaceExistingButton = new JRadioButton("Replace");
+		JRadioButton cloneExistingButton = new JRadioButton("Create a copy of the entity");
+
+		ButtonGroup buttonGroup1 = new ButtonGroup();
+		buttonGroup1.add(ignoreAdminButton);
+		buttonGroup1.add(createAdminButton);
+
+		ButtonGroup buttonGroup2 = new ButtonGroup();
+		buttonGroup2.add(keepExistingButton);
+		buttonGroup2.add(replaceExistingButton);
+		buttonGroup2.add(cloneExistingButton);
+		JPanel batchPanel = UIUtils.createGrid(
+				UIUtils.createVerticalBox(new JCustomLabel("What do you want to do for the new configuration (biotypes/tests)?", FastFont.BOLD), ignoreAdminButton, createAdminButton),
+				UIUtils.createVerticalBox(new JCustomLabel("What do you want to do for the existing entities (studies/biosamples/locations/results)?", FastFont.BOLD), keepExistingButton, replaceExistingButton, cloneExistingButton));
+
+		ActionListener al = e-> {
+			new SwingWorkerExtended(tabbedPane, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+				@Override
+				public void doInBackground() {
+					mapping.initializeMappingFromDb(
+							ignoreAdminButton.isSelected()? EntityAction.SKIP: EntityAction.CREATE,
+									keepExistingButton.isSelected()? EntityAction.SKIP: replaceExistingButton.isSelected()? EntityAction.MAP_REPLACE: EntityAction.CREATE);
+				}
+				@Override
+				public void done() {
+					updateView();
+				}
+			};
+		};
+
+		ignoreAdminButton.setSelected(true);
+		keepExistingButton.setSelected(true);
+		ignoreAdminButton.addActionListener(al);
+		createAdminButton.addActionListener(al);
+		keepExistingButton.addActionListener(al);
+		replaceExistingButton.addActionListener(al);
+		cloneExistingButton.addActionListener(al);
+
+
+		ignoreAdminButton.setEnabled(mapping.hasNewTypes());
+		createAdminButton.setEnabled(mapping.hasNewTypes());
+
+		keepExistingButton.setEnabled(mapping.hasExistingEntities());
+		replaceExistingButton.setEnabled(mapping.hasExistingEntities());
+		cloneExistingButton.setEnabled(mapping.hasExistingEntities());
+
+		if(!mapping.hasExistingEntities()) replaceExistingButton.setSelected(true);
+
 		//Prepare panels for studies
 		if(exchange.getStudies()!=null && exchange.getStudies().size()>0) {
 			List<Component> studyPanels = new ArrayList<>();
-		
+
 			for (final Study study : exchange.getStudies()) {
 				StudyMappingPanel studyMappingPanel = new StudyMappingPanel(this, study);
 				studyMappingPanels.add(studyMappingPanel);
@@ -149,15 +159,15 @@ public class ImporterDlg extends JEscapeDialog {
 			studyPanels.add(Box.createVerticalGlue());
 			tabbedPane.add("Studies", new JScrollPane(UIUtils.createVerticalBox(studyPanels)));
 		}
-		
+
 		//Prepare panels for biotypes/biosamples
 		if(exchange.getBiotypes()!=null && exchange.getBiotypes().size()>0) {
 			List<Component> biotypePanels = new ArrayList<>();
 			for (final Biotype biotype : exchange.getBiotypes()) {
-				//Init BiotypeMappingPanel 
+				//Init BiotypeMappingPanel
 				BiotypeMappingPanel biotypeMappingPanel = new BiotypeMappingPanel(this, biotype);
 				biotypeMappingPanels.add(biotypeMappingPanel);
-				
+
 				//Display biosamples to be imported (information purpose only)
 				BiosampleMappingPanel biosampleMappingPanel = new BiosampleMappingPanel(this, biotype, Biosample.filter(exchange.getBiosamples(), biotype));
 				biosampleMappingPanel.setPreferredSize(biosampleMappingPanel.getMinimumSize());
@@ -169,24 +179,24 @@ public class ImporterDlg extends JEscapeDialog {
 				biotypePanels.add(UIUtils.createTitleBox("Biotype: " + biotype.getName(), splitPane));
 			}
 			biotypePanels.add(Box.createVerticalGlue());
-			tabbedPane.add("Biosamples", new JScrollPane(UIUtils.createVerticalBox(biotypePanels)));
+			tabbedPane.add("Biotypes / Biosamples", new JScrollPane(UIUtils.createVerticalBox(biotypePanels)));
 
 		}
-		
+
 		//Prepare panel for location
 		if(exchange.getLocations()!=null && exchange.getLocations().size()>0) {
 			locationMappingPanel = new LocationMappingPanel(this, exchange.getLocations());
 			tabbedPane.add("Locations", new JScrollPane(UIUtils.createTitleBox("Location", locationMappingPanel)));
 		}
-		
+
 		//Prepare panels for tests/results
 		if(exchange.getTests()!=null && exchange.getTests().size()>0) {
 			List<Component> testsPanels = new ArrayList<>();
 			for (final Test test : exchange.getTests()) {
-				//Init BiotypeMappingPanel 
+				//Init BiotypeMappingPanel
 				TestMappingPanel testMappingPanel = new TestMappingPanel(this, test);
 				testMappingPanels.add(testMappingPanel);
-				
+
 				//Display biosamples to be imported (information purpose only)
 				ResultMappingPanel resultMappingPanel = new ResultMappingPanel(this, test, Result.filter(exchange.getResults(), test));
 				resultMappingPanel.setPreferredSize(resultMappingPanel.getMinimumSize());
@@ -198,54 +208,53 @@ public class ImporterDlg extends JEscapeDialog {
 				testsPanels.add(UIUtils.createTitleBox("Test: " + test.getFullName(), splitPane));
 			}
 			testsPanels.add(Box.createVerticalGlue());
-			
-//			panels.add(UIUtils.createBox(BorderFactory.createEtchedBorder(), UIUtils.createVerticalBox(testsPanels), null, null, UIUtils.createVerticalTitlePanel("Result"), null));
-			tabbedPane.add("Results", new JScrollPane(UIUtils.createVerticalBox(testsPanels)));
-			
+
+			tabbedPane.add("Test / Results", new JScrollPane(UIUtils.createVerticalBox(testsPanels)));
+
 		}
-		
+
 		if(tabbedPane.getTabCount()==0) {
 			JExceptionDialog.showError(null, "The file is empty");
 			return;
 		}
-		
+
 		mappingPanels.addAll(studyMappingPanels);
 		mappingPanels.addAll(biotypeMappingPanels);
 		mappingPanels.addAll(biosampleMappingPanels);
 		if(locationMappingPanel!=null) mappingPanels.add(locationMappingPanel);
 		mappingPanels.addAll(testMappingPanels);
 		mappingPanels.addAll(resultMappingPanels);
-		
-		
+
+
 		setContentPane(
 				UIUtils.createBox(
-					UIUtils.createTitleBox("Entities to be imported", tabbedPane),
-					UIUtils.createTitleBox("Import Mode ", batchPanel),
-					UIUtils.createHorizontalBox(Box.createHorizontalGlue(), new JButton(new ImportAction()))
-				));
+						UIUtils.createTitleBox("Entities to be imported", tabbedPane),
+						UIUtils.createTitleBox("Import Mode ", batchPanel),
+						UIUtils.createHorizontalBox(Box.createHorizontalGlue(), new JButton(new ImportAction()))
+						));
 		pack();
 		UIUtils.adaptSize(this, 1200, 1000);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
-		
+
 	}
 
 	public Exchange getExchange() {
 		return exchange;
 	}
-	
+
 	public void updateView() {
 		for(IMappingPanel panel: mappingPanels) {
-			panel.updateView();;
-		}				
+			panel.updateView();
+		}
 	}
-	
+
 	public void updateMapping() {
 		for(IMappingPanel panel: mappingPanels) {
 			panel.updateMapping();
-		}		
+		}
 	}
-	
+
 	public class ImportAction extends AbstractAction {
 		public ImportAction() {
 			super("Import");
@@ -256,17 +265,17 @@ public class ImporterDlg extends JEscapeDialog {
 			new SwingWorkerExtended("Importing", getContentPane(), SwingWorkerExtended.FLAG_ASYNCHRONOUS) {
 				@Override
 				protected void doInBackground() throws Exception {
-					
+
 					//Update the Mapping object
 					updateMapping();
 
 					//Save the mapped objects
-					SpiritUser user = Spirit.getUser();
+					SpiritUser user = SpiritFrame.getUser();
 					try {
-						JPAUtil.pushEditableContext(Spirit.getUser());
-						
-						DAOExchange.persist(mapping, user);						
-						
+						JPAUtil.pushEditableContext(SpiritFrame.getUser());
+
+						DAOExchange.persist(mapping, user);
+
 						SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
 						dispose();
 					} finally {
@@ -274,17 +283,17 @@ public class ImporterDlg extends JEscapeDialog {
 					}
 				}
 			};
-			
+
 		}
 	}
-	
+
 	public ExchangeMapping getMapping() {
 		return mapping;
 	}
-	
+
 	public static void main(String[] args) {
 		Spirit.initUI();
-		SwingUtilities.invokeLater(new Runnable() {			
+		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
 				new ImporterDlg(new File("c:/tmp/export.spirit"));

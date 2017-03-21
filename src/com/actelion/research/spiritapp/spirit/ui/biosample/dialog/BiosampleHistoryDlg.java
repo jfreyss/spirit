@@ -40,7 +40,7 @@ import javax.swing.JSplitPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTabbedPane;
 import com.actelion.research.spiritapp.spirit.ui.util.RevisionList;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
@@ -135,10 +135,10 @@ public class BiosampleHistoryDlg extends JEscapeDialog {
 			String diff;
 			if(i+1<revisions.size()) {
 				Biosample b2 = revisions.get(i+1).getBiosamples().get(0);
-				diff = b1.getDifference(b2, Spirit.getUsername());
+				diff = b1.getDifference(b2, SpiritFrame.getUsername());
 			} else {
 				Biosample b2 = revisions.get(0).getBiosamples().get(0);
-				diff = b1.getDifference(b2, Spirit.getUsername());
+				diff = b1.getDifference(b2, SpiritFrame.getUsername());
 				if(diff.length()==0) diff = "First version";
 			}
 			if(onlyNoticeableChange.isSelected() && diff.length()==0) continue;
@@ -157,7 +157,7 @@ public class BiosampleHistoryDlg extends JEscapeDialog {
 			super("Restore version");
 			this.biosamples = biosamples;
 			for (Biosample biosample : biosamples) {
-				if(!SpiritRights.canEdit(biosample, Spirit.getUser())) {
+				if(!SpiritRights.canEdit(biosample, SpiritFrame.getUser())) {
 					setEnabled(false);
 					break;
 				}
@@ -174,7 +174,7 @@ public class BiosampleHistoryDlg extends JEscapeDialog {
 					biosample.setLastAction(new com.actelion.research.spiritcore.business.biosample.ActionComments("Restored from version "+FormatterUtils.formatDateTime(biosample.getUpdDate())));
 					biosample.setUpdDate(null); 						
 				}
-				DAOBiosample.persistBiosamples(biosamples, Spirit.getUser());
+				DAOBiosample.persistBiosamples(biosamples, SpiritFrame.getUser());
 				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, biosamples);
 				dispose();
 			} catch (Exception ex) {

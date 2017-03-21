@@ -19,19 +19,8 @@
  * @author Joel Freyss
  */
 
-package com.actelion.research.spiritapp.spirit.ui.util;
+package com.actelion.research.spiritapp.spirit.ui;
 
-import java.util.List;
+public interface IHomeTab {
 
-
-
-public interface ISpiritTab {
-	
-	public<T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details);
-	
-	public void refreshFilters();
-	
-	public void setStudyIds(String s);
-	public String getStudyIds();
-	
 }

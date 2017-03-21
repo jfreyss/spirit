@@ -24,7 +24,7 @@ package com.actelion.research.spiritapp.spirit.ui.lf;
 import java.util.Collection;
 import java.util.Collections;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxOneNode;
@@ -39,7 +39,7 @@ public class UpdUserNode extends TextComboBoxOneNode {
 	
 	@Override
 	public Collection<String> getChoices() {
-		String username = Spirit.getUser()==null? System.getProperty("user.name"): Spirit.getUser().getUsername();
+		String username = SpiritFrame.getUser()==null? System.getProperty("user.name"): SpiritFrame.getUser().getUsername();
 		return Collections.singletonList(username);
 	}
 	

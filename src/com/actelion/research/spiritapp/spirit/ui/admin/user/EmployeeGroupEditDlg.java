@@ -32,7 +32,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.lf.EmployeeGroupComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
@@ -70,7 +70,7 @@ public class EmployeeGroupEditDlg extends JSpiritEscapeDialog {
 					group.setName(nameField.getText());
 					group.setParent(parentComboBox.getSelection());
 					
-					DAOEmployee.persistEmployeeGroups(Collections.singleton(group), Spirit.getUser());
+					DAOEmployee.persistEmployeeGroups(Collections.singleton(group), SpiritFrame.getUser());
 					dispose();
 				} catch (Exception e) {
 					JExceptionDialog.showError(e);

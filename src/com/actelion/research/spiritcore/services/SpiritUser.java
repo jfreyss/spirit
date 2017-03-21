@@ -30,46 +30,48 @@ import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
 /**
- * User logged in Spirit 
+ * User logged in Spirit
  * @author freyssj
  */
 public class SpiritUser {
-	
+
 	public static String ROLE_ADMIN = "admin";
 	public static String ROLE_READALL = "readall";
-	
+
 	private String username;
-	
-	private Set<String> managedUsers = new HashSet<>();	
+
+	private Set<String> managedUsers = new HashSet<>();
 
 	private Set<String> roles = new HashSet<>();
 
 	private EmployeeGroup mainGroup;
 	private Set<EmployeeGroup> groups = new HashSet<>();
-	
+
 	public SpiritUser() {}
-	
+
 	public SpiritUser(String username) {
 		this.username = username;
 		this.managedUsers.add(username);
 	}
-	
+
 	public SpiritUser(Employee emp) {
 		if(emp==null) throw new IllegalArgumentException("employee cannot be null");
-		this.username = emp.getUserName();		
+		this.username = emp.getUserName();
 		this.groups.addAll(emp.getEmployeeGroups());
 		this.mainGroup = emp.getMainEmployeeGroup();
 		roles = emp.getRoles();
-		
+
 		populateManagedUsersRec(emp, this.managedUsers);
+
+		System.out.println("SpiritUser.SpiritUser() "+username+" "+emp.getEmployeeGroups()+" "+mainGroup);
 	}
-	
+
 	public static SpiritUser getFakeAdmin() {
 		SpiritUser user = new SpiritUser("###");
 		user.setRole(ROLE_ADMIN, true);
 		return user;
 	}
-	
+
 	private void populateManagedUsersRec(Employee root, Set<String> res) {
 		if(res.contains(root.getUserName())) return; //avoid loops;
 		res.add(root.getUserName());
@@ -77,14 +79,14 @@ public class SpiritUser {
 			populateManagedUsersRec(emp, res);
 		}
 	}
-	
+
 	public String getUsername() {
 		return username;
 	}
 	public void setUsername(String username) {
 		this.username = username.toUpperCase();
 	}
-	
+
 	/**
 	 * Sets a unique role to the user
 	 * @param role
@@ -93,7 +95,7 @@ public class SpiritUser {
 		roles.clear();
 		roles.add(role);
 	}
-	
+
 	public void setRole(String role, boolean set) {
 		if(set) {
 			roles.add(role);
@@ -101,43 +103,43 @@ public class SpiritUser {
 			roles.remove(role);
 		}
 	}
-	
+
 	public boolean isRole(String role) {
 		return roles.contains(role);
 	}
-	
+
 	public Set<String> getRoles() {
 		return Collections.unmodifiableSet(roles);
 	}
-	
+
 	public String getRolesString() {
 		return MiscUtils.flatten(roles, ", ");
 	}
-	
+
 	public boolean isMember(EmployeeGroup gr) {
 		return groups.contains(gr);
-	}	
-	
+	}
+
 	public boolean isReadall() {
 		return isSuperAdmin() || isRole(ROLE_READALL);
 	}
 	public boolean isSuperAdmin() {
 		return isRole(ROLE_ADMIN);
 	}
-	
+
 	@Override
 	public String toString() {
 		return username;
 	}
-	
+
 	public EmployeeGroup getMainGroup() {
 		return mainGroup;
 	}
-	
+
 	public void setMainGroup(EmployeeGroup mainGroup) {
 		this.mainGroup = mainGroup;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof SpiritUser)) return false;
@@ -147,7 +149,7 @@ public class SpiritUser {
 	/**
 	 * Returns all users down the hierarchy (including itself)
 	 * @return
-	 */	
+	 */
 	public Set<String> getManagedUsers() {
 		return managedUsers;
 	}

@@ -47,7 +47,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.util.ui.JCustomTextField;
@@ -84,7 +84,7 @@ public class LocationTextField extends JCustomTextField {
 					if(getText().length()==0) {
 						setBioLocation(null);
 					} else {
-						Location loc = DAOLocation.getCompatibleLocation(getText(), Spirit.getUser());
+						Location loc = DAOLocation.getCompatibleLocation(getText(), SpiritFrame.getUser());
 						setBioLocation(loc);
 					}
 				} catch(Exception ex) {
@@ -141,7 +141,7 @@ public class LocationTextField extends JCustomTextField {
 				if(getText().length()==0) {
 					locationBrowser.setBioLocation(null);
 				} else {
-					Location loc = DAOLocation.getCompatibleLocation(getText(), Spirit.getUser());
+					Location loc = DAOLocation.getCompatibleLocation(getText(), SpiritFrame.getUser());
 					locationBrowser.setBioLocation(loc);
 				}
 			} catch(Exception ex) {

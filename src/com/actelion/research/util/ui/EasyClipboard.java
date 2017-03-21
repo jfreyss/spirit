@@ -24,27 +24,23 @@ package com.actelion.research.util.ui;
 import java.awt.Toolkit;
 import java.awt.datatransfer.*;
 
-public class EasyClipboard
-{
+public class EasyClipboard {
 
-    public EasyClipboard()
-    {
+    public EasyClipboard() {
     }
 
-    public static String getClipboard()
-    {
+    public static String getClipboard() {
         Transferable t = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
         try {
 	        if(t == null || !t.isDataFlavorSupported(DataFlavor.stringFlavor)) return null;
 	        String text = (String)t.getTransferData(DataFlavor.stringFlavor);
 	        return text;
-        }catch (Exception e) {
+        } catch (Exception e) {
             return null;
 		}
     }
 
-    public static void setClipboard(String str)
-    {
+    public static void setClipboard(String str) {
         StringSelection ss = new StringSelection(str);
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ss, null);
     }

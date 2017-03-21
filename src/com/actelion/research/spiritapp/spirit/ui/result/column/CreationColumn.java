@@ -30,7 +30,7 @@ import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTableModel;
 import com.actelion.research.spiritapp.spirit.ui.lf.CreationLabel;
 import com.actelion.research.spiritcore.business.RightLevel;
@@ -77,7 +77,7 @@ public class CreationColumn extends Column<Result, String> {
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
 		ownerLabel.setValue(creation? row.getCreUser(): row.getUpdUser(), null, creation? row.getCreDate(): row.getUpdDate(), 
-				SpiritRights.canEdit(row, Spirit.getUser())? 
+				SpiritRights.canEdit(row, SpiritFrame.getUser())? 
 					RightLevel.WRITE: 
 					RightLevel.READ);
 		return ownerLabel;	

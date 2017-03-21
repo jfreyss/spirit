@@ -41,6 +41,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTableModel.Mode;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationActions;
@@ -157,7 +158,7 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 	public static boolean deleteInNewContext(List<Location> locations) {
 		try {
 
-			JPAUtil.pushEditableContext(Spirit.getUser());
+			JPAUtil.pushEditableContext(SpiritFrame.getUser());
 			locations = JPAUtil.reattach(locations);
 			SpiritUser user = Spirit.askForAuthentication();
 			for (Location loc : locations) {
@@ -222,8 +223,8 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 				b.setLocPos(null, -1);
 				b.setStatus(status);
 			}				
-			if(toCheckout.size()>0) DAOBiosample.persistBiosamples(session, toCheckout, Spirit.getUser());
-			DAOLocation.deleteLocations(session, locations, Spirit.getUser());
+			if(toCheckout.size()>0) DAOBiosample.persistBiosamples(session, toCheckout, SpiritFrame.getUser());
+			DAOLocation.deleteLocations(session, locations, SpiritFrame.getUser());
 			
 
 			txn.commit();

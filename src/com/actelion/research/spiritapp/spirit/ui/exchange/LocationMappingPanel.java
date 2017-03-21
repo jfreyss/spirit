@@ -44,7 +44,7 @@ import com.actelion.research.spiritapp.spirit.ui.location.LocationBrowser;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
-import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.MappingAction;
+import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.EntityAction;
 import com.actelion.research.util.ui.UIUtils;
 
 public class LocationMappingPanel extends JPanel implements IMappingPanel  {
@@ -78,13 +78,13 @@ public class LocationMappingPanel extends JPanel implements IMappingPanel  {
 			try {
 				Location match = DAOLocation.getCompatibleLocation(l.getHierarchyFull(), null);
 				if(match!=null) {
-					mappingPanel.setMappingAction(MappingAction.MAP_REPLACE);
+					mappingPanel.setMappingAction(EntityAction.MAP_REPLACE);
 					mappingPanel.setCreationEnabled(false);
 					locationBrowser.setBioLocation(match);
 				}
 			} catch(Exception e) {
 				//no match
-				mappingPanel.setMappingAction(MappingAction.CREATE);
+				mappingPanel.setMappingAction(EntityAction.CREATE);
 				mappingPanel.setCreationEnabled(true);
 			}
 			
@@ -101,7 +101,7 @@ public class LocationMappingPanel extends JPanel implements IMappingPanel  {
 				for (String l: mappingPanels.keySet()) {
 					MappingPanel mappingPanel = mappingPanels.get(l);
 					if(mappingPanel==null) return;
-					mappingPanel.setMappingAction(MappingAction.CREATE);
+					mappingPanel.setMappingAction(EntityAction.CREATE);
 				}
 			}
 		});
@@ -112,7 +112,7 @@ public class LocationMappingPanel extends JPanel implements IMappingPanel  {
 				for (String l: mappingPanels.keySet()) {
 					MappingPanel mappingPanel = mappingPanels.get(l);
 					if(mappingPanel==null) return;
-					mappingPanel.setMappingAction(MappingAction.SKIP);
+					mappingPanel.setMappingAction(EntityAction.SKIP);
 				}
 			}
 		});
@@ -124,7 +124,7 @@ public class LocationMappingPanel extends JPanel implements IMappingPanel  {
 					MappingPanel mappingPanel = mappingPanels.get(l);
 					if(mappingPanel==null) return;
 					if( ((LocationBrowser) mappingPanel.getMappingComponent()).getBioLocation()!=null) {
-						mappingPanel.setMappingAction(MappingAction.MAP_REPLACE);
+						mappingPanel.setMappingAction(EntityAction.MAP_REPLACE);
 					}
 				}
 			}

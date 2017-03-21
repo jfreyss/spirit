@@ -48,46 +48,53 @@ import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.util.CompareUtils;
 
+/**
+ * The ResultValue describes a single datapoint (input/output/info), whether it is numerical, alphanumerical or a file.
+ * It it linked to a result and an attribute.
+ *
+ * @author Joel Freyss
+ *
+ */
 @Entity
-@Table(name="assay_result_value", indexes = {		
+@Table(name="assay_result_value", indexes = {
 		@Index(name="value_attribute_idx", columnList = "assay_attribute_id"),
 		@Index(name="value_result_idx", columnList = "assay_result_id"),
 		@Index(name="value_detail_idx", columnList = "document_id")})
 @SequenceGenerator(name="assay_result_value_seq", sequenceName="assay_result_value_seq", allocationSize=1)
 @Audited
 public class ResultValue implements Comparable<ResultValue> {
-	
+
 	private static final String[] validValues = new String[] {"<LOD", ">LOD", "N/A", "NA", "?"};
-	
+
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="assay_result_value_seq")
 	@Column(name="assay_result_value_id")
 	private int id = 0;
-	
+
 	@Column(name="text_value")
 	private String value = "";
-	
+
 	@ManyToOne(cascade={}, fetch=FetchType.LAZY, optional=false)
 	@JoinColumn(name="assay_attribute_id", nullable=false)
-	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
-	@BatchSize(size=50)	
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+	@BatchSize(size=50)
 	private TestAttribute attribute;
-	
+
 	@ManyToOne(cascade={}, fetch=FetchType.LAZY, optional=false)
 	@JoinColumn(name="assay_result_id", nullable=false)
 	private Result result;
-	
+
 
 	@ManyToOne(cascade=CascadeType.ALL, fetch=FetchType.LAZY, optional=true)
-	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
-	@JoinColumn(name="document_id", nullable=true)	
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+	@JoinColumn(name="document_id", nullable=true)
 	private Document document;
-	
+
 	private transient Double calculatedValue = null;
-	
+
 	private transient Biosample linkedBiosample;
 
-	
+
 	public ResultValue() {
 	}
 
@@ -96,8 +103,8 @@ public class ResultValue implements Comparable<ResultValue> {
 		this.attribute = att;
 		this.value = value;
 	}
-	
-	
+
+
 	public void setAttribute(TestAttribute attribute) {
 		this.attribute = attribute;
 	}
@@ -113,12 +120,12 @@ public class ResultValue implements Comparable<ResultValue> {
 	public int getId() {
 		return id;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return attribute==null? 0: attribute.hashCode();
 	}
-	
+
 	public String getValue() {
 		if(getAttribute().getDataType()==DataType.LARGE) {
 			return document==null? null: new String(document.getBytes());
@@ -130,19 +137,19 @@ public class ResultValue implements Comparable<ResultValue> {
 	public void setValue(String value) {
 		if(getAttribute().getDataType()==DataType.LARGE) {
 			this.value = value.substring(0, Math.min(30, value.length()));
-			this.document = new Document("large.txt", value.getBytes());			
+			this.document = new Document("large.txt", value.getBytes());
 		} else {
 			this.value = value==null? null: value.trim();
 		}
 	}
-	
+
 	public Double getDoubleValue() {
-		//For numeric value, add the double value 
+		//For numeric value, add the double value
 		if(attribute.getDataType()==DataType.NUMBER || attribute.getDataType()==DataType.FORMULA) {
 			if(this.value==null || this.value.length()==0) {
 				return null;
 			} else {
-				try {				
+				try {
 					int offset = 0;
 					while(offset<this.value.length() && "<>= ".indexOf(this.value.charAt(offset))>=0) {
 						offset++;
@@ -171,7 +178,7 @@ public class ResultValue implements Comparable<ResultValue> {
 	public int compareTo(ResultValue o) {
 		return getComparator().compare(this, o);
 	}
-	
+
 	public static Comparator<ResultValue> getComparator() {
 		return new Comparator<ResultValue>() {
 			@Override
@@ -181,7 +188,7 @@ public class ResultValue implements Comparable<ResultValue> {
 				return CompareUtils.compare(o1.getValue(), o2.getValue());
 			}
 		};
-		
+
 	}
 
 	public void setResult(Result result) {
@@ -193,143 +200,44 @@ public class ResultValue implements Comparable<ResultValue> {
 		if(result==null) throw new IllegalArgumentException("Result cannot be null");
 		return result;
 	}
-	
-	
-	/**
-	 * In some cases, the unit can be written on the input value (ex: CCL3 [pg/ml])
-	 * The associated output parameter has a value in this unit.
-	 * 
-	 * getDelegateInputValue() will return the delegated input value if any (or null)
-	 * 
-	 * @return
-	 */
-	private ResultValue getDelegateInputValue() {
-		Result r = getResult();
-		List<ResultValue> output = r.getOutputResultValues(); 
-		List<ResultValue> input = r.getInputResultValues(); 
-		int index = output.indexOf(this);
-		if(index<0 || index>=input.size()) return null;
-		
-		ResultValue in = input.get(index);
-		if(in.getUnitToDelegate()==null) return null;
-		return in;
-	}
-	
-	
-	private String getUnitToDelegate() {
-		if(value==null) return null;
-		int index1 = value.lastIndexOf('[');
-		int index2 = value.lastIndexOf(']');
-		if(index1>0 && index1<index2) {
-			return value.substring(index1+1, index2);
-		}
-		
-		index1 = value.lastIndexOf('(');
-		index2 = value.lastIndexOf(')');
-		if(index1>0 && index1<index2) {
-			return value.substring(index1+1, index2);
-		}
-
-		return null;
-	}
-	
-	/**
-	 * In some cases, the unit can be written on the input value (ex: CCL3 [pg/ml])
-	 * <br>
-	 * getDelegateUnit() can be called on an output value to return the delegated unit if any [pg/ml] (or null)
-	 * 
-	 * @return
-	 */
-	public String getDelegateUnit() {
-		String s = getUnitToDelegate();
-		if(s!=null) return s;
-		ResultValue v = getDelegateInputValue();
-		if(v!=null) return v.getUnitToDelegate();
-		return null;
-	}
-	
-	public String getUnit() {
-		ResultValue v = getDelegateInputValue();
-		if(v!=null) return v.getUnitToDelegate();
-		return getAttribute().getUnit();
-	}
-
-	
-	/**
-	 * In some cases, the unit can be written on the input value (ex: CCL3 [pg/ml])
-	 * <br> 
-	 * getValueWithoutDelegateUnit() can be called on an input value to return the value without the delegated unit [CCL3] (or null)
-	 * 
-	 * @return
-	 */
-	public String getValueWithoutDelegateUnit() {
-		if(value==null) return "";
-		int index1 = value.lastIndexOf('(');
-		int index2 = value.lastIndexOf(')');
-		if(index1>0 && index1<index2) {
-			return value.substring(0, index1).trim();
-		}
-
-		index1 = value.lastIndexOf('[');
-		index2 = value.lastIndexOf(']');
-		if(index1>0 && index1<index2) {
-			return value.substring(0, index1).trim();
-		}
-		return value;
-	}
 
 	public Document getLinkedDocument() {
 		return document;
 	}
-	
+
 	public void setLinkedDocument(Document document) {
 		this.document = document;
 		setValue(document==null? "": document.getFileName());
 	}
-	
+
 	public Double getCalculatedValue() {
 		return calculatedValue;
 	}
 	public void setCalculatedValue(Double calculatedValue) {
 		this.calculatedValue = calculatedValue;
 	}
-	
-	
+
+
 	public Biosample getLinkedBiosample() {
 		return linkedBiosample;
 	}
 	public void setLinkedBiosample(Biosample linkedBiosample) {
 		this.linkedBiosample = linkedBiosample;
 	}
-	
+
 
 	public static boolean isValidDouble(String value) {
 		if(value==null || value.length()==0) return true;
 		return value.equals(convertToValidDouble(value));
 	}
 
-//	public static String convertToValidDoubles(String values) {
-//		if(values==null || values.length()==0) return null;
-//		
-//		String[] vals = values.split("; ", -1);
-//		StringBuilder sb = new StringBuilder();
-//		for(int i=0; i<vals.length; i++) {
-//			if(i>0) sb.append("; ");
-//			
-//			String s = convertToValidDouble(vals[i]);
-//			sb.append(s==null?"": s);			
-//		}
-//		
-//		return sb.toString();
-//	}
-	
 	public static String convertToValidDouble(String value) {
 		if(value==null || value.length()==0) return null;
 
 		for(String s: validValues) {
 			if(s.equals(value)) return value;
 		}
-		
+
 
 		String[] allowedModifiers = new String[] {"<", "<=", ">", ">="};
 		String doubleValue = value.trim();
@@ -338,7 +246,7 @@ public class ResultValue implements Comparable<ResultValue> {
 				doubleValue = value.substring(mod.length()).trim();
 			}
 		}
-		
+
 		try {
 			Double.parseDouble(doubleValue);
 			return value;
@@ -347,19 +255,12 @@ public class ResultValue implements Comparable<ResultValue> {
 			return "NA";
 		}
 	}
-	
+
 	public static List<String> getValues(Collection<ResultValue> resultValues) {
 		List<String> res = new ArrayList<String>();
 		for (ResultValue rv : resultValues) {
 			res.add(rv.getValue());
 		}
-		return res;		
+		return res;
 	}
-	
-//	public Compound getLinkedCompound() {
-//		return linkedCompound;
-//	}
-//	public void setLinkedCompound(Compound linkedCompound) {
-//		this.linkedCompound = linkedCompound;
-//	}
 }

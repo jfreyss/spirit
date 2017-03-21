@@ -24,7 +24,7 @@ package com.actelion.research.spiritapp.spirit.ui.biosample.column;
 import javax.swing.JComponent;
 import javax.swing.table.TableCellEditor;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleTableModel;
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.GroupCellEditor;
 import com.actelion.research.spiritapp.spirit.ui.study.GroupLabel;
@@ -61,7 +61,7 @@ public class StudyGroupColumn extends Column<Biosample, Group> {
 	
 	@Override
 	public Group getValue(Biosample row) {
-		if(SpiritRights.isBlindAll(row.getInheritedStudy(), Spirit.getUser())) return null;
+		if(SpiritRights.isBlindAll(row.getInheritedStudy(), SpiritFrame.getUser())) return null;
 		return row.getInheritedGroup();
 	}
 	

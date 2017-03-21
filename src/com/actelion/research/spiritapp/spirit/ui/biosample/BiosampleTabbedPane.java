@@ -40,7 +40,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTableModel.Mode;
 import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.BiosampleHistoryPanel;
 import com.actelion.research.spiritapp.spirit.ui.result.ResultActions;
@@ -231,7 +231,7 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 	}
 	
 	public void setBiosamples(final Collection<Biosample> biosamples, boolean checkRights) {
-		if(checkRights && !SpiritRights.canReadBiosamples(biosamples, Spirit.getUser())) {
+		if(checkRights && !SpiritRights.canReadBiosamples(biosamples, SpiritFrame.getUser())) {
 			this.biosamples = null;
 			refreshTab();
 		} else {
@@ -300,7 +300,7 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 			}
 			if(ids.size()>0) {
 				try {
-					results = DAOResult.queryResults(ResultQuery.createQueryForBiosampleIds(ids), Spirit.getUser());
+					results = DAOResult.queryResults(ResultQuery.createQueryForBiosampleIds(ids), SpiritFrame.getUser());
 				} catch(Exception e) {
 					e.printStackTrace();
 				}

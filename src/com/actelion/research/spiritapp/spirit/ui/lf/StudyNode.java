@@ -35,7 +35,7 @@ import java.util.Map;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JList;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxOneNode;
@@ -62,7 +62,7 @@ public class StudyNode extends TextComboBoxOneNode {
 			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 				Study study = quickCache.get((String)value);
-				String user = Spirit.getUser()==null? null: Spirit.getUser().getUsername();
+				String user = SpiritFrame.getUser()==null? null: SpiritFrame.getUser().getUsername();
 				if(study==null) {
 					setText("<html><div>" + value +"<br></html>");
 				} else {
@@ -103,10 +103,10 @@ public class StudyNode extends TextComboBoxOneNode {
 	}
 	
 	public void loadStudies() {
-		if(quickCache==null && Spirit.getUser()!=null) {
+		if(quickCache==null && SpiritFrame.getUser()!=null) {
 			quickCache = new LinkedHashMap<String, Study>();
 			List<String> l = new ArrayList<String>();
-			for (Study s : DAOStudy.getRecentStudies(Spirit.getUser(), level)) {
+			for (Study s : DAOStudy.getRecentStudies(SpiritFrame.getUser(), level)) {
 				l.add(s.getStudyId());
 				quickCache.put(s.getStudyId(), s);
 			}
@@ -115,7 +115,7 @@ public class StudyNode extends TextComboBoxOneNode {
 	
 	@Override
 	public Collection<String> getChoices() {
-		if(Spirit.getUser()==null) return new ArrayList<String>();
+		if(SpiritFrame.getUser()==null) return new ArrayList<String>();
 		loadStudies();
 		
 		return quickCache.keySet() ;
@@ -140,7 +140,7 @@ public class StudyNode extends TextComboBoxOneNode {
 			if(study==null) {
 				study = DAOStudy.getStudyByStudyId(s);
 			}
-			if(study==null || !SpiritRights.canExpert(study, Spirit.getUser())) continue;
+			if(study==null || !SpiritRights.canExpert(study, SpiritFrame.getUser())) continue;
 			res.add(study);
 		}
 		return res;

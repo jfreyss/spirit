@@ -41,7 +41,7 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationType.LocationCategory;
@@ -81,8 +81,7 @@ public class LocationDepictor extends JPanel {
 		//Refresh only when shown or resized, and not before (to save time)
 		addComponentListener(new ComponentAdapter() {
 			@Override
-			public void componentShown(ComponentEvent e) {
-			}
+			public void componentShown(ComponentEvent e) {}
 			@Override
 			public void componentResized(ComponentEvent e) {
 				boolean isVisible = true;
@@ -148,7 +147,7 @@ public class LocationDepictor extends JPanel {
 						if(location.getLocationType().getCategory()!=LocationCategory.MOVEABLE && getAcceptedAdminLocations()!=null && getAcceptedAdminLocations().size()>0 && !getAcceptedAdminLocations().contains(location)) {
 							continue;
 						}
-						if(!SpiritRights.canRead(location, Spirit.getUser())) {
+						if(!SpiritRights.canRead(location, SpiritFrame.getUser())) {
 							continue;
 						}
 						roots.add(location);

@@ -31,7 +31,7 @@ import java.awt.event.WindowFocusListener;
 
 import javax.swing.JDialog;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JEscapeDialog;
 
@@ -48,14 +48,14 @@ public class JSpiritEscapeDialog extends JEscapeDialog {
 	public JSpiritEscapeDialog(Frame owner, String title, final String pushContext) {
 		super(owner, title, true);
 		this.pushContext = pushContext;		
-		if(pushContext!=null) JPAUtil.pushEditableContext(Spirit.getUser());
+		if(pushContext!=null) JPAUtil.pushEditableContext(SpiritFrame.getUser());
 		init();
 	}
 
 	public JSpiritEscapeDialog(JDialog owner, String title, final String pushContext) {
 		super(owner, title, true);
 		this.pushContext = pushContext;	
-		if(pushContext!=null) JPAUtil.pushEditableContext(Spirit.getUser());
+		if(pushContext!=null) JPAUtil.pushEditableContext(SpiritFrame.getUser());
 		
 		init();
 		

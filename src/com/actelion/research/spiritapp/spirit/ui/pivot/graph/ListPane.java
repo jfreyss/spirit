@@ -49,9 +49,15 @@ import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import com.actelion.research.util.ui.UIUtils;
+
 public class ListPane<T extends JPanel> extends JComponent implements Scrollable {
 
-	private int maxWidth = 300;
+	public static String PROPERTY_DOUBLECLICK = "property_doubleclick";
+
+	private int MINWIDTH = 120;
+	private int MAXWIDTH = 220;
+	private int maxWidth = MAXWIDTH;
 	private Border focusBorder = BorderFactory.createCompoundBorder(
 			BorderFactory.createLineBorder(Color.GRAY),
 			BorderFactory.createLineBorder(Color.BLUE, 2));
@@ -59,35 +65,35 @@ public class ListPane<T extends JPanel> extends JComponent implements Scrollable
 			BorderFactory.createLineBorder(Color.GRAY),
 			BorderFactory.createLineBorder(Color.BLUE));
 	private Border hoverBorder = BorderFactory.createCompoundBorder(
-			BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+			BorderFactory.createLineBorder(UIUtils.WHITESMOKE),
 			BorderFactory.createLineBorder(Color.GRAY));
 	private Border unhoverBorder = BorderFactory.createCompoundBorder(
 			BorderFactory.createLineBorder(Color.WHITE),
-			BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+			BorderFactory.createLineBorder(UIUtils.WHITESMOKE));
 	private ListSelectionListener listener;
-	
+
 	private List<T> panels = new ArrayList<>();
 	private Set<Integer> selectedIndexes = new TreeSet<>();
 	private Map<T, Integer> map2Index = new java.util.HashMap<>();
 	private int lastIndexClicked = -1;
 	private int nCols = 1;
 	private int focus = -1;
-	
+
 	public ListPane() {
 		super();
-		
+
 		//Mouse scroll and zoom
-		addMouseWheelListener(new MouseWheelListener() {				
+		addMouseWheelListener(new MouseWheelListener() {
 			@Override
-			public void mouseWheelMoved(MouseWheelEvent e) {	
+			public void mouseWheelMoved(MouseWheelEvent e) {
 				if(e.isControlDown()) {
 					if(e.getWheelRotation()<0 && nCols>1) {
-						maxWidth = getWidth()/(nCols-1); 
+						maxWidth = getWidth()/(nCols-1);
 						maxWidth += maxWidth/nCols/2;
 					} else if(e.getWheelRotation()>0 && maxWidth>100) {
 						maxWidth = getWidth()/(nCols+1);
 						maxWidth += maxWidth/nCols/2;
-					}					
+					}
 					doLayout();
 					getParent().validate();
 					e.consume();
@@ -96,14 +102,14 @@ public class ListPane<T extends JPanel> extends JComponent implements Scrollable
 					if(e.getWheelRotation()<0) {
 						((JViewport) getParent()).setViewPosition(new Point(pt.x, Math.max(0, pt.y-100)));
 					} else {
-						((JViewport) getParent()).setViewPosition(new Point(pt.x, Math.min(getHeight(), pt.y+100)));						
+						((JViewport) getParent()).setViewPosition(new Point(pt.x, Math.min(getHeight(), pt.y+100)));
 					}
 				}
 			}
 		});
 
 		//KeyListener
-		addKeyListener(new KeyAdapter() {		
+		addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				boolean modifier = e.isControlDown() || e.isShiftDown();
@@ -125,12 +131,12 @@ public class ListPane<T extends JPanel> extends JComponent implements Scrollable
 				}
 			}
 		});
-		
+
 		setFocusable(true);
 		setRequestFocusEnabled(true);
 
 	}
-	
+
 	private void setFocus(int focus, boolean modifiers) {
 		if(!modifiers) {
 			selectedIndexes.clear();
@@ -148,17 +154,21 @@ public class ListPane<T extends JPanel> extends JComponent implements Scrollable
 		} else {
 			addSelectedItem(panels.get(focus));
 		}
-		
+
 
 	}
-	
+
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		g.setColor(panels.size()==0? getBackground(): Color.WHITE);
 		g.fillRect(0, 0, getWidth(), getHeight());
 	}
-	
+
+	public List<T> getItems() {
+		return panels;
+	}
+
 	public void setItems(List<T> panels) {
 		this.panels = panels;
 		map2Index.clear();
@@ -169,22 +179,30 @@ public class ListPane<T extends JPanel> extends JComponent implements Scrollable
 			map2Index.put(panel, index);
 			panel.setBorder(unhoverBorder);
 			panel.setFocusable(false);
-			panel.addMouseListener(new MouseAdapter() {	        	
+			panel.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseExited(MouseEvent e) {
 					panel.setBorder(focus==index?focusBorder: selectedIndexes.contains(index)? selectedBorder: unhoverBorder);
 					panel.repaint();
 				}
-				
+
 				@Override
 				public void mouseEntered(MouseEvent e) {
 					panel.setBorder(focus==index?focusBorder: selectedIndexes.contains(index)? selectedBorder: hoverBorder);
 					panel.repaint();
 				}
-				
+
+				@Override
+				public void mousePressed(MouseEvent e) {
+					// TODO Auto-generated method stub
+					super.mousePressed(e);
+				}
 				@Override
 				public void mouseClicked(MouseEvent e) {
 					focus = index;
+					if(e.getClickCount()>=2) {
+						firePropertyChange(PROPERTY_DOUBLECLICK, -1, focus);
+					}
 					if(e.isControlDown()) {
 						if(selectedIndexes.contains(index)) {
 							removeSelectedItem(panel);
@@ -214,15 +232,14 @@ public class ListPane<T extends JPanel> extends JComponent implements Scrollable
 		//Set size, so that all graphs fit on the screen
 		if(getParent()!=null && getParent().getHeight()>0 && panels.size()>0) {
 			maxWidth = (int) Math.sqrt(Math.max(50, (getWidth()-40)*1.2) * getParent().getHeight()*4.0/3/panels.size());
-			System.out.println("ListPane.setItems() "+maxWidth);
-			if(maxWidth<200) maxWidth = 200;
-			if(maxWidth>getParent().getHeight()*4/3) maxWidth = getParent().getHeight()*4/3;
-		}		
-		
+			if(maxWidth<MAXWIDTH) maxWidth = MAXWIDTH;
+			if(maxWidth>getParent().getHeight()*4/3) maxWidth = Math.max(MINWIDTH, getParent().getHeight()*4/3);
+		}
+
 		validate();
 		getParent().repaint();
 	}
-	
+
 	public void setListSelectionListener(ListSelectionListener listener) {
 		this.listener = listener;
 	}
@@ -246,7 +263,7 @@ public class ListPane<T extends JPanel> extends JComponent implements Scrollable
 		selectedIndexes.clear();
 		addSelectedItem(sel);
 	}
-	
+
 	public void setSelectedItems(Collection<T> sel) {
 		selectedIndexes.clear();
 		for (T t : sel) {
@@ -256,21 +273,21 @@ public class ListPane<T extends JPanel> extends JComponent implements Scrollable
 		updateBorders();
 		fireSelectionChanged();
 	}
-	
+
 	public void addSelectedItem(T sel) {
 		Integer index = map2Index.get(sel);
 		if(index!=null) selectedIndexes.add(index);
 		updateBorders();
 		fireSelectionChanged();
 	}
-	
+
 	public void removeSelectedItem(T sel) {
 		Integer index = map2Index.get(sel);
 		if(index!=null) selectedIndexes.remove(index);
 		updateBorders();
 		fireSelectionChanged();
 	}
-	
+
 	private void updateBorders() {
 		for (int i = 0; i < panels.size(); i++) {
 			final int index = i;
@@ -284,20 +301,20 @@ public class ListPane<T extends JPanel> extends JComponent implements Scrollable
 			}
 		}
 	}
-	
+
 	public Set<Integer> getSelectedIndexes() {
 		return Collections.unmodifiableSet(selectedIndexes);
 	}
-	
+
 	@Override
 	public void doLayout() {
-		int width = getWidth();		
+		int width = getWidth();
 		if(getParent() instanceof JViewport) {
 			width = ((JViewport)getParent()).getParent().getWidth()-25;
 		}
 		nCols = (int) Math.ceil(Math.max(1, width / (double)maxWidth));//(int) Math.ceil(Math.sqrt(n));
 		int nRows = (int) Math.ceil(getComponentCount() / (double)nCols);
-		int height = width / nCols * 3 / 4;  
+		int height = width / nCols * 3 / 4;
 		for (int i = 0; i < getComponentCount(); i++) {
 			int col = i%nCols;
 			int row = i/nCols;

@@ -26,25 +26,28 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.List;
 
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritapp.spirit.ui.util.ISpiritTab;
+import com.actelion.research.spiritapp.spirit.ui.IHomeTab;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
+import com.actelion.research.spiritapp.spirit.ui.SpiritTab;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
-public class HomeTab extends JPanel implements ISpiritTab {
-	
+public class HomeTab extends SpiritTab implements IHomeTab {
+
 	private final LastActivityEditorPane editorPane;
 	private boolean initialized = false;
-	
-	public HomeTab(Spirit spirit) {
-		editorPane = new LastActivityEditorPane(spirit);
-		
+
+	public HomeTab(SpiritFrame frame) {
+		super(frame, "", IconType.HOME.getIcon());
+
+		editorPane = new LastActivityEditorPane(frame);
+
 		setLayout(new BorderLayout());
 		add(BorderLayout.CENTER, new JScrollPane(editorPane));
-		
-				
+
+
 		addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentShown(ComponentEvent e) {
@@ -54,17 +57,7 @@ public class HomeTab extends JPanel implements ISpiritTab {
 			}
 		});
 	}
-	
-	private String studyIds;
-	@Override
-	public String getStudyIds() {
-		return studyIds;
-	}
-	@Override
-	public void setStudyIds(String studyIds) {
-		this.studyIds = studyIds;
-	}
-	
+
 	@Override
 	public <T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
 		if(isShowing()) {
@@ -73,12 +66,11 @@ public class HomeTab extends JPanel implements ISpiritTab {
 	}
 
 	@Override
-	public void refreshFilters() {
+	public void onTabSelect() {
 	}
-	
-	
-	
-	
 
+	@Override
+	public void onStudySelect() {
+	}
 
 }

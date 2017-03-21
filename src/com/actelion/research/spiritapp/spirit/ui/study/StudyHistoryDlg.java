@@ -27,23 +27,30 @@ import java.util.List;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.ui.admin.AdminActions;
 import com.actelion.research.spiritapp.spirit.ui.util.RevisionList;
+import com.actelion.research.spiritcore.business.study.Study;
+import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.PopupAdapter;
+import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 
+/**
+ * Dialog to show the audit history of a study.
+ * 
+ * @author Joel Freyss
+ *
+ */
 public class StudyHistoryDlg extends JEscapeDialog {
 
-
-	public StudyHistoryDlg(List<Revision> revisions) {
+	public StudyHistoryDlg(Study study) {
 		super(UIUtils.getMainFrame(), "Study - History");
 		
-		final RevisionList revisionList = new RevisionList(revisions);
+		//dialog events
+		final RevisionList revisionList = new RevisionList();
 		final StudyDetailPanel detailPanel = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT);
 		detailPanel.setForRevision(true);
 		
@@ -64,14 +71,28 @@ public class StudyHistoryDlg extends JEscapeDialog {
 			}
 		});
 		
-		
+		//Create layout
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,  
 				UIUtils.createTitleBox("Revisions", new JScrollPane(revisionList)), 
 				UIUtils.createTitleBox("Study Revision", detailPanel));
 		splitPane.setDividerLocation(400);		
 		setContentPane(splitPane);
 		
+		//Load revisions in background
+		new SwingWorkerExtended(revisionList, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+			private List<Revision> revs;
+			protected void doInBackground() throws Exception {
+				revs = DAORevision.getRevisions(study);
+			}
+			
+			protected void done() {
+				revisionList.setRevisions(revs);
+				revisionList.setSelectedIndex(0);
+			}
+		};
 		
+
+		//show dialog
 		UIUtils.adaptSize(this, 1124, 800);
 		setVisible(true);
 		

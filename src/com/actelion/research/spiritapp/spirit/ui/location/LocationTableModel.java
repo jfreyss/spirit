@@ -24,7 +24,7 @@ package com.actelion.research.spiritapp.spirit.ui.location;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationDepartmentColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationDescriptionColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationFreeColumn;
@@ -81,7 +81,7 @@ public class LocationTableModel extends ExtendTableModel<Location> {
 		try {
 			List<Location> res = new ArrayList<>();
 			for (Location loc: row.getChildren()) {
-				if(!SpiritRights.canRead(loc, Spirit.getUser())) continue;
+				if(!SpiritRights.canRead(loc, SpiritFrame.getUser())) continue;
 				res.add(loc);
 			}
 			return res;
@@ -89,7 +89,7 @@ public class LocationTableModel extends ExtendTableModel<Location> {
 			try {
 				List<Location> res = new ArrayList<>();
 				for (Location loc: row.getChildren()) {
-					if(!SpiritRights.canRead(loc, Spirit.getUser())) continue;
+					if(!SpiritRights.canRead(loc, SpiritFrame.getUser())) continue;
 					res.add(loc);
 				}
 				return res;

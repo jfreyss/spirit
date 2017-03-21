@@ -274,7 +274,6 @@ public class SpiritProperties {
 		return "open".equals(getValue(PropertyKey.RIGHTS_MODE));
 	}
 	
-
 	/**
 	 * Return true, if the system has been set to have a workflow. 
 	 * IE: there are promoters (other than ALL), or states come from an other state

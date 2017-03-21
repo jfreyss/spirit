@@ -294,7 +294,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 	 * @return an non empty set
 	 */
 	public Set<Location> getChildrenRec(int maxDepth) {
-		Set<Location> childrenRec = new HashSet<Location>();
+		Set<Location> childrenRec = new HashSet<>();
 		childrenRec.add(this);
 		if(maxDepth>0) {
 			for (Location l : getChildren()) {
@@ -444,7 +444,8 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 	
 	
 	/**
-	 * Get the biosamples in this location, not sorted
+	 * Gets the biosamples from this location (not sorted)
+	 * The location may be temporary (not persistent), if biosample.location == null
 	 * @return
 	 */
 	public Set<Biosample> getBiosamples() {
@@ -455,16 +456,12 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		this.biosamples = biosamples;		
 	}
 	
-	public void setContainers(Collection<Container> containers) {
-		this.biosamples.clear();
-		this.biosamples.addAll(Container.getBiosamples(containers, true));
-	}
 	
 	public Map<Integer, Container> getContainersMap() {
 		
 		Map<Integer, Container> res = new HashMap<>();
 		if(getLabeling()==LocationLabeling.NONE) {
-			List<Biosample> biosamples = new ArrayList<Biosample>(getBiosamples());
+			List<Biosample> biosamples = new ArrayList<>(getBiosamples());
 			Collections.sort(biosamples, new Comparator<Biosample>() {
 				@Override
 				public int compare(Biosample o1, Biosample o2) {
@@ -478,10 +475,14 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 			}			
 		} else if(getBiosamples()!=null) {
 			for (Biosample b : getBiosamples()) {
-				if(b.getLocation()==null) {
-					System.err.println("The position of "+b+" is null!?");
-				} else {						
+				if(b.getPos()>=0) {
 					res.put(b.getPos(), b.getContainer());
+				} else {
+					try {
+						res.put(parsePosition(b.getScannedPosition()), b.getContainer());
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					}
 				}
 			}
 		}

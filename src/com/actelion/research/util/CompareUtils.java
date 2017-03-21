@@ -193,7 +193,7 @@ public class CompareUtils {
 			if(o1==null && o2==null) return 0; 
 			if(o1==null) return 1; //Null at the end
 			if(o2==null) return -1;
-			return CompareUtils.compare(o1.toString(), o2.toString());
+			return CompareUtils.compare(o1, o2);
 		}
 	};
 	

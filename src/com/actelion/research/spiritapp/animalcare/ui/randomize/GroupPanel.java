@@ -43,7 +43,7 @@ import javax.swing.JScrollPane;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.study.GroupLabel;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachedBiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachedBiosampleTableModel;
@@ -71,7 +71,7 @@ public class GroupPanel extends JPanel {
 	public GroupPanel(RandomizationDlg dlg, final Group gp, boolean forCages, boolean hideFrom) {
 		
 		String title = gp==null?"NoGroup": 
-			gp.getBlindedName(Spirit.getUser().getUsername()) + (hideFrom || gp.getFromGroup()==null?"": " (from "+gp.getFromGroup().getBlindedName(Spirit.getUser().getUsername())+")");
+			gp.getBlindedName(SpiritFrame.getUser().getUsername()) + (hideFrom || gp.getFromGroup()==null?"": " (from "+gp.getFromGroup().getBlindedName(SpiritFrame.getUser().getUsername())+")");
 
 		this.group = gp;
 		this.forCages = forCages;

@@ -28,7 +28,7 @@ import java.util.List;
 
 import javax.swing.BorderFactory;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.IBiosampleDetail;
 import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
@@ -103,10 +103,10 @@ public class BiosampleHistoryPanel extends ImageEditorPane implements IBiosample
 						Biosample b1 = revisions.get(i).getBiosamples().get(0);
 						if(i+1<revisions.size()) {
 							Biosample b2 = revisions.get(i+1).getBiosamples().get(0);
-							diff = b1.getDifference(b2, Spirit.getUsername());
+							diff = b1.getDifference(b2, SpiritFrame.getUsername());
 						} else {
 							Biosample b2 = revisions.get(0).getBiosamples().get(0);
-							diff = b1.getDifference(b2, Spirit.getUsername());
+							diff = b1.getDifference(b2, SpiritFrame.getUsername());
 							if(diff.length()==0) diff = "First version";
 						}
 						

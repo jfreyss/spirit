@@ -47,7 +47,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationLabeling;
 import com.actelion.research.spiritcore.business.location.LocationType;
@@ -75,6 +75,7 @@ public class LocationBrowser extends JPanel {
 	private JCustomTextField locationTextField = new JCustomTextField();
 	private List<LocationComboBox> locationComboBoxes = new ArrayList<>();
 	
+	private Dimension layoutSize = new Dimension(220, FastFont.getDefaultFontSize()+12+2);	
 	private boolean allowTextEditing = true;
 	private JPanel textPanel = new JPanel(new BorderLayout());
 	private JPanel comboPanel = new JPanel(null) {
@@ -225,7 +226,7 @@ public class LocationBrowser extends JPanel {
 		if(fullLocation.length()==0) {
 			setBioLocation(null);
 		} else {
-			Location loc = DAOLocation.getCompatibleLocation(fullLocation, Spirit.getUser());
+			Location loc = DAOLocation.getCompatibleLocation(fullLocation, SpiritFrame.getUser());
 			if(loc==null) throw new Exception("Invalid location: "+fullLocation);
 			setBioLocation(loc);
 		}
@@ -240,8 +241,6 @@ public class LocationBrowser extends JPanel {
 		return dim;
 	}
 		
-	
-	private Dimension layoutSize = new Dimension(220, FastFont.getDefaultFontSize()+12+2);
 	
 	private void updateView() {
 		comboPanel.removeAll();		
@@ -259,7 +258,8 @@ public class LocationBrowser extends JPanel {
 			//Find possible choices
 			List<Location> nextChildren = new ArrayList<>();
 			for (Location l : parent==null? DAOLocation.getLocationRoots(): parent.getChildren()) {
-				if(!SpiritRights.canRead(l, Spirit.getUser())) continue;
+				if(l.getLocationType()==null) continue;
+				if(!SpiritRights.canRead(l, SpiritFrame.getUser())) continue;
 				if(filter==LocationBrowserFilter.CONTAINER && l.getLocationType().getPositionType()!=LocationLabeling.NONE) continue;
 				if(filter==LocationBrowserFilter.RACKS && l.getLocationType().getPositionType()!=LocationLabeling.NONE && l.getLocationType()!=LocationType.RACK) continue;
 				

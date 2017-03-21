@@ -26,8 +26,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
@@ -36,19 +34,17 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdLabel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.util.ui.JTextComboBox;
 
 public class SelectorPanel extends JPanel {
-	
+
 	private SelectorDlg dlg;
 	private final JTextComboBox queryComboBox;
 	private final DefaultListModel<Biosample> listModel = new DefaultListModel<Biosample>();
-	private final JList<Biosample> discriminatorList = new JList<Biosample>(listModel); 
+	private final JList<Biosample> discriminatorList = new JList<Biosample>(listModel);
 	private final SampleIdLabel label = new SampleIdLabel();
 
 	public SelectorPanel(final SelectorDlg dlg) {
@@ -57,33 +53,27 @@ public class SelectorPanel extends JPanel {
 
 		//queryComboBox
 		queryComboBox = new JTextComboBox(dlg.getQueryValues());
-		queryComboBox.setTextWhenEmpty(dlg.getQueryLinker()==null?"": dlg.getQueryLinker().toString());		
-		queryComboBox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				updateList();
-				dlg.selectionQueryChanged();
-			}
+		queryComboBox.setTextWhenEmpty(dlg.getQueryLinker()==null?"": dlg.getQueryLinker().toString());
+		queryComboBox.addActionListener(e-> {
+			updateList();
+			dlg.selectionQueryChanged();
 		});
 		queryComboBox.setListCellRenderer(new DefaultListCellRenderer() {
 			@Override
-			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {				
+			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 				boolean canBeChosen = dlg.isCompatibleWithSelected((String)value);
 				setForeground(canBeChosen?Color.BLACK: Color.LIGHT_GRAY);
 				return this;
 			}
 		});
-		
-		
+
+
 		//discriminatorList
-		discriminatorList.addListSelectionListener(new ListSelectionListener() {			
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				dlg.selectionBiosampleChanged();
-			}
+		discriminatorList.addListSelectionListener(e-> {
+			dlg.selectionBiosampleChanged();
 		});
-		discriminatorList.setCellRenderer(new DefaultListCellRenderer() {			
+		discriminatorList.setCellRenderer(new DefaultListCellRenderer() {
 			@Override
 			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
@@ -92,41 +82,41 @@ public class SelectorPanel extends JPanel {
 				label.setBackground(getBackground());
 				label.setForeground(getForeground());
 				label.setBorder(getBorder());
-				
-				
+
+
 				boolean gray = dlg.isGray(SelectorPanel.this, (Biosample)value);
 				label.setAlpha(gray? .75f: 0f);
 				return label;
 			}
 		});
 		discriminatorList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		
+
 		updateView();
-		
-		
-		
+
+
+
 		//Layout component
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridx = 0;
 		c.fill = GridBagConstraints.BOTH; c.weightx = 1;
 		c.gridy = 0; c.weighty = 0; add(queryComboBox, c);
 		c.gridy = 1; c.weighty = 1; add(new JScrollPane(discriminatorList), c);
-		
-		
+
+
 		setPreferredSize(new Dimension(150, 300));
 		setBorder(BorderFactory.createEtchedBorder());
 	}
-	
+
 	private void updateList() {
 		String sel = queryComboBox.getText();
 		listModel.clear();
-		listModel.addElement(null);		
+		listModel.addElement(null);
 		for(Biosample b: dlg.getBiosamples(sel)) {
-			listModel.addElement(b);		
+			listModel.addElement(b);
 		}
 		discriminatorList.setSelectedIndex(0);
 	}
-	
+
 	public void updateView() {
 		label.setExtraDisplay(dlg.getDisplayLinker(), false);
 		discriminatorList.updateUI();
@@ -134,7 +124,7 @@ public class SelectorPanel extends JPanel {
 	public String getQuery() {
 		return queryComboBox.getText();
 	}
-	
+
 	public Biosample getSelection() {
 		return discriminatorList.getSelectedValue();
 	}

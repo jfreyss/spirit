@@ -32,7 +32,9 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -47,7 +49,7 @@ import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.animalcare.ui.monitor.MonitorTextField;
 import com.actelion.research.spiritapp.animalcare.ui.monitor.MonitoringAnimalPanel;
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleList;
 import com.actelion.research.spiritapp.spirit.ui.biosample.ContainerComboBox;
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdLabel;
@@ -74,7 +76,6 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.ListHashMap;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JEscapeDialog;
@@ -86,7 +87,7 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class SampleWeighingDlg extends JEscapeDialog {
-	
+
 	private Study study;
 	private GroupComboBox groupComboBox = new GroupComboBox();
 	private PhaseComboBox phaseComboBox = new PhaseComboBox();
@@ -94,33 +95,33 @@ public class SampleWeighingDlg extends JEscapeDialog {
 	private ContainerComboBox cageComboBox = new ContainerComboBox();
 	private JCheckBox onlyRequired = new JCheckBox("Show only required measurements", true);
 	private JCheckBox onlyAlive = new JCheckBox("Show only samples with status alive or necropsied", true);
-	
+
 	private JPanel templatePanel = new JPanel();
 	private BalanceDecorator balanceDecorator = new BalanceDecorator(this);
-	
+
 	private Test weighTest = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
 	private Test lengthTest = DAOTest.getTest(DAOTest.LENGTH_TESTNAME);
 	private Test obsTest = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);
-	
-	private List<JComponent> requiredComponents = new ArrayList<>();
-	private ListHashMap<Biosample, Biosample> animal2Samples = new ListHashMap<>();
 
-	private int push = 0;
+	private List<JComponent> requiredComponents = new ArrayList<>();
+	private Map<Biosample, List<Biosample>> animal2Samples = new HashMap<>();
+
+	//	private int push = 0;
 	private final String elb;
 
 	public SampleWeighingDlg(Study s) {
 		super(UIUtils.getMainFrame(), "Sample Weighing - " + s.getStudyId());
 
 		this.study = JPAUtil.reattach(s);
-		this.elb = DAOResult.suggestElb(Spirit.getUsername());
+		this.elb = DAOResult.suggestElb(SpiritFrame.getUsername());
 
 		//Check creation of samples
 		if(study.isSynchronizeSamples()) {
-			//Always synchronize samples to match the study designy			
+			//Always synchronize samples to match the study designy
 			try {
 				boolean res = CreateSamplesHelper.synchronizeSamples(study);
 				if(!res) return;
-				
+
 				//Be sure to reload
 				study = JPAUtil.reattach(s);
 			} catch(Exception e) {
@@ -128,13 +129,13 @@ public class SampleWeighingDlg extends JEscapeDialog {
 				return;
 			}
 		}
-			
-		
-		
+
+
+
 		//init components
 		phaseComboBox.setValues(study.getPhases(), "");
 		groupComboBox.setValues(study.getGroups(), "");
-		
+
 		List<Biosample> animals = study.getTopAttachedBiosamples();
 		animalList.setBiosamples(animals);
 
@@ -144,31 +145,31 @@ public class SampleWeighingDlg extends JEscapeDialog {
 		cages.add(new Container("NoCage"));
 		cageComboBox.setValues(cages, "");
 		cageComboBox.setEnabled(cages.size()>1);
-		
-		ActionListener al = new ActionListener() {			
+
+		ActionListener al = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(push>0) return;
+				//				if(push>0) return;
 				animalList.clearSelection();
-				initViewInBackground();				
+				initViewInBackground();
 			}
 		};
 		phaseComboBox.addActionListener(al);
 		groupComboBox.addActionListener(al);
-		cageComboBox.addActionListener(al);		
+		cageComboBox.addActionListener(al);
 		onlyRequired.addActionListener(al);
 		onlyAlive.addActionListener(al);
-		
-		animalList.addListSelectionListener(new ListSelectionListener() {			
+
+		animalList.addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
-				if(push>0) return;
+				//				if(push>0) return;
 				if(!e.getValueIsAdjusting()) {
 					initViewInBackground();
 				}
 			}
 		});
-		
+
 		//init layout
 		//selectors
 		JScrollPane sp = new JScrollPane(animalList);
@@ -180,25 +181,25 @@ public class SampleWeighingDlg extends JEscapeDialog {
 						Box.createVerticalStrut(10),
 						UIUtils.createHorizontalBox(onlyRequired, Box.createHorizontalGlue()),
 						UIUtils.createHorizontalBox(onlyAlive, Box.createHorizontalGlue()),
-						Box.createVerticalGlue()), 
+						Box.createVerticalGlue()),
 				null, null,
 				null, sp));
-				
+
 		JScrollPane scrollPane = new JScrollPane(templatePanel);
 		scrollPane.setPreferredSize(new Dimension(500, 400));
 		scrollPane.getVerticalScrollBar().setUnitIncrement(10);
-		
+
 		JPanel centerPanel = new JPanel(new BorderLayout());
 		centerPanel.add(BorderLayout.NORTH, filterPanel);
 		centerPanel.add(BorderLayout.CENTER, scrollPane);
-		
+
 		//buttons
 		JButton batchButton = new JIconButton(IconType.EDIT.getIcon(), "Edit In Batch Mode");
-		batchButton.addActionListener(new ActionListener() {			
+		batchButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				try {					
-					List<Result> results = new ArrayList<>(); 
+				try {
+					List<Result> results = new ArrayList<>();
 					Phase phase = phaseComboBox.getSelection();
 					for (Biosample topSample : animal2Samples.keySet()) {
 						List<Biosample> samples = animal2Samples.get(topSample);
@@ -220,11 +221,11 @@ public class SampleWeighingDlg extends JEscapeDialog {
 							}
 						}
 						for (Biosample sample : samples) {
-							
+
 							Result r1 = sample.getAuxResult(weighTest, phase);
 							Result r2 = sample.getAuxResult(lengthTest, phase);
 							Result r3 = sample.getAuxResult(obsTest, phase);
-							
+
 							if(r1!=null && hasRequiredWeight) results.add(r1);
 							if(r2!=null && hasRequiredLength) results.add(r2);
 							if(r3!=null) results.add(r3);
@@ -233,7 +234,7 @@ public class SampleWeighingDlg extends JEscapeDialog {
 							if(sample.getAttachedSampling()!=null) {
 								for(Measurement m: study.getAllMeasurementsFromSamplings()) {
 									assert m.getTest()!=null;
-									final Result result = sample.getAuxResult(m.getTest(), phase, m.getParameters());									
+									final Result result = sample.getAuxResult(m.getTest(), phase, m.getParameters());
 									if(result!=null) results.add(result);
 								}
 							}
@@ -244,135 +245,121 @@ public class SampleWeighingDlg extends JEscapeDialog {
 				} catch(Exception ex) {
 					JExceptionDialog.showError(ex);
 				}
-				
+
 			}
 		});
-//		JButton reportButton = new JIconButton(IconType.EXCEL.getIcon(), "Report");
-//		reportButton.addActionListener(new ActionListener() {			
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				try {
-//					SamplesToxicologyReport rep = new SamplesToxicologyReport();
-//					rep.populateReport(SampleWeighingDlg.this.study);
-//					rep.export(null);
-//				} catch(Exception ex) {
-//					JExceptionDialog.showError(ex);
-//				}
-//				
-//			}
-//		});
-		
+
 		JButton okButton = new JButton("Close");
-		okButton.addActionListener(new ActionListener() {			
+		okButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				dispose();
 			}
 		});
-		
-		
+
+
 		//contentPane
 		JPanel contentPane = new JPanel(new BorderLayout());
 		contentPane.add(BorderLayout.CENTER, centerPanel);
 		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), balanceDecorator.getBalanceCheckBox(), Box.createHorizontalGlue(), batchButton, okButton));
-		
+
 		//init
 		initViewInBackground();
-		
+
 		setContentPane(contentPane);
-		Dimension dim = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-		setSize(950, dim.height-150);
+		UIUtils.adaptSize(this, 950, 1000);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
 	}
-	
+
 	private void initViewInBackground() {
 		final Group group = groupComboBox.getSelection();
 		final Phase phase = phaseComboBox.getSelection();
-		final Container cage = cageComboBox.getSelection();				
+		final Container cage = cageComboBox.getSelection();
 		final List<Biosample> animals = animalList.getSelection();
-		
+
 		templatePanel.removeAll();
 		getContentPane().validate();
 		getContentPane().repaint();
-		
-		
-		final List<Biosample> list = new ArrayList<Biosample>();		
+
+
+		final List<Biosample> list = new ArrayList<Biosample>();
 		new SwingWorkerExtended("Loading", templatePanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			@Override
 			protected void doInBackground() throws Exception {
-				try {
-					push++;
-					
-					//Apply filters
-					study = JPAUtil.reattach(study);
-					List<Biosample> filtered = new ArrayList<>();
-					for(Biosample a: study.getTopAttachedBiosamples()) {
-						
-						//Filter by animals
-						if(onlyAlive.isSelected() && a.getStatus()!=Status.INLAB && a.getStatus()!=Status.NECROPSY) continue;
+				//				try {
+				//					push++;
 
-						if(animals.size()>0 && !animals.contains(a)) continue;
-	
-						//Filter by group
-						if(group!=null && !group.equals(a.getInheritedGroup())) continue;
-						
-						//Filter by cage
-						if(cage!=null) {
-							if(cage.getContainerType()==null && a.getContainerType()==null) {
-								//ok
-							} else if(cage.getContainerId()!=null && cage.getContainerId().equals(a.getContainer().getContainerId())) {
-								//ok
-							} else {
-								continue;
-							}
-						}
-												
-						
-						//Retrieve the samples
-						List<Biosample> samples = a.getSamplesFromStudyDesign(phase, onlyRequired.isSelected());
-						if(samples.size()>0) {
-							filtered.add(a);
-							list.add(a);
-							list.addAll(samples);
+				//Apply filters
+				study = JPAUtil.reattach(study);
+				List<Biosample> filtered = new ArrayList<>();
+				for(Biosample a: study.getTopAttachedBiosamples()) {
+
+					//Filter by animals
+					if(onlyAlive.isSelected() && a.getStatus()!=Status.INLAB && a.getStatus()!=Status.NECROPSY) continue;
+
+					if(animals.size()>0 && !animals.contains(a)) continue;
+
+					//Filter by group
+					if(group!=null && !group.equals(a.getInheritedGroup())) continue;
+
+					//Filter by cage
+					if(cage!=null) {
+						if(cage.getContainerType()==null && a.getContainerType()==null) {
+							//ok
+						} else if(cage.getContainerId()!=null && cage.getContainerId().equals(a.getContainer().getContainerId())) {
+							//ok
+						} else {
+							continue;
 						}
 					}
-					animal2Samples.clear();
-					for (Biosample sample : list) {
-						Biosample top = sample.getTopParentInSameStudy();
-						animal2Samples.add(top, sample);
-					}
 
-					
-					//Retrieve results to populate the fields
-					DAOResult.attachOrCreateStudyResultsToSamples(study, list, phase, elb);
-				} finally {
-					push--;
+
+					//Retrieve the samples
+					List<Biosample> samples = a.getSamplesFromStudyDesign(phase, onlyRequired.isSelected());
+					if(samples.size()>0) {
+						filtered.add(a);
+						list.add(a);
+						list.addAll(samples);
+					}
 				}
-				
-				
+				animal2Samples.clear();
+				for (Biosample sample : list) {
+					Biosample top = sample.getTopParentInSameStudy();
+					animal2Samples.putIfAbsent(top, new ArrayList<>());
+					animal2Samples.get(top).add(sample);
+				}
+
+
+				//Retrieve results to populate the fields
+				DAOResult.attachOrCreateStudyResultsToSamples(study, list, phase, elb);
+				//				} finally {
+				//					push--;
+				//				}
+
+
 			}
 			@Override
 			protected void done() {
 
 				if(animals.size()==0) animalList.setBiosamples(Biosample.getTopParentsInSameStudy(list));
-				
+
 				List<Component> templateComponents = new ArrayList<>();
 				templatePanel.removeAll();
 				templatePanel.setLayout(new GridLayout(1,1));
 				requiredComponents.clear();
 
-				
+
 				int n = 0;
 
 				//Create panels for each animal
 				boolean showOnlyRequired = onlyRequired.isSelected();
-				
+
 				for (Biosample topSample : new ArrayList<>(animal2Samples.keySet())) {
 					List<Biosample> samples = animal2Samples.get(topSample);
 
 					//animalHeader
-					JPanel animalHeader = MonitoringAnimalPanel.createAnimalPanel(++n, topSample, topSample.getExpectedEndPhase()); 							
+					JPanel animalHeader = MonitoringAnimalPanel.createAnimalPanel(++n, topSample, topSample.getExpectedEndPhase());
 
 					//Required comps?
 					boolean hasRequiredWeight = false;
@@ -392,8 +379,8 @@ public class SampleWeighingDlg extends JEscapeDialog {
 							}
 						}
 					}
-					
-					List<Component> comps = new ArrayList<>();					
+
+					List<Component> comps = new ArrayList<>();
 					//TableHeader
 					comps.add(null);
 					comps.add(null);
@@ -415,14 +402,14 @@ public class SampleWeighingDlg extends JEscapeDialog {
 					}
 					comps.add(new JLabel("Observation"));
 					int cols = comps.size();
-					
+
 					for (Biosample sample : samples) {
 						//Create the fields
 						MonitorTextField weightTF = new MonitorTextField(sample.getAuxResult(weighTest, phase), 0, false);
 						MonitorTextField lengthTF = new MonitorTextField(sample.getAuxResult(lengthTest, phase), 0, false);
 						MonitorTextField commentsTF = new MonitorTextField(sample.getAuxResult(obsTest, phase), 0, false);
-						
-						
+
+
 						//Find required samples
 						if(sample.getAttachedSampling()==null) {
 							lengthTF.setVisible(false);
@@ -435,30 +422,30 @@ public class SampleWeighingDlg extends JEscapeDialog {
 							weightTF.setVisible(!showOnlyRequired || sample.getAttachedSampling().isWeighingRequired());
 							lengthTF.setVisible(!showOnlyRequired || sample.getAttachedSampling().isLengthRequired());
 							if(sample.getAttachedSampling().isWeighingRequired()) {
-								weightTF.setRequired(true);	
+								weightTF.setRequired(true);
 								requiredComponents.add(weightTF);
 								hasRequiredWeight = true;
 							}
 							if(sample.getAttachedSampling().isLengthRequired()) {
-								lengthTF.setRequired(true);	
+								lengthTF.setRequired(true);
 								requiredComponents.add(lengthTF);
 								hasRequiredLength = true;
 							}
 							if(sample.getAttachedSampling().isCommentsRequired()) {
-								commentsTF.setRequired(true);				
+								commentsTF.setRequired(true);
 								requiredComponents.add(commentsTF);
 							}
 						}
-						
-						SampleIdLabel sampleIdLabel2 = new SampleIdLabel(sample, true, false);		
+
+						SampleIdLabel sampleIdLabel2 = new SampleIdLabel(sample, true, false);
 						sampleIdLabel2.setExtraDisplay(new BiosampleLinker(LinkerType.COMMENTS, null), true);
-						
+
 						comps.add(Box.createHorizontalStrut(15*sample.getParentHierarchy().size()));
 						comps.add(sampleIdLabel2);
 						comps.add(new PhaseLabel(sample.getInheritedPhase(), sample.getInheritedGroup()));
 						comps.add(weightTF);
 						comps.add(lengthTF);
-						
+
 						//Find extra measurements
 						final List<MonitorTextField> formulaTextFields = new ArrayList<>();
 						if(sample.getAttachedSampling()!=null) {
@@ -472,10 +459,10 @@ public class SampleWeighingDlg extends JEscapeDialog {
 									MonitorTextField tf = new MonitorTextField(result, i, sample.getAttachedSampling().getMeasurements().contains(m));
 									tf.setVisible(!showOnlyRequired || tf.isRequired());
 									comps.add(tf);
-									
-									
+
+
 									if(ta.getDataType()==DataType.FORMULA) {
-										tf.setEnabled(false);										
+										tf.setEnabled(false);
 										formulaTextFields.add(tf);
 									} else {
 										if(tf.isRequired()) requiredComponents.add(tf);
@@ -486,8 +473,8 @@ public class SampleWeighingDlg extends JEscapeDialog {
 												DAOResult.computeFormula(Collections.singletonList(result));
 												for(MonitorTextField ftf: formulaTextFields) {
 													ftf.refreshText();
-												}								
-											}							
+												}
+											}
 										});
 									}
 								}
@@ -495,21 +482,21 @@ public class SampleWeighingDlg extends JEscapeDialog {
 						}
 						comps.add(commentsTF);
 					}
-					
+
 
 					templateComponents.add(UIUtils.createBox(BorderFactory.createEtchedBorder(), UIUtils.createTable(cols, comps), animalHeader));
-					
+
 				}
-			
+
 				templateComponents.add(Box.createVerticalGlue());
 				templatePanel.add(UIUtils.createVerticalBox(templateComponents));
-				
-				
+
+
 				//Init required components
 				for (int i = 0; i < requiredComponents.size()-1; i++) {
-					final JComponent next = ((JCustomTextField)requiredComponents.get(i+1)); 
-					if(requiredComponents.get(i) instanceof JCustomTextField) {			
-						((JCustomTextField)requiredComponents.get(i)).addActionListener(new ActionListener() {					
+					final JComponent next = (requiredComponents.get(i+1));
+					if(requiredComponents.get(i) instanceof JCustomTextField) {
+						((JCustomTextField)requiredComponents.get(i)).addActionListener(new ActionListener() {
 							@Override
 							public void actionPerformed(ActionEvent e) {
 								next.requestFocusInWindow();
@@ -519,14 +506,14 @@ public class SampleWeighingDlg extends JEscapeDialog {
 						System.err.println("Not supported: "+ requiredComponents.get(i));
 					}
 				}
-				
-				
+
+
 				SampleWeighingDlg.this.getContentPane().validate();
 				SampleWeighingDlg.this.getContentPane().repaint();
 			}
 		};
 
 	}
-	
-	
+
+
 }

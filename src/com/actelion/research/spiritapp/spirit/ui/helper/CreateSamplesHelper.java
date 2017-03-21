@@ -43,6 +43,7 @@ import javax.swing.JScrollPane;
 import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.NamedSamplingColumn;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
@@ -83,10 +84,10 @@ public class CreateSamplesHelper {
 		if(!study.isSynchronizeSamples()) return true;
 		
 		//Check user rights, read access is enough, because this function only mimics what is in the design.
-		if(!SpiritRights.canExpert(study, Spirit.getUser())) throw new Exception("You must have read access on "+study);		
+		if(!SpiritRights.canExpert(study, SpiritFrame.getUser())) throw new Exception("You must have read access on "+study);		
 				
 		try {
-			JPAUtil.pushEditableContext(Spirit.getUser());
+			JPAUtil.pushEditableContext(SpiritFrame.getUser());
 		
 			study = JPAUtil.reattach(study);
 			

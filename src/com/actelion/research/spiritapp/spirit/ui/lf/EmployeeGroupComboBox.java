@@ -28,7 +28,7 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.util.ui.JGenericComboBox;
@@ -40,14 +40,14 @@ public class EmployeeGroupComboBox extends JGenericComboBox<EmployeeGroup> {
 		super();
 		this.onlyWithMembership = onlyWithMembership;
 		repopulate();			
-		setPreferredWidth(230);
+		setPreferredWidth(240);
 	}	
 		
 	public void repopulate() {
 		List<EmployeeGroup> res = DBAdapter.getAdapter().getEmployeeGroups();
 		List<EmployeeGroup> depts = new ArrayList<>();
 		for (EmployeeGroup g: res) {
-			if(onlyWithMembership && (Spirit.getUser()==null || !Spirit.getUser().isSuperAdmin() || !Spirit.getUser().isMember(g))) {
+			if(onlyWithMembership && (SpiritFrame.getUser()==null || !SpiritFrame.getUser().isSuperAdmin() || !SpiritFrame.getUser().isMember(g))) {
 				continue;
 			}
 			depts.add(g);

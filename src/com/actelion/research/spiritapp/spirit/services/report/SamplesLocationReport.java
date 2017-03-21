@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Sheet;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
@@ -65,7 +65,7 @@ public class SamplesLocationReport extends AbstractReport {
 	protected void populateWorkBook() throws Exception {		
 		boolean showWithoutLocation = getParameter(SHOW_WITHOUT_LOCATION_PARAMETER)==Boolean.TRUE;
 		boolean showResults = getParameter(SHOW_RESULTS_PARAMETER)==Boolean.TRUE;
-		SpiritUser user = Spirit.getUser();
+		SpiritUser user = SpiritFrame.getUser();
 		
 		//Load the samples and their results
 		List<Biosample> allSamples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForStudyIds(study.getStudyId()), user);		
@@ -164,7 +164,7 @@ public class SamplesLocationReport extends AbstractReport {
 	
 	public static void main(String[] args)  {
 		try {
-			Spirit.setUser(DAOSpiritUser.loadUser("freyssj"));
+			SpiritFrame.setUser(DAOSpiritUser.loadUser("freyssj"));
 			SamplesLocationReport wg = new SamplesLocationReport();
 			wg.populateReport(DAOStudy.getStudyByStudyId("S-00511"));
 			wg.export(null);

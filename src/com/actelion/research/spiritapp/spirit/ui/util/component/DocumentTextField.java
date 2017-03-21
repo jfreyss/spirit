@@ -41,6 +41,7 @@ import javax.swing.JFileChooser;
 import javax.swing.border.Border;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
@@ -136,7 +137,7 @@ public class DocumentTextField extends JCustomTextField {
 				document.setBytes(IOUtils.getBytes(f));
 				document.setFileName(f.getName());
 				document.setCreDate(new Date());
-				document.setCreUser(Spirit.getUser()==null?"??":Spirit.getUser().getUsername());
+				document.setCreUser(SpiritFrame.getUser()==null?"??":SpiritFrame.getUser().getUsername());
 				setSelectedDocument(document);
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);

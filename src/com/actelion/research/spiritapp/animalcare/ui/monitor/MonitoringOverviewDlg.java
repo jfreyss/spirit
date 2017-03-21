@@ -75,32 +75,32 @@ import com.actelion.research.util.ui.UIUtils;
 public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChangeObserver {
 
 	private final Study s;
-	
+
 	private final JPanel contentPanel = new JPanel(new BorderLayout());
 
 	public MonitoringOverviewDlg(Study s) throws Exception {
 		super(UIUtils.getMainFrame(), "Live Monitoring");
 		if (s == null) throw new Exception("You must select a study");
 		this.s = s;
-		
+
 		SpiritChangeListener.register(this);
 		setContentPane(contentPanel);
 		UIUtils.adaptSize(this, 1500, 1200);
 		setLocationRelativeTo(UIUtils.getMainFrame());
-		
-		recreateUIInThread();		
+
+		recreateUIInThread();
 		setVisible(true);
 	}
-	
+
 	public static List<Result> extractResults(Collection<Biosample> biosamples, Phase phase) {
-		List<Result> res = new ArrayList<>();		
+		List<Result> res = new ArrayList<>();
 		for (Biosample b : biosamples) {
 			res.addAll(b.getAuxResults((Test) null, phase));
 		}
 		Collections.sort(res);
 		return res;
 	}
-	
+
 	private void recreateUIInThread()  {
 		contentPanel.removeAll();
 		contentPanel.revalidate();
@@ -115,7 +115,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 			private List<FoodWater> allFws;
 			private Date now = JPAUtil.getCurrentDateFromDatabase();
 			private Study study;
-						
+
 			@Override
 			protected void doInBackground() throws Exception {
 				study = JPAUtil.reattach(s);
@@ -132,15 +132,15 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 					tests.add(t);
 				}
 				Collections.sort(tests);
-										
+
 				//Load FWs
-				allFws = DAOFoodWater.getFoodWater(study, null);				
+				allFws = DAOFoodWater.getFoodWater(study, null);
 			}
-			
+
 			@Override
 			protected void done() {
 				try {
-														
+
 					/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					// DisplayPane
 					// Loop through each phase and display the actions
@@ -148,8 +148,8 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 					JButton nowButton = null;
 					Set<Phase> phasesWithGroupAssignments =  study.getPhasesWithGroupAssignments();
 					for (final Phase phase : study.getPhases()) {
-						
-						
+
+
 						MonitoringStats fwStats = MonitoringHelper.calculateDoneRequiredFW(Biosample.getContainers(animals), phase, allFws);
 						Map<Test, MonitoringStats> stats = new LinkedHashMap<>();
 						for (Test test : tests) {
@@ -160,7 +160,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 						List<MonitoringStats> allStats = new ArrayList<>();
 						allStats.add(fwStats);
 						allStats.addAll(stats.values());
-						
+
 						//Create button
 						JButton liveButton = new JButton("<html><span style='font-size:90%;font-weight:bold;'>" + phase.getShortName() + "</span><br>"
 								+ "<span style='font-size:80%'>" + (phase.getAbsoluteDate() == null ? "" :FormatterUtils.formatDate(phase.getAbsoluteDate())) + "</span><br>");
@@ -169,12 +169,12 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 
 						liveButton.setIcon(MonitoringStats.getIconType(allStats).getIcon());
 						liveButton.setHorizontalAlignment(SwingConstants.LEFT);
-//						liveButton.setPreferredSize(new Dimension(92, 44));
+						//						liveButton.setPreferredSize(new Dimension(92, 44));
 						liveButton.addActionListener(new ActionListener() {
 							@Override
 							public void actionPerformed(ActionEvent e) {
 								new MonitoringDlg(phase);
-								SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, phase.getStudy());								
+								SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, phase.getStudy());
 							}
 						});
 
@@ -188,7 +188,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 								statsBuilder.append(s.getText(test.getName())+"<br>");
 							}
 						}
-						
+
 						if(phasesWithGroupAssignments.contains(phase)) {
 							JButton b = new JButton(new StudyActions.Action_GroupAssignment(phase));
 							b.setText("<html>Group<br>Assign.");
@@ -202,32 +202,23 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 						comps.add(new JLabel("<html><span style='font-size:90%;white-space:nowrap'>"+phase.getDescription().replace(" + ", " +<br>")));
 						comps.add(new JLabel("<html><div style='font-size:90%'>"+statsBuilder));
 					}
-					
+
 					JPanel displayPane = UIUtils.createTable(4, 2, 0, comps);
 
 
 					// ContentPane
 					final JScrollPane displaySp = new JScrollPane(displayPane);
 					displaySp.setPreferredSize(new Dimension(400, 500));
-					
+
 
 					final PivotTemplate tpl2 = new MonitorPivotTemplate();
-					
+
 					GraphPanelWithResults graphPanel = new GraphPanelWithResults();
 					graphPanel.setPivotTemplate(tpl2);
 					graphPanel.setResults(results);
-					
-//					JTabbedPane tabbedPane = new JCustomTabbedPane();
-//					for(final Test t: mapResults.keySet()) {
-//						final GraphPanel panel = new GraphPanel();
-//						tabbedPane.add("<html>Result<br><b>"+t.getName()+"</b>", panel);
-//						panel.setPivotTemplate(tpl2);
-//						panel.setResults(mapResults.get(t));
-//						
-//					}
-					
-					
-					JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, displaySp, graphPanel);					
+
+
+					JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, displaySp, graphPanel);
 					splitPane.setDividerLocation(380);
 					contentPanel.add(BorderLayout.CENTER, splitPane);
 					contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue(), new JButton(new CloseAction())));
@@ -249,10 +240,10 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 					JExceptionDialog.showError(e);
 				}
 			}
-			
+
 		};
-		
-		
+
+
 	}
 
 	@Override

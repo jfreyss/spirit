@@ -260,6 +260,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 	public String toString() {
 		return "[Container:" + containerType + " " + containerId + "]";
 	}
+	
 	public String getType() {		
 		Container c = this;
 		
@@ -272,7 +273,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		Container c = this;
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append(c.getBlocNo()==null?"": c.getContainerType().getBlocNoPrefix() + c.getBlocNo() + "\n"); 
+		sb.append(c.getContainerType().getBlocNoPrefix()==null?"": c.getContainerType().getBlocNoPrefix() + c.getBlocNo() + "\n"); 
 		
 		int count=0;
 		for (Biosample b : c.getBiosamples()) {

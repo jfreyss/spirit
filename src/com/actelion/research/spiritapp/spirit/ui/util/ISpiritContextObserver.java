@@ -44,7 +44,7 @@ public interface ISpiritContextObserver {
 	
 	public void query(final BiosampleQuery q);
 	
-	public void query(final ResultQuery q);
+	public void query(final ResultQuery q, int selectGraph);
 	
 	public void setStatus(String status);
 	

@@ -22,8 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.result;
 
 import java.awt.BorderLayout;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,9 +29,10 @@ import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
+import com.actelion.research.spiritapp.spirit.ui.SpiritTab;
 import com.actelion.research.spiritapp.spirit.ui.pivot.PivotPanel;
 import com.actelion.research.spiritapp.spirit.ui.pivot.graph.GraphPanelWithResults;
-import com.actelion.research.spiritapp.spirit.ui.util.ISpiritTab;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
@@ -41,120 +40,104 @@ import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Study;
+import com.actelion.research.util.ui.iconbutton.IconType;
 
-public class ResultTab extends JPanel implements ISpiritTab {
+public class ResultTab extends SpiritTab {
 
 	private final ResultSearchPane searchPane;
 
 	private JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
 	private final GraphPanelWithResults graphPanel;
 	private final PivotPanel pivotPanel;
-	
+
 	private final JPanel center = new JPanel(new BorderLayout());
-	
-	public ResultTab() {
-		this(null);
+	private List<Result> results = new ArrayList<>();
+
+	public ResultTab(SpiritFrame frame) {
+		this(frame, null);
 	}
-	public ResultTab(Biotype forcedBiotype) {
+
+	public ResultTab(SpiritFrame frame, Biotype forcedBiotype) {
+		super(frame,"Results", IconType.RESULT.getIcon());
+
 		this.searchPane = new ResultSearchPane(this, forcedBiotype);
 		this.graphPanel = new GraphPanelWithResults();
 		this.pivotPanel = new PivotPanel(true, null, null);
-		
+
 		tabbedPane.add("Graphical", graphPanel);
 		tabbedPane.add("All Data", pivotPanel);
-		
+
 		tabbedPane.addChangeListener(e-> {
 			refreshResults();
 		});
-		
+
 		JPanel queryPanel = new JPanel(new BorderLayout());
 		queryPanel.add(BorderLayout.CENTER, searchPane);
-		
+
 		JSplitPane contentPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, queryPanel, tabbedPane);
 		contentPane.setDividerLocation(300);
 		contentPane.setOneTouchExpandable(true);
 
 
 		setLayout(new BorderLayout());
-		add(BorderLayout.CENTER, contentPane);		
+		add(BorderLayout.CENTER, contentPane);
 
 		JPanel buttonsPanel = createButtonsPanel();
 		if(buttonsPanel!=null) center.add(BorderLayout.SOUTH, buttonsPanel);
-				
+
 		ResultActions.attachPopup(pivotPanel.getPivotTable());
 		ResultActions.attachPopup(graphPanel.getPivotTable());
-		
+
 		searchPane.addPropertyChangeListener(evt-> {
 			ResultTab.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
 		});
-		
-		addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentShown(ComponentEvent e) {
-				searchPane.getSearchTree().repopulate();
-				if(getRootPane()!=null) {
-					getRootPane().setDefaultButton(searchPane.getSearchButton());
-				}
-			}
-		});
-	}	
-		
-	@Override
-	public void refreshFilters() {
-		searchPane.getSearchTree().repopulate();
-	}	
-	
+	}
+
 	@Override
 	public<T> void fireModelChanged(final SpiritChangeType action, final Class<T> what, final List<T> details) {
 		if(what==Test.class || what==Study.class || what==Result.class) {
-			refreshFilters();
-		}		
+			searchPane.getSearchTree().repopulate();
+		}
 		if(what==Result.class) {
-			searchPane.search(searchPane.getSearchTree().updateQuery());
+			searchPane.query(searchPane.getSearchTree().getQuery());
 		}
 	}
 
-	
-	private List<Result> results = new ArrayList<>();
-	
 	public void setResults(List<Result> results) {
 		this.results = results;
 		refreshResults();
 	}
+
+	public void setErrorText(String errorText) {
+		graphPanel.getGraphPanel().setErrorText(errorText);
+		pivotPanel.setResults(new ArrayList<>());
+	}
+
 	private void refreshResults() {
 		if(tabbedPane.getSelectedIndex()==0) {
-			graphPanel.setResults(results);			
+			graphPanel.setResults(results);
 		} else {
 			pivotPanel.setResults(results);
 		}
 	}
-	
-	public void query(ResultQuery q) {
-		searchPane.query(q);
+
+	public void query(ResultQuery q, int graphIndex) {
+		searchPane.setQuery(q).afterDone(() -> {
+			if(graphIndex>=0) {
+				tabbedPane.setSelectedIndex(0);
+				graphPanel.getGraphPanel().setSelectedIndex(graphIndex);
+			}
+		});
 	}
-	@Override
-	public String getStudyIds() {
-		return searchPane.getSearchTree().getStudyId();
-	}
-	
-	@Override
-	public void setStudyIds(String s) {
-		if(s==null) return;
-		String currentStudy = searchPane.getSearchTree().getStudyId();
-		if(currentStudy!=null && currentStudy.equals(s)) return; //no need to refresh
-		
-		searchPane.getSearchTree().setQuery(ResultQuery.createQueryForStudyIds(s));
-		setResults(new ArrayList<Result>());
-	}
-	
+
 	public void setCurrentPivotTemplate(PivotTemplate pivotTemplate) {
 		pivotPanel.setCurrentPivotTemplate(pivotTemplate);
 	}
-	
+
 	public void setDefaultTemplates(PivotTemplate[] pivotTemplates) {
 		pivotPanel.setDefaultTemplates(pivotTemplates);
 	}
-	
+
 	/**
 	 * To be overriden by classes to get a custom button panel
 	 * @return
@@ -162,7 +145,7 @@ public class ResultTab extends JPanel implements ISpiritTab {
 	protected JPanel createButtonsPanel() {
 		return null;
 	}
-	
+
 	public PivotPanel getPivotCardPanel() {
 		return pivotPanel;
 	}
@@ -173,5 +156,25 @@ public class ResultTab extends JPanel implements ISpiritTab {
 	public List<Result> getResults() {
 		return pivotPanel.getResults();
 	}
-	
+
+	@Override
+	public void onTabSelect() {
+		searchPane.getSearchTree().repopulate();
+		if(getRootPane()!=null) {
+			getRootPane().setDefaultButton(searchPane.getSearchButton());
+		}
+	}
+
+	@Override
+	public void onStudySelect() {
+		if(getFrame()!=null && getFrame().getStudyId().length()>0) {
+			ResultQuery q = ResultQuery.createQueryForStudyIds(getFrame().getStudyId());
+			q.setMaxResults(10000);
+			searchPane.setQuery(q);
+			searchPane.getSearchTree().refreshFilters(false);
+		} else {
+			setResults(new ArrayList<>());
+		}
+	}
+
 }

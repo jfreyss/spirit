@@ -25,7 +25,7 @@ import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationLabel;
 import com.actelion.research.spiritcore.business.location.Location;
@@ -95,6 +95,6 @@ public class LocationNameColumn extends Column<Location, String> {
 	
 	@Override
 	public boolean isEditable(Location row) {
-		return SpiritRights.canEdit(row, Spirit.getUser());
+		return SpiritRights.canEdit(row, SpiritFrame.getUser());
 	}
 }

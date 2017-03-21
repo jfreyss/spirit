@@ -43,9 +43,9 @@ public class MiscUtils {
 
 	public static final String SPLIT_SEPARATORS = ",;\n\t";
 	public static final String SPLIT_SEPARATORS_WITH_SPACE = SPLIT_SEPARATORS + " ";
-	
+
 	private static final DateFormat dateFormat = new SimpleDateFormat("dd.MM.yy");
-	
+
 	private static final Date parseDate(String s) {
 		try {
 			return s == null ? null : dateFormat.parse(s);
@@ -53,11 +53,11 @@ public class MiscUtils {
 			return null;
 		}
 	}
-	
+
 	public static String extractCommonPrefix(Collection<String> strings) {
 		if(strings==null || strings.size()==0) return "";
 		if(strings.size()==1) return strings.iterator().next();
-		
+
 		String res = null;
 		for (String string : strings) {
 			if(string==null || string.length()==0) continue;
@@ -66,7 +66,7 @@ public class MiscUtils {
 			} else {
 				int commonLen = 0;
 				while(commonLen < res.length() && commonLen<string.length() && res.charAt(commonLen)==string.charAt(commonLen)) {
-					commonLen++;					
+					commonLen++;
 				}
 				res = res.substring(0, commonLen);
 			}
@@ -75,14 +75,14 @@ public class MiscUtils {
 		if(res!=null && res.length()>0 && res.charAt(res.length()-1)=='/') {
 			res = res.substring(0, res.length()-1);
 		}
-		
+
 		return res;
 	}
-	
+
 	public static String extractCommonSuffix(Collection<String> strings) {
 		if(strings==null || strings.size()==0) return "";
 		if(strings.size()==1) return strings.iterator().next();
-		
+
 		String res = null;
 		for (String string : strings) {
 			if(string==null || string.length()==0) continue;
@@ -96,7 +96,7 @@ public class MiscUtils {
 				res = res.substring(res.length()-commonLen);
 			}
 		}
-				
+
 		return res;
 	}
 
@@ -107,33 +107,33 @@ public class MiscUtils {
 			if(s.startsWith(modifier)) return modifier;
 		}
 		return "=";
-	} 
-	
+	}
+
 	public static String extractText(String s) {
 		String modifier = extractModifier(s);
 		if(!s.startsWith(modifier)) return s;
 		return s.substring(modifier.length()).trim();
 	}
-	
+
 	public static Date extractDate(String s) {
 		String text = extractText(s);
 		return parseDate(text);
 	}
-	
+
 	public static Date addDays(Date d, int days) {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(d);
 		cal.add(Calendar.DAY_OF_YEAR, days);
 		return cal.getTime();
 	}
-	
-	
+
+
 	public static String removeHtml(String s) {
 		if(s==null) return null;
 		return s.replaceAll("<br>", "\n")
 				.replaceAll("&nbsp;"," ")
 				.replaceAll("\\<([^=>]*(=\\'.*?\\')?(=\\\".*?\\\")?)+>","")
-//				.replaceAll("\\<.*?>","")
+				//				.replaceAll("\\<.*?>","")
 				.replaceAll("\t", " ")
 				.replaceAll("[\r\n]+", "\n")
 				.replaceAll("[ ]+", " ").trim();
@@ -144,8 +144,8 @@ public class MiscUtils {
 		if(s.length()==0) s = "";
 		return s;
 	}
-	
-	public static String convertLabel(String s) {		
+
+	public static String convertLabel(String s) {
 		if(s==null) s = "";
 		s = s
 				.replaceAll("<B>(.*?)\n", "<span style='font-weight:bold'>$1</span>\n")
@@ -161,14 +161,14 @@ public class MiscUtils {
 		if(s.length()==0) s = "-";
 		return s;
 	}
-	
+
 	public static String extractStartDigits(String s) {
 		if(s==null) return null;
 		Matcher m = Pattern.compile("^[0-9]*").matcher(s);
 		if(m.find()) return m.group();
 		else return "";
 	}
-	
+
 	public static String flatten(Object[] strings) {
 		return flatten(strings, ", ");
 	}
@@ -187,7 +187,7 @@ public class MiscUtils {
 		}
 		return sb.toString();
 	}
-	
+
 	/**
 	 * Format the Map like "key1=value1; key2=value2"
 	 * @param map
@@ -198,15 +198,15 @@ public class MiscUtils {
 		for (Map.Entry<?, ?> e : map.entrySet()) {
 			sb.append((sb.length()>0?"; ":"") + (e.getKey()==null?"":e.getKey()) + "=" + (e.getValue()==null?"":e.getValue()));
 		}
-		
+
 		return sb.toString();
 	}
 
-	
+
 	public static String[] cutText(String text, int maxLength) {
 		if(text==null) return new String[0];
-		
-		List<String> res = new ArrayList<String>(); 
+
+		List<String> res = new ArrayList<String>();
 		int offset = 0;
 		int minLength = Math.max(2, maxLength/3);
 		while(offset<text.length()) {
@@ -214,16 +214,16 @@ public class MiscUtils {
 			for (; index >= offset + minLength; index--) {
 				char c = text.charAt(index);
 				if(c==' ' || c=='-') {break;}
-//				if(Character.isUpperCase(c)) {break;}
+				//				if(Character.isUpperCase(c)) {break;}
 			}
 			if(index<=offset+minLength) index = Math.min(text.length(), offset+maxLength);
 			res.add(text.substring(offset, index).trim());
 			offset = index;
-		}		
+		}
 		return res.toArray(new String[res.size()]);
-		
+
 	}
-	
+
 
 	public static String unsplit(String[] strings) {
 		return unsplit(strings, ", ");
@@ -252,7 +252,7 @@ public class MiscUtils {
 		}
 		return res;
 	}
-	
+
 	public static List<Long> splitLong(String s) {
 		List<Long> res = new ArrayList<Long>();
 		for(String string: split(s, SPLIT_SEPARATORS+" ")) {
@@ -264,29 +264,29 @@ public class MiscUtils {
 		}
 		return res;
 	}
-	
+
 	/**
 	 * Split a string, using the standard separators (,;\n\t)
 	 * Unlike String.split, the string can contain the separator but they must be escaped with backslash
-	 * 
+	 *
 	 * The opposite function is unsplit.
-	 * 
+	 *
 	 * @param s
 	 * @return
 	 */
 	public static String[] split(String s) {
 		return split(s, SPLIT_SEPARATORS);
 	}
-	
+
 	/**
 	 * Split a string, using the given separators.
 	 * Unlike String.split, the string can contain the separator but they must be escaped with backslash
-	 * 
+	 *
 	 * The opposite function is unsplit.
-	 * 
+	 *
 	 * Ex: split(" ",quoted"\,escaped\\,ok ", ",") will return those 2 elements [",quoted",escaped\],[ok].
-	 * 
-	 * 
+	 *
+	 *
 	 * @param s
 	 * @param separators
 	 * @return
@@ -309,20 +309,20 @@ public class MiscUtils {
 				}
 			} else if(!inQuote && separators.indexOf(token)>=0) {
 				if(sb.toString().trim().length()>0) res.add(sb.toString().trim());
-				sb.setLength(0);    			
+				sb.setLength(0);
 			} else {
 				sb.append(token);
-			}    				
+			}
 		}
 		if(sb.toString().trim().length()>0) res.add(sb.toString().trim());
-		
+
 		return res.toArray(new String[res.size()]);
 	}
-	
+
 
 	/**
 	 * Split a query by And / Or keywords.
-	 * 
+	 *
 	 * @return always an odd number of items: ex: "<=5", "AND", ">2"
 	 */
 	public static String[] splitByOrAnd(String string){
@@ -343,10 +343,10 @@ public class MiscUtils {
 		} else if(res.size()%2==0 && res.size()>0) {
 			res.remove(res.size()-1);
 		}
-		
+
 		return res.toArray(new String[res.size()]);
 	}
-	
+
 	/**
 	 * Extract n items from the list, if the n>list.size, return all.
 	 * Otherwise return n elements using a progressive incrementation
@@ -356,7 +356,7 @@ public class MiscUtils {
 	 */
 	public static<T> List<T> subList(List<T> list, int size) {
 		if(size>=list.size()) return list;
-		
+
 		List<T> res = new ArrayList<T>();
 		//We choose alpha such as sum(1+(alpha*i), i, 0, n-1)) = list.size
 		int alpha = -2*(size-list.size()-1)/(size*(size-1));
@@ -365,9 +365,9 @@ public class MiscUtils {
 			if(index>=list.size()) return res;
 			res.add(list.get(index));
 
-			index += 1 + (int) (i * alpha);
+			index += 1 + i * alpha;
 		}
-		return res;		
+		return res;
 	}
 
 	public static String concatenate(String[][] rows, boolean removeSpecialCharacters) {
@@ -378,27 +378,27 @@ public class MiscUtils {
 				String s = strings[i];
 				if(s==null) s = "";
 				if(removeSpecialCharacters) s = s.replaceAll("\t|\n", " ");
-				sb.append(s);				
+				sb.append(s);
 			}
 			sb.append(System.getProperty("line.separator"));
 		}
-		
+
 		return sb.toString();
 	}
-	
+
 	public static Integer parseInt(String integer) {
 		try {
 			return Integer.parseInt(integer.trim());
 		} catch(Exception e) {
-			return null;		
+			return null;
 		}
 	}
-	
+
 	public static Double parseDouble(String doub) {
 		try {
 			return Double.parseDouble(doub.trim());
 		} catch(Exception e) {
-			return null;		
+			return null;
 		}
 	}
 
@@ -425,7 +425,7 @@ public class MiscUtils {
 		}
 		return sb.toString();
 	}
-	
+
 	/**
 	 * Inverse function of serializeIntegerMap
 	 * @param data
@@ -434,7 +434,7 @@ public class MiscUtils {
 	public static Map<Integer, String> deserializeIntegerMap(String data) {
 		Map<Integer, String> map = new LinkedHashMap<>();
 		if(data==null) return map;
-		
+
 		//Automat algorithm to parse data
 		boolean inKey = true;
 		int id = 0;
@@ -456,10 +456,10 @@ public class MiscUtils {
 				} else if(c==';' || c=='\t') {
 					inKey = true;
 					map.put(id, value.toString());
-					id = 0; 
+					id = 0;
 					value.setLength(0);
 				} else {
-					value.append(c);					
+					value.append(c);
 				}
 			}
 		}
@@ -468,7 +468,7 @@ public class MiscUtils {
 		}
 		return map;
 	}
-	
+
 	/**
 	 * Serializes a Map<Integer,String> like: 1->joel, 2->to;=to, 3->null to 1=joel;2=to\;=to;3=
 	 * All characters must be accepted. Returned string is [[id=string][;id=string]*]
@@ -488,7 +488,7 @@ public class MiscUtils {
 		}
 		return sb.toString();
 	}
-	
+
 	/**
 	 * Inverse function of serializeIntegerMap
 	 * @param data
@@ -497,7 +497,7 @@ public class MiscUtils {
 	public static Map<String, String> deserializeStringMap(String data) {
 		Map<String, String> map = new LinkedHashMap<>();
 		if(data==null) return map;
-		
+
 		//Automat algorithm to parse data
 		boolean inKey = true;
 		StringBuilder key = new StringBuilder();
@@ -522,10 +522,10 @@ public class MiscUtils {
 				} else if(c==';' || c=='\t') {
 					inKey = true;
 					map.put(key.toString(), value.toString());
-					key.setLength(0); 
+					key.setLength(0);
 					value.setLength(0);
 				} else {
-					value.append(c);					
+					value.append(c);
 				}
 			}
 		}
@@ -534,8 +534,8 @@ public class MiscUtils {
 		}
 		return map;
 	}
-	
-	
+
+
 	/**
 	 * Serializes a List<String> like: {joel, 123} to joel;123
 	 * All characters must be accepted. Returned string is [[id=string][#id=string]*]
@@ -549,13 +549,13 @@ public class MiscUtils {
 			if(s.contains("\\")) s = s.replace("\\", "\\\\");
 			if(s.contains(";")) s = s.replace(";", "\\;");
 			if(s.contains("\t")) s = s.replace("\t", "\\\t");
-			
+
 			if(sb.length()>0) sb.append(";");
 			sb.append(s);
 		}
 		return sb.toString();
 	}
-	
+
 	/**
 	 * Inverse function of serializeStrings
 	 * @param data
@@ -564,11 +564,11 @@ public class MiscUtils {
 	public static List<String> deserializeStrings(String data) {
 		List<String> list = new ArrayList<>();
 		if(data==null) return list;
-		
+
 		//Automat algorithm to parse data
 		StringBuilder value = new StringBuilder();
 		for (int i = 0; i < data.length(); i++) {
-			char c = data.charAt(i);		
+			char c = data.charAt(i);
 			if(c=='\\') { //Escape character
 				i++;
 				if(i>=data.length()) throw new RuntimeException("Cannot deserialize: "+data);
@@ -577,15 +577,15 @@ public class MiscUtils {
 				list.add(value.toString());
 				value.setLength(0);
 			} else {
-				value.append(c);					
+				value.append(c);
 			}
 		}
 		list.add(value.toString());
 		return list;
 	}
-	
-	
-	
+
+
+
 	/**
 	 * 1 -> 2
 	 * 1. -> 2.
@@ -599,7 +599,7 @@ public class MiscUtils {
 	 */
 	public static String incrementName(String name) {
 		String abbr = name;
-		String suffix = "";		
+		String suffix = "";
 		for (int i = abbr.length()-1; i > 0 ; i--) {
 			if(!Character.isDigit(abbr.charAt(i)) && !Character.isLetter(abbr.charAt(i))) {
 				suffix = abbr.charAt(i) + suffix;
@@ -609,29 +609,29 @@ public class MiscUtils {
 		}
 		abbr = abbr.substring(0, abbr.length()-suffix.length());
 		if(abbr==null || abbr.length()==0) return "1" + suffix;
-				
+
 		if(abbr.length()>0 && Character.isDigit(abbr.charAt(abbr.length()-1))) {
 			//increment number
 			int index;
 			for(index=abbr.length()-1; index>=0 && Character.isDigit(abbr.charAt(index)); index--) {}
-			index++;				
-									
+			index++;
+
 			String number = abbr.substring(index);
 			return abbr.substring(0, index) + (Integer.parseInt(number)+1) + suffix;
 		} else if(abbr.length()>0 && Character.isLetter(abbr.charAt(abbr.length()-1))) {
 			//increment letter
 			int index;
-			for(index=abbr.length()-1; index>=0 && Character.isLetter(abbr.charAt(index)); index--) {}						
-			index++;				
+			for(index=abbr.length()-1; index>=0 && Character.isLetter(abbr.charAt(index)); index--) {}
+			index++;
 			String letter = abbr.substring(index);
-			if(letter.endsWith("Z") || letter.endsWith("z")) return abbr.substring(0, index) + "?" + suffix;			
+			if(letter.endsWith("Z") || letter.endsWith("z")) return abbr.substring(0, index) + "?" + suffix;
 			return abbr.substring(0, index) + letter.substring(0, letter.length()-1) + (char)(letter.charAt(letter.length()-1)+1) + suffix;
 		}
 		return "??";
 	}
-	
+
 	/**
-	 * Returns true if obj is contained within array 
+	 * Returns true if obj is contained within array
 	 */
 	public static<T> boolean contains(T[] array, T obj) {
 		for (T t : array) {
@@ -639,9 +639,9 @@ public class MiscUtils {
 		}
 		return false;
 	}
-		
+
 	/**
-	 * Returns true if one of the objects is contained within array 
+	 * Returns true if one of the objects is contained within array
 	 */
 	public static<T> boolean contains(T[] array, Collection<T> objects) {
 		for(T obj: objects) {
@@ -651,20 +651,20 @@ public class MiscUtils {
 		}
 		return false;
 	}
-	
+
 	public static void removeNulls(Collection<?> collection) {
 		for (Iterator<?> iterator = collection.iterator(); iterator.hasNext();) {
 			if(iterator.next()==null) iterator.remove();
 		}
 	}
-	
+
 	/**
 	 * Some quick tests
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		System.out.println(convertLabel("<B>Bold\n<c>Cyan\nTest"));
-		
+
 		System.out.println(extractStartDigits("F5A78"));
 		System.out.println(extractStartDigits("45F5A78"));
 		System.out.println(Arrays.toString(cutText("Weighing Test", 12)));
@@ -673,7 +673,7 @@ public class MiscUtils {
 		System.out.println(Arrays.toString(cutText("WeightIncrease", 12)));
 		System.out.println(Arrays.toString(cutText("FoodAndWater Intake", 12)));
 		System.out.println(Arrays.toString(cutText("Longestwithoutspaces", 12)));
-		
+
 		System.out.println(Arrays.toString(splitByOrAnd("<3 and >1")));
 		System.out.println(Arrays.toString(splitByOrAnd("<3 and or >1")));
 		System.out.println(Arrays.toString(splitByOrAnd("<3 <2 and or >1")));
@@ -684,14 +684,14 @@ public class MiscUtils {
 		System.out.println(deserializeIntegerMap(s));
 		System.out.println(serializeIntegerMap(deserializeIntegerMap(s)));
 		assert s.equals(serializeIntegerMap(deserializeIntegerMap(s)));
-		
+
 		String s2 = "2=two\t3=third\t4=special\\;\t5=end";
 		System.out.println();
 		System.out.println(s2);
 		System.out.println(deserializeIntegerMap(s2));
 		System.out.println(serializeIntegerMap(deserializeIntegerMap(s2)));
 		assert s.equals(serializeIntegerMap(deserializeIntegerMap(s2)));
-		
+
 		System.out.println();
 		System.out.println(incrementName(""));
 		System.out.println(incrementName("1"));
@@ -713,46 +713,48 @@ public class MiscUtils {
 		assert incrementName("1A19").equals("1A20");
 		assert incrementName("{1d}").equals("{1e}");
 
-		
+
 	}
 
 	public static String convert2Html(String s) {
 		if(s==null) return "";
-		
+
 		//Convert special chars
 		s = s.replaceAll("&", "&amp;");
 		s = s.replaceAll("<", "&lt;");
 		s = s.replaceAll(">", "&gt;");
-		
+
 		//convert tab to tables;
 		StringBuilder sb = new StringBuilder();
 		boolean inTable = false;
-		String[] lines = s.split("\n"); 
-		for(String line: lines ) {
+		String[] lines = s.split("\n");
+		for (int i = 0; i < lines.length; i++) {
+			String line = lines[i];
 			if(line.indexOf('\t')<0) {
 				if(inTable) {
 					sb.append("</table>");
 					inTable = false;
-				}				
-				sb.append(line+"<br>");
+				}
+				sb.append(line);
+				if(i<lines.length-1) sb.append("<br>");
 			} else {
 				if(inTable) {
 					sb.append("<tr><td>" + line.replaceAll("\t", "</td><td>") + "</td></tr>");
-					
+
 				} else {
 					inTable = true;
 					sb.append("<table style='border:solid 1px gray'>");
 					sb.append("<tr><th>" + line.replaceAll("\t", "</th><th>") + "</th></tr>");
-					
+
 				}
 			}
 		}
 		if(inTable) sb.append("</table>");
-		
+
 		s = sb.toString();
 		return s;
 	}
-	
+
 
 	public static String repeat(String s, int n) {
 		StringBuilder sb = new StringBuilder();
@@ -761,5 +763,5 @@ public class MiscUtils {
 		}
 		return sb.toString();
 	}
-	
+
 }

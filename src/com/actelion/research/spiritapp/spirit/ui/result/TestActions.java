@@ -25,7 +25,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.admin.TestEditDlg;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.services.SpiritRights;
@@ -38,7 +38,7 @@ public class TestActions {
 			super("Edit Test");
 			this.test = test;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
-			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()));
+			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -52,7 +52,7 @@ public class TestActions {
 			super("Duplicate");
 			this.test = test;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
-			setEnabled(SpiritRights.isSuperAdmin(Spirit.getUser()));
+			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {

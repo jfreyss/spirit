@@ -42,8 +42,8 @@ import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.migration.MigrationScript;
 import com.actelion.research.spiritcore.services.migration.MigrationScript.ILogger;
 import com.actelion.research.util.ui.FastFont;
@@ -53,53 +53,53 @@ import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 
 /**
- * Class responsible for setting/testing the connection (ie. dbadapter.initAdapter(true) should be successful) 
- * 
+ * Class responsible for setting/testing the connection (ie. dbadapter.initAdapter(true) should be successful)
+ *
  * @author freyssj
  *
  */
 public class DatabaseMigrationDlg extends JDialog {
-	
+
 	private boolean hasErrors = false;
 	private final JTextArea sqlPane = new JTextArea();
 	private final JEditorPane errorPane = new ImageEditorPane();
 
 	public DatabaseMigrationDlg() {
 		super(UIUtils.getMainFrame(), "Spirit - DB Migration", true);
-		
+
 		sqlPane.setEditable(false);
 		sqlPane.setCaretPosition(0);
 		JScrollPane sp1 = new JScrollPane(sqlPane);
 		sp1.setPreferredSize(new Dimension(750, 300));
-		
+
 		errorPane.setEditable(false);
 		errorPane.setCaretPosition(0);
 		JScrollPane sp2 = new JScrollPane(errorPane);
 		sp2.setPreferredSize(new Dimension(750, 400));
-		
+
 		JButton cancelButton = new JButton("Cancel");
-		cancelButton.addActionListener(new ActionListener() {			
+		cancelButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				dispose();
 			}
-		});		
-		
+		});
+
 		JButton updateButton = new JButton("Update DB");
-		updateButton.addActionListener(new ActionListener() {			
+		updateButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				updateDB();	
+				updateDB();
 			}
 		});
 		getRootPane().setDefaultButton(updateButton);
-		
-		//Init script		
-		try {			
+
+		//Init script
+		try {
 			String script = MigrationScript.getSql(DBAdapter.getAdapter().getVendor());
 			if(script.length()==0) {
 				//Assume this is correct and update the version
-				
+
 			}
 			sqlPane.setText(script);
 		} catch(Exception e) {
@@ -111,24 +111,24 @@ public class DatabaseMigrationDlg extends JDialog {
 		} catch(Exception e) {
 			version = null;
 		}
-		
+
 		add(
 				UIUtils.createBox(UIUtils.createBox(sp2, sp1),
-						
-				UIUtils.createVerticalBox(new JCustomLabel("Your database is not up to date (currently: " + (version==null?"NA":version) + ")", FastFont.BOLD, Color.RED),
-						new JLabel("You must update the DB to version " + MigrationScript.getExpectedDBVersion() + " to continue. Do you accept the update?")),
-				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), cancelButton, updateButton)));
+
+						UIUtils.createVerticalBox(new JCustomLabel("Your database is not up to date (currently: " + (version==null?"NA":version) + ")", FastFont.BOLD, Color.RED),
+								new JLabel("You must update the DB to version " + MigrationScript.getExpectedDBVersion() + " to continue. Do you accept the update?")),
+						UIUtils.createHorizontalBox(Box.createHorizontalGlue(), cancelButton, updateButton)));
 		pack();
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setVisible(true);
-		
+
 	}
-	
+
 	private void updateDB() {
 
 		hasErrors = false;
-		final ILogger logger = new ILogger() {				
+		final ILogger logger = new ILogger() {
 			@Override
 			public void info(String sql, String msg) {
 				try {
@@ -136,9 +136,9 @@ public class DatabaseMigrationDlg extends JDialog {
 					SimpleAttributeSet att1 = new SimpleAttributeSet();
 					StyleConstants.setFontSize(att1, 11);
 					SimpleAttributeSet att2 = new SimpleAttributeSet();
-				    StyleConstants.setForeground(att2, UIUtils.getColor(0, 128, 0));
+					StyleConstants.setForeground(att2, UIUtils.getColor(0, 128, 0));
 
-				    javax.swing.text.Document doc = errorPane.getDocument();
+					javax.swing.text.Document doc = errorPane.getDocument();
 					doc.insertString(doc.getLength(), sql.replaceAll("\n", " ")+"\n", att1);
 					doc.insertString(doc.getLength(), " > " + msg.replaceAll("\n", " ")+"\n", att2);
 
@@ -149,16 +149,16 @@ public class DatabaseMigrationDlg extends JDialog {
 			}
 			@Override
 			public void error(String sql, Exception e) {
-				try {							
-					
+				try {
+
 					hasErrors = true;
-					
+
 					SimpleAttributeSet att1 = new SimpleAttributeSet();
 					StyleConstants.setFontSize(att1, 11);
-				    SimpleAttributeSet att2 = new SimpleAttributeSet();
-				    StyleConstants.setForeground(att2, Color.RED);
-					
-				    javax.swing.text.Document doc = errorPane.getDocument();								
+					SimpleAttributeSet att2 = new SimpleAttributeSet();
+					StyleConstants.setForeground(att2, Color.RED);
+
+					javax.swing.text.Document doc = errorPane.getDocument();
 					doc.insertString(doc.getLength(), sql.replaceAll("\n", " ")+"\n", att1);
 					doc.insertString(doc.getLength(), " > " + (e.getMessage()==null? e.toString(): e.getMessage().replaceAll("\n", " "))+"\n", att2);
 
@@ -168,18 +168,19 @@ public class DatabaseMigrationDlg extends JDialog {
 				}
 			}
 		};
-		new SwingWorkerExtended(errorPane, true) {
+
+		//Update DB in the backgrounf,
+		new SwingWorkerExtended(errorPane, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			@Override
 			protected void doInBackground() throws Exception {
 				errorPane.setText("<html><div style='white-space:nowrap'>");
 				MigrationScript.updateDB(DBAdapter.getAdapter().getVendor(), logger);
 			}
-			
+
 			@Override
 			protected void done() {
 				try {
 					boolean ok = testSchema(DBAdapter.getAdapter());
-					
 					if(ok) {
 						if(hasErrors) {
 							JExceptionDialog.showWarning(DatabaseMigrationDlg.this, "The Spirit database was successfully migrated.\n There were however some migration errors, please check what went wrong.");
@@ -188,18 +189,27 @@ public class DatabaseMigrationDlg extends JDialog {
 							dispose();
 						}
 					} else {
-						JExceptionDialog.showError(DatabaseMigrationDlg.this, "The Spirit database could not be migrated. Please check the errors.");							
+						JExceptionDialog.showError(DatabaseMigrationDlg.this, "The Spirit database could not be migrated. Please check the errors.");
 					}
 				} catch(Exception e) {
-					JExceptionDialog.showError(DatabaseMigrationDlg.this, e);												
+					JExceptionDialog.showError(DatabaseMigrationDlg.this, e);
 				}
 			}
 		};
 	}
-	
+
+	/**
+	 * Tests the schema and returns true if the schema is as expected.
+	 * Returns false if the schema does not match (this function may suggest automatic update, not advised in normal cases).
+	 * Throws an exception for DB connection errors
+	 *
+	 * @param adapter
+	 * @return
+	 * @throws Exception
+	 */
 	public static boolean testSchema(DBAdapter adapter) throws Exception {
 		boolean ok;
-		try {			
+		try {
 			JPAUtil.closeFactory();
 			LoggerFactory.getLogger(DatabaseMigrationDlg.class).debug("Test Schema: preinit "+adapter.getClass());
 			adapter.preInit();
@@ -207,7 +217,6 @@ public class DatabaseMigrationDlg extends JDialog {
 			adapter.validate();
 			ok = true;
 		} catch(Exception e) {
-			
 			e.printStackTrace();
 			int res = JOptionPane.showConfirmDialog(null, "There were some errors (" + e.getCause() + ").\n\nDo you want Spirit to fix the errors?", "Error", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 			if(res==JOptionPane.YES_OPTION) {
@@ -223,7 +232,7 @@ public class DatabaseMigrationDlg extends JDialog {
 		}
 		return ok;
 	}
-	
+
 	public static void main(String[] args) {
 		new DatabaseMigrationDlg();
 	}

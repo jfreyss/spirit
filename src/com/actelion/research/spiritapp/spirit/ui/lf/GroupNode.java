@@ -29,7 +29,7 @@ import java.util.List;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JList;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxOneNode;
@@ -74,7 +74,7 @@ public class GroupNode extends TextComboBoxOneNode {
 	
 	public void setStudy(Study study) {
 		this.study = study;
-		getComponent().setEnabled(!SpiritRights.isBlindAll(study, Spirit.getUser()));
+		getComponent().setEnabled(!SpiritRights.isBlindAll(study, SpiritFrame.getUser()));
 		getComponent().setText("");		
 		setVisible(study!=null);
 	}

@@ -38,8 +38,8 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class LocationDepartmentColumn extends Column<Location, EmployeeGroup> {
-	
-	private class LocationDepartmentCellEditor extends AbstractCellEditor implements  TableCellEditor {
+
+	private class LocationDepartmentCellEditor extends AbstractCellEditor implements TableCellEditor {
 
 		private EmployeeGroupComboBox comboBox = new EmployeeGroupComboBox(true);
 
@@ -54,8 +54,8 @@ public class LocationDepartmentColumn extends Column<Location, EmployeeGroup> {
 			return comboBox;
 		}
 	}
-		
-		
+
+
 	public LocationDepartmentColumn() {
 		super("Department", EmployeeGroup.class, 70);
 	}
@@ -76,19 +76,19 @@ public class LocationDepartmentColumn extends Column<Location, EmployeeGroup> {
 			for(EmployeeGroup eg: DBAdapter.getAdapter().getEmployeeGroups()) {
 				if(eg.getName().equalsIgnoreCase(value)) {
 					res.add(eg);
-				}				
+				}
 			}
 			if(res.size()==0) throw new Exception("There are no groups called: "+value);
 			if(res.size()>1) throw new Exception("There are several groups called: "+value);
 			setValue(row, res.get(0));
 		}
 	}
-	
+
 	@Override
 	public boolean isEditable(Location row) {
 		return row!=null && (row.getPrivacy()==Privacy.PRIVATE || row.getPrivacy()==Privacy.PROTECTED);
 	}
-	
+
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Location> table) {
 		return new LocationDepartmentCellEditor();

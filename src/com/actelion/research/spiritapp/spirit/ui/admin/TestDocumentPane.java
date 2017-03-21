@@ -22,87 +22,103 @@
 package com.actelion.research.spiritapp.spirit.ui.admin;
 
 import java.awt.Dimension;
-import java.util.List;
 
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
+import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.FormatterUtils;
 
 public class TestDocumentPane extends ImageEditorPane {
+	private Test selection = null;
+
 	public TestDocumentPane() {
-		super();		
+		super();
 		setEditable(false);
 	}
-	
-	
+
+
 	@Override
 	public Dimension getMinimumSize() {
 		return new Dimension(700, 400);
 	}
-	
-	public void showAllTests() {
-		StringBuilder sb = new StringBuilder();
 
-		sb.append("<html><body>");
-		List<Test> list = DAOTest.getTests();
-		Test prev = null;
-		for(Test test: list) {
-			sb.append(getHelp(test));
-			
-			if(prev!=null && !prev.getCategory().equals(test.getCategory())) sb.append("<hr>");
-			prev = test;
-		}			
-		sb.append("</body></html>");	
-		setText(sb.toString());		
-		setCaretPosition(0);
-	}
-	
-	public void setTest(Test t) {	
-		StringBuilder sb = new StringBuilder();
-		if(t!=null) {
-			sb.append("<html><body style='margin:0px;padding:0px'>");
-			sb.append(getHelp(t));							
-			sb.append("</body></html>");		
-		} 
-		setText(sb.toString());		
+
+	public void setSelection(Test t) {
+		this.selection = t;
+		setText(getHelp().toString());
 		setCaretPosition(0);
 	}
 
-	private String color(TestAttribute ta) {
-		switch (ta.getOutputType()) {
+	private String color(OutputType ta) {
+		switch (ta) {
 		case INPUT: return "#0000AA";
 		case OUTPUT: return "#330000";
 		case INFO: return "#330066";
 		default: return "";
 		}
 	}
-	private StringBuilder getHelp(Test test) {
+	private StringBuilder getHelp() {
+
 		StringBuilder sb = new StringBuilder();
-		sb.append("<span style='font-size:110%'>" + test.getCategory()+".<b>"+test.getName() + "</b></span><br>");
-		sb.append("<table style='margin:0px 0px 2px 0px'>");
-		for(TestAttribute ta: test.getAttributes()) {
-			sb.append("<tr>");
-			sb.append("<td>&nbsp;&nbsp;</td>");
-			sb.append("<td style='font-size:90%;color:" + color(ta) + "' valign=top>" + (ta.getOutputType().name()) + ": </td>");
-			sb.append("<td style='font-size:90%;color:" + color(ta) + "' valign=top><b>" + ta.getName() + "</b>: </td>");
-			sb.append("<td style='font-size:90%;color:" + color(ta) + "' valign=top>" + ta.getDataType()+ (ta.getParameters()==null?"": " " + ta.getParameters()) + "</td>");
-			sb.append("</tr>");			
-		}
-		sb.append("</table");		
-		sb.append("<br><hr>");
-		
-		if(test.getCreDate()!=null) {
-			sb.append("<i>Created by " + (test.getCreUser()==null?"N/A":test.getCreUser()) + " - "+ FormatterUtils.formatDateTime(test.getCreDate())+"</i><br>");
-			if(test.getUpdDate()!=null && test.getUpdDate().after(test.getCreDate())) {
-				sb.append("<i>Updated by " + (test.getUpdUser()==null?"N/A":test.getUpdUser()) + " - "+ FormatterUtils.formatDateTime(test.getUpdDate())+"</i><br>");
+		sb.append("<html><body>");
+		sb.append("<table style='white-space:nowrap'><tr style='padding:3px;background:#CCCCCC'>");
+		sb.append("<td><b>Category</b></td>");
+		sb.append("<td><b>Name</b></td>");
+		sb.append("<td><b>Input</b></td>");
+		sb.append("<td><b>Output</b></td>");
+		sb.append("<td><b>Infos</b></td>");
+		sb.append("<td><b>Creation</b></td>");
+		sb.append("<td><b>Update</b></td>");
+		Test previous = null;
+		for(Test test: DAOTest.getTests()) {
+			sb.append("<tr style='background:" + (test.equals(selection)?"yellow": "white") + ";" + (previous==null || (previous.getCategory()!=null && !previous.getCategory().equals(test.getCategory()))?"border-top:solid 1px black":"") + "'>");
+			previous = test;
+
+			//Category
+			sb.append("<td>");
+			sb.append(MiscUtils.convert2Html(test.getCategory()));
+			sb.append("</td>");
+			//Name
+			sb.append("<td><a href='test:" + MiscUtils.convert2Html(test.getName()) + "'>");
+			sb.append("<b>" + MiscUtils.convert2Html(test.getName()) + "</b>");
+			sb.append("</a></td>");
+
+			for(OutputType outputType: OutputType.values()) {
+				sb.append("<td style='color:" + color(outputType) + "'>");
+				int n = 0;
+				for(TestAttribute ta: test.getAttributes(outputType)) {
+					if(n>0) sb.append(", ");
+					if(n>=3) {sb.append("..."); break;}
+					sb.append(MiscUtils.convert2Html(ta.getName()));
+					n++;
+				}
+				sb.append("</td>");
 			}
+
+			//Creation
+			sb.append("<td>");
+			if(test.getCreUser()!=null && test.getCreUser().length()>0) {
+				sb.append(FormatterUtils.formatDate(test.getCreDate()) + " [" + test.getCreUser()+"]");
+			}
+			sb.append("</td>");
+			//Update
+			sb.append("<td>");
+			if(test.getUpdUser()!=null && test.getUpdUser().length()>0) {
+				sb.append(FormatterUtils.formatDate(test.getUpdDate()) + " [" + test.getUpdUser()+"]");
+			}
+			sb.append("</td>");
+
+
+			sb.append("</tr>");
 		}
+
 		return sb;
 	}
-	
-	
-	
+
+
+
 }
 

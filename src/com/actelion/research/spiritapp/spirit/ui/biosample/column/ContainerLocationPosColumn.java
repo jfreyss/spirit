@@ -26,7 +26,7 @@ import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.table.TableCellEditor;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.LocationCellEditor;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel.ContainerDisplayMode;
@@ -55,7 +55,7 @@ public class ContainerLocationPosColumn extends Column<Biosample, String> {
 	@Override
 	public String getValue(Biosample row) {
 		if(row==null || row.getLocation()==null) return null;
-		return row.getLocationString(LocationFormat.FULL_POS, Spirit.getUser());
+		return row.getLocationString(LocationFormat.FULL_POS, SpiritFrame.getUser());
 	}
 	
 	@Override
@@ -72,13 +72,13 @@ public class ContainerLocationPosColumn extends Column<Biosample, String> {
 		if(row==null) return false;
 		Location location = row.getLocation();
 		if(row.getBiotype()!=null && row.getBiotype().isAbstract()) return false;
-		if(location!=null && !SpiritRights.canEdit(location, Spirit.getUser())) return false;
+		if(location!=null && !SpiritRights.canEdit(location, SpiritFrame.getUser())) return false;
 		return true;
 	}
 
 	@Override
 	public void paste(Biosample row, String value) throws Exception {
-		DAOLocation.updateLocation(row, value, Spirit.getUser());						
+		DAOLocation.updateLocation(row, value, SpiritFrame.getUser());						
 	}
 	
 	

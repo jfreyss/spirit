@@ -35,7 +35,7 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -47,7 +47,7 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class StudySearchPane extends JPanel {
 
-	private final StudySearchTree studySearchTree = new StudySearchTree();
+	private final StudySearchTree studySearchTree;
 	
 	private final JButton myStudiesButton = new JButton(new Action_MyStudies());
 	private final JButton searchButton = new JButton(new Action_Search());
@@ -55,9 +55,10 @@ public class StudySearchPane extends JPanel {
 	
 	private final StudyTable table;
 	
-	public StudySearchPane(StudyTable table) {
+	public StudySearchPane(SpiritFrame frame, StudyTable table) {
 		super(new BorderLayout(0, 0));
 		this.table = table;
+		this.studySearchTree = new StudySearchTree(frame);
 		
 		
 		add(BorderLayout.CENTER, new JScrollPane(studySearchTree));
@@ -83,7 +84,7 @@ public class StudySearchPane extends JPanel {
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			query(studySearchTree.getQuery());
+			query();
 		}
 	}
 	
@@ -94,7 +95,7 @@ public class StudySearchPane extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			StudyQuery q = new StudyQuery();
-			q.setUser(Spirit.getUser()==null? null: Spirit.getUser().getUsername());
+			q.setUser(SpiritFrame.getUser()==null? null: SpiritFrame.getUser().getUsername());
 			query(q);
 		}
 	}
@@ -118,14 +119,18 @@ public class StudySearchPane extends JPanel {
 		
 	}
 	
-	public void query(final StudyQuery query) {
+	public SwingWorkerExtended query() {
+		return query(studySearchTree.getQuery());
+	}
+			
+	public SwingWorkerExtended query(final StudyQuery query) {
 		table.setRows(new ArrayList<>());
-		new SwingWorkerExtended("Querying Studies", table, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+		return new SwingWorkerExtended("Querying Studies", table, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			List<Study> studies;
 			@Override
 			protected void doInBackground() throws Exception {
 				//Query Studies
-				studies = DAOStudy.queryStudies(query, Spirit.getUser());
+				studies = DAOStudy.queryStudies(query, SpiritFrame.getUser());
 			}
 
 			@Override
@@ -143,11 +148,8 @@ public class StudySearchPane extends JPanel {
 		return searchButton;
 	}
 
-	public StudySearchTree getSearchTree() {
-		return studySearchTree;
-	}	
 	
-	public void setStudyIds(String studyIds) {
-		studySearchTree.setStudyIds(studyIds);
-	}
+//	public void setStudyIds(String studyIds) {
+//		studySearchTree.setStudyIds(studyIds);
+//	}
 }

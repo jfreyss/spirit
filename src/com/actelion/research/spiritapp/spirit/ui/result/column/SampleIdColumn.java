@@ -32,7 +32,7 @@ import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdLabel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -87,9 +87,9 @@ public final class SampleIdColumn extends Column<Result, String> {
 					b = new Biosample(value);
 				} else {
 					//If found, check the rights
-					if(SpiritRights.canEdit(b, Spirit.getUser())) {
+					if(SpiritRights.canEdit(b, SpiritFrame.getUser())) {
 						//OK
-					} else if(b.getInheritedStudy()!=null && SpiritRights.canBlind(b.getInheritedStudy(), Spirit.getUser())) {
+					} else if(b.getInheritedStudy()!=null && SpiritRights.canBlind(b.getInheritedStudy(), SpiritFrame.getUser())) {
 						//OK
 					} else {						
 						throw new Exception("You cannot add results on "+b+" because you have no rights on this sample.\n "+(b.getInheritedStudy()==null?"":" Please contact someone from study "+b.getInheritedStudy()));

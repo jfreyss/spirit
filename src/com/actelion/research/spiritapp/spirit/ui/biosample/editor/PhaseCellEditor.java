@@ -78,8 +78,6 @@ public class PhaseCellEditor extends AbstractCellEditor implements TableCellEdit
 			textComboBox.setText(((Phase)value).getShortName());
 		}
 		
-		System.out.println("PhaseCellEditor.getTableCellEditorComponent() "+value);
-		
 		textComboBox.selectAll();
 		return textComboBox;
 	}

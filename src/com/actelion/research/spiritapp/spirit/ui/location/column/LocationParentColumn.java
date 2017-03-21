@@ -24,7 +24,7 @@ package com.actelion.research.spiritapp.spirit.ui.location.column;
 import javax.swing.JComponent;
 import javax.swing.table.TableCellEditor;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationLabel;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
@@ -63,7 +63,7 @@ public class LocationParentColumn extends Column<Location, Location> {
 		}
 		
 		//Otherwise load from the DB
-		Location loc = value==null || value.length()==0? null: DAOLocation.getCompatibleLocation(value, Spirit.getUser());
+		Location loc = value==null || value.length()==0? null: DAOLocation.getCompatibleLocation(value, SpiritFrame.getUser());
 		row.setParent(loc);
 	}
 	

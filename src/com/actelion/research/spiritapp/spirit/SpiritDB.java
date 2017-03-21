@@ -24,6 +24,7 @@ package com.actelion.research.spiritapp.spirit;
 import java.awt.Dimension;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.InetAddress;
 import java.util.List;
 
 import javax.swing.JLabel;
@@ -34,10 +35,11 @@ import javax.swing.SwingUtilities;
 
 import org.slf4j.LoggerFactory;
 
-import com.actelion.research.spiritapp.spirit.ui.SpiritAction;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.admin.database.DatabaseMigrationDlg;
 import com.actelion.research.spiritapp.spirit.ui.admin.database.DatabaseSettingsDlg;
 import com.actelion.research.spiritapp.spirit.ui.admin.user.UserAdminDlg;
+import com.actelion.research.spiritapp.spirit.ui.util.SpiritAction;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
 import com.actelion.research.spiritcore.adapter.HSQLFileAdapter;
@@ -47,6 +49,7 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
+import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
@@ -84,15 +87,15 @@ public class SpiritDB {
 			LoggerFactory.getLogger(Spirit.class).debug("check Users");
 			if(DBAdapter.getAdapter().isInActelionDomain()) {
 				//Login freyssj automatically 
-//				if(System.getProperty("user.name").equals("freyssj") && InetAddress.getLocalHost().getHostAddress().equals("10.100.227.35") ) {
-//					try {
-//						user = DAOSpiritUser.loadUser("freyssj");
-//						if(user==null) throw new Exception("Could not load user freyssj");
-//						Spirit.setUser(user);									
-//					} catch (Exception e) {
-//						System.err.println(e);
-//					}
-//				}
+				if(System.getProperty("user.name").equals("freyssj") && InetAddress.getLocalHost().getHostAddress().equals("10.100.227.35") ) {
+					try {
+						user = DAOSpiritUser.loadUser("freyssj");
+						if(user==null) throw new Exception("Could not load user freyssj");
+						SpiritFrame.setUser(user);									
+					} catch (Exception e) {
+						System.err.println(e);
+					}
+				}
 			} else if(DBAdapter.getAdapter().getUserManagedMode()==UserAdministrationMode.READ_WRITE) {
 				List<Employee> employees = DBAdapter.getAdapter().getEmployees();
 				boolean admins = false;
@@ -110,7 +113,7 @@ public class SpiritDB {
 				//Log the system user
 				user = new SpiritUser(System.getProperty("user.name"));
 				user.setRole(SpiritUser.ROLE_ADMIN, true);
-				Spirit.setUser(user);				
+				SpiritFrame.setUser(user);				
 			} 
 		} catch(Throwable e) {
 			e.printStackTrace();
@@ -124,12 +127,12 @@ public class SpiritDB {
 			return;
 		}
 		
-		if(Spirit.getUser()==null) {
+		if(SpiritFrame.getUser()==null) {
 			SwingUtilities.invokeLater(new Runnable() {				
 				@Override
 				public void run() {
 					new SpiritAction.Action_Relogin(UIUtils.getMainFrame(), "Spirit", msg.toString()).actionPerformed(null);
-					if(Spirit.getUser()==null) System.exit(1);
+					if(SpiritFrame.getUser()==null) System.exit(1);
 					checkImportExamples(false);
 				}
 			});
@@ -141,7 +144,7 @@ public class SpiritDB {
 	
 	public static void checkImportExamples(boolean force) {
 		//Check emptyness?
-		SpiritUser user = Spirit.getUser();
+		SpiritUser user = SpiritFrame.getUser();
 		if(DBAdapter.getAdapter().isInActelionDomain() || (user!=null && !SpiritRights.isSuperAdmin(user))) return;
 		try {
 			

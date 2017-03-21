@@ -54,7 +54,6 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableColumn;
 
 import com.actelion.research.spiritapp.spirit.ui.lf.SpiritExcelTable;
-import com.actelion.research.spiritapp.spirit.ui.study.IStudy;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachedBiosampleTableModel.SampleIdColumn;
 import com.actelion.research.spiritcore.business.biosample.BarcodeSequence.Category;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -67,7 +66,7 @@ import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JTextComboBox;
 import com.actelion.research.util.ui.exceltable.Column;
 
-public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> implements IStudy {
+public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> {
 
 	private AttachedBiosampleIdCellEditor sampleIdCellEditor;
 	
@@ -293,14 +292,11 @@ public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> 
 		
 		
 	}
-
 	
-	@Override
 	public Study getStudy() {
 		return getModel().getStudy();
 	}
 	
-	@Override
 	public void setStudy(Study study) {
 		throw new IllegalArgumentException("Not to be called");
 	}

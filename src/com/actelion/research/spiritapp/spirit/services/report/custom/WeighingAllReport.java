@@ -34,9 +34,9 @@ import javax.swing.JPanel;
 
 import org.apache.poi.ss.usermodel.Sheet;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport;
 import com.actelion.research.spiritapp.spirit.services.report.ReportParameter;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -159,7 +159,7 @@ public class WeighingAllReport extends AbstractReport {
 				Map<String, String> phase2CountCell = new HashMap<>();
 				groupPhase2CountCell.put(group, phase2CountCell);
 
-				String name = group.getBlindedName(Spirit.getUsername()) + " " + group.getTreatmentDescription(-1, false);
+				String name = group.getBlindedName(SpiritFrame.getUsername()) + " " + group.getTreatmentDescription(-1, false);
 				set(sheet, groupRow, 0, name, Style.S_TITLE14BLUE);
 				groupRow++;
 
@@ -303,7 +303,7 @@ public class WeighingAllReport extends AbstractReport {
 
 	public static void main(String[] args)  {
 		try {
-			Spirit.setUser(DAOSpiritUser.loadUser("freyssj"));
+			SpiritFrame.setUser(DAOSpiritUser.loadUser("freyssj"));
 			WeighingAllReport wg = new WeighingAllReport();
 			wg.populateReport(DAOStudy.getStudyByStudyId("S-00677"));
 			wg.export(null);

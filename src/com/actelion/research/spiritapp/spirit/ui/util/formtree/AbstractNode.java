@@ -59,106 +59,106 @@ public abstract class AbstractNode<T>  {
 		OR_CLAUSE
 	}
 	protected final FormTree tree;
-    
+
 	protected AbstractNode parent;
 	protected List<AbstractNode> children = new ArrayList<AbstractNode>();
 	protected Strategy<T> strategy;
-	protected ExpandStrategy expandStrategy;	
+	protected ExpandStrategy expandStrategy;
 	protected final String label;
-	
+
 	protected int row;
 	protected int depth;
 	protected boolean expanded = false;
 
 	protected Font editFont = FastFont.REGULAR;
-	
+
 	private JPanel panel = null;
 	private final JToggleButton button = new JToggleButton();
 	private boolean canExpand = true;
-	private boolean visible = true; 
-	
-    protected abstract void updateView();
+	private boolean visible = true;
+
+	protected abstract void updateView();
 	protected abstract void updateModel();
 	protected abstract boolean isFilled();
 
 	public abstract JComponent getComponent();
-	public abstract JComponent getFocusable();	
+	public abstract JComponent getFocusable();
 
-	
+
 	static {
 		UIManager.put("FormTree.collapsed", new ImageIcon(AbstractNode.class.getResource("collapsed.png")));
-		UIManager.put("FormTree.expanded", new ImageIcon(AbstractNode.class.getResource("expanded.png")));		
+		UIManager.put("FormTree.expanded", new ImageIcon(AbstractNode.class.getResource("expanded.png")));
 	}
-	
+
 	public AbstractNode(FormTree tree, String label, Strategy<T> strategy) {
 		this.tree = tree;
 		this.label = label;
 		this.strategy = strategy;
-		
+
 		button.setPreferredSize(new Dimension(19,19));
 		button.setSelected(isExpanded());
-		button.setBorder(BorderFactory.createEmptyBorder(4, 5, 4, 5));		
+		button.setBorder(BorderFactory.createEmptyBorder(4, 5, 4, 5));
 	}
-	
+
 	public String getLabel() {
-		return label;	
+		return label;
 	}
-	
+
 	public void add(AbstractNode<?> child) {
 		child.parent = this;
 		children.add(child);
 	}
-	
-	protected final void updateViewRec() {		
-		updateView();		
-		for (AbstractNode child : new ArrayList<AbstractNode>( children)) {
+
+	protected final void updateViewRec() {
+		updateView();
+		for (AbstractNode child : new ArrayList<>( children)) {
 			child.updateViewRec();
 		}
 
-		if(!isExpanded() && (isFilledRec() || (expandStrategy!=null && expandStrategy.shouldExpand()))) {			
+		if(!isExpanded() && (isFilledRec() || (expandStrategy!=null && expandStrategy.shouldExpand()))) {
 			setExpanded(true);
 			setVisible(true);
 		}
 		if(!isVisible()) return;
-		
+
 	}
-	
+
 	protected final void updateModelRec() {
 		if(strategy!=null) updateModel();
-		for (AbstractNode child : new ArrayList<AbstractNode>( children)) {
+		for (AbstractNode child : new ArrayList<>( children)) {
 			child.updateModelRec();
-		}		
+		}
 	}
-	
+
 	public FormTree getTree() {
 		return tree;
 	}
 
-    public void clearChildren() {
+	public void clearChildren() {
 		children.clear();
 	}
 
-    public List<AbstractNode> getChildren() {
+	public List<AbstractNode> getChildren() {
 		return Collections.unmodifiableList(children);
 	}
-   
-    protected void recomputeProperties() {
-    	if(depth==0) setExpanded(true);
-    	
-    	recomputeProperties(depth, row);    	
-    }
-    
-    protected final int recomputeProperties(int depth, int row) {
-    	if(!isVisible()) return row;
-    	this.depth = depth;
-    	this.row = row;
-    	row++;
-    
-    	for (AbstractNode child : getChildren()) {    		
-    		row = child.recomputeProperties(depth+1, row);
+
+	protected void recomputeProperties() {
+		if(depth==0) setExpanded(true);
+
+		recomputeProperties(depth, row);
+	}
+
+	protected final int recomputeProperties(int depth, int row) {
+		if(!isVisible()) return row;
+		this.depth = depth;
+		this.row = row;
+		row++;
+
+		for (AbstractNode child : getChildren()) {
+			row = child.recomputeProperties(depth+1, row);
 		}
-    	return row;   	
-    }
+		return row;
+	}
 
 	public Strategy getStrategy() {
 		return strategy;
@@ -167,7 +167,7 @@ public abstract class AbstractNode<T>  {
 	public void setStrategy(Strategy<T> strategy) {
 		this.strategy = strategy;
 	}
-	
+
 	protected boolean isFilledRec() {
 		if(isFilled()) return true;
 		for (AbstractNode c : getChildren()) {
@@ -190,7 +190,7 @@ public abstract class AbstractNode<T>  {
 
 	protected void addEventsToComponent() {
 		final Component component = getComponent();
-		MouseAdapter ma = new PopupAdapter() {			
+		MouseAdapter ma = new PopupAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				SwingUtilities.invokeLater(new Runnable() {
@@ -198,7 +198,7 @@ public abstract class AbstractNode<T>  {
 					public void run() {
 						if(getFocusable()!=null) getFocusable().requestFocusInWindow();
 					}
-				});				
+				});
 			}
 			@Override
 			protected void showPopup(final MouseEvent e) {
@@ -206,12 +206,12 @@ public abstract class AbstractNode<T>  {
 					@Override
 					public void run() {
 						if(getFocusable()!=null) getFocusable().requestFocusInWindow();
-						if(strategy!=null && tree.isRightClickEnabled()) {										
+						if(strategy!=null && tree.isRightClickEnabled()) {
 							strategy.onRightClick(component, e.getX(), e.getY());
 						}
 					}
-				});	
-				
+				});
+
 			}
 		};
 		FocusAdapter fa = new FocusAdapter() {
@@ -225,7 +225,7 @@ public abstract class AbstractNode<T>  {
 				if(strategy!=null) strategy.onFocus();
 			}
 		};
-		
+
 		component.addMouseListener(ma);
 		component.addFocusListener(fa);
 		if(component instanceof Container) {
@@ -233,16 +233,16 @@ public abstract class AbstractNode<T>  {
 				c.addMouseListener(ma);
 				c.addFocusListener(fa);
 			}
-		}		
+		}
 	}
-	
+
 	protected final Component getView() {
 
 		if(panel==null) {
-	
+
 			//Add spacer and expand button
 			int n = depth  - (tree.isRootVisible()?0:1);
-						
+
 			button.addFocusListener(new FocusAdapter() {
 				@Override
 				public void focusLost(FocusEvent e) {
@@ -252,16 +252,16 @@ public abstract class AbstractNode<T>  {
 					tree.setLastComponent((Component)e.getSource());
 				}
 			});
-			button.addActionListener(new ActionListener() {				
+			button.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					tree.expand(AbstractNode.this);
 				}
 			});
-			
+
 			//Add component
 			JComponent component = getComponent();
-			
+
 			panel = new JPanel(new GridBagLayout());
 			GridBagConstraints c = new GridBagConstraints();
 			c.gridy = 0;
@@ -269,14 +269,14 @@ public abstract class AbstractNode<T>  {
 			c.gridx = 0; c.weightx = 0; panel.add(UIUtils.createHorizontalBox(Box.createHorizontalStrut(2 + Math.max(0, n) * 12), button), c);
 			c.gridx = 1; c.weightx = 1; panel.add(component, c);
 			c.gridx = 2; c.weightx = 0; panel.add(Box.createHorizontalGlue(), c);
-			
+
 			panel.setOpaque(false);
 		}
 		panel.setBorder(BorderFactory.createEmptyBorder(row>1 && depth<=1 && (getChildren().size()>0 || expandStrategy!=null)? 5:0, 0, 0, 0));
-		
-		boolean addExpandButton = depth>0 && canExpand && (getChildren().size()>0 || expandStrategy!=null);		
+
+		boolean addExpandButton = depth>0 && canExpand && (getChildren().size()>0 || expandStrategy!=null);
 		button.setVisible(addExpandButton);
-		
+
 		button.setSelected(isExpanded());
 		if(isExpanded()) {
 			button.setIcon(UIManager.getIcon("FormTree.expanded"));
@@ -293,7 +293,7 @@ public abstract class AbstractNode<T>  {
 	public void setExpandStrategy(ExpandStrategy expandStrategy) {
 		this.expandStrategy = expandStrategy;
 	}
-	
+
 	public void setExpanded(boolean expanded) {
 		this.expanded = expanded;
 	}
@@ -301,20 +301,20 @@ public abstract class AbstractNode<T>  {
 	public boolean isExpanded() {
 		return expanded;
 	}
-	
+
 	public void setCanExpand(boolean canExpand) {
 		this.canExpand = canExpand;
 		if(!canExpand) setExpanded(true);
 	}
-	
+
 	public boolean isCanExpand() {
 		return canExpand;
 	}
-	
+
 	public void setVisible(boolean visible) {
 		this.visible = visible;
 	}
-	
+
 	public boolean isVisible() {
 		return visible;
 	}

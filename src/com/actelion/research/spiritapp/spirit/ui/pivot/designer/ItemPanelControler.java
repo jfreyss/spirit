@@ -30,7 +30,7 @@ import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Where;
 
 public class ItemPanelControler {
 	
-	private Map<Where, DropZonePanel> where2panel = new HashMap<Where, DropZonePanel>();
+	private Map<Where, DropZonePanel> where2panel = new HashMap<>();
 	
 	public ItemPanelControler() {}
 	
@@ -48,13 +48,7 @@ public class ItemPanelControler {
 
 	public void onDragEnd() {}
 	
-	public boolean placeItem(PivotItem item, DropZonePanel panel) {
-		
-//		if(item==PivotItemFactory.RESULT_OUTPUT && where2panel.get(Where.MERGE)==panel) {
-//			//Refuse the output PivotItem in the Merge zone
-//			return false;
-//		}
-
+	public boolean placeItem(PivotItem item, DropZonePanel panel) {		
 		for (DropZonePanel p : where2panel.values()) {
 			p.removeItem(item);
 		}

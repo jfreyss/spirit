@@ -26,8 +26,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -46,8 +44,7 @@ import com.actelion.research.spiritapp.bioviewer.ui.batchassign.BatchAssignDlg.R
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleOrRackTab;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.DefaultRackDepictorRenderer;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.RackDepictor;
-import com.actelion.research.spiritapp.spirit.ui.scanner.ScanRackAction;
-import com.actelion.research.spiritapp.spirit.ui.scanner.ScanRackForDepictorAction;
+import com.actelion.research.spiritapp.spirit.ui.scanner.ScanRackForBiosampleOrRackTabAction;
 import com.actelion.research.spiritapp.spirit.ui.scanner.SelectRackAction;
 import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner;
 import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner.Verification;
@@ -63,15 +60,13 @@ import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.actelion.research.util.ui.scanner.ScannerConfiguration;
-import com.itextpdf.text.Font;
 
 class BatchAssignRackPanel extends JPanel {
 
 	private BatchAssignDlg dlg;
 	private int rackNo;
 	
-	private SpiritScanner model = new SpiritScanner();
+	private SpiritScanner scanner = new SpiritScanner(Verification.EMPTY_CONTAINERS);
 	private BiosampleOrRackTab rackTab = new BiosampleOrRackTab();
 	private JLabel sharedInfoLabel = new JCustomLabel("", FastFont.REGULAR);
 	private JLabel rackIdLabel = new JLabel();
@@ -109,39 +104,35 @@ class BatchAssignRackPanel extends JPanel {
 				
 			}
 		});
-		/*
-		rackTab.getRackDepictor().setToolTipSelecter(new PlateDepictor.ToolTipSelecter() {			
-			@Override
-			public String getToolTip(RackPos value, Plate plate, int row, int col) {
-				return dlg.getError(dlg.getBiosample(rackNo, row, col));
-			}
-		});
-		*/
 		
-		
+//		rackTab.getRackDepictor().setToolTipSelecter(new PlateDepictor.ToolTipSelecter() {			
+//			@Override
+//			public String getToolTip(RackPos value, Plate plate, int row, int col) {
+//				return dlg.getError(dlg.getBiosample(rackNo, row, col));
+//			}
+//		});
+						
 		rackTab.addPropertyChangeListener(BiosampleOrRackTab.PROPERTY_SELECTION, new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {				
 				dlg.setTableSelection(rackTab.getSelection(Biosample.class));				
 			}
 		});
-		
 
-		final SelectRackAction setRackAction = new SelectRackAction(model) {			
+		final SelectRackAction setRackAction = new SelectRackAction(scanner) {			
 			@Override
 			protected void eventRackSelected(Location sel) throws Exception {
+				if(rack!=null) {
+					sel.setLocationType(rack.getLocationType());
+					sel.setCols(rack.getCols());
+					sel.setRows(rack.getRows());
+				}
 				rack = sel;
 				refreshData();
 			}
 		};
 
-		final ScanRackAction scanRackAction = new ScanRackForDepictorAction(model, rackTab, Verification.EMPTY_CONTAINERS, false) {
-			@Override
-			public ScannerConfiguration getScannerConfiguration() {
-				//We must ask the user, so return null
-				return null;
-			}
-			
+		final ScanRackForBiosampleOrRackTabAction scanRackAction = new ScanRackForBiosampleOrRackTabAction(scanner, rackTab) {
 			@Override
 			public void postScan(Location sel) throws Exception {
 				rack = sel;
@@ -151,16 +142,14 @@ class BatchAssignRackPanel extends JPanel {
 		};		
 		
 		JButton clearButton = new JIconButton(IconType.CLEAR, "");		
-		clearButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				clear();
-				dlg.assignPositions();
-			}
+		clearButton.addActionListener(e-> {
+			clear();
+			refreshData();
+			dlg.assignPositions();
 		}); 
 		
 		
-		add(BorderLayout.NORTH, UIUtils.createHorizontalBox(new JCustomLabel("Rack "+(rackNo+1), Font.BOLD, 16f), Box.createHorizontalGlue(), new JButton(scanRackAction), clearButton));
+		add(BorderLayout.NORTH, UIUtils.createHorizontalBox(new JCustomLabel("Rack "+(rackNo+1), FastFont.BIGGEST), Box.createHorizontalGlue(), new JButton(scanRackAction), clearButton));
 		add(BorderLayout.CENTER, rackTab);
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(new JButton(setRackAction), rackIdLabel, Box.createHorizontalGlue(), sharedInfoLabel));
 		setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.BLACK), BorderFactory.createEmptyBorder(2, 2, 2, 2)));
@@ -191,7 +180,6 @@ class BatchAssignRackPanel extends JPanel {
 				} 			
 			}
 		}
-		System.out.println("BatchAssignRackPanel.getOrderedPositions() "+res);
 		return res;
 	}
 	
@@ -209,8 +197,8 @@ class BatchAssignRackPanel extends JPanel {
 
 	
 	public ContainerType getContainerType() {
-		if(model.getScannerConfiguration()==null) return null;
-		return ContainerType.get(model.getScannerConfiguration().getDefaultTubeType());
+		if(scanner.getScannerConfiguration()==null) return null;
+		return ContainerType.get(scanner.getScannerConfiguration().getDefaultTubeType());
 	}
 	
 	public void refreshData() {		

@@ -49,7 +49,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JHeaderLabel;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
@@ -69,10 +69,10 @@ import com.actelion.research.util.ui.iconbutton.JIconButton;
  * Simple dialog to query for biosamples and return the selection Modal Mode:
  * Biosample res = new BiosampleFinder(null, type, true,
  * selection).showOpenDialog();
- * 
+ *
  * Non Modal: new BiosampleFinder(null, type, true, selection) {
  * onSelect(Biosample b) {} }.setVisible(true)
- * 
+ *
  * @author J.Freyss
  */
 public abstract class BiosampleFinder extends JEscapeDialog {
@@ -107,7 +107,7 @@ public abstract class BiosampleFinder extends JEscapeDialog {
 		BiosampleQuery query = new BiosampleQuery();
 		query.setBiotype(defaultBiotype);
 
-		searchTree = new BiosampleSearchTree(null, true);
+		searchTree = new BiosampleSearchTree(null, null, true);
 		searchTree.setQuery(query);
 		searchTree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, new PropertyChangeListener() {
 			@Override
@@ -200,7 +200,7 @@ public abstract class BiosampleFinder extends JEscapeDialog {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if(e.getValueIsAdjusting()) return;
-				
+
 				List<Biosample> l = table.getSelection();
 
 				if(l.size()==1) {
@@ -208,10 +208,10 @@ public abstract class BiosampleFinder extends JEscapeDialog {
 					if(westPane.getDividerLocation()>westPane.getHeight()-20) westPane.setDividerLocation(480);
 				} else {
 					detailPane.setBiosamples(null);
-					if(westPane.getDividerLocation()<westPane.getHeight()-20) westPane.setDividerLocation(westPane.getHeight());					
+					if(westPane.getDividerLocation()<westPane.getHeight()-20) westPane.setDividerLocation(westPane.getHeight());
 				}
-				
-				okButton.setEnabled(l.size()==1);				
+
+				okButton.setEnabled(l.size()==1);
 			}
 		});
 		table.addMouseListener(new MouseAdapter() {
@@ -254,7 +254,7 @@ public abstract class BiosampleFinder extends JEscapeDialog {
 					search();
 				}
 			});
-		} else if (currentSelection != null) {			
+		} else if (currentSelection != null) {
 			table.setRows(Collections.singletonList(currentSelection));
 			table.setSelection(Collections.singletonList(currentSelection));
 			table.scrollTo(currentSelection);
@@ -272,18 +272,18 @@ public abstract class BiosampleFinder extends JEscapeDialog {
 		} else {
 			final BiosampleQuery q = searchTree.getQuery();
 			if (q.isEmpty())  return;
-			
-			
-			new SwingWorkerExtended("Loading Biosamples", centerPane, true) {
+
+
+			new SwingWorkerExtended("Loading Biosamples", centerPane) {
 				private List<Biosample> biosamples;
-	
+
 				@Override
 				protected void doInBackground() throws Exception {
-	
-					biosamples = DAOBiosample.queryBiosamples(q, Spirit.getUser());
+
+					biosamples = DAOBiosample.queryBiosamples(q, SpiritFrame.getUser());
 					Collections.sort(biosamples);
 				}
-	
+
 				@Override
 				protected void done() {
 					table.setRows(biosamples);
@@ -293,15 +293,15 @@ public abstract class BiosampleFinder extends JEscapeDialog {
 						table.scrollTo(currentSelection);
 					}
 				}
-	
+
 			};
 		}
 	}
-	
+
 	/**
 	 * Must be overidden for custom behaviours on select. Don't forget to call
 	 * dispose
-	 * 
+	 *
 	 * @param sel
 	 */
 	public abstract void onSelect(Biosample sel);

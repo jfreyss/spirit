@@ -26,11 +26,9 @@ import java.util.Collections;
 import java.util.List;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleTable;
-import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner.Verification;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.util.ui.iconbutton.IconType;
 
 /**
  * Scan rack and populate the given EditBiosampleTable.
@@ -43,28 +41,11 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 public class ScanRackForTableAction extends ScanRackAction {
 	
 	private EditBiosampleTable table;
-	private boolean proposeRackCreation;
-
 	
-	public ScanRackForTableAction(SpiritScanner model, EditBiosampleTable table, Verification method, boolean proposeRackCreation) {
-		super("Scan Rack", IconType.SCANNER.getIcon(), model);
-		model.setVerification(method);
+	public ScanRackForTableAction(SpiritScanner scanner, EditBiosampleTable table) {
+		super("Scan Rack", scanner);
 		this.table = table;
-		this.proposeRackCreation = proposeRackCreation;
 	}
-	
-	
-	@Override
-	public void preScan() throws Exception {
-		//Check tubes are all empty
-		final Biotype biotype = table.getModel().getBiotype();
-		if(biotype==null || biotype.isAbstract()) throw new Exception("You can only perform a scan if you select a concrete biotype");
-		for (Biosample b : table.getRows()) {
-			if(!b.isEmpty()) throw new Exception("You can only perform a scan on an empty table");			
-		}		
-		super.preScan();
-	}
-
 	
 	@Override
 	public Location scan() throws Exception {
@@ -84,22 +65,6 @@ public class ScanRackForTableAction extends ScanRackAction {
 		return rack;
 	}	
 	
-	@Override
-	public void postScan(Location scannedRack) throws Exception {
-		if(proposeRackCreation) {
-			new SelectRackAction(scanner) {				
-				@Override
-				protected void eventRackSelected(Location rack) throws Exception {
-					//Convert the scanner position to the real position
-					for (Biosample b : table.getRows()) {
-						b.setLocation(rack);
-						if(b.getContainer()!=null) b.setPos(rack==null? -1: rack.parsePosition(b.getContainer().getScannedPosition()));
-					}
-					table.repaint();					
-				}
-			}.actionPerformed(null);
-		}
-	}
 	
 
 }

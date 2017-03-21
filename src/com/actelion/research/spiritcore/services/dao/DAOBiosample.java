@@ -155,32 +155,6 @@ public class DAOBiosample {
 		return containers.size()==1? containers.get(0): null;
 	}
 	
-//	/**
-//	 * Load the container
-//	 * @param containerIds
-//	 * @return
-//	 */
-//	private static List<Container> getContainersNewSession(Collection<String> containerIds) {
-//		EntityManager em = null;
-//		try {
-//			em = JPAUtil.createManager();
-//			System.out.println("DAOBiosample.getContainersNewSession()1");
-//			List<Biosample> biosamples = queryBiosamples(em, BiosampleQuery.createQueryForContainerIds(containerIds), null);
-//			System.out.println("DAOBiosample.getContainersNewSession()2");
-//			for (Biosample b : biosamples) {
-//				if(b.getInheritedStudy()!=null) b.getInheritedStudy().getId();
-//				if(b.getEmployeeGroup()!=null) b.getEmployeeGroup().getName();
-//				
-//			}
-//			return Biosample.getContainers(biosamples, true);
-//		} catch(Exception e) {
-//			e.printStackTrace();
-//			throw new RuntimeException(e);
-//		} finally {
-//			if(em!=null) em.close();
-//		}
-//	}
-
 	public static Biosample getBiosample(Study study, String animalIdOrNo) {		
 		List<Biosample> biosamples = getBiosamples(study, Collections.singletonList(animalIdOrNo));
 		return biosamples.size()==1? biosamples.get(0): null;
@@ -569,7 +543,6 @@ public class DAOBiosample {
 		}
 
 		if(q.getPhases()!=null && q.getPhases().length()>0) {
-			
 			Set<String> set = new HashSet<>(Arrays.asList(MiscUtils.split(q.getPhases(), MiscUtils.SPLIT_SEPARATORS_WITH_SPACE)));
 			if(set.size()>0) {
 				for (Iterator<Biosample> iterator = biosamples.iterator(); iterator.hasNext();) {
@@ -894,6 +867,9 @@ public class DAOBiosample {
 		for (Biosample biosample : biosamples) {
 			Location location = biosample.getLocation();
 			if (location != null) {
+				System.out.println("DAOBiosample.persistBiosamples() "+biosample+" "+location);
+				if(location.getLocationType()==null) throw new Exception("The location's type cannot be null");
+				if(location.getName()==null || location.getName().length()==0) throw new Exception("The location's name is required");
 				//to save the location when the location was created or edited in the setlocation dlg
 				if (location.getId() <= 0) {
 					logger.debug("Persist linked location: "+location );
@@ -909,21 +885,31 @@ public class DAOBiosample {
 		//////////////////////////////////////////////////////
 		// Update Containers
 		Set<String> containerIds = Biosample.getContainerIds(biosamples);
-		Map<String, Container> cid2container = Container.mapContainerId(getContainers(containerIds));
+		Map<String, Container> cid2container = new HashMap<>();// Container.mapContainerId(getContainers(containerIds));
+		if(containerIds.size()>0) {
+			List<Biosample> inBiosamples = session.createQuery("from Biosample b where " + QueryTokenizer.expandForIn("b.container.containerId", containerIds)).getResultList();
+			cid2container.putAll(Container.mapContainerId(Biosample.getContainers(inBiosamples, true)));
+		}
+		
 
-		for (Biosample biosample : biosamples) {				
-			String containerId = biosample.getContainerId();
-			if (containerId!=null && containerId.length()>0) {
-				Container c = cid2container.get(containerId);
-				if(c!=null && c.getContainerType().isMultiple() && !SpiritRights.canEdit(c, user)) throw new Exception("You are not allowed to edit the container " + containerId);
-				if(c!=null && c.getContainerType().isMultiple() && c.getContainerType()!=biosample.getContainerType()) throw new Exception("The container's type of " + containerId+" is " + c.getContainerType());
-				if(c!=null && !c.getContainerType().isMultiple() && c.getBiosamples().size()>0 && !c.getBiosamples().contains(biosample)) throw new Exception("The container " + containerId + " of " + biosample + " is already used by "+c.getBiosamples());
-				if(c==null) cid2container.put(containerId, biosample.getContainer());
-			}
+		for (Biosample biosample : biosamples) {
 			
-			//Unset the container for abstract samples
-			if(biosample.getBiotype().isAbstract()) {
-				biosample.setContainer(null);
+			if(biosample.getContainerType()==null) {
+				biosample.setContainerId(null);
+			} else {			
+				String containerId = biosample.getContainerId();
+				if (containerId!=null && containerId.length()>0) {
+					Container c = cid2container.get(containerId);
+					if(c!=null && c.getContainerType().isMultiple() && !SpiritRights.canEdit(c, user)) throw new Exception("You are not allowed to edit the container " + containerId);
+					if(c!=null && c.getContainerType().isMultiple() && c.getContainerType()!=biosample.getContainerType()) throw new Exception("The container's type of " + containerId+" is " + c.getContainerType());
+					if(c!=null && !c.getContainerType().isMultiple() && c.getBiosamples().size()>0 && !c.getBiosamples().contains(biosample)) throw new Exception("The container " + containerId + " of " + biosample + " is already used by "+c.getBiosamples());
+					if(c==null) cid2container.put(containerId, biosample.getContainer());
+				}
+				
+				//Unset the container for abstract samples
+				if(biosample.getBiotype().isAbstract()) {
+					biosample.setContainer(null);
+				}
 			}
 			
 		}
@@ -1075,8 +1061,8 @@ public class DAOBiosample {
 		q.setStudyIds(study == null ? "" : study.getStudyId());
 		q.setBiotype(biotype);
 		List<Biosample> all = queryBiosamples(q, user);
-		List<Biosample> res = new ArrayList<Biosample>();
-		ListHashMap<String, Biosample> key2Sample = new ListHashMap<String, Biosample>();
+		List<Biosample> res = new ArrayList<>();
+		ListHashMap<String, Biosample> key2Sample = new ListHashMap<>();
 
 		for (Biosample b : all) {
 			if (b.getTopParent() == b)

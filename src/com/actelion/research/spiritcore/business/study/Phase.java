@@ -115,7 +115,7 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 	public String getShortName() {
 		if(name==null) return "";
 		if(!parsed) parseDayHoursMinutesLabel();
-		return name.substring(0, name.length()-label.length());
+		return name.substring(0, name.length()-label.length()).trim();
 	}
 	
 	public String getName() {

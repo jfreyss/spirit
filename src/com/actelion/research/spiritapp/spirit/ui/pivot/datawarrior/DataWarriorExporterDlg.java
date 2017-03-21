@@ -36,7 +36,7 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorConfig;
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorExporter;
@@ -117,7 +117,7 @@ public class DataWarriorExporterDlg extends JEscapeDialog {
 		StringBuilder sb;
 		DataWarriorConfig model = dataWarriorModelPanel.getDataWarriorModel() ;
 						
-		sb = DataWarriorExporter.getDwar(results, model, Spirit.getUser());
+		sb = DataWarriorExporter.getDwar(results, model, SpiritFrame.getUser());
 		
 		if(sb==null) throw new Exception("Exporting to DW is not supported in this view");
 		

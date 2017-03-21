@@ -22,34 +22,37 @@
 package com.actelion.research.spiritcore.business.pivot;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import com.actelion.research.spiritcore.business.pivot.PivotTemplate.Where;
-import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultValue;
-import com.actelion.research.spiritcore.business.result.Test;
-import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.util.CompareUtils;
 
+
+/**
+ * PivotRow represents a list of cells per column in a PivotTable
+ * 
+ * @author Joel Freyss
+ *
+ */
 public class PivotRow implements Comparable<PivotRow> {
 	
 	private final PivotDataTable table;
-	private final Group group;
+//	private final Group group;
 	private final Phase phase;
-	private final Test test;
+//	private final Test test;
 	private String key;
 	private ResultValue rv;
 	
-	private final Map<PivotColumn, PivotCell> column2cell = new HashMap<PivotColumn, PivotCell>();
+	private final HashMap<PivotColumn, PivotCell> column2cell = new HashMap<>();
 	
 	public PivotRow(PivotDataTable table, ResultValue rv, String key) {
-		PivotTemplate template = table.getTemplate(); 
-		Result r = rv.getResult();
+//		PivotTemplate template = table.getTemplate(); 
+//		Result r = rv.getResult();
 		this.table = table;
-		this.group = template.getWhere(PivotItemFactory.STUDY_GROUP)==Where.ASROW? r.getGroup(): null;
-		this.phase = template.getWhere(PivotItemFactory.STUDY_PHASE_DATE)==Where.ASROW? r.getInheritedPhase(): null;
-		this.test = template.getWhere(PivotItemFactory.RESULT_TEST)==Where.ASROW? r.getTest(): null;
+//		this.group = template.getWhere(PivotItemFactory.STUDY_GROUP)==Where.ASROW? r.getGroup(): null;
+		this.phase = table.getTemplate().getWhere(PivotItemFactory.STUDY_PHASE_DATE)==Where.ASROW? rv.getResult().getInheritedPhase(): null;
+//		this.test = template.getWhere(PivotItemFactory.RESULT_TEST)==Where.ASROW? r.getTest(): null;
 		this.rv = rv;
 		this.key = key;
 	}
@@ -59,11 +62,6 @@ public class PivotRow implements Comparable<PivotRow> {
 		return key;
 	}
 	
-	@Override
-	public int hashCode() {		
-		return key.hashCode();
-	}
-	
 	protected void addValue(PivotColumn pivotColumn, ResultValue value) {
 		getPivotCell(pivotColumn).addValue(value);
 	}
@@ -71,30 +69,31 @@ public class PivotRow implements Comparable<PivotRow> {
 	public PivotCell getPivotCell(PivotColumn pivotColumn) {
 		PivotCell cell = column2cell.get(pivotColumn);
 		if(cell==null) {
-			cell = new PivotCell(table);
-			column2cell.put(pivotColumn, cell);
-		}
+			column2cell.put(pivotColumn, cell = new PivotCell(table));
+		}		
 		return cell;
 	}
 
 	public ResultValue getRepresentative() {
 		return rv;
 	}
-	public Group getGroup() {
-		return group;
-	}	
+	
+	@Override
+	public int hashCode() {		
+		return key.hashCode();
+	}
 	
 	@Override
 	public int compareTo(PivotRow o) {
 		int c;
-		c = CompareUtils.compare(group, o.group);
-		if(c!=0) return c;
-		
+//		c = CompareUtils.compare(group, o.group);
+//		if(c!=0) return c;
+//		
 		c = CompareUtils.compare(phase, o.phase);
 		if(c!=0) return c;
-		
-		c = CompareUtils.compare(test, o.test);
-		if(c!=0) return c;
+//		
+//		c = CompareUtils.compare(test, o.test);
+//		if(c!=0) return c;
 				
 		c = CompareUtils.compare(key, o.key);
 		if(c!=0) return c;

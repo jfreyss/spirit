@@ -65,9 +65,9 @@ public class DAOBiotype {
 		q.setBiotype(biotype);
 		int n = DAOBiosample.queryBiosamples(session, q, null).size();
 		if(n>0) {
-			throw new Exception("You cannot delete a biotype if you have some biosamples");
+			throw new Exception("You have " + n + " samples of " + MiscUtils.removeHtml(biotype.getName()) + ".\n You cannot delete a biotype if you have some biosamples");
 		}
-		
+
 		EntityTransaction txn = null;
 		try {
 			txn = session.getTransaction();
@@ -76,39 +76,39 @@ public class DAOBiotype {
 				biotype = session.merge(biotype);
 			}
 			session.remove(biotype);
-			
+
 			txn.commit();
 			txn = null;
 		} finally {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
 			Cache.getInstance().removeAllWithPrefix("id2biotype_"+JPAUtil.getManager());
 		}
-		
+
 	}
 
 	public static Map<Integer, Biotype> getId2Biotype() {
 		Map<Integer, Biotype> id2biotype = (Map<Integer, Biotype>) Cache.getInstance().get("id2biotype_"+JPAUtil.getManager());
-		if(id2biotype==null) {			
+		if(id2biotype==null) {
 			EntityManager session = JPAUtil.getManager();
 			//Load all
-			Query query = session.createQuery("select distinct(t) from Biotype t left join fetch t.metadata");		
-			
+			Query query = session.createQuery("select distinct(t) from Biotype t left join fetch t.metadata");
+
 			List<Biotype> biotypes = query.getResultList();
 			id2biotype = JPAUtil.mapIds(biotypes);
 			Cache.getInstance().add("id2biotype_"+JPAUtil.getManager(), id2biotype, 180);
 		}
 		return id2biotype;
 	}
-	
+
 	public static List<Biotype> getBiotypes() {
 		return getBiotypes(false);
 	}
-	
+
 	public static List<Biotype> getBiotypes(boolean showHidden) {
 		Map<Integer, Biotype> id2biotype = getId2Biotype();
 		List<Biotype> todo = new ArrayList<>(id2biotype.values());
 		Collections.sort(todo);
-		
+
 		//Order according to the hierarchy
 		List<Biotype> types = new ArrayList<>();
 		while(todo.size()>0) {
@@ -135,30 +135,30 @@ public class DAOBiotype {
 		}
 		if(!showHidden) {
 			types = Biotype.removeHidden(types);
-		}		
+		}
 		return types;
-	}	
+	}
 
 	public static Biotype getBiotype(String name) {
 		if(name==null) return null;
-		
+
 		Map<Integer, Biotype> id2biotype = getId2Biotype();
 		for (Biotype t : id2biotype.values()) {
 			if(t.getName().equals(name)) return t;
-			
+
 		}
 		return null;
 	}
 
 	public static Set<String> getAutoCompletionFields(BiotypeMetadata metadataType, Study study) {
 		if(metadataType==null || metadataType.getId()<=0) return new TreeSet<String>();
-	
+
 		//Use Cache
 		String key = "biotype_autocompletion_"+metadataType.getId()+"_"+(study==null?"": study.getId());
 		Set<String> res = (Set<String>) Cache.getInstance().get(key);
 		if(res==null) {
 			res = new TreeSet<String>(CompareUtils.STRING_COMPARATOR);
-			try { 
+			try {
 				EntityManager session = JPAUtil.getManager();
 				int id = metadataType.getId();
 				//Select first 500 non empty rows
@@ -175,7 +175,7 @@ public class DAOBiotype {
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
-			
+
 			Cache.getInstance().add(key, res, 60);
 		}
 		return res;
@@ -183,67 +183,67 @@ public class DAOBiotype {
 
 	public static Set<String> getAutoCompletionFieldsForSampleId(Biotype biotype) {
 		if(biotype==null || biotype.getId()<=0) return new TreeSet<String>();
-		
+
 		//Use Cache
 		String key = "biotype_autocompletion_sampleid_"+biotype.getId();
 		Set<String> res = (Set<String>) Cache.getInstance().get(key);
-		if(res==null) {			
+		if(res==null) {
 			EntityManager session = JPAUtil.getManager();
 			Query query = session.createQuery("SELECT distinct(b.sampleId) FROM Biosample b WHERE b.biotype = ?1");
 			query.setParameter(1, biotype);
 			query.setMaxResults(3000);
 			res = new TreeSet<String>(CompareUtils.STRING_COMPARATOR);
 			res.addAll(query.getResultList());
-			
+
 			Cache.getInstance().add(key, res, Cache.FAST);
 		}
 		return res;
 	}
 
 	public static Set<String> getAutoCompletionFieldsForName(Biotype biotype, Study study) {
-		
+
 		if(biotype==null || biotype.getId()<=0) return new TreeSet<String>();
-		
+
 		//Use Cache
 		String key = "biotype_autocompletion_name_"+biotype.getId()+"_"+(study==null?"": study.getId());
 		Set<String> res = (Set<String>) Cache.getInstance().get(key);
 		if(res==null) {
-			
+
 			EntityManager session = JPAUtil.getManager();
 			Query query = session.createQuery(
 					"SELECT distinct(b.name) FROM Biosample b WHERE b.biotype = ?1 AND length(b.name)>0  " +
-					(study!=null? " AND b.inheritedStudy = ?2 ":""));
+							(study!=null? " AND b.inheritedStudy = ?2 ":""));
 			query.setParameter(1, biotype);
 			if(study!=null) query.setParameter(2, study);
 			query.setMaxResults(3000);
 			res = new TreeSet<String>(CompareUtils.STRING_COMPARATOR);
 			res.addAll(query.getResultList());
-			
-			
+
+
 			Cache.getInstance().add(key, res, Cache.FAST);
 		}
 		return res;
 	}
 
 	public static Set<String> getAutoCompletionFieldsForComments(Biotype biotype, Study study) {
-		
+
 		if(biotype==null || biotype.getId()<=0) return new TreeSet<String>();
-		
+
 		//Use Cache
 		String key = "biotype_autocompletion_comments_"+biotype.getId()+"_"+(study==null?"": study.getId());
 		Set<String> res = (Set<String>) Cache.getInstance().get(key);
 		if(res==null) {
-			
+
 			EntityManager session = JPAUtil.getManager();
 			Query query = session.createQuery(
 					"SELECT distinct(b.comments) FROM Biosample b WHERE b.biotype = ?1 AND length(b.comments)>0 " +
-					(study!=null? " AND b.inheritedStudy = ?2 ":""));
+							(study!=null? " AND b.inheritedStudy = ?2 ":""));
 			query.setParameter(1, biotype);
 			if(study!=null) query.setParameter(2, study);
 			query.setMaxResults(3000);
 			res = new TreeSet<String>(CompareUtils.STRING_COMPARATOR);
 			res.addAll(query.getResultList());
-			
+
 			Cache.getInstance().add(key, res, Cache.FAST);
 		}
 		return res;
@@ -253,7 +253,7 @@ public class DAOBiotype {
 		if(biotype==null) return;
 		persistBiotypes(Collections.singletonList(biotype), user);
 	}
-	
+
 
 	public static void persistBiotypes(Collection<Biotype> biotypes, SpiritUser user) throws Exception {
 		if(biotypes==null || biotypes.size()==0) return;
@@ -267,37 +267,37 @@ public class DAOBiotype {
 			txn = null;
 		} finally {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
-		}		
+		}
 	}
-	
+
 	public static void persistBiotypes(EntityManager session, Collection<Biotype> biotypes, SpiritUser user) throws Exception {
 		logger.info("Persist "+biotypes.size()+" biotypes");
-		
+
 		if(biotypes==null || biotypes.size()==0) return;
 		if(user==null || !user.isSuperAdmin()) throw new Exception("Only an admin can save a biotype");
-		
+
 
 		Date now = JPAUtil.getCurrentDateFromDatabase();
 		for (Biotype biotype : biotypes) {
-				
+
 			if(biotype.getCategory()==null) throw new Exception("The category is required");
 			if(biotype.getName()==null || biotype.getName().length()==0) throw new Exception("The name is required");
-			
+
 			//Update the bidirectional link
 			for (BiotypeMetadata m : biotype.getMetadata()) {
 				if(m.getName().trim().length()==0) throw new Exception("The Metadata name cannot be empty");
 				if(m.getDataType()==null) throw new Exception("The Metadata datatype cannot be empty");
 				m.setBiotype(biotype);
 			}
-			
+
 			//Set a prefic if it is null or non empty
 			if(biotype.getPrefix()==null || biotype.getPrefix().length()==0) {
 				biotype.setPrefix(biotype.getName().substring(0, Math.min(3, biotype.getName().length())));
 			}
-						
+
 			biotype.setUpdDate(now);
 			biotype.setUpdUser(user.getUsername());
-			
+
 			if(biotype.getId()<=0) {
 				logger.debug("Persist "+biotype+": Insert");
 				session.persist(biotype);
@@ -321,10 +321,10 @@ public class DAOBiotype {
 		try {
 			txn = session.getTransaction();
 			txn.begin();
-			
-			List<Biosample> biosamples = (List<Biosample>) session.createQuery("select b from Biosample b where b.name = ?1")
-				.setParameter(1, value)
-				.getResultList();
+
+			List<Biosample> biosamples = session.createQuery("select b from Biosample b where b.name = ?1")
+					.setParameter(1, value)
+					.getResultList();
 			Date now = JPAUtil.getCurrentDateFromDatabase();
 			for (Biosample b : biosamples) {
 				b.setUpdDate(now);
@@ -332,15 +332,15 @@ public class DAOBiotype {
 				b.setSampleName(newValue);
 				session.merge(b);
 			}
-			
+
 			txn.commit();
 			return biosamples.size();
 		} finally {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
 			Cache.getInstance().remove("id2biotype_"+JPAUtil.getManager());
-		}		
+		}
 	}
-	
+
 	public static int renameMetadata(BiotypeMetadata att, String value, String newValue, SpiritUser user) throws Exception {
 		if(user==null || !user.isSuperAdmin()) throw new Exception("You must be an admin to rename a metadata");
 		EntityManager session = JPAUtil.getManager();
@@ -348,8 +348,8 @@ public class DAOBiotype {
 		try {
 			txn = session.getTransaction();
 			txn.begin();
-			
-			List<Biosample> biosamples = (List<Biosample>) session.createQuery("from Biosample b"
+
+			List<Biosample> biosamples = session.createQuery("from Biosample b"
 					+ " WHERE concat(';', b.serializedMetadata, '%') like '%;"+att.getId()+"=" + value.replace("'", "''") + ";%'").getResultList();
 			Date now = JPAUtil.getCurrentDateFromDatabase();
 			for (Biosample b : biosamples) {
@@ -359,15 +359,15 @@ public class DAOBiotype {
 					b.setMetadataValue(att, newValue);
 				}
 			}
-			
+
 			Cache.getInstance().remove("id2biotype_"+JPAUtil.getManager());
 			txn.commit();
 			return biosamples.size();
 		} finally {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
-		}		
+		}
 	}
-	
+
 	public static void moveNameToMetadata(Biotype biotype, SpiritUser user) throws Exception {
 		if(user==null || !user.isSuperAdmin()) throw new Exception("You must be an admin to rename a metadata");
 		EntityManager session = JPAUtil.getManager();
@@ -387,7 +387,7 @@ public class DAOBiotype {
 			biotype = session.merge(biotype);
 			biotype.setUpdDate(now);
 			biotype.setUpdUser(user.getUsername());
-			
+
 			//Query and Update the biosamples
 			BiosampleQuery q = new BiosampleQuery();
 			q.setBiotype(biotype);
@@ -398,29 +398,29 @@ public class DAOBiotype {
 				b.setUpdUser(user.getUsername());
 				b.setUpdDate(now);
 			}
-			
+
 			///Remove the name
 			biotype.setSampleNameLabel(null);
-			
+
 			Cache.getInstance().remove("id2biotype_"+JPAUtil.getManager());
 			txn.commit();
 		} finally {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
-		}	
-		
+		}
+
 	}
-	
+
 	public static void moveMetadataToName(BiotypeMetadata biotypeMetadata, SpiritUser user) throws Exception {
 		if(user==null || !user.isSuperAdmin()) throw new Exception("You must be an admin to rename a metadata");
-		
+
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {
 			Biotype biotype = biotypeMetadata.getBiotype();
-//			if(!session.contains(biotype)) {
-//				biotype = session.merge(biotype);
-//				biotypeMetadata = biotype.getMetadata(biotypeMetadata.getName());
-//			}
+			//			if(!session.contains(biotype)) {
+			//				biotype = session.merge(biotype);
+			//				biotypeMetadata = biotype.getMetadata(biotypeMetadata.getName());
+			//			}
 			if(biotype.getSampleNameLabel()!=null) throw new Exception(biotype+" has already a MainField");
 
 
@@ -434,8 +434,8 @@ public class DAOBiotype {
 			biotype.setNameRequired(biotypeMetadata.isRequired());
 			biotype.setUpdDate(now);
 			biotype.setUpdUser(user.getUsername());
-			
-			
+
+
 			//Query and Update the biosamples
 			BiosampleQuery q = new BiosampleQuery();
 			q.setBiotype(biotype);
@@ -449,18 +449,18 @@ public class DAOBiotype {
 					b.setUpdDate(now);
 				}
 			}
-			
+
 			///Remove the metadata
 			biotype.getMetadata().remove(biotype.getMetadata(biotypeMetadata.getName()));
 			biotype = session.merge(biotype);
 			Cache.getInstance().remove("id2biotype_"+JPAUtil.getManager());
 
 			txn.commit();
-			
+
 		} finally {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
-		}	
-		
+		}
+
 	}
-	
+
 }

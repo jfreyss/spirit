@@ -42,7 +42,7 @@ import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
 @Entity
-@Table(name="assay_attribute", indexes = {		
+@Table(name="assay_attribute", indexes = {
 		@Index(name="assay_attribute_assay_idx", columnList = "assay_id")})
 @SequenceGenerator(name="assay_attribute_seq", sequenceName="assay_attribute_seq", allocationSize=1)
 @Audited
@@ -52,7 +52,7 @@ public class TestAttribute implements Comparable<TestAttribute>, IObject {
 		INPUT, OUTPUT, INFO
 	}
 
-	
+
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="assay_attribute_seq")
 	@Column(name="assay_attribute_id")
@@ -61,10 +61,10 @@ public class TestAttribute implements Comparable<TestAttribute>, IObject {
 	@ManyToOne(cascade={}, fetch=FetchType.LAZY)
 	@JoinColumn(name="assay_id")
 	private Test test;
-	
+
 	@Column(name="assay_attribute_name", nullable=false)
 	private String name;
-	
+
 	@Column(nullable=false)
 	@Enumerated(EnumType.STRING)
 	private DataType dataType;
@@ -72,28 +72,38 @@ public class TestAttribute implements Comparable<TestAttribute>, IObject {
 	@Column(nullable=false, name="is_output")
 	@Enumerated(EnumType.ORDINAL)
 	private OutputType outputType = OutputType.OUTPUT;
-	
+
 	@Column(nullable=false, name="is_required")
 	private boolean isRequired = false;
 
 	@Column(nullable=true, length=1000)
 	private String parameters;
-	
+
 	@Column(name="idx", nullable=false)
 	private int index;
 
+	/**
+	 * Empty Constructor
+	 */
 	public TestAttribute() {}
-	
+
+	/**
+	 * TestAtribute on a given test and name
+	 * @param test
+	 * @param name
+	 */
 	public TestAttribute(Test test, String name) {
 		this.test = test;
 		this.name = name;
 		this.dataType = DataType.NUMBER;
 	}
-	
+
+	@Override
 	public int getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(int id) {
 		this.id = id;
 	}
@@ -120,14 +130,6 @@ public class TestAttribute implements Comparable<TestAttribute>, IObject {
 	public void setOutputType(OutputType outputType) {
 		this.outputType = outputType;
 	}
-	
-//	public boolean isOutput() {
-//		return isOutput;
-//	}
-//
-//	public void setOutput(boolean isOutput) {
-//		this.isOutput = isOutput;
-//	}
 
 	public boolean isRequired() {
 		return isRequired;
@@ -138,24 +140,24 @@ public class TestAttribute implements Comparable<TestAttribute>, IObject {
 	}
 
 	/**
-	 * Extract the unit from the name (in brackets)
+	 * Extract the unit from the name (in bracket or braces)
 	 * @return
 	 */
 	public String getUnit() {
 		return extractUnit(name);
 	}
-	
+
 	@Override
 	public int compareTo(TestAttribute o) {
 		int c = getTest()==null? (o.getTest()==null?0:1): getTest().compareTo(o.getTest());
 		if(c!=0) return c;
-		
+
 		c = getOutputType().compareTo(o.getOutputType());
 		if(c!=0) return c;
-		
+
 		c = getIndex() - o.getIndex();
 		if(c!=0) return c;
-		
+
 		c = getName()==null? (o.getName()==null?0: 1): getName().compareTo(o.getName());
 		return c;
 	}
@@ -164,39 +166,40 @@ public class TestAttribute implements Comparable<TestAttribute>, IObject {
 	public int hashCode() {
 		return id;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
-		if(!(obj instanceof TestAttribute)) return false;		
-		if(this==obj) return true;		
+		if(!(obj instanceof TestAttribute)) return false;
+		if(this==obj) return true;
 		TestAttribute a2 = (TestAttribute) obj;
-		
+
 		if(getId()>0) return getId()==a2.getId();
 		return this.compareTo(a2)==0;
 	}
-	
+
 	@Override
 	public String toString() {
 		return getName();
 	}
-	
+
 	public void setIndex(int index) {
 		this.index = index;
 	}
-	
+
 	public int getIndex() {
 		return index;
 	}
-	
+
 	public void setTest(Test assay) {
 		this.test = assay;
 	}
-	
+
 	public Test getTest() {
 		return test;
 	}
 
 	/**
+	 * The parameters depend of the datatype: list of values for comboboxes, or biotype of the linked biosample
 	 * @param parameters the parameters to set
 	 */
 	public void setParameters(String parameters) {
@@ -209,15 +212,25 @@ public class TestAttribute implements Comparable<TestAttribute>, IObject {
 	public String getParameters() {
 		return parameters;
 	}
-	
+
+	/**
+	 * Returns the parameters split into an array
+	 * @return
+	 */
 	public String[] getParametersArray() {
 		if(this.parameters==null) return new String[0];
 		return MiscUtils.split(this.parameters);
 	}
+
 	public void setParametersArray(String[] parameters) {
 		this.parameters = MiscUtils.unsplit(parameters);
 	}
-	
+
+	/**
+	 * Extract the unit (within braces, brackets) from the given name
+	 * @param name
+	 * @return
+	 */
 	public static String extractUnit(String name) {
 		if(name==null) return null;
 		int index1 = name.lastIndexOf('[');
@@ -225,7 +238,7 @@ public class TestAttribute implements Comparable<TestAttribute>, IObject {
 		if(index1>0 && index1<index2) {
 			return name.substring(index1+1, index2).trim();
 		}
-		
+
 		index1 = name.lastIndexOf('(');
 		index2 = name.lastIndexOf(')');
 		if(index1>0 && index1<index2) {
@@ -234,22 +247,29 @@ public class TestAttribute implements Comparable<TestAttribute>, IObject {
 
 		return null;
 	}
+
+
+	/**
+	 * Extract the name wihout the unit (within braces, brackets) from the given name
+	 * @param name
+	 * @return
+	 */
 	public static String extractNameWithoutUnit(String name) {
 		if(name==null) return null;
 		int index1 = name.lastIndexOf('[');
 		int index2 = name.lastIndexOf(']');
 		if(index1>0 && index1<index2) {
-			return (name.substring(0, index1) + name.substring(index2+1)).trim();
+			return (name.substring(0, index1) + name.substring(index2+1).trim()).trim();
 		}
-		
+
 		index1 = name.lastIndexOf('(');
 		index2 = name.lastIndexOf(')');
 		if(index1>0 && index1<index2) {
-			return (name.substring(0, index1) + name.substring(index2+1)).trim();
+			return (name.substring(0, index1) + name.substring(index2+1).trim()).trim();
 		}
 
 		return name;
-		
+
 	}
 
 	@Override

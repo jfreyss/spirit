@@ -30,8 +30,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.FoodWater;
@@ -143,7 +143,7 @@ public class FoodWaterReport extends AbstractReport {
 				group2Lines.add(gr, y);
 				
 				x = 0;
-				set(sheet, y, x++, b.getInheritedGroupString(Spirit.getUsername()), Style.S_TD_BOLD_LEFT);
+				set(sheet, y, x++, b.getInheritedGroupString(SpiritFrame.getUsername()), Style.S_TD_BOLD_LEFT);
 				set(sheet, y, x++, b.getSampleId(), Style.S_TD_LEFT);
 				set(sheet, y, x++, b.getSampleName(), Style.S_TD_LEFT);
 				if(!displayCageEachPhase) { 
@@ -234,7 +234,7 @@ public class FoodWaterReport extends AbstractReport {
 			for (Group gr : study.getGroups()) {
 				if(study.getTopAttachedBiosamples(gr).size()==0) continue;
 				x = 0;
-				set(sheet, y, x++, gr==null? "N/A": gr.getBlindedName(Spirit.getUsername()), Style.S_TD_BOLD_LEFT);
+				set(sheet, y, x++, gr==null? "N/A": gr.getBlindedName(SpiritFrame.getUsername()), Style.S_TD_BOLD_LEFT);
 				set(sheet, y, x++, "" , Style.S_TD_LEFT);
 				set(sheet, y, x++, "" , Style.S_TD_LEFT);
 				if(!displayCageEachPhase) set(sheet, y, x++, "" , Style.S_TD_BOLD_LEFT);

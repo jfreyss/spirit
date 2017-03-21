@@ -45,7 +45,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -76,39 +75,6 @@ public class Document {
 		PRESENTATION,
 		OTHER,
 		ZIP
-	}
-	
-	
-	@Entity
-	@Table(name="document_bytes")
-	@Audited
-	@SequenceGenerator(name="document_sequence", sequenceName="document_sequence", allocationSize=1)	
-	public static class DocumentBytes {
-		@Id
-		@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="document_sequence")
-		private int id;
-		
-		@Lob
-		private byte[] bytes;
-		
-		public byte[] getBytes() {
-			return bytes;
-		}
-		public void setBytes(byte[] bytes) {
-			this.bytes = bytes;
-		}
-		/**
-		 * @param id the id to set
-		 */
-		public void setId(int id) {
-			this.id = id;
-		}
-		/**
-		 * @return the id
-		 */
-		public int getId() {
-			return id;
-		}
 	}
 	
 	

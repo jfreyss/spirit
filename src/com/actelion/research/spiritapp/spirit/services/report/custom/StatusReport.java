@@ -23,8 +23,8 @@ package com.actelion.research.spiritapp.spirit.services.report.custom;
 
 import org.apache.poi.ss.usermodel.Sheet;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Status;
@@ -97,7 +97,7 @@ public class StatusReport extends AbstractReport {
 			set(sheet, line, col++, a.getSampleName(), Style.S_TD_CENTER);
 			set(sheet, line, col++, a.getSampleId(), Style.S_TD_CENTER);
 			set(sheet, line, col++, a.getContainerId(), Style.S_TD_CENTER);
-			set(sheet, line, col++, g==null?"": g.getBlindedName(Spirit.getUsername()) , Style.S_TD_LEFT);
+			set(sheet, line, col++, g==null?"": g.getBlindedName(SpiritFrame.getUsername()) , Style.S_TD_LEFT);
 			set(sheet, line, col++, g==null || g.getNSubgroups()<=1?"": (a.getInheritedSubGroup()+1), Style.S_TD_CENTER);
 			
 			

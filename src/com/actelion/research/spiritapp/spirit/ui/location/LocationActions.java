@@ -36,8 +36,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.print.PrintLabel;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.location.edit.LocationEditDlg;
 import com.actelion.research.spiritapp.spirit.ui.print.BrotherLabelsDlg;
 import com.actelion.research.spiritcore.business.location.Location;
@@ -67,11 +67,11 @@ public class LocationActions {
 			this.parent = selection==null || selection.size()==0? null: selection.iterator().next();
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('l'));
 			putValue(AbstractAction.SMALL_ICON, IconType.LOCATION.getIcon());
-			setEnabled(SpiritRights.canRead(parent, Spirit.getUser()));
+			setEnabled(SpiritRights.canRead(parent, SpiritFrame.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if(Spirit.getUser()==null) return;
+			if(SpiritFrame.getUser()==null) return;
 			Location location = new Location();
 			if(parent!=null) {
 				location.setLocationType(parent.getLocationType());
@@ -82,9 +82,9 @@ public class LocationActions {
 			location.setName("");
 			
 			
-			if(Spirit.getUser()!=null  && !Spirit.getUser().isSuperAdmin() && (parent==null || parent.getInheritedPrivacy()==Privacy.PUBLIC)) {
+			if(SpiritFrame.getUser()!=null  && !SpiritFrame.getUser().isSuperAdmin() && (parent==null || parent.getInheritedPrivacy()==Privacy.PUBLIC)) {
 				location.setPrivacy(Privacy.PROTECTED);
-				location.setEmployeeGroup(Spirit.getUser().getMainGroup());
+				location.setEmployeeGroup(SpiritFrame.getUser().getMainGroup());
 			}
 			
 			LocationEditDlg.edit(Collections.singletonList(location));
@@ -101,7 +101,7 @@ public class LocationActions {
 			putValue(AbstractAction.SMALL_ICON, IconType.DELETE.getIcon());
 			boolean enabled = true;
 			for (Location l : locations) {
-				if(!SpiritRights.canEdit(l, Spirit.getUser())) {
+				if(!SpiritRights.canEdit(l, SpiritFrame.getUser())) {
 					enabled = false;
 				}
 			}
@@ -109,7 +109,7 @@ public class LocationActions {
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if(Spirit.getUser()==null) return;
+			if(SpiritFrame.getUser()==null) return;
 			LocationEditDlg.deleteInNewContext(locations);
 		}
 	}
@@ -142,7 +142,7 @@ public class LocationActions {
 			this.locations = Collections.singletonList(location);
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('p'));
 			putValue(AbstractAction.SMALL_ICON, IconType.PRINT.getIcon());
-			setEnabled(SpiritRights.canRead(location, Spirit.getUser()));
+			setEnabled(SpiritRights.canRead(location, SpiritFrame.getUser()));
 		}
 		
 		public Action_Print(List<Location> locations) {
@@ -152,7 +152,7 @@ public class LocationActions {
 			putValue(AbstractAction.SMALL_ICON, IconType.PRINT.getIcon());
 			boolean enabled = true;
 			for (Location l : locations) {
-				if(!SpiritRights.canRead(l, Spirit.getUser())) {
+				if(!SpiritRights.canRead(l, SpiritFrame.getUser())) {
 					enabled = false;
 				}
 			}
@@ -181,7 +181,7 @@ public class LocationActions {
 			putValue(AbstractAction.SMALL_ICON, IconType.DUPLICATE.getIcon());
 			boolean enabled = true;
 			for (Location location : locations) {
-				if(!SpiritRights.canEdit(location.getParent(), Spirit.getUser())) {
+				if(!SpiritRights.canEdit(location.getParent(), SpiritFrame.getUser())) {
 					enabled = false;
 					break;
 				}
@@ -191,7 +191,7 @@ public class LocationActions {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if(Spirit.getUser()==null) return;
+			if(SpiritFrame.getUser()==null) return;
 			
 
 			LocationEditDlg.duplicate(locations);
@@ -207,7 +207,7 @@ public class LocationActions {
 			this.locations = Collections.singletonList(location);
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(AbstractAction.SMALL_ICON, IconType.EDIT.getIcon());
-			setEnabled(SpiritRights.canEdit(location, Spirit.getUser()));
+			setEnabled(SpiritRights.canEdit(location, SpiritFrame.getUser()));
 
 		}
 		
@@ -218,7 +218,7 @@ public class LocationActions {
 			putValue(AbstractAction.SMALL_ICON, IconType.EDIT.getIcon());
 			boolean enabled = true;
 			for(Location l: locations) {
-				if(!SpiritRights.canEdit(l, Spirit.getUser())) enabled = false;
+				if(!SpiritRights.canEdit(l, SpiritFrame.getUser())) enabled = false;
 			}
 			
 			setEnabled(enabled);
@@ -236,7 +236,7 @@ public class LocationActions {
 			super("Move Location");
 			this.locations = Collections.singletonList(location);
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('m'));
-			setEnabled(SpiritRights.canEdit(location, Spirit.getUser()));
+			setEnabled(SpiritRights.canEdit(location, SpiritFrame.getUser()));
 		}
 		public Action_Move(List<Location> locations) {
 			super("Move Batch");
@@ -248,7 +248,7 @@ public class LocationActions {
 				boolean enabled = true;
 				Location parent = locations.get(0).getParent();
 				for (Location l : locations) {
-					if(!SpiritRights.canEdit(l, Spirit.getUser()) || CompareUtils.compare(parent, l.getParent())!=0) {
+					if(!SpiritRights.canEdit(l, SpiritFrame.getUser()) || CompareUtils.compare(parent, l.getParent())!=0) {
 						enabled = false;
 					}
 				}

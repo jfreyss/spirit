@@ -37,7 +37,7 @@ import javax.swing.JSplitPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.result.ResultTable;
 import com.actelion.research.spiritapp.spirit.ui.util.RevisionList;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
@@ -116,7 +116,7 @@ public class ResultHistoryDlg extends JEscapeDialog {
 			super("Restore version");
 			this.results = results;
 			for (Result r : results) {
-				if(!SpiritRights.canEdit(r, Spirit.getUser())) {
+				if(!SpiritRights.canEdit(r, SpiritFrame.getUser())) {
 					setEnabled(false);
 					break;
 				}
@@ -127,7 +127,7 @@ public class ResultHistoryDlg extends JEscapeDialog {
 			try {			
 				int res = JOptionPane.showConfirmDialog(ResultHistoryDlg.this, "Are you sure you want to restore to the selected version?", "Restore", JOptionPane.YES_NO_OPTION);
 				if(res!=JOptionPane.YES_OPTION) return;
-				DAOResult.persistResults(results, Spirit.getUser());
+				DAOResult.persistResults(results, SpiritFrame.getUser());
 				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Result.class, results);
 				dispose();
 			} catch (Exception ex) {

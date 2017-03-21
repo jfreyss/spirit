@@ -26,7 +26,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.selector.SelectorDlg;
 import com.actelion.research.spiritapp.stockcare.ui.FilterDlg;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -76,7 +76,7 @@ public class AntibodySelectAction extends AbstractAction {
 							q.setBiotype(antibodyType);											
 							if(res[0].length()>0) q.getLinker2values().put(new BiosampleLinker(antibodyAggMetadata, mt1), "*"+res[0]+"*");
 							if(res[1].length()>0) q.getLinker2values().put(new BiosampleLinker(antibodyType, mt2), res[1]);
-							pool = DAOBiosample.queryBiosamples(q, Spirit.getUser());
+							pool = DAOBiosample.queryBiosamples(q, SpiritFrame.getUser());
 						}
 
 						@Override
@@ -96,7 +96,7 @@ public class AntibodySelectAction extends AbstractAction {
 			q.setBiotype(antibodyType);
 			if(res[0].length()>0) q.getLinker2values().put(new BiosampleLinker(antibodyAggMetadata, mt1), "*"+res[0]+"*");
 			if(res[1].length()>0) q.getLinker2values().put(new BiosampleLinker(antibodyType, mt2), res[1]);
-			List<Biosample> pool = DAOBiosample.queryBiosamples(q, Spirit.getUser());
+			List<Biosample> pool = DAOBiosample.queryBiosamples(q, SpiritFrame.getUser());
 			
 			BiosampleLinker querySel = new BiosampleLinker(LinkerType.SAMPLENAME, antibodyType);
 			BiosampleLinker discrimSel = new BiosampleLinker(antibodyAggMetadata, fluorophoreType.getMetadata("Type"));

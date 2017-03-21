@@ -37,7 +37,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.text.JTextComponent;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel.ContainerDisplayMode;
 import com.actelion.research.spiritapp.spirit.ui.lf.LF;
@@ -188,7 +188,7 @@ public class MonitoringCagePanel extends JPanel {
 							Result r = animal.getAuxResult(DAOTest.getTest(DAOTest.FOODWATER_TESTNAME), newFoodCons.toPhase);
 							r.getOutputResultValues().get(0).setValue(newFoodCons.value==null? null: ""+newFoodCons.value);
 							r.setUpdDate(now);
-							r.setUpdUser(Spirit.getUser().getUsername());
+							r.setUpdUser(SpiritFrame.getUser().getUsername());
 							if(!results.contains(r)) results.add(r);
 						}
 					}
@@ -198,7 +198,7 @@ public class MonitoringCagePanel extends JPanel {
 							Result r = animal.getAuxResult(DAOTest.getTest(DAOTest.FOODWATER_TESTNAME), newWaterCons.toPhase);
 							r.getOutputResultValues().get(1).setValue(newWaterCons.value==null? null: ""+newWaterCons.value);
 							r.setUpdDate(now);
-							r.setUpdUser(Spirit.getUser().getUsername());
+							r.setUpdUser(SpiritFrame.getUser().getUsername());
 							if(!results.contains(r)) results.add(r);
 						}
 					}
@@ -211,7 +211,7 @@ public class MonitoringCagePanel extends JPanel {
 							String valFood = newNextFoodCons.value==null? null: ""+newNextFoodCons.value;
 							r2.getOutputResultValues().get(0).setValue(valFood);
 							r2.setUpdDate(now);
-							r2.setUpdUser(Spirit.getUser().getUsername());
+							r2.setUpdUser(SpiritFrame.getUser().getUsername());
 							if(!results.contains(r2)) results.add(r2);	
 						}
 					}
@@ -224,20 +224,20 @@ public class MonitoringCagePanel extends JPanel {
 							String valWater = newNextWaterCons.value==null? null: ""+newNextWaterCons.value;
 							r2.getOutputResultValues().get(1).setValue(valWater);
 							r2.setUpdDate(new Date());
-							r2.setUpdUser(Spirit.getUser().getUsername());
+							r2.setUpdUser(SpiritFrame.getUser().getUsername());
 							if(!results.contains(r2)) results.add(r2);	
 						}
 					}
 					
 				
-					currentFw.setUpdUser(Spirit.getUser().getUsername());
+					currentFw.setUpdUser(SpiritFrame.getUser().getUsername());
 					currentFw.setUpdDate(now);
 					
 					updateLabels(newFoodCons, newWaterCons, newNextFoodCons, newNextWaterCons);
 
-					JPAUtil.pushEditableContext(Spirit.getUser());
-					DAOResult.persistResults(results, Spirit.getUser());
-					DAOFoodWater.persistFoodWater(currentFw, Spirit.getUser());
+					JPAUtil.pushEditableContext(SpiritFrame.getUser());
+					DAOResult.persistResults(results, SpiritFrame.getUser());
+					DAOFoodWater.persistFoodWater(currentFw, SpiritFrame.getUser());
 					if(src instanceof JCustomTextField) {
 						((JCustomTextField)src).setBorderColor(Color.BLUE);
 						src.setToolTipText((src.getToolTipText()==null?"<html>": src.getToolTipText()+"<br>") + "Updated: "+formatTooltipText(((JCustomTextField)src).getText(),  currentFw.getUpdUser(), currentFw.getUpdDate()));
@@ -344,7 +344,7 @@ public class MonitoringCagePanel extends JPanel {
 		content.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1), BorderFactory.createLoweredBevelBorder()));
 		content.setFont(FastFont.SMALLER);
 		content.setOpaque(true);
-		content.setBackground(UIUtils.getDilutedColor(Color.LIGHT_GRAY, group==null? Color.LIGHT_GRAY: group.getBlindedColor(Spirit.getUsername())));
+		content.setBackground(UIUtils.getDilutedColor(Color.LIGHT_GRAY, group==null? Color.LIGHT_GRAY: group.getBlindedColor(SpiritFrame.getUsername())));
 		
 		ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.CONTAINERID, container);
 		JPanel westPanel = UIUtils.createVerticalBox(
@@ -355,7 +355,7 @@ public class MonitoringCagePanel extends JPanel {
 		
 		westPanel.setOpaque(true);
 		westPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, Color.LIGHT_GRAY));
-		if(group!=null) westPanel.setBackground(group.getBlindedColor(Spirit.getUsername()));
+		if(group!=null) westPanel.setBackground(group.getBlindedColor(SpiritFrame.getUsername()));
 		
 		add(BorderLayout.WEST, westPanel);
 		add(BorderLayout.CENTER, centerPanel);

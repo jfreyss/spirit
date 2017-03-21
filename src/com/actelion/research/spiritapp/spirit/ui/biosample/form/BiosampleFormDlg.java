@@ -41,7 +41,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleFinder;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.form.BiosampleFormPanel.EditMode;
 import com.actelion.research.spiritapp.spirit.ui.biosample.form.BiosampleFormPanel.ViewMode;
@@ -67,8 +66,8 @@ public class BiosampleFormDlg extends JSpiritEscapeDialog {
 	private JPanel centerPane = new JPanel(new GridLayout());
 	private JScrollPane scrollPane = new JScrollPane(centerPane);
 
-	private JButton selectParentButton = new JButton("Select Existing Parent");
-	private JButton createParentButton = new JButton("Create New Parent");
+//	private JButton selectParentButton = new JButton("Select Existing Parent");
+	private JButton createParentButton = new JButton("Add Parent");
 	private JButton childButton = new JButton("Add Child");
 	
 	private JButton saveButton = new JIconButton(IconType.SAVE, "Save");
@@ -89,40 +88,34 @@ public class BiosampleFormDlg extends JSpiritEscapeDialog {
 		assert toEdit!=null && toEdit.getBiotype()!=null;
 		
 		//init actions
-		createParentButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Biotype biotype = panels.size()==0 || panels.get(0).getBiotype()==null? null: panels.get(0).getBiotype().getParent();
-				BiosampleFormPanel singlePanel = new BiosampleFormPanel(BiosampleFormDlg.this);
-				panels.addFirst(singlePanel);
-				singlePanel.setBiosample(new Biosample(biotype));
-				initUI();
-			}
+		createParentButton.addActionListener(e-> {	
+			Biotype biotype = panels.size()==0 || panels.get(0).getBiotype()==null? null: panels.get(0).getBiotype().getParent();
+			BiosampleFormPanel singlePanel = new BiosampleFormPanel(BiosampleFormDlg.this);
+			panels.addFirst(singlePanel);
+			singlePanel.setBiosample(new Biosample(biotype));
+			initUI();
 		});
-		selectParentButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Biotype biotype = panels.size()==0 || panels.get(0).getBiotype()==null? null: panels.get(0).getBiotype().getParent();
-				BiosampleFinder finder = new BiosampleFinder(BiosampleFormDlg.this, "Select a parent biosample", null, biotype, null, null, false) {
-					@Override
-					public void onSelect(Biosample sel) {
-						dispose();
-						changeBiosample(null, sel);
-					}					
-				};
-				finder.setVisible(true);					
-			}
-		});
-		childButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Biotype biotype = panels.size()==0 || panels.get(panels.size()-1).getBiotype()==null || panels.get(panels.size()-1).getBiotype().getChildren().size()==0? null: panels.get(panels.size()-1).getBiotype().getChildren().iterator().next();
-				BiosampleFormPanel singlePanel = new BiosampleFormPanel(BiosampleFormDlg.this);
-				panels.addLast(singlePanel);
-				singlePanel.setBiosample(new Biosample(biotype));
-				initUI();
-				scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum());
-			}
+//		selectParentButton.addActionListener(new ActionListener() {			
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				Biotype biotype = panels.size()==0 || panels.get(0).getBiotype()==null? null: panels.get(0).getBiotype().getParent();
+//				BiosampleFinder finder = new BiosampleFinder(BiosampleFormDlg.this, "Select a parent biosample", null, biotype, null, null, false) {
+//					@Override
+//					public void onSelect(Biosample sel) {
+//						dispose();
+//						changeBiosample(null, sel);
+//					}					
+//				};
+//				finder.setVisible(true);					
+//			}
+//		});
+		childButton.addActionListener(e-> {
+			Biotype biotype = panels.size()==0 || panels.get(panels.size()-1).getBiotype()==null || panels.get(panels.size()-1).getBiotype().getChildren().size()==0? null: panels.get(panels.size()-1).getBiotype().getChildren().iterator().next();
+			BiosampleFormPanel singlePanel = new BiosampleFormPanel(BiosampleFormDlg.this);
+			panels.addLast(singlePanel);
+			singlePanel.setBiosample(new Biosample(biotype));
+			initUI();
+			scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum());
 		});
 		
 		
@@ -200,7 +193,7 @@ public class BiosampleFormDlg extends JSpiritEscapeDialog {
 
 		List<Component> comps = new ArrayList<>();
 				
-		comps.add(UIUtils.createHorizontalBox(selectParentButton, createParentButton, Box.createHorizontalGlue()));		
+		comps.add(UIUtils.createHorizontalBox(createParentButton, Box.createHorizontalGlue()));		
 		comps.add(initUIRec(0));
 		comps.add(Box.createVerticalGlue());		
 		centerPane.add(UIUtils.createVerticalBox(comps));
@@ -287,8 +280,6 @@ public class BiosampleFormDlg extends JSpiritEscapeDialog {
 			return;
 		}
 		
-
-		
 		//save
 		boolean isNew = false;
 		for (Biosample b : toSave) {
@@ -296,12 +287,13 @@ public class BiosampleFormDlg extends JSpiritEscapeDialog {
 		}
 		DAOBiosample.persistBiosamples(toSave, Spirit.askForAuthentication());
 		dispose();
+		
+		//Fire events
 		SpiritChangeListener.fireModelChanged(isNew? SpiritChangeType.MODEL_ADDED: SpiritChangeType.MODEL_UPDATED, Biosample.class, toSave);
 	}
 	
 	public BiosampleFormPanel getNext(BiosampleFormPanel panel) {
 		int index = panels.indexOf(panel);
-		System.out.println("BiosampleFormDlg.getNext() "+index+" "+panel+" in "+panels);
 		return index>=0 && index+1<panels.size()? panels.get(index+1): null;
 	}
 	

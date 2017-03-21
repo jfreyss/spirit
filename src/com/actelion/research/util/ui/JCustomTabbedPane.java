@@ -22,19 +22,21 @@
 package com.actelion.research.util.ui;
 
 import javax.swing.JTabbedPane;
-import javax.swing.UIManager;
 
 public class JCustomTabbedPane extends JTabbedPane {
-	
+
 	public JCustomTabbedPane() {
 		this(JTabbedPane.TOP);
 	}
-	
+
 	public JCustomTabbedPane(int tabPlacement) {
 		super(tabPlacement);
-		if(UIManager.getLookAndFeel().getName().contains("Nimbus")) {
-			setUI(new CustomTabbedPaneUI());
-		}
-		setOpaque(true);	
-	}	
+		setUI(new CustomTabbedPaneUI());
+		setOpaque(true);
+	}
+
+	@Override
+	public CustomTabbedPaneUI getUI() {
+		return (CustomTabbedPaneUI) super.getUI();
+	}
 }
