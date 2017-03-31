@@ -275,7 +275,7 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 		assert att!=null;
 		assert test.equals(att.getTest()): test +"("+test.getId()+")" + " is not equal to "+att.getTest()+"("+att.getTest().getId()+") for result.id= "+getId();
 
-		ResultValue v = values.get(att);
+		ResultValue v = getResultValueMap().get(att);
 		if(v==null) {
 			//hack, check if id (hashcode) has been changed
 			for (TestAttribute ta : values.keySet()) {

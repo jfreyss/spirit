@@ -22,8 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.biosample.edit;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -115,64 +113,55 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 		//Reload Objects
 		List<Biosample> biosamples = transactionMode? JPAUtil.reattach(biosamplesInput): biosamplesInput;
 
-		excelButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				try {
-					EditBiosampleTable table = editPanel.getTable();
-					POIUtils.exportToExcel(table.getTabDelimitedTable(), ExportMode.HEADERS_TOP);
-				} catch (Exception e) {
-					JExceptionDialog.showError(EditBiosampleDlg.this, e);
-				}
+		excelButton.addActionListener(ev-> {
+			try {
+				EditBiosampleTable table = editPanel.getTable();
+				POIUtils.exportToExcel(table.getTabDelimitedTable(), ExportMode.HEADERS_TOP);
+			} catch (Exception e) {
+				JExceptionDialog.showError(EditBiosampleDlg.this, e);
 			}
 		});
 
-		okButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				new SwingWorkerExtended("Saving", editPanel) {
-					private List<Biosample> toSave;
-					private String selCol;
-					private boolean isAddOp = false;
+		okButton.addActionListener(ev-> {
+			new SwingWorkerExtended("Saving", editPanel) {
+				private List<Biosample> toSave;
+				private String selCol;
+				private boolean isAddOp = false;
 
-					@Override
-					protected void doInBackground() throws Exception {
-						try {
-							if(editPanel.getBiotype()==null) throw new Exception("You must select a biotype");
-							SpiritUser user = Spirit.askForAuthentication();
+				@Override
+				protected void doInBackground() throws Exception {
+					try {
+						SpiritUser user = Spirit.askForAuthentication();
 
-							toSave = validate(EditBiosampleDlg.this, editPanel.getTable().getBiosamples(), editPanel.getTable(), true);
+						toSave = validate(EditBiosampleDlg.this, editPanel.getTable().getBiosamples(), editPanel.getTable(), true);
 
-							if(toSave==null) return;
-							if(toSave.size()==0) throw new Exception("There are no samples to save");
+						if(toSave==null) return;
+						if(toSave.size()==0) throw new Exception("There are no samples to save");
 
-							for (Biosample b : toSave) {
-								if(b.getId()<=0) { isAddOp = true; break;}
-							}
-
-							DAOBiosample.persistBiosamples(toSave, user);
-							resSavedBiosamples.addAll(toSave);
-
-						} catch (ValidationException e) {
-							e.printStackTrace();
-							selCol = e.getCol();
-							Biosample selBiosample = (e.getRow() instanceof Biosample)? (Biosample) e.getRow(): null;
-							editPanel.getTable().setSelection(selBiosample, selCol);
-							throw e;
+						for (Biosample b : toSave) {
+							if(b.getId()<=0) { isAddOp = true; break;}
 						}
 
+						DAOBiosample.persistBiosamples(toSave, user);
+						resSavedBiosamples.addAll(toSave);
+
+					} catch (ValidationException e) {
+						e.printStackTrace();
+						selCol = e.getCol();
+						Biosample selBiosample = (e.getRow() instanceof Biosample)? (Biosample) e.getRow(): null;
+						editPanel.getTable().setSelection(selBiosample, selCol);
+						throw e;
 					}
-					@Override
-					protected void done() {
-						if(toSave==null) return;
-						SpiritChangeListener.fireModelChanged(isAddOp? SpiritChangeType.MODEL_ADDED : SpiritChangeType.MODEL_UPDATED, Biosample.class, toSave);
-						dispose();
 
-					}
-				};
+				}
+				@Override
+				protected void done() {
+					if(toSave==null) return;
+					SpiritChangeListener.fireModelChanged(isAddOp? SpiritChangeType.MODEL_ADDED : SpiritChangeType.MODEL_UPDATED, Biosample.class, toSave);
+					dispose();
 
-
-			}
+				}
+			};
 		});
 
 		//
@@ -184,7 +173,7 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), excelButton, Box.createHorizontalGlue(), /*validateButton,*/ okButton));
 		setContentPane(contentPanel);
 
-		UIUtils.adaptSize(this, 1400, 800);
+		UIUtils.adaptSize(this, 1920, 1080);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 
 		//Init Data

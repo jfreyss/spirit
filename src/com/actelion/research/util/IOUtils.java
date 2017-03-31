@@ -21,11 +21,27 @@
 
 package com.actelion.research.util;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 
 
 /**
- * 
+ *
  * @author freyssj
  */
 public class IOUtils {
@@ -36,7 +52,7 @@ public class IOUtils {
 		s.writeObject(o);
 		out.close();
 	}
-	
+
 	public static Object loadObject(String file) throws IOException, ClassNotFoundException {
 		FileInputStream in = new FileInputStream(file);
 		ObjectInputStream s = new ObjectInputStream(in);
@@ -48,17 +64,17 @@ public class IOUtils {
 	public static String readerToString(Reader reader) throws IOException {
 		return  readerToString(reader, Integer.MAX_VALUE);
 	}
-	
+
 	public static String readerToString(Reader reader, int maxSize) throws IOException {
 		if(maxSize<=0) maxSize = Integer.MAX_VALUE;
 		char[] buf = new char[512];
 		int c;
 		StringBuilder sb = new StringBuilder();
-		while(sb.length()<maxSize && ( c = reader.read(buf, 0, Math.min(buf.length, maxSize-sb.length()))) > 0) {			
+		while(sb.length()<maxSize && ( c = reader.read(buf, 0, Math.min(buf.length, maxSize-sb.length()))) > 0) {
 			sb.append(buf, 0, c);
 		}
 		return sb.toString();
-	}		
+	}
 
 	public static String streamToString(InputStream is) throws IOException {
 		byte[] buf = new byte[512];
@@ -68,38 +84,38 @@ public class IOUtils {
 			sb.append(new String(buf, 0, c));
 		}
 		return sb.toString();
-	}		
-	
+	}
+
 	public static byte[] getBytes(File f) throws IOException {
 		FileInputStream is = new FileInputStream(f);
 		byte[] res = new byte[(int) f.length()];
 		is.read(res, 0, res.length);
 		is.close();
 		return res;
-	}		
-	
+	}
+
 	public static void bytesToFile(byte[] bytes, File f) throws IOException {
 		FileOutputStream os = new FileOutputStream(f);
 		os.write(bytes);
 		os.close();
 	}
-	
+
 	public static void stringToFile(String s, File f) throws IOException {
 		try (FileWriter os = new FileWriter(f)) {
 			os.write(s);
 		}
 	}
-	
+
 	public static String fileToString(File f) throws IOException {
 		return fileToString(f, Integer.MAX_VALUE);
 	}
-	
+
 	public static String fileToString(File f, int maxSize) throws IOException {
 		try (FileReader reader = new FileReader(f)) {
 			return readerToString(reader, maxSize);
 		}
 	}
-	
+
 	/**
 	 * Redirects the streams, without closing them
 	 * @param is
@@ -113,7 +129,7 @@ public class IOUtils {
 			os.write(buf, 0, c);
 		}
 		is.close();
-	}	
+	}
 
 	/**
 	 * Redirects the reader to the writer, without closing them
@@ -129,7 +145,7 @@ public class IOUtils {
 		}
 		is.close();
 	}
-	
+
 	public static void copy(File src, File dest) throws IOException {
 		InputStream is = null;
 		OutputStream os = null;
@@ -137,11 +153,42 @@ public class IOUtils {
 			is = new BufferedInputStream(new FileInputStream(src));
 			os = new BufferedOutputStream(new FileOutputStream(dest));
 			redirect(is, os);
-			
+
 		} finally {
 			try {if(is!=null) is.close();}catch(Exception e){}
 			try {if(os!=null) os.close();}catch(Exception e){}
 		}
+	}
+
+	/**
+	 * Debug instruction to view the relevant stacktrace
+	 * @throws IOException
+	 */
+	public static void dumpStack() {
+		Exception e = new Exception("StackTrace");
+		Set<Throwable> dejaVu = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
+		dejaVu.add(e);
+
+		synchronized (System.err) {
+			StackTraceElement[] trace = e.getStackTrace();
+			System.err.println("Exception "+e.getMessage());
+			for (StackTraceElement traceElement : trace) {
+				if(traceElement.getClassName().contains("com.actelion.research.util.IOUtils")) continue;
+				if(traceElement.getClassName().contains("com.actelion")) {
+					System.err.println("\tat " + traceElement);
+				}
+			}
+			if(e.getCause()!=null) {
+				System.err.println("Caused by "+e.getCause());
+				for (StackTraceElement traceElement : trace) {
+					if(traceElement.getClassName().contains("com.actelion.research.util.IOUtils.dumpStack")) continue;
+					if(traceElement.getClassName().contains("com.actelion")) {
+						System.err.println("\tat " + traceElement);
+					}
+				}
+			}
+		}
+
 	}
 
 }

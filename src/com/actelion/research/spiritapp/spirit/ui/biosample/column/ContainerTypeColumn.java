@@ -27,19 +27,19 @@ import javax.swing.JComponent;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerTypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel.ContainerDisplayMode;
+import com.actelion.research.spiritapp.spirit.ui.container.ContainerTypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
-import com.actelion.research.util.ui.exceltable.ComboboxCellEditor;
+import com.actelion.research.util.ui.exceltable.ObjectComboBoxCellEditor;
 
 public class ContainerTypeColumn extends Column<Biosample, ContainerType> {
-	
+
 	private static ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.CONTAINER_TYPE);
-	
+
 	public ContainerTypeColumn() {
 		super("Container\nType", ContainerType.class, 40, 70);
 	}
@@ -47,11 +47,11 @@ public class ContainerTypeColumn extends Column<Biosample, ContainerType> {
 	public String getCategory() {
 		return "Container";
 	}
-	
+
 	@Override
 	public float getSortingKey() {return 2.1f;}
-	
-	
+
+
 	@Override
 	public ContainerType getValue(Biosample row) {
 		return row.getContainerType();
@@ -59,17 +59,17 @@ public class ContainerTypeColumn extends Column<Biosample, ContainerType> {
 	@Override
 	public void setValue(Biosample row, ContainerType value) {
 		row.setContainerType(value);
-	}		
+	}
 	@Override
 	public boolean isEditable(Biosample row) {
 		if(row!=null && (row.getBiotype()==null || row.isAbstract())) return false;
 		return true;
 	}
-	
+
 	@Override
 	public void paste(Biosample row, String value) throws Exception {
 		ContainerType type = ContainerType.get(value);
-		setValue(row, type);						
+		setValue(row, type);
 	}
 
 	@Override
@@ -77,16 +77,16 @@ public class ContainerTypeColumn extends Column<Biosample, ContainerType> {
 		containerLabel.setBiosample(r);
 		return containerLabel;
 	}
-	
+
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		comp.setForeground(Color.GRAY);
 		comp.setBackground(LF.BGCOLOR_LOCATION);
 	}
-	
+
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {
-		return new ComboboxCellEditor<ContainerType>(new ContainerTypeComboBox());
+		return new ObjectComboBoxCellEditor<ContainerType>(new ContainerTypeComboBox());
 	}
-	
+
 }

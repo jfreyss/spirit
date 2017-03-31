@@ -44,46 +44,46 @@ public class JSpiritEscapeDialog extends JEscapeDialog {
 
 	private String pushContext;
 	private boolean mustAskForExit = false;
-	
+
 	public JSpiritEscapeDialog(Frame owner, String title, final String pushContext) {
 		super(owner, title, true);
-		this.pushContext = pushContext;		
+		this.pushContext = pushContext;
 		if(pushContext!=null) JPAUtil.pushEditableContext(SpiritFrame.getUser());
 		init();
 	}
 
 	public JSpiritEscapeDialog(JDialog owner, String title, final String pushContext) {
 		super(owner, title, true);
-		this.pushContext = pushContext;	
+		this.pushContext = pushContext;
 		if(pushContext!=null) JPAUtil.pushEditableContext(SpiritFrame.getUser());
-		
+
 		init();
-		
+
 	}
-	
+
 	private void init() {
 		//Clear cache
 		if(pushContext!=null) {
-			JPAUtil.clear();
+			SpiritFrame.clear();
 		}
-		
-		final AWTEventListener myListener = new AWTEventListener() {			
+
+		final AWTEventListener myListener = new AWTEventListener() {
 			@Override
-			public void eventDispatched(AWTEvent event) {	
+			public void eventDispatched(AWTEvent event) {
 				if(!(event instanceof KeyEvent)) return;
 				KeyEvent evt = (KeyEvent) event;
 				if(evt.getKeyCode()==0 || evt.getKeyCode()==27 || evt.getKeyCode()==39 || evt.getKeyCode()==37 || evt.getKeyCode()==40 || evt.getKeyCode()==10) return;
 				setMustAskForExit(true);
 			}
 		};
-   		
-   		
-   		addWindowFocusListener(new WindowFocusListener() {			
+
+
+		addWindowFocusListener(new WindowFocusListener() {
 			@Override
 			public void windowLostFocus(WindowEvent e) {
-				Toolkit.getDefaultToolkit().removeAWTEventListener(myListener);				
+				Toolkit.getDefaultToolkit().removeAWTEventListener(myListener);
 			}
-			
+
 			@Override
 			public void windowGainedFocus(WindowEvent e) {
 				Toolkit.getDefaultToolkit().addAWTEventListener(myListener, AWTEvent.KEY_EVENT_MASK);
@@ -94,12 +94,12 @@ public class JSpiritEscapeDialog extends JEscapeDialog {
 	public void setMustAskForExit(boolean mustAskForExit) {
 		this.mustAskForExit = mustAskForExit;
 	}
-	
+
 	@Override
 	protected boolean mustAskForExit() {
 		return mustAskForExit;
 	}
-	
+
 	@Override
 	public final boolean eventWindowClosed() {
 		//Check that we can close the window
@@ -110,6 +110,6 @@ public class JSpiritEscapeDialog extends JEscapeDialog {
 		}
 		return res;
 	}
-	
-	 
+
+
 }

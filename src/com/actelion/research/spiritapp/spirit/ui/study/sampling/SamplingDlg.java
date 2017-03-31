@@ -27,8 +27,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -74,7 +72,7 @@ import com.actelion.research.util.ui.UIUtils;
  *
  */
 public class SamplingDlg extends JEscapeDialog {
-	
+
 	private BiotypeComboBox typeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 	private final Sampling sampling;
 	private JPanel contentPanel = new JPanel(new GridBagLayout());
@@ -84,44 +82,38 @@ public class SamplingDlg extends JEscapeDialog {
 	private JTextComponent nameTextField;
 	private JCustomTextField amountTextField = new JCustomTextField(JCustomTextField.DOUBLE);
 	private JCustomTextField commentsTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 30);
-	
+
 	private final JCheckBox weightCheckBox = new JCheckBox("Weight");
 	private final JCheckBox lengthCheckBox = new JCheckBox("Length");
 	private final JCheckBox commentCheckBox = new JCheckBox("Observations");
 	private final ContainerTypeComboBox containerTypeComboBox = new ContainerTypeComboBox();
 	private final BlocNoComboBox containerIndexComboBox = new BlocNoComboBox(false);
-	
+
 	private final JPanel measurementPanel = new JPanel();
 	private final JLabel warningLabel1 = new JCustomLabel(" ", Color.RED);
 	private final JLabel warningLabel2 = new JCustomLabel(" ", Color.RED);
-	
+
 	public SamplingDlg(final NamedSamplingDlg dlg, final Study study, final Sampling sampling, boolean addActions) {
 		super(dlg, "Edit Sampling", true);
 		this.sampling = sampling;
-		
-		typeComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				refresh();
-			}
+
+		typeComboBox.addTextChangeListener(e-> {
+			refresh();
 		});
-		containerTypeComboBox.addItemListener(new ItemListener() {			
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				ContainerType type = containerTypeComboBox.getSelection();
-				containerIndexComboBox.setVisible(type!=null && type.isMultiple());
-				containerIndexComboBox.setSelection(1);
-				
-				if(type==ContainerType.K7 || type==ContainerType.SLIDE) {
-					warningLabel1.setText("Cassette and slides should only be created in SlideCare");
-				} else {
-					warningLabel1.setText("");
-				}
+		containerTypeComboBox.addPropertyChangeListener(JTextComboBox.PROPERTY_TEXTCHANGED, e-> {
+			ContainerType type = containerTypeComboBox.getSelection();
+			containerIndexComboBox.setVisible(type!=null && type.isMultiple());
+			containerIndexComboBox.setSelection(1);
+
+			if(type==ContainerType.K7 || type==ContainerType.SLIDE) {
+				warningLabel1.setText("Cassette and slides should only be created in SlideCare");
+			} else {
+				warningLabel1.setText("");
 			}
 		});
 		containerIndexComboBox.setVisible(sampling.getContainerType()!=null && sampling.getContainerType().isMultiple());
-		
-		
+
+
 		//If samples are already generated and are in a named container, the container cannot be anymore changed
 		if(sampling.getSamples().size()>0) {
 			typeComboBox.setEnabled(false);
@@ -130,9 +122,9 @@ public class SamplingDlg extends JEscapeDialog {
 
 		//Extra measurement
 		measurementPanel.setOpaque(false);
-				
-		//Center Panel		
-		JPanel centerPanel = new JPanel(new BorderLayout(3,3));		
+
+		//Center Panel
+		JPanel centerPanel = new JPanel(new BorderLayout(3,3));
 		centerPanel.add(BorderLayout.NORTH, UIUtils.createHorizontalBox(BorderFactory.createEmptyBorder(8, 8, 8, 8), new JLabel("BioType: "), typeComboBox, Box.createHorizontalGlue()));
 		centerPanel.add(BorderLayout.CENTER, UIUtils.createTitleBox("Metadata", contentPanel));
 		centerPanel.add(BorderLayout.SOUTH, UIUtils.createVerticalBox(
@@ -142,42 +134,37 @@ public class SamplingDlg extends JEscapeDialog {
 								Box.createHorizontalStrut(20),
 								UIUtils.createVerticalBox(measurementPanel, Box.createVerticalGlue()),
 								Box.createHorizontalGlue())),
-				UIUtils.createHorizontalBox(Box.createHorizontalStrut(5), warningLabel1),
-				UIUtils.createHorizontalBox(Box.createHorizontalStrut(5), warningLabel2)
+								UIUtils.createHorizontalBox(Box.createHorizontalStrut(5), warningLabel1),
+								UIUtils.createHorizontalBox(Box.createHorizontalStrut(5), warningLabel2)
 				));
-		
+
 		refresh();
 
 		//Buttons
 		JButton okButton = new JButton("Ok");
 		getRootPane().setDefaultButton(okButton);
-		okButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				
-				try {
-					
-					if(validateModel()) return;
-					
-					Sampling fromSampling = sampling.clone();
-					fromSampling.setId(sampling.getId());
-					fromSampling.setSamples(sampling.getSamples());
+		okButton.addActionListener(ev-> {
+			try {
 
-					updateModel();
-					
-					if(dlg!=null) { 
-						dlg.synchronizeSamples(study, fromSampling, sampling);
-					}
-					
-					dispose();
-					success = true;
-				} catch (Exception e) {
-					JExceptionDialog.showError(e);
+				if(validateModel()) return;
+
+				Sampling fromSampling = sampling.clone();
+				fromSampling.setId(sampling.getId());
+				fromSampling.setSamples(sampling.getSamples());
+
+				updateModel();
+
+				if(dlg!=null) {
+					dlg.synchronizeSamples(study, fromSampling, sampling);
 				}
-				
+
+				dispose();
+				success = true;
+			} catch (Exception e) {
+				JExceptionDialog.showError(e);
 			}
 		});
-		
+
 		//Update View
 		containerTypeComboBox.setSelection(sampling.getContainerType());
 		containerIndexComboBox.setSelection(sampling.getBlocNo());
@@ -186,33 +173,33 @@ public class SamplingDlg extends JEscapeDialog {
 		commentCheckBox.setSelected(sampling.isCommentsRequired());
 		amountTextField.setTextDouble(sampling.getAmount());
 		commentsTextField.setMaxChars(255);
-		
+
 		setLayout(new BorderLayout());
 		add(BorderLayout.CENTER, centerPanel);
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
-		
+
 		pack();
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setLocationRelativeTo(UIUtils.getMainFrame());		
+		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
 	}
-	
+
 	private void refresh() {
 		refreshMeasurementPanel();
 		refreshMetadataPanel();
 		getContentPane().validate();
 		pack();
-		setLocationRelativeTo(UIUtils.getMainFrame());		
+		setLocationRelativeTo(UIUtils.getMainFrame());
 	}
-	
+
 	private void refreshMeasurementPanel() {
 		measurementPanel.removeAll();
 		List<JComponent> comps = new ArrayList<>();
-		
+
 		for(final Measurement m: sampling.getMeasurements()) {
 			JButton removeButton = new JButton("Del.");
 			removeButton.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
-			removeButton.addActionListener(new ActionListener() {				
+			removeButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					List<Measurement> list = new ArrayList<>(sampling.getMeasurements());
@@ -223,31 +210,27 @@ public class SamplingDlg extends JEscapeDialog {
 			});
 			comps.add(new JLabel(m.getDescription()));
 			comps.add(removeButton);
-			
+
 		}
-		
+
 		JButton addMeasurementButton = new JButton("Add Measurement");
-		addMeasurementButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				ExtraMeasurementDlg dlg = new ExtraMeasurementDlg();
-				Measurement m = dlg.getExtraMeasurement();
-				if(m!=null) {
-					List<Measurement> list = new ArrayList<>(sampling.getMeasurements());
-					list.add(m);
-					sampling.setMeasurements(list);
-					refresh();
-				}
+		addMeasurementButton.addActionListener(e-> {
+			ExtraMeasurementDlg dlg = new ExtraMeasurementDlg();
+			Measurement m = dlg.getExtraMeasurement();
+			if(m!=null) {
+				List<Measurement> list = new ArrayList<>(sampling.getMeasurements());
+				list.add(m);
+				sampling.setMeasurements(list);
+				refresh();
 			}
 		});
 		comps.add(addMeasurementButton);
 		comps.add(null);
-		
-		
+
+
 		measurementPanel.add(UIUtils.createTable(comps));
 	}
-	
+
 	public void refreshMetadataPanel() {
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = GridBagConstraints.WEST;
@@ -255,12 +238,12 @@ public class SamplingDlg extends JEscapeDialog {
 		components.clear();
 		contentPanel.removeAll();
 		if(type!=null) {
-			
+
 			//Name
 			if(type.getSampleNameLabel()!=null) {
-				c.gridy++; 
+				c.gridy++;
 				c.gridx = 0; contentPanel.add(new JLabel(type.getSampleNameLabel()  + (type.isNameRequired()?"*":"") + ": "), c);
-				
+
 				if(type.isNameAutocomplete()) {
 					nameTextField = new JTextComboBox(new ArrayList<String>( DAOBiotype.getAutoCompletionFieldsForName(type, null)));
 					((JTextComboBox)nameTextField).setColumns(20);
@@ -268,13 +251,13 @@ public class SamplingDlg extends JEscapeDialog {
 					nameTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 20);
 				}
 				nameTextField.setText(sampling.getSampleName());
-				
+
 				c.gridx = 1; contentPanel.add(nameTextField, c);
 			}
-			
+
 			//Metadata
 			for (BiotypeMetadata m : type.getMetadata()) {
-				c.gridy++; 
+				c.gridy++;
 				c.gridx = 0; contentPanel.add(new JLabel(m.getName()  + (m.isRequired()?"*":"") + ": "), c);
 				JComponent comp = MetadataComponentFactory.getComponentFor(m);
 				if(comp instanceof MetadataComponent) {
@@ -282,31 +265,29 @@ public class SamplingDlg extends JEscapeDialog {
 				}
 				components.add(comp);
 				c.gridx = 1; contentPanel.add(comp, c);
-			}			
-			
+			}
+
 			//Amount
 			if(type.getAmountUnit()!=null) {
-				c.gridy++; 
+				c.gridy++;
 				c.gridx = 0; contentPanel.add(new JLabel(type.getAmountUnit().getName() + ": "), c);
 				c.gridx = 1; contentPanel.add(UIUtils.createHorizontalBox(amountTextField, new JLabel(type.getAmountUnit().getUnit())), c);
 			}
 			//Comments
-			c.gridy++; 
+			c.gridy++;
 			c.gridx = 0; contentPanel.add(new JLabel("Comments: "), c);
 			c.gridx = 1; contentPanel.add(commentsTextField, c);
 			commentsTextField.setText(sampling.getComments());
-			
-			c.gridy++; 
+
+			c.gridy++;
 			c.weighty = 1;
 			c.weightx = 1;
 			c.gridx = 1; contentPanel.add(new JLabel(""), c);
 		}
-		
-		
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @return true if sth changed in the validation process
 	 * @throws Exception
 	 */
@@ -316,22 +297,22 @@ public class SamplingDlg extends JEscapeDialog {
 		if(containerIndexComboBox.isVisible() && containerIndexComboBox.getSelection()==null) {
 			throw new Exception("You must specify a container index");
 		}
-	
+
 		//Validate name
 		if(type.getSampleNameLabel()!=null) {
 			String data = nameTextField.getText();
 			if(type.isNameRequired() && data.length()==0) throw new Exception(type.getSampleNameLabel()+" is required");
-			
+
 			if(data.length()>0 && type.isNameAutocomplete()) {
-				
-				
-				Set<String> possibleValues = new TreeSet<String>(DAOBiotype.getAutoCompletionFieldsForName(type, null));					
+
+
+				Set<String> possibleValues = new TreeSet<String>(DAOBiotype.getAutoCompletionFieldsForName(type, null));
 				if(!possibleValues.contains(data)) {
 					CorrectionMap<Biotype, JTextComponent> correctionMap1 = new CorrectionMap<Biotype, JTextComponent>();
-					
-					Correction<Biotype, JTextComponent> correction = correctionMap1.addCorrection(type, data, new ArrayList<String>( possibleValues), false);					
+
+					Correction<Biotype, JTextComponent> correction = correctionMap1.addCorrection(type, data, new ArrayList<String>( possibleValues), false);
 					correction.getAffectedData().add(nameTextField);
-					
+
 					CorrectionDlg<Biotype, JTextComponent> dlg = new CorrectionDlg<Biotype, JTextComponent>(this, correctionMap1) {
 						@Override
 						public String getSuperCategory(Biotype att) {
@@ -344,36 +325,36 @@ public class SamplingDlg extends JEscapeDialog {
 						@Override
 						protected void performCorrection(Correction<Biotype, JTextComponent> correction, String newValue) {
 							for (JTextComponent t : correction.getAffectedData()) {
-								t.setText(newValue);							
-							}						
+								t.setText(newValue);
+							}
 						}
 					};
-					
+
 					if(dlg.getReturnCode()!=CorrectionDlg.OK) return true;
 				}
 			}
 		}
-		
-		
+
+
 		//Validate Metadata
 		int i = 0;
 		for (BiotypeMetadata m : type.getMetadata()) {
 			if(i>components.size()) break;
 			if((components.get(i) instanceof MetadataComponent)) {
-				String data = ((MetadataComponent) components.get(i)).getData();					
+				String data = ((MetadataComponent) components.get(i)).getData();
 				if(m.isRequired() && data.length()==0) throw new Exception(m.getName()+" is required");
 			}
 			i++;
 		}
 		return false;
 	}
-	
+
 	public Sampling updateModel() throws Exception {
 		Biotype type = typeComboBox.getSelection();
-	
+
 		sampling.setBiotype(type);
 		if(type!=null) {
-			
+
 			//Update name
 			if(type.getSampleNameLabel()!=null) {
 				String data = nameTextField.getText();
@@ -388,28 +369,28 @@ public class SamplingDlg extends JEscapeDialog {
 				if((components.get(i) instanceof MetadataComponent)) {
 					String data = ((MetadataComponent) components.get(i)).getData();
 					metadataMap.put(m, data);
-					
+
 					if(m.isRequired() && data.length()==0) throw new Exception(m.getName()+" is required");
 				}
 				i++;
 			}
 			sampling.setMetadataMap(metadataMap);
-			
+
 			sampling.setAmount(amountTextField.getTextDouble());
-			
+
 			sampling.setComments(commentsTextField.getText());
-			
+
 			sampling.setContainerType(containerTypeComboBox.getSelection());
 			if(containerIndexComboBox.isVisible()) {
-				sampling.setBlocNo(containerIndexComboBox.getSelection());				
+				sampling.setBlocNo(containerIndexComboBox.getSelection());
 			} else {
 				sampling.setBlocNo(null);
 			}
 			sampling.setWeighingRequired(weightCheckBox.isSelected());
 			sampling.setLengthRequired(lengthCheckBox.isSelected());
 			sampling.setCommentsRequired(commentCheckBox.isSelected());
-			
-			
+
+
 		} else {
 			sampling.setMetadataMap(new HashMap<BiotypeMetadata, String>());
 		}

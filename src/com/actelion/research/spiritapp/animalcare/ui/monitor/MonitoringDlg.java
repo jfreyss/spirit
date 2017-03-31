@@ -104,15 +104,15 @@ public class MonitoringDlg extends JEscapeDialog {
 	private JPanel animalPanel = new JPanel(new GridBagLayout());
 	private List<JTextComponent> requiredComponents = new ArrayList<>();
 	private final String elb;
-	
+
 	public MonitoringDlg(Phase p) {
 		super(UIUtils.getMainFrame(), "Live Monitoring");
 
-		
+
 		this.phase = p;
 		this.study = JPAUtil.reattach(phase.getStudy());
 		List<Biosample> animals = study.getTopAttachedBiosamples();
-		this.elb = DAOResult.suggestElb(SpiritFrame.getUsername()); 
+		this.elb = DAOResult.suggestElb(SpiritFrame.getUsername());
 
 		// Reload results
 		try {
@@ -139,24 +139,22 @@ public class MonitoringDlg extends JEscapeDialog {
 		sortComboBox1.addActionListener(queryListener);
 		sortComboBox1.setEnabled(!SpiritRights.isBlindAll(study, SpiritFrame.getUser()));
 		sortComboBox2.addActionListener(queryListener);
-		
+
 		// Filter Panel
 		formulationLabel.setPreferredSize(new Dimension(200, 50));
-		JPanel filterPanel = UIUtils.createTitleBox("Filters for " + phase.getStudy().getStudyId() + " / " + phase.getShortName(), 
+		JPanel filterPanel = UIUtils.createTitleBox("Filters for " + phase.getStudy().getStudyId() + " / " + phase.getShortName(),
 				UIUtils.createHorizontalBox(
 						UIUtils.createTable(
-								new JLabel("Cage: "), UIUtils.createHorizontalBox(cageComboBox, Box.createHorizontalStrut(15), onlyRequiredCheckBox, Box.createHorizontalGlue()), 
+								new JLabel("Cage: "), UIUtils.createHorizontalBox(cageComboBox, Box.createHorizontalStrut(15), onlyRequiredCheckBox, Box.createHorizontalGlue()),
 								new JLabel("Treatment: "), UIUtils.createHorizontalBox(treatmentComboBox, Box.createHorizontalStrut(15), new JLabel("Sort: "), sortComboBox1, new JLabel("and"), sortComboBox2)),
 						Box.createHorizontalGlue(),
-						new JScrollPane(formulationLabel)						
-				));
+						new JScrollPane(formulationLabel)
+						));
 
 		JButton closeButton = new JButton("Close");
-		closeButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				dispose();
-			}
+		closeButton.addActionListener(e-> {
+			dispose();
+
 		});
 
 		// ContentPanel
@@ -185,15 +183,14 @@ public class MonitoringDlg extends JEscapeDialog {
 		updateFilters();
 		updateView();
 
-		JPanel contentPanel = new JPanel(new BorderLayout());
-		contentPanel.add(BorderLayout.NORTH, filterPanel);
-		contentPanel.add(BorderLayout.CENTER, splitPane);
-		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), balanceDecorator.getBalanceCheckBox(), Box.createHorizontalGlue(), closeButton));
-		setContentPane(contentPanel);
+		setContentPane(UIUtils.createBox(
+				splitPane,
+				filterPanel,
+				UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), balanceDecorator.getBalanceCheckBox(), Box.createHorizontalGlue(), closeButton)));
 		UIUtils.adaptSize(this, 1100, 1200);
 		setVisible(true);
 	}
-	
+
 	public String getElb() {
 		return elb;
 	}
@@ -227,11 +224,10 @@ public class MonitoringDlg extends JEscapeDialog {
 				cages.add(animal.getContainer());
 		}
 
-		cageComboBox.setValues(cages, "");
+		cageComboBox.setValues(cages, true);
 	}
 
 	private void updateView() {
-
 		// Read Filters
 		NamedTreatment filterTreatment = treatmentComboBox.getSelection();
 		Container filterCage = cageComboBox.getSelection();
@@ -275,7 +271,7 @@ public class MonitoringDlg extends JEscapeDialog {
 				int c = 0;
 				if (sortComboBox1.getSelectedIndex() == 0) {
 					c = CompareUtils.compare(o1.getContainerId(), o2.getContainerId());
-					if (c != 0) return c;					
+					if (c != 0) return c;
 					c = CompareUtils.compare(o1.getFirstBiosample()==null?"": o1.getFirstBiosample().getSampleIdName(), o2.getFirstBiosample()==null?"": o2.getFirstBiosample().getSampleIdName());
 				} else {
 					c = CompareUtils.compare(o1.getFirstGroup(), o2.getFirstGroup());
@@ -285,7 +281,7 @@ public class MonitoringDlg extends JEscapeDialog {
 				return c;
 			}
 		});
-		
+
 		// Sort animals by group/cageId/animalNo/animalId
 		Collections.sort(filteredAnimals, new Comparator<Biosample>() {
 			@Override
@@ -295,7 +291,7 @@ public class MonitoringDlg extends JEscapeDialog {
 					c = CompareUtils.compare(o1.getInheritedGroup(), o2.getInheritedGroup());
 					if (c != 0) return c;
 				}
-				
+
 				c = CompareUtils.compare(o1.getContainerId(), o2.getContainerId());
 				if (c != 0) return c;
 
@@ -303,7 +299,7 @@ public class MonitoringDlg extends JEscapeDialog {
 					c = CompareUtils.compare(o1.getSampleName(), o2.getSampleName());
 					if (c != 0) return c;
 				}
-				return CompareUtils.compare(o1.getSampleId(), o2.getSampleId());					
+				return CompareUtils.compare(o1.getSampleId(), o2.getSampleId());
 			}
 		});
 
@@ -317,8 +313,8 @@ public class MonitoringDlg extends JEscapeDialog {
 			tests.add(DAOTest.getTest(DAOTest.WEIGHING_TESTNAME));
 			tests.add(DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME));
 			tests.addAll(Measurement.getTests(StudyAction.getMeasurements(study.getStudyActions())));
-			
-			
+
+
 			allPreviousResults = new ArrayList<Result>();
 			ResultQuery q = new ResultQuery();
 			q.setTestIds(new HashSet<>(JPAUtil.getIds(tests)));
@@ -352,9 +348,10 @@ public class MonitoringDlg extends JEscapeDialog {
 		}
 		cagePanel.setMinimumSize(new Dimension(0,0));
 		cagePanel.setMaximumSize(new Dimension(cagePanel.getPreferredSize().width,cagePanel.getPreferredSize().height));
-		c.gridheight = GridBagConstraints.REMAINDER;
+
+		c.gridy = GridBagConstraints.REMAINDER;
 		c.weighty = 1;
-		cagePanel.add(Box.createGlue(), c);
+		cagePanel.add(Box.createVerticalGlue(), c);
 		cagePanel.validate();
 
 		// AnimalsInfo
@@ -376,30 +373,28 @@ public class MonitoringDlg extends JEscapeDialog {
 			cagePanel.setBackground(Color.WHITE);
 			cagePanels.add(cagePanel);
 		}
-		animalPanel.add(BorderLayout.CENTER, UIUtils.createVerticalBox(cagePanels));
+
+		animalPanel.add(BorderLayout.NORTH, UIUtils.createVerticalBox(cagePanels));
 		animalPanel.validate();
-		
+
 		if (splitPane != null) {
 			splitPane.setDividerLocation(Math.min(350, filteredContainers.size() * 110));
 		}
-		
-		
+
+
 		//Init required components
-		JComponent previous = null; 
+		JComponent previous = null;
 		for(final JComponent comp: requiredComponents) {
-			if(comp.isEnabled()) {			
+			if(comp.isEnabled()) {
 				if(previous!=null) {
-					((JCustomTextField)previous).addActionListener(new ActionListener() {					
-						@Override
-						public void actionPerformed(ActionEvent e) {
-							comp.requestFocusInWindow();
-						}
+					((JCustomTextField)previous).addActionListener(e-> {
+						comp.requestFocusInWindow();
 					});
 				}
 				previous = comp;
 			}
 		}
-		
+
 	}
 
 	public String getFormulation(NamedTreatment nt) {
@@ -434,7 +429,7 @@ public class MonitoringDlg extends JEscapeDialog {
 			}
 		}
 	}
-	
+
 	public static List<FoodWater> getOrCreateFoodWaterFor(Phase phase) {
 		List<FoodWater> fwsFromGivenPhase = DAOFoodWater.getFoodWater(phase.getStudy(), phase);
 		List<FoodWater> res = new ArrayList<FoodWater>();
@@ -444,26 +439,26 @@ public class MonitoringDlg extends JEscapeDialog {
 			FoodWater sel = null;
 			for (FoodWater fw : fwsFromGivenPhase) {
 				if(fw.getContainerId().equals(cage.getContainerId()) && fw.getPhase().equals(phase)) {
-					sel = fw; 
+					sel = fw;
 					break;
 				}
 			}
-			
+
 			//If not existing, create it
 			if(sel==null) {
 				sel = new FoodWater();
 				sel.setPhase(phase);
 				sel.setContainerId(cage.getContainerId());
-			}					
-			//Skip this cage if all animals are already dead			
+			}
+			//Skip this cage if all animals are already dead
 			if(cage.getBiosamples().size()<=0) continue;
-			
+
 
 			//Add the FoodWater
 			res.add(sel);
-		}		
+		}
 		return res;
-		
+
 	}
 
 }

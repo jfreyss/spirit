@@ -159,7 +159,7 @@ public class AttachAnimalsManuallyDlg extends JSpiritEscapeDialog {
 			biotype = DAOBiotype.getBiotype(Biotype.ANIMAL);
 			//			canChooseBiotype = true;
 		}
-		biotypeComboBox.setSelectedItem(biotype);
+		biotypeComboBox.setSelection(biotype);
 
 		try {
 			animalTable.getModel().setBiotype(biotype);

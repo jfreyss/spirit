@@ -63,46 +63,46 @@ import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 
 public class LocationEditDlg extends JSpiritEscapeDialog {
-	
+
 	private LocationEditTable table = new LocationEditTable();
-	private List<Location> savedLocations = null; 
-	
+	private List<Location> savedLocations = null;
+
 	public static LocationEditDlg duplicate(List<Location> locations) {
 		Set<Location> tree = new HashSet<>();
 		for (Location l : locations) {
 			tree.addAll(l.getChildrenRec(10));
 		}
-		
+
 		if(tree.size()!=locations.size()) {
 			int res = JOptionPane.showConfirmDialog(UIUtils.getMainFrame(), "Do you want to duplicate the children also?", "Duplicate Locations", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if(res==JOptionPane.YES_OPTION) {
-				locations = new ArrayList<Location>(tree);
+				locations = new ArrayList<>(tree);
 			} else if(res==JOptionPane.NO_OPTION) {
 				//ok
 			} else {
 				return null;
 			}
 		}
-		
+
 		return new LocationEditDlg(locations, true, true);
 	}
-	
+
 	public static LocationEditDlg edit(List<Location> locations) {
 		return new LocationEditDlg(locations, false, true);
 	}
-	
+
 	public static LocationEditDlg editInSameTransaction(List<Location> locations) {
 		return new LocationEditDlg(locations, false, false);
 	}
-	
+
 	private LocationEditDlg(List<Location> myLocations, boolean duplicate, final boolean newTransaction) {
 		super(UIUtils.getMainFrame(), "Location - Edit", newTransaction? LocationEditDlg.class.getName(): null);
 		List<Location> locations = JPAUtil.reattach(myLocations);
-				
+
 		if(duplicate) {
 			locations = Location.duplicate(locations);
 		}
-		
+
 		//Create Print Button
 		JButton printButton = new JButton(new LocationActions.Action_Print(locations) {
 			@Override
@@ -117,7 +117,7 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 
 		//Create Save Button
 		JButton saveButton = new JIconButton(IconType.SAVE, newTransaction? "Save": "Ok");
-		saveButton.addActionListener(new ActionListener() {			
+		saveButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -126,10 +126,10 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 						Location location = iterator.next();
 						if((location.getName()==null || location.getName().length()==0) && location.getLocationType()==null) {
 							iterator.remove();
-						}						
+						}
 					}
 					if(newTransaction) {
-						save(locations);								
+						save(locations);
 					} else {
 						savedLocations = locations;
 						dispose();
@@ -139,22 +139,22 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 				}
 			}
 		});
-		
+
 		//Panel Layout
 		setContentPane( UIUtils.createBox(
 				UIUtils.createTitleBox("Locations", new JScrollPane(table)),
 				null,
 				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), printButton, saveButton)));
 		UIUtils.adaptSize(this, 1140, 600);
-		
+
 		//init
 		table.setRows(locations);
-		
 
-	
+
+
 		setVisible(true);
 	}
-	
+
 	public static boolean deleteInNewContext(List<Location> locations) {
 		try {
 
@@ -162,8 +162,9 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 			locations = JPAUtil.reattach(locations);
 			SpiritUser user = Spirit.askForAuthentication();
 			for (Location loc : locations) {
-				if (!SpiritRights.canEdit(loc, user))
+				if (!SpiritRights.canEdit(loc, user)) {
 					throw new Exception("You are not allowed to delete the location " + loc);
+				}
 			}
 
 			delete(locations);
@@ -176,30 +177,30 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 			JPAUtil.popEditableContext();
 		}
 	}
-	
+
 	private static void delete(List<Location> locations) throws Exception {
 		int res = JOptionPane.showConfirmDialog(UIUtils.getMainFrame(), "Are you sure you want to delete " + (locations.size() == 1 ? locations.get(0).getHierarchyFull() : locations.size() + " locations") + "?", "Delete Location", JOptionPane.YES_NO_OPTION);
 		if (res != JOptionPane.YES_OPTION) return;
-		
-		List<Biosample> toCheckout = new ArrayList<Biosample>();			
+
+		List<Biosample> toCheckout = new ArrayList<Biosample>();
 		for (Location l : locations) {
 			toCheckout.addAll(l.getBiosamples());
 		}
 
 		Status status = null;
 		if(toCheckout.size()>0) {
-			
+
 			BiosampleTable table = new BiosampleTable();
 			table.getModel().setCanExpand(false);
 			table.getModel().setMode(Mode.COMPACT);
 			table.setRows(toCheckout);
 			JScrollPane sp = new JScrollPane(table);
 			sp.setPreferredSize(new Dimension(750, 400));
-			
+
 			JPanel msgPanel = new JPanel(new BorderLayout());
 			msgPanel.add(BorderLayout.NORTH, new JLabel("<html><div style='color:orange'>What do you want to do with the " + toCheckout.size() + " biosamples of those locations?</div>"));
 			msgPanel.add(BorderLayout.CENTER, sp);
-			
+
 			res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(), msgPanel, "Checkout", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {"Mark as "+Status.TRASHED, "Mark as "+Status.USEDUP, "Cancel"}, null);
 			if(res==0) {
 				status = Status.TRASHED;
@@ -208,7 +209,7 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 			} else {
 				return;
 			}
-			
+
 		}
 
 		//Update in a transaction
@@ -218,25 +219,25 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 			session = JPAUtil.getManager();
 			txn = session.getTransaction();
 			txn.begin();
-			
+
 			for (Biosample b : toCheckout) {
 				b.setLocPos(null, -1);
 				b.setStatus(status);
-			}				
+			}
 			if(toCheckout.size()>0) DAOBiosample.persistBiosamples(session, toCheckout, SpiritFrame.getUser());
 			DAOLocation.deleteLocations(session, locations, SpiritFrame.getUser());
-			
+
 
 			txn.commit();
 			txn = null;
-			
+
 			SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_DELETED, Location.class, locations);
 
 		} finally {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
-		} 
+		}
 	}
-	
+
 
 
 	private void save(List<Location> locations) throws Exception {
@@ -245,7 +246,7 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 		dispose();
 		this.savedLocations = locations;
 	}
-	
+
 
 	public List<Location> getSavedLocations() {
 		return savedLocations;

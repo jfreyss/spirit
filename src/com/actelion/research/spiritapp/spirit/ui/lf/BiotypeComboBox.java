@@ -23,7 +23,6 @@ package com.actelion.research.spiritapp.spirit.ui.lf;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Image;
 import java.util.Collection;
 
@@ -34,7 +33,7 @@ import javax.swing.JLabel;
 import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.util.ui.FastFont;
-import com.actelion.research.util.ui.JGenericComboBox;
+import com.actelion.research.util.ui.JObjectComboBox;
 import com.actelion.research.util.ui.UIUtils;
 
 /**
@@ -43,70 +42,51 @@ import com.actelion.research.util.ui.UIUtils;
  * @author freyssj
  *
  */
-public class BiotypeComboBox extends JGenericComboBox<Biotype> {
+public class BiotypeComboBox extends JObjectComboBox<Biotype> {
 
 	public BiotypeComboBox() {
 		this("");
 	}
-	
+
 	public BiotypeComboBox(String label) {
 		this(null, label);
 	}
 	public BiotypeComboBox(Collection<Biotype> values) {
-		this(values, "");
+		this(values, "Biotype");
 	}
 	public BiotypeComboBox(Collection<Biotype> values, String label) {
 		this.setTextWhenEmpty(label);
-		setMaximumRowCount(35);
-		setValues(values);			
+		setValues(values);
+
 	}
-	
+
 	@Override
-	public Dimension getPreferredSize() {
-		Dimension dim = super.getPreferredSize();
-		dim.width+=20;
-		return dim;
-	}
-	
-	@Override
-	public Component processCellRenderer(JLabel comp, Biotype type, int index) {
-		if(type!=null) {
-			int depth = type.getDepth();
-			Image img = ImageFactory.getImage(type, FastFont.getAdaptedSize(16));
-			comp.setText(type.getName());
-			comp.setFont(depth==0? FastFont.BOLD: FastFont.MEDIUM);						
+	public Component processCellRenderer(JLabel comp, String typeName, int index) {
+		Biotype biotype = getMap().get(typeName);
+		if(biotype!=null) {
+			Image img = ImageFactory.getImage(biotype, FastFont.getAdaptedSize(18));
+			comp.setText(typeName);
+			comp.setFont(biotype.getDepth()==0? FastFont.BOLD: FastFont.MEDIUM);
 			comp.setIcon(new ImageIcon(img));
 			comp.setIconTextGap(1);
-			comp.setBorder(BorderFactory.createEmptyBorder(depth==0?2:0, depth*11, 1, 0));
+			comp.setBorder(BorderFactory.createEmptyBorder(biotype.getDepth()==0?2:0, biotype.getDepth()*11, 1, 0));
 			comp.setOpaque(true);
-			comp.setBackground(type.isHidden()? UIUtils.getDilutedColor(Color.LIGHT_GRAY, type.getCategory().getBackground()): type.getCategory().getBackground());	
-			comp.setForeground(type.isHidden()? Color.LIGHT_GRAY: Color.BLACK);
+			comp.setBackground(biotype.isHidden()? UIUtils.getDilutedColor(Color.LIGHT_GRAY, biotype.getCategory().getBackground()): biotype.getCategory().getBackground());
+			comp.setForeground(biotype.isHidden()? Color.LIGHT_GRAY: Color.BLACK);
+		} else {
+			comp.setText(typeName);
 		}
-		
 		return comp;
 	}
-	
-	@Override
-	public void setValues(Collection<Biotype> values, String textWhenEmpty) {
-		super.setValues(values, textWhenEmpty);
-	}
-	
-	@Override
+
 	public void setSelectionString(String type) {
-		for (int i=0; i <= getModel().getSize(); i++) {
-			String val = getModel().getElementAt(i)==null?"": getModel().getElementAt(i).toString();
-			if(val.equalsIgnoreCase(type)) {
-				super.setSelectedIndex(i);
-				break;
-			}			
-		}
+		setText(type);
 	}
-	
 
 
 	public String getSelectionString() {
-		return getSelectedItem().toString();
+		return getText();
 	}
 
-	
+
 }

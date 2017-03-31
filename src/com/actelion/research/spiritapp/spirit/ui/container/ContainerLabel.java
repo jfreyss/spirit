@@ -64,10 +64,12 @@ public class ContainerLabel extends JComponentNoRepaint {
 	public ContainerLabel() {
 		this(ContainerDisplayMode.FULL);
 	}
+
 	public ContainerLabel(ContainerDisplayMode displayMode) {
 		this.displayMode = displayMode;
 		setOpaque(true);
 	}
+
 	public ContainerLabel(ContainerDisplayMode displayMode, Container container) {
 		this(displayMode);
 		setContainer(container);
@@ -203,7 +205,7 @@ public class ContainerLabel extends JComponentNoRepaint {
 			} else if(containerId!=null && containerId.length()>0) {
 				//Check if it is created
 				g.setColor(CONTAINERID_COLOR);
-				g.setFont(containerType==ContainerType.CAGE? FastFont.BOLD: FastFont.REGULAR);
+				g.setFont(FastFont.REGULAR);
 				g.drawString(containerId, 24, FastFont.REGULAR.getSize()+4);
 			}
 		}
@@ -213,7 +215,9 @@ public class ContainerLabel extends JComponentNoRepaint {
 	public Dimension getPreferredSize() {
 		int height = FastFont.getDefaultFontSize()*2;
 		if(displayMode==ContainerDisplayMode.FULL) {
-			return new Dimension(Math.max(80, 4 + Math.max(fullLocation==null?0: getFontMetrics(FastFont.REGULAR).stringWidth(fullLocation), containerId==null?0:getFontMetrics(FastFont.SMALL).stringWidth( (containerType==null?"":containerType.getName()+": ") + containerId))), height);
+			return new Dimension(Math.max(80, 4 + Math.max(
+					fullLocation==null?0: getFontMetrics(FastFont.REGULAR).stringWidth(fullLocation),
+							containerId==null?0:getFontMetrics(FastFont.REGULAR).stringWidth( (containerType==null?"":containerType.getName()+": ") + containerId))), height);
 		} else  if(displayMode==ContainerDisplayMode.NAME_POS) {
 			return new Dimension(Math.max(45, 16 + (fullLocation==null?0: getFontMetrics(FastFont.REGULAR).stringWidth(fullLocation))), height);
 		} else if(displayMode==ContainerDisplayMode.CONTAINERID_OR_BIOSAMPLEID || displayMode==ContainerDisplayMode.CONTAINERID) {

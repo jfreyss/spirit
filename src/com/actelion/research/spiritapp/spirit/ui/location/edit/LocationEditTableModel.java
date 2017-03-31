@@ -26,7 +26,6 @@ import java.util.List;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationColsColumn;
-import com.actelion.research.spiritapp.spirit.ui.location.column.LocationDepartmentColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationDescriptionColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationLabelingColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationNameColumn;
@@ -46,31 +45,30 @@ public class LocationEditTableModel extends ExcelTableModel<Location> {
 		LocationNameColumn nameColumn = new LocationNameColumn();
 		nameColumn.setDiplayIcon(false);
 		nameColumn.setBold(true);
-		
+
 		List<Column<Location, ?>> columns = new ArrayList<>();
-		columns.add(new LocationParentColumn());
 		columns.add(new LocationTypeColumn());
+		columns.add(new LocationParentColumn());
 		columns.add(nameColumn);
+		columns.add(new LocationDescriptionColumn());
 		columns.add(new LocationLabelingColumn());
 		columns.add(new LocationRowsColumn());
 		columns.add(new LocationColsColumn());
 		if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER) {
 			columns.add(new LocationPrivacyColumn());
-			columns.add(new LocationDepartmentColumn());
 		}
-		
-		columns.add(new LocationDescriptionColumn());
-		
+
+
 		setTreeColumn(nameColumn);
 		setColumns(columns);
 	}
 
-	
+
 
 	@Override
 	public List<Location> getTreeChildren(Location row) {
 		try {
-			List<Location> res = new ArrayList<Location>();
+			List<Location> res = new ArrayList<>();
 			for (Location loc: row.getChildren()) {
 				if(!SpiritRights.canRead(loc, SpiritFrame.getUser())) continue;
 				res.add(loc);
@@ -80,13 +78,13 @@ public class LocationEditTableModel extends ExcelTableModel<Location> {
 			e.printStackTrace();
 			return new ArrayList<Location>();
 		}
-	}	
-	
+	}
+
 	@Override
 	public Location createRecord() {
 		return new Location();
 	}
-	
+
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
 		Location loc = getRows().get(rowIndex);

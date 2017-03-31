@@ -21,9 +21,6 @@
 
 package com.actelion.research.spiritapp.spirit.ui.result.edit;
 
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -42,62 +39,41 @@ import com.actelion.research.util.ui.JTextComboBox;
 import com.actelion.research.util.ui.UIUtils;
 
 public class EditResultSelectElbDlg extends JEscapeDialog {
-	
+
 	private JTextComboBox comboBox = new JTextComboBox();
+	private final List<String> recentElbs;
 	private String returnedValue;
-	
-	
+
+
 	public EditResultSelectElbDlg() {
 		super(UIUtils.getMainFrame(), "Results - New", true);
-		
-		final List<String> recentElbs = DAOResult.getRecentElbs(SpiritFrame.getUser());
+
+		recentElbs = DAOResult.getRecentElbs(SpiritFrame.getUser());
 		comboBox.setChoices(recentElbs);
+		comboBox.addActionListener(e-> {
+			ok();
+		});
+		JButton okButton = new JButton("Continue");
+
+		okButton.addActionListener(ev-> {
+			ok();
+		});
 
 		JLabel header = new JLabel(
-				"<html><body><b>Enter the ELB (electronic lab journal) or <br>" +
+				"<html><body><b>Enter a new ELB (electronic lab journal) or <br>" +
 				" select an existing one to edit/appends results.</b></body></html>");
-		header.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-		
-		JButton okButton = new JButton("Continue");
-		
-		JPanel contentPanel = new  JPanel(new BorderLayout());
-		contentPanel.add(BorderLayout.NORTH, header);
-		contentPanel.add(BorderLayout.CENTER, UIUtils.createHorizontalBox(new JLabel("ELB: "), comboBox, Box.createHorizontalGlue()));
-		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
+		header.setBorder(BorderFactory.createEmptyBorder(7,7,7,7));
+
+		JPanel contentPanel = UIUtils.createBox(
+				UIUtils.createTitleBox(UIUtils.createBox(
+						UIUtils.createHorizontalBox(comboBox, Box.createHorizontalGlue()),
+						header)),
+				null,
+				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
 		setContentPane(contentPanel);
 		pack();
 		setLocationRelativeTo(UIUtils.getMainFrame());
-		
-		okButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				String res = comboBox.getText();
-				try {
-					
-					if(DBAdapter.getAdapter().isInActelionDomain() && res.startsWith("ELB") && !recentElbs.contains(res)) {
-						if(res.length()<12) throw new Exception("The ELB is not well formatted");
-					}
-					
-					if(res.length()==0 || res.equalsIgnoreCase("ELB9999-9999")) {
-						throw new Exception("Please enter an ELB");
-					}
-					returnedValue = res;
-					dispose();
-				} catch(Exception e) {
-					JExceptionDialog.showError(EditResultSelectElbDlg.this, e);
-					if(res.startsWith("ELB")) {
-						comboBox.selectAll();
-						SwingUtilities.invokeLater(new Runnable() {
-							@Override
-							public void run() {
-								comboBox.requestFocus();
-							}
-						});
-					}	
-				}				
-			}
-		});
-		
+
 		if(DBAdapter.getAdapter().isInActelionDomain()) {
 			comboBox.setText("ELB9999-9999");
 		} else {
@@ -107,8 +83,7 @@ public class EditResultSelectElbDlg extends JEscapeDialog {
 		comboBox.selectAll();
 		getRootPane().setDefaultButton(okButton);
 		setVisible(true);
-		
-		
+
 	}
 
 
@@ -118,7 +93,33 @@ public class EditResultSelectElbDlg extends JEscapeDialog {
 	public String getReturnedValue() {
 		return returnedValue;
 	}
-	
-	
+
+	private void ok() {
+		String res = comboBox.getText();
+		try {
+
+			if(DBAdapter.getAdapter().isInActelionDomain() && res.startsWith("ELB") && !recentElbs.contains(res)) {
+				if(res.length()<12) throw new Exception("The ELB is not well formatted");
+			}
+
+			if(res.length()==0 || res.equalsIgnoreCase("ELB9999-9999")) {
+				throw new Exception("Please enter an ELB");
+			}
+			returnedValue = res;
+			dispose();
+		} catch(Exception e) {
+			JExceptionDialog.showError(EditResultSelectElbDlg.this, e);
+			if(res.startsWith("ELB")) {
+				comboBox.selectAll();
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						comboBox.requestFocus();
+					}
+				});
+			}
+		}
+	}
+
 
 }

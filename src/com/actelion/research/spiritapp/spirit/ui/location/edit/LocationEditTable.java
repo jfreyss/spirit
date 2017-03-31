@@ -27,12 +27,12 @@ import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.util.ui.exceltable.ExcelTable;
 
 public class LocationEditTable extends ExcelTable<Location> {
-	
+
 	public LocationEditTable() {
 		super(new LocationEditTableModel());
-		setRowHeight(26);
+		setRowHeight(28);
 	}
-	
+
 	@Override
 	public void setRows(List<Location> rows) {
 		super.setRows(rows);
@@ -42,6 +42,6 @@ public class LocationEditTable extends ExcelTable<Location> {
 	public boolean canRemove(Location row) {
 		return row==null || row.getId()<=0;
 	}
-	
+
 
 }

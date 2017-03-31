@@ -35,35 +35,36 @@ import javax.imageio.ImageIO;
 import javax.persistence.Transient;
 
 public enum LocationType {
-	BUILDING("Building",LocationCategory.ADMIN, Disposition.BOX),
-	LAB("Lab", 			LocationCategory.ADMIN, Disposition.BOX),
+	BUILDING("Building",LocationCategory.ADMIN, 	Disposition.BOX),
+	LAB("Lab", 			LocationCategory.ADMIN, 	Disposition.BOX),
 	FREEZER("Freezer", 	LocationCategory.CONTAINER, Disposition.BOX),
 	SHELF("Shelf", 		LocationCategory.CONTAINER, Disposition.BOX),
 	DRAWER("Drawer", 	LocationCategory.CONTAINER, Disposition.BOX),
 	TANK("Tank", 		LocationCategory.CONTAINER, Disposition.HORIZONTAL),
 	TOWER("Tower", 		LocationCategory.CONTAINER, Disposition.VERTICAL),
-	BOX("Box", 			LocationCategory.MOVEABLE, Disposition.BOX, LocationLabeling.ALPHA, 8, 12),	
-	RACK("Rack",		LocationCategory.MOVEABLE, Disposition.BOX, LocationLabeling.ALPHA, 8, 12),	
-	BAG("Bag", 			LocationCategory.MOVEABLE, Disposition.BOX, LocationLabeling.NONE, -1, -1),	
-	SLIDEBOX("SlideBox",LocationCategory.MOVEABLE, Disposition.BOX, LocationLabeling.NUM_I, 50, 2),	
+	BOX("Box", 			LocationCategory.MOVEABLE, Disposition.BOX, LocationLabeling.ALPHA, 8, 12),
+	RACK("Rack",		LocationCategory.MOVEABLE, Disposition.BOX, LocationLabeling.ALPHA, 8, 12),
+	BAG("Bag", 			LocationCategory.MOVEABLE, Disposition.BOX, LocationLabeling.NONE, -1, -1),
+	SLIDEBOX("SlideBox",LocationCategory.MOVEABLE, Disposition.BOX, LocationLabeling.NUM_I, 50, 2),
 	;
-	
-	
-	
+
+
+
 	public static enum Disposition {HORIZONTAL, VERTICAL, BOX}
 	public static enum LocationCategory {ADMIN, CONTAINER, MOVEABLE}
-	
+
 	private final String name;
 	private final LocationCategory category;
 	private final Disposition disposition;
-	private final LocationLabeling positionType;	
+	private final LocationLabeling positionType;
 	private final int defaultRows;
 	private final int defaultCols;
-	
+
 	private LocationType(String name, LocationCategory category, Disposition disposition) {
 		this(name, category, disposition, null, -1, -1);
-				
+
 	}
+
 	private LocationType(String name, LocationCategory category, Disposition disposition, LocationLabeling positionType, int defaultRows, int defaultCols) {
 		this.name = name;
 		this.category = category;
@@ -72,20 +73,34 @@ public enum LocationType {
 		this.defaultCols = defaultCols;
 		this.defaultRows = defaultRows;
 	}
-	
+
+	public LocationType getPreferredChild() {
+		switch (this) {
+		case BUILDING: return LocationType.LAB;
+		case LAB: return LocationType.FREEZER;
+		case FREEZER: return LocationType.DRAWER;
+		case SHELF: return LocationType.DRAWER;
+		case TANK: return LocationType.TOWER;
+		case TOWER: return LocationType.BOX;
+		default: return null;
+		}
+
+	}
+
+
 	@Override
 	public String toString() {
 		return name;
 	}
-	
+
 	public String getName() {
 		return name;
-	}	
-	
+	}
+
 	public Disposition getDisposition() {
 		return disposition;
 	}
-	
+
 	public static List<LocationType> getValues() {
 		List<LocationType> res = new ArrayList<LocationType>();
 		for (LocationType cat : values()) {
@@ -93,18 +108,18 @@ public enum LocationType {
 		}
 		return res;
 	}
-	
+
 	@Transient
 	public static final Map<String, Image> images = new HashMap<>();
-	
+
 	@Transient
 	public static final Map<String, Image> smallImages = new HashMap<>();
-	
-	
+
+
 	public Image getImage() {
 		Image image = images.get(name);
 		if(image==null) {
-			synchronized (images) {				
+			synchronized (images) {
 				String n = getName().toLowerCase();
 				if(n.indexOf(' ')>0) n = n.substring(0, n.indexOf(' '));
 				URL url = getClass().getResource(n+".png");
@@ -114,7 +129,7 @@ public enum LocationType {
 					} catch (Exception e) {
 						System.err.println("no image for "+name.toLowerCase()+".png  "+e);
 					}
-				} 
+				}
 				if(image==null) {
 					image = new BufferedImage(60, 60, BufferedImage.TYPE_INT_ARGB);
 					Graphics2D g = (Graphics2D) image.getGraphics();
@@ -127,7 +142,7 @@ public enum LocationType {
 		Image img = images.get(name);
 		return img;
 	}
-	
+
 	public Image getImageThumbnail() {
 		if(!smallImages.containsKey(name)) {
 			Image img = getImage();
@@ -153,11 +168,11 @@ public enum LocationType {
 	public int getDefaultCols() {
 		return defaultCols;
 	}
-	
+
 	public int getDefaultRows() {
 		return defaultRows;
 	}
-	
+
 	public static List<LocationType> getPossibleRoots() {
 		List<LocationType> roots = new ArrayList<>();
 		for (LocationType t : values()) {
@@ -165,5 +180,5 @@ public enum LocationType {
 		}
 		return roots;
 	}
-	
+
 }

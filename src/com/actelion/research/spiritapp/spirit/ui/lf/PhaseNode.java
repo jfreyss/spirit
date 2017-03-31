@@ -27,11 +27,11 @@ import java.util.List;
 
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxOneNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxNode;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 
-public class PhaseNode extends TextComboBoxOneNode {
+public class PhaseNode extends TextComboBoxNode {
 	private Study study;
 	
 	public PhaseNode(FormTree tree, final Strategy<String> strategy) {

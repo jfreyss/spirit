@@ -24,133 +24,149 @@ package com.actelion.research.spiritapp.spirit.ui.lf;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+import java.awt.Graphics;
 import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JList;
+import javax.swing.JLabel;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.ui.FastFont;
+import com.actelion.research.util.ui.JObjectComboBox;
 import com.actelion.research.util.ui.JTextComboBox;
 import com.actelion.research.util.ui.UIUtils;
 
-public class StudyComboBox extends JTextComboBox {
+public class StudyComboBox extends JObjectComboBox<Study> {
+
+	private class StudyLabel extends JLabel {
+		Study study;
+
+		public StudyLabel() {
+
+		}
+
+		private void setStudy(Study s) {
+			this.study = s;
+		}
+
+		@Override
+		protected void paintComponent(Graphics g) {
+			UIUtils.applyDesktopProperties(g);
+			super.paintComponent(g);
+			String user = SpiritFrame.getUser()==null? null: SpiritFrame.getUser().getUsername();
+			if(study==null) {
+				setText(" ");
+				return;
+			} else {
+				String title = (study.getTitle()==null?"":study.getTitle());
+				boolean resp = study.isMentioned(user);
+
+				Color bg = getBackground();
+				if(resp) {
+					bg = UIUtils.getDilutedColor(bg, Color.YELLOW, .9);
+				}
+
+				g.setColor(bg);
+				g.fillRect(0, 0, getWidth(), getHeight());
+				g.setColor(getForeground());
+				g.setFont(FastFont.BOLD);
+				int x = 2;
+				int y = getHeight()-4;
+				g.drawString(study.getStudyId(), x, y);
+				x += g.getFontMetrics().stringWidth(study.getStudyId()) + 5;
+
+				if(study.getIvv()!=null && study.getIvv().length()>0) {
+					g.setFont(FastFont.REGULAR);
+					g.drawString(study.getIvv(), x, y);
+					x += g.getFontMetrics().stringWidth(study.getIvv()) + 3;
+				}
+				g.setFont(FastFont.SMALL);
+				g.drawString(title, x, y);
+				x += g.getFontMetrics().stringWidth(title);
+
+				if(study.getCreUser()!=null && study.getCreUser().length()>0) {
+					String s = "[" + study.getCreUser() + "]";
+					g.setColor(bg);
+					g.fillRect(getWidth() - g.getFontMetrics().stringWidth(s) - 4, 0, getWidth(), getHeight());
+					g.setColor(Color.GRAY);
+					g.drawString(s, getWidth() - g.getFontMetrics().stringWidth(s) - 2, y);
+				}
+			}
+		}
+
+		@Override
+		public Dimension getPreferredSize() {
+			return new Dimension(500, 20);
+		}
+	}
+
+
+
+
 
 	private RightLevel level;
-	private Map<String, Study> quickCache = new LinkedHashMap<>();
-	
+	private StudyLabel studyLabel = new StudyLabel();
+
 	public StudyComboBox() {
 		this(RightLevel.READ, "StudyId");
 	}
-	
+
 	public StudyComboBox(String label) {
 		this(RightLevel.READ, label);
 	}
-	
+
 	public StudyComboBox(RightLevel level) {
 		this(level, "StudyId");
 	}
-	
-	public StudyComboBox(RightLevel level, final String label) {
-		super(true);
-		setTextWhenEmpty(label);
-		addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusGained(FocusEvent e) {
-				selectAll();
-			}
-		});
 
+	@Override
+	public Study getSelection() {
+		Study study = super.getSelection();
+		if(study!=null) return study;
+		return DAOStudy.getStudyByStudyId(getText());
+	}
+
+	public StudyComboBox(RightLevel level, final String label) {
+		setTextWhenEmpty(label);
+		setAllowTyping(true);
 		this.level = level;
-		
-		setListCellRenderer(new DefaultListCellRenderer() {
-	
-			
-			@Override
-			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-				Study study = quickCache==null? null: quickCache.get((String)value);
-				String user = SpiritFrame.getUser()==null? null: SpiritFrame.getUser().getUsername();
-				if(study==null) {
-					setText("<html><div>" + value +"<br></html>");
-				} else {
-					String title = (study.getTitle()==null?"":study.getTitle());
-					int maxLength = 100 - (study.getIvv()==null?0: study.getIvv().length()+2);
-					if(title.length()>maxLength) title = title.substring(0,maxLength-2) + "...";
-					boolean resp = study.isMentioned(user);
-					
-					setText("<html><div style='white-space:nowrap'>" +
-							(study.getStudyId()!=null? "<b style='font-size:10px'>" + study.getStudyId() + "</b>:&nbsp;&nbsp;": "") +
-							(study.getIvv()!=null? "<span style='font-size:10px'>"+study.getIvv()+"</span>&nbsp;&nbsp;": "") +
-							"<span style='color:gray;white-space:nowrap;font-size:8px'>" + (study.getIvv()!=null? ": ": "") + title + "</span>" +
-							"<span style='white-space:nowrap;font-size:8px'>" + (study.getCreUser()	!=null? " ["+study.getCreUser()+"]": "") + "</span>" +
-							"</html>");
-					if(resp) setBackground(UIUtils.getDilutedColor(getBackground(), Color.YELLOW, .9));
-//					setIcon(study.getStatus()==StudyStatus.ONGOING? IconType.ORANGE_FLAG.getIcon(): study.getStatus()==StudyStatus.FINISHED? IconType.GREEN_FLAG.getIcon(): IconType.RED_FLAG.getIcon());
-				}
-				setPreferredSize(new Dimension(500, 20));
-				return this;
-			}
-		});
-		
-		addPropertyChangeListener(JTextComboBox.PROPERTY_TEXTCHANGED, new PropertyChangeListener() {			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				cleanValue();
-				
-			}
+
+		addPropertyChangeListener(JTextComboBox.PROPERTY_TEXTCHANGED, evt-> {
+			cleanValue();
 		});
 	}
-	
+
+	@Override
+	public Component processCellRenderer(JLabel comp, String value, int index) {
+		Study study = getMap().get(value);
+		if(study==null) {
+			studyLabel.setStudy(null);
+		} else {
+			studyLabel.setStudy(study);
+		}
+		return studyLabel;
+	}
+
 	public void setLevel(RightLevel level) {
 		this.level = level;
-		quickCache = null;
-	}
-	
-	public void reload() {
-		quickCache = null;
-		loadStudies();
-	}
-	
-	public void loadStudies() {
-		if(quickCache==null) {
-			setValues(DAOStudy.getRecentStudies(SpiritFrame.getUser(), level));
-		}
-	}
-	
-	@Override
-	public Collection<String> getChoices() {
-		loadStudies();		
-		return quickCache.keySet() ;
-	}
-	
-	
-	public void setValues(List<Study> studies) {
-		quickCache = new LinkedHashMap<>();
-		for (Study s : studies) {
-			quickCache.put(s.getStudyId(), s);
-		}
 	}
 
-	
+	@Override
+	public Collection<Study> getValues() {
+		return DAOStudy.getRecentStudies(SpiritFrame.getUser(), level);
+	}
+
 	public static String cleanValue(String studyIds) {
 		String[] tokens = MiscUtils.split(studyIds);
 		StringBuilder sb = new StringBuilder();
 		for (String sid : tokens) {
 			if(!sid.toUpperCase().equals(sid)) {
 				sid = sid.toUpperCase();
-			}			
-			if(sid.length()>0 && sid.length()<7 && !sid.equals("0")) {			
+			}
+			if(sid.length()>0 && sid.length()<7 && !sid.equals("0")) {
 				//Normalize the studyId
 				String s = sid.startsWith("S-")? sid.substring(2): sid.startsWith("S")? sid.substring(1): sid;
 				try {
@@ -159,45 +175,27 @@ public class StudyComboBox extends JTextComboBox {
 					sid = "S-" + s;
 				} catch(Exception e) {
 					//nothing
-				}				
+				}
 			}
 			if(sb.length()>0) sb.append(", ");
 			sb.append(sid);
 		}
 		return sb.toString();
 	}
-	
-	private void cleanValue() {		
+
+	private void cleanValue() {
 		if(getText()==null) return;
-		
+
 		String newVal = cleanValue(getText());
 		if(!getText().equals(newVal)) {
 			setText(newVal);
 		}
 	}
-	
-	
-//	/**
-//	 * TODO remove the reload (should not be done by component)
-//	 * Use getText
-//	 * @return
-//	 */
-//	@Deprecated
-//	public Study getStudy() {
-//		String s = getText();
-//		Study study = quickCache==null? null: quickCache.get(s);
-//		if(study==null) { //always load from db to have a valid study
-//			study = DAOStudy.getStudyByStudyId(s);
-//		} else {
-//			study = JPAUtil.reattach(study);
-//		}
-//			
-//		if(level==RightLevel.BLIND && !SpiritRights.canBlind(study, Spirit.getUser())) return null;
-//		if(level==RightLevel.WRITE && !SpiritRights.canEdit(study, Spirit.getUser())) return null;
-//		if(level==RightLevel.READ && !SpiritRights.canRead(study, Spirit.getUser())) return null;
-//		if(level==RightLevel.VIEW && !SpiritRights.canView(study, Spirit.getUser())) return null;
-//		return study;
-//	}
 
-	
+	@Override
+	public String convertObjectToString(Study obj) {
+		return obj==null?"": obj.getStudyId();
+	}
+
+
 }

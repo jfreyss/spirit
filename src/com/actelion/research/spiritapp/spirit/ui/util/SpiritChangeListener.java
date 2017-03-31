@@ -25,14 +25,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 
 public class SpiritChangeListener {
 
 	private static final List<ISpiritChangeObserver> observers = new ArrayList<>();
-	
-	
+
+
 	public static void register(ISpiritChangeObserver observer) {
 		observers.add(observer);
 	}
@@ -40,7 +41,7 @@ public class SpiritChangeListener {
 	public final static<T extends IObject> void fireModelChanged(SpiritChangeType action) {
 		fireModelChanged(action, null, (T) null);
 	}
-	
+
 	/**
 	 * Fires an update event, must be called after a dialog is disposed.
 	 * @param action
@@ -51,13 +52,13 @@ public class SpiritChangeListener {
 		SpiritChangeListener.fireModelChanged(action, what, Collections.singletonList(detail));
 	}
 
-	public final static<T extends IObject> void fireModelChanged(final SpiritChangeType action, final Class<T> what, final List<T> details) {		
-		
+	public final static<T extends IObject> void fireModelChanged(final SpiritChangeType action, final Class<T> what, final List<T> details) {
+
 		if(action==SpiritChangeType.LOGIN || (action!=null && details.size()>0)) {
 			try {
-					
+
 				//Clearing cache
-				JPAUtil.clear();
+				SpiritFrame.clear();
 
 				//Firing Events on the non editable context
 				for(int i=0; i<50 && JPAUtil.isEditableContext(); i++) {

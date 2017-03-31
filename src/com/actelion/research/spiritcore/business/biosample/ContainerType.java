@@ -61,8 +61,8 @@ public enum ContainerType {
 	CAGE("Cage",						"Cage", 	"cage", 		null,						BarcodeType.GENERATE, 8, null),
 	UNKNOWN("Other",					"?", 		"unknown", 		BrotherFormat._12x33N,		BarcodeType.NOBARCODE),
 	;
-	
-	
+
+
 	private final String name;
 	private final String shortName;
 	private final String img;
@@ -73,7 +73,7 @@ public enum ContainerType {
 
 	private ContainerType(String name, String shortName, String img, BrotherFormat brotherFormat, BarcodeType barcodeType) {
 		this(name, shortName, img, brotherFormat, barcodeType, 1, null);
-				
+
 	}
 	private ContainerType(String name, String shortName, String img, BrotherFormat brotherFormat, BarcodeType barcodeType, int maxSize, String blocNoPrefix) {
 		this.img = img;
@@ -84,28 +84,28 @@ public enum ContainerType {
 		this.maxSize = maxSize;
 		this.blocNoPrefix = blocNoPrefix;
 	}
-	
+
 	public String getShortName() {
 		return shortName;
 	}
-	
+
 	public boolean isMultiple() {
 		return maxSize>1;
 	}
-	
+
 	@Override
 	public String toString() {
 		return name;
 	}
+
 	public String getName() {
 		return name;
 	}
-	
-	
+
 	public BrotherFormat getBrotherFormat() {
 		return brotherFormat;
 	}
-	
+
 	public String[] getAlternativeMedia() {
 		return brotherFormat==null? new String[] {}: brotherFormat.getMedias();
 	}
@@ -116,17 +116,17 @@ public enum ContainerType {
 
 	@Transient
 	public static final Map<String, Image> smallImages = new HashMap<>();
-	
+
 
 	public Image getImage(int dim) {
 		Image img = getImage();
-		return img==null? null: img.getScaledInstance(dim, dim, Image.SCALE_DEFAULT);		
+		return img==null? null: img.getScaledInstance(dim, dim, Image.SCALE_DEFAULT);
 	}
 
 	public Image getImage() {
 		Image image = smallImages.get(name);
 		if(image==null) {
-			synchronized (smallImages) {		
+			synchronized (smallImages) {
 				image = smallImages.get(name);
 				if(image==null) {
 					String n = img;
@@ -136,12 +136,12 @@ public enum ContainerType {
 					if(url!=null) {
 						try {
 							image = ImageIO.read(url);
-//							image = image.getScaledInstance(40, 40, Image.SCALE_DEFAULT);
+							//							image = image.getScaledInstance(40, 40, Image.SCALE_DEFAULT);
 						} catch (Exception e) {
 							e.printStackTrace();
 							System.err.println("no image for "+name.toLowerCase()+".png  "+e);
 						}
-					} 
+					}
 					if(image==null) {
 						image = new BufferedImage(40,40,BufferedImage.TYPE_INT_ARGB);
 						Graphics2D g = (Graphics2D) image.getGraphics();
@@ -154,18 +154,18 @@ public enum ContainerType {
 		}
 		return image;
 	}
-	
+
 	public static ContainerType get(String s) {
 		for (ContainerType ct : values()) {
-			if(ct.getName().equalsIgnoreCase(s)) return ct;			
+			if(ct.getName().equalsIgnoreCase(s)) return ct;
 		}
 		return null;
 	}
-	
+
 	public BarcodeType getBarcodeType() {
 		return barcodeType;
 	}
-	
+
 	public static ContainerType[] valuesOfRackable() {
 		List<ContainerType> res = new ArrayList<ContainerType>();
 		for (ContainerType ct : values()) {
@@ -179,7 +179,7 @@ public enum ContainerType {
 	public String getBlocNoPrefix() {
 		return blocNoPrefix;
 	}
-	
+
 	public String[] getMedias() {
 		if(getAlternativeMedia()==null) return new String[] {getName()};
 		String[] res = new String[getAlternativeMedia().length+1];

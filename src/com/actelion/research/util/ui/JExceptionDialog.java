@@ -36,19 +36,19 @@ import javax.swing.SwingUtilities;
 public class JExceptionDialog {
 
 	private JExceptionDialog() {}
-	
+
 	public static void showError(Throwable e) {
 		Frame parent = Frame.getFrames().length > 0 ? Frame.getFrames()[Frame.getFrames().length - 1] : null;
 		if(parent instanceof SplashScreen2) parent = null;
 		showError(parent, e);
 	}
-	
+
 	public static void showError(String s) {
 		Frame parent = Frame.getFrames().length > 0 ? Frame.getFrames()[Frame.getFrames().length - 1] : null;
 		if(parent instanceof SplashScreen2) parent = null;
 		showError(parent, s);
 	}
-	
+
 	public static void showError(Component parent, Throwable e) {
 		if(e==null) throw new IllegalArgumentException("The error cannot be null");
 		System.err.println("Unexpected Error");
@@ -60,7 +60,7 @@ public class JExceptionDialog {
 		}
 		showError(parent, sb.toString());
 	}
-	
+
 	public static void showError(Component parent, List<String> messages) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Some problems were found:\n");
@@ -74,17 +74,19 @@ public class JExceptionDialog {
 		}
 		showError(parent, sb.toString());
 	}
-	
+
 	public static void showError(final Component parent, final String message) {
 		show(parent, message, "Error", JOptionPane.ERROR_MESSAGE);
 	}
+
 	public static void showInfo(Component parent, String message) {
 		show(parent, message, "Info", JOptionPane.INFORMATION_MESSAGE);
 	}
+
 	public static void showWarning(Component parent, String message) {
 		show(parent, message, "Warning", JOptionPane.WARNING_MESSAGE);
 	}
-	
+
 	public static void show(final Component parent, final String message, final String title, final int messageType) {
 		if(!SwingUtilities.isEventDispatchThread()) {
 			SwingUtilities.invokeLater(new Runnable() {

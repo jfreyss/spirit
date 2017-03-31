@@ -25,6 +25,7 @@ package com.actelion.research.util.ui;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -36,6 +37,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
@@ -48,44 +50,47 @@ import com.actelion.research.util.FormatterUtils;
 
 
 public class JCustomTextField extends JTextField {
-	
+
 	/**
 	 * PROPERTY_TEXTCHANGED is fired whenever the user selected an item on the list, typed enter, or changed the data AND this data has been changed
-	 * an eventaction is fired even if the data has not been changed 
+	 * an eventaction is fired even if the data has not been changed
 	 */
-	public static final String PROPERTY_TEXTCHANGED = "text_changed"; 
-
-	protected static final Color LABEL_COLOR = new Color(120, 120, 160, 180);
-	protected static final Color LABEL_COLOR_DISABLED = new Color(180, 180, 200, 180);
-	
-	private List<TextChangeListener> textChangeListeners = new ArrayList<>();
-	
+	public static final String PROPERTY_TEXTCHANGED = "text_changed";
 	public static final int ALPHANUMERIC = 1;
 	public static final int DOUBLE = 2;
 	public static final int INTEGER = 3;
 	public static final int DATE = 4;
+
+	protected static final Color LABEL_COLOR = new Color(120, 120, 160, 180);
+	protected static final Color LABEL_COLOR_DISABLED = new Color(180, 180, 200, 180);
+
+	private Icon icon = null;
 	private int maxChars;
 	private String textWhenEmpty;
 	private boolean warningWhenEdited;
 	private String previous = "";
 
-	protected class MyCustomDocument extends PlainDocument {		
+	private List<TextChangeListener> textChangeListeners = new ArrayList<>();
+
+
+	protected class MyCustomDocument extends PlainDocument {
 		public MyCustomDocument() {
 			super();
 		}
 		@Override
 		public void insertString(int offs, String str, AttributeSet a) throws BadLocationException {
 			if(str==null) return;
-			
+
 			if (maxChars<=0 || (getLength() + str.length()) <= maxChars) {
 				super.insertString(offs, str, a);
-		    }
+			}
 		}
 	}
-	
+
 	public JCustomTextField() {
 		this(ALPHANUMERIC);
 	}
+
 	public JCustomTextField(int type) {
 		setType(type);
 		init();
@@ -96,40 +101,51 @@ public class JCustomTextField extends JTextField {
 		this(ALPHANUMERIC, initial, columns);
 		setTextWhenEmpty(textWhenEmpty);
 	}
-	
+
 	public JCustomTextField(int type, int columns) {
 		this(type);
 		setType(type);
 		setColumns(columns);
 		init();
 	}
-	
+
 	public JCustomTextField(int type, String initial) {
 		this(type, initial, type==INTEGER? 3: type==DOUBLE? 5: type==DATE? 8: 15);
 	}
+
 	public JCustomTextField(int type, String initial, int columns) {
 		super();
 		setType(type);
 		init();
-		setText(initial);
+		super.setText(initial);
 		setColumns(columns);
 	}
-	
+
+	public void setIcon(Icon icon) {
+		this.icon = icon;
+		setMargin(new Insets(0, icon==null? 0: icon.getIconWidth()+5, 0, 0));
+		repaint();
+	}
+
+	public Icon getIcon() {
+		return icon;
+	}
+
 	public void setType(int type) {
 		setHorizontalAlignment(type==DOUBLE || type==INTEGER? JTextField.RIGHT: JTextField.LEFT);
 		setColumns(type==INTEGER? 3: type==DOUBLE? 5: type==DATE? 8: 18);
 	}
-	
+
 	@Override
 	public Dimension getMaximumSize() {
 		return getPreferredSize();
 	}
-	
+
 	@Override
 	public Dimension getMinimumSize() {
 		return getPreferredSize();
 	}
-		
+
 	public Integer getTextInt() {
 		try {
 			return Integer.parseInt(getText());
@@ -137,21 +153,21 @@ public class JCustomTextField extends JTextField {
 			return null;
 		}
 	}
-	
+
 	public Double getTextDouble() {
 		try {
-			return Double.valueOf(getText());			
+			return Double.valueOf(getText());
 		} catch (Exception e) {
 			return null;
 		}
 	}
-	
+
 	public Date getTextDate() throws Exception {
 		Date parsed = FormatterUtils.parseDate(getText());
 		if(parsed==null && getText().length()>0) throw new Exception("The date not well formatted");
 		return parsed;
 	}
-	
+
 	public void setTextInteger(Integer v) {
 		if(v==null) {
 			setText("");
@@ -159,45 +175,38 @@ public class JCustomTextField extends JTextField {
 			setText("" + v);
 		}
 	}
-	
+
 	public void setTextDouble(Double v) {
 		if(v==null) {
 			setText("");
-		} else if( (int) (double) v == (double) v) {
-			setText("" + (int) (double) v);			
+		} else if( (int) (double) v == v) {
+			setText("" + (int) (double) v);
 		} else {
 			setText("" + v);
 		}
 	}
-	
+
+	public void setTextDate(Date d) {
+		setText(FormatterUtils.formatDate(d));
+	}
+
 	@Override
 	public void setText(String t) {
 		super.setText(t);
 		fireTextChanged();
-		
+
 		if(warningWhenEdited) {
 			setEditable(getText().length()==0);
 		}
 	}
-		
-	public void setTextDate(Date d) {
-		super.setText(FormatterUtils.formatDate(d));
-		fireTextChanged();
-		
-		if(warningWhenEdited) {
-			setEditable(getText().length()==0);
-		}
-	}
-		
+
 	private void init() {
-//		setMargin(new Insets(0,0,0,0));
-		
 		setDocument(new MyCustomDocument());
-		
+
 		addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				setText(getText().trim());				
+				setText(getText().trim());
 				fireTextChanged();
 			}
 		});
@@ -208,30 +217,28 @@ public class JCustomTextField extends JTextField {
 				if(isEnabled() && warningWhenEdited && !isEditable()) {
 					int res = JOptionPane.showConfirmDialog(JCustomTextField.this, "Would you like to re-enter a value?", "Reedit Value", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION);
 					if(res!=JOptionPane.YES_OPTION) return;
-					
+
 					setEditable(true);
 					selectAll();
-					SwingUtilities.invokeLater(new Runnable() {						
+					SwingUtilities.invokeLater(new Runnable() {
 						@Override
 						public void run() {
 							requestFocusInWindow();
 						}
 					});
-					
+
 				}
-				
+
 			}
 		});
-		
+
 		addActionListener(new ActionListener() {
-			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				fireTextChanged();
+				JCustomTextField.this.fireTextChanged();
 			}
 		});
 	}
-	
 
 	/**
 	 * @param maxChars the maxChars to set
@@ -246,66 +253,72 @@ public class JCustomTextField extends JTextField {
 	public int getMaxChars() {
 		return maxChars;
 	}
-	
-	
+
 	public void setTextWhenEmpty(String textWhenEmpty) {
 		this.textWhenEmpty = textWhenEmpty;
 	}
-	
+
 	public String getTextWhenEmpty() {
 		return textWhenEmpty;
 	}
-	
-	
+
 	@Override
 	protected void paintComponent(Graphics g) {
-		super.paintComponent(g);
 		UIUtils.applyDesktopProperties(g);
+
+		super.paintComponent(g);
+
+
+		int textX = 5;
+		if(this.icon!=null){
+			int iconWidth = icon.getIconWidth();
+			int iconHeight = icon.getIconHeight();
+			textX = textX + iconWidth + 2;
+			int y = (this.getHeight() - iconHeight)/2;
+			icon.paintIcon(this, g, 2, y);
+		}
+
 		if(getText().length()==0 && textWhenEmpty!=null) {
 			g.setColor(isEnabled()? LABEL_COLOR: LABEL_COLOR_DISABLED);
-
 			g.setFont(getFont());
 			if(getHorizontalAlignment()==SwingConstants.RIGHT) {
 				g.drawString(textWhenEmpty, getWidth() - g.getFontMetrics().stringWidth(textWhenEmpty)- 5, getHeight()/2+5);
 			} else {
-				g.drawString(textWhenEmpty, 5, getHeight()/2+5);
+				g.drawString(textWhenEmpty, textX, getHeight()/2+5);
 			}
-		}		
+		}
 	}
-	
+
 	public void setWarningWhenEdited(boolean v) {
 		warningWhenEdited = v;
 		if(warningWhenEdited) {
 			setEditable(getText().length()==0);
 		}
 	}
-	
+
 	public void addTextChangeListener(TextChangeListener listener) {
 		textChangeListeners.add(listener);
 	}
-	
+
 	/**
 	 * Called when the user updated the data
 	 * @param newValue
 	 */
-	public void fireTextChanged() {		
+	public void fireTextChanged() {
 		String s = getText();
 		if(!s.equals(previous)) {
 			previous = s;
 
-			for (TextChangeListener listener : textChangeListeners) {			
+			for (TextChangeListener listener : textChangeListeners) {
 				listener.textChanged(this);
 			}
-			
-			firePropertyChange(PROPERTY_TEXTCHANGED, null, getText());			
+
+			firePropertyChange(PROPERTY_TEXTCHANGED, null, getText());
 		}
 	}
-	
 
-	
 	public void setBorderColor(Color color) {
 		setBorder(BorderFactory.createCompoundBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(2,2,2,2), BorderFactory.createLineBorder(color)), BorderFactory.createEmptyBorder(2,2,2,2)));
 	}
-	
-	
+
 }

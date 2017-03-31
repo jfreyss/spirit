@@ -51,12 +51,15 @@ import com.actelion.research.util.ui.UIUtils;
  *
  */
 public class SpiritTabbedPane extends JComponent {
+
 	public static String STUDY_ACTION = "study_action";
 	private JCustomTabbedPane tabbedPane = new JCustomTabbedPane();
 	private Dimension dim;
 	private JPanel leadingPanel;
 
 	private StudyComboBox studyComboBox = new StudyComboBox();
+
+	private int push = 0;
 
 	public SpiritTabbedPane() {
 		studyComboBox.setColumns(14);
@@ -68,28 +71,37 @@ public class SpiritTabbedPane extends JComponent {
 
 		//Add events
 		addChangeListener(e -> {
-			if(tabbedPane!=null && tabbedPane.getSelectedComponent() instanceof SpiritTab) {
-				SpiritTab tab = (SpiritTab)tabbedPane.getSelectedComponent();
-				tab.onTabSelect();
-				if(!tab.getSelectedStudyId().equals(getStudyId())) {
-					((SpiritTab)tabbedPane.getSelectedComponent()).onStudySelect();
-					tab.setSelectedStudyId(getStudyId());
+			if(push>0) return;
+			try {
+				push++;
+				if(tabbedPane!=null && tabbedPane.getSelectedComponent() instanceof SpiritTab) {
+					SpiritTab tab = (SpiritTab)tabbedPane.getSelectedComponent();
+					tab.onTabSelect();
+					if(!tab.getSelectedStudyId().equals(getStudyId())) {
+						((SpiritTab)tabbedPane.getSelectedComponent()).onStudySelect();
+						tab.setSelectedStudyId(getStudyId());
+					}
 				}
+			} finally {
+				push--;
 			}
 		});
 		getStudyComboBox().addTextChangeListener(l-> {
-			if(tabbedPane!=null && tabbedPane.getSelectedComponent() instanceof SpiritTab) {
-				SpiritTab tab = (SpiritTab)tabbedPane.getSelectedComponent();
-				if(!tab.getSelectedStudyId().equals(getStudyId())) {
-					((SpiritTab)tabbedPane.getSelectedComponent()).onStudySelect();
-					tab.setSelectedStudyId(getStudyId());
+			if(push>0) return;
+			try {
+				push++;
+				if(getStudyId().length()>0 && getSelectedComponent() instanceof IHomeTab) {
+					Study s = DAOStudy.getStudyByStudyId(getStudyId());
+					if(s!=null)  SpiritContextListener.setStudy(s);
+				} else if(getSelectedComponent() instanceof SpiritTab) {
+					SpiritTab tab = (SpiritTab)tabbedPane.getSelectedComponent();
+					if(!tab.getSelectedStudyId().equals(getStudyId())) {
+						((SpiritTab)tabbedPane.getSelectedComponent()).onStudySelect();
+						tab.setSelectedStudyId(getStudyId());
+					}
 				}
-			}
-		});
-		getStudyComboBox().addActionListener(e-> {
-			if(getStudyId().length()>0 && getSelectedComponent() instanceof IHomeTab) {
-				Study s = DAOStudy.getStudyByStudyId(getStudyId());
-				SpiritContextListener.setStudy(s);
+			} finally {
+				push--;
 			}
 		});
 	}
@@ -131,7 +143,7 @@ public class SpiritTabbedPane extends JComponent {
 	}
 
 	public Component getSelectedComponent() {
-		return tabbedPane.getSelectedComponent();
+		return tabbedPane==null? null: tabbedPane.getSelectedComponent();
 	}
 
 	public void setSelectedComponent(Component component) {
@@ -188,6 +200,13 @@ public class SpiritTabbedPane extends JComponent {
 			if(claz.isInstance(comp) && comp instanceof SpiritTab) return (SpiritTab) comp;
 		}
 		return null;
+	}
+
+	protected void push() {
+		push++;
+	}
+	protected void pop() {
+		push--;
 	}
 
 }

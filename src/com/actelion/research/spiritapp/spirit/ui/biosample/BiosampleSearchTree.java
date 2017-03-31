@@ -57,8 +57,9 @@ import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.InputNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.LabelNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.MultiNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.ObjectComboBoxNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxOneNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxNode;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.RightLevel;
@@ -80,22 +81,22 @@ import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.UIUtils;
 
-public class BiosampleSearchTree extends FormTree {	
-	
-	
+public class BiosampleSearchTree extends FormTree {
+
+
 	private final BiosampleQuery query = new BiosampleQuery();
 	private final LabelNode top = new LabelNode(this, "Query Biosamples:");
 	private final ContainerTypeComboBox containerTypeComboBox = new ContainerTypeComboBox();
-	
+
 	private final LabelNode stuNode = new LabelNode(this, "Study");
 	private final LabelNode conNode = new LabelNode(this, "Container");
 	private final LabelNode bioNode = new LabelNode(this, "Biosample");
-	
+
 	private final LabelNode moreNode = new LabelNode(this, "Filters");
 	private final LabelNode locationNode = new LabelNode(this, "Location");
 	private final LabelNode advancedNode = new LabelNode(this, "Advanced");
 	private LabelNode catSelectOneNode = new LabelNode(this, "Select One Sample per TopParent");
-	private CheckboxNode cb1, cb2; 
+	private CheckboxNode cb1, cb2;
 	private Biotype[] selectableBiotypes;
 	private SpiritFrame frame;
 
@@ -108,16 +109,16 @@ public class BiosampleSearchTree extends FormTree {
 		@Override
 		public void setModel(String modelValue) {
 			query.setStudyIds(modelValue);
-		}		
+		}
 		@Override
 		public void onAction() {
 			updateModel();
 			eventStudyChanged();
 			initLayout();
 			setFocus(studyNode);
-		}		
+		}
 	});
-	
+
 	private final GroupNode groupNode = new GroupNode(this, new Strategy<String>() {
 		@Override
 		public String getModel() {
@@ -126,7 +127,7 @@ public class BiosampleSearchTree extends FormTree {
 		@Override
 		public void setModel(String modelValue) {
 			query.setGroup(modelValue);
-		}			
+		}
 	});
 	private final PhaseNode phaseNode = new PhaseNode(this, new Strategy<String>() {
 		@Override
@@ -136,13 +137,13 @@ public class BiosampleSearchTree extends FormTree {
 		@Override
 		public void setModel(String modelValue) {
 			query.setPhases(modelValue);
-		}			
+		}
 	});
 	private final InputNode quickSearchNode = new InputNode(this, FieldType.OR_CLAUSE, "SampleIds/ContainerIds", new Strategy<String>() {
-		
+
 		@Override
 		public String getModel() {
-			return query.getSampleIdOrContainerIds();			
+			return query.getSampleIdOrContainerIds();
 		}
 		@Override
 		public void setModel(String modelValue) {
@@ -153,7 +154,7 @@ public class BiosampleSearchTree extends FormTree {
 	private final BiotypeNode bioTypeNode;
 
 	private final JCheckBox exactCheckBox = new JCheckBox("Exact Match", false);
-	
+
 	private final InputNode keywordsNode = new InputNode(this, FieldType.AND_CLAUSE, "Keywords", new Strategy<String>() {
 		@Override
 		public String getModel() {
@@ -170,9 +171,9 @@ public class BiosampleSearchTree extends FormTree {
 				if(modelValue!=null && modelValue.length()>0 && !modelValue.startsWith("\"")) modelValue = "\""+modelValue+"\"";
 			}
 			query.setKeywords(modelValue);
-		}		
+		}
 	}) {
-		
+
 		@Override
 		public JComponent getComponent() {
 			exactCheckBox.setIconTextGap(0);
@@ -181,7 +182,7 @@ public class BiosampleSearchTree extends FormTree {
 			return UIUtils.createHorizontalBox(textField, UIUtils.createVerticalBox(exactCheckBox), Box.createHorizontalGlue());
 		}
 	};
-	
+
 	private final LocationFormNode locationFormNode = new LocationFormNode(this, "Location", new Strategy<Location>() {
 		@Override
 		public Location getModel() {
@@ -192,15 +193,15 @@ public class BiosampleSearchTree extends FormTree {
 			query.setLocationRoot(modelValue);
 		}
 	});
-	
+
 	private final ComboBoxNode<Quality> minQualityNode = new ComboBoxNode<Quality>(this, new QualityComboBox(), "Min Quality", new Strategy<Quality>() {
 		@Override public Quality getModel() {return query.getMinQuality();}
-		@Override public void setModel(Quality modelValue) {query.setMinQuality(modelValue);}						
+		@Override public void setModel(Quality modelValue) {query.setMinQuality(modelValue);}
 	});
-	
+
 	private final ComboBoxNode<Quality> maxQualityNode = new ComboBoxNode<Quality>(this, new QualityComboBox(), "Max Quality", new Strategy<Quality>() {
 		@Override public Quality getModel() {return query.getMaxQuality();}
-		@Override public void setModel(Quality modelValue) {query.setMaxQuality(modelValue);}						
+		@Override public void setModel(Quality modelValue) {query.setMaxQuality(modelValue);}
 	});
 
 	private final CheckboxNode onlyContainerCheckbox = new CheckboxNode(this, "Only in Containers", new Strategy<Boolean>() {
@@ -213,7 +214,7 @@ public class BiosampleSearchTree extends FormTree {
 			query.setFilterNotInContainer(modelValue==Boolean.TRUE);
 		}
 	});
-	
+
 	private final CheckboxNode onlyLocationCheckbox = new CheckboxNode(this, "Only in Locations", new Strategy<Boolean>() {
 		@Override
 		public Boolean getModel() {
@@ -223,8 +224,8 @@ public class BiosampleSearchTree extends FormTree {
 		public void setModel(Boolean modelValue) {
 			query.setFilterNotInLocation(modelValue==Boolean.TRUE);
 		}
-	});	
-	
+	});
+
 	private final CheckboxNode filterTrashNode = new CheckboxNode(this, "Hide Trashed/Used Up", new Strategy<Boolean>() {
 		@Override
 		public Boolean getModel() {
@@ -236,19 +237,19 @@ public class BiosampleSearchTree extends FormTree {
 		}
 	});
 
-	
+
 	public BiosampleSearchTree(SpiritFrame frame) {
 		this(frame, null, false);
 	}
-	
-	public BiosampleSearchTree(SpiritFrame frame, final Biotype[] selectableBiotypes, final boolean autoQuery) {		
+
+	public BiosampleSearchTree(SpiritFrame frame, final Biotype[] selectableBiotypes, final boolean autoQuery) {
 		super();
 		this.frame = frame;
 		setRootVisible(false);
 		this.selectableBiotypes = selectableBiotypes;
 		query.setFilterTrashed(selectableBiotypes!=null && selectableBiotypes.length>0);
 		exactCheckBox.setOpaque(false);
-		
+
 		//Study Category
 		if(frame==null) {
 			stuNode.setCanExpand(false);
@@ -257,11 +258,11 @@ public class BiosampleSearchTree extends FormTree {
 			stuNode.add(phaseNode);
 			top.add(stuNode);
 		}
-		
+
 
 		//Container
 		conNode.setCanExpand(false);
-		conNode.add(new ComboBoxNode<ContainerType>(this, containerTypeComboBox, "", new Strategy<ContainerType>() {
+		conNode.add(new ObjectComboBoxNode<ContainerType>(this, "ContainerType", containerTypeComboBox, new Strategy<ContainerType>() {
 			@Override
 			public ContainerType getModel() {
 				return query.getContainerType();
@@ -269,10 +270,10 @@ public class BiosampleSearchTree extends FormTree {
 			@Override
 			public void setModel(ContainerType modelValue) {
 				query.setContainerType(modelValue);
-			}						
-		}));		
+			}
+		}));
 		top.add(conNode);
-		
+
 		//Biosample
 		if(selectableBiotypes==null) {
 			bioTypeNode = new BiotypeNode(this, new Strategy<Biotype>() {
@@ -282,11 +283,11 @@ public class BiosampleSearchTree extends FormTree {
 				}
 				@Override
 				public void setModel(Biotype modelValue) {
-					query.setBiotypes(modelValue==null? null: new Biotype[]{modelValue});					
-				}	
-				
+					query.setBiotypes(modelValue==null? null: new Biotype[]{modelValue});
+				}
+
 				@Override
-				public void onAction() {	
+				public void onChange() {
 					if((bioTypeNode.getSelection()==null && query.getBiotype()!=null) || (bioTypeNode.getSelection()!=null && !bioTypeNode.getSelection().equals(query.getBiotype()))) {
 						updateModel();
 						eventBiotypeChanged();
@@ -301,11 +302,11 @@ public class BiosampleSearchTree extends FormTree {
 				}
 				@Override
 				public void setModel(Biotype modelValue) {
-					query.setBiotypes(modelValue==null? selectableBiotypes: new Biotype[]{modelValue});					
-				}	
-				
+					query.setBiotypes(modelValue==null? selectableBiotypes: new Biotype[]{modelValue});
+				}
+
 				@Override
-				public void onAction() {	
+				public void onAction() {
 					if(bioTypeNode.getSelection()==null || !bioTypeNode.getSelection().getName().equals(query.getBiotype())) {
 						updateModel();
 						eventBiotypeChanged();
@@ -321,7 +322,7 @@ public class BiosampleSearchTree extends FormTree {
 		locationNode.setCanExpand(true);
 		locationNode.add(locationFormNode);
 
-		
+
 
 
 		////////////////////////////
@@ -339,7 +340,7 @@ public class BiosampleSearchTree extends FormTree {
 				if(modelValue) {
 					query.setSelectOneMode(BiosampleQuery.SELECT_MOST_LEFT);
 				}
-			}	
+			}
 			@Override
 			public void onAction() {
 				cb2.getCheckbox().setSelected(false);
@@ -347,7 +348,7 @@ public class BiosampleSearchTree extends FormTree {
 
 		});
 		catSelectOneNode.add(cb1);
-		
+
 		cb2 = new CheckboxNode(this, "Select the most-right", new Strategy<Boolean>() {
 			@Override
 			public Boolean getModel() {
@@ -358,7 +359,7 @@ public class BiosampleSearchTree extends FormTree {
 				if(modelValue) {
 					query.setSelectOneMode(BiosampleQuery.SELECT_MOST_RIGHT);
 				}
-			}			
+			}
 			@Override
 			public void onAction() {
 				cb1.getCheckbox().setSelected(false);
@@ -366,7 +367,7 @@ public class BiosampleSearchTree extends FormTree {
 
 		});
 		catSelectOneNode.add(cb2);
-				
+
 		top.add(moreNode);
 
 		if(frame!=null) {
@@ -383,9 +384,9 @@ public class BiosampleSearchTree extends FormTree {
 			@Override
 			public void setModel(String modelValue) {
 				query.setCreUser(modelValue);
-			}			
+			}
 		}));
-		
+
 		advancedNode.add(new CreDateNode(this, new Strategy<String>() {
 			@Override
 			public String getModel() {
@@ -394,9 +395,9 @@ public class BiosampleSearchTree extends FormTree {
 			@Override
 			public void setModel(String modelValue) {
 				query.setCreDays(modelValue);
-			}			
+			}
 		}));
-		
+
 		advancedNode.add(new UpdUserNode(this, new Strategy<String>() {
 			@Override
 			public String getModel() {
@@ -405,9 +406,9 @@ public class BiosampleSearchTree extends FormTree {
 			@Override
 			public void setModel(String modelValue) {
 				query.setUpdUser(modelValue);
-			}			
+			}
 		}));
-		
+
 		advancedNode.add(new UpdDateNode(this, new Strategy<String>() {
 			@Override
 			public String getModel() {
@@ -416,7 +417,7 @@ public class BiosampleSearchTree extends FormTree {
 			@Override
 			public void setModel(String modelValue) {
 				query.setUpdDays(modelValue);
-			}			
+			}
 		}));
 		advancedNode.add(new DepartmentNode(this, new Strategy<String>() {
 			@Override
@@ -426,40 +427,40 @@ public class BiosampleSearchTree extends FormTree {
 			@Override
 			public void setModel(String modelValue) {
 				query.setDepartment(modelValue);
-			}			
+			}
 		}));
 		advancedNode.add(catSelectOneNode);
-//		advancedNode.add(minQualityNode);	
-//		advancedNode.add(maxQualityNode);	
+		//		advancedNode.add(minQualityNode);
+		//		advancedNode.add(maxQualityNode);
 		advancedNode.add(onlyContainerCheckbox);
 		advancedNode.add(onlyLocationCheckbox);
-		
+
 		//Quality
 		minQualityNode.getComboBox().setEditable(false);
 		maxQualityNode.getComboBox().setEditable(false);
 
-		
+
 		//Trashed
-		
+
 		moreNode.setCanExpand(false);
 		if(selectableBiotypes!=null && selectableBiotypes.length>0) {
 			stuNode.setVisible(selectableBiotypes.length==1 && (selectableBiotypes[0].getCategory()==BiotypeCategory.LIVING || selectableBiotypes[0].getCategory()==BiotypeCategory.SOLID || selectableBiotypes[0].getCategory()==BiotypeCategory.LIQUID));
-			
+
 			boolean canSelectContainer = false;
 			for(Biotype type: selectableBiotypes) {
 				if(!type.isAbstract() && !type.isHideContainer() && type.getContainerType()==null) {
 					canSelectContainer = true;
 					break;
 				}
-			}			
+			}
 			conNode.setVisible(canSelectContainer);
-			
+
 			bioNode.setExpanded(true);
 			catSelectOneNode.setVisible(false);
 			if(selectableBiotypes.length==1) {
 				query.setBiotype(selectableBiotypes[0]);
 				bioTypeNode.setSelection(selectableBiotypes[0]);
-			}				
+			}
 			containerTypeComboBox.setVisible(false);
 		} else {
 			bioTypeNode.setValues(DAOBiotype.getBiotypes());
@@ -469,17 +470,20 @@ public class BiosampleSearchTree extends FormTree {
 
 		eventStudyChanged();
 	}
-		
-	
-	public void eventStudyChanged() {		
-				
+
+
+	public void eventStudyChanged() {
+		BiosampleQuery query = getQuery();
 		List<Study> studies = new ArrayList<>();
 		try {
-			if(query.getStudyIds()!=null && query.getStudyIds().length()>0) studies = DAOStudy.queryStudies(StudyQuery.createForStudyIds(query.getStudyIds()), SpiritFrame.getUser());
+			if(query.getStudyIds()!=null && query.getStudyIds().length()>0) {
+				studies = DAOStudy.queryStudies(StudyQuery.createForStudyIds(query.getStudyIds()), SpiritFrame.getUser());
+			}
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
 
+		System.out.println("BiosampleSearchTree.eventStudyChanged() "+studies.size());
 		//Update biotype/container filters
 		if(studies.size()>0) {
 			Set<ContainerType> allContainerTypes = new TreeSet<ContainerType>();
@@ -497,7 +501,7 @@ public class BiosampleSearchTree extends FormTree {
 				bioTypeNode.setValues(DAOBiotype.getBiotypes());
 			}
 		}
-		
+
 		//Update group, phases
 		Study study = studies.size()==1? studies.get(0) : null;
 		study = JPAUtil.reattach(study);
@@ -509,27 +513,27 @@ public class BiosampleSearchTree extends FormTree {
 		containerTypeComboBox.setVisible(containerTypeComboBox.getValues().size()>0);
 
 		eventBiotypeChanged();
-		bioNode.setVisible(bioTypeNode.getComboBox().getValues().size()>0);
+		bioNode.setVisible(bioTypeNode.getValues().size()>0);
 	}
-	
+
 
 	public void eventBiotypeChanged() {
 		bioNode.clearChildren();
 		query.getLinker2values().clear();
-		
+
 		bioTypeNode.setCanExpand(false);
-		bioNode.add(bioTypeNode);		
+		bioNode.add(bioTypeNode);
 		bioNode.add(keywordsNode);
 		bioNode.add(quickSearchNode);
-		
+
 		Biotype type = query.getBiotype();
-		
+
 		if(type==null || type.isAbstract()){
 			query.setFilterNotInContainer(false);
 		}
 
 		moreNode.clearChildren();
-		if(type!=null) {	
+		if(type!=null) {
 			//
 			//Gets linkers
 			ListHashMap<Pair<String, Biotype>, BiosampleLinker> linkers = getLinkers(type);
@@ -550,7 +554,7 @@ public class BiosampleSearchTree extends FormTree {
 				for (final BiosampleLinker linker : linkers.get(key)) {
 					String label = linker.getLabelShort();
 					if(linker.getType()==LinkerType.SAMPLEID && biotype2.getCategory()==BiotypeCategory.LIBRARY) {
-						linkerNode.add(new TextComboBoxOneNode(this, label, false, new Strategy<String>() {
+						linkerNode.add(new TextComboBoxNode(this, label, false, new Strategy<String>() {
 							@Override public String getModel() {return query.getLinker2values().get(linker);}
 							@Override public void setModel(String modelValue) {
 								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
@@ -563,7 +567,7 @@ public class BiosampleSearchTree extends FormTree {
 							}
 						});
 					} else if(linker.getBiotypeMetadata()!=null && (linker.getBiotypeMetadata().getDataType()==DataType.AUTO || linker.getBiotypeMetadata().getDataType()==DataType.LIST /* || linker.getBiotypeMetadata().getDataType()==DataType.DICO*/)) {
-						linkerNode.add(new TextComboBoxOneNode(this, label, false, new Strategy<String>() {
+						linkerNode.add(new TextComboBoxNode(this, label, false, new Strategy<String>() {
 							@Override public String getModel() {return query.getLinker2values().get(linker);}
 							@Override public void setModel(String modelValue) {
 								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
@@ -579,16 +583,16 @@ public class BiosampleSearchTree extends FormTree {
 						continue;
 					} else if(linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().getDataType()==DataType.FILES) {
 						continue;
-					} else if(linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().getDataType()==DataType.MULTI) {					
+					} else if(linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().getDataType()==DataType.MULTI) {
 						linkerNode.add(new MultiNode(this, label, linker.getBiotypeMetadata().extractChoices(), new Strategy<String>() {
 							@Override public String getModel() {return query.getLinker2values().get(linker);}
 							@Override public void setModel(String modelValue) {
 								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
 								else query.getLinker2values().put(linker, modelValue);
 							}
-						}));							
+						}));
 					} else if(linker.getType()==LinkerType.SAMPLENAME && biotype2.isNameAutocomplete()) {
-						linkerNode.add(new TextComboBoxOneNode(this, label, false, new Strategy<String>() {
+						linkerNode.add(new TextComboBoxNode(this, label, false, new Strategy<String>() {
 							@Override public String getModel() {return query.getLinker2values().get(linker);}
 							@Override public void setModel(String modelValue) {
 								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
@@ -601,16 +605,16 @@ public class BiosampleSearchTree extends FormTree {
 							}
 						});
 					} else if(linker.getType()==LinkerType.COMMENTS) {
-						linkerNode.add(new TextComboBoxOneNode(this, label, false, new Strategy<String>() {
+						linkerNode.add(new TextComboBoxNode(this, label, false, new Strategy<String>() {
 							@Override public String getModel() { return query.getLinker2values().get(linker);}
 							@Override public void setModel(String modelValue) {
 								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
 								else query.getLinker2values().put(linker, modelValue);
-							}						
+							}
 						}) {
-							@Override public Collection<String> getChoices() {return DAOBiotype.getAutoCompletionFieldsForComments(biotype2, frame==null? studyNode.getStudy(): frame.getStudy());} 			
+							@Override public Collection<String> getChoices() {return DAOBiotype.getAutoCompletionFieldsForComments(biotype2, frame==null? studyNode.getStudy(): frame.getStudy());}
 						});
-					} else {							
+					} else {
 						linkerNode.add(new InputNode(this, FieldType.AND_CLAUSE, label, new Strategy<String>() {
 							@Override public String getModel() {return query.getLinker2values().get(linker);}
 							@Override public void setModel(String modelValue) {
@@ -619,84 +623,84 @@ public class BiosampleSearchTree extends FormTree {
 							}
 						}));
 					}
-				}											
+				}
 			}
 		}
-		
+
 		if(selectableBiotypes==null || selectableBiotypes.length>1 || !selectableBiotypes[0].isAbstract()) {
 			locationNode.setExpanded(false);
 			moreNode.add(locationNode);
 		}
-		
+
 		advancedNode.setExpanded(false);
 		moreNode.add(advancedNode);
-		
+
 		moreNode.add(filterTrashNode);
-		
+
 		updateView();
 	}
 
-		
+
 	public BiosampleQuery getQuery() {
-		query.setSelectOneMode(BiosampleQuery.SELECT_ALL);		
+		query.setSelectOneMode(BiosampleQuery.SELECT_ALL);
 		query.setStudyIds(frame==null? null: frame.getStudyId());
-		
+
 		updateModel();
 		return query;
 	}
 
 	public void setQuery(BiosampleQuery query) {
 		//update our model
-		this.query.copyFrom(query);		
+		this.query.copyFrom(query);
 		if(frame!=null) {
 			frame.setStudyId(query.getStudyIds());
 		}
 		updateView();
-		
+
 		//recreate the study tab
 		eventStudyChanged();
-		
+
 		//recreate the metadata tab
 		eventBiotypeChanged();
 	}
-	
+
 	public String getStudyId() {
 		return frame==null? studyNode.getSelection(): frame.getStudyId();
 	}
-	
+
 	public void setStudyId(String v) {
 		if(v==null || v.equals(frame==null? studyNode.getSelection(): frame.getStudyId())) return;
 		setQuery(BiosampleQuery.createQueryForStudyIds(v));
 	}
-	
+
 	public Biotype getBiotype() {
 		return bioTypeNode.getSelection();
 	}
 	public void setBiotype(Biotype v) {
 		bioTypeNode.setSelection(v);
 	}
-	
+
 
 	public static ListHashMap<Pair<String, Biotype>, BiosampleLinker> getLinkers(Biotype biotype) {
 		ListHashMap<Pair<String, Biotype>, BiosampleLinker> res = new ListHashMap<Pair<String, Biotype>, BiosampleLinker>();
 
 		//Look at own metadata
 		{
-			
+
 			Pair<String, Biotype> key = new Pair<String, Biotype>(biotype.getName(), biotype);
 			if(!biotype.isHideSampleId()) {
-				res.add(key, new BiosampleLinker(LinkerType.SAMPLEID, biotype));				
-			} 
+				res.add(key, new BiosampleLinker(LinkerType.SAMPLEID, biotype));
+			}
 			if(biotype.getSampleNameLabel()!=null) {
 				res.add(key, new BiosampleLinker(LinkerType.SAMPLENAME, biotype));
 			}
 			for(BiotypeMetadata mt2: biotype.getMetadata()) {
-				res.add(key, new BiosampleLinker(mt2));						
+				res.add(key, new BiosampleLinker(mt2));
 			}
 			res.add(key, new BiosampleLinker(LinkerType.COMMENTS, biotype));
 		}
-		
-		
+
+
 		//Look at aggregated Data
 		for(BiotypeMetadata mt: biotype.getMetadata()) {
 			if(mt.getDataType()!=DataType.BIOSAMPLE) continue;
@@ -705,7 +709,7 @@ public class BiosampleSearchTree extends FormTree {
 			if(biotype2==null) continue;
 			String label = mt.getName();
 			Pair<String, Biotype> key = new Pair<String, Biotype>(label, biotype2);
-			
+
 			if(!biotype2.isHideSampleId()) {
 				res.add(key, new BiosampleLinker(mt, LinkerType.SAMPLEID));
 			}
@@ -713,17 +717,17 @@ public class BiosampleSearchTree extends FormTree {
 				res.add(key, new BiosampleLinker(mt, LinkerType.SAMPLENAME, biotype2));
 			}
 			for(BiotypeMetadata mt2: biotype2.getMetadata()) {
-				res.add(key, new BiosampleLinker(mt, mt2));						
+				res.add(key, new BiosampleLinker(mt, mt2));
 			}
 			res.add(key, new BiosampleLinker(mt, LinkerType.COMMENTS, biotype2));
 		}
-		
+
 		//Look at parent types
 		Biotype b = biotype.getParent();
 		while(b!=null) {
 			String label = b.getName();
 			Pair<String, Biotype> key = new Pair<String, Biotype>(label, b);
-			
+
 			if(!b.isHideSampleId()) {
 				res.add(key, new BiosampleLinker(b, LinkerType.SAMPLEID));
 			}
@@ -732,10 +736,10 @@ public class BiosampleSearchTree extends FormTree {
 				res.add(key, new BiosampleLinker(b, LinkerType.SAMPLENAME));
 			}
 			for(BiotypeMetadata mt2: b.getMetadata()) {
-				res.add(key, new BiosampleLinker(mt2));						
+				res.add(key, new BiosampleLinker(mt2));
 			}
 			res.add(key, new BiosampleLinker(b, LinkerType.COMMENTS));
-			
+
 			b = b.getParent();
 		}
 		return res;

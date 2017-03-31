@@ -61,16 +61,16 @@ import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 /**
  * Class used to apply a sampling for a non-synchronized study
- * 
+ *
  * @author freyssj
  *
  */
 public class ApplySamplingDlg extends JEscapeDialog {
-	
+
 	private Study study;
 	private List<Biosample> biosamples = null;
-	
-	
+
+
 	private final JGenericComboBox<NamedSampling> samplingComboBox = new JGenericComboBox<>();
 	private final ContainerTypeComboBox containerTypeComboBox = new ContainerTypeComboBox();
 	private final PhaseComboBox phaseComboBox = new PhaseComboBox();
@@ -83,35 +83,35 @@ public class ApplySamplingDlg extends JEscapeDialog {
 			JExceptionDialog.showError("Study cannot be null");
 			return;
 		}
-		
+
 
 		study = JPAUtil.reattach(study);
 		this.study = study;
-				
+
 		biosampleList.setBiosamples(study.getTopAttachedBiosamples());
-		
+
 		phaseComboBox.setTextWhenEmpty("All Phases...");
-		
+
 		JPanel filterPanel = UIUtils.createTable(
 				new JLabel("Sampling: "), samplingComboBox,
 				new JLabel("Container: "), containerTypeComboBox,
 				new JLabel("Phase: "), phaseComboBox,
 				null, showDeadCheckBox);
-		
-		
-		samplingComboBox.addActionListener(new ActionListener() {				
+
+
+		samplingComboBox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				updateFilters();
 			}
 		});
-		showDeadCheckBox.addActionListener(new ActionListener() {				
+		showDeadCheckBox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				updateFilters();
 			}
 		});
-		
+
 
 		JButton okButton = new JIconButton(IconType.NEW, "Next");
 		okButton.addActionListener(new ActionListener() {
@@ -120,38 +120,38 @@ public class ApplySamplingDlg extends JEscapeDialog {
 				createTemplate();
 			}
 		});
-		
-		
+
+
 		//ContentPane
 		JPanel contentPanel = new JPanel(new BorderLayout());
 		contentPanel.add(BorderLayout.CENTER, UIUtils.createTitleBox("Add sampling for:",
 				UIUtils.createVerticalBox(
-						filterPanel, 
+						filterPanel,
 						new JLabel("Select one or more samples:"),
 						new JScrollPane(biosampleList))));
 		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
-		getRootPane().setDefaultButton(okButton);		
-		
+		getRootPane().setDefaultButton(okButton);
+
 
 		updateFilters();
 
-				
-		setContentPane(contentPanel);		
+
+		setContentPane(contentPanel);
 		pack();
 		setLocationRelativeTo(UIUtils.getMainFrame());
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);		
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setVisible(true);
-		
-		
+
+
 	}
-		
-	
+
+
 	private int push = 0;
 	private void updateFilters() {
 		if(push>0) return;
 		try {
 			push++;
-			
+
 			//Filter possible sampling types
 			Set<NamedSampling> samplings = new LinkedHashSet<NamedSampling>();
 			for(StudyAction ns: study.getStudyActions()) {
@@ -159,7 +159,7 @@ public class ApplySamplingDlg extends JEscapeDialog {
 				if(ns.getNamedSampling2()!=null) samplings.add(ns.getNamedSampling2());
 			}
 
-			
+
 			samplingComboBox.setValues(samplings, "All Samplings...");
 			if(samplings.size()==1) samplingComboBox.setSelection(samplings.iterator().next());
 
@@ -171,9 +171,9 @@ public class ApplySamplingDlg extends JEscapeDialog {
 					if(s.getContainerType()!=null) containerTypes.add(s.getContainerType());
 				}
 			}
-			containerTypeComboBox.setValues(containerTypes, "All Containers...");
-			
-			
+			containerTypeComboBox.setValues(containerTypes);
+
+
 			//Filter phases
 			if(phaseComboBox!=null) {
 				Set<Phase> phases = new TreeSet<Phase>();
@@ -184,7 +184,7 @@ public class ApplySamplingDlg extends JEscapeDialog {
 				}
 				phaseComboBox.setValues(phases);
 			}
-			
+
 			//Filter Animals
 			List<Biosample> biosamples = new ArrayList<Biosample>();
 			for(Biosample b : study.getTopAttachedBiosamples()) {
@@ -194,20 +194,20 @@ public class ApplySamplingDlg extends JEscapeDialog {
 			List<Biosample> sel = biosampleList.getSelection();
 			biosampleList.setBiosamples(biosamples);
 			biosampleList.setSelection(sel);
-			
-			
-			
+
+
+
 		} finally {
 			push--;
 		}
-		
-		
+
+
 	}
-	
-	
+
+
 	public void createTemplate() {
 		try {
-			
+
 			//Get the filters
 			Phase selectedPhase = phaseComboBox.getSelection();
 			NamedSampling namedSampling = samplingComboBox.getSelection();
@@ -217,33 +217,33 @@ public class ApplySamplingDlg extends JEscapeDialog {
 			if(namedSampling!=null && namedSampling.getAllSamplings().size()==0) {
 				throw new Exception("You should define the samples you want in the study design because the "+namedSampling+"'s template is empty");
 			}
-			
-			
+
+
 			List<Phase> selectedPhases = selectedPhase==null? null: Collections.singletonList(selectedPhase);
-			
+
 			//Generate samples
 			biosamples = null;
 			List<Biosample> res = BiosampleCreationHelper.processTemplateInStudy(study, namedSampling, selectedPhases, selectedContainer, biosampleList.getSelection().size()==0? null: biosampleList.getSelection());
-				
-			
+
+
 			biosamples = res;
 			if(biosamples==null || biosamples.size()==0) throw new Exception("There are no samples to be created, matching those criterias");
-			
+
 			//Open an Edit Dlg transactionLess (we are already in a transaction)
-			EditBiosampleDlg editDlg =  EditBiosampleDlg.createDialogForEditInTransactionMode(null, biosamples);			
+			EditBiosampleDlg editDlg =  EditBiosampleDlg.createDialogForEditInTransactionMode(null, biosamples);
 			editDlg.setVisible(true);
-			
-			dispose();			
+
+			dispose();
 		} catch(Exception e) {
 			biosamples = null;
-			JExceptionDialog.showError(e);			
+			JExceptionDialog.showError(e);
 		}
 	}
-	
-	
+
+
 	public List<Biosample> getBiosamples() {
 		return biosamples;
 	}
 
-		
+
 }

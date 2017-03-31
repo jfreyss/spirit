@@ -29,8 +29,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -109,29 +107,25 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 
 			dataTypeComboBox.setSelection(att.getDataType());
 
-			dataTypeComboBox.addItemListener(new ItemListener() {
-				@Override
-				public void itemStateChanged(ItemEvent e) {
-					refresh();
-				}
+			dataTypeComboBox.addItemListener(e-> {
+				refresh();
 			});
 			refresh();
 
-			paramButton.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					//For a biosample attribute, the user can select a biotype
-					if(dataTypeComboBox.getSelection()==DataType.BIOSAMPLE) {
-						editParametersBiotype(att);
-					} else if(dataTypeComboBox.getSelection()==DataType.FORMULA) {
-						//For a formula attribute, the user can enter a formula
-						editParametersFormula(att);
-					} else if(dataTypeComboBox.getSelection()==DataType.AUTO || dataTypeComboBox.getSelection()==DataType.LIST) {
-						//For a Auto or list attribute, the user can enter a list of choices
-						editParametersChoice(att, dataTypeComboBox.getSelection());
-					}
-					refresh();
+			paramButton.addActionListener(e-> {
+				//For a biosample attribute, the user can select a biotype
+				if(dataTypeComboBox.getSelection()==DataType.BIOSAMPLE) {
+					editParametersBiotype(att);
+				} else if(dataTypeComboBox.getSelection()==DataType.FORMULA) {
+					//For a formula attribute, the user can enter a formula
+					editParametersFormula(att);
+				} else if(dataTypeComboBox.getSelection()==DataType.AUTO || dataTypeComboBox.getSelection()==DataType.LIST || dataTypeComboBox.getSelection()==DataType.MULTI) {
+					//For a Auto or list attribute, the user can enter a list of choices
+					editParametersChoice(att, dataTypeComboBox.getSelection());
+				} else {
+					JExceptionDialog.showError("Not supported");
 				}
+				refresh();
 			});
 		}
 
@@ -233,24 +227,16 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 				UIUtils.createTitleBox("Info Attributes", UIUtils.createBox(infoScrollPane, new JInfoLabel("Info attributes are optional and are used to give extra information about a result (comments, raw value, ...)"))));
 
 		JButton okButton = new JIconButton(IconType.SAVE, "Save");
-		okButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					eventOk();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-					JOptionPane.showMessageDialog(TestEditDlg.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-				}
-
+		okButton.addActionListener(e-> {
+			try {
+				eventOk();
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				JOptionPane.showMessageDialog(TestEditDlg.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		});
 
-		JPanel content = new JPanel(new BorderLayout());
-		content.add(BorderLayout.CENTER, centerPanel);
-		content.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
-		setContentPane(content);
-
+		setContentPane(UIUtils.createBox(centerPanel, null, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton)));
 		UIUtils.adaptSize(this, 820, 770);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -318,53 +304,45 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			final AttributeRow row = rows.get(i);
 			final int index = i;
 			JButton addButton = new JButton("+");
-			addButton.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					TestAttribute ta = new TestAttribute();
-					ta.setTest(test);
-					rows.add(index, new AttributeRow(ta));
-					updateModel();
-					refreshPanel(outputType);
-				}
+			addButton.addActionListener(e-> {
+				TestAttribute ta = new TestAttribute();
+				ta.setTest(test);
+				rows.add(index, new AttributeRow(ta));
+				updateModel();
+				refreshPanel(outputType);
+
 			});
 			JButton delButton = new JButton("-");
-			delButton.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					int n = DAOTest.countRelations(row.model);
-					if(n>0) {
-						JExceptionDialog.showError("You must first delete the "+n+" results with a "+row.model.getName());
-						return;
-					}
-					AttributeRow r = rows.remove(index);
-					r.remove();
-					updateModel();
-					refreshPanel(outputType);
+			delButton.addActionListener(e-> {
+				int n = DAOTest.countRelations(row.model);
+				if(n>0) {
+					JExceptionDialog.showError("You must first delete the "+n+" results with a "+row.model.getName());
+					return;
 				}
+				AttributeRow r = rows.remove(index);
+				r.remove();
+				updateModel();
+				refreshPanel(outputType);
 			});
 			final JComboBox<String> moveButton = new JComboBox<String>(new String[] {"Move", "Up", "Down", "To Input", "To Output", "To Info"});
-			moveButton.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					if(moveButton.getSelectedIndex()==1 && index>0) {
-						rows.add(index-1, rows.remove(index));
-					} else if(moveButton.getSelectedIndex()==2 && index+1<rows.size()) {
-						rows.add(index, rows.remove(index+1));
-					} else if(moveButton.getSelectedIndex()==3 && outputType!=OutputType.INPUT) {
-						inputRows.add(rows.remove(index));
-						refreshPanel(OutputType.INPUT);
-					} else if(moveButton.getSelectedIndex()==4 && outputType!=OutputType.OUTPUT) {
-						outputRows.add(rows.remove(index));
-						refreshPanel(OutputType.OUTPUT);
-					} else if(moveButton.getSelectedIndex()==5 && outputType!=OutputType.INFO) {
-						infoRows.add(rows.remove(index));
-						refreshPanel(OutputType.INFO);
-					}
-
-					moveButton.setSelectedIndex(0);
-					refreshPanel(outputType);
+			moveButton.addActionListener(e-> {
+				if(moveButton.getSelectedIndex()==1 && index>0) {
+					rows.add(index-1, rows.remove(index));
+				} else if(moveButton.getSelectedIndex()==2 && index+1<rows.size()) {
+					rows.add(index, rows.remove(index+1));
+				} else if(moveButton.getSelectedIndex()==3 && outputType!=OutputType.INPUT) {
+					inputRows.add(rows.remove(index));
+					refreshPanel(OutputType.INPUT);
+				} else if(moveButton.getSelectedIndex()==4 && outputType!=OutputType.OUTPUT) {
+					outputRows.add(rows.remove(index));
+					refreshPanel(OutputType.OUTPUT);
+				} else if(moveButton.getSelectedIndex()==5 && outputType!=OutputType.INFO) {
+					infoRows.add(rows.remove(index));
+					refreshPanel(OutputType.INFO);
 				}
+
+				moveButton.setSelectedIndex(0);
+				refreshPanel(outputType);
 			});
 			c.gridx = 0; c.gridy = i+1; panel.add(new JLabel((i+1)+"."), c);
 			c.gridx = 1; c.gridy = i+1; panel.add(row.name, c);
@@ -376,13 +354,10 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			c.gridx = 8; c.gridy = i+1; panel.add(moveButton, c);
 		}
 		JButton addButton = new JButton("+");
-		addButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				rows.add(new AttributeRow(new TestAttribute()));
-				updateModel();
-				refreshPanel(outputType);
-			}
+		addButton.addActionListener(e-> {
+			rows.add(new AttributeRow(new TestAttribute()));
+			updateModel();
+			refreshPanel(outputType);
 		});
 		c.gridx = 6; c.gridy = rows.size()+1; panel.add(addButton, c);
 
@@ -398,7 +373,6 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 			if(!Test.getTestCategories(DAOTest.getTests()).contains(testCategoryComboBox.getSelection())) {
 				int res = JOptionPane.showConfirmDialog(this, "The category "+testCategoryComboBox.getSelection()+" is new.\n Are you sure you want to create it?", "New category", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 				if(res!=JOptionPane.YES_OPTION) return;
-
 			}
 
 			if(testNameTextField.getText().trim().length()==0) throw new Exception("Test Name is required");

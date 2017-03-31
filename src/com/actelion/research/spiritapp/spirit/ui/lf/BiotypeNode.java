@@ -23,56 +23,26 @@ package com.actelion.research.spiritapp.spirit.ui.lf;
 
 import java.util.Collection;
 
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.ComboBoxNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.ObjectComboBoxNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
-import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 
 /**
  * Wrapper to a BioTypeComboBox
  * @author freyssj
  *
  */
-public class BiotypeNode extends ComboBoxNode<Biotype> {
-	
-	public BiotypeNode(FormTree tree, Strategy<Biotype> strategy) {
-		super(tree, new BiotypeComboBox(DAOBiotype.getBiotypes()), "", null, strategy);
-		getComboBox().setEditable(false);
-	}
-	
-	public BiotypeNode(FormTree tree, Collection<Biotype> fixedChoices, Strategy<Biotype> strategy) {
-		super(tree, new BiotypeComboBox(fixedChoices, "..."), "", null, strategy);
-		getComboBox().setEditable(false);
-	}
-	
-	
-	@Override
-	public BiotypeComboBox getComboBox() {
-		return (BiotypeComboBox) super.getComboBox();
-	}
-	
-	@Override
-	protected void updateModel() {
-		if(strategy==null) {
-			System.err.println("No Strategy defined for "+getLabel());
-			return;
-		}
-		strategy.setModel(getComboBox().getSelection());
-	}
-	@Override
-	protected void updateView() {
-		Biotype model = strategy.getModel();		
-		((BiotypeComboBox) getComboBox()).setSelection(model);
-	}
-	
-	public void setEnabled(boolean val) {
-		((BiotypeComboBox) getComboBox()).setEnabled(val);
-	}
-	public boolean  isEnabled() {
-		return ((BiotypeComboBox) getComboBox()).isEnabled();
-	}
-	
+public class BiotypeNode extends ObjectComboBoxNode<Biotype> {
 
-	
+	public BiotypeNode(FormTree tree, Strategy<Biotype> strategy) {
+		super(tree, "Biotype", new BiotypeComboBox(), strategy);
+	}
+
+	public BiotypeNode(FormTree tree, Collection<Biotype> fixedChoices, Strategy<Biotype> strategy) {
+		super(tree, "Biotype", new BiotypeComboBox(fixedChoices), strategy);
+	}
+
+
+
 }

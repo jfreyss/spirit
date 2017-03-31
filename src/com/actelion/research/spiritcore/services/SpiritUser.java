@@ -60,10 +60,7 @@ public class SpiritUser {
 		this.groups.addAll(emp.getEmployeeGroups());
 		this.mainGroup = emp.getMainEmployeeGroup();
 		roles = emp.getRoles();
-
 		populateManagedUsersRec(emp, this.managedUsers);
-
-		System.out.println("SpiritUser.SpiritUser() "+username+" "+emp.getEmployeeGroups()+" "+mainGroup);
 	}
 
 	public static SpiritUser getFakeAdmin() {

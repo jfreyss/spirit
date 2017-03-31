@@ -49,7 +49,7 @@ import com.actelion.research.util.CompareUtils;
 
 @Entity
 @Table(name="employee_group", schema="spirit", indexes = {
-		@Index(name="employeegroup_parent_index", columnList="group_parent"), 
+		@Index(name="employeegroup_parent_index", columnList="group_parent"),
 		@Index(name="employeegroup_name_index", columnList="group_name")})
 @SequenceGenerator(name="employee_group_sequence", sequenceName="employee_group_sequence", allocationSize=1)
 @BatchSize(size=64)
@@ -58,47 +58,48 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="employee_group_sequence")
 	@Column(name="group_id", scale=9)
-	private int id = 0;	
-	
-	@Column(name="group_name", unique=true)	
+	private int id = 0;
+
+	@Column(name="group_name", unique=true)
 	private String name;
 
 	@ManyToOne(optional=true, fetch=FetchType.LAZY)
-	@JoinColumn(name="group_parent")	
-	private EmployeeGroup parent;	
-	
+	@JoinColumn(name="group_parent")
+	private EmployeeGroup parent;
+
 	@OneToMany(mappedBy="parent", fetch=FetchType.LAZY)
-	@SortNatural	
-	private Set<EmployeeGroup> children = new TreeSet<>();	
-	
-	
+	@SortNatural
+	private Set<EmployeeGroup> children = new TreeSet<>();
+
+
 	public EmployeeGroup() {}
-	
+
 	public EmployeeGroup(String name) {
 		this.name = name;
 	}
-	
+
 	@Override
 	public int getId() {
 		return id;
 	}
-	
+
+	@Override
 	public void setId(int id) {
 		this.id = id;
 	}
-	
+
 	public EmployeeGroup getParent() {
 		return parent;
 	}
-	
+
 	public void setParent(EmployeeGroup parent) {
 		this.parent = parent;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public String getNameShort() {
 		final int newLength = 20;
 		if(name==null || name.length()<newLength) return name;
@@ -108,7 +109,7 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 		for (int i = 0; i < split.length; i++) {
 			String n = split[i];
 			if(sb.length()>0) sb.append(" ");
-			if(toBeCompressed>0 && n.length()>3) {				
+			if(toBeCompressed>0 && n.length()>3) {
 				sb.append(n.substring(0, Math.max(3, n.length()-toBeCompressed/(split.length-i))));
 			} else {
 				sb.append(n);
@@ -116,11 +117,11 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 		}
 		return sb.toString();
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	/**
 	 * @param children the children to set
 	 */
@@ -133,7 +134,7 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 	public Set<EmployeeGroup> getChildren() {
 		return children;
 	}
-	
+
 	/**
 	 * Return itself + children until given depth (depth=0 means no children)
 	 * @param maxDepth
@@ -148,16 +149,16 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 		}
 		return res;
 	}
-	
+
 	@Override
 	public int hashCode() {
-		return (int)(id%Integer.MAX_VALUE);
+		return id%Integer.MAX_VALUE;
 	}
 	@Override
 	public String toString() {
 		return name;
 	}
-	
+
 	@Override
 	public int compareTo(EmployeeGroup o) {
 		if(o==null) return -1;
@@ -170,8 +171,18 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 		if(id>0 && id==((EmployeeGroup)o).getId()) return true;
 		return false;
 	}
-	
-	
+
+	public int getDepth() {
+		int depth = 0;
+		EmployeeGroup eg = this;
+		while(eg!=null && depth<6) {
+			depth++;
+			eg = eg.getParent();
+		}
+		return depth;
+	}
+
+
 	public static List<Integer> getIds(Collection<EmployeeGroup> groups) {
 		List<Integer> res = new ArrayList<>();
 		for (EmployeeGroup eg : groups) {
@@ -179,7 +190,7 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 		}
 		return res;
 	}
-	
+
 	public static List<String> getNames(Collection<EmployeeGroup> groups) {
 		List<String> res = new ArrayList<>();
 		for (EmployeeGroup eg : groups) {
@@ -187,5 +198,5 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 		}
 		return res;
 	}
-	
+
 }

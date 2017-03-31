@@ -22,8 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.lf;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
@@ -34,8 +32,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
 
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.UIUtils;
@@ -47,69 +43,63 @@ public class UserIdTextArea extends JPanel {
 	private JButton add1Button = new JButton("Add");
 	private JButton remove1Button = new JButton("Remove");
 
-	
+
 	public UserIdTextArea(int cols, int rows) {
 		super(new BorderLayout());
 		textArea = new JTextArea(cols, rows);
-		
+
 		textArea.setWrapStyleWord(true);
 		textArea.setLineWrap(true);
-		textArea.addCaretListener(new CaretListener() {				
-			@Override
-			public void caretUpdate(CaretEvent e) {
-				if(!textArea.isFocusOwner()) return;
-				int c = e.getDot();
-				String text = textArea.getText();
-				text = text.replaceAll("["+MiscUtils.SPLIT_SEPARATORS_WITH_SPACE+"]", " ");
-				int index1 =  text.lastIndexOf(" ", c-1)+1;
-				int index2 =  text.indexOf(" ", c);
-				if(index1<0) index1 = 0;
-				if(index2<0) index2 = text.length();
-				if(index1>=index2) {
-					userId1ComboBox.setText("");
-					return;
-				}
-				String name = text.substring(index1, index2);
-				
-				userId1ComboBox.setText(name);
+		textArea.addCaretListener(e-> {
+			if(!textArea.isFocusOwner()) return;
+			int c = e.getDot();
+			String text = textArea.getText();
+			text = text.replaceAll("["+MiscUtils.SPLIT_SEPARATORS_WITH_SPACE+"]", " ");
+			int index1 =  text.lastIndexOf(" ", c-1)+1;
+			int index2 =  text.indexOf(" ", c);
+			if(index1<0) index1 = 0;
+			if(index2<0) index2 = text.length();
+			if(index1>=index2) {
+				userId1ComboBox.setText("");
+				return;
 			}
+			String name = text.substring(index1, index2);
+
+			userId1ComboBox.setText(name);
 		});
-		
-		add1Button.addActionListener(new ActionListener() {				
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				updateUsers(userId1ComboBox.getText(), null);
-			}
+
+		add1Button.addActionListener(e-> {
+			updateUsers(userId1ComboBox.getText(), null);
 		});
-		remove1Button.addActionListener(new ActionListener() {				
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				updateUsers(null, userId1ComboBox.getText());
-			}
+		remove1Button.addActionListener(e-> {
+			updateUsers(null, userId1ComboBox.getText());
 		});
-		
-		
+		userId1ComboBox.addActionListener(e-> {
+			updateUsers(userId1ComboBox.getText(), null);
+		});
+
+
 		add(BorderLayout.CENTER, new JScrollPane(textArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalStrut(10), new JLabel("Add: "), userId1ComboBox, add1Button, remove1Button));
 
 	}
-	
+
 	private void updateUsers(String toAdd, String toRemove) {
 		Set<String> set = new TreeSet<String>(Arrays.asList(MiscUtils.split(textArea.getText())));
 		if(toAdd!=null) set.add(toAdd);
 		if(toRemove!=null) set.remove(toRemove);
 		int scrollTo = -1;
-		
+
 		if(toRemove!=null) {
 			scrollTo = textArea.getText().indexOf(toRemove);
 		}
-		
+
 		textArea.setText(MiscUtils.flatten(set, ", "));
-		
+
 		if(toAdd!=null) {
 			scrollTo = textArea.getText().indexOf(toAdd);
 		}
-		
+
 		if(scrollTo>=0) textArea.setCaretPosition(scrollTo);
 	}
 
@@ -119,17 +109,17 @@ public class UserIdTextArea extends JPanel {
 		userId1ComboBox.setEnabled(enabled);
 		add1Button.setEnabled(enabled);
 		remove1Button.setEnabled(enabled);
-		
+
 	}
-	
+
 	public void setText(String s) {
 		textArea.setText(s);
-		
+
 		//And clean
 		updateUsers(null, null);
 	}
 	public String getText() {
 		return textArea.getText();
 	}
-	
+
 }

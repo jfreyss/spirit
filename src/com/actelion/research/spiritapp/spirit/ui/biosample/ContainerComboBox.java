@@ -21,6 +21,7 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 
@@ -31,23 +32,24 @@ import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.util.ui.JGenericComboBox;
 
 public class ContainerComboBox extends JGenericComboBox<Container> {
-	
+
+	private ContainerLabel lbl = new ContainerLabel();
+
 	public ContainerComboBox() {
 		super();
 		setMinimumSize(new Dimension(200, 20));
 	}
-	
-	
-	private ContainerLabel lbl = new ContainerLabel();
 
 	@Override
-	public Component processCellRenderer(JLabel comp, Container b, int index) {
-		lbl.setContainer(b);
-		super.processCellRenderer(comp, b, index);
+	public Component processCellRenderer(JLabel comp, Container container, int index) {
+		lbl.setBackground(Color.WHITE);
+		lbl.setForeground(Color.BLACK);
+		lbl.setContainer(container);
+		super.processCellRenderer(comp, container, index);
 		return lbl;
 	}
-	
-	
-	
-	
+
+
+
+
 }

@@ -24,8 +24,6 @@ package com.actelion.research.spiritapp.animalcare.ui.monitor;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -102,9 +100,6 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 	}
 
 	private void recreateUIInThread()  {
-		contentPanel.removeAll();
-		contentPanel.revalidate();
-		contentPanel.repaint();
 
 		new SwingWorkerExtended("Loading", contentPanel) {
 
@@ -170,12 +165,9 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 						liveButton.setIcon(MonitoringStats.getIconType(allStats).getIcon());
 						liveButton.setHorizontalAlignment(SwingConstants.LEFT);
 						//						liveButton.setPreferredSize(new Dimension(92, 44));
-						liveButton.addActionListener(new ActionListener() {
-							@Override
-							public void actionPerformed(ActionEvent e) {
-								new MonitoringDlg(phase);
-								SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, phase.getStudy());
-							}
+						liveButton.addActionListener(e-> {
+							new MonitoringDlg(phase);
+							SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, phase.getStudy());
 						});
 
 						StringBuilder statsBuilder = new StringBuilder();
@@ -215,27 +207,29 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 
 					GraphPanelWithResults graphPanel = new GraphPanelWithResults();
 					graphPanel.setPivotTemplate(tpl2);
-					graphPanel.setResults(results);
-
 
 					JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, displaySp, graphPanel);
 					splitPane.setDividerLocation(380);
 					contentPanel.add(BorderLayout.CENTER, splitPane);
 					contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue(), new JButton(new CloseAction())));
 
-					//Scroll to current date
-					if (nowButton != null) {
-						final JComponent comp = nowButton;
-						SwingUtilities.invokeLater(new Runnable() {
-							@Override
-							public void run() {
-								Point pt = SwingUtilities.convertPoint(comp, 0, 0, displaySp);
-								displaySp.getVerticalScrollBar().setValue(pt.y-displaySp.getHeight()/2);
-							}
-						});
+					contentPanel.validate();
+					contentPanel.repaint();
 
-					}
-					contentPanel.revalidate();
+					final JComponent comp = nowButton;
+					SwingUtilities.invokeLater(()-> {
+						//Scroll to current date
+						if (comp != null) {
+							Point pt = SwingUtilities.convertPoint(comp, 0, 0, displaySp);
+							displaySp.getVerticalScrollBar().setValue(pt.y-displaySp.getHeight()/2);
+						}
+						graphPanel.setResults(results);
+
+					});
+
+
+
+
 				} catch(Exception e) {
 					JExceptionDialog.showError(e);
 				}

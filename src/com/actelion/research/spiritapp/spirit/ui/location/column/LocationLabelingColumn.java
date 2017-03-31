@@ -35,7 +35,7 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class LocationLabelingColumn extends Column<Location, LocationLabeling> {
-	
+
 	private class LocationLabelingCellEditor extends AbstractCellEditor implements  TableCellEditor {
 
 		private JGenericComboBox<LocationLabeling> comboBox = new JGenericComboBox<LocationLabeling>(LocationLabeling.values(), false);
@@ -50,11 +50,11 @@ public class LocationLabelingColumn extends Column<Location, LocationLabeling> {
 			comboBox.setSelection((LocationLabeling) value);
 			return comboBox;
 		}
-		
+
 	}
-	
+
 	public LocationLabelingColumn() {
-		super("Labeling", LocationLabeling.class);				
+		super("Labeling", LocationLabeling.class, 50);
 	}
 	@Override
 	public LocationLabeling getValue(Location row) {
@@ -64,12 +64,12 @@ public class LocationLabelingColumn extends Column<Location, LocationLabeling> {
 	public void setValue(Location row, LocationLabeling value) {
 		row.setLabeling(value);
 	}
-	
+
 	@Override
 	public void paste(Location row, String value) throws Exception {
 		setValue(row, LocationLabeling.get(value));
 	}
-	
+
 	@Override
 	public boolean isEditable(Location row) {
 		return row.getLocationType()!=null && row.getLocationType().getCategory()==LocationCategory.MOVEABLE;
@@ -79,5 +79,5 @@ public class LocationLabelingColumn extends Column<Location, LocationLabeling> {
 	public TableCellEditor getCellEditor(AbstractExtendTable<Location> table) {
 		return new LocationLabelingCellEditor();
 	}
-	
+
 }

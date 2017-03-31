@@ -82,14 +82,14 @@ import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritContextObserver {
-	
+
 	private static SplashConfig splashConfig = new SplashConfig(SlideCare.class.getResource("slidecare.jpg"), "SlideCare", "SlideCare v" + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Actelion - J.Freyss");
 	private StudyComboBox studyComboBox = new StudyComboBox(RightLevel.ADMIN);
-	
+
 	private StudyDetailPanel studyDetailPanel = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT);
 	private JButton createCassetteButton = new JButton(new Action_CreateCassette());
 	private JButton createSlideButton = new JButton(new Action_CreateSlide());
-	
+
 	private JTabbedPane tabbedPane = new JCustomTabbedPane();
 	private InventoryPanel cassettePanel = new InventoryPanel(ContainerType.K7) {
 		@Override
@@ -105,27 +105,27 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	};
 	private JStatusBar statusBar = new JStatusBar();
 
-	
+
 	public SlideCare() {
 		super("SlideCare");
-		
+
 		URL url = getClass().getResource("ico.png");
 		if(url!=null) setIconImage(Toolkit.getDefaultToolkit().createImage(url));
 
-		
+
 		SpiritChangeListener.register(this);
 		SpiritContextListener.register(this);
-		
+
 		//TopPanel
 		JPanel studySelecterPanel = UIUtils.createHorizontalBox(new JLabel("Study: "), studyComboBox);
 		studySelecterPanel.setOpaque(true);
-		
-			
+
+
 		JPanel topPane = new JPanel(new BorderLayout());
 		topPane.add(BorderLayout.WEST, studySelecterPanel);
 		topPane.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(), BorderFactory.createEmptyBorder(5,5,5,5)));
-		
-		
+
+
 		//TabbedPane
 		tabbedPane.setFont(FastFont.BOLD);
 		tabbedPane.add("Study Design", studyDetailPanel);
@@ -140,30 +140,30 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 				eventTabChanged();
 			}
 		});
-		
-		
+
+
 		//StatusBar
 		statusBar.setCopyright("SlideCare - (C) Joel Freyss - Actelion 2013");
-		
-		
+
+
 		//contentPanel
 		JPanel contentPanel = new JPanel(new BorderLayout());
 		contentPanel.add(BorderLayout.NORTH, topPane);
 		contentPanel.add(BorderLayout.CENTER, tabbedPane);
 		contentPanel.add(BorderLayout.SOUTH, statusBar);
 		setContentPane(contentPanel);
-		
+
 		UIUtils.adaptSize(this, 1600, 1200);
-   		setLocationRelativeTo(null);
-   		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
-   				
+		setLocationRelativeTo(null);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+
 		initMenu();
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 
-		studyComboBox.addActionListener(new ActionListener() {			
+		studyComboBox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(studyComboBox.getText()!=null)  Spirit.getConfig().setProperty("slideCare.study", studyComboBox.getText());
@@ -171,8 +171,8 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 			}
 		});
 
-		
-		
+
+
 		setVisible(true);
 
 		//Login
@@ -181,7 +181,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 				final SpiritUser user = DAOSpiritUser.loadUser("freyssj");
 				if(user==null) throw new Exception("Could not load user birkood1");
 				SpiritFrame.setUser(user);
-				SwingUtilities.invokeLater(new Runnable() {				
+				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
 						eventUserChanged();
@@ -190,25 +190,24 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 			} catch (Exception e) {
 				System.err.println(e);
 			}
-		} 
-		
+		}
+
 		if(SpiritFrame.getUser()==null) {
-			SwingUtilities.invokeLater(new Runnable() {				
+			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
 					new SpiritAction.Action_Relogin(SlideCare.this, "SlideCare").actionPerformed(null);
 					if(SpiritFrame.getUser()==null) System.exit(1);
-					
+
 					statusBar.setUser(SpiritFrame.getUser().getUsername()+ " logged in");
 				}
 			});
-		}		
+		}
 		setPreferredSize(new Dimension(300, 200));
 
 	}
 	private void eventUserChanged() {
 		studyComboBox.setText(Spirit.getConfig().getProperty("slideCare.study", ""));
-		studyComboBox.reload();
 		eventTabChanged();
 		updateStatus();
 	}
@@ -220,13 +219,13 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		} else {
 			userStatus = SpiritFrame.getUser().getUsername() + " ("+ (SpiritFrame.getUser().getMainGroup()==null?"NoDept":SpiritFrame.getUser().getMainGroup().getName())+ ") logged in";
 		}
-		statusBar.setUser(userStatus);	
-	
+		statusBar.setUser(userStatus);
+
 	}
-	
+
 	private InventoryPanel lastSelectedInventoryPanel;
 	private void eventTabChanged() {
-		
+
 		statusBar.setInfos("");
 		Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
 		if(tabbedPane.getSelectedIndex()==0) {
@@ -239,10 +238,10 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 			lastSelectedInventoryPanel = slidePanel;
 		}
 	}
-	
+
 	public void initMenu() {
 		JMenuBar menuBar = new JMenuBar();
-		
+
 		JMenu editMenu = new JMenu("Edit");
 		editMenu.setMnemonic('e');
 		editMenu.add(new Action_CreateCassette());
@@ -254,14 +253,14 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		menuBar.add(SpiritMenu.getToolsMenu());
 		menuBar.add(SpiritMenu.getAdminMenu());
 		menuBar.add(SpiritMenu.getHelpMenu(splashConfig));
-		
+
 		setJMenuBar(menuBar);
-		
+
 	}
-	
+
 	public class Action_CreateCassette extends AbstractAction {
 		public Action_CreateCassette() {
-			super("Create Cassettes");			
+			super("Create Cassettes");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)'c');
 			putValue(AbstractAction.SMALL_ICON, new ImageIcon(ContainerType.K7.getImage(22)));
 		}
@@ -269,18 +268,18 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		public void actionPerformed(ActionEvent e) {
 			try {
 				Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
-				if(study==null || !SpiritRights.canAdmin(study, SpiritFrame.getUser())) throw new Exception("You must select a study");				
+				if(study==null || !SpiritRights.canAdmin(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
 				new ContainerCreatorDlg(study, ContainerType.K7);
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
-			
+
 		}
 	}
-	
+
 	public class Action_CreateSlide extends AbstractAction {
 		public Action_CreateSlide() {
-			super("Create Slides");			
+			super("Create Slides");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)'s');
 			putValue(AbstractAction.SMALL_ICON, new ImageIcon(ContainerType.SLIDE.getImage(22)));
 		}
@@ -288,30 +287,30 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		public void actionPerformed(ActionEvent e) {
 			try {
 				Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
-				if(study==null || !SpiritRights.canAdmin(study, SpiritFrame.getUser())) throw new Exception("You must select a study");				
+				if(study==null || !SpiritRights.canAdmin(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
 				new ContainerCreatorDlg(study, ContainerType.SLIDE);
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
 		}
 	}
-	
-	
-	
+
+
+
 	public static void main(String[] args) {
-		
+
 		Spirit.initUI();
 		SplashScreen2.show(splashConfig);
 
-		
+
 		new SwingWorkerExtended() {
-			
+
 			@Override
 			protected void doInBackground() throws Exception {
-				SpiritAction.logUsage("SlideCare");					
+				SpiritAction.logUsage("SlideCare");
 				JPAUtil.getManager();
 			}
-			
+
 			@Override
 			protected void done() {
 				Spirit.initUI();
@@ -324,12 +323,11 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
 		if(action==SpiritChangeType.LOGIN) {
 			eventUserChanged();
-		} else {  
-			studyComboBox.reload();
+		} else {
 			eventTabChanged();
 		}
 	}
-	
+
 	@Override
 	public void setStudy(Study study) {
 	}
@@ -358,12 +356,12 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	@Override
 	public void setUser(String status) {
 		statusBar.setUser(status);
-	}	
-	
+	}
+
 	public static void open() {
 		SlideCare app = new SlideCare();
 		app.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		app.eventUserChanged();		
+		app.eventUserChanged();
 	}
 
 

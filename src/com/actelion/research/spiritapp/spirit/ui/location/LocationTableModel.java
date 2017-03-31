@@ -25,11 +25,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.location.column.LocationDepartmentColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationDescriptionColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationFreeColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationNameColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationOccupiedColumn;
+import com.actelion.research.spiritapp.spirit.ui.location.column.LocationPrivacyColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationSizeColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationStudyColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationTypeColumn;
@@ -40,24 +40,24 @@ import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
 public class LocationTableModel extends ExtendTableModel<Location> {
-	
-	
-	public LocationTableModel() {		
+
+
+	public LocationTableModel() {
 		List<Column<Location, ?>> columns = new ArrayList<Column<Location, ?>>();
 		Column<Location, ?> nameColumn = new LocationNameColumn();
 		columns.add(nameColumn);
-		
+
 		columns.add(new LocationTypeColumn());
 		columns.add(new LocationDescriptionColumn());
 		columns.add(new LocationOccupiedColumn());
 		columns.add(new LocationFreeColumn());
 		columns.add(new LocationSizeColumn());
-		columns.add(new LocationDepartmentColumn());		
-		columns.add(new LocationStudyColumn());		
-		setColumns(columns);		
-		setTreeColumn(nameColumn);		
+		columns.add(new LocationPrivacyColumn());
+		columns.add(new LocationStudyColumn());
+		setColumns(columns);
+		setTreeColumn(nameColumn);
 	}
-	
+
 	@Override
 	public Location getTreeParent(Location row) {
 		if(row==null) {
@@ -70,12 +70,12 @@ public class LocationTableModel extends ExtendTableModel<Location> {
 				row = JPAUtil.reattach(row);
 				return row.getParent();
 			} catch(Exception e2) {
-				System.err.println("Lazy loading error: "+e2);		
+				System.err.println("Lazy loading error: "+e2);
 				return null;
 			}
 		}
 	}
-	
+
 	@Override
 	public List<Location> getTreeChildren(Location row) {
 		try {
@@ -94,12 +94,12 @@ public class LocationTableModel extends ExtendTableModel<Location> {
 				}
 				return res;
 			} catch(Exception e2) {
-				System.err.println("Lazy loading error: "+e2);			
+				System.err.println("Lazy loading error: "+e2);
 				return new ArrayList<Location>();
 			}
 		}
 	}
 
-	
-	
+
+
 }

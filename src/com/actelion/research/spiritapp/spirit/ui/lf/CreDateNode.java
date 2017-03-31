@@ -26,9 +26,9 @@ import java.util.Collection;
 
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxOneNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxNode;
 
-public class CreDateNode extends TextComboBoxOneNode {
+public class CreDateNode extends TextComboBoxNode {
 	private Collection<String> options = new ArrayList<String>();
 
 	public CreDateNode(FormTree tree, Strategy<String> strategy) {

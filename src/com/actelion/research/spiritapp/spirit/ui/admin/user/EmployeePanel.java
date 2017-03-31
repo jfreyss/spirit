@@ -46,7 +46,6 @@ import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
-import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
@@ -58,53 +57,44 @@ public class EmployeePanel extends JPanel {
 	private JCheckBox activeCheckbox = new JCheckBox("Hide disabled users", true);
 	private JCustomTextField filterField = new JCustomTextField(JCustomTextField.ALPHANUMERIC);
 	private EmployeeTable employeeTable = new EmployeeTable();
-	
+
 	public EmployeePanel() {
-		
+
 		final JButton deleteUserButton = new JIconButton(IconType.DELETE, "Delete User");
 		final JButton editUserButton = new JIconButton(IconType.EDIT, "Edit User");
 		final JButton createUserButton = new JIconButton(IconType.NEW, "Create User");
-		
-		deleteUserButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				List<Employee> sel = employeeTable.getSelection();
-				if(sel.size()==1) {
-					int res = JOptionPane.showConfirmDialog(EmployeePanel.this, "Are you sure you want to delete " + sel.get(0)+"?", "Delete user", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-					if(res!=JOptionPane.YES_OPTION) return;
-					
-					try {
-						DAOEmployee.removeEmployee(sel.get(0), SpiritFrame.getUser());
-						JPAUtil.clear();
 
-						refresh();
-					} catch (Exception e) {
-						JExceptionDialog.showError(e);
-					}
-				}
-							
-			}
-		});
-		editUserButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				List<Employee> sel = employeeTable.getSelection();
-				if(sel.size()==1) {
-					new EmployeeEditDlg(sel.get(0));
-					JPAUtil.clear();
+		deleteUserButton.addActionListener(ev-> {
+			List<Employee> sel = employeeTable.getSelection();
+			if(sel.size()==1) {
+				int res = JOptionPane.showConfirmDialog(EmployeePanel.this, "Are you sure you want to delete " + sel.get(0)+"?", "Delete user", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+				if(res!=JOptionPane.YES_OPTION) return;
 
+				try {
+					DAOEmployee.removeEmployee(sel.get(0), SpiritFrame.getUser());
+					SpiritFrame.clear();
 					refresh();
-					employeeTable.setSelection(sel);
+				} catch (Exception e) {
+					JExceptionDialog.showError(e);
 				}
 			}
 		});
-		createUserButton.addActionListener(new ActionListener() {			
+		editUserButton.addActionListener(ev-> {
+			List<Employee> sel = employeeTable.getSelection();
+			if(sel.size()==1) {
+				new EmployeeEditDlg(sel.get(0));
+				SpiritFrame.clear();
+				refresh();
+				employeeTable.setSelection(sel);
+			}
+		});
+		createUserButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent ev) {
 				createUser("");
 			}
 		});
-				
+
 		employeeTable.getModel().setTreeViewActive(false);
 		employeeTable.addMouseListener(new MouseAdapter() {
 			@Override
@@ -114,15 +104,15 @@ public class EmployeePanel extends JPanel {
 				}
 			}
 		});
-		
-		activeCheckbox.addChangeListener(new ChangeListener() {			
+
+		activeCheckbox.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				refresh();
 			}
 		});
-		
-		
+
+
 		filterField.setOpaque(false);
 		filterField.addKeyListener(new KeyAdapter() {
 			@Override
@@ -130,19 +120,19 @@ public class EmployeePanel extends JPanel {
 				refresh();
 			}
 		});
-		
+
 		setLayout(new GridLayout());
 		add(UIUtils.createBox(
 				UIUtils.createTitleBox("Users", new JScrollPane(employeeTable)),
 				UIUtils.createTitleBox("Filter", UIUtils.createHorizontalBox(new JLabel("User: "), filterField, activeCheckbox, Box.createHorizontalGlue())),
 				UIUtils.createHorizontalBox(deleteUserButton, editUserButton, createUserButton, Box.createHorizontalGlue())));
-		
-		
+
+
 		refresh();
 	}
-	
+
 	public void refresh() {
-		List<Employee> res = new ArrayList<Employee>(); 
+		List<Employee> res = new ArrayList<Employee>();
 		for(Employee emp: DAOEmployee.getEmployees()) {
 			if(activeCheckbox.isSelected() && emp.isDisabled()) continue;
 			if(filterField.getText().length()>0) {
@@ -156,17 +146,17 @@ public class EmployeePanel extends JPanel {
 					if(!ok) continue;
 				}
 			}
-			
+
 			res.add(emp);
 		}
 		employeeTable.setRows(res);
 	}
-	
+
 	private void createUser(String prefix) {
 		Employee emp = new Employee();
 		if(prefix!=null) emp.setUserName(prefix);
 		new EmployeeEditDlg(emp);
-		JPAUtil.clear();
+		SpiritFrame.clear();
 
 		refresh();
 		employeeTable.setSelection(Collections.singletonList(emp));

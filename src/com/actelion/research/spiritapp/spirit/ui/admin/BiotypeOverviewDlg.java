@@ -39,7 +39,6 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
-import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
@@ -85,7 +84,7 @@ public class BiotypeOverviewDlg extends JEscapeDialog {
 		setContentPane(contentPanel);
 
 
-		biotypeComboBox.addActionListener(e-> {
+		biotypeComboBox.addTextChangeListener(e->{
 			biotypePane.setSelection(biotypeComboBox.getSelection());
 			editButton.setEnabled(biotypeComboBox.getSelection()!=null);
 			deleteButton.setEnabled(biotypeComboBox.getSelection()!=null);
@@ -95,7 +94,6 @@ public class BiotypeOverviewDlg extends JEscapeDialog {
 		editButton.addActionListener(e-> {
 			if(biotypeComboBox.getSelection()!=null) {
 				new BiotypeEditDlg(biotypeComboBox.getSelection());
-				JPAUtil.clear();
 				biotypeComboBox.setValues(DAOBiotype.getBiotypes(true));
 				biotypeComboBox.setSelection(biotypeComboBox.getSelection());
 			}
@@ -120,7 +118,6 @@ public class BiotypeOverviewDlg extends JEscapeDialog {
 		addButton.addActionListener(e-> {
 			Biotype type = new Biotype();
 			new BiotypeEditDlg(type);
-			JPAUtil.clear();
 			biotypeComboBox.setValues(DAOBiotype.getBiotypes(true));
 			biotypeComboBox.setSelection(type);
 			editButton.setEnabled(biotypeComboBox.getSelection()!=null);

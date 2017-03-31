@@ -39,28 +39,17 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.util.ui.JTextComboBox;
 
 public abstract class GroupCellEditor extends AbstractCellEditor implements TableCellEditor {
+
 	private final List<Group> groups = new ArrayList<Group>();
 	private final JTextComboBox cb = new JTextComboBox();
-	
-//	private EditBiosampleTableModel model;
-//	private Study study;
-	
-//	public GroupCellEditor(EditBiosampleTableModel model) {
-//		this.model = model;
-//		init();
-//	}
-//	public GroupCellEditor(Study study) {
-//		this.study = study;
-//		init();
-//	}
-	
+
 	public GroupCellEditor() {
 		init();
 	}
-	
+
 	private void init() {
 		cb.setAllowTyping(false);
-		cb.setListCellRenderer(new DefaultListCellRenderer() {			
+		cb.setRenderer(new DefaultListCellRenderer() {
 			GroupLabel gl = new GroupLabel();
 			@Override
 			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -71,21 +60,22 @@ public abstract class GroupCellEditor extends AbstractCellEditor implements Tabl
 		});
 	}
 
+
+
 	public abstract Study getStudy(int row);
-	
+
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-		
-		Study study = getStudy(row); 
+		Study study = getStudy(row);
 		groups.clear();
-		List<String> choices = new ArrayList<String>(); 
+		List<String> choices = new ArrayList<>();
 		if(study!=null) {
 			groups.addAll(study.getGroups());
 			for (Group g : groups) {
-				choices.add(g.getBlindedName(SpiritFrame.getUsername()));				
+				choices.add(g.getBlindedName(SpiritFrame.getUsername()));
 			}
 		}
-		cb.setChoices(choices);		
+		cb.setChoices(choices);
 		cb.setText(value==null?"": ((Group)value).getBlindedName(SpiritFrame.getUsername()));
 		return cb;
 	}
@@ -96,5 +86,5 @@ public abstract class GroupCellEditor extends AbstractCellEditor implements Tabl
 			if(group.getBlindedName(SpiritFrame.getUsername()).equals(cb.getText())) return group;
 		}
 		return null;
-	}		
+	}
 }

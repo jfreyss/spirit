@@ -143,7 +143,7 @@ public class SampleWeighingDlg extends JEscapeDialog {
 		List<Container> cages = Biosample.getContainers(animals);
 		Collections.sort(cages);
 		cages.add(new Container("NoCage"));
-		cageComboBox.setValues(cages, "");
+		cageComboBox.setValues(cages, true);
 		cageComboBox.setEnabled(cages.size()>1);
 
 		ActionListener al = new ActionListener() {
@@ -330,15 +330,10 @@ public class SampleWeighingDlg extends JEscapeDialog {
 					animal2Samples.get(top).add(sample);
 				}
 
-
 				//Retrieve results to populate the fields
 				DAOResult.attachOrCreateStudyResultsToSamples(study, list, phase, elb);
-				//				} finally {
-				//					push--;
-				//				}
-
-
 			}
+
 			@Override
 			protected void done() {
 

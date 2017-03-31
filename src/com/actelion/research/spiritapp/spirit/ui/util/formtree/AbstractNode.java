@@ -318,4 +318,13 @@ public abstract class AbstractNode<T>  {
 	public boolean isVisible() {
 		return visible;
 	}
+
+	public void setEnabled(boolean enabled) {
+		getComponent().setEnabled(enabled);
+	}
+
+	public boolean isEnabled() {
+		return getComponent().isEnabled();
+	}
+
 }

@@ -41,18 +41,18 @@ import com.actelion.research.util.ui.exceltable.ExtendTable;
 import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
 /**
- * Generic implementation for the tables used in Spirit. Last changes are automaticcaly tracked and highlighted 
+ * Generic implementation for the tables used in Spirit. Last changes are automaticcaly tracked and highlighted
  * @author freyssj
  *
  * @param <T>
  */
 public class SpiritExtendTable<T> extends ExtendTable<T> {
-	
+
 	private long lastQuery = 0;
 
 	public SpiritExtendTable(ExtendTableModel<T> model) {
 		super(model);
-		
+
 		getModel().addTableModelListener(new TableModelListener() {
 			@Override
 			public void tableChanged(TableModelEvent e) {
@@ -61,11 +61,11 @@ public class SpiritExtendTable<T> extends ExtendTable<T> {
 			}
 		});
 	}
-	
+
 	public long getLastQuery() {
 		return lastQuery;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public void reload() {
 		List<T> rows = getRows();
@@ -73,9 +73,9 @@ public class SpiritExtendTable<T> extends ExtendTable<T> {
 			List<T> sel = getSelection();
 			for (int i = 0; i < rows.size(); i++) {
 				IObject old = (IObject) rows.get(i);
-				
-				if(old.getId()>0) {
-					//The row is coming from the DB, reload it (or remove it if it deleted) 
+
+				if(old.getId()>0 && !JPAUtil.isValid(old)) {
+					//The row is coming from the DB, reload it (or remove it if it deleted)
 					T t = (T) JPAUtil.reattach(old);
 					if(t==null) {
 						rows.remove(i--);
@@ -83,21 +83,21 @@ public class SpiritExtendTable<T> extends ExtendTable<T> {
 						rows.set(i, t);
 					}
 				} else if(getModel().getTreeColumn()!=null) {
-					//The row is not coming from the DB and has children, reload the children (or remove it if it deleted) 
+					//The row is not coming from the DB and has children, reload the children (or remove it if it deleted)
 					List<IObject> children = (List<IObject>) getModel().getTreeChildren((T) old);
 					for (int j = 0; j < children.size(); j++) {
 						IObject c = JPAUtil.reattach(children.get(j));
 						if(c==null) {
-							children.remove(j--);							
+							children.remove(j--);
 						} else {
 							children.set(j, c);
 						}
-					}										
+					}
 				}
 			}
-			
+
 			getModel().fireTableDataChanged();
-			
+
 			setSelection(sel);
 		}
 	}
@@ -106,8 +106,8 @@ public class SpiritExtendTable<T> extends ExtendTable<T> {
 	 * Highlight rows, if they were updated during the last 10s, or 12h
 	 */
 	@Override
-	public void postProcess(T row, int rowNo, Object value, JComponent c) {	
-		
+	public void postProcess(T row, int rowNo, Object value, JComponent c) {
+
 		if(row==null) return;
 		Date last = null;
 		if(row instanceof Biosample) last = ((Biosample) row).getUpdDate();
@@ -116,13 +116,13 @@ public class SpiritExtendTable<T> extends ExtendTable<T> {
 		else if(row instanceof FoodWater) last = ((FoodWater) row).getUpdDate();
 		else if(row instanceof Location) last = ((Location) row).getUpdDate();
 		else return;
-		
-		
+
+
 		if(last!=null && Math.abs(last.getTime()-getLastQuery())<10*1000L) { //10s
 			c.setBackground(Color.YELLOW);
 		} else if(last!=null && Math.abs(last.getTime()-getLastQuery())<12*3600*1000L) { //12h
 			c.setBackground(UIUtils.getDilutedColor(c.getBackground(), Color.YELLOW, .9));
 		}
 
-	}	
+	}
 }

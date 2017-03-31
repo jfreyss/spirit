@@ -21,8 +21,6 @@
 
 package com.actelion.research.spiritapp.spirit.ui.util.formtree;
 
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Collection;
@@ -33,20 +31,20 @@ import com.actelion.research.spiritcore.util.QueryTokenizer;
 import com.actelion.research.util.ui.JTextComboBox;
 
 public abstract class TextComboBoxMultipleNode extends AbstractNode<String[]> {
-	
+
 	private final JTextComboBox comboBox;
 	private final FieldType fieldType;
 
 	public TextComboBoxMultipleNode(FormTree tree, FieldType fieldType, String label) {
 		this(tree, fieldType, label, null);
 	}
-		
+
 	public TextComboBoxMultipleNode(final FormTree tree, String label, final Strategy<String[]> accessor) {
 		this(tree, FieldType.AND_CLAUSE, label, accessor);
-	}	
+	}
 	public TextComboBoxMultipleNode(final FormTree tree, FieldType fieldType, String label, final Strategy<String[]> accessor) {
 		super(tree, label, accessor);
-		
+
 		this.fieldType = fieldType;
 		this.comboBox = new JTextComboBox() {
 			@Override
@@ -54,49 +52,41 @@ public abstract class TextComboBoxMultipleNode extends AbstractNode<String[]> {
 				return TextComboBoxMultipleNode.this.getChoices();
 			}
 		};
-//		comboBox.setEscapeSpaceWithQuotes(true);
-		this.comboBox.addFocusListener(new FocusAdapter() {			
-			@Override
-			public void focusGained(FocusEvent e) {
-				comboBox.selectAll();
-			}
-		});
-		
 		boolean multiple = fieldType==FieldType.AND_CLAUSE || fieldType==FieldType.OR_CLAUSE;
 		comboBox.setMultipleChoices(multiple);
-		comboBox.addPropertyChangeListener(JTextComboBox.PROPERTY_TEXTCHANGED, new PropertyChangeListener() {			
+		comboBox.addPropertyChangeListener(JTextComboBox.PROPERTY_TEXTCHANGED, new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				getTree().firePropertyChange(FormTree.PROPERTY_CHANGED, false, true);
 				if(strategy!=null) strategy.onChange();
 			}
 		});
-		
-		comboBox.setFont(editFont);		
+
+		comboBox.setFont(editFont);
 		comboBox.setTextWhenEmpty(label);
 
 		comboBox.setToolTipText("<html> <u><b>"+label + "</b></u><br>"
-				+ (fieldType==FieldType.OR_CLAUSE? QueryTokenizer.getHelp(false): fieldType==FieldType.AND_CLAUSE? QueryTokenizer.getHelp(true): "") + "<br>"  
+				+ (fieldType==FieldType.OR_CLAUSE? QueryTokenizer.getHelp(false): fieldType==FieldType.AND_CLAUSE? QueryTokenizer.getHelp(true): "") + "<br>"
 				+ (multiple?"Use <b>Ctrl-Click</b> or <b>Shift-Click</b> to select more than one " + label:"") + "</html>");
 
 	}
-	
+
 	public FieldType getFieldType() {
 		return fieldType;
 	}
 
-	
+
 	/**
 	 * To be overriden
 	 * @return
 	 */
 	public abstract Collection<String> getChoices();
-	
+
 	@Override
 	public JTextComboBox getComponent() {
 		return comboBox;
 	}
-	
+
 	@Override
 	protected void updateModel() {
 		if(strategy==null) {
@@ -105,7 +95,7 @@ public abstract class TextComboBoxMultipleNode extends AbstractNode<String[]> {
 		}
 		strategy.setModel(comboBox.getSelectionArray());
 	}
-	
+
 	@Override
 	protected void updateView() {
 		comboBox.setSelectionArray(strategy.getModel());
@@ -118,11 +108,11 @@ public abstract class TextComboBoxMultipleNode extends AbstractNode<String[]> {
 	public String getSelection() {
 		return comboBox.getText();
 	}
-	
+
 	@Override
 	public JComponent getFocusable() {
 		return comboBox;
 	}
-	
+
 
 }

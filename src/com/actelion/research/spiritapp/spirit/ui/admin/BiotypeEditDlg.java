@@ -119,7 +119,7 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 				new SwingWorkerExtended() {
 					@Override
 					protected void doInBackground() throws Exception {
-						countData = DAOBiosample.countRelations(t);
+						countData = DAOBiosample.countRelations(biotype, t);
 					}
 					@Override
 					protected void done() {

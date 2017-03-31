@@ -48,7 +48,7 @@ import com.actelion.research.spiritapp.spirit.ui.util.formtree.InputNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.LabelNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxMultipleNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxOneNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxNode;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
@@ -79,7 +79,7 @@ public class ResultSearchTree extends FormTree {
 	//	private final LabelNode outputNode = new LabelNode(this, "Output");
 	private final LabelNode advancedNode = new LabelNode(this, "Advanced");
 
-	private TextComboBoxOneNode elbNode;
+	private TextComboBoxNode elbNode;
 	private Map<String, ResultFilters> memoLastResultFilters = new HashMap<>();
 
 	private int push = 0;
@@ -194,7 +194,7 @@ public class ResultSearchTree extends FormTree {
 		advancedNode.add(phaseNode);
 
 		//ELB
-		elbNode = new TextComboBoxOneNode(this, "ELBs", true, new Strategy<String>() {
+		elbNode = new TextComboBoxNode(this, "ELBs", true, new Strategy<String>() {
 			@Override
 			public String getModel() {
 				return query.getElbs();
@@ -294,7 +294,7 @@ public class ResultSearchTree extends FormTree {
 							tests = DAOTest.getTestsFromElbs(elbs);
 						} else {
 							counter = DAOStudy.countResults(studies, forcedBiotype);
-							tests = DAOTest.getTests();
+							tests = studies!=null && studies.size()>0? new ArrayList<>(counter.keySet()): DAOTest.getTests();
 						}
 
 						rootTest.clearChildren();

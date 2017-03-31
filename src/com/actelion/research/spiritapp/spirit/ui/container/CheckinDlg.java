@@ -23,12 +23,9 @@ package com.actelion.research.spiritapp.spirit.ui.container;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,8 +41,6 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.container.ContainerTableModel.ContainerTableModelType;
@@ -86,26 +81,26 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 
 	private LocationBrowser locationBrowser = new LocationBrowser();
 	private LocationDepictor locationDepictor = new LocationDepictor();
-	
-	
-	private JRadioButton patternRadioButton = new JRadioButton(Direction.PATTERN.getName());		
-	private JRadioButton rightRadioButton = new JRadioButton(Direction.LEFT_RIGHT.getName());		
+
+
+	private JRadioButton patternRadioButton = new JRadioButton(Direction.PATTERN.getName());
+	private JRadioButton rightRadioButton = new JRadioButton(Direction.LEFT_RIGHT.getName());
 	private JRadioButton bottomRadioButton = new JRadioButton(Direction.TOP_BOTTOM.getName());
-	
-	private JLabel commentsLabel = new JCustomLabel("", Color.RED); 
+
+	private JLabel commentsLabel = new JCustomLabel("", Color.RED);
 	private final JButton newLocationButton = new JIconButton(IconType.NEW, "New Location");
-	
-	private final List<Container> containers;		
+
+	private final List<Container> containers;
 	private Set<Container> toSave = new HashSet<>();
-	
-	
+
+
 	private JLabel containerStatusLabel = new JLabel();
 	private int push = 0;
-		
+
 	public CheckinDlg(Collection<Biosample> mySamples, boolean commitTransaction) {
 		super(UIUtils.getMainFrame(), commitTransaction? "Checkin / Relocate": "Set Location", commitTransaction? CheckinDlg.class.getName(): null);
 		this.commitTransaction = commitTransaction;
-		
+
 		List<Biosample> biosamples;
 		if(commitTransaction) {
 			biosamples = JPAUtil.reattach(mySamples);
@@ -113,45 +108,39 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 			biosamples = new ArrayList<>(mySamples);
 		}
 		this.containers = Biosample.getContainers(biosamples, true);
-		System.out.println("CheckinDlg.CheckinDlg() "+containers);
-		
+
 		//Test that containers are not empty
 		if(containers==null || containers.size()==0) {
 			JExceptionDialog.showError("You must have some containers");
 			return;
 		}
-		
+
 
 		Set<Location> locations = Container.getLocations(containers);
 		currentLocation = locations.size()>0? locations.iterator().next(): null;
-		
+
 		if(currentLocation==null) {
 			int currentLocId = Config.getInstance(".spirit").getProperty("checkin.location", -1);
 			if(currentLocId>0) {
 				currentLocation = DAOLocation.getLocation(currentLocId);
 			}
 		}
-		
+
 		//Configure LocationPane
-		locationBrowser.addPropertyChangeListener(LocationBrowser.PROPERTY_LOCATION_SELECTED, new PropertyChangeListener() {			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				
-				Location location = locationBrowser.getBioLocation();
-				locationDepictor.setBioLocation(location);
-				eventChangeLocation();
-				
-			}
+		locationBrowser.addPropertyChangeListener(LocationBrowser.PROPERTY_LOCATION_SELECTED, evt-> {
+			Location location = locationBrowser.getBioLocation();
+			locationDepictor.setBioLocation(location);
+			eventChangeLocation();
 		});
-		
+
 		locationDepictor.setHighlightContainers(containers);
 		locationDepictor.setDisplayChildren(false);
 		locationDepictor.addRackDepictorListener(new RackDepictorListener() {
 			@Override
 			public void onSelect(Collection<Integer> pos, Container lastSelect, boolean dblClick) {
-				
+
 				//Select the containers from the table (if some of those are selected)
-				makePreview();					
+				makePreview();
 				if(dblClick) {
 					try {
 						eventSetPositions();
@@ -160,20 +149,20 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 						commentsLabel.setText(e.getMessage());
 						e.printStackTrace();
 					}
-				}				
+				}
 			}
-			
+
 			@Override
 			public void containerDropped(List<Container> containers, List<Integer> toPos) {
 				CheckinDlg.this.containerDropped(containers, toPos);
 			}
-			
+
 			@Override
 			public boolean acceptDrag() {
 				return true;
 			}
 		});
-		
+
 		containerTable.enableDragSource(false);
 		containerTable.addMouseListener(new MouseAdapter() {
 			@Override
@@ -187,7 +176,7 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 							Location l = sel.get(0).getLocation();
 							if(l!=null && !l.equals(locationDepictor.getBioLocation())) {
 								locationBrowser.setBioLocation(l);
-								locationDepictor.setBioLocation(l);						
+								locationDepictor.setBioLocation(l);
 								eventChangeLocation();
 							}
 						}
@@ -197,46 +186,40 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 					push--;
 				}
 			}
-		});		
-		containerTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {			
-			@Override
-			public void valueChanged(ListSelectionEvent e) {			
-				if(e.getValueIsAdjusting()) return;
-				if(push>0) return;
-				try {
-					push++;
-					eventTableSelection();
-				} finally {
-					push--;
-				}
+		});
+		containerTable.getSelectionModel().addListSelectionListener(e-> {
+			if(e.getValueIsAdjusting()) return;
+			if(push>0) return;
+			try {
+				push++;
+				eventTableSelection();
+			} finally {
+				push--;
 			}
 		});
-		
-		
+
+
 		//newLocationButton
-		newLocationButton.addActionListener(new ActionListener() {				
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Location location = new Location();
-				location.setParent(locationBrowser.getBioLocation()==null? null: locationBrowser.getBioLocation().getParent());
-				location.setLocationType(LocationType.RACK);
-				location.setCols(12);
-				location.setRows(8);
-				location.setName("Rack-"+System.currentTimeMillis());
-				LocationEditDlg dlg = LocationEditDlg.editInSameTransaction(Collections.singletonList(location));
-				
-				List<Location> locs = dlg.getSavedLocations();
-				if(locs!=null && locs.size()>0) {
-					//link location
-					Location loc = locs.get(0);
-					loc = JPAUtil.reattach(loc);
-					locationBrowser.setBioLocation(loc);
-					locationDepictor.setBioLocation(loc);
-					eventChangeLocation();
-				} else {
-					//unset the parent
-					location.setParent(null);
-				}
+		newLocationButton.addActionListener(e-> {
+			Location location = new Location();
+			location.setParent(locationBrowser.getBioLocation());
+			location.setLocationType(LocationType.RACK);
+			location.setCols(12);
+			location.setRows(8);
+			location.setName("Rack-"+System.currentTimeMillis());
+			LocationEditDlg dlg = LocationEditDlg.editInSameTransaction(Collections.singletonList(location));
+
+			List<Location> locs = dlg.getSavedLocations();
+			if(locs!=null && locs.size()>0) {
+				//link location
+				Location loc = locs.get(0);
+				//				loc = JPAUtil.reattach(loc);
+				locationBrowser.setBioLocation(loc);
+				locationDepictor.setBioLocation(loc);
+				eventChangeLocation();
+			} else {
+				//unset the parent
+				location.setParent(null);
 			}
 		});
 
@@ -245,7 +228,7 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 		JScrollPane sp1 = new JScrollPane(containerTable);
 		containerPanel.add(BorderLayout.CENTER, sp1);
 		containerPanel.add(BorderLayout.NORTH, containerStatusLabel);
-		
+
 		if(Container.getScannedPoses(containers).size()>0) {
 			patternRadioButton.setSelected(true);
 			RackDropListener.setDirection(Direction.PATTERN);
@@ -258,112 +241,98 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 			rightRadioButton.setSelected(true);
 			RackDropListener.setDirection(Direction.LEFT_RIGHT);
 		}
-		
+
 		ButtonGroup group = new ButtonGroup();
 		group.add(rightRadioButton);
 		group.add(bottomRadioButton);
-		group.add(patternRadioButton);		
+		group.add(patternRadioButton);
 
-		ActionListener al = new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				RackDropListener.setDirection(rightRadioButton.isSelected()? Direction.LEFT_RIGHT: bottomRadioButton.isSelected()? Direction.TOP_BOTTOM: patternRadioButton.isSelected()? Direction.PATTERN: Direction.DEFAULT);
-				makePreview();
-			}
-		};		
+		ActionListener al = e-> {
+			RackDropListener.setDirection(rightRadioButton.isSelected()? Direction.LEFT_RIGHT: bottomRadioButton.isSelected()? Direction.TOP_BOTTOM: patternRadioButton.isSelected()? Direction.PATTERN: Direction.DEFAULT);
+			makePreview();
+		};
 		rightRadioButton.addActionListener(al);
-		bottomRadioButton.addActionListener(al);		
+		bottomRadioButton.addActionListener(al);
 		patternRadioButton.addActionListener(al);
-		
-		JPanel moveToPanel = UIUtils.createHorizontalBox(
-//			new JLabel("Set Positions: "),
-			rightRadioButton,
-			new JLabel(Direction.LEFT_RIGHT.getImage()),
-			Box.createHorizontalStrut(5),						
-			bottomRadioButton,
-			new JLabel(Direction.TOP_BOTTOM.getImage()),
-			Box.createHorizontalStrut(5),						
-			patternRadioButton,
-			Box.createHorizontalStrut(15),						
-			commentsLabel,
-			Box.createHorizontalGlue()
-		);
 
-		
-		//Configure OkButton	
+		JPanel moveToPanel = UIUtils.createHorizontalBox(
+				rightRadioButton,
+				new JLabel(Direction.LEFT_RIGHT.getImage()),
+				Box.createHorizontalStrut(5),
+				bottomRadioButton,
+				new JLabel(Direction.TOP_BOTTOM.getImage()),
+				Box.createHorizontalStrut(5),
+				patternRadioButton,
+				Box.createHorizontalStrut(15),
+				commentsLabel,
+				Box.createHorizontalGlue()
+				);
+
+
+		//Configure OkButton
 		JButton okButton;
 		if(commitTransaction) {
 			okButton = new JIconButton(IconType.SAVE, "Save");
 		} else {
-			okButton = new JButton("Close");			
+			okButton = new JButton("Close");
 		}
 
 		//TopPanel
-		JPanel locationPanel = new JPanel(new BorderLayout());
-		locationPanel.add(BorderLayout.NORTH, UIUtils.createTitleBox("Direction", moveToPanel));
-		locationPanel.add(BorderLayout.CENTER, UIUtils.createTitleBox("Location", UIUtils.createBox(locationDepictor, UIUtils.createBox(locationBrowser, null, null, null, locationDepictor.createZoomPanel()))));
-		locationPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), newLocationButton, Box.createHorizontalGlue(), okButton));
-		
-		
+		//TODO readd newLocationButton
+		JPanel locationPanel = UIUtils.createBox(
+				UIUtils.createTitleBox("Location", UIUtils.createBox(locationDepictor, UIUtils.createBox(locationBrowser, null, null, null, locationDepictor.createZoomPanel()))),
+				UIUtils.createTitleBox("Direction", moveToPanel),
+				UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), /*newLocationButton,*/ Box.createHorizontalGlue(), okButton));
 		getRootPane().setDefaultButton(okButton);
 
 
-		okButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					eventOk();
-				} catch (Exception ex) {
-					JExceptionDialog.showError(CheckinDlg.this, ex);
-				}
+		okButton.addActionListener(e-> {
+			try {
+				eventOk();
+			} catch (Exception ex) {
+				JExceptionDialog.showError(CheckinDlg.this, ex);
 			}
 		});
-		
-		
-		
-		JSplitPane centerPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, 
-				UIUtils.createTitleBox("Containers", containerPanel), 
-				locationPanel);
-		centerPane.setDividerLocation(340);		
+
+		JSplitPane centerPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, UIUtils.createTitleBox("Containers", containerPanel), locationPanel);
+		centerPane.setDividerLocation(340);
 		setContentPane(centerPane);
-				
+
 		if(currentLocation!=null) {
 			locationBrowser.setBioLocation(currentLocation);
 			locationDepictor.setBioLocation(currentLocation);
 		}
-		
-		
+
+
 		//Init the container table
-		containerTable.setRows(new ArrayList<Container>(containers));
+		containerTable.setRows(new ArrayList<>(containers));
 		containerTable.selectAll();
-		
-		
+
+
 		eventChangeLocation();
-		
+
 		UIUtils.adaptSize(this, 1200, 760);
 		setVisible(true);
 	}
-	
+
 	public void eventTableSelection() {
 		List<Container> containers = containerTable.getSelection();
-		containerStatusLabel.setText("<html><b>" + containers.size()+ " Containers selected</b><br>Drag or Dbl-Click where you want to move them</html>");				
+		containerStatusLabel.setText("<html><b>" + containers.size()+ " Containers selected</b><br>Drag or Dbl-Click where you want to move them</html>");
 		locationDepictor.setSelectedContainers(containers);
 		locationDepictor.setHighlightContainers(containerTable.getRows());
 		makePreview();
 	}
 
-	
 	private void eventChangeLocation() {
 		Location location = locationDepictor.getBioLocation();
-		
+
 		if(location==null) {
 			bottomRadioButton.setEnabled(false);
 			rightRadioButton.setEnabled(false);
 			patternRadioButton.setEnabled(false);
 			return;
 		}
-		
-		
+
 		//Update MoveTo -> direction
 		if(location.getLocationType().getPositionType()==LocationLabeling.NONE || location.getLocationType().getPositionType()==null) {
 			bottomRadioButton.setEnabled(false);
@@ -373,25 +342,25 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 			bottomRadioButton.setEnabled(true);
 			rightRadioButton.setEnabled(true);
 			patternRadioButton.setEnabled(true);
-			
+
 			//preview if empty rack
 			Set<Biosample> present = new HashSet<Biosample>(location.getBiosamples());
 			present.removeAll(containerTable.getRows());
-					
+
 		}
-		
+
 		makePreview();
 		repaint();
 	}
-	
+
 	/**
 	 * Compute where the container would be moved and preview the result
 	 */
 	private void makePreview() {
 		Location location = locationDepictor.getBioLocation();
 		if(location==null) return;
-		
-		
+		location = JPAUtil.reattach(location);
+
 		Set<Integer> selPoses = locationDepictor.getSelectedPoses();
 		List<Container> containers = containerTable.getSelection();
 		if(selPoses.size()>0) {
@@ -404,73 +373,72 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 			locationDepictor.computeDroppedPoses( location.getSize()>0?0:-1, containers);
 		}
 	}
-	
+
 	private void eventSetPositions() throws Exception {
 		Location location = locationDepictor.getBioLocation();
 		if(location==null) throw new Exception("You must select a location");
-		
-		
-		List<Integer> poses = locationDepictor.getDroppedPoses();		
+
+
+		List<Integer> poses = locationDepictor.getDroppedPoses();
 		List<Container> containers = containerTable.getSelection();
 		if(location.getLabeling()==LocationLabeling.NONE) {
 			for (int i = 0; i < containers.size(); i++) {
-				containers.get(i).setLocation(location);					
-			}			
+				containers.get(i).setLocation(location);
+			}
 		} else {
 			if(containers.size()!=poses.size()) throw new Exception("There is not enough place");
 			for (int i = 0; i < containers.size(); i++) {
-				containers.get(i).setLocation(location);				
-				containers.get(i).setPos(poses.get(i));	
-//				assert containers.get(i).getLocation()==location: "location mismatch "+containers.get(i).getLocation()+"<>"+location;
+				containers.get(i).setLocation(location);
+				containers.get(i).setPos(poses.get(i));
 			}
 		}
 		toSave.addAll(containers);
-		
+
 		locationDepictor.setSelectedContainers(containers);
 		containerTable.repaint();
 		locationDepictor.setBioLocation(location);
-		locationDepictor.updateView();		
-	}	
-	
+		locationDepictor.updateView();
+	}
+
 	private void containerDropped(List<Container> containers, Collection<Integer> toPos) {
 		if(locationDepictor.getBioLocation()==null || containers.size()==0) return;
 		if(toPos.size()!=containers.size()) return;
-		
-		List<Integer> poses = new ArrayList<Integer>(toPos);
+
+		List<Integer> poses = new ArrayList<>(toPos);
 		Collections.sort(poses);
-		
+
 		for (int i = 0; i < containers.size(); i++) {
-			Container c = containers.get(i);		
+			Container c = containers.get(i);
 			int pos = poses.get(i);
-			c.setLocation(locationDepictor.getBioLocation());					
-			c.setPos(pos);		
+			c.setLocation(locationDepictor.getBioLocation());
+			c.setPos(pos);
 			toSave.add(c);
-		}				
+		}
 		locationDepictor.updateView();
 		repaint();
 	}
-	
+
 	public void eventOk() throws Exception {
 		SpiritUser user = Spirit.askForAuthentication();
 		if(!commitTransaction && toSave.size()==0) {
 			List<Container> containers = containerTable.getRows();
 			containerDropped(containers, locationDepictor.getSelectedPoses());
 		}
-		
+
 		if(toSave.size()==0) {
 			throw new Exception("To validate the location, you should double-click on the new position");
-		}		
-		
+		}
+
 		if(locationDepictor.getBioLocation()!=null) {
-			Config.getInstance(".spirit").setProperty("checkin.location", locationDepictor.getBioLocation().getId());			
-		}			
-					
+			Config.getInstance(".spirit").setProperty("checkin.location", locationDepictor.getBioLocation().getId());
+		}
+
 		if(commitTransaction) {
 			List<Biosample> biosamples = Container.getBiosamples(toSave);
 			DAOBiosample.persistBiosamples(biosamples, user);
 			SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, biosamples);
 		}
-		
+
 		dispose();
 		success = true;
 	}
@@ -478,6 +446,6 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 	public boolean isSuccess() {
 		return success;
 	}
-	
-	
+
+
 }

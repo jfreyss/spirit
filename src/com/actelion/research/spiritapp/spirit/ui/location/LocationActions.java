@@ -65,37 +65,38 @@ public class LocationActions {
 		public Action_New(Collection<Location> selection) {
 			super("New Locations");
 			this.parent = selection==null || selection.size()==0? null: selection.iterator().next();
+			if(parent!=null) putValue(NAME, getValue(NAME) + " (under "+parent.getName()+")");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('l'));
 			putValue(AbstractAction.SMALL_ICON, IconType.LOCATION.getIcon());
-			setEnabled(SpiritRights.canRead(parent, SpiritFrame.getUser()));
+			setEnabled(parent==null || (parent.getLocationType().getPreferredChild()!=null && SpiritRights.canRead(parent, SpiritFrame.getUser())));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if(SpiritFrame.getUser()==null) return;
 			Location location = new Location();
 			if(parent!=null) {
-				location.setLocationType(parent.getLocationType());
+				location.setLocationType(parent.getLocationType().getPreferredChild());
 				location.setCols(parent.getCols());
 				location.setRows(parent.getRows());
 				location.setParent(parent);
 			}
 			location.setName("");
-			
-			
+
+
 			if(SpiritFrame.getUser()!=null  && !SpiritFrame.getUser().isSuperAdmin() && (parent==null || parent.getInheritedPrivacy()==Privacy.PUBLIC)) {
 				location.setPrivacy(Privacy.PROTECTED);
 				location.setEmployeeGroup(SpiritFrame.getUser().getMainGroup());
 			}
-			
+
 			LocationEditDlg.edit(Collections.singletonList(location));
 		}
 	}
-	
+
 	public static class Action_Delete extends AbstractAction {
 		private List<Location> locations;
-		
+
 		public Action_Delete(List<Location> locations) {
-			super("Delete Batch");
+			super("Delete");
 			this.locations = locations;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('l'));
 			putValue(AbstractAction.SMALL_ICON, IconType.DELETE.getIcon());
@@ -113,7 +114,7 @@ public class LocationActions {
 			LocationEditDlg.deleteInNewContext(locations);
 		}
 	}
-	
+
 	public static class Action_History extends AbstractAction {
 		private final Collection<Location> locations;
 		public Action_History(Collection<Location> locations) {
@@ -133,7 +134,7 @@ public class LocationActions {
 			}
 		}
 	}
-	
+
 	public static class Action_Print extends AbstractAction {
 		private List<Location> locations;
 
@@ -144,7 +145,7 @@ public class LocationActions {
 			putValue(AbstractAction.SMALL_ICON, IconType.PRINT.getIcon());
 			setEnabled(SpiritRights.canRead(location, SpiritFrame.getUser()));
 		}
-		
+
 		public Action_Print(List<Location> locations) {
 			super("Print Labels");
 			this.locations = locations;
@@ -158,11 +159,11 @@ public class LocationActions {
 			}
 			setEnabled(enabled);
 		}
-		
+
 		public List<Location> getLocations() {
 			return locations;
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			List<PrintLabel> labels = new ArrayList<PrintLabel>();
@@ -192,16 +193,16 @@ public class LocationActions {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if(SpiritFrame.getUser()==null) return;
-			
+
 
 			LocationEditDlg.duplicate(locations);
 		}
 	}
-	
-	
+
+
 	public static class Action_EditBatch extends AbstractAction {
 		private List<Location> locations;
-		
+
 		public Action_EditBatch(Location location) {
 			super("Edit / Move Location ("+location.getName()+")");
 			this.locations = Collections.singletonList(location);
@@ -210,9 +211,9 @@ public class LocationActions {
 			setEnabled(SpiritRights.canEdit(location, SpiritFrame.getUser()));
 
 		}
-		
+
 		public Action_EditBatch(List<Location> locations) {
-			super("Edit Batch");
+			super("Edit");
 			this.locations = locations;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(AbstractAction.SMALL_ICON, IconType.EDIT.getIcon());
@@ -220,7 +221,7 @@ public class LocationActions {
 			for(Location l: locations) {
 				if(!SpiritRights.canEdit(l, SpiritFrame.getUser())) enabled = false;
 			}
-			
+
 			setEnabled(enabled);
 
 		}
@@ -229,7 +230,7 @@ public class LocationActions {
 			LocationEditDlg.edit(locations);
 		}
 	}
-	
+
 	public static class Action_Move extends AbstractAction {
 		private List<Location> locations;
 		public Action_Move(Location location) {
@@ -239,9 +240,9 @@ public class LocationActions {
 			setEnabled(SpiritRights.canEdit(location, SpiritFrame.getUser()));
 		}
 		public Action_Move(List<Location> locations) {
-			super("Move Batch");
+			super("Move");
 			this.locations = locations;
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('m'));			
+			putValue(AbstractAction.MNEMONIC_KEY, (int)('m'));
 			if(locations.size()==0) {
 				setEnabled(false);
 			} else {
@@ -252,77 +253,77 @@ public class LocationActions {
 						enabled = false;
 					}
 				}
-				setEnabled(enabled);				
+				setEnabled(enabled);
 			}
 		}
 
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			new MoveLocationDialog(locations);
 		}
 	}
-	
-//	public static class Action_ScanUpdate extends AbstractAction {
-//		public Action_ScanUpdate(Location loc) {
-//			super("Scan & Update");
-//			setEnabled(loc!=null && loc.getLocationType()==LocationType.RACK && SpiritRights.canEdit(loc, Spirit.getUser()));
-//		}
-//		
-//		@Override
-//		public void actionPerformed(ActionEvent e) {
-//			
-//		}
-//		
-//	}
-	
+
+	//	public static class Action_ScanUpdate extends AbstractAction {
+	//		public Action_ScanUpdate(Location loc) {
+	//			super("Scan & Update");
+	//			setEnabled(loc!=null && loc.getLocationType()==LocationType.RACK && SpiritRights.canEdit(loc, Spirit.getUser()));
+	//		}
+	//
+	//		@Override
+	//		public void actionPerformed(ActionEvent e) {
+	//
+	//		}
+	//
+	//	}
+
 	public static JPopupMenu createPopup(List<Location> locations) {
 		JPopupMenu menu = new JPopupMenu();
-		
+
 		String s = locations.size()==1? locations.get(0).getName(): locations.size()+" selected";
 		menu.add(new JCustomLabel("   Location: "+s, Font.BOLD));
-		
+
 		JMenu newMenu = new JMenu("New");
 		newMenu.setMnemonic('n');
 		newMenu.setIcon(IconType.NEW.getIcon());
 		menu.add(newMenu);
 		newMenu.add(new JMenuItem(new Action_New(locations)));
-		newMenu.add(new JMenuItem(new Action_Duplicate(locations)));	
-		
-		menu.add(new JMenuItem(new Action_EditBatch(locations)));			
+		newMenu.add(new JMenuItem(new Action_Duplicate(locations)));
+
+		menu.add(new JMenuItem(new Action_EditBatch(locations)));
 		menu.add(new JSeparator());
-		menu.add(new JMenuItem(new Action_Print(locations)));			
+		menu.add(new JMenuItem(new Action_Print(locations)));
 		menu.add(new JSeparator());
-		
+
 		JMenu advancedMenu = new JMenu("Advanced");
 		advancedMenu.setMnemonic('n');
 		advancedMenu.setIcon(IconType.ADMIN.getIcon());
 		menu.add(advancedMenu);
-		advancedMenu.add(new JMenuItem(new Action_Delete(locations)));			
+		advancedMenu.add(new JMenuItem(new Action_Delete(locations)));
 		advancedMenu.add(new JSeparator());
-		advancedMenu.add(new JMenuItem(new Action_History(locations)));			
+		advancedMenu.add(new JMenuItem(new Action_History(locations)));
 
 		return menu;
 	}
-	
-	
+
+
 	public static JPopupMenu createPopup(Location location) {
-		return createPopup(location==null? new ArrayList<Location>(): Collections.singletonList(location));		
+		return createPopup(location==null? new ArrayList<Location>(): Collections.singletonList(location));
 	}
-		
+
 	public static void attachPopup(final LocationTable table) {
 		table.addMouseListener(new PopupAdapter(table) {
 			@Override
 			protected void showPopup(MouseEvent e) {
 
 				JPopupMenu popupMenu = LocationActions.createPopup(table.getSelection());
-//				popupMenu.insert(table.new TreeViewExpandAll(true, true), 0);
-//				popupMenu.insert(table.new TreeViewExpandAll(false, true), 1);
-//				popupMenu.insert(new JSeparator(), 2);
+				//				popupMenu.insert(table.new TreeViewExpandAll(true, true), 0);
+				//				popupMenu.insert(table.new TreeViewExpandAll(false, true), 1);
+				//				popupMenu.insert(new JSeparator(), 2);
 				popupMenu.show(table, e.getX(), e.getY());
 			}
 		});
 	}
 
-	
+
 }

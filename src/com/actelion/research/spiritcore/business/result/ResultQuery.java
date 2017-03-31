@@ -104,23 +104,6 @@ public class ResultQuery implements Serializable {
 		return query;
 	}
 
-
-	//	public static ResultQuery createQueryForTestIdPhaseId(Test test, Phase phase) {
-	//		ResultQuery query = new ResultQuery();
-	//		query.getTestIds().add((int)testId);
-	//		query.setPhaseId(phaseId);
-	//		query.setQuality(null);
-	//		return query;
-	//	}
-
-	//
-	//	public static ResultQuery createQueryForAnimalId(int animalId) {
-	//		ResultQuery query = new ResultQuery();
-	//		query.setQuality(null);
-	//		query.setAnimalId(animalId);
-	//		return query;
-	//	}
-
 	public void copyFrom(ResultQuery query) {
 		this.bids = query.bids;
 		this.phase = query.phase;
@@ -133,13 +116,11 @@ public class ResultQuery implements Serializable {
 		this.biotype = query.biotype;
 		this.updUser = query.updUser;
 		this.updDays = query.updDays;
-		//		this.skippedOutputAttributes = query.skippedOutputAttributes;
 
 		this.setQuality(query.minQuality);
-		this.setTestIds(new HashSet<Integer>(query.testIds));
+		this.setTestIds(new HashSet<>(query.testIds));
 		this.setAttribute2Values(new SetHashMap<TestAttribute, String>(query.attribute2values));
 	}
-
 
 	public String getSampleIds() {
 		return sampleId;
@@ -174,47 +155,38 @@ public class ResultQuery implements Serializable {
 	public String getStudyIds() {
 		return studyIds;
 	}
-
 	public void setBid(int biosampleId) {
 		bids.clear();
 		bids.add(biosampleId);
 	}
-
 	public void setBids(Collection<Integer> ids) {
 		bids.clear();
 		bids.addAll(ids);
 	}
-
 	public void setAttribute2Values(SetHashMap<TestAttribute, String> attributes) {
 		this.attribute2values = attributes;
 	}
-
 	public SetHashMap<TestAttribute, String> getAttribute2Values() {
 		return attribute2values;
 	}
-
 	public Set<String> getInputs() {
 		return inputs;
 	}
 	public Set<String> getBiotypes() {
 		return biotypes;
 	}
-
 	public void setKeywords(String keywords) {
 		this.keywords = keywords;
 	}
 	public String getKeywords() {
 		return keywords;
 	}
-
 	public boolean isSpecificToStudy() {
 		return sid!=0 || (studyIds!=null && studyIds.length()>0) || (phases!=null && phases.length()>0) || (group!=null && group.length()>0);
 	}
-
 	public void setPhase(Phase phase) {
 		this.phase = phase;
 	}
-
 	public Phase getPhase() {
 		return phase;
 	}
@@ -224,23 +196,18 @@ public class ResultQuery implements Serializable {
 	public void setBiotype(String biotype) {
 		this.biotype = biotype;
 	}
-
 	public String getUpdUser() {
 		return updUser;
 	}
-
 	public void setUpdUser(String updUser) {
 		this.updUser = updUser;
 	}
-
 	public String getUpdDate() {
 		return updDays;
 	}
-
 	public void setUpdDate(String updDays) {
 		this.updDays = updDays;
 	}
-
 	public Quality getQuality() {
 		return minQuality;
 	}
@@ -270,8 +237,6 @@ public class ResultQuery implements Serializable {
 		this.topSampleIds = topSampleIds;
 	}
 
-
-
 	public String getQueryKey() {
 		ResultQuery query = this;
 		StringBuilder sb = new StringBuilder();
@@ -300,22 +265,16 @@ public class ResultQuery implements Serializable {
 		if(query.getSampleIds()!=null) {
 			sb.append(" "+query.getSampleIds());
 		}
-		//		if(query.getKeywords()!=null) {
-		//			sb.append(" "+query.getKeywords());
-		//		}
-
 		if(query.getTestIds().size()>0) {
 			for (Integer id : query.getTestIds()) {
 				sb.append(" "+id);
 			}
 		}
-
 		if(inputs.size()>0) {
 			for (String s : inputs) {
 				sb.append(" "+s);
 			}
 		}
-
 		if(query.getUpdUser()!=null && query.getUpdUser().length()>0) {
 			sb.append(" "+query.getUpdUser());
 		}
@@ -371,11 +330,9 @@ public class ResultQuery implements Serializable {
 	public String getContainerIds() {
 		return containerIds;
 	}
-
 	public void setContainerIds(String containerIds) {
 		this.containerIds = containerIds;
 	}
-
 	public int getMaxResults() {
 		return maxResults;
 	}

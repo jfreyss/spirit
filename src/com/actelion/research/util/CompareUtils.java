@@ -43,7 +43,7 @@ public class CompareUtils {
 		return false;
 	}
 
-	
+
 	/**
 	 * Compare 2 strings by splitting the chains into blocks and comparing each blocks individually.
 	 * Each Block is then compared as integer or string.
@@ -51,20 +51,21 @@ public class CompareUtils {
 	 * Example
 	 * Dose 10 ->  [Dose] [10]
 	 * Dose 100 -> [Dose] [100]
-	 * 
+	 *
 	 * Caveat:
 	 * The sorting considers "-" as negative only if it is the first character, otherwise it is considered as a separator, so the sorting goes:
 	 * -10, -2, -1, _1, 1, 2, 10, A, B, C, -, null
-	 * 
+	 *
 	 * @param o1
 	 * @param o2
 	 * @return
 	 */
 	public static final int compare(String o1, String o2) {
-		if(o1==null && o2==null) return 0; 
-		if(o1==null) return 1; 
+		if(o1==null && o2==null) return 0;
+		if(o1==null) return 1;
 		if(o2==null) return -1;
-		
+
+
 		if(o1.startsWith("-") && !o2.startsWith("-")) {
 			return -1;
 		} else if(!o1.startsWith("-") && o2.startsWith("-")) {
@@ -80,14 +81,14 @@ public class CompareUtils {
 		while(st1.hasMoreTokens() && st2.hasMoreTokens()) {
 			s1 = st1.nextToken();
 			s2 = st2.nextToken();
-			
+
 			if(s1.length()==0) {
 				if(s2.length()==0) continue;
 				else return -1;
 			} else if(s2.length()==0) {
 				return 1;
 			}
-			
+
 			if(s1.length()==1 && separators.indexOf(s1.charAt(0))>=0) {
 				if(s2.length()==1 && separators.indexOf(s2.charAt(0))>=0) {
 					c = separators.indexOf(s1.charAt(0))- separators.indexOf(s2.charAt(0));
@@ -99,7 +100,7 @@ public class CompareUtils {
 				return -1;
 			}
 
-			
+
 			//Compare first the numeric value if possible
 			allDigits1 = true;
 			allDigits2 = true;
@@ -110,7 +111,9 @@ public class CompareUtils {
 				if(!Character.isDigit(s2.charAt(j))) allDigits2 = false;
 			}
 			if(allDigits1 && allDigits2) {
-				c = fastIntValueOf(s1) - fastIntValueOf(s2);
+				long l1 = fastLongValueOf(s1);
+				long l2 = fastLongValueOf(s2);
+				c =  l1>l2?1: l1==l2? 0: -1;
 				if(c!=0) return c;
 			} else if(allDigits1 && !allDigits2) {
 				return -1;
@@ -126,18 +129,18 @@ public class CompareUtils {
 
 		if(!st1.hasMoreTokens() && st2.hasMoreTokens()) return -1;
 		if(st1.hasMoreTokens() && !st2.hasMoreTokens()) return 1;
-		
+
 		return o1.compareTo(o2);
 	}
 
-	public static int fastIntValueOf( String str ) {
-	    int ival = 0;
-	    for(int i=0; i<str.length(); i++) {
-	    	ival = ival*10 + (str.charAt(i)-'0');
-	    }
-	    return ival;
+	public static long fastLongValueOf(String str ) {
+		long ival = 0;
+		for(int i=0; i<str.length(); i++) {
+			ival = ival*10 + (str.charAt(i)-'0');
+		}
+		return ival;
 	}
-	
+
 	public static int compare(Object[] a1, Object[] a2) {
 		for (int i = 0; i < a1.length || i < a2.length; i++) {
 			Object o1 = i < a1.length? a1[i]: null;
@@ -148,7 +151,7 @@ public class CompareUtils {
 		return 0;
 	}
 	public static int compare(Object o1, Object o2) {
-		if(o1==null && o2==null) return 0; 
+		if(o1==null && o2==null) return 0;
 		if(o1==null) return 1; //Null at the end
 		if(o2==null) return -1;
 
@@ -156,20 +159,20 @@ public class CompareUtils {
 			return compare((String) o1, (String) o2);
 		} else if((o1 instanceof Object[]) && (o2 instanceof Object[])) {
 			return compare((Object[]) o1, (Object[]) o2);
-		} else if((o1 instanceof Comparable) && o2.getClass().isAssignableFrom(o1.getClass())) {			
+		} else if((o1 instanceof Comparable) && o2.getClass().isAssignableFrom(o1.getClass())) {
 			return ((Comparable) o1).compareTo(o2);
-		} else if((o1 instanceof Comparable) && o1.getClass().isAssignableFrom(o2.getClass())) {			
+		} else if((o1 instanceof Comparable) && o1.getClass().isAssignableFrom(o2.getClass())) {
 			return -((Comparable) o2).compareTo(o1);
 		} else {
-			return compare(o1.toString(), o2.toString());			
+			return compare(o1.toString(), o2.toString());
 		}
 	}
-	
+
 	public static final int compareAsDate(Object o1, Object o2) {
-		if(o1==null && o2==null) return 0; 
+		if(o1==null && o2==null) return 0;
 		if(o1==null) return 1; //Null at the end
 		if(o2==null) return -1;
-		
+
 		Date d1 = FormatterUtils.parseDateTime(o1.toString());
 		Date d2 = FormatterUtils.parseDateTime(o2.toString());
 		if(d1!=null && d2!=null) {
@@ -183,22 +186,22 @@ public class CompareUtils {
 		}
 	}
 
-	
+
 	/**
 	 * Comparator to allow null values
 	 */
 	public static final Comparator<Object> OBJECT_COMPARATOR = new Comparator<Object>() {
 		@Override
 		public int compare(Object o1, Object o2) {
-			if(o1==null && o2==null) return 0; 
+			if(o1==null && o2==null) return 0;
 			if(o1==null) return 1; //Null at the end
 			if(o2==null) return -1;
 			return CompareUtils.compare(o1, o2);
 		}
 	};
-	
-	
-	
+
+
+
 	/**
 	 * Comparator for strings, comparing blocks separately so that the order becomes SLIDE-1, SLIDE-2, SLIDE-10, SLIDE-10-1, ...
 	 */
@@ -208,11 +211,11 @@ public class CompareUtils {
 			return CompareUtils.compare(o1, o2);
 		}
 	};
-	
+
 	/**
 	 * Comparator for dates, allowing formats such as yyyy, mm.yyyy, ...
 	 */
-	public static final Comparator<Object> DATE_COMPARATOR = new Comparator<Object>() {		
+	public static final Comparator<Object> DATE_COMPARATOR = new Comparator<Object>() {
 		@Override
 		public int compare(Object o1, Object o2) {
 			return CompareUtils.compareAsDate(o1, o2);
@@ -220,11 +223,11 @@ public class CompareUtils {
 	};
 
 	public static boolean equals(Object obj1, Object obj2) {
-		return obj1==null? obj2==null: obj1.equals(obj2);			
+		return obj1==null? obj2==null: obj1.equals(obj2);
 	}
 
 	public static boolean equals(String s1, String s2) {
-		return (s1==null?"":s1).equals((s2==null?"":s2));			
+		return (s1==null?"":s1).equals((s2==null?"":s2));
 	}
 
 	/**
@@ -232,38 +235,38 @@ public class CompareUtils {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-//		List<String> initial = Arrays.asList(new String[] {"heart", "", "lung", "lung/left", "1", "10", "2", "3", "11", "Box1","Box10", "Box2", "Box 2", "Box 1", "Box 10", "10.9.2012", "11.9.12", "2012", "Genomics", "_2", "_3", "_10", " 1", "_1", "-10", "-1. 0", "-2", "-1.00", "-1. 00", "-1.  00", "1-1", "1-10", "Proteomics", "Clinical Analysis", "Lung/Right", "Lung", "Lung/Left", "1", "-1", "-1.1", "-1.10", "2.A", "10.B-1", "10.B-10", "10.B-2", "1.C", "21.D", "3.B-3", "Heart","11.C", "11. C", "10. B-1", "2.C", "1.B","d030; Heart","d030; Heart/Left ventricle + Septum","d030; Heart/Right ventricle"});
-//		List<String> initial = Arrays.asList(new String[] {"-5_4", "-5", "+1_8", "+2", "-", "#", "1", "2B", "2A", "3A", "3B", "a", "A", "b", "B", "c", "C", "1", "11", "2", "21", "22"});
+		//		List<String> initial = Arrays.asList(new String[] {"heart", "", "lung", "lung/left", "1", "10", "2", "3", "11", "Box1","Box10", "Box2", "Box 2", "Box 1", "Box 10", "10.9.2012", "11.9.12", "2012", "Genomics", "_2", "_3", "_10", " 1", "_1", "-10", "-1. 0", "-2", "-1.00", "-1. 00", "-1.  00", "1-1", "1-10", "Proteomics", "Clinical Analysis", "Lung/Right", "Lung", "Lung/Left", "1", "-1", "-1.1", "-1.10", "2.A", "10.B-1", "10.B-10", "10.B-2", "1.C", "21.D", "3.B-3", "Heart","11.C", "11. C", "10. B-1", "2.C", "1.B","d030; Heart","d030; Heart/Left ventricle + Septum","d030; Heart/Right ventricle"});
+		//		List<String> initial = Arrays.asList(new String[] {"-5_4", "-5", "+1_8", "+2", "-", "#", "1", "2B", "2A", "3A", "3B", "a", "A", "b", "B", "c", "C", "1", "11", "2", "21", "22"});
 		List<String> initial = Arrays.asList(new String[] {"-10", "-2", "-1", "_1", "1", "2", "10", "A", "B", "C", "-", "null"});
 		List<String> l = new ArrayList<String>();
 		l.addAll(initial);
-//		l.addAll(initial);
-//		l.addAll(initial);
-//		l.addAll(initial);
-//		l.addAll(initial);
-//		l.addAll(initial);
-//		l.addAll(initial);
-//		l.addAll(initial);
-		
-		
+		//		l.addAll(initial);
+		//		l.addAll(initial);
+		//		l.addAll(initial);
+		//		l.addAll(initial);
+		//		l.addAll(initial);
+		//		l.addAll(initial);
+		//		l.addAll(initial);
+
+
 		List<String> l2 = new ArrayList<String>(l);
 		long st = System.currentTimeMillis();
 		Collections.sort(l2);
 		long t1 = System.currentTimeMillis()-st;
-		
+
 		List<String> l3 = new ArrayList<String>(l);
 		st = System.currentTimeMillis();
 		Collections.sort(l3, DATE_COMPARATOR);
 		long t2 = System.currentTimeMillis()-st;
-		
+
 		st = System.currentTimeMillis();
 		Collections.sort(l, STRING_COMPARATOR);
 		long t3 = System.currentTimeMillis()-st;
-		
+
 		for (String string : l) {
 			System.out.println(string);
 		}
-		
+
 		System.out.println();
 		System.out.println("CompareUtils.normal: "+t1);
 		System.out.println("CompareUtils.date: "+t2);
@@ -271,5 +274,5 @@ public class CompareUtils {
 	}
 
 
-	
+
 }

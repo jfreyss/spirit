@@ -57,6 +57,7 @@ import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
+import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.JCustomTabbedPane;
@@ -209,64 +210,6 @@ public class StudyDetailPanel extends JPanel {
 		refresh();
 
 	}
-
-	//	/**
-	//	 * Refresh the tabbedPane in a worker.
-	//	 */
-	//	private void refresh() {
-	//		if(study==null || forRevision) {
-	//			studyDepictor.setStudy(study);
-	//			refreshTabbedPane();
-	//		} else {
-	//			new SwingWorkerExtended("Loading Study", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
-	//				@Override
-	//				protected void done() {
-	//					study = JPAUtil.reattach(study);
-	//					refreshTabbedPane();
-	//					studyDepictor.setStudy(study);
-	//				}
-	//			};
-	//		}
-	//	}
-	//
-	//	/**
-	//	 * Refresh the tabbedPane, without reattaching the study
-	//	 */
-	//	private void refreshTabbedPane() {
-	//		if(study==null) {
-	//			cardLayout.show(infoCardTabbedPane, "view");
-	//			infoLabel.setText("");
-	//		} else if(SpiritRights.canRead(study, SpiritFrame.getUser())) {
-	//			if(infoTabbedPane.getSelectedIndex()==0) {
-	//				final List<Biosample> animals = study==null?new ArrayList<Biosample>(): new ArrayList<>(study.getAttachedBiosamples());
-	//				Collections.sort(animals);
-	//				animalTable.setRows(animals);
-	//			} else if(infoTabbedPane.getSelectedIndex()==1) {
-	//				samplingsEditorPane.setStudy(study);
-	//			} else if(infoTabbedPane.getSelectedIndex()==2) {
-	//				editorPane.setStudy(null);
-	//				graphPanel.setResults(new ArrayList<>());
-	//				new SwingWorkerExtended(graphPanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
-	//					private List<Result> results;
-	//					@Override
-	//					protected void doInBackground() throws Exception {
-	//						results = DAOResult.queryResults(ResultQuery.createQueryForSids(Collections.singleton(study.getId())), SpiritFrame.getUser());
-	//					}
-	//					@Override
-	//					protected void done() {
-	//						editorPane.setStudy(study);
-	//						graphPanel.setResults(results);
-	//					}
-	//				};
-	//			}
-	//			cardLayout.show(infoCardTabbedPane, "read");
-	//		} else {
-	//			cardLayout.show(infoCardTabbedPane, "view");
-	//			infoLabel.setText("<html><div style='color:red'>You don't have sufficient right on this study.<br> You may request permission to one of the responsibles:</b><br><ul><li> "+MiscUtils.flatten(study.getAdminUsersAsSet(), "<li>") + "</ul>");
-	//		}
-	//	}
-
-
 	/**
 	 * Refresh the tabbedPane in a worker.
 	 */
@@ -284,12 +227,7 @@ public class StudyDetailPanel extends JPanel {
 				protected void doInBackground() throws Exception {
 					if(!forRevision) {
 						study = JPAUtil.reattach(study);
-					}
-					if(study!=null) {
-						study.getAttachedBiosamples();
-						study.getNamedTreatments();
-						study.getNamedSamplings();
-						study.getStudyActions();
+						DAOStudy.fullLoad(study);
 					}
 				}
 				@Override
@@ -306,8 +244,6 @@ public class StudyDetailPanel extends JPanel {
 			studyDepictor.setStudy(null);
 		}
 	}
-
-
 
 	private void refreshTabbedPane() {
 		if(study==null) return;
@@ -330,7 +266,7 @@ public class StudyDetailPanel extends JPanel {
 			new SwingWorkerExtended("Loading Samplings", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 				@Override
 				protected void done() {
-					samplingsEditorPane.setStudy(study);
+					samplingsEditorPane.setStudy(JPAUtil.reattach(study));
 					cardLayout.show(infoCardTabbedPane, "read");
 				}
 			};
@@ -338,7 +274,7 @@ public class StudyDetailPanel extends JPanel {
 			new SwingWorkerExtended("Loading Details", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 				@Override
 				protected void done() {
-					editorPane.setStudy(study);
+					editorPane.setStudy(JPAUtil.reattach(study));
 					cardLayout.show(infoCardTabbedPane, "read");
 				}
 			}.afterDone(() -> {
@@ -347,6 +283,7 @@ public class StudyDetailPanel extends JPanel {
 					private int maxResults = 4000;
 					@Override
 					protected void doInBackground() throws Exception {
+						if(study==null) return;
 						ResultQuery q = ResultQuery.createQueryForSids(Collections.singleton(study.getId()));
 						q.setMaxResults(maxResults);
 						results = DAOResult.queryResults(q, SpiritFrame.getUser());
@@ -354,7 +291,7 @@ public class StudyDetailPanel extends JPanel {
 
 					@Override
 					protected void done() {
-						if(results.size()>=maxResults) {
+						if(results!=null && results.size()>=maxResults) {
 							graphPanel.setErrorText("There are too many results to be displayed (>" + maxResults + ")");
 						} else {
 							graphPanel.setResults(results);

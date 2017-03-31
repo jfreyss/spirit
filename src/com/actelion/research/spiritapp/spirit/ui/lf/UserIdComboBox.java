@@ -22,67 +22,51 @@
 package com.actelion.research.spiritapp.spirit.ui.lf;
 
 import java.awt.Component;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JList;
+import javax.swing.JLabel;
 
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.util.MiscUtils;
-import com.actelion.research.util.ui.JTextComboBox;
+import com.actelion.research.util.ui.JObjectComboBox;
 
-public class UserIdComboBox extends JTextComboBox {
-	
-	private static List<String> userIds = null;
-	private static List<Employee> employees = null;
+public class UserIdComboBox extends JObjectComboBox<Employee> {
 
 	public UserIdComboBox() {
-		super(false);
+		super();
 		setColumns(8);
-		setListCellRenderer(new DefaultListCellRenderer() {
-			@Override
-			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-				if(employees==null || index-1<0 || index-1>=employees.size()) {
-					setText(value==null?"": ""+value);
-				} else {
-					Employee emp = employees.get(index-1);
-					setText("<html><b>" + emp.getUserName() + "</b>" +
-							(emp.getEmployeeGroups().isEmpty()?"": "<span style='color:gray;font-size:9px'>  " + MiscUtils.flatten(emp.getEmployeeGroups(), ",") + "</span>"));
-				}
-				
-				return this;
-			}
-		});
-		employees = DBAdapter.getAdapter().getEmployees();
 	}
-	
+
 	@Override
-	public Collection<String> getChoices() {
-		userIds = new ArrayList<>();
-		
-		for(Employee emp: employees) {
-			userIds.add(emp.getUserName());
+	public Component processCellRenderer(JLabel comp, String value, int index) {
+		Employee emp = getMap().get(value);
+		if(emp==null) {
+			comp.setText(value==null?"": ""+value);
+		} else {
+			comp.setText("<html><b>" + emp.getUserName() + "</b>" +
+					(emp.getEmployeeGroups().isEmpty()?"": "<span style='color:gray;font-size:9px'>  " + MiscUtils.flatten(emp.getEmployeeGroups(), ",") + "</span>"));
 		}
-		return userIds;
+
+		return comp;
 	}
-	
-	
+
+	@Override
+	public Collection<Employee> getValues() {
+		return DBAdapter.getAdapter().getEmployees();
+	}
+
+
 
 	@Override
 	public String getToolTipText() {
-		if(employees==null) getChoices();		
-		if(employees==null) return null;
-		
-		for (Employee e : employees) {
-			if(e.getUserName().equals(getText())) {
-				return e.getUserName() + (e.getEmployeeGroups().isEmpty()? "": ": " + MiscUtils.flatten(e.getEmployeeGroups(), ","));
-			}
-		}
-		return null;
+		Employee emp = getMap().get(getText());
+		if(emp==null) return null;
+		return emp.getUserName() + (emp.getEmployeeGroups().isEmpty()? "": ": " + MiscUtils.flatten(emp.getEmployeeGroups(), ","));
 	}
-	
+
+	@Override
+	public String convertObjectToString(Employee obj) {
+		return obj==null? "": obj.getUserName();
+	}
 }

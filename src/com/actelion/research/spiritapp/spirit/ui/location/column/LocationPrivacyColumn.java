@@ -24,52 +24,94 @@ package com.actelion.research.spiritapp.spirit.ui.location.column;
 import java.awt.Component;
 
 import javax.swing.AbstractCellEditor;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 
+import com.actelion.research.spiritapp.spirit.ui.lf.EmployeeGroupComboBox;
+import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.location.edit.LocationEditTable;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.Privacy;
-import com.actelion.research.util.ui.JGenericComboBox;
+import com.actelion.research.spiritcore.services.dao.DAOEmployee;
+import com.actelion.research.util.ui.JObjectComboBox;
+import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
-public class LocationPrivacyColumn extends Column<Location, Privacy> {
-	
-	
+public class LocationPrivacyColumn extends Column<Location, String> {
+
+
 	private class LocationPrivacyCellEditor extends AbstractCellEditor implements  TableCellEditor {
 
-		private JGenericComboBox<Privacy> comboBox = new JGenericComboBox<Privacy>(Privacy.values(), false);
+		private JObjectComboBox<Privacy> privacyComboBox = new JObjectComboBox<>(Privacy.values());
+		private EmployeeGroupComboBox deptComboBox = new EmployeeGroupComboBox(true);
+		private JPanel editor = UIUtils.createHorizontalBox(privacyComboBox, deptComboBox);
+
+
+		public LocationPrivacyCellEditor() {
+			privacyComboBox.setColumns(15);
+			//			deptComboBox.setColumns(20);
+			privacyComboBox.addTextChangeListener(e-> onChange());
+		}
+
+		private void onChange() {
+			deptComboBox.setEnabled(privacyComboBox.getSelection()==Privacy.PRIVATE || privacyComboBox.getSelection()==Privacy.PROTECTED);
+		}
 
 		@Override
 		public Object getCellEditorValue() {
-			return comboBox.getSelection();
+			String s = (privacyComboBox.getSelection()==null?"": privacyComboBox.getSelection().getName()) + (deptComboBox.isEnabled() && deptComboBox.getSelection()!=null? " to " + deptComboBox.getSelection().getName():"");
+			return s;
 		}
 
 		@Override
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-			comboBox.setSelection((Privacy) value);
-			return comboBox;
+			if(row>=((LocationEditTable) table).getModel().getRows().size()) {
+				System.err.println("Invalid row "+row);
+				return null;
+			}
+			Location loc = ((LocationEditTable) table).getModel().getRows().get(row);
+			privacyComboBox.setSelection(loc.getPrivacy());
+			deptComboBox.setSelection(loc.getEmployeeGroup());
+			onChange();
+			return editor;
 		}
-		
+
 	}
-	
+
 	public LocationPrivacyColumn() {
-		super("Privacy", Privacy.class);				
+		super("Privacy", String.class, 140);
 	}
+
 	@Override
-	public Privacy getValue(Location row) {
-		return row.getPrivacy();
+	public String getValue(Location row) {
+		return row.getPrivacy()==null?"": row.getPrivacy().getName() + ((row.getPrivacy()==Privacy.PROTECTED || row.getPrivacy()==Privacy.PRIVATE) && row.getEmployeeGroup()!=null? " to " +row.getEmployeeGroup().getName():"");
 	}
+
 	@Override
-	public void setValue(Location row, Privacy value) {
-		row.setPrivacy(value);
+	public void postProcess(AbstractExtendTable<Location> table, Location row, int rowNo, Object value, JComponent comp) {
+		if((row.getPrivacy()==Privacy.PROTECTED || row.getPrivacy()==Privacy.PRIVATE) && row.getEmployeeGroup()==null) {
+			comp.setForeground(LF.COLOR_ERROR_FOREGROUND);
+		}
 	}
+
 	@Override
-	public void paste(Location row, String value) throws Exception {
-		Privacy p = Privacy.get(value);
-		setValue(row, p==null? Privacy.INHERITED: p);
+	public void setValue(Location row, String value) {
+		System.out.println("LocationPrivacyColumn.setValue() "+value);
+		if(value==null) return;
+		int index = value.indexOf(" to ");
+		String privacy = value;
+		String dept = "";
+		if(index>0) {
+			privacy = value.substring(0, index);
+			dept = value.substring(index+4);
+		}
+		row.setPrivacy(Privacy.get(privacy));
+		row.setEmployeeGroup((row.getPrivacy()==Privacy.PROTECTED || row.getPrivacy()==Privacy.PRIVATE)? DAOEmployee.getEmployeeGroup(dept): null);
 	}
-	
+
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Location> table) {
 		return new LocationPrivacyCellEditor();

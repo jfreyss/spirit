@@ -34,7 +34,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import com.actelion.research.spiritapp.spirit.ui.result.TestChoice;
+import com.actelion.research.spiritapp.spirit.ui.result.TestComboBox;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
@@ -46,7 +46,7 @@ import com.actelion.research.util.ui.UIUtils;
 
 public class ExtraMeasurementDlg extends JEscapeDialog {
 
-	private final TestChoice testChoice = new TestChoice();
+	private final TestComboBox testChoice = new TestComboBox();
 	private final JPanel centerPanel = new JPanel(new BorderLayout());
 	private final JButton okButton = new JButton("OK");
 	private final List<JCustomTextField> tas = new ArrayList<JCustomTextField>();

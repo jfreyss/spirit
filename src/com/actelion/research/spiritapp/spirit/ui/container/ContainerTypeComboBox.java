@@ -28,37 +28,41 @@ import java.util.Arrays;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
-import com.actelion.research.spiritcore.business.biosample.BarcodeType;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.util.ui.FastFont;
-import com.actelion.research.util.ui.JGenericComboBox;
+import com.actelion.research.util.ui.JObjectComboBox;
 
-public class ContainerTypeComboBox extends JGenericComboBox<ContainerType> {
-		
+public class ContainerTypeComboBox extends JObjectComboBox<ContainerType> {
+
 	public ContainerTypeComboBox() {
-		this(ContainerType.values());		
+		this(ContainerType.values());
 	}
-	
+
 	public ContainerTypeComboBox(ContainerType[] containerTypes) {
 		super();
-		setMaximumRowCount(35);
-		setValues(Arrays.asList(containerTypes), "");
+		setValues(Arrays.asList(containerTypes));
 	}
-	
+
 	@Override
-	public Component processCellRenderer(JLabel comp, ContainerType type, int index) {
+	public Component processCellRenderer(JLabel comp, String object, int index) {
+		ContainerType type = getMap().get(object);
 		if(type!=null) {
-			comp.setIcon(new ImageIcon(type.getImage(FastFont.getDefaultFontSize()*2-4)));
+			comp.setIcon(new ImageIcon(type.getImage(FastFont.getAdaptedSize(18))));
 			comp.setIconTextGap(0);
-			if(type.getBarcodeType()==BarcodeType.MATRIX) {
-				comp.setBackground(new Color(235, 245, 255));
-			} else if(type.getBarcodeType()==BarcodeType.NOBARCODE) {
-				comp.setBackground(new Color(245, 235, 255));												
-			} else if(type.getBarcodeType()==BarcodeType.GENERATE) {
-				comp.setBackground(new Color(255, 255, 240));																		
-			}			
+			if(type.isMultiple()) {
+				comp.setBackground(new Color(245, 235, 255));
+			} else {
+				comp.setBackground(new Color(255, 255, 240));
+			}
+		} else {
+			setText(" ");
 		}
 		return comp;
 	}
-	
+
+	@Override
+	public String convertObjectToString(ContainerType obj) {
+		return obj==null?"": obj.getName();
+	}
+
 }

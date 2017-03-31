@@ -101,53 +101,53 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 public class BiosampleActions {
 
 	public static class Action_New extends AbstractAction {
-	
+
 		private Biotype biotype;
-	
+
 		public Action_New(Biotype biotype) {
 			super("New "+biotype.getName());
 			this.biotype = biotype;
 			putValue(AbstractAction.SMALL_ICON, new ImageIcon(ImageFactory.getImage(biotype, FastFont.getAdaptedSize(24))));
 		}
 		@Override
-		public void actionPerformed(ActionEvent e) {			
+		public void actionPerformed(ActionEvent e) {
 			Biosample b = new Biosample(biotype);
 			new BiosampleFormDlg(b);
 		}
 	}
-	
+
 	public static class Action_NewChild extends AbstractAction {
-		
+
 		private Biosample parent;
-			
+
 		public Action_NewChild(Biosample parent) {
 			super("Create Child");
 			putValue(AbstractAction.SMALL_ICON, IconType.NEW.getIcon());
 			setParent(parent);
 		}
-		
+
 		public void setParent(Biosample parent) {
 			this.parent = parent;
 			setEnabled(parent!=null);
 		}
-	
+
 		@Override
-		public void actionPerformed(ActionEvent e) {			
+		public void actionPerformed(ActionEvent e) {
 			Biosample b = new Biosample(parent==null || parent.getBiotype()==null || parent.getBiotype().getChildren().isEmpty()? null: parent.getBiotype().getChildren().iterator().next());
 			b.setParent(parent);
 			new BiosampleFormDlg(b);
 		}
 	}
-	
+
 
 	public static class Action_NewBatch extends AbstractAction {
-		
+
 		public Action_NewBatch() {
 			super("New Biosamples");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
 			putValue(Action.SMALL_ICON, IconType.BIOSAMPLE.getIcon());
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
@@ -160,19 +160,19 @@ public class BiosampleActions {
 			}
 		}
 	}
-	
+
 	public static class Action_Duplicate extends AbstractAction {
-		
+
 		private List<Biosample> biosamples;
-		
+
 		public Action_Duplicate(List<Biosample> biosamples) {
 			super("Duplicate");
 			this.biosamples = biosamples;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			putValue(Action.SMALL_ICON, IconType.DUPLICATE.getIcon());
-			setEnabled(SpiritRights.canEditBiosamples(biosamples, SpiritFrame.getUser()));
+			setEnabled(SpiritRights.canReadBiosamples(biosamples, SpiritFrame.getUser()));
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
@@ -192,7 +192,7 @@ public class BiosampleActions {
 						b.setParent(old2copy.get(b.getParent()));
 					}
 				}
-				
+
 				EditBiosampleDlg.createDialogForEditInTransactionMode(null, res).setVisible(true);
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
@@ -200,7 +200,7 @@ public class BiosampleActions {
 
 		}
 	}
-	
+
 	public static class Action_Order extends AbstractAction {
 		private final List<Biosample> biosamples;
 
@@ -219,32 +219,32 @@ public class BiosampleActions {
 			}
 			setEnabled(enabled);
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			assert DBAdapter.getAdapter().getAutomaticStores()!=null;
 			ListHashMap<Location, Biosample> map = new ListHashMap<Location, Biosample>();
 			for (Biosample b : biosamples) {
 				map.add(b.getLocation(), b);
-			} 
-			
+			}
+
 			for (Location l: DBAdapter.getAdapter().getAutomaticStores().keySet()) {
 				if(map.get(l)==null || map.get(l).size()==0) continue;
-				
+
 				URL url = DBAdapter.getAdapter().getAutomaticStores().get(l);
 				assert url!=null;
-				
-				
+
+
 				try {
 					String cids = MiscUtils.flatten(Biosample.getContainerIds(biosamples), " ");
 					String path = url + "?q=" + URLEncoder.encode(cids, "UTF-8");
-					
+
 					Desktop.getDesktop().browse(new URI(path));
 				} catch(Exception ex) {
 					JExceptionDialog.showError(ex);
 				}
-				
-				
+
+
 			}
 		}
 	}
@@ -269,13 +269,13 @@ public class BiosampleActions {
 				}
 			}
 		}
-		
+
 		public List<Biosample> getBiosamples() {
 			return biosamples;
 		}
-		
+
 		@Override
-		public void actionPerformed(ActionEvent e) {	
+		public void actionPerformed(ActionEvent e) {
 			if(getBiosamples()==null || getBiosamples().size()==0) return;
 			try {
 				new PrintingDlg(getBiosamples());
@@ -285,13 +285,13 @@ public class BiosampleActions {
 
 		}
 	}
-	
+
 	/**
 	 * Selects samples based on a discriminator (ex: samples with different fluorophores)
 	 */
 	public static class Action_SelectWithDiscriminator extends AbstractAction {
 		private final List<Biosample> biosamples;
-		
+
 		public Action_SelectWithDiscriminator(List<Biosample> biosamples) {
 			super("Help me select some biosamples");
 			this.biosamples = biosamples;
@@ -303,7 +303,7 @@ public class BiosampleActions {
 			return biosamples;
 		}
 		@Override
-		public void actionPerformed(ActionEvent e) {			
+		public void actionPerformed(ActionEvent e) {
 			new SelectorDlg(getBiosamples());
 		}
 	}
@@ -318,7 +318,7 @@ public class BiosampleActions {
 			this.biosamples = biosamples;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			putValue(Action.SMALL_ICON, IconType.DELETE.getIcon());
-			
+
 			boolean enabled = biosamples.size()>0;
 			for (Biosample biosample : biosamples) {
 				if(!SpiritRights.canDelete(biosample, SpiritFrame.getUser())) {enabled = false; break;}
@@ -326,7 +326,7 @@ public class BiosampleActions {
 			setEnabled(enabled);
 		}
 		@Override
-		public void actionPerformed(ActionEvent e) {			
+		public void actionPerformed(ActionEvent e) {
 			try {
 				BiosampleDiscardDlg.createDialogForDelete(biosamples);
 			} catch (Exception ex) {
@@ -334,14 +334,14 @@ public class BiosampleActions {
 			}
 		}
 	}
-	
+
 	/**
 	 * Edit samples
 	 */
 	public static class Action_BatchEdit extends AbstractAction {
-		
+
 		private final List<Biosample> biosamples;
-		
+
 		/**
 		 * Constructor for an edit action (generic, you must implement getBiosamples)
 		 */
@@ -351,7 +351,7 @@ public class BiosampleActions {
 			putValue(Action.SMALL_ICON, IconType.EDIT.getIcon());
 			this.biosamples = null;
 		}
-		
+
 		/**
 		 * Constructor for an edit action (on the given biosamples)
 		 * @param biosamples
@@ -360,25 +360,25 @@ public class BiosampleActions {
 			super(biosamples.size()==1?  "Edit " + (SpiritRights.canRead(biosamples.get(0), SpiritFrame.getUser())? biosamples.get(0).getSampleIdName(): null): "Edit All");
 			this.biosamples = biosamples;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
-			putValue(Action.SMALL_ICON, IconType.EDIT.getIcon());			
+			putValue(Action.SMALL_ICON, IconType.EDIT.getIcon());
 			setEnabled(SpiritRights.canEditBiosamples(biosamples,SpiritFrame.getUser()));
 		}
-		
+
 		public List<Biosample> getBiosamples() {
 			return biosamples;
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			List<Biosample> biosamples = getBiosamples();
 			try {
 				if(biosamples==null || biosamples.size()==0) throw new Exception("Your selection is empty");
-				
+
 				//Analyze the data, to check if we can edit
 				if(!SpiritRights.canEditBiosamples(biosamples, Spirit.askForAuthentication())) {
 					throw new Exception("You are not allowed to edit those biosamples");
 				}
-				
+
 				if(biosamples.size()==1 && biosamples.get(0).getInheritedStudy()==null) {
 					//We open the component editor only if we have one item and no study
 					new BiosampleFormDlg(biosamples.get(0));
@@ -386,39 +386,39 @@ public class BiosampleActions {
 					//Open the batch edit dialog
 					EditBiosampleDlg.createDialogForEditInTransactionMode(null, getBiosamples()).setVisible(true);
 				}
-				
+
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
 		}
 	}
-	
+
 	public static class Action_SetLivingStatus extends AbstractAction {
-		
+
 		private List<Biosample> biosamples;
 		private final Study study;
-		
+
 		public Action_SetLivingStatus(Study study) {
 			this(study==null? new ArrayList<Biosample>(): new ArrayList<>(study.getTopAttachedBiosamples()));
 		}
 
 		public Action_SetLivingStatus(List<Biosample> biosamples) {
-			super("Set Living Status"); 
+			super("Set Living Status");
 			this.biosamples = biosamples;
-			
+
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(Action.SMALL_ICON, IconType.STUDY.getIcon());
-			
+
 			Set<Study> studies = new HashSet<>();
 			boolean canEdit = true;
 			for (Biosample b : biosamples) {
 				canEdit = canEdit && SpiritRights.canEdit(b, SpiritFrame.getUser());
 				studies.add(b.getAttachedStudy());
 			}
-			study = studies.size()==1? studies.iterator().next(): null;					
+			study = studies.size()==1? studies.iterator().next(): null;
 			setEnabled(study!=null && canEdit);
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if(study==null) return;
@@ -430,7 +430,7 @@ public class BiosampleActions {
 
 		}
 	}
-	
+
 	public static class Action_NewChildren extends AbstractAction {
 		private final List<Biosample> biosamples;
 
@@ -439,14 +439,14 @@ public class BiosampleActions {
 			this.biosamples = biosamples;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
 			putValue(AbstractAction.SMALL_ICON, IconType.BIOSAMPLE.getIcon());
-			
+
 			boolean canEdit = SpiritFrame.getUser()!=null;
 			for (Biosample b : biosamples) {
 				canEdit = canEdit && SpiritRights.canEdit(b, SpiritFrame.getUser()) && b.getBiotype()!=null;
 			}
 			setEnabled(canEdit);
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
@@ -455,14 +455,14 @@ public class BiosampleActions {
 				List<Biosample> children = dlg.getChildren();
 				if(children!=null) {
 					EditBiosampleDlg dlg2 = EditBiosampleDlg.createDialogForEditInTransactionMode("Create Children", children);
-					dlg2.setVisible(true);							
+					dlg2.setVisible(true);
 				}
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
-			}				
+			}
 		}
 	}
-	
+
 	public static class Action_NewResults extends AbstractAction {
 		private final List<Biosample> biosamples;
 
@@ -471,14 +471,14 @@ public class BiosampleActions {
 			this.biosamples = biosamples;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
 			putValue(AbstractAction.SMALL_ICON, IconType.RESULT.getIcon());
-			
+
 			boolean canEdit = SpiritFrame.getUser()!=null;
 			for (Biosample b : biosamples) {
 				canEdit = canEdit && SpiritRights.canEdit(b, SpiritFrame.getUser()) && b.getBiotype()!=null;
 			}
 			setEnabled(canEdit);
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
@@ -491,17 +491,17 @@ public class BiosampleActions {
 				new EditResultDlg(true, results);
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
-			}				
+			}
 		}
 	}
-	
+
 	public static class Action_Amount extends AbstractAction {
 		private final List<Biosample> biosamples;
 		public Action_Amount(List<Biosample> biosamples) {
 			super("Update Amount");
 			this.biosamples = biosamples;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('c'));
-			
+
 			boolean canEdit = true;
 			for (Biosample b : biosamples) {
 				canEdit = canEdit && SpiritRights.canEdit(b, SpiritFrame.getUser()) && b.getBiotype()!=null && !b.isAbstract() && b.getBiotype().getAmountUnit()!=null;
@@ -536,7 +536,7 @@ public class BiosampleActions {
 			}
 		}
 	}
-	
+
 	public static class Action_SetQuality extends AbstractAction {
 		private final List<Biosample> biosamples;
 		private Quality quality;
@@ -555,11 +555,11 @@ public class BiosampleActions {
 			new SetBiosampleQualityDlg(biosamples, quality);
 		}
 	}
-	
+
 	public static class Action_SetStatus extends AbstractAction {
 		private final List<Biosample> biosamples;
 		private Status status;
-		
+
 		public Action_SetStatus(List<Biosample> biosamples, Status status) {
 			super(status.getName());
 			this.biosamples = biosamples;
@@ -567,7 +567,7 @@ public class BiosampleActions {
 			for (Biosample b : biosamples) {
 				if(b.isAbstract() || !SpiritRights.canEdit(b, SpiritFrame.getUser())) setEnabled(false);
 			}
-			
+
 			if(status==Status.TRASHED) {
 				putValue(AbstractAction.SMALL_ICON, IconType.TRASH.getIcon());
 			}
@@ -578,17 +578,17 @@ public class BiosampleActions {
 			new SetBiosampleStatusDlg(biosamples, status);
 		}
 	}
-	
+
 	public static class Action_SetExpiryDate extends AbstractAction {
 		private final List<Biosample> biosamples;
-		
+
 		public Action_SetExpiryDate(List<Biosample> biosamples) {
 			super("Set Expiry Date");
 			this.biosamples = biosamples;
 			for (Biosample b : biosamples) {
 				if(b.isAbstract() || !SpiritRights.canEdit(b, SpiritFrame.getUser())) setEnabled(false);
 			}
-			
+
 			putValue(AbstractAction.SMALL_ICON, IconType.SANDGLASS.getIcon());
 
 		}
@@ -597,15 +597,15 @@ public class BiosampleActions {
 			new SetExpiryDateDlg(biosamples);
 		}
 	}
-	
-	
+
+
 
 	public static class Action_AssignTo extends AbstractAction {
 		private List<Biosample> biosamples;
 		public Action_AssignTo(List<Biosample> biosamples) {
 			super("Change Ownership");
 			this.biosamples = biosamples;
-			
+
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
 			putValue(AbstractAction.MNEMONIC_KEY, (int)'o');
 			if(biosamples!=null) {
@@ -616,19 +616,19 @@ public class BiosampleActions {
 				setEnabled(enabled);
 			}
 		}
-		
+
 		public List<Biosample> getBiosamples() {
 			return biosamples;
 		}
 		@Override
 		public void actionPerformed(ActionEvent ev) {
 			if(getBiosamples()==null || getBiosamples().size()==0) return;
-			
+
 			UserIdComboBox userIdComboBox = new UserIdComboBox();
-			int res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(), 
-					UIUtils.createVerticalBox( 
+			int res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(),
+					UIUtils.createVerticalBox(
 							new JLabel("To whom would you like to assign those " + getBiosamples().size() + " samples?"),
-							UIUtils.createHorizontalBox(userIdComboBox, Box.createHorizontalGlue())),												
+							UIUtils.createHorizontalBox(userIdComboBox, Box.createHorizontalGlue())),
 					"Change ownership",
 					JOptionPane.OK_CANCEL_OPTION,
 					JOptionPane.QUESTION_MESSAGE,
@@ -647,7 +647,7 @@ public class BiosampleActions {
 				if(u==null) throw new Exception(name + " is an invalid user");
 				res = JOptionPane.showConfirmDialog(null, "Are you sure to update the owner to " + u.getUsername()+" and the department to "+(u.getMainGroup()==null?"NA":u.getMainGroup())+"?", "Change Ownership", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 				if(res!=JOptionPane.YES_OPTION) return;
-				
+
 				DAOBiosample.changeOwnership(biosamples, u, admin);
 				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, biosamples);
 			} catch (Exception e) {
@@ -655,11 +655,11 @@ public class BiosampleActions {
 			} finally {
 				JPAUtil.popEditableContext();
 			}
-			
+
 		}
 	}
-	
-	
+
+
 	public static class Action_Find_Duplicate_Biosamples extends AbstractAction {
 		public Action_Find_Duplicate_Biosamples() {
 			super("Find Duplicated Biosamples");
@@ -672,18 +672,18 @@ public class BiosampleActions {
 			new BiosampleDuplicatesDlg();
 		}
 	}
-	
-	
-	
-	
-	
+
+
+
+
+
 	public static class Action_Checkin extends AbstractAction {
 		private Collection<Biosample> biosamples;
 		public Action_Checkin(Collection<Biosample> biosamples) {
 			super();
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('c'));
 			putValue(Action.SMALL_ICON, IconType.LOCATION.getIcon());
-			
+
 			this.biosamples = biosamples;
 			boolean enabled = true;
 			boolean haveLocation = false;
@@ -703,7 +703,7 @@ public class BiosampleActions {
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
-	
+
 		}
 	}
 
@@ -719,7 +719,7 @@ public class BiosampleActions {
 			this.biosamples = biosamples;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('c'));
 			putValue(Action.SMALL_ICON, IconType.LOCATION.getIcon());
-			
+
 			boolean enabled = biosamples!=null;
 			boolean someLoc = false;
 			if(biosamples!=null) for (Biosample b : biosamples) {
@@ -731,11 +731,11 @@ public class BiosampleActions {
 			setEnabled(enabled && someLoc);
 			putValue(Action.NAME,"Checkout " + (biosamples==null || biosamples.size()!=1?"Batch":""));
 		}
-		
-//		public Collection<Biosample> getBiosamples() {
-//			return biosamples;
-//		}
-		
+
+		//		public Collection<Biosample> getBiosamples() {
+		//			return biosamples;
+		//		}
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
@@ -743,7 +743,7 @@ public class BiosampleActions {
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
-	
+
 		}
 	}
 
@@ -756,7 +756,7 @@ public class BiosampleActions {
 		table.addMouseListener(new PopupAdapter(table) {
 			@Override
 			protected void showPopup(MouseEvent e) {
-				BiosampleActions.createPopup(new ArrayList<Biosample>(table.getSelection())).show(table, e.getX(), e.getY());				
+				BiosampleActions.createPopup(new ArrayList<Biosample>(table.getSelection())).show(table, e.getX(), e.getY());
 			}
 		});
 	}
@@ -764,58 +764,58 @@ public class BiosampleActions {
 		table.addMouseListener(new PopupAdapter(table) {
 			@Override
 			protected void showPopup(MouseEvent e) {
-				
+
 				List<Biosample> biosamples = table.getSelection();
 				JPopupMenu popupMenu = new JPopupMenu();
 				String s = biosamples!=null && biosamples.size()==1? biosamples.get(0).getSampleIdName() :"";
 				popupMenu.add(new JCustomLabel("   Biosample: "+s, Font.BOLD));
-				
+
 				if(biosamples==null || biosamples.size()==0) {
-					
+
 				} else if(biosamples.size()==1) {
 					Biosample b = biosamples.get(0);
 					popupMenu.add(new JMenuItem(new AdminActions.Action_Restore(biosamples)));
-					
+
 					if( b!=null && b.getBiotype()!=null) {
 						popupMenu.add(new JSeparator());
 						popupMenu.add(new JMenuItem(new Action_History(biosamples)));
 					}
-					
+
 				} else { //batch
 					popupMenu.add(new JMenuItem(new AdminActions.Action_Restore(biosamples)));
 
-				} 
-				
-				popupMenu.show(table, e.getX(), e.getY());				
+				}
+
+				popupMenu.show(table, e.getX(), e.getY());
 			}
 		});
 	}
-	
-	public static void attachPopup(final PivotTable comp) {		
+
+	public static void attachPopup(final PivotTable comp) {
 		comp.addMouseListener(new PopupAdapter() {
 			@Override
 			protected void showPopup(MouseEvent e) {
 				Collection<Biosample> biosamples = comp.getSelectedBiosamples();
-				if(biosamples!=null) BiosampleActions.createPopup(new ArrayList<Biosample>(biosamples)).show(comp, e.getX(), e.getY());				
+				if(biosamples!=null) BiosampleActions.createPopup(new ArrayList<Biosample>(biosamples)).show(comp, e.getX(), e.getY());
 			}
 		});
 	}
-	public static void attachPopup(final JComponent comp) {		
+	public static void attachPopup(final JComponent comp) {
 		comp.addMouseListener(new PopupAdapter() {
 			@Override
 			protected void showPopup(MouseEvent e) {
 				Collection<Biosample> biosamples = null;
 				if(comp instanceof IBiosampleDetail) {
 					biosamples = ((IBiosampleDetail) comp).getBiosamples();
-				}				
-				if(biosamples!=null) BiosampleActions.createPopup(new ArrayList<Biosample>(biosamples)).show(comp, e.getX(), e.getY());				
+				}
+				if(biosamples!=null) BiosampleActions.createPopup(new ArrayList<Biosample>(biosamples)).show(comp, e.getX(), e.getY());
 			}
 		});
 	}
-	
-	
+
+
 	/**
-	 * 
+	 *
 	 * @param biosamples
 	 * @param phase
 	 * @return
@@ -823,15 +823,15 @@ public class BiosampleActions {
 	public static JPopupMenu createPopup(List<Biosample> biosamples) {
 
 		JPopupMenu menu = new JPopupMenu();
-		
+
 		if(biosamples==null || biosamples.size()==0) {
 			return menu;
 		}
 		if(SpiritFrame.getUser()==null) {
-			menu.add(new SpiritAction.Action_Relogin(null, null));			
+			menu.add(new SpiritAction.Action_Relogin(null, null));
 			return menu;
 		}
-		
+
 		Set<Biotype> types = Biosample.getBiotypes(biosamples);
 		boolean hasLiving = false;
 		boolean hasCompositeOrComponents= false;
@@ -842,18 +842,18 @@ public class BiosampleActions {
 			else hasUnknown = true;
 		}
 
-		
-		
 
 
-		
+
+
+
 		String s = biosamples.size()==1? biosamples.get(0).getSampleIdName(): biosamples.size()+" selected";
 		menu.add(new JCustomLabel("   Biosample: " + s, Font.BOLD));
 
 		//New
 		JMenu newMenu = new JMenu("New");
 		newMenu.setIcon(IconType.NEW.getIcon());
-		newMenu.setMnemonic('n');		
+		newMenu.setMnemonic('n');
 		menu.add(newMenu);
 		newMenu.add(new Action_NewBatch());
 		newMenu.add(new Action_Duplicate(biosamples));
@@ -864,16 +864,16 @@ public class BiosampleActions {
 		//Edit
 		JMenu editMenu = new JMenu("Edit");
 		editMenu.setIcon(IconType.EDIT.getIcon());
-		editMenu.setMnemonic('e');		
+		editMenu.setMnemonic('e');
 		menu.add(editMenu);
 		editMenu.add(new Action_BatchEdit(biosamples));
 		editMenu.add(new JSeparator());
 		editMenu.add(new Action_Amount(biosamples));
-		
+
 		//Status
 		if(hasUnknown) {
 			//SetStatus is disabled
-			JMenu statusMenu = new JMenu("Trash / Set Status"); 
+			JMenu statusMenu = new JMenu("Trash / Set Status");
 			statusMenu.setIcon(IconType.STATUS.getIcon());
 			statusMenu.setEnabled(false);
 			editMenu.add(statusMenu);
@@ -882,65 +882,65 @@ public class BiosampleActions {
 			editMenu.add(new Action_SetLivingStatus(biosamples));
 		} else if(hasCompositeOrComponents) {
 			//SetStatus for samples
-			JMenu statusMenu = new JMenu("Trash / Set Status"); 
+			JMenu statusMenu = new JMenu("Trash / Set Status");
 			statusMenu.setIcon(IconType.STATUS.getIcon());
 			statusMenu.add(new Action_SetStatus(biosamples, Status.INLAB));
 			statusMenu.add(new JSeparator());
 			statusMenu.add(new Action_SetStatus(biosamples, Status.LOWVOL));
 			statusMenu.add(new Action_SetStatus(biosamples, Status.USEDUP));
 			statusMenu.add(new Action_SetStatus(biosamples, Status.TRASHED));
-			editMenu.add(statusMenu);				
+			editMenu.add(statusMenu);
 		} else {
-			JMenu statusMenu = new JMenu("Trash / Set Status"); 
+			JMenu statusMenu = new JMenu("Trash / Set Status");
 			statusMenu.setIcon(IconType.STATUS.getIcon());
 			statusMenu.setEnabled(false);
 			editMenu.add(statusMenu);
 		}
-		
-		
-		JMenu qualityMenu = new JMenu("Set Quality"); 
+
+
+		JMenu qualityMenu = new JMenu("Set Quality");
 		qualityMenu.setIcon(IconType.QUALITY.getIcon());
 		for (Quality quality : Quality.values()) {
 			qualityMenu.add(new Action_SetQuality(biosamples, quality));
-		}			
+		}
 		editMenu.add(qualityMenu);
-		JMenuItem expiryMenu = new JMenuItem(new Action_SetExpiryDate(biosamples)); 
+		JMenuItem expiryMenu = new JMenuItem(new Action_SetExpiryDate(biosamples));
 		expiryMenu.setEnabled(hasCompositeOrComponents);
 		editMenu.add(expiryMenu);
-		
+
 		//Checkin/Checkout
-		menu.add(new JSeparator());							
+		menu.add(new JSeparator());
 		menu.add(new JMenuItem(new BiosampleActions.Action_Checkin(biosamples)));
 		menu.add(new JMenuItem(new BiosampleActions.Action_Checkout(biosamples)));
 
-		
+
 
 
 		//Print
 		menu.add(new JSeparator());
-		menu.add(new Action_Print(biosamples));		
+		menu.add(new Action_Print(biosamples));
 		menu.add(new JSeparator());
-		
+
 		//Order from storage??
 		if(DBAdapter.getAdapter().getAutomaticStores()!=null && DBAdapter.getAdapter().getAutomaticStores().size()>0) {
 			menu.add(new Action_Order(biosamples));
 		}
-		
+
 		//Advanced
-		JMenu systemMenu = new JMenu("Advanced"); 
+		JMenu systemMenu = new JMenu("Advanced");
 		systemMenu.setIcon(IconType.ADMIN.getIcon());
-		systemMenu.add(new Action_Delete(biosamples));				
+		systemMenu.add(new Action_Delete(biosamples));
 		systemMenu.add(new JSeparator());
-		systemMenu.add(new Action_SelectWithDiscriminator(biosamples));				
+		systemMenu.add(new Action_SelectWithDiscriminator(biosamples));
 		systemMenu.add(new JSeparator());
 		systemMenu.add(new Action_AssignTo(biosamples));
 		systemMenu.add(new JSeparator());
-		systemMenu.add(new Action_History(biosamples));		
+		systemMenu.add(new Action_History(biosamples));
 		menu.add(systemMenu);
 
-		
+
 		return menu;
 	}
-	
-	
+
+
 }

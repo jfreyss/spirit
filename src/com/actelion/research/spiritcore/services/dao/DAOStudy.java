@@ -57,8 +57,10 @@ import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.AttachedBiosample;
+import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Measurement;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
+import com.actelion.research.spiritcore.business.study.NamedTreatment;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Randomization;
 import com.actelion.research.spiritcore.business.study.Sampling;
@@ -1050,7 +1052,28 @@ public class DAOStudy {
 		return new ArrayList<Study>(list1);
 	}
 
+	/**
+	 * Fully load a study for the display (attached, sampling, treatment, actions)
+	 * @param study
+	 */
+	@SuppressWarnings("unused")
+	public static void fullLoad(Study study) {
+		if(study!=null) {
+			for(Biosample b: study.getAttachedBiosamples()) {
 
+			}
+			for(Group g: study.getGroups()) {
+				g.getFromGroup();
+				g.getFromPhase();
+			}
+			for(Phase p: study.getPhases()) {
+
+			}
+			for(NamedTreatment ns: study.getNamedTreatments()) {}
+			for(NamedSampling ns: study.getNamedSamplings()) {}
+			for(StudyAction a: study.getStudyActions()) {}
+		}
+	}
 
 }
 

@@ -22,8 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.admin.user;
 
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Collections;
@@ -39,7 +37,6 @@ import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
-import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
@@ -48,53 +45,42 @@ import com.actelion.research.util.ui.iconbutton.JIconButton;
 public class EmployeeGroupPanel extends JPanel {
 
 	private EmployeeGroupTable employeeGroupTable = new EmployeeGroupTable();
-	
+
 	public EmployeeGroupPanel() {
-		
+
 		final JButton deleteButton = new JIconButton(IconType.DELETE, "Delete");
 		final JButton editButton = new JIconButton(IconType.EDIT, "Edit");
 		final JButton createButton = new JIconButton(IconType.NEW, "Create Group");
-		
-		deleteButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				List<EmployeeGroup> sel = employeeGroupTable.getSelection();
-				if(sel.size()==1) {
-					int res = JOptionPane.showConfirmDialog(EmployeeGroupPanel.this, "Are you sure you want to delete " + sel.get(0)+"?", "Delete Group", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-					if(res!=JOptionPane.YES_OPTION) return;
-					
-					try {
-						DAOEmployee.removeEmployeeGroup(sel.get(0), SpiritFrame.getUser());
-						refresh();
-					} catch (Exception e) {
-						JExceptionDialog.showError(e);
-					}
-				}
-							
-			}
-		});
-		editButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				List<EmployeeGroup> sel = employeeGroupTable.getSelection();
-				if(sel.size()==1) {
-					new EmployeeGroupEditDlg(sel.get(0));
-					refresh();
-					employeeGroupTable.setSelection(sel);
-				}
-			}
-		});
-		createButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				EmployeeGroup group = new EmployeeGroup();
-				new EmployeeGroupEditDlg(group);
-				refresh();
-				employeeGroupTable.setSelection(Collections.singletonList(group));
 
+		deleteButton.addActionListener(ev-> {
+			List<EmployeeGroup> sel = employeeGroupTable.getSelection();
+			if(sel.size()==1) {
+				int res = JOptionPane.showConfirmDialog(EmployeeGroupPanel.this, "Are you sure you want to delete " + sel.get(0)+"?", "Delete Group", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+				if(res!=JOptionPane.YES_OPTION) return;
+
+				try {
+					DAOEmployee.removeEmployeeGroup(sel.get(0), SpiritFrame.getUser());
+					refresh();
+				} catch (Exception e) {
+					JExceptionDialog.showError(e);
+				}
 			}
 		});
-		
+		editButton.addActionListener(e-> {
+			List<EmployeeGroup> sel = employeeGroupTable.getSelection();
+			if(sel.size()==1) {
+				new EmployeeGroupEditDlg(sel.get(0));
+				refresh();
+				employeeGroupTable.setSelection(sel);
+			}
+		});
+		createButton.addActionListener(e-> {
+			EmployeeGroup group = new EmployeeGroup();
+			new EmployeeGroupEditDlg(group);
+			refresh();
+			employeeGroupTable.setSelection(Collections.singletonList(group));
+		});
+
 		employeeGroupTable.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -103,22 +89,22 @@ public class EmployeeGroupPanel extends JPanel {
 				}
 			}
 		});
-		
+
 		setLayout(new GridLayout());
 		add(UIUtils.createBox(
-				UIUtils.createTitleBox("Groups", new JScrollPane(employeeGroupTable)), 
-				null, 
+				UIUtils.createTitleBox("Groups", new JScrollPane(employeeGroupTable)),
+				null,
 				UIUtils.createHorizontalBox(deleteButton, editButton, createButton, Box.createHorizontalGlue())));
-		
-		
-		
+
+
+
 		refresh();
-		
+
 
 	}
-	
+
 	public void refresh() {
-		JPAUtil.clear();
+		SpiritFrame.clear();
 		List<EmployeeGroup> emps = DBAdapter.getAdapter().getEmployeeGroups();
 		employeeGroupTable.setRows(emps);
 	}

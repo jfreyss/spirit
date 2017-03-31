@@ -27,20 +27,20 @@ import java.util.Collections;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxOneNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxNode;
 
-public class DepartmentNode extends TextComboBoxOneNode {
+public class DepartmentNode extends TextComboBoxNode {
 	public DepartmentNode(FormTree tree, Strategy<String> strategy) {
 		super(tree, "Department ", strategy);
-	}	
-		
+	}
+
 	@Override
 	public Collection<String> getChoices() {
 		if(SpiritFrame.getUser()==null || SpiritFrame.getUser().getMainGroup()==null) {
-			return null;			
+			return null;
 		} else {
 			return Collections.singletonList(SpiritFrame.getUser().getMainGroup().getName());
 		}
 	}
-	
+
 }

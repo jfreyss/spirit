@@ -328,11 +328,13 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 
 	@Override
 	public void onStudySelect() {
+		System.out.println("BiosampleTab.onStudySelect() "+getFrame().getStudyId());
 		if(getFrame()!=null && getFrame().getStudyId().length()>0) {
 			query(searchPane.getSearchTree().getQuery());
 		} else {
 			tableOrRackTab.setBiosamples(new ArrayList<>());
 		}
+		searchPane.getSearchTree().eventStudyChanged();
 	}
 
 }

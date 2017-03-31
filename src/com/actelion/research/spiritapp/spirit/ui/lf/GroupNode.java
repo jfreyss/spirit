@@ -32,53 +32,51 @@ import javax.swing.JList;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxOneNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxNode;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.util.ui.UIUtils;
 
 
-public class GroupNode extends TextComboBoxOneNode {
+public class GroupNode extends TextComboBoxNode {
 	private Study study;
 	public GroupNode(FormTree tree, Strategy<String> strategy) {
-		super(tree, "Group", strategy);		
-		
-		getComponent().setListCellRenderer(new DefaultListCellRenderer() {
-			
+		super(tree, "Group", strategy);
+
+		getComponent().setRenderer(new DefaultListCellRenderer() {
 			@Override
-			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {			
+			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 				if(study!=null) {
 					Group g = study.getGroup((String) value);
 					if(g!=null && g.getColor()!=null) {
 						setBackground(UIUtils.getDilutedColor(g.getColor(), getBackground()));
 					}
-						
 				}
 				return this;
 			}
 		});
 	}
-	
+
 	@Override
 	public Collection<String> getChoices() {
-		List<String> list = new ArrayList<String>();
+		List<String> list = new ArrayList<>();
 		if(study!=null) {
 			for (Group group : study.getGroups()) {
 				list.add(group.getName());
 			}
-		}		
+		}
 		return list;
 	}
-	
+
 	public void setStudy(Study study) {
 		this.study = study;
 		getComponent().setEnabled(!SpiritRights.isBlindAll(study, SpiritFrame.getUser()));
-		getComponent().setText("");		
+		getComponent().setText("");
 		setVisible(study!=null);
 	}
-	
-	
-	
+
+
+
 }

@@ -97,7 +97,7 @@ public class BioTypeDocumentPane extends ImageEditorPane {
 			sb.append("</td>");
 
 			//Name
-			sb.append("<td style='white-space:nowrap'>");
+			sb.append("<td style='width:120px'>");
 			sb.append(MiscUtils.repeat("&nbsp;", type.getDepth()*4));
 			String url = "file://localhost/type_"+type.getName();
 			if(getImageCache().get(url)==null) getImageCache().put(url, ImageFactory.getImageThumbnail(type));

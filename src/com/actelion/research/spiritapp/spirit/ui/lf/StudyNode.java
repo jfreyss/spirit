@@ -38,7 +38,7 @@ import javax.swing.JList;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxOneNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxNode;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
@@ -47,21 +47,21 @@ import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.JTextComboBox;
 import com.actelion.research.util.ui.UIUtils;
 
-public class StudyNode extends TextComboBoxOneNode {
-	
+public class StudyNode extends TextComboBoxNode {
+
 	private RightLevel level;
 	private Map<String, Study> quickCache = null;
-	
+
 	public StudyNode(FormTree tree, RightLevel level, boolean multiple, Strategy<String> strategy) {
 		super(tree, "StudyId", strategy);
 		this.level = level;
-		
+
 		getComponent().setMultipleChoices(multiple);
-		getComponent().setListCellRenderer(new DefaultListCellRenderer() {
+		getComponent().setRenderer(new DefaultListCellRenderer() {
 			@Override
 			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-				Study study = quickCache.get((String)value);
+				Study study = quickCache.get(value);
 				String user = SpiritFrame.getUser()==null? null: SpiritFrame.getUser().getUsername();
 				if(study==null) {
 					setText("<html><div>" + value +"<br></html>");
@@ -69,9 +69,9 @@ public class StudyNode extends TextComboBoxOneNode {
 					String title = (study.getTitle()==null?"":study.getTitle());
 					int maxLength = 100 - (study.getIvv()==null?0: study.getIvv().length()+2);
 					if(title.length()>maxLength) title = title.substring(0,maxLength-2) + "...";
-					boolean resp = study.isMentioned(user); 
-							
-					
+					boolean resp = study.isMentioned(user);
+
+
 					setText("<html><div style='white-space:nowrap'>" +
 							(study.getStudyId()!=null? "<b style='font-size:10px'>" + study.getStudyId() + "</b>:&nbsp;&nbsp;": "") +
 							(study.getIvv()!=null? "<span style='font-size:10px'>"+study.getIvv()+"</span>&nbsp;&nbsp;": "") +
@@ -84,24 +84,24 @@ public class StudyNode extends TextComboBoxOneNode {
 				return this;
 			}
 		});
-		
-		getComponent().addPropertyChangeListener(JTextComboBox.PROPERTY_TEXTCHANGED, new PropertyChangeListener() {			
+
+		getComponent().addPropertyChangeListener(JTextComboBox.PROPERTY_TEXTCHANGED, new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				cleanValue();
 			}
 		});
 	}
-	
+
 	private void cleanValue() {
-		if(getSelection()==null) return;		
+		if(getSelection()==null) return;
 		String newVal = StudyComboBox.cleanValue(getSelection());
 		if(!getSelection().equals(newVal)) {
 			setSelection(newVal);
 		}
 
 	}
-	
+
 	public void loadStudies() {
 		if(quickCache==null && SpiritFrame.getUser()!=null) {
 			quickCache = new LinkedHashMap<String, Study>();
@@ -112,17 +112,17 @@ public class StudyNode extends TextComboBoxOneNode {
 			}
 		}
 	}
-	
+
 	@Override
 	public Collection<String> getChoices() {
 		if(SpiritFrame.getUser()==null) return new ArrayList<String>();
 		loadStudies();
-		
+
 		return quickCache.keySet() ;
 	}
-	
-	
-	
+
+
+
 	public void setSelection(String studyId) {
 		getComponent().setText(studyId);
 	}
@@ -131,10 +131,10 @@ public class StudyNode extends TextComboBoxOneNode {
 		List<Study> res = getStudies();
 		return res.size()==1? res.get(0): null;
 	}
-	
+
 	public List<Study> getStudies() {
 		String sel = getSelection();
-		List<Study> res = new ArrayList<Study>();		
+		List<Study> res = new ArrayList<Study>();
 		for(String s: MiscUtils.split(sel)) {
 			Study study = quickCache==null? null: quickCache.get(s);
 			if(study==null) {
@@ -145,10 +145,10 @@ public class StudyNode extends TextComboBoxOneNode {
 		}
 		return res;
 	}
-	
+
 	public void repopulate() {
 		quickCache=null;
 	}
 
-	
+
 }

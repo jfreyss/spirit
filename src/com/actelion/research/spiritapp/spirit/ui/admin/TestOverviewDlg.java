@@ -29,7 +29,7 @@ import javax.swing.event.HyperlinkEvent.EventType;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.result.TestChoice;
+import com.actelion.research.spiritapp.spirit.ui.result.TestComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.result.Test;
@@ -44,14 +44,14 @@ import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class TestOverviewDlg extends JEscapeDialog {
 
-	private TestChoice testChoice;
-	private TestDocumentPane testPane = new TestDocumentPane();
+	private TestComboBox testChoice = new TestComboBox();
 
 	public TestOverviewDlg() {
 		super(UIUtils.getMainFrame(), "Admin - Tests", true);
 		SpiritUser user = SpiritFrame.getUser();
 		if(user==null || !SpiritRights.isSuperAdmin(user)) return;
 
+		TestDocumentPane testPane = new TestDocumentPane();
 		testPane.addHyperlinkListener(e-> {
 			if(e.getEventType()!=EventType.ACTIVATED) return;
 			if(e.getDescription().startsWith("test:")) {
@@ -62,9 +62,8 @@ public class TestOverviewDlg extends JEscapeDialog {
 			}
 		});
 
-		testChoice = new TestChoice();
 		final JButton renameInputButton = new JButton("Rename Values");
-		final JButton moveButton = new JButton("Move Values");
+		//		final JButton moveButton = new JButton("Move Values");
 		final JButton newTestButton = new JIconButton(IconType.NEW, "New Test");
 		final JButton duplicateButton = new JIconButton(IconType.DUPLICATE, "Duplicate");
 		final JButton editButton = new JIconButton(IconType.EDIT, "Edit");
@@ -76,9 +75,9 @@ public class TestOverviewDlg extends JEscapeDialog {
 			new TestRenameAttDlg(testChoice.getSelection());
 		});
 
-		moveButton.addActionListener(e-> {
-			new TestMoveDlg(testChoice.getSelection());
-		});
+		//		moveButton.addActionListener(e-> {
+		//			new TestMoveDlg(testChoice.getSelection());
+		//		});
 
 		newTestButton.addActionListener(e-> {
 			Test t = new Test();
@@ -113,27 +112,28 @@ public class TestOverviewDlg extends JEscapeDialog {
 				testChoice.reset();
 			}
 		});
-		testChoice.addActionListener(e-> {
+		testChoice.addTextChangeListener(e-> {
 			testPane.setSelection(testChoice.getSelection());
 			renameInputButton.setEnabled(testChoice.getSelection()!=null);
 			editButton.setEnabled(testChoice.getSelection()!=null);
-			moveButton.setEnabled(testChoice.getSelection()!=null);
+			//			moveButton.setEnabled(testChoice.getSelection()!=null);
 			duplicateButton.setEnabled(testChoice.getSelection()!=null);
 			deleteButton.setEnabled(testChoice.getSelection()!=null);
 		});
 
 		renameInputButton.setEnabled(testChoice.getSelection()!=null);
 		editButton.setEnabled(testChoice.getSelection()!=null);
-		moveButton.setEnabled(testChoice.getSelection()!=null);
+		//		moveButton.setEnabled(testChoice.getSelection()!=null);
 		duplicateButton.setEnabled(testChoice.getSelection()!=null);
 		deleteButton.setEnabled(testChoice.getSelection()!=null);
 
 		setContentPane(UIUtils.createBox(UIUtils.createTitleBox("Test Details", new JScrollPane(testPane)),
 				UIUtils.createTitleBox("",
 						UIUtils.createVerticalBox(
-								UIUtils.createHorizontalBox(testChoice, editButton, duplicateButton, deleteButton, Box.createHorizontalGlue()),
-								UIUtils.createHorizontalBox(newTestButton, Box.createHorizontalGlue()),
-								UIUtils.createHorizontalBox(renameInputButton, moveButton, Box.createHorizontalGlue()))),
+								UIUtils.createHorizontalBox(testChoice, editButton, renameInputButton, duplicateButton, deleteButton, Box.createHorizontalGlue()),
+								UIUtils.createHorizontalBox(newTestButton, Box.createHorizontalGlue())
+								//								UIUtils.createHorizontalBox(renameInputButton, moveButton, Box.createHorizontalGlue()))
+								)),
 				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), new JButton(new CloseAction()))));
 
 		testPane.setSelection(testChoice.getSelection());

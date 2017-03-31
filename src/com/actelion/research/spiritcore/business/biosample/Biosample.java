@@ -273,18 +273,6 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	@OnDelete(action=OnDeleteAction.NO_ACTION)
 	private Sampling attachedSampling = null;
 
-	//	/**
-	//	 * The actions are the important history actions of this sample (treatment, relocation)
-	//	 * The must be saved individually
-	//	 */
-	//	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, mappedBy="biosample", orphanRemoval=true)
-	//	@OnDelete(action=OnDeleteAction.CASCADE)
-	//	@SortNatural
-	//	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-	//	@BatchSize(size=32)
-	//	private Set<ActionBiosample> actions = new TreeSet<>();
-
-
 	/**
 	 * The lastAction is used to record the last noticeable actions (weighing, treatment)
 	 */
@@ -943,17 +931,18 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		if(c!=0) return c;
 
 		//Compare biotype
-		c = CompareUtils.compare(getBiotype(), o2.getBiotype());
+		c = getBiotype()==null? (o2.getBiotype()==null?0:1): getBiotype().compareTo(o2.getBiotype());
 		if(c!=0) return c;
 
-		//Compare SampleId (if not hide), or SampleName (if any)
-		String s1 =    getBiotype()==null?"":    !getBiotype().isHideSampleId()?    getSampleId():    getBiotype().getSampleNameLabel()!=null?    getSampleName():"";
-		String s2 = o2.getBiotype()==null?"": !o2.getBiotype().isHideSampleId()? o2.getSampleId(): o2.getBiotype().getSampleNameLabel()!=null? o2.getSampleName():"";
-		c = CompareUtils.compare(s1, s2);
+
+		//Compare SampleName (if any)
+		String s1 =    getBiotype()==null?"":    getBiotype().getCategory()==BiotypeCategory.PURIFIED &&    !getBiotype().isHideSampleId()?    getSampleId():    getBiotype().getSampleNameLabel()!=null?    getSampleName():"";
+		String s2 = o2.getBiotype()==null?"": o2.getBiotype().getCategory()==BiotypeCategory.PURIFIED && !o2.getBiotype().isHideSampleId()? o2.getSampleId(): o2.getBiotype().getSampleNameLabel()!=null? o2.getSampleName():"";
+		c = (s1==null?"":s1).compareToIgnoreCase((s2==null?"":s2));
 		if(c!=0) return c;
 
 		//Compare
-		c = CompareUtils.compare(getComments(), o2.getComments());
+		c = (getComments()==null?"":getComments()).compareToIgnoreCase((o2.getComments()==null?"":o2.getComments()));
 		if(c!=0) return c;
 
 		//Compare containers

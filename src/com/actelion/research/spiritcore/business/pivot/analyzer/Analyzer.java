@@ -37,7 +37,6 @@ import com.actelion.research.spiritcore.business.pivot.PivotCellKey;
 import com.actelion.research.spiritcore.business.pivot.PivotColumn;
 import com.actelion.research.spiritcore.business.pivot.PivotDataTable;
 import com.actelion.research.spiritcore.business.pivot.PivotRow;
-import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultValue;
 import com.actelion.research.spiritcore.services.SpiritUser;
@@ -66,7 +65,7 @@ public class Analyzer {
 	 */
 	public Analyzer(List<Result> results, SpiritUser user) {
 		LoggerFactory.getLogger(Analyzer.class).debug("Init analyzer");
-		PivotTemplate template = new PerInputPivotTemplate();
+		PerInputPivotTemplate template = new PerInputPivotTemplate();
 		template.init(results);
 		LoggerFactory.getLogger(Analyzer.class).debug("expand analyzer");
 		template.expand(results, user);

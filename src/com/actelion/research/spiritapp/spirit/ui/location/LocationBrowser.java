@@ -29,15 +29,11 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -67,15 +63,15 @@ public class LocationBrowser extends JPanel {
 		RACKS,
 		CONTAINER
 	}
-	
+
 	private LocationBrowserFilter filter;
 	private CardLayout cardLayout = new CardLayout();
 	private Location location = null;
-	
+
 	private JCustomTextField locationTextField = new JCustomTextField();
 	private List<LocationComboBox> locationComboBoxes = new ArrayList<>();
-	
-	private Dimension layoutSize = new Dimension(220, FastFont.getDefaultFontSize()+12+2);	
+
+	private Dimension layoutSize = new Dimension(220, FastFont.getDefaultFontSize()+12+2);
 	private boolean allowTextEditing = true;
 	private JPanel textPanel = new JPanel(new BorderLayout());
 	private JPanel comboPanel = new JPanel(null) {
@@ -83,7 +79,7 @@ public class LocationBrowser extends JPanel {
 		public void doLayout() {
 			int width = getWidth();
 			if(width<=0) return;
-			
+
 			int x = 0;
 			int maxX = 0;
 			int y = 0;
@@ -92,29 +88,29 @@ public class LocationBrowser extends JPanel {
 				LocationComboBox c = locationComboBoxes.get(i);
 				Location l = c.getSelection();
 				int w = l==null?50: getFontMetrics(c.getFont()).stringWidth(l.getName())+36;
-				
-				if(first || x+w+5<width) {			
-					c.setBounds(x, y, w, FastFont.getDefaultFontSize()+12);				
+
+				if(first || x+w+5<width) {
+					c.setBounds(x, y, w, FastFont.getDefaultFontSize()+12);
 					x+=w-2;
 					first = false;
 				} else {
 					y+=FastFont.getDefaultFontSize()+12+2;
 					x=0;
-					c.setBounds(x, y, w, FastFont.getDefaultFontSize()+12);				
+					c.setBounds(x, y, w, FastFont.getDefaultFontSize()+12);
 					x+=w-2;
 				}
 				maxX = Math.max(maxX, x);
-			}	
+			}
 			layoutSize.width = width;
 			layoutSize.height = y + FastFont.getDefaultFontSize()+12+2;
 		}
 	};
-	
+
 	public LocationBrowser() {
 		this(LocationBrowserFilter.ALL);
 	}
-	
-	
+
+
 	public LocationBrowser(LocationBrowserFilter filter) {
 		super();
 		this.filter = filter;
@@ -125,31 +121,27 @@ public class LocationBrowser extends JPanel {
 
 		locationTextField.setBorder(BorderFactory.createEmptyBorder(2, 2, 0, 0));
 		locationTextField.setFont(FastFont.REGULAR);
-		locationTextField.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				try {
-					updateBioLocation(locationTextField.getText());
-				} catch(Exception e) {
-					JExceptionDialog.showError(e);
-				}
+		locationTextField.addTextChangeListener(ev-> {
+			try {
+				updateBioLocation(locationTextField.getText());
+			} catch(Exception e) {
+				JExceptionDialog.showError(e);
 			}
 		});
-		
+
 		comboPanel.setBackground(Color.WHITE);
 		textPanel.setOpaque(false);
 		comboPanel.setOpaque(false);
 		add("text", textPanel);
 		add("combo", comboPanel);
 		cardLayout.show(LocationBrowser.this, "combo");
-		
+
 		textPanel.add(BorderLayout.CENTER, locationTextField);
-		
+
 		MouseListener ma = new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if(isEnabled() && allowTextEditing) {					
+				if(isEnabled() && allowTextEditing) {
 					cardLayout.show(LocationBrowser.this, "text");
 					locationTextField.setText(location==null?"": location.getHierarchyFull());
 					locationTextField.selectAll();
@@ -157,36 +149,33 @@ public class LocationBrowser extends JPanel {
 				}
 			}
 		};
-		FocusListener fl = new FocusListener() {			
+		FocusListener fl = new FocusListener() {
 			@Override
 			public void focusLost(FocusEvent e) {
 				setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(), BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1,0,0,0, Color.GRAY), BorderFactory.createLineBorder(Color.LIGHT_GRAY))));
 			}
-			
+
 			@Override
 			public void focusGained(FocusEvent e) {
 				Color c = UIUtils.getColor(115,164,209);
-				setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(c, 1), BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1,0,0,0, Color.GRAY), BorderFactory.createLineBorder(Color.LIGHT_GRAY))));	
+				setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(c, 1), BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1,0,0,0, Color.GRAY), BorderFactory.createLineBorder(Color.LIGHT_GRAY))));
 			}
-		}; 
-		
-		final AWTEventListener listener = new AWTEventListener() {			
-			@Override
-			public void eventDispatched(AWTEvent event) {
-				if(((MouseEvent)event).getID()==MouseEvent.MOUSE_CLICKED) {
-					if(event.getSource()!=locationTextField && locationTextField.isFocusOwner()) {
-						try {
-							updateBioLocation(locationTextField.getText());					
-						} catch(Exception ex) {
-							ex.printStackTrace();
-						}
+		};
+
+		final AWTEventListener listener = event-> {
+			if(((MouseEvent)event).getID()==MouseEvent.MOUSE_CLICKED) {
+				if(event.getSource()!=locationTextField && locationTextField.isFocusOwner()) {
+					try {
+						updateBioLocation(locationTextField.getText());
+					} catch(Exception ex) {
+						ex.printStackTrace();
 					}
 				}
 			}
 		};
-		
-		
-		locationTextField.addFocusListener(new FocusListener() {			
+
+
+		locationTextField.addFocusListener(new FocusListener() {
 			@Override
 			public void focusGained(FocusEvent e) {
 				Toolkit.getDefaultToolkit().addAWTEventListener(listener, AWTEvent.MOUSE_EVENT_MASK);
@@ -194,33 +183,34 @@ public class LocationBrowser extends JPanel {
 			@Override
 			public void focusLost(FocusEvent e) {
 				try {
-					updateBioLocation(locationTextField.getText());					
+					updateBioLocation(locationTextField.getText());
 				} catch(Exception ex) {
 					ex.printStackTrace();
 				}
 				Toolkit.getDefaultToolkit().removeAWTEventListener(listener);
 			}
 		});
-		
+
 		comboPanel.addMouseListener(ma);
 		locationTextField.addFocusListener(fl);
 		updateView();
 	}
-	
+
 	public void setAllowTextEditing(boolean allowTextEditing) {
 		this.allowTextEditing = allowTextEditing;
 	}
 	public boolean isAllowTextEditing() {
 		return allowTextEditing;
 	}
-	
+
 	@Override
 	public void setFont(Font font) {
 		super.setFont(font);
 		if(locationTextField!=null) locationTextField.setFont(font);
 	}
-	
+
 	private void updateBioLocation(String fullLocation) throws Exception {
+
 		fullLocation = fullLocation.replaceAll("[\n\r]", "");
 		cardLayout.show(LocationBrowser.this, "combo");
 		if(fullLocation.length()==0) {
@@ -230,31 +220,31 @@ public class LocationBrowser extends JPanel {
 			if(loc==null) throw new Exception("Invalid location: "+fullLocation);
 			setBioLocation(loc);
 		}
-		LocationBrowser.this.firePropertyChange(PROPERTY_LOCATION_SELECTED, null, location);
+		LocationBrowser.this.firePropertyChange(PROPERTY_LOCATION_SELECTED, null, getBioLocation());
 	}
-	
+
 	@Override
 	public Dimension getPreferredSize() {
 		comboPanel.doLayout();
 		Dimension minSize = getMinimumSize();
-		Dimension dim = new Dimension(Math.max(layoutSize.width + 2, minSize.width), Math.max(layoutSize.height+2, minSize.height));		
+		Dimension dim = new Dimension(Math.max(layoutSize.width + 2, minSize.width), Math.max(layoutSize.height+2, minSize.height));
 		return dim;
 	}
-		
-	
+
+	private int push = 0;
 	private void updateView() {
-		comboPanel.removeAll();		
+		comboPanel.removeAll();
 		locationComboBoxes.clear();
 		List<Location> hierarchy = new ArrayList<>();
 		if(location!=null) {
 			location = JPAUtil.reattach(location);
 			hierarchy = location.getHierarchy();
 		}
-		
+
 		Location parent = null;
 		for (int i = 0; i < hierarchy.size()+1; i++) {
 			final Location parentFinal = parent;
-			
+
 			//Find possible choices
 			List<Location> nextChildren = new ArrayList<>();
 			for (Location l : parent==null? DAOLocation.getLocationRoots(): parent.getChildren()) {
@@ -262,20 +252,21 @@ public class LocationBrowser extends JPanel {
 				if(!SpiritRights.canRead(l, SpiritFrame.getUser())) continue;
 				if(filter==LocationBrowserFilter.CONTAINER && l.getLocationType().getPositionType()!=LocationLabeling.NONE) continue;
 				if(filter==LocationBrowserFilter.RACKS && l.getLocationType().getPositionType()!=LocationLabeling.NONE && l.getLocationType()!=LocationType.RACK) continue;
-				
+
 				nextChildren.add(l);
 			}
-			
+
 			if(nextChildren.size()==0) break;
-						
+
 			Collections.sort(nextChildren);
 			Location sel = i<hierarchy.size()? hierarchy.get(i): null;
 			final LocationComboBox locComboBox = new LocationComboBox(nextChildren);
-			
+
 			locComboBox.setSelection(sel);
-			locComboBox.addPropertyChangeListener(LocationComboBox.PROPERTY_TEXTCHANGED, new PropertyChangeListener() {				
-				@Override
-				public void propertyChange(PropertyChangeEvent evt) {
+			locComboBox.addTextChangeListener(evt -> {
+				if(push>0) return;
+				try {
+					push++;
 					//New location selected
 					if(locComboBox.getSelection()==null) {
 						location = parentFinal;
@@ -286,34 +277,37 @@ public class LocationBrowser extends JPanel {
 					LocationBrowser.this.firePropertyChange(PROPERTY_LOCATION_SELECTED, null, location);
 					if(getParent()!=null && getParent().getParent() instanceof JScrollPane) {
 						final JScrollPane sp = (JScrollPane) getParent().getParent();
-						SwingUtilities.invokeLater(new Runnable() {							
-							@Override
-							public void run() {
-								sp.getHorizontalScrollBar().setValue(sp.getHorizontalScrollBar().getMaximum());
-							}
+						SwingUtilities.invokeLater(()-> {
+							sp.getHorizontalScrollBar().setValue(sp.getHorizontalScrollBar().getMaximum());
 						});
 					}
+				} finally {
+					push--;
 				}
+
 			});
 			locationComboBoxes.add(locComboBox);
 			comboPanel.add(locComboBox);
-			
+
 			nextChildren = new ArrayList<>();
 			parent = sel;
 		}
-		
+
 		comboPanel.validate();
 		repaint();
+
+
 	}
-	
+
 	public void setBioLocation(Location location) {
+		if(push>0) return;
 		this.location = location;
 		updateView();
 	}
-	
+
 	public Location getBioLocation() {
 		return location;
 	}
-	
-	
+
+
 }

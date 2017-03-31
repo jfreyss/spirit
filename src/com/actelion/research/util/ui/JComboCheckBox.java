@@ -34,8 +34,6 @@ import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
@@ -58,24 +56,24 @@ import javax.swing.event.AncestorListener;
 
 /**
  * Simulates a JComboBox, where more than 1 value can be selected.
- * 
+ *
  * The items should not have ';'
  * If the items are labeled like 'key - value', we use the key to populate the textfield
- * 
+ *
  * @author freyssj
  */
 public class JComboCheckBox extends JCustomTextField {
-	
+
 	private List<String> choices;
 	private String separator = "; ";
-	
+
 	public JComboCheckBox() {
 		this(new ArrayList<String>());
 	}
-	
+
 	/**
 	 * Simulates a JComboBox, where more than 1 value can be selected.
-	 * 
+	 *
 	 * The choices should not have ';'
 	 * If the choices are labeled like 'key - value', we use the key to populate the textfield
 	 */
@@ -84,11 +82,11 @@ public class JComboCheckBox extends JCustomTextField {
 		this.choices = choices;
 		init();
 	}
-	
+
 	public JComboCheckBox(String[] choices) {
 		this(Arrays.asList(choices));
 	}
-	
+
 	private void init() {
 		setChoices(choices);
 		addMouseListener(new MouseAdapter() {
@@ -98,27 +96,27 @@ public class JComboCheckBox extends JCustomTextField {
 				showPopup();
 			}
 		});
-		addFocusListener(new FocusListener() {					
+		addFocusListener(new FocusListener() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				hidePopup();				
-			}					
+				hidePopup();
+			}
 			@Override
 			public void focusGained(FocusEvent e) {
 			}
 		});
-		
+
 		addAncestorListener(new AncestorListener(){
 			@Override
-            public void ancestorAdded(AncestorEvent event){ hidePopup();}
+			public void ancestorAdded(AncestorEvent event){ hidePopup();}
 			@Override
-            public void ancestorRemoved(AncestorEvent event){ hidePopup();}
+			public void ancestorRemoved(AncestorEvent event){ hidePopup();}
 			@Override
-            public void ancestorMoved(AncestorEvent event){ 
-                if (event.getSource() != JComboCheckBox.this) hidePopup();
-            }});
-		
-		Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener() {			
+			public void ancestorMoved(AncestorEvent event){
+				if (event.getSource() != JComboCheckBox.this) hidePopup();
+			}});
+
+		Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener() {
 			@Override
 			public void eventDispatched(AWTEvent event) {
 				if((event instanceof MouseEvent ) && ((MouseEvent)event).getID()==MouseEvent.MOUSE_CLICKED) {
@@ -128,10 +126,10 @@ public class JComboCheckBox extends JCustomTextField {
 				}
 			}
 		}, AWTEvent.MOUSE_EVENT_MASK);
-		
+
 		setEditable(true);
 		setMargin(new Insets(0, 0, 0, 12));
-		
+
 	}
 
 	public void setSeparator(String separator) {
@@ -144,7 +142,7 @@ public class JComboCheckBox extends JCustomTextField {
 	public void setChoices(List<String> choices) {
 		this.choices = choices;
 	}
-	
+
 	private JDialog frame;
 	public void hidePopup() {
 		if(frame!=null) {
@@ -153,14 +151,14 @@ public class JComboCheckBox extends JCustomTextField {
 			repaint();
 		}
 	}
-	
+
 	public void showPopup() {
-		
+
 		if(!isShowing() || frame!=null || choices==null) return;
 		final Point p = JComboCheckBox.this.getLocationOnScreen();
-		
+
 		List<String> allChoices = new ArrayList<String>(choices);
-		for (String string : getCheckedItems()) {			
+		for (String string : getCheckedItems()) {
 			if(string.length()>0 && !allChoices.contains(string)) {
 				allChoices.add(string);
 			}
@@ -171,36 +169,33 @@ public class JComboCheckBox extends JCustomTextField {
 		int count = 0;
 		int byRow = allChoices.size()>30? 4: allChoices.size()>6? 3: 1;
 		int byCol = allChoices.size() / byRow;
-		for (final String item : allChoices) {				
+		for (final String item : allChoices) {
 			final JCheckBox cb = new JCheckBox(item);
 			cb.setSelected(isChecked(item));
 			cb.setFocusable(false);
-			cb.addActionListener(new ActionListener() {							
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					String val = extractKey(item);
-					if(val.length()==0) return;
-					
-					String[] alreadyChecked = getCheckedItems();
-					
-					Set<String> sel = new TreeSet<>();
-					sel.addAll(Arrays.asList(alreadyChecked));
-					if(cb.isSelected()) sel.add(val);
-					else sel.remove(val);
-					
-					StringBuilder sb = new StringBuilder();
-					for (String s : sel) {
-						sb.append((sb.length()>0? separator: "") + s);
-					}
-					setText(sb.toString());
+			cb.addActionListener(e-> {
+				String val = extractKey(item);
+				if(val.length()==0) return;
+
+				String[] alreadyChecked = getCheckedItems();
+
+				Set<String> sel = new TreeSet<>();
+				sel.addAll(Arrays.asList(alreadyChecked));
+				if(cb.isSelected()) sel.add(val);
+				else sel.remove(val);
+
+				StringBuilder sb = new StringBuilder();
+				for (String s : sel) {
+					sb.append((sb.length()>0? separator: "") + s);
 				}
+				setText(sb.toString());
 			});
-			c.gridx = count / byCol; 
-			c.gridy = count % byCol; 
-			panel.add(cb, c); 
+			c.gridx = count / byCol;
+			c.gridy = count % byCol;
+			panel.add(cb, c);
 			count++;
 		}
-		
+
 		panel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		panel.setBackground(Color.WHITE);
 		SwingUtilities.invokeLater(new Runnable() {
@@ -217,7 +212,7 @@ public class JComboCheckBox extends JCustomTextField {
 				}
 				frame.setUndecorated(true);
 				frame.setContentPane(panel);
-				frame.setAlwaysOnTop(true);				
+				frame.setAlwaysOnTop(true);
 				frame.pack();
 				int x = p.x;
 				int y = p.y+getBounds().height;
@@ -234,16 +229,16 @@ public class JComboCheckBox extends JCustomTextField {
 				repaint();
 			}
 		});
-		
+
 	}
-	
+
 	private String extractKey(String v) {
 		if(v.indexOf(" - ")>0) v = v.substring(0, v.indexOf(" - "));
 		return v.trim();
 	}
 	public String[] getCheckedItems() {
-		String sel = (String) getText();
-		String[] res = sel.split("\\"+separator);
+		String sel = getText();
+		String[] res = sel.split("\\"+separator.trim());
 		for (int i = 0; i < res.length; i++) {
 			res[i] = res[i].trim();
 		}
@@ -257,7 +252,7 @@ public class JComboCheckBox extends JCustomTextField {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Draw with a Nimbus style
 	 * @param graphics
@@ -285,7 +280,7 @@ public class JComboCheckBox extends JCustomTextField {
 			Insets insets = getInsets();
 			g.setPaint(new GradientPaint(0, 0, bg0, 0, getHeight()/2, bg1));
 			g.fillRect(getWidth()-(insets.right-3), insets.top-3,  (insets.right-6), getHeight()/2-(insets.top-3));
-			
+
 			g.setPaint(new GradientPaint(0, getHeight()/2, bg1, 0, getHeight()-2, bg2));
 			g.fillRect(getWidth()-(insets.right-3), getHeight()/2, (insets.right-6), getHeight()/2-(insets.bottom-4));
 			g.setColor(UIUtils.getColor(139,160,179));
@@ -295,11 +290,11 @@ public class JComboCheckBox extends JCustomTextField {
 		g.setFont(FastFont.BIGGEST);
 		g.drawString("*", getWidth()-9-g.getFontMetrics().stringWidth("*")/2, getHeight()/2+5);
 		g.fillPolygon(new int[] {getWidth()-12, getWidth()-6, getWidth()-9}, new int[] {getHeight()/2, getHeight()/2, getHeight()/2+6}, 3 );
-		
-//		g.fillPolygon(new int[] {getWidth()-12, getWidth()-6, getWidth()-9}, new int[] {getHeight()/2-6, getHeight()/2-6, getHeight()/2}, 3 );
-//		g.fillPolygon(new int[] {getWidth()-12, getWidth()-6, getWidth()-9}, new int[] {getHeight()/2, getHeight()/2, getHeight()/2+6}, 3 );
 
-		
+		//		g.fillPolygon(new int[] {getWidth()-12, getWidth()-6, getWidth()-9}, new int[] {getHeight()/2-6, getHeight()/2-6, getHeight()/2}, 3 );
+		//		g.fillPolygon(new int[] {getWidth()-12, getWidth()-6, getWidth()-9}, new int[] {getHeight()/2, getHeight()/2, getHeight()/2+6}, 3 );
+
+
 	}
-	
+
 }

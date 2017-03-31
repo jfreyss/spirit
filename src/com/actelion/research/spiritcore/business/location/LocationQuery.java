@@ -28,16 +28,17 @@ import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 
 
 public class LocationQuery implements Serializable {
-	
+
 	private String studyId;
 	private String name;
 	private LocationType locationType;
 	private EmployeeGroup employeeGroup;
 	private Biotype biotype;
 	private Boolean onlyOccupied;
-	
+	private boolean filterAdminLocation;
+
 	public LocationQuery() {}
-	
+
 	public String getName() {
 		return name;
 	}
@@ -58,7 +59,7 @@ public class LocationQuery implements Serializable {
 	public String getStudyId() {
 		return studyId;
 	}
-	
+
 	/**
 	 * @param locationType the locationType to set
 	 */
@@ -72,11 +73,11 @@ public class LocationQuery implements Serializable {
 	public LocationType getLocationType() {
 		return locationType;
 	}
-		
+
 	public boolean isEmpty() {
 		return onlyOccupied==null && (getStudyId()==null || getStudyId().length()==0)
 				&& getEmployeeGroup()==null && getBiotype()==null
-				&& getLocationType()==null && (getName()==null || getName().length()==0); 
+				&& getLocationType()==null && (getName()==null || getName().length()==0);
 	}
 
 	/**
@@ -106,11 +107,18 @@ public class LocationQuery implements Serializable {
 	public void setBiotype(Biotype biotype) {
 		this.biotype = biotype;
 	}
-	
+
 	public void setOnlyOccupied(Boolean onlyOccupied) {
 		this.onlyOccupied = onlyOccupied;
 	}
 	public Boolean getOnlyOccupied() {
 		return onlyOccupied;
+	}
+
+	public boolean isFilterAdminLocation() {
+		return filterAdminLocation;
+	}
+	public void setFilterAdminLocation(boolean filterAdminLocation) {
+		this.filterAdminLocation = filterAdminLocation;
 	}
 }

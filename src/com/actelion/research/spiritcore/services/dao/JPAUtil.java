@@ -39,6 +39,8 @@ import org.slf4j.LoggerFactory;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.location.Location;
+import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -78,12 +80,28 @@ public class JPAUtil {
 		public long lastTestQuery = 0;
 		private List<EntityManager> all = Collections.synchronizedList(new ArrayList<EntityManager>());
 
+		/**
+		 * Not Thread-safe. Close all entityManagers
+		 */
 		public void close() {
 			for(final EntityManager em : new ArrayList<>(getAll())) {
-				LoggerFactory.getLogger(JPAUtil.class).debug("Close EM: "+em);
+				LoggerFactory.getLogger(JPAUtil.class).debug("Close EM: "+em+" open="+em.isOpen());
 				if(em!=null && em.isOpen()) {
 					if(em.getTransaction().isActive()) em.getTransaction().rollback();
 					em.close();
+				}
+			}
+		}
+
+		/**
+		 * Not Thread-safe. Clear the cache of all entityManagers
+		 */
+		public void clear() {
+			for(final EntityManager em : new ArrayList<>(getAll())) {
+				LoggerFactory.getLogger(JPAUtil.class).debug("Clear EM: "+em+" open="+em.isOpen());
+				if(em!=null && em.isOpen() ) {
+					if(em.getTransaction().isActive()) em.getTransaction().rollback();
+					em.clear();
 				}
 			}
 		}
@@ -127,26 +145,6 @@ public class JPAUtil {
 			return all;
 		}
 
-		//		public void clear() {
-		//			for(EntityManager em: getAll()) {
-		//				LoggerFactory.getLogger(JPAUtil.class).debug("Clear EM: "+em);
-		//
-		//				if(em.isOpen()) {
-		//		    		try {
-		//		    			if(em.getTransaction().isActive()) {
-		//		    				LoggerFactory.getLogger(JPAUtil.class).warn("Rollback unfinished transaction");
-		//		    				em.getTransaction().rollback();
-		//		    			}
-		//		    			em.clear();
-		//		    		} catch(Exception e) {
-		//		    			e.printStackTrace();
-		//		    			em.close();
-		//		    		}
-		//				}
-		//			}coder
-
-		//		}
-
 		@Override
 		public void remove() {
 			all.remove(get());
@@ -170,6 +168,9 @@ public class JPAUtil {
 	private static MyThreadLocal readEntityManager;
 	private static MyThreadLocal writeEntityManager;
 
+	private static Long timeDiff = null;
+	private static Long lastSynchro = null;
+
 	static {
 		System.setProperty("org.jboss.logging.provider", "slf4j");
 
@@ -185,27 +186,24 @@ public class JPAUtil {
 		});
 	}
 
-	private static Long timeDiff = null;
-
-	private static Long lastSynchro = null;
-
-
 	/**
 	 * Clear all entity manager and Spirit Cache.
+	 * Not Thread safe
 	 */
 	public static void clear() {
 		try {
-			LoggerFactory.getLogger(JPAUtil.class).debug("close sessions");
+			LoggerFactory.getLogger(JPAUtil.class).debug("clear sessions");
 			popEditableContext();
 			if(readEntityManager!=null) {
-				readEntityManager.close();
+				readEntityManager.clear();
 			}
 			if(writeEntityManager!=null) {
-				writeEntityManager.close();
+				writeEntityManager.clear();
 			}
 		} catch(Exception e) {
-			LoggerFactory.getLogger(JPAUtil.class).warn("Could not close managers: ", e);
+			LoggerFactory.getLogger(JPAUtil.class).warn("Could not clear managers: ", e);
 		}
+		LoggerFactory.getLogger(JPAUtil.class).debug("Clear Cache");
 		Cache.removeAll();
 	}
 
@@ -506,13 +504,7 @@ public class JPAUtil {
 				id2index.put(o.getId(), i);
 			} else if(o.getId()<=0) {
 				//The entity is new. Reload the dependancies if needed
-				if(o instanceof Biosample) {
-					((Biosample) o).setBiotype(JPAUtil.reattach(((Biosample) o).getBiotype()));
-					((Biosample) o).setParent(JPAUtil.reattach(((Biosample) o).getParent()));
-					((Biosample) o).setInheritedStudy(JPAUtil.reattach(((Biosample) o).getInheritedStudy()));
-					((Biosample) o).setInheritedPhase(JPAUtil.reattach(((Biosample) o).getInheritedPhase()));
-					((Biosample) o).setInheritedGroup(JPAUtil.reattach(((Biosample) o).getInheritedGroup()));
-				} else if(o instanceof Study) {
+				if(o instanceof Study) {
 					for (NamedSampling a : ((Study)o).getNamedSamplings()) {
 						for(Sampling ss: a.getAllSamplings()) {
 							if(ss.getId()>0 && !entityManager.contains(ss)) {
@@ -523,25 +515,20 @@ public class JPAUtil {
 							}
 						}
 					}
+				} else if(o instanceof Biosample) {
+					((Biosample) o).setBiotype(JPAUtil.reattach(((Biosample) o).getBiotype()));
+					((Biosample) o).setParent(JPAUtil.reattach(((Biosample) o).getParent()));
+					((Biosample) o).setInheritedStudy(JPAUtil.reattach(((Biosample) o).getInheritedStudy()));
+					((Biosample) o).setInheritedPhase(JPAUtil.reattach(((Biosample) o).getInheritedPhase()));
+					((Biosample) o).setInheritedGroup(JPAUtil.reattach(((Biosample) o).getInheritedGroup()));
+				} else if(o instanceof Location) {
+					((Location)o).setParent(JPAUtil.reattach(((Location)o).getParent()));
+				} else if(o instanceof Result) {
+					((Result)o).setBiosample(JPAUtil.reattach(((Result)o).getBiosample()));
+					((Result)o).setPhase(JPAUtil.reattach(((Result)o).getPhase()));
 				}
 			} else {
 				//The entity is already attached to the session
-
-				//Some checks...
-				//				//TODO remove checks
-				//				if(o instanceof Study) {
-				//					for (StudyAction a : ((Study)o).getStudyActions()) {
-				//						if(!entityManager.contains(a)) {
-				//							throw new RuntimeException(o+" has StudyAction dependancies not in the session");
-				//						}
-				//					}
-				//					for (Biosample b : ((Study)o).getTopAttachedBiosamples()) {
-				//						if(!entityManager.contains(b)) {
-				//							throw new RuntimeException(o+" has Biosample dependancies not in the session");
-				//						}
-				//					}
-				//				}
-				//				//TODO end remove
 			}
 		}
 
@@ -568,6 +555,9 @@ public class JPAUtil {
 		return res;
 	}
 
+	public static boolean isValid(IObject object) {
+		return Persistence.getPersistenceUtil().isLoaded(object);
+	}
 
 	/**
 	 * Reattach the object to the current session (associated to the current thread)

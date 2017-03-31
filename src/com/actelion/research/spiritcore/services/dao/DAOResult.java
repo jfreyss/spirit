@@ -617,7 +617,7 @@ public class DAOResult {
 	public static int move(Test src, TestAttribute srcAtt, String srcVal, Test dest, SpiritUser user) throws Exception {
 		ResultQuery q = new ResultQuery();
 
-		if(!user.isSuperAdmin()) throw new Exception("You need to be a superadmin to perform this operation");
+		if(!user.isSuperAdmin()) throw new Exception("You need to be an admin to perform this operation");
 		q.getAttribute2Values().add(srcAtt, srcVal);
 		List<Result> results = queryResults(q, user);
 

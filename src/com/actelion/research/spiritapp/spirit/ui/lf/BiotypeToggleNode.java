@@ -48,17 +48,17 @@ import com.actelion.research.util.ui.UIUtils;
  *
  */
 public class BiotypeToggleNode extends BiotypeNode {
-	
+
 	private JPanel panel;
-	private List<JToggleButton> buttons = new ArrayList<JToggleButton>();
-	private final List<Biotype> biotypes;		
-	
+	private List<JToggleButton> buttons = new ArrayList<>();
+	private final List<Biotype> biotypes;
+
 	public BiotypeToggleNode(FormTree tree, final List<Biotype> biotypes, final Strategy<Biotype> strategy) {
 		super(tree, biotypes, strategy);
 		this.biotypes = biotypes;
-		
-		
-		ActionListener al = new ActionListener() {				
+
+
+		ActionListener al = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(getStrategy()!=null) {
@@ -67,7 +67,7 @@ public class BiotypeToggleNode extends BiotypeNode {
 				}
 			}
 		};
-		
+
 		ButtonGroup group = new ButtonGroup();
 		JToggleButton button = new JToggleButton("All", null);
 		button.setFont(FastFont.MEDIUM);
@@ -78,7 +78,7 @@ public class BiotypeToggleNode extends BiotypeNode {
 		button.setVisible(biotypes.size()>1);
 		group.add(button);
 		buttons.add(button);
-		
+
 		for(Biotype biotype: biotypes) {
 			button = new JToggleButton(biotype.getName(), new ImageIcon(ImageFactory.getImage(biotype, 28)));
 			button.setFont(FastFont.SMALL);
@@ -86,29 +86,29 @@ public class BiotypeToggleNode extends BiotypeNode {
 			button.setHorizontalTextPosition(SwingConstants.CENTER);
 			button.setVerticalTextPosition(SwingConstants.BOTTOM);
 			button.setBorder(BorderFactory.createEmptyBorder(3, 5, 3, 5));
-			button.addActionListener(al);			
+			button.addActionListener(al);
 			group.add(button);
 			buttons.add(button);
 		}
-		
+
 		panel = UIUtils.createHorizontalBox(buttons.toArray(new JToggleButton[0]));
 		panel.setBorder(BorderFactory.createEmptyBorder(2,0,2,0));
 		panel.setBackground(Color.WHITE);
 		panel.setOpaque(false);
 
 	}
-		
+
 	@Override
 	protected void updateModel() {
 		assert strategy!=null;
 		strategy.setModel(getSelection());
-		
+
 	}
-	
+
 	@Override
 	protected void updateView() {
 		assert strategy!=null;
-		Biotype model = strategy.getModel();	
+		Biotype model = strategy.getModel();
 		if(model==null) {
 			buttons.get(0).setSelected(true);
 		} else {
@@ -125,7 +125,7 @@ public class BiotypeToggleNode extends BiotypeNode {
 		}
 		return null;
 	}
-	
+
 	@Override
 	public JComponent getComponent() {
 		return panel;
@@ -140,7 +140,7 @@ public class BiotypeToggleNode extends BiotypeNode {
 	protected boolean isFilled() {
 		return false;
 	}
-	
+
 
 	@Override
 	public void setEnabled(boolean enabled) {
@@ -148,7 +148,7 @@ public class BiotypeToggleNode extends BiotypeNode {
 			button.setEnabled(enabled);
 		}
 	}
-	
 
-	
+
+
 }

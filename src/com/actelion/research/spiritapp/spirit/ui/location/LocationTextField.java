@@ -36,8 +36,6 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JDialog;
@@ -57,17 +55,17 @@ public class LocationTextField extends JCustomTextField {
 
 	private LocationBrowser locationBrowser = new LocationBrowser();
 	private Dimension size = new Dimension(160, 27);
-	
-	
+
+
 	@Override
 	public Dimension getMinimumSize() {
 		return size;
 	}
-	
-	public LocationTextField() {		
+
+	public LocationTextField() {
 		super(JCustomTextField.ALPHANUMERIC, 22);
 		locationBrowser.setAllowTextEditing(false);
-		
+
 		setLayout(null);
 		addMouseListener(new MouseAdapter() {
 			@Override
@@ -90,51 +88,47 @@ public class LocationTextField extends JCustomTextField {
 				} catch(Exception ex) {
 					JExceptionDialog.showError(ex);
 				}
-				
-			}					
-		});
-		locationBrowser.addPropertyChangeListener(LocationBrowser.PROPERTY_LOCATION_SELECTED, new PropertyChangeListener() {
-			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				Location loc = locationBrowser.getBioLocation();
-				setText(loc==null?"": loc.getHierarchyFull());
-				
+
 			}
 		});
-		
+		locationBrowser.addPropertyChangeListener(LocationBrowser.PROPERTY_LOCATION_SELECTED, evt -> {
+			Location loc = locationBrowser.getBioLocation();
+
+			System.out.println("LocationTextField.LocationTextField() "+getText()+" to become "+  loc);
+
+			setText(loc==null?"": loc.getHierarchyFull());
+		});
+
 		addAncestorListener(new AncestorListener(){
 			@Override
-            public void ancestorAdded(AncestorEvent event){ hidePopup();}
+			public void ancestorAdded(AncestorEvent event){ hidePopup();}
 			@Override
-            public void ancestorRemoved(AncestorEvent event){ hidePopup();}
+			public void ancestorRemoved(AncestorEvent event){ hidePopup();}
 			@Override
-            public void ancestorMoved(AncestorEvent event){ 
-                if (event.getSource() != LocationTextField.this) hidePopup();
-            }});
-		
-		Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener() {			
-			@Override
-			public void eventDispatched(AWTEvent event) {
-				if((event instanceof MouseEvent ) && ((MouseEvent)event).getID()==MouseEvent.MOUSE_CLICKED) {
-					if(frame!=null && (event.getSource() instanceof Component) && SwingUtilities.getWindowAncestor((Component) event.getSource())!=frame &&  event.getSource()!=LocationTextField.this) {
-						hidePopup();
-					}
+			public void ancestorMoved(AncestorEvent event){
+				if (event.getSource() != LocationTextField.this) hidePopup();
+			}});
+
+		AWTEventListener listener = event-> {
+			if((event instanceof MouseEvent ) && ((MouseEvent)event).getID()==MouseEvent.MOUSE_CLICKED) {
+				if(frame!=null && (event.getSource() instanceof Component) && SwingUtilities.getWindowAncestor((Component) event.getSource())!=frame &&  event.getSource()!=LocationTextField.this) {
+					hidePopup();
 				}
 			}
-		}, AWTEvent.MOUSE_EVENT_MASK);
-		
-		
+		};
+		Toolkit.getDefaultToolkit().addAWTEventListener(listener, AWTEvent.MOUSE_EVENT_MASK);
+
+
 		setBioLocation(null);
 	}
 
-	
+
 	public void setBioLocation(Location loc) {
 		setText(loc==null?"":loc.getHierarchyFull());
 		locationBrowser.setBioLocation(loc);
 	}
-	
-	public Location getBioLocation() throws Exception {	
+
+	public Location getBioLocation() throws Exception {
 		if(isFocusOwner()) {
 			//The user is focused on the textfield and therefore still in editmode
 			try {
@@ -150,63 +144,60 @@ public class LocationTextField extends JCustomTextField {
 		}
 		return locationBrowser.getBioLocation();
 	}
-	
-	
-	
-	
-	
+
+
+
+
+
 	private JDialog frame;
-	public void hidePopup() {		
-		if(frame!=null) {				
+	public void hidePopup() {
+		if(frame!=null) {
 			frame.dispose();
 			frame = null;
 		}
 	}
-	
+
 	public void showPopup() {
-		
+
 		if(!isShowing() || frame!=null) return;
 		final Point p = LocationTextField.this.getLocationOnScreen();
-		
+
 		final JPanel panel = new JPanel(new BorderLayout());
 		panel.add(BorderLayout.CENTER, locationBrowser);
-		
 		panel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		panel.setBackground(Color.WHITE);
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				if(frame!=null) frame.dispose();
-				if(LocationTextField.this.getTopLevelAncestor() instanceof JDialog) {
-					frame = new JDialog((JDialog)LocationTextField.this.getTopLevelAncestor(), false);
-				} else if(LocationTextField.this.getTopLevelAncestor() instanceof JFrame) {
-					frame = new JDialog((JFrame)LocationTextField.this.getTopLevelAncestor(), false);
-				} else {
-					System.err.println("Invalid topparent: "+LocationTextField.this.getTopLevelAncestor());
-					return;
-				}
-				frame.setUndecorated(true);
-				frame.setContentPane(panel);
-				frame.setAlwaysOnTop(true);				
-				frame.setSize(300, 70);
-				int x = p.x;
-				int y = p.y+getBounds().height;
-				if(y+frame.getHeight()>Toolkit.getDefaultToolkit().getScreenSize().height) {
-					x = p.x+getBounds().width;
-					y = Toolkit.getDefaultToolkit().getScreenSize().height - frame.getHeight();
-				}
-				if(x+frame.getWidth()>Toolkit.getDefaultToolkit().getScreenSize().width) {
-					x = Toolkit.getDefaultToolkit().getScreenSize().width - frame.getWidth();
-				}
-				frame.setFocusableWindowState(false);
-				frame.setLocation(x, y);
-				frame.setVisible(true);
+
+		SwingUtilities.invokeLater(()-> {
+			if(frame!=null) frame.dispose();
+			if(LocationTextField.this.getTopLevelAncestor() instanceof JDialog) {
+				frame = new JDialog((JDialog)LocationTextField.this.getTopLevelAncestor(), false);
+			} else if(LocationTextField.this.getTopLevelAncestor() instanceof JFrame) {
+				frame = new JDialog((JFrame)LocationTextField.this.getTopLevelAncestor(), false);
+			} else {
+				System.err.println("Invalid topparent: "+LocationTextField.this.getTopLevelAncestor());
+				return;
 			}
+			frame.setUndecorated(true);
+			frame.setContentPane(panel);
+			frame.setAlwaysOnTop(true);
+			frame.setSize(300, 70);
+			int x = p.x;
+			int y = p.y+getBounds().height;
+			if(y+frame.getHeight()>Toolkit.getDefaultToolkit().getScreenSize().height) {
+				x = p.x+getBounds().width;
+				y = Toolkit.getDefaultToolkit().getScreenSize().height - frame.getHeight();
+			}
+			if(x+frame.getWidth()>Toolkit.getDefaultToolkit().getScreenSize().width) {
+				x = Toolkit.getDefaultToolkit().getScreenSize().width - frame.getWidth();
+			}
+			frame.setFocusableWindowState(false);
+			frame.setLocation(x, y);
+			frame.setVisible(true);
 		});
-		
+
 	}
-	
-	
+
+
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
@@ -217,10 +208,10 @@ public class LocationTextField extends JCustomTextField {
 		g.setColor(Color.LIGHT_GRAY);
 		g.drawLine(getWidth()-16, 2, getWidth()-16, getHeight()-2);
 		g.setColor(Color.BLACK);
-				
+
 		g.drawOval(getWidth()-12, 6, 8, 8);
 		g.drawOval(getWidth()-10, 8, 4, 4);
 	}
 
-	
+
 }

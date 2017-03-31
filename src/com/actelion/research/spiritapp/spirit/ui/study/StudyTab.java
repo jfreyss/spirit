@@ -45,10 +45,10 @@ import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class StudyTab extends SpiritTab implements IStudyTab {
-	
+
 	private final StudyTable studyTable = new StudyTable();
 	private final StudySearchPane searchPane;
-	
+
 	private final StudyDetailPanel studyDetailPanel = new StudyDetailPanel(JSplitPane.HORIZONTAL_SPLIT);
 
 	private boolean initialized = false;
@@ -58,27 +58,27 @@ public class StudyTab extends SpiritTab implements IStudyTab {
 		searchPane = new StudySearchPane(frame, studyTable);
 		final JScrollPane studyScrollPane = new JBGScrollPane(studyTable, 3);
 
-		
+
 		JSplitPane northPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, searchPane, studyScrollPane);
 		northPane.setDividerLocation(250);
-		
+
 		JSplitPane contentPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, northPane, studyDetailPanel);
 		contentPane.setDividerLocation(250);
 		contentPane.setOneTouchExpandable(true);
-		
+
 		studyDetailPanel.showInfos();
-		
+
 		studyTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if(e.getValueIsAdjusting()) return;
 				final List<Study> sel = studyTable.getSelection();
 				studyDetailPanel.setStudy(sel.size()==1? sel.get(0): null);
-				
+
 				frame.setStudyId(MiscUtils.flatten(Study.getStudyIds(sel)));
 			}
-		});		
-		
+		});
+
 
 		StudyActions.attachPopup(studyTable);
 		StudyActions.attachPopup(studyScrollPane);
@@ -93,9 +93,9 @@ public class StudyTab extends SpiritTab implements IStudyTab {
 
 		setLayout(new BorderLayout());
 		add(BorderLayout.CENTER, contentPane);
-		
-		
-	}	
+
+
+	}
 
 	@Override
 	public<T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
@@ -106,66 +106,65 @@ public class StudyTab extends SpiritTab implements IStudyTab {
 			studyDetailPanel.setStudy(null);
 		} else if((action==SpiritChangeType.MODEL_UPDATED || action==SpiritChangeType.MODEL_ADDED) && what==Study.class) {
 			getFrame().setStudyId(((Study)details.get(0)).getStudyId());
-//			setStudyIds(((Study)details.get(0)).getStudyId());
+			//			setStudyIds(((Study)details.get(0)).getStudyId());
 		}
-		
+
 		studyTable.reload();
 	}
-	
-//	@Override
-//	public String getStudyIds() {
-//		String studyIds = searchPane.getSearchTree().getStudyIds();
-//		if(studyIds.length()==0) {
-//			StringBuilder sb = new StringBuilder();
-//			if(studyTable.getRowCount()<=1) {
-//				for(Study study: studyTable.getRows()) {
-//					sb.append((sb.length()>0?", ":"") + study.getStudyId());
-//				}				
-//			} else {
-//				for(Study study: studyTable.getSelection()) {
-//					sb.append((sb.length()>0?", ":"") + study.getStudyId());
-//				}
-//			}
-//			studyIds = sb.toString();
-//		}
-//		return studyIds;
-//	}
-//	
-//	@Override
-//	public void setStudyIds(final String studyIds) {
-//		if(studyIds==null || studyIds.length()==0) return;		
-//		if(studyIds.equals(getStudyIds())) return; //no need to refresh
-//		
-//		this.initialized = true;
-//		searchPane.setStudyIds(studyIds);
-//		
-//		//Execute this thread after the others		
-//		new SwingWorkerExtended("Loading Studies", studyTable, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
-//			List<Study> studies;
-//			@Override
-//			protected void doInBackground() throws Exception {
-//				StudyQuery q = new StudyQuery();
-//				q.setStudyIds(studyIds);
-//				
-//				studies = DAOStudy.queryStudies(q, SpiritFrame.getUser());
-//			}
-//			@Override
-//			protected void done() {
-//				if(!studyTable.getRows().containsAll(studies)) {
-//					studyTable.setRows(studies);
-//				}
-//				studyTable.setSelection(studies);
-//			}
-//		};
-//	}
-	
-	
+
+	//	@Override
+	//	public String getStudyIds() {
+	//		String studyIds = searchPane.getSearchTree().getStudyIds();
+	//		if(studyIds.length()==0) {
+	//			StringBuilder sb = new StringBuilder();
+	//			if(studyTable.getRowCount()<=1) {
+	//				for(Study study: studyTable.getRows()) {
+	//					sb.append((sb.length()>0?", ":"") + study.getStudyId());
+	//				}
+	//			} else {
+	//				for(Study study: studyTable.getSelection()) {
+	//					sb.append((sb.length()>0?", ":"") + study.getStudyId());
+	//				}
+	//			}
+	//			studyIds = sb.toString();
+	//		}
+	//		return studyIds;
+	//	}
+	//
+	//	@Override
+	//	public void setStudyIds(final String studyIds) {
+	//		if(studyIds==null || studyIds.length()==0) return;
+	//		if(studyIds.equals(getStudyIds())) return; //no need to refresh
+	//
+	//		this.initialized = true;
+	//		searchPane.setStudyIds(studyIds);
+	//
+	//		//Execute this thread after the others
+	//		new SwingWorkerExtended("Loading Studies", studyTable, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
+	//			List<Study> studies;
+	//			@Override
+	//			protected void doInBackground() throws Exception {
+	//				StudyQuery q = new StudyQuery();
+	//				q.setStudyIds(studyIds);
+	//
+	//				studies = DAOStudy.queryStudies(q, SpiritFrame.getUser());
+	//			}
+	//			@Override
+	//			protected void done() {
+	//				if(!studyTable.getRows().containsAll(studies)) {
+	//					studyTable.setRows(studies);
+	//				}
+	//				studyTable.setSelection(studies);
+	//			}
+	//		};
+	//	}
+
+
 	@Override
 	public void setStudy(Study study) {
-		System.out.println("StudyTab.setStudy() "+study);
 		getFrame().setStudyId(study==null?"": study.getStudyId());
 		searchPane.query().afterDone(() -> {
-			studyTable.setSelection(study==null? null: Collections.singleton(study));			
+			studyTable.setSelection(study==null? null: Collections.singleton(study));
 		});
 	}
 
@@ -174,33 +173,33 @@ public class StudyTab extends SpiritTab implements IStudyTab {
 		return studyDetailPanel.getStudy()==null? null: studyDetailPanel.getStudy();
 	}
 
-	
+
 	@Override
 	public void onTabSelect() {
 		onStudySelect();
 		if(getRootPane()!=null){
-			getRootPane().setDefaultButton(searchPane.getSearchButton());		
+			getRootPane().setDefaultButton(searchPane.getSearchButton());
 			if(!initialized) {
 				searchPane.reset();
 				initialized = true;
 			}
 		}
 	}
-	
+
 	@Override
 	public void onStudySelect() {
 		String studyIds = getFrame().getStudyId();
-		if(studyIds==null || studyIds.length()==0) return;		
-		
+		if(studyIds==null || studyIds.length()==0) return;
+
 		this.initialized = true;
-		
-		//Execute this thread after the others		
+
+		//Execute this thread after the others
 		new SwingWorkerExtended("Loading Studies", studyTable, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 			List<Study> studies;
 			@Override
 			protected void doInBackground() throws Exception {
 				StudyQuery q = new StudyQuery();
-				q.setStudyIds(studyIds);				
+				q.setStudyIds(studyIds);
 				studies = DAOStudy.queryStudies(q, SpiritFrame.getUser());
 			}
 			@Override
@@ -212,6 +211,6 @@ public class StudyTab extends SpiritTab implements IStudyTab {
 			}
 		};
 	}
-	
+
 
 }

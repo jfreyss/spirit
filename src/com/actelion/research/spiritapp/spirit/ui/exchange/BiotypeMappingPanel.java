@@ -47,27 +47,27 @@ import com.actelion.research.util.ui.UIUtils;
 
 public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 	private Biotype biotype;
-	
+
 	private ImporterDlg dlg;
 	//1st line
 	private final MappingPanel biotypeMappingPanel;
 	private final BiotypeComboBox biotypeComboBox;
-	
+
 	//
 	private final JPanel centerPanel = new JPanel();
 	private final List<MappingPanel> metadataMappingPanels = new ArrayList<>();
 	private final List<JGenericComboBox<BiotypeMetadata>> metadataComboboxes = new ArrayList<>();
 	private List<BiotypeMetadata> metadatas = new ArrayList<>();
-	
+
 	public BiotypeMappingPanel(ImporterDlg dlg, Biotype fromBiotype) {
 		super(new BorderLayout());
 		this.dlg = dlg;
 		this.biotype = fromBiotype;
 
 		ExchangeMapping mapping = dlg.getMapping();
-		
+
 		List<Biotype> biotypes = Biotype.filter(DAOBiotype.getBiotypes(), fromBiotype.getCategory());
-		 
+
 		//Find metadata to be skipped
 		if(dlg.getExchange()!=null && dlg.getExchange().getBiosamples().size()>0) {
 			metadata: for (BiotypeMetadata m : biotype.getMetadata()) {
@@ -76,7 +76,7 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 					if(b.getBiotype().equals(m.getBiotype()) && b.getMetadataValue(m)!=null && b.getMetadataValue(m).length()>0) {
 						metadatas.add(m);
 						continue metadata;
-					}					
+					}
 				}
 			}
 		} else {
@@ -86,14 +86,14 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 		//Init components
 		biotypeComboBox = new BiotypeComboBox(biotypes, "Map to...");
 		biotypeMappingPanel = new MappingPanel(biotypeComboBox);
-		biotypeMappingPanel.addPropertyChangeListener(MappingPanel.PROPERTY_ACTION, new PropertyChangeListener() {			
+		biotypeMappingPanel.addPropertyChangeListener(MappingPanel.PROPERTY_ACTION, new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				updateLayout();
 			}
 		});
-		
-		biotypeComboBox.addActionListener(new ActionListener() {			
+
+		biotypeComboBox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				Biotype toBiotype = biotypeComboBox.getSelection();
@@ -101,7 +101,7 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 					BiotypeMetadata m = metadatas.get(index);
 					JGenericComboBox<BiotypeMetadata> comboBox = null;
 					if(toBiotype!=null) {
-						comboBox = new JGenericComboBox<>(toBiotype.getMetadata(), "Map to...");						
+						comboBox = new JGenericComboBox<>(toBiotype.getMetadata(), "Map to...");
 						comboBox.setSelectionString(m.getName());
 					}
 					metadataMappingPanels.get(index).setMappingComponent(comboBox);
@@ -115,13 +115,13 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 
 			}
 		});
-		
+
 		for (int index = 0; index < metadatas.size(); index++) {
 			metadataMappingPanels.add(new MappingPanel(null));
 			metadataComboboxes.add(new JGenericComboBox<BiotypeMetadata>());
 		}
-		
-		
+
+
 		//Init Layout
 		JPanel mapBiotypePanel = UIUtils.createHorizontalBox(biotypeMappingPanel, Box.createHorizontalGlue());
 		mapBiotypePanel.setOpaque(false);
@@ -129,24 +129,24 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 		JPanel panel = UIUtils.createHorizontalBox(centerPanel, Box.createGlue());
 		panel.setOpaque(true);
 		setOpaque(false);
-		
+
 		add(BorderLayout.CENTER, new JScrollPane(panel));
-		
-		
+
+
 		//Preselection
 		biotypeMappingPanel.setMappingAction(mapping.getBiotype2action().get(biotype.getName()));
 		biotypeComboBox.setSelectionString(mapping.getBiotype2mappedBiotype().get(biotype.getName())==null?"":mapping.getBiotype2mappedBiotype().get(biotype.getName()).getName());
-		if(biotypeComboBox.getSelectedIndex()>0) {
+		if(biotypeComboBox.getSelectedText().length()>0) {
 			biotypeMappingPanel.setMappingAction(EntityAction.MAP_REPLACE);
 			biotypeMappingPanel.setCreationEnabled(false);
 		} else {
 			biotypeMappingPanel.setCreationEnabled(true);
 		}
 
-		
-		updateView();		
+
+		updateView();
 	}
-	
+
 	private void updateLayout() {
 		centerPanel.removeAll();
 		List<JComponent> formComponents = new ArrayList<>();
@@ -166,39 +166,41 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 				}
 			}
 		}
-		
+
 		centerPanel.add(UIUtils.createHorizontalBox(UIUtils.createTable(formComponents), Box.createHorizontalGlue()));
-		
+
 		centerPanel.revalidate();
 	}
-	
+
+	@Override
 	public void updateView() {
 		ExchangeMapping mapping = dlg.getMapping();
 		biotypeMappingPanel.setMappingAction(mapping.getBiotype2action().get(biotype.getName()));
 		biotypeComboBox.setSelection(mapping.getBiotype2mappedBiotype().get(biotype.getName()));
-		
+
 		updateLayout();
-		
+
 	}
-	
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public void updateMapping() {
 		ExchangeMapping mapping = dlg.getMapping();
 		mapping.getBiotype2action().put(biotype.getName(), biotypeMappingPanel.getMappingAction());
 		mapping.getBiotype2mappedBiotype().put(biotype.getName(), biotypeComboBox.getSelection());
-		
+
 		for (int i = 0; i < metadatas.size(); i++) {
 			BiotypeMetadata m = metadatas.get(i);
 			MappingPanel mappingPanel = metadataMappingPanels.get(i);
 			mapping.getBiotypeMetadata2action().put(new com.actelion.research.spiritcore.util.Pair<String, String>(biotype.getName(), m.getName()), mappingPanel.getMappingAction());
-			
+
 			if(mappingPanel.getMappingComponent()!=null && mappingPanel.getMappingComponent() instanceof JGenericComboBox) {
 				JGenericComboBox<BiotypeMetadata> combobox = ((JGenericComboBox<BiotypeMetadata>) mappingPanel.getMappingComponent());
 				if(combobox.getSelection()!=null) {
-					mapping.getBiotypeMetadata2mappedBiotypeMetadata().put(new com.actelion.research.spiritcore.util.Pair<String, String>(biotype.getName(), m.getName()), combobox.getSelection());				
+					mapping.getBiotypeMetadata2mappedBiotypeMetadata().put(new com.actelion.research.spiritcore.util.Pair<String, String>(biotype.getName(), m.getName()), combobox.getSelection());
 				}
 			}
 		}
 	}
-	
+
 }

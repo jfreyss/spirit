@@ -34,7 +34,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import com.actelion.research.spiritapp.spirit.ui.result.TestChoice;
+import com.actelion.research.spiritapp.spirit.ui.result.TestComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.closabletab.JClosableTabbedPane.IClosableTab;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
@@ -55,7 +55,7 @@ public class EditResultTab extends JPanel implements IClosableTab {
 	 *
 	 */
 	private final EditResultDlg dlg;
-	private final TestChoice testChoice;
+	private final TestComboBox testComboBox;
 
 	private final EditResultTable table;
 	private JButton pivotPhases = new JIconButton(IconType.PIVOT, "Pivot by Phase");
@@ -68,7 +68,7 @@ public class EditResultTab extends JPanel implements IClosableTab {
 		table = new EditResultTable(dlg);
 		table.setCanAddRow(editResultDlg.isEditExperimentMode());
 
-		testChoice = new TestChoice();
+		testComboBox = new TestComboBox();
 
 
 		pivotPhases.setToolTipText("Enter the results using a pivoted table, with the phase as header");
@@ -76,7 +76,7 @@ public class EditResultTab extends JPanel implements IClosableTab {
 
 		//top results panel
 		add(BorderLayout.NORTH, UIUtils.createHorizontalBox(
-				new JLabel("Test:"), testChoice,
+				new JLabel("Test:"), testComboBox,
 				Box.createHorizontalGlue(),
 				pivotPhases, pivotInput));
 
@@ -86,7 +86,7 @@ public class EditResultTab extends JPanel implements IClosableTab {
 		setPreferredSize(new Dimension(500, 200));
 
 
-		testChoice.addActionListener(e-> {
+		testComboBox.addTextChangeListener(e-> {
 			eventTestChanged();
 		});
 
@@ -116,7 +116,7 @@ public class EditResultTab extends JPanel implements IClosableTab {
 	}
 
 	public void resetTabName() {
-		Test test = testChoice.getSelection();
+		Test test = testComboBox.getSelection();
 
 		int sel = -1;
 		for(int i=0; i<dlg.getTabbedPane().getTabCount(); i++) {
@@ -146,13 +146,13 @@ public class EditResultTab extends JPanel implements IClosableTab {
 			}
 		}
 
-		Test test = testChoice.getSelection();
+		Test test = testComboBox.getSelection();
 		resetTabName();
 		try {
 
 			if(test==null && previousTest!=null) {
 				JExceptionDialog.showError(this, "You must select a test");
-				testChoice.setSelection(previousTest);
+				testComboBox.setSelection(previousTest);
 				return;
 			}
 
@@ -175,14 +175,14 @@ public class EditResultTab extends JPanel implements IClosableTab {
 	}
 
 	public void setTest(Test test) {
-		testChoice.setSelection(test);
+		testComboBox.setSelection(test);
 		table.updateModel(test);
 		table.getModel().fireTableDataChanged();
 	}
 
 	public void setResults(List<Result> results) {
 		Collections.sort(results);
-		testChoice.setEnabled(true);
+		testComboBox.setEnabled(true);
 		Test test = null;
 		//		Study study = null;
 		//		Biosample firstBiosample = null;
@@ -209,9 +209,9 @@ public class EditResultTab extends JPanel implements IClosableTab {
 
 		//Set the test
 		if(test==null) {
-			test = testChoice.getSelection(); //get default selection
+			test = testComboBox.getSelection(); //get default selection
 		} else {
-			testChoice.setSelection(test);
+			testComboBox.setSelection(test);
 		}
 
 		//Update the model
@@ -266,8 +266,8 @@ public class EditResultTab extends JPanel implements IClosableTab {
 		return table;
 	}
 
-	public TestChoice getTestChoice() {
-		return testChoice;
+	public TestComboBox getTestChoice() {
+		return testComboBox;
 	}
 
 

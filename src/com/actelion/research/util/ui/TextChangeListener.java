@@ -25,7 +25,6 @@ import java.util.EventListener;
 
 import javax.swing.JComponent;
 
-@FunctionalInterface
 public interface TextChangeListener extends EventListener {
 	/**
 	 * Only called when changed to a new value

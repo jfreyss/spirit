@@ -24,10 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui.location;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,10 +35,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.SpiritTab;
@@ -69,7 +61,7 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class LocationTab extends SpiritTab {
-	
+
 	//West Components
 	private final JSplitPane westPane;
 	private LocationSearchPane searchPane;
@@ -77,128 +69,113 @@ public class LocationTab extends SpiritTab {
 
 	//East Components
 	private LocationBrowser locationBrowser = new LocationBrowser();
-	private JTabbedPane tabbedPane = new JCustomTabbedPane(JTabbedPane.BOTTOM);	
+	private JTabbedPane tabbedPane = new JCustomTabbedPane(JTabbedPane.BOTTOM);
 	private LocationDepictor locationDepictor = new LocationDepictor();
 	private BiosampleTable biosampleTable = new BiosampleTable();
 	private boolean first = true;
 	private int push = 0;
-	
+
 	public LocationTab(SpiritFrame frame) {
 		this(frame, null);
 	}
-	
-	public LocationTab(SpiritFrame frame, Biotype forcedBiotype) {		
+
+	public LocationTab(SpiritFrame frame, Biotype forcedBiotype) {
 		super(frame, "Locations", IconType.LOCATION.getIcon());
 
 		searchPane = new LocationSearchPane(frame, forcedBiotype);
-		
+
 		locationDepictor.setDisplayChildren(true);
 		locationDepictor.setShowOneEmptyPosition(false);
-				
-		//Layout
+
+		//Graphical or biosample tab
 		tabbedPane.add("Graphical", locationDepictor);
-		tabbedPane.add("Biosamples", new JScrollPane(biosampleTable));		
-		tabbedPane.addChangeListener(new ChangeListener() {			
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				//Memorize the selection
-				List<Biosample> selection;
-				if(tabbedPane.getSelectedIndex()==0) {
-					selection = biosampleTable.getSelection(); 
-				} else {
-					selection = Container.getBiosamples(locationDepictor.getSelectedContainers());					
-				}
-				
-				//Update
-				updateDepictorOrTable();
+		tabbedPane.add("Biosamples", new JScrollPane(biosampleTable));
+		tabbedPane.addChangeListener(e-> {
+			//Memorize the selection
+			List<Biosample> selection;
+			if(tabbedPane.getSelectedIndex()==0) {
+				selection = biosampleTable.getSelection();
+			} else {
+				selection = Container.getBiosamples(locationDepictor.getSelectedContainers());
+			}
 
-				//Keep the selection
-				if(tabbedPane.getSelectedIndex()==0) {
-					locationDepictor.setSelectedContainers(Biosample.getContainers(selection));
-				} else {
-					biosampleTable.setSelection(selection);					
-				}
-				
+			//Update
+			updateDepictorOrTable();
 
+			//Keep the selection
+			if(tabbedPane.getSelectedIndex()==0) {
+				locationDepictor.setSelectedContainers(Biosample.getContainers(selection));
+			} else {
+				biosampleTable.setSelection(selection);
 			}
 		});
-		
+
+		//CSV Export
 		JButton csvButton = new JIconButton(IconType.CSV, "CSV");
-		csvButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					if(tabbedPane.getSelectedIndex()==0) {
-						CSVUtils.exportToCsv(locationDepictor.getLocationLayout());
-					} else {
-						CSVUtils.exportToCsv(biosampleTable.getTabDelimitedTable());
-					}
-				} catch(Exception ex) {
-					JExceptionDialog.showError(ex);
+		csvButton.addActionListener(e-> {
+			try {
+				if(tabbedPane.getSelectedIndex()==0) {
+					CSVUtils.exportToCsv(locationDepictor.getLocationLayout());
+				} else {
+					CSVUtils.exportToCsv(biosampleTable.getTabDelimitedTable());
 				}
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});
-		
+
+		//Excel Export
 		JButton excelButton = new JIconButton(IconType.EXCEL, "XLS");
-		excelButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					if(tabbedPane.getSelectedIndex()==0) {
-						String[][] layout = locationDepictor.getLocationLayout();
-						if(layout==null) throw new Exception("You cannot export the layout if there are biosamples");
-						POIUtils.exportToExcel(layout, POIUtils.ExportMode.HEADERS_TOPLEFT);
-					} else {
-						POIUtils.exportToExcel(biosampleTable.getTabDelimitedTable(), POIUtils.ExportMode.HEADERS_TOP);
-					}
-				} catch(Exception ex) {
-					JExceptionDialog.showError(ex);
+		excelButton.addActionListener(e-> {
+			try {
+				if(tabbedPane.getSelectedIndex()==0) {
+					String[][] layout = locationDepictor.getLocationLayout();
+					if(layout==null) throw new Exception("You cannot export the layout if there are biosamples");
+					POIUtils.exportToExcel(layout, POIUtils.ExportMode.HEADERS_TOPLEFT);
+				} else {
+					POIUtils.exportToExcel(biosampleTable.getTabDelimitedTable(), POIUtils.ExportMode.HEADERS_TOP);
 				}
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});
-		
+
 		JPanel buttonsPanel = createButtonsPanel();
 		JPanel locationPanel = UIUtils.createBox(
-				tabbedPane, 
+				tabbedPane,
 				UIUtils.createBox(locationBrowser, null, null, null, UIUtils.createHorizontalBox(locationDepictor.createZoomPanel(), csvButton, excelButton)),
 				buttonsPanel==null? null: buttonsPanel);
-		
+
 		westPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, searchPane, detailPane);
 		JSplitPane contentPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, westPane, locationPanel);
-		
+
 		westPane.setDividerLocation(1200);
 		westPane.setOneTouchExpandable(true);
 		contentPane.setDividerLocation(300);
 		contentPane.setOneTouchExpandable(true);
-		
+
 		//If a query is made, restricts the displayed locations to the result's location
-		searchPane.addPropertyChangeListener(LocationSearchPane.PROPERTY_QUERIED, new PropertyChangeListener() {			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				detailPane.setBiosamples(null);
-				locationDepictor.setAcceptedAdminLocations(searchPane.getLocationQuery().isEmpty()? null: searchPane.getAcceptedAdminLocations());
-			}
+		searchPane.addPropertyChangeListener(LocationSearchPane.PROPERTY_QUERIED,  evt-> {
+			detailPane.setBiosamples(null);
+			locationDepictor.setAcceptedAdminLocations(searchPane.getLocationQuery().isEmpty()? null: searchPane.getAcceptedAdminLocations());
 		});
 
 		//If the locationBrowser is changed, update the location
-		locationBrowser.addPropertyChangeListener(LocationBrowser.PROPERTY_LOCATION_SELECTED, new PropertyChangeListener() {			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {				
-				searchPane.getLocationTable().addRow(locationBrowser.getBioLocation());
-				setBioLocation(locationBrowser.getBioLocation());
-			}
+		locationBrowser.addPropertyChangeListener(LocationBrowser.PROPERTY_LOCATION_SELECTED, evt-> {
+			searchPane.getLocationTable().addRow(locationBrowser.getBioLocation());
+			setBioLocation(locationBrowser.getBioLocation());
 		});
-		
+
 		//hide or show the selected biosamples if a selection is made
-		locationDepictor.addRackDepictorListener(new RackDepictorListener() {			
+		locationDepictor.addRackDepictorListener(new RackDepictorListener() {
 			@Override
-			public void onSelect(Collection<Integer> pos, Container lastSelect, boolean dblClick) {		
+			public void onSelect(Collection<Integer> pos, Container lastSelect, boolean dblClick) {
 				Set<Container> sel = locationDepictor.getSelectedContainers();
 				if(sel.size()==1 && SpiritRights.canReadBiosamples(sel.iterator().next().getBiosamples(), SpiritFrame.getUser())) {
 					if(westPane.getDividerLocation()>getHeight()-100) {
 						westPane.setDividerLocation(580);
 					}
-					detailPane.setBiosamples(sel.iterator().next().getBiosamples());					
+					detailPane.setBiosamples(sel.iterator().next().getBiosamples());
 				} else {
 					if(westPane.getDividerLocation()<getHeight()-100) {
 						westPane.setDividerLocation(2400);
@@ -209,64 +186,57 @@ public class LocationTab extends SpiritTab {
 			@Override
 			public void locationSelected(final Location location) {
 				setBioLocation(location);
-			}				
+			}
 			@Override
 			public void onPopup(Collection<Integer> pos, Container lastSelect, Component comp, Point point) {
 				Set<Container> containers = locationDepictor.getSelectedContainers();
-				if(pos.size()>0) {					
+				if(pos.size()>0) {
 					ContainerActions.createPopup(containers).show(comp, point.x, point.y);
-				}				
+				}
 			}
 			@Override
 			public void locationPopup(Location location, Component comp, Point point) {
 				LocationActions.createPopup(location).show(comp, point.x, point.y);
 			}
 		});
-		
+
 		BiosampleActions.attachPopup(biosampleTable);
 
 		//Link the BiosampleTable to the depictor
-		searchPane.getLocationTable().getSelectionModel().addListSelectionListener(new ListSelectionListener() {			
-			@Override
-			public void valueChanged(ListSelectionEvent e) {	
-				if(e.getValueIsAdjusting()) return;
-				if(push>0) return;
-				List<Location> selection = searchPane.getLocationTable().getSelection();
-				if(selection.size()==1) {
-					Location sel = selection.size()==1? selection.get(0): null;
-					setBioLocation(sel, -1, true);
-				} else {
-					locationBrowser.setBioLocation(null);
-					setBioLocation(null, -1, true);
-				}
+		searchPane.getLocationTable().getSelectionModel().addListSelectionListener(e->{
+			if(e.getValueIsAdjusting()) return;
+			if(push>0) return;
+			List<Location> selection = searchPane.getLocationTable().getSelection();
+			if(selection.size()==1) {
+				Location sel = selection.size()==1? selection.get(0): null;
+				setBioLocation(sel, -1, true);
+			} else {
+				locationBrowser.setBioLocation(null);
+				setBioLocation(null, -1, true);
 			}
 		});
-		
+
 		//Link the biosampleTab view to the graphicalTab view
-		biosampleTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {			
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if(e.getValueIsAdjusting()) return;
-				
-				if(biosampleTable.getSelection().size()>0 && SpiritRights.canReadBiosamples(biosampleTable.getSelection(), SpiritFrame.getUser())) {
-					if(westPane.getDividerLocation()>getHeight()-100) {
-						westPane.setDividerLocation(580);
-					}
-					detailPane.setBiosamples(biosampleTable.getSelection());
-				} else {
-					if(westPane.getDividerLocation()<getHeight()-100) {
-						westPane.setDividerLocation(2400);
-					}
-					detailPane.setBiosamples(null);
+		biosampleTable.getSelectionModel().addListSelectionListener(e-> {
+			if(e.getValueIsAdjusting()) return;
+
+			if(biosampleTable.getSelection().size()>0 && SpiritRights.canReadBiosamples(biosampleTable.getSelection(), SpiritFrame.getUser())) {
+				if(westPane.getDividerLocation()>getHeight()-100) {
+					westPane.setDividerLocation(580);
 				}
+				detailPane.setBiosamples(biosampleTable.getSelection());
+			} else {
+				if(westPane.getDividerLocation()<getHeight()-100) {
+					westPane.setDividerLocation(2400);
+				}
+				detailPane.setBiosamples(null);
 			}
 		});
-		
+
 		setLayout(new BorderLayout());
 		add(BorderLayout.CENTER, contentPane);
-			
-	}	
-	
+	}
+
 	/**
 	 * Set the location for this tab, by updating the table, the browser, and the locationdepictor
 	 * @param location
@@ -274,9 +244,9 @@ public class LocationTab extends SpiritTab {
 	public void setBioLocation(final Location location) {
 		setBioLocation(location, -1, false);
 	}
-	
+
 	public void setBioLocation(final Location location, final int pos) {
-		setBioLocation(location, pos, false);		
+		setBioLocation(location, pos, false);
 	}
 
 	private void setBioLocation(final Location location, final int pos, final boolean onlySetDepictorPosition) {
@@ -291,19 +261,18 @@ public class LocationTab extends SpiritTab {
 				if(location!=null && !onlySetDepictorPosition) {
 					searchPane.getLocationTable().setSelection(Collections.singletonList(location));
 				}
-				
+
 				//Update the browser
 				locationBrowser.setBioLocation(location);
 				locationDepictor.setSelectedPoses(null);
-				
+
 				//Update the depictor
 				updateDepictorOrTable();
 				if(pos>=0) locationDepictor.setSelectedPoses(Collections.singletonList(pos));
 			}
 		};
-
 	}
-		
+
 	/**
 	 * Precondition: locationBrowser.location is set
 	 * Recreate the LocationDepictor or the table (depending which one is visible)
@@ -312,7 +281,7 @@ public class LocationTab extends SpiritTab {
 		Location location = locationBrowser.getBioLocation();
 		if(tabbedPane.getSelectedIndex()==0) {
 			locationDepictor.setBioLocation(location);
-		} else {			
+		} else {
 			List<Biosample> biosamples = new ArrayList<>();
 			if(location!=null) {
 				for (Biosample b: location.getBiosamples()) {
@@ -324,26 +293,27 @@ public class LocationTab extends SpiritTab {
 			Collections.sort(biosamples, Biosample.COMPARATOR_POS);
 			biosampleTable.setRows(biosamples);
 		}
-		
 	}
-	
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
 		if(!isShowing()) return;
-				
+
 		if(what==Location.class && action==SpiritChangeType.MODEL_DELETED) {
 			//Remove the locations
 			List<Location> locs = (List<Location>) details;
-			
+			System.out.println("LocationTab.fireModelChanged() remove"+locs);
+
 			//Refresh their parent
 			List<Location> parents = JPAUtil.reattach(Location.getParents(locs));
 			List<Location> rows = new ArrayList<>(searchPane.getLocationTable().getRows());
+			System.out.println("LocationTab.fireModelChanged(1) "+rows);
 			rows.removeAll(locs);
 			rows = JPAUtil.reattach(rows);
 			searchPane.getLocationTable().setRows(rows);
-			
+			System.out.println("LocationTab.fireModelChanged(2) "+rows);
+
 			//Set the active location: parent
 			Location parent = parents.size()==0? null: parents.get(0);
 			setBioLocation(parent);
@@ -351,45 +321,46 @@ public class LocationTab extends SpiritTab {
 			//Reload the locations
 			List<Location> locs = (List<Location>) details;
 			locs = JPAUtil.reattach(locs);
-			
+
 			//Add the parents
 			for (Location l : new ArrayList<>(locs)) {
 				if(l!=null && l.getParent()!=null && !locs.contains(l.getParent())) {
 					locs.add(l.getParent());
 				}
 			}
-			
+
 			//Refresh location or parents
 			List<Location> rows = new ArrayList<>(searchPane.getLocationTable().getRows());
 			rows = JPAUtil.reattach(rows);
 			rows.addAll(locs);
-			searchPane.getLocationTable().setRows(rows);	
+			searchPane.getLocationTable().setRows(rows);
 
 			//Set the active location: parent
 			if(action==SpiritChangeType.MODEL_ADDED) {
-				setBioLocation(locs.size()>=1 && locs.get(0).getParent()!=null? locs.get(0).getParent(): null);				
+				setBioLocation(locs.size()>=1 && locs.get(0).getParent()!=null? locs.get(0).getParent(): null);
 			} else {
 				setBioLocation(locs.size()>=1? locs.get(0): null);
 			}
-		} 
-		Location l = locationDepictor.getBioLocation();
-		l = JPAUtil.reattach(l);
-		Collection<Container> sel = locationDepictor.getSelectedContainers();		
+		} else {
+			Location l = locationDepictor.getBioLocation();
+			l = JPAUtil.reattach(l);
+			Collection<Container> sel = locationDepictor.getSelectedContainers();
 
-		
-		//Refresh the loc (set null first to be sure to trigger a change)
-		locationDepictor.setSelectedContainers(sel);
-		setBioLocation(l);
+
+			//Refresh the loc (set null first to be sure to trigger a change)
+			locationDepictor.setSelectedContainers(sel);
+			setBioLocation(l);
+		}
 	}
-	
+
 	public LocationDepictor getLocationDepictor() {
 		return locationDepictor;
 	}
-	
+
 	public List<Location> getLocations() {
 		return searchPane.getLocationTable().getRows();
 	}
-	
+
 	/**
 	 * To be overriden by classes to get a custom button panel
 	 * @return
@@ -401,7 +372,7 @@ public class LocationTab extends SpiritTab {
 	@Override
 	public void onTabSelect() {
 		if(getRootPane()!=null){
-			getRootPane().setDefaultButton(searchPane.getSearchButton());		
+			getRootPane().setDefaultButton(searchPane.getSearchButton());
 		}
 		if(first) {
 			first = false;
@@ -412,12 +383,12 @@ public class LocationTab extends SpiritTab {
 			}
 		}
 	}
-	
+
 	@Override
-	public void onStudySelect() {		
+	public void onStudySelect() {
 		searchPane.query();
 	}
-	
-	
-	
+
+
+
 }

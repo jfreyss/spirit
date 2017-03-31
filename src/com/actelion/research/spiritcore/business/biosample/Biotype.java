@@ -25,8 +25,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -68,47 +68,47 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	public static final String ANIMAL = "Animal";
 	public static final String DATEOFDEATH = "DateOfDeath";
 	public static final String STAINING = "Staining";
-	
+
 	@Id
 	@SequenceGenerator(name="biotype_sequence", sequenceName="biotype_sequence", allocationSize=1)
 	@GeneratedValue(generator="biotype_sequence")
 	@Column(name="id")
 	private int id = 0;
-	
+
 	@Column(name="name")
 	private String name = "";
-	
-	@ManyToOne(fetch=FetchType.LAZY)	
+
+	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="parent_id")
-	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Biotype parent = null;
-	
-	@OneToMany(fetch=FetchType.LAZY, mappedBy="parent")	
-	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
+
+	@OneToMany(fetch=FetchType.LAZY, mappedBy="parent")
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Set<Biotype> children = new HashSet<>();
-	
+
 	@Column(nullable=false, name="cat")
 	@Enumerated(EnumType.STRING)
 	private BiotypeCategory category = null;
-	
+
 	@OneToMany(fetch=FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval=true, mappedBy="biotype")
 	@OrderBy("index, name")
-	@BatchSize(size=8) 
+	@BatchSize(size=8)
 	@Audited(targetAuditMode=RelationTargetAuditMode.AUDITED)
 	private Set<BiotypeMetadata> metadata = new LinkedHashSet<>();
-	
+
 	/**
 	 * Not null, if the biosample has a name
 	 */
 	@Column(name="namelabel", length=30, nullable=true)
 	private String sampleNameLabel = null;
-	
+
 	private Boolean nameRequired = Boolean.FALSE;
-	
+
 	private Boolean nameAutocomplete = Boolean.FALSE;
-	
+
 	private Boolean nameUnique = Boolean.FALSE;
-	
+
 	private Boolean hideSampleId = Boolean.TRUE;
 
 	private Boolean hideContainer = Boolean.FALSE;
@@ -117,32 +117,32 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	 * The barcode prefix
 	 */
 	private String prefix = null;
-		
+
 	/**
 	 * If an amount has to be stored and in which unit
 	 */
 	@Enumerated(EnumType.STRING)
 	@Column(name="amountunit", nullable=true, length=10)
 	private AmountUnit amountUnit;
-	
+
 	/**
 	 * The default containerType (if any)
 	 */
 	@Enumerated(EnumType.STRING)
 	private ContainerType containerType;
-	
+
 	/**
 	 * An abstract biotype cannot have containers/locations
 	 */
-	private boolean isAbstract = true;
-	
+	private boolean isAbstract = false;
+
 	/**
 	 * A hidden biotype can only be seen by an admin
 	 */
 	private boolean isHidden = false;
-	
+
 	private String updUser;
-	
+
 	private String creUser;
 
 	@Temporal(TemporalType.TIMESTAMP)
@@ -150,19 +150,19 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date updDate = new Date();
-	
-	
+
+
 	/**Attributes used for displaying the hierarchy*/
 	private transient int depth;
 
 	public Biotype() {
-		
+
 	}
 	public Biotype(String name) {
 		this.name = name;
 	}
-	
-	@PrePersist	
+
+	@PrePersist
 	void preUpdate() {
 		Set<BiotypeMetadata> mts = metadata;
 		metadata = new TreeSet<BiotypeMetadata>();
@@ -177,15 +177,16 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	public int getId() {
 		return id;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
+	@Override
 	public void setId(int id) {
 		this.id = id;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -201,31 +202,31 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	public void setMetadata(Set<BiotypeMetadata> metadata) {
 		this.metadata = metadata;
 	}
-	
+
 	public Set<BiotypeMetadata> getMetadata() {
 		return metadata;
 	}
-	
+
 	public BiotypeMetadata getMetadata(String name) {
 		for (BiotypeMetadata bm : getMetadata()) {
 			if(bm.getName().equals(name)) return bm;
 		}
 		return null;
 	}
-	
+
 	public BiotypeMetadata getMetadata(int id) {
 		for (BiotypeMetadata bm : getMetadata()) {
 			if(bm.getId()==id) return bm;
 		}
 		return null;
 	}
-	
+
 	@Override
 	public String toString() {
 		return name;
 	}
 
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof Biotype)) return false;
@@ -238,7 +239,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 			return (getName()==null && t2.getName()==null) || (getName()!=null && getName().equals(t2.getName()));
 		}
 	}
-	
+
 	public void setPrefix(String prefix) {
 		this.prefix = prefix;
 	}
@@ -246,7 +247,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	public String getPrefix() {
 		return prefix;
 	}
-	
+
 	private List<Biotype> getAncestors() {
 		LinkedList<Biotype> res = new LinkedList<>();
 		Biotype b = this;
@@ -261,28 +262,28 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	public int compareTo(Biotype o) {
 		if(this.equals(o)) return 0;
 		if(o==null) return 1;
-		
+
 		List<Biotype> l1 = getAncestors();
 		List<Biotype> l2 = o.getAncestors();
-		
+
 		for (int i = 0; i<l1.size() || i<l2.size(); i++) {
 			if(i>=l1.size()) return -1;
 			if(i>=l2.size()) return 1;
-			
+
 			Biotype b1 = l1.get(i);
 			Biotype b2 = l2.get(i);
-			
+
 			int c = b1.isHidden()? (b2.isHidden()?0: 1): (b2.isHidden()?-1: 0);
 			if(c!=0) return c;
-			
+
 			c = b1.getCategory()==null? (b2.getCategory()==null?0: 1): b1.getCategory().compareTo(b2.getCategory());
 			if(c!=0) return c;
-			
+
 			c = b1.getName().compareToIgnoreCase(b2.getName());
 			if(c!=0) return c;
 		}
 		return 0;
-		
+
 	}
 
 	/**
@@ -312,7 +313,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	public Biotype getParent() {
 		return parent;
 	}
-	
+
 	/**
 	 * @return the parent
 	 */
@@ -332,7 +333,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	public void setDepth(int depth) {
 		this.depth = depth;
 	}
-	
+
 	@PreRemove
 	public void remove() {
 		parent = null;
@@ -354,22 +355,22 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 		this.containerType = containerType;
 	}
 
-//	public boolean isAliquotType() {
-//		return aliquotType;
-//	}
-//	public void setAliquotType(boolean aliquotType) {
-//		this.aliquotType = aliquotType;
-//	}
+	//	public boolean isAliquotType() {
+	//		return aliquotType;
+	//	}
+	//	public void setAliquotType(boolean aliquotType) {
+	//		this.aliquotType = aliquotType;
+	//	}
 
-//	@Override
-//	public Biotype clone() {
-//		try {
-//			return (Biotype) super.clone();
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//			return null;
-//		}
-//	}
+	//	@Override
+	//	public Biotype clone() {
+	//		try {
+	//			return (Biotype) super.clone();
+	//		} catch (Exception e) {
+	//			e.printStackTrace();
+	//			return null;
+	//		}
+	//	}
 
 	/**
 	 * The label is the name given to the main attribute, used to define the sample.
@@ -405,31 +406,32 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	public int hashCode() {
 		return id>0? (int)(id%Integer.MAX_VALUE): name==null?0: name.hashCode();
 	}
-	
+
 	public void setNameAutocomplete(boolean nameAutocomplete) {
 		this.nameAutocomplete = nameAutocomplete;
 	}
-	
+
 	public boolean isNameAutocomplete() {
 		return nameAutocomplete == Boolean.TRUE;
 	}
-	
+
 	public void setNameUnique(Boolean nameUnique) {
 		this.nameUnique = nameUnique;
 	}
-	
+
 	public boolean isNameUnique() {
 		return nameUnique == Boolean.TRUE;
 	}
-	
+
 	public void setNameRequired(boolean nameAutocomplete) {
 		this.nameRequired = nameAutocomplete;
 	}
-	
+
 	public boolean isNameRequired() {
 		return nameRequired == Boolean.TRUE;
 	}
 
+	@Override
 	public String getUpdUser() {
 		return updUser;
 	}
@@ -454,6 +456,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 		this.creDate = creDate;
 	}
 
+	@Override
 	public Date getUpdDate() {
 		return updDate;
 	}
@@ -461,19 +464,19 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	public void setUpdDate(Date updDate) {
 		this.updDate = updDate;
 	}
-	
+
 	public void setHideSampleId(boolean hideSampleId) {
 		this.hideSampleId = hideSampleId;
 	}
-	
+
 	public boolean isHideSampleId() {
 		return hideSampleId==Boolean.TRUE;
 	}
-	
+
 	public void setHideContainer(boolean hideContainer) {
 		this.hideContainer = hideContainer;
 	}
-	
+
 	public boolean isHideContainer() {
 		return hideContainer==Boolean.TRUE;
 	}
@@ -481,9 +484,9 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	public Set<Biotype> getChildren() {
 		return children;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param biotypes
 	 * @param cat
 	 * @return
@@ -496,7 +499,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 		}
 		return res;
 	}
-	
+
 	/**
 	 * Removes the abstract biotypes, and returns a new list
 	 * @param biotypes
@@ -510,7 +513,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 		}
 		return res;
 	}
-	
+
 	/**
 	 * Removes the hidden biotypes, and returns a new list
 	 * @param biotypes
@@ -526,24 +529,22 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	}
 
 	public static Map<String, Biotype> mapName(Collection<Biotype> biotypes){
-		Map<String, Biotype> res = new HashMap<>();
+		Map<String, Biotype> res = new LinkedHashMap<>();
 		if(biotypes==null) return res;
 		for (Biotype s : biotypes) {
 			res.put(s.getName(), s);
 		}
 		return res;
 	}
-	
-	/**
-	 * Used for debug
-	 * @return
-	 */
-	public String getMetadataIds() {
-		String s = "";
-		for (BiotypeMetadata bm : getMetadata()) {
-			s+="["+bm.getId()+"]"+bm.getName()+",";
+
+	public static List<String> getNames(Collection<Biotype> biotypes){
+		List<String> res = new ArrayList<>();
+		if(biotypes==null) return res;
+		for (Biotype s : biotypes) {
+			res.add(s.getName());
 		}
-		return s.length()==0?"": s.substring(0, s.length()-1);
+		return res;
 	}
-	
+
+
 }

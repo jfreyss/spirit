@@ -105,12 +105,12 @@ public class SampleIdLabel extends JComponentNoRepaint {
 			int groupWidth = !displayGroup || biosample.getInheritedGroup()==null || biosample.getInheritedGroup()==null? 0:
 				Math.max(30, getFontMetrics(FastFont.MEDIUM).stringWidth(biosample.getInheritedGroup().getShortName() + "_" + biosample.getInheritedPhaseString()));
 			boolean paintName = displayName && (biosample.getBiotype()==null || biosample.getBiotype().getSampleNameLabel()!=null);
-			int sampleIdWidth = getFontMetrics(FastFont.REGULAR.increaseSize(sizeIncrement)).stringWidth(biosample.getSampleId()==null?"": biosample.getSampleId());
+			int sampleIdWidth = getFontMetrics((highlight?FastFont.BOLD: FastFont.REGULAR).increaseSize(sizeIncrement)).stringWidth(biosample.getSampleId()==null?"": biosample.getSampleId());
 			int extraDisplayWidth = extraDisplay!=null && extraSameLine? getFontMetrics(FastFont.REGULAR.increaseSize(sizeIncrement)).stringWidth(" | " + (extraDisplay.getValue(biosample)==null?"":extraDisplay.getValue(biosample))): 0;
 			int nameWidth = paintName? getFontMetrics((highlight? FastFont.BOLD: FastFont.REGULAR).increaseSize(sizeIncrement)).stringWidth(biosample.getSampleName()==null || biosample.getSampleName()==null?"": biosample.getSampleName()): 0;
 			textWidth = Math.max(sampleIdWidth + groupWidth, nameWidth + extraDisplayWidth);
 
-			preferredWidth =  iconW + 6 + textWidth;
+			preferredWidth =  iconW + 8 + textWidth;
 
 			if(preferredWidth>350) preferredWidth = 350;
 		}

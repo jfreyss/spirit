@@ -49,9 +49,9 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.column.NamedSamplingC
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
+import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBarcode;
@@ -66,48 +66,48 @@ import com.actelion.research.util.ui.UIUtils;
 
 public class CreateSamplesHelper {
 
-	
+
 	/**
 	 * After each modification of the sampling in the study design, the samples have to be created, this is checked and done through this function.
 	 * This function has to be called everytime something has to be done on the samples (the user may not understand the different between the design and the concrete object)
-	 * 
+	 *
 	 * Read access is necessary
 	 * The study must allow the synchronization of samples
-	 * 
-	 * 
+	 *
+	 *
 	 * @param study
 	 * @return boolean - false if the study is not consistent and the user refused the creation of objects, true if it it consistent
 	 */
 	public static boolean synchronizeSamples(Study study) throws Exception {
-		
+
 		if(study==null) return true;
 		if(!study.isSynchronizeSamples()) return true;
-		
+
 		//Check user rights, read access is enough, because this function only mimics what is in the design.
-		if(!SpiritRights.canExpert(study, SpiritFrame.getUser())) throw new Exception("You must have read access on "+study);		
-				
+		if(!SpiritRights.canExpert(study, SpiritFrame.getUser())) throw new Exception("You must have read access on "+study);
+
 		try {
 			JPAUtil.pushEditableContext(SpiritFrame.getUser());
-		
+
 			study = JPAUtil.reattach(study);
-			
-			
+
+
 			final List<Biosample> toAdd = new ArrayList<>();
 			final List<Biosample> toUpdate = new ArrayList<>();
 			final List<Biosample> toQuestionable = new ArrayList<>();
 			final List<Biosample> toDelete = new ArrayList<>();
-			
+
 			//check existence of samples from sampling template
 			List<Biosample> allNeeded = BiosampleCreationHelper.processTemplateInStudy(study, null, null, null, null);
 			LoggerFactory.getLogger(CreateSamplesHelper.class).debug("allNeeded="+allNeeded);
 
 			////////////////////////////////////////
-			
+
 			//Check dividing samples to be added
 			List<Biosample> dividingBiosamplesToRemove = new ArrayList<Biosample>();
 			toAdd.addAll(BiosampleCreationHelper.processDividingSamples(study, dividingBiosamplesToRemove));
 			toDelete.addAll(dividingBiosamplesToRemove);
-											
+
 			//First filter: Find which ones must be deleted or created based on their status and their existence
 			for (Biosample b : allNeeded) {
 				boolean dead = b.getTopParentInSameStudy().getStatus()==Status.KILLED || b.getTopParentInSameStudy().getStatus()==Status.DEAD;
@@ -123,31 +123,31 @@ public class CreateSamplesHelper {
 						toAdd.add(b);
 					}
 				}
-			}			
-			
+			}
+
 			//Create Barcodes
-			for (Biosample b : toAdd) {				
+			for (Biosample b : toAdd) {
 				if(b.getSampleId()==null || b.getSampleId().length()==0) {
 					b.setSampleId(DAOBarcode.getNextId(b.getBiotype()));
-				}						
-			}		
-			
+				}
+			}
+
 			////////////////////////////////////////
 			//Check samples to be deleted
 			for(Biosample top: study.getTopAttachedBiosamples()) {
 				//Skip dead/necropsied/...
+				if(!top.getStatus().isAvailable()) continue;
+
 				for(Biosample sample: top.getHierarchy(HierarchyMode.ATTACHED_SAMPLES)) {
-					
-					System.out.println("CreateSamplesHelper.synchronizeSamples() "+sample);//SER002316
-					if(sample.getInheritedGroup()==null) continue; //Reserve -> Skip already created samples
+					if(sample.getInheritedGroup()==null) continue; //Reserve -> Skip
 					if(sample.getInheritedPhase()==null) continue; //No Phase -> Skip
-					if(sample.getAttachedSampling()==null) continue; //No sampling, should not happen here 
+					if(sample.getAttachedSampling()==null) continue; //No sampling -> Skip (should not happen because we loop through attached samples)
 					if(!allNeeded.contains(sample)) toDelete.add(sample);
 				}
 			}
-			
-			
-			//Find samples that may have been moved. 
+
+
+			//Find samples that may have been moved.
 			//find samples where the topSample may have been moved to a new group/subgroup: ie there is a sample to delete, matching a sample in toadd, with the same biotype, metadata
 			ListHashMap<Biosample, Biosample> top2toAddSamples = new ListHashMap<>();
 			for (Biosample b : toAdd) {
@@ -159,7 +159,7 @@ public class CreateSamplesHelper {
 				assert b.getTopParentInSameStudy()!=null;
 				if(top2toAddSamples.get(b.getTopParentInSameStudy())!=null) {
 					for (Biosample b2 : top2toAddSamples.get(b.getTopParentInSameStudy())) {
-						
+
 						if(!b.getAttachedSampling().equals(b2.getAttachedSampling())) continue;
 						if(!b.getBiotype().equals(b2.getBiotype())) continue;
 						String cmt1 = b.getInfos(EnumSet.of(InfoFormat.METATADATA, InfoFormat.COMMENTS));
@@ -175,26 +175,26 @@ public class CreateSamplesHelper {
 					toAdd.remove(match);
 					toDelete.remove(b);
 					toUpdate.add(b);
-					
+
 					for (Biosample child :  new ArrayList<>(match.getChildren())) {
 						child.setParent(b);
 					}
-					
+
 				} else if(matches.size()>1){
 					//There are matches but this is not clear
 					//Unresolvable problems
 					toQuestionable.addAll(matches);
 					toQuestionable.add(b);
 				}
-				
+
 			}
 			toAdd.removeAll(toQuestionable);
 			toAdd.removeAll(toUpdate);
 			toDelete.removeAll(toQuestionable);
 			toDelete.removeAll(toUpdate);
-			
+
 			LoggerFactory.getLogger(CreateSamplesHelper.class).debug("toAdd="+toAdd.size()+" toDelete="+toDelete.size()+" questionable="+toQuestionable.size());
-			
+
 			if(toAdd.size()==0 && toUpdate.size()==0 && toDelete.size()==0)  return true;
 
 
@@ -204,7 +204,7 @@ public class CreateSamplesHelper {
 			contentPanel.setPreferredSize(new Dimension(Math.min(1200, dim.width-200), Math.min((toAdd.size() + toUpdate.size() + toDelete.size()) * 22 + 400, dim.height-300)));
 
 
-			
+
 
 			//Propose Creation
 			JPanel creationPanel = new JPanel(new BorderLayout());
@@ -213,14 +213,14 @@ public class CreateSamplesHelper {
 				BiosampleTable table = new BiosampleTable();
 				table.getModel().showHideable(new NamedSamplingColumn(), true);
 				table.setRows(toAdd);
-						
+
 				creationPanel.setBorder(BorderFactory.createEtchedBorder());
 				creationPanel.add(BorderLayout.NORTH, UIUtils.createHorizontalBox(BorderFactory.createEmptyBorder(5, 0, 5, 0), new JCustomLabel("Based on your study design, those " +toAdd.size()+ " samples should be added.", FastFont.BIGGER), Box.createHorizontalGlue()));
 				creationPanel.add(BorderLayout.CENTER, new JScrollPane(table));
 				creationPanel.setBackground(Color.GREEN);
 				contentPanel.add(creationPanel);
 			}
-			
+
 			//Propose Update
 			JPanel updatePanel = new JPanel(new BorderLayout());
 			if(toUpdate.size()>0) {
@@ -228,14 +228,14 @@ public class CreateSamplesHelper {
 				BiosampleTable table = new BiosampleTable();
 				table.getModel().showHideable(new NamedSamplingColumn(), true);
 				table.setRows(toUpdate);
-						
+
 				updatePanel.setBorder(BorderFactory.createEtchedBorder());
 				updatePanel.add(BorderLayout.NORTH, UIUtils.createHorizontalBox(BorderFactory.createEmptyBorder(5, 0, 5, 0), new JCustomLabel("Based on your study design, those " +toUpdate.size()+ " samples should be moved to an other phase. ", FastFont.BIGGER), Box.createHorizontalGlue()));
 				updatePanel.add(BorderLayout.CENTER, new JScrollPane(table));
 				updatePanel.setBackground(Color.PINK);
 				contentPanel.add(updatePanel);
 			}
-			
+
 			//Propose Deletion
 			JPanel questionablePanel = new JPanel(new BorderLayout());
 			if(toQuestionable.size()>0) {
@@ -244,13 +244,13 @@ public class CreateSamplesHelper {
 				final BiosampleTable table = new BiosampleTable();
 				table.getModel().showHideable(new NamedSamplingColumn(), true);
 				table.setRows(toQuestionable);
-				
+
 				questionablePanel.setBorder(BorderFactory.createEtchedBorder());
 				questionablePanel.add(BorderLayout.NORTH, UIUtils.createHorizontalBox(new JCustomLabel("Based on your study design, " +toDelete.size()+ " samples are questionable and will be ignored.", FastFont.BIGGER), Box.createHorizontalGlue()));
 				questionablePanel.add(BorderLayout.CENTER, new JScrollPane(table));
 				questionablePanel.setOpaque(true);
 				questionablePanel.setBackground(Color.ORANGE);
-				contentPanel.add(questionablePanel);				
+				contentPanel.add(questionablePanel);
 			}
 
 			//Propose Deletion
@@ -263,24 +263,24 @@ public class CreateSamplesHelper {
 				final BiosampleTable deletionTable = new BiosampleTable();
 				deletionTable.getModel().showHideable(new NamedSamplingColumn(), true);
 				deletionTable.setRows(toDelete);
-				
+
 				deletionPanel.setBorder(BorderFactory.createEtchedBorder());
-				deletionPanel.add(BorderLayout.NORTH, 
+				deletionPanel.add(BorderLayout.NORTH,
 						UIUtils.createVerticalBox(BorderFactory.createEmptyBorder(5, 0, 5, 0),
 								UIUtils.createHorizontalBox(new JCustomLabel("Based on your study design, " +toDelete.size()+ " samples will be DELETED.", FastFont.BIGGER), Box.createHorizontalGlue()),
 								UIUtils.createHorizontalBox(ignoreDeletionCheckBox, Box.createHorizontalGlue())));
 				deletionPanel.add(BorderLayout.CENTER, new JScrollPane(deletionTable));
 				deletionPanel.setOpaque(true);
 				deletionPanel.setBackground(Color.RED);
-				contentPanel.add(deletionPanel);				
+				contentPanel.add(deletionPanel);
 			}
-			
-			int res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(), 
-					contentPanel, 
-					"Sample synchronization", 
-					JOptionPane.YES_NO_CANCEL_OPTION, 
-					JOptionPane.PLAIN_MESSAGE, 
-					null, 
+
+			int res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(),
+					contentPanel,
+					"Sample synchronization",
+					JOptionPane.YES_NO_CANCEL_OPTION,
+					JOptionPane.PLAIN_MESSAGE,
+					null,
 					new String[] {"Synchronize Samples", "Continue without synchronization", "Cancel"}, toDelete.size()>0? "Continue without synchronization": "Synchronize Samples");
 			if(res==0) {
 				new SwingWorkerExtended("Synchronize Samples", null, SwingWorkerExtended.FLAG_SYNCHRONOUS) {
@@ -291,21 +291,21 @@ public class CreateSamplesHelper {
 						EntityTransaction txn = null;
 						try {
 							txn = session.getTransaction();
-							txn.begin();			
+							txn.begin();
 							if(toUpdate.size()+toAdd.size()>0) {
 								List<Biosample> toSave = new ArrayList<>();
 								toSave.addAll(toUpdate);
-								toSave.addAll(toAdd);								
-								DAOBiosample.persistBiosamples(session, toSave, Spirit.askForAuthentication());				
+								toSave.addAll(toAdd);
+								DAOBiosample.persistBiosamples(session, toSave, Spirit.askForAuthentication());
 							}
-							
-							
+
+
 							if(toDelete.size()>0 && !ignoreDeletionCheckBox.isSelected()) {
 								DAOBiosample.deleteBiosamples(session, toDelete, Spirit.askForAuthentication());
 							}
 							txn.commit();
 							txn = null;
-							
+
 						} catch (Exception e) {
 							if (txn != null)try {txn.rollback();} catch (Exception e2) {}
 							throw e;
@@ -318,9 +318,9 @@ public class CreateSamplesHelper {
 					}
 				};
 
-				
-				
-				
+
+
+
 			} else if(res==1) {
 				//Nothing
 			} else {
@@ -328,13 +328,13 @@ public class CreateSamplesHelper {
 				return false;
 			}
 
-			return true;  
-			
-			
+			return true;
+
+
 		} finally {
 			JPAUtil.popEditableContext();
 		}
 
 	}
-	
+
 }

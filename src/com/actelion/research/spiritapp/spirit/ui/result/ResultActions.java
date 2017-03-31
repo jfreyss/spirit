@@ -57,9 +57,9 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
+import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
@@ -84,14 +84,14 @@ public class ResultActions {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			List<Result> results = new ArrayList<Result>();
+			List<Result> results = new ArrayList<>();
 			Result result = new Result(defaultTest);
-			results.add(result);			
+			results.add(result);
 			new EditResultDlg(true, results);
 		}
 	}
-	
-	
+
+
 	public static class Action_Edit_ELB extends AbstractAction {
 		private String elb = null;
 		private final Result selectedResult;
@@ -110,7 +110,7 @@ public class ResultActions {
 	}
 	public static class Action_Edit_Results extends AbstractAction {
 		private List<Result> results;
-		
+
 		public Action_Edit_Results() {
 			super("Edit Selected Results");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
@@ -118,49 +118,49 @@ public class ResultActions {
 		}
 		public Action_Edit_Results(List<Result> results) {
 			this();
-			
+
 			this.results = results;
-			
+
 			boolean enabled = results.size()>0;
 			for (Result result : results) {
 				if(!SpiritRights.canEdit(result, SpiritFrame.getUser())) {
 					enabled = false;
 					break;
 				}
-			}			
+			}
 			setEnabled(enabled);
 		}
 		public List<Result> getResults() {
 			return results;
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if(getResults()==null || getResults().size()==0) return;
 			new EditResultDlg(getResults());
 		}
 	}
-	
+
 	public static class Action_Delete_Results extends AbstractAction {
 		private final List<Result> results;
-		
+
 		public Action_Delete_Results(List<Result> results) {
 			super("Delete Selected Results (Owner)");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			putValue(Action.SMALL_ICON, IconType.DELETE.getIcon());
-			
+
 			this.results = results;
-			
+
 			boolean enabled = results.size()>0;
 			for (Result result : results) {
 				if(!SpiritRights.canDelete(result, SpiritFrame.getUser())) {
 					enabled = false;
 					break;
 				}
-			}			
+			}
 			setEnabled(enabled);
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
@@ -170,7 +170,7 @@ public class ResultActions {
 			}
 		}
 	}
-	
+
 	public static class Action_Find_Duplicate_Results extends AbstractAction {
 		public Action_Find_Duplicate_Results() {
 			super("Find Duplicated Results");
@@ -183,34 +183,34 @@ public class ResultActions {
 			new ResultDuplicatesDlg();
 		}
 	}
-	
+
 	public static class Action_AssignTo extends AbstractAction {
 		private List<Result> results;
 		public Action_AssignTo(List<Result> results) {
 			super("Change Ownership (owner)");
 			this.results = results;
-			
+
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
 			putValue(AbstractAction.MNEMONIC_KEY, (int)'o');
-			
+
 			boolean enabled = results.size()>0;
 			for (Result result : results) {
 				if(!SpiritRights.canDelete(result, SpiritFrame.getUser())) {
 					enabled = false;
 					break;
 				}
-			}			
+			}
 			setEnabled(enabled);
 		}
 		@Override
 		public void actionPerformed(ActionEvent ev) {
-			
-			
+
+
 			UserIdComboBox userIdComboBox = new UserIdComboBox();
-			int res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(), 
-					UIUtils.createVerticalBox( 
+			int res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(),
+					UIUtils.createVerticalBox(
 							new JLabel("To whom would you like to assign those " + results.size() + " results?"),
-							UIUtils.createHorizontalBox(userIdComboBox, Box.createHorizontalGlue())),												
+							UIUtils.createHorizontalBox(userIdComboBox, Box.createHorizontalGlue())),
 					"Change ownership",
 					JOptionPane.OK_CANCEL_OPTION,
 					JOptionPane.QUESTION_MESSAGE,
@@ -229,7 +229,7 @@ public class ResultActions {
 				if(u==null) throw new Exception(name + " is an invalid user");
 				res = JOptionPane.showConfirmDialog(null, "Are you sure to update the updUser to " + u.getUsername()+" and the department to "+u.getMainGroup()+"?", "Change Ownership", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 				if(res!=JOptionPane.YES_OPTION) return;
-				
+
 				DAOResult.changeOwnership(results, u, admin);
 				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Result.class, results);
 			} catch (Exception e) {
@@ -237,26 +237,26 @@ public class ResultActions {
 			} finally {
 				JPAUtil.popEditableContext();
 			}
-			
+
 		}
 	}
-	
-//	public static class Action_DeleteResults extends AbstractAction {
-//		private final List<Result> results;
-//		public Action_DeleteResults(List<Result> results) {
-//			super("Delete results from experiment");
-//			this.results = results;
-//			putValue(AbstractAction.SMALL_ICON, IconType.DELETE.getIcon());
-//			for (Result result : results) {
-//				if(!SpiritRights.canDelete(result, Spirit.getUser())) {setEnabled(false); break;}
-//			}					
-//		}
-//		@Override
-//		public void actionPerformed(ActionEvent e) {
-//			DeleteResultDlg.showDeleteDialog(results);
-//		}
-//	}
-	
+
+	//	public static class Action_DeleteResults extends AbstractAction {
+	//		private final List<Result> results;
+	//		public Action_DeleteResults(List<Result> results) {
+	//			super("Delete results from experiment");
+	//			this.results = results;
+	//			putValue(AbstractAction.SMALL_ICON, IconType.DELETE.getIcon());
+	//			for (Result result : results) {
+	//				if(!SpiritRights.canDelete(result, Spirit.getUser())) {setEnabled(false); break;}
+	//			}
+	//		}
+	//		@Override
+	//		public void actionPerformed(ActionEvent e) {
+	//			DeleteResultDlg.showDeleteDialog(results);
+	//		}
+	//	}
+
 
 	public static class Action_SetQuality extends AbstractAction {
 		private final List<Result> results;
@@ -268,15 +268,15 @@ public class ResultActions {
 			putValue(AbstractAction.MNEMONIC_KEY, (int)(quality.getName().charAt(0)));
 			for (Result result : results) {
 				if(!SpiritRights.canEdit(result, SpiritFrame.getUser())) setEnabled(false);
-			}					
+			}
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			new SetResultQualityDlg(results, quality);
 		}
 	}
-	
-	
+
+
 	public static class Action_History extends AbstractAction {
 		private final Result result;
 		public Action_History(Result result) {
@@ -297,43 +297,43 @@ public class ResultActions {
 		}
 	}
 
-	
-	
+
+
 	public static void attachPopup(final ResultTable table) {
 		table.addMouseListener(new PopupAdapter(table) {
 			@Override
 			protected void showPopup(MouseEvent e) {
-				ResultActions.createPopup(table.getSelection()).show(table, e.getX(), e.getY());				
+				ResultActions.createPopup(table.getSelection()).show(table, e.getX(), e.getY());
 			}
 		});
 	}
-	
+
 	public static void attachPopup(final PivotTable table) {
 		table.addMouseListener(new PopupAdapter(table) {
 			@Override
 			protected void showPopup(MouseEvent e) {
 				List<Result> results = table.getSelectedResults();
-				
-				ResultActions.createPopup(results).show(table, e.getX(), e.getY());				
+
+				ResultActions.createPopup(results).show(table, e.getX(), e.getY());
 			}
 		});
 	}
-	
-	public static void attachPopup(final JComponent comp) {		
+
+	public static void attachPopup(final JComponent comp) {
 		comp.addMouseListener(new PopupAdapter() {
 			@Override
 			protected void showPopup(MouseEvent e) {
-				ResultActions.createPopup(null).show(comp, e.getX(), e.getY());				
+				ResultActions.createPopup(null).show(comp, e.getX(), e.getY());
 			}
 		});
 	}
-	
+
 	public static JPopupMenu createPopup(List<Result> results) {
 		JPopupMenu menu = new JPopupMenu();
 		if(results!=null && results.size()>0) {
 			menu.add(new JCustomLabel("   Results: " + (results.size()>1?" "+results.size()+" selected":""), Font.BOLD));
 			menu.add(new JSeparator());
-			
+
 			String elb = null;
 			for (Result result : results) {
 				if(elb==null) {
@@ -343,67 +343,67 @@ public class ResultActions {
 					break;
 				}
 			}
-			
+
 			JMenu newMenu = new JMenu("New");
 			newMenu.setIcon(IconType.NEW.getIcon());
-			newMenu.setMnemonic('n');		
+			newMenu.setMnemonic('n');
 			menu.add(newMenu);
 			newMenu.add(new Action_New());
-			
+
 			JMenu editMenu = new JMenu("Edit");
 			editMenu.setIcon(IconType.EDIT.getIcon());
-			editMenu.setMnemonic('e');		
+			editMenu.setMnemonic('e');
 			menu.add(editMenu);
-			editMenu.add(new Action_Edit_ELB(elb, results.get(0)));			
+			editMenu.add(new Action_Edit_ELB(elb, results.get(0)));
 			editMenu.add(new Action_Edit_Results(results));
 			editMenu.add(new JSeparator());
-			JMenu markMenu = new JMenu("Set Quality"); 
+			JMenu markMenu = new JMenu("Set Quality");
 			markMenu.setIcon(IconType.QUALITY.getIcon());
 			for (Quality quality : Quality.values()) {
 				markMenu.add(new Action_SetQuality(results, quality));
-			}			
-			editMenu.add(markMenu);	
-			
+			}
+			editMenu.add(markMenu);
+
 			menu.add(new JSeparator());
-			
-			JMenu systemMenu = new JMenu("Advanced"); 
+
+			JMenu systemMenu = new JMenu("Advanced");
 			systemMenu.setIcon(IconType.ADMIN.getIcon());
 
-			systemMenu.add(new Action_Delete_Results(results));			
+			systemMenu.add(new Action_Delete_Results(results));
 			systemMenu.add(new JSeparator());
 			systemMenu.add(new Action_AssignTo(results));
-			systemMenu.add(new JSeparator());			
+			systemMenu.add(new JSeparator());
 			systemMenu.add(new Action_History(results.size()==1? results.get(0): null));
 			menu.add(systemMenu);
-			
+
 		}
 		return menu;
 	}
-	
+
 	public static void attachRevisionPopup(final ResultTable table) {
 		table.addMouseListener(new PopupAdapter(table) {
 			@Override
 			protected void showPopup(MouseEvent e) {
-				
+
 				List<Result> objects = table.getSelection();
 				JPopupMenu popupMenu = new JPopupMenu();
 				String s = SpiritFrame.getUser()!=null && SpiritFrame.getUser().isSuperAdmin() && objects!=null && objects.size()==1? " (id:" + objects.get(0).getId()+")":"";
 				popupMenu.add(new JCustomLabel("   Result Menu"+s, Font.BOLD));
-				
+
 				if(objects==null || objects.size()==0) {
 				} else if(objects.size()==1) {
-					popupMenu.add(new JMenuItem(new AdminActions.Action_Restore(objects)));					
-//					popupMenu.add(new JMenuItem(new AdminActions.Action_Rollback(revision)));
+					popupMenu.add(new JMenuItem(new AdminActions.Action_Restore(objects)));
+					//					popupMenu.add(new JMenuItem(new AdminActions.Action_Rollback(revision)));
 					popupMenu.add(new JSeparator());
-					popupMenu.add(new JMenuItem(new Action_History(objects.get(0))));					
+					popupMenu.add(new JMenuItem(new Action_History(objects.get(0))));
 				} else { //batch
 					popupMenu.add(new JMenuItem(new AdminActions.Action_Restore(objects)));
 
-				} 
-				
-				popupMenu.show(table, e.getX(), e.getY());				
+				}
+
+				popupMenu.show(table, e.getX(), e.getY());
 			}
 		});
 	}
-	
+
 }

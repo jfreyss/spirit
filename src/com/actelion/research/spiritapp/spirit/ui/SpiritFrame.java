@@ -191,12 +191,10 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 				}
 
 				//Apply actions after login
-				System.out.println("SpiritFrame.recreateTabs() afterLoginAction= "+ afterLoginAction);
 				if(afterLoginAction!=null && user!=null) {
 					new SwingWorkerExtended(tabbedPane, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 						@Override
 						protected void doInBackground() throws Exception {
-							System.out.println("SpiritFrame.recreateTabs() APPLY "+ afterLoginAction);
 							try {
 								afterLoginAction.run();
 								afterLoginAction = null;
@@ -288,23 +286,13 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		HelpBinder.bindHelp();
 
 		try {
-			//			String lf = Spirit.getConfig().getProperty("preferences.lf", "Nimbus");
-			//			if(lf.equalsIgnoreCase("System")) {
-			//				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-			//			} else {
 			UIManager.setLookAndFeel(new NimbusLookAndFeel());
-			//			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				//				FastFont.setDefaultFontSize(Spirit.getConfig().getProperty("preferences.fontSize", FastFont.getDefaultFontSize()));
-				//				FastFont.setDefaultFontFamily(Spirit.getConfig().getProperty("preferences.fontFamily", FastFont.getDefaultFontFamily()));
-				ImageFactory.clearCache();
-				IconType.clearCache();
-			}
+		SwingUtilities.invokeLater(() -> {
+			ImageFactory.clearCache();
+			IconType.clearCache();
 		});
 	}
 
@@ -324,100 +312,135 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 
 	@Override
 	public void query(final BiosampleQuery q) {
-		BiosampleTab tab = (BiosampleTab) tabbedPane.getTab(BiosampleTab.class);
-		if(q==null || tab==null || tabbedPane==null) return;
-		tab.setSelectedStudyId(q.getStudyIds());
-		tabbedPane.setStudyId(q.getStudyIds());
-		tabbedPane.setSelectedComponent(tab);
-		tab.query(q);
+		try {
+			tabbedPane.push();
+			BiosampleTab tab = (BiosampleTab) tabbedPane.getTab(BiosampleTab.class);
+			if(q==null || tab==null || tabbedPane==null) return;
+			tab.setSelectedStudyId(q.getStudyIds());
+			tabbedPane.setStudyId(q.getStudyIds());
+			tabbedPane.setSelectedComponent(tab);
+			tab.query(q);
+		} finally {
+			tabbedPane.pop();
+		}
 	}
 
 	@Override
 	public void query(final ResultQuery q, int graphIndex) {
-		ResultTab tab = (ResultTab) tabbedPane.getTab(ResultTab.class);
-		if(q==null || tab==null || tabbedPane==null) return;
-		System.out.println("SpiritFrame.query() set "+q.getStudyIds());
-		tab.setSelectedStudyId(q.getStudyIds());
-		tabbedPane.setStudyId(q.getStudyIds());
-		tabbedPane.setSelectedComponent(tab);
-		tab.query(q, graphIndex);
+		try {
+			tabbedPane.push();
+			ResultTab tab = (ResultTab) tabbedPane.getTab(ResultTab.class);
+			if(q==null || tab==null || tabbedPane==null) return;
+			System.out.println("SpiritFrame.query() set "+q.getStudyIds());
+			tab.setSelectedStudyId(q.getStudyIds());
+			tabbedPane.setStudyId(q.getStudyIds());
+			tabbedPane.setSelectedComponent(tab);
+			tab.query(q, graphIndex);
+		} finally {
+			tabbedPane.pop();
+		}
 	}
 
 	@Override
 	public void setResults(final List<Result> results) {
-		ResultTab tab = (ResultTab) tabbedPane.getTab(ResultTab.class);
-		if(tab==null || tabbedPane==null) return;
-		tab.setSelectedStudyId(tabbedPane.getStudyId());
-		tabbedPane.setSelectedComponent(tab);
-		tab.setResults(results);
-		statusBar.setInfos(results.size()+ " results");
+		try {
+			tabbedPane.push();
+			ResultTab tab = (ResultTab) tabbedPane.getTab(ResultTab.class);
+			if(tab==null || tabbedPane==null) return;
+			tab.setSelectedStudyId(tabbedPane.getStudyId());
+			tabbedPane.setSelectedComponent(tab);
+			tab.setResults(results);
+			statusBar.setInfos(results.size()+ " results");
+		} finally {
+			tabbedPane.pop();
+		}
 	}
 
 	@Override
-	public void setBiosamples(final List<Biosample> biosamples) {
-		IBiosampleTab tab = (IBiosampleTab) tabbedPane.getTab(IBiosampleTab.class);
-		if(tab==null || tabbedPane==null) return;
-		((SpiritTab)tab).setSelectedStudyId(tabbedPane.getStudyId());
-
-		Set<Location> locations = Biosample.getLocations(biosamples);
-		Location loc = locations.size()==1? locations.iterator().next(): null;
-
-		if(tab instanceof SpiritTab) {
-			//Avoid firing studyEvent
+	public void setBiosamples(List<Biosample> biosamples) {
+		try {
+			tabbedPane.push();
+			IBiosampleTab tab = (IBiosampleTab) tabbedPane.getTab(IBiosampleTab.class);
+			if(tab==null || tabbedPane==null) return;
 			((SpiritTab)tab).setSelectedStudyId(tabbedPane.getStudyId());
-		}
 
-		tabbedPane.setSelectedComponent((Component)tab);
-		if(loc!=null && loc.getSize()>0 && biosamples.size()==loc.getBiosamples().size() && loc.getBiosamples().containsAll(biosamples)) {
-			tab.setRack(loc);
-		} else {
-			if(biosamples.size()==1) {
-				Biosample b = biosamples.get(0);
-				tab.setBiosamples(new ArrayList<>(b.getHierarchy(HierarchyMode.ALL_MAX2)));
+			Set<Location> locations = Biosample.getLocations(biosamples);
+			Location loc = locations.size()==1? locations.iterator().next(): null;
 
-			} else {
-				tab.setBiosamples(biosamples);
+			if(tab instanceof SpiritTab) {
+				//Avoid firing studyEvent
+				((SpiritTab)tab).setSelectedStudyId(tabbedPane.getStudyId());
 			}
-			tab.setSelectedBiosamples(biosamples);
+
+			tabbedPane.setSelectedComponent((Component)tab);
+			if(loc!=null && loc.getSize()>0 && biosamples.size()==loc.getBiosamples().size() && loc.getBiosamples().containsAll(biosamples)) {
+				tab.setRack(loc);
+			} else {
+				if(biosamples.size()==1) {
+					Biosample b = biosamples.get(0);
+					tab.setBiosamples(new ArrayList<>(b.getHierarchy(HierarchyMode.ALL_MAX2)));
+
+				} else {
+					tab.setBiosamples(biosamples);
+				}
+				tab.setSelectedBiosamples(biosamples);
+			}
+			if(biosamples!=null) statusBar.setInfos(biosamples.size()+ " biosamples");
+		} finally {
+			tabbedPane.pop();
 		}
-		if(biosamples!=null) statusBar.setInfos(biosamples.size()+ " biosamples");
 	}
 
 	@Override
 	public void setRack(Location loc) {
-		IBiosampleTab tab = (IBiosampleTab) tabbedPane.getTab(IBiosampleTab.class);
-		if(tab==null || tabbedPane==null) return;
-		((SpiritTab)tab).setSelectedStudyId(tabbedPane.getStudyId());
+		try {
+			tabbedPane.push();
+			IBiosampleTab tab = (IBiosampleTab) tabbedPane.getTab(IBiosampleTab.class);
+			if(tab==null || tabbedPane==null) return;
+			((SpiritTab)tab).setSelectedStudyId(tabbedPane.getStudyId());
 
-		tabbedPane.setSelectedComponent((Component)tab);
-		tab.setRack(loc);
-		if(loc!=null) statusBar.setInfos("Rack "+loc + ": "+loc.getBiosamples().size());
+			tabbedPane.setSelectedComponent((Component)tab);
+			tab.setRack(loc);
+			if(loc!=null) statusBar.setInfos("Rack "+loc + ": "+loc.getBiosamples().size());
+		} finally {
+			tabbedPane.pop();
+		}
 	}
 
 
 	@Override
 	public void setLocation(final Location location, final int pos) {
-		LocationTab tab = (LocationTab) tabbedPane.getTab(LocationTab.class);
-		if(tab==null || tabbedPane==null) return;
-		tab.setSelectedStudyId(tabbedPane.getStudyId());
+		try {
+			tabbedPane.push();
+			LocationTab tab = (LocationTab) tabbedPane.getTab(LocationTab.class);
+			if(tab==null || tabbedPane==null) return;
+			tab.setSelectedStudyId(tabbedPane.getStudyId());
 
-		if(tabbedPane==null) return;
-		tabbedPane.setSelectedComponent(tab);
-		tab.setBioLocation(location, pos);
-		if(location!=null) statusBar.setInfos(location + " selected");
+			if(tabbedPane==null) return;
+			tabbedPane.setSelectedComponent(tab);
+			tab.setBioLocation(location, pos);
+			if(location!=null) statusBar.setInfos(location + " selected");
+		} finally {
+			tabbedPane.pop();
+		}
 	}
 
 	@Override
 	public void setStudy(final Study study) {
-		tabbedPane.setStudyId(study==null?"": study.getStudyId());
+		try {
+			getTabbedPane().push();
+			tabbedPane.setStudyId(study==null?"": study.getStudyId());
 
-		IStudyTab tab = (IStudyTab) tabbedPane.getTab(IStudyTab.class);
-		if(tab==null || tabbedPane==null) return;
-		((SpiritTab)tab).setSelectedStudyId(tabbedPane.getStudyId());
+			IStudyTab tab = (IStudyTab) tabbedPane.getTab(IStudyTab.class);
+			if(tab==null || tabbedPane==null) return;
+			((SpiritTab)tab).setSelectedStudyId(tabbedPane.getStudyId());
 
-		tabbedPane.setSelectedComponent((Component) tab);
-		tab.setStudy(study);
-		if(study!=null) statusBar.setInfos(study + " selected");
+			tabbedPane.setSelectedComponent((Component) tab);
+			tab.setStudy(study);
+			if(study!=null) statusBar.setInfos(study + " selected");
+		} finally {
+			getTabbedPane().pop();
+		}
 	}
 
 	public static final Config getConfig() {
@@ -539,6 +562,10 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		return DAOStudy.getStudyByStudyId(tabbedPane.getStudyId());
 	}
 
+	public static void clear() {
+		SwingWorkerExtended.awaitTermination();
+		JPAUtil.clear();
+	}
 
 
 }
