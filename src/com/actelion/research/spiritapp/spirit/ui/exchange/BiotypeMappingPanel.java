@@ -22,10 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.exchange;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,33 +82,26 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 		//Init components
 		biotypeComboBox = new BiotypeComboBox(biotypes, "Map to...");
 		biotypeMappingPanel = new MappingPanel(biotypeComboBox);
-		biotypeMappingPanel.addPropertyChangeListener(MappingPanel.PROPERTY_ACTION, new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				updateLayout();
-			}
+		biotypeMappingPanel.addPropertyChangeListener(MappingPanel.PROPERTY_ACTION, evt -> {
+			updateLayout();
 		});
 
-		biotypeComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Biotype toBiotype = biotypeComboBox.getSelection();
-				for (int index = 0; index < metadatas.size(); index++) {
-					BiotypeMetadata m = metadatas.get(index);
-					JGenericComboBox<BiotypeMetadata> comboBox = null;
-					if(toBiotype!=null) {
-						comboBox = new JGenericComboBox<>(toBiotype.getMetadata(), "Map to...");
-						comboBox.setSelectionString(m.getName());
-					}
-					metadataMappingPanels.get(index).setMappingComponent(comboBox);
-					if(comboBox!=null && comboBox.getSelectedIndex()>0) {
-						metadataMappingPanels.get(index).setMappingAction(EntityAction.MAP_REPLACE);
-						metadataMappingPanels.get(index).setCreationEnabled(false);
-					} else {
-						metadataMappingPanels.get(index).setCreationEnabled(true);
-					}
+		biotypeComboBox.addTextChangeListener(e-> {
+			Biotype toBiotype = biotypeComboBox.getSelection();
+			for (int index = 0; index < metadatas.size(); index++) {
+				BiotypeMetadata m = metadatas.get(index);
+				JGenericComboBox<BiotypeMetadata> comboBox = null;
+				if(toBiotype!=null) {
+					comboBox = new JGenericComboBox<>(toBiotype.getMetadata(), "Map to...");
+					comboBox.setSelectionString(m.getName());
 				}
-
+				metadataMappingPanels.get(index).setMappingComponent(comboBox);
+				if(comboBox!=null && comboBox.getSelectedIndex()>0) {
+					metadataMappingPanels.get(index).setMappingAction(EntityAction.MAP_REPLACE);
+					metadataMappingPanels.get(index).setCreationEnabled(false);
+				} else {
+					metadataMappingPanels.get(index).setCreationEnabled(true);
+				}
 			}
 		});
 

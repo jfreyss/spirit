@@ -24,8 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui.biosample.editor;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,89 +53,82 @@ import com.actelion.research.util.ui.JTextComboBox;
 import com.actelion.research.util.ui.UIUtils;
 
 public class MetadataFullDlg extends JEscapeDialog {
-	
+
 	private final Biosample biosample;
 	private final BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 	private final SampleIdGenerateField<Biosample> sampleIdField = new SampleIdGenerateField<Biosample>();
 	private final SampleIdScanField parentField = new SampleIdScanField();
 	private JTextComponent  nameTextField;
-//	private final JCustomTextField  amountTextField = new JCustomTextField(JCustomTextField.DOUBLE);
-	
+	//	private final JCustomTextField  amountTextField = new JCustomTextField(JCustomTextField.DOUBLE);
+
 	private final JPanel contentPane = new JPanel(new BorderLayout());
 	private final JPanel content = new JPanel(new GridBagLayout());
 	private boolean success = false;
-	
+
 	public MetadataFullDlg(EditBiosampleTable table, JComponent locationRelativeTo, Biosample biosample) {
 		super(UIUtils.getMainFrame(), "Biosample - Edit Metadata", true);
 		this.biosample = biosample;
 
 		parentField.setExtraBiosamplesPool(table.getRows());
-		
+
 		JButton okButton = new JButton("OK");
 		getRootPane().setDefaultButton(okButton);
-		okButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				try {
-					updateModel();
-					dispose();
-					success = true;
-				} catch (Exception e) {
-					e.printStackTrace();
-					JOptionPane.showMessageDialog(MetadataFullDlg.this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-				}
-				
+		okButton.addActionListener(ev -> {
+			try {
+				updateModel();
+				dispose();
+				success = true;
+			} catch (Exception e) {
+				e.printStackTrace();
+				JOptionPane.showMessageDialog(MetadataFullDlg.this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		});
-		
+
 		contentPane.add(BorderLayout.CENTER, content);
 		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
 		setContentPane(contentPane);
-		
+
 		biotypeComboBox.setSelection(biosample.getBiotype());
 		sampleIdField.setText(biosample.getSampleId());
 		parentField.setBiosample(biosample.getParent());
-		
-		
-		biotypeComboBox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {	
-				updateView();
-			}
+
+
+		biotypeComboBox.addTextChangeListener(e-> {
+			updateView();
 		});
-		
+
 
 
 		updateView();
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setLocationRelativeTo(locationRelativeTo);		
+		setLocationRelativeTo(locationRelativeTo);
 		setVisible(true);
 	}
 
-	
+
 	private List<JComponent> comps = new ArrayList<JComponent>();
-	
+
 	public void updateView() {
-		
-		
+
+
 		final Biotype type = biotypeComboBox.getSelection();
 		biosample.setBiotype(type);
-		
+
 		comps.clear();
 		content.removeAll();
 		JCustomTextField lbl = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 10);
 		lbl.setText(biosample.getSampleId());
 		lbl.setEnabled(false);
-		
-		
+
+
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = GridBagConstraints.WEST;
-		
-		c.gridy++; 
+
+		c.gridy++;
 		c.weightx = 0; c.gridx = 0; content.add(new JLabel("Biotype: "), c);
 		c.weightx = 1; c.gridx = 1; content.add(UIUtils.createHorizontalBox(biotypeComboBox, Box.createHorizontalGlue()), c);
-		
-		c.gridy++; 
+
+		c.gridy++;
 		c.weightx = 0; c.gridx = 0; content.add(new JLabel("SampleId: "), c);
 		c.weightx = 1; c.gridx = 1; content.add(sampleIdField, c);
 		sampleIdField.putCachedSampleId(biosample, type==null? null: type.getPrefix(), biosample.getId()<=0? null:  biosample.getSampleId());
@@ -146,24 +137,24 @@ public class MetadataFullDlg extends JEscapeDialog {
 
 		//Separator
 		c.gridy++;  content.add(Box.createVerticalStrut(5), c);
-		c.gridy++; c.gridwidth=2; c.fill = GridBagConstraints.HORIZONTAL; c.gridx = 0; content.add(new JSeparator(), c); c.gridwidth=1; c.fill = GridBagConstraints.NONE;  			
+		c.gridy++; c.gridwidth=2; c.fill = GridBagConstraints.HORIZONTAL; c.gridx = 0; content.add(new JSeparator(), c); c.gridwidth=1; c.fill = GridBagConstraints.NONE;
 		c.gridy++; content.add(Box.createVerticalStrut(5), c);
 
-		c.gridy++; 
+		c.gridy++;
 		c.weightx = 0; c.gridx = 0; content.add(new JLabel("ParentId: "), c);
 		c.weightx = 1; c.gridx = 1; content.add(parentField, c);
 
 		//Separator
 		c.gridy++;  content.add(Box.createVerticalStrut(5), c);
-		c.gridy++; c.gridwidth=2; c.fill = GridBagConstraints.HORIZONTAL; c.gridx = 0; content.add(new JSeparator(), c); c.gridwidth=1; c.fill = GridBagConstraints.NONE;  			
+		c.gridy++; c.gridwidth=2; c.fill = GridBagConstraints.HORIZONTAL; c.gridx = 0; content.add(new JSeparator(), c); c.gridwidth=1; c.fill = GridBagConstraints.NONE;
 		c.gridy++; content.add(Box.createVerticalStrut(5), c);
 
-		
+
 		if(type!=null) {
 			c.weighty = 0;
 
 			//Name
-			if(type.getSampleNameLabel()!=null) {				
+			if(type.getSampleNameLabel()!=null) {
 				if(type.isNameAutocomplete()) {
 					nameTextField = new JTextComboBox(true) {
 						@Override
@@ -171,71 +162,71 @@ public class MetadataFullDlg extends JEscapeDialog {
 							return DAOBiotype.getAutoCompletionFieldsForName(type, null);
 						}
 					};
-					 
+
 				} else {
-					nameTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 20); 
+					nameTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 20);
 				}
 				nameTextField.setText(biosample.getSampleName());
-				
-				c.gridy++; 
+
+				c.gridy++;
 				c.weightx = 0; c.gridx = 0; content.add(new JLabel(type.getSampleNameLabel()+": "), c);
 				c.weightx = 1; c.gridx = 1; content.add(nameTextField, c);
 			}
-			
+
 			//Metadata
 			for (BiotypeMetadata m : type.getMetadata()) {
 				JComponent comp = MetadataComponentFactory.getComponentFor(m);
 				if(comp instanceof MetadataComponent) {
 					((MetadataComponent) comp).updateView(biosample, m);
-					
+
 				}
 				comps.add(comp);
 
-				c.gridy++; 
+				c.gridy++;
 				c.weightx = 0; c.gridx = 0; content.add(new JLabel(m.getName() + (m.isRequired()?"*":"") + ": "), c);
 				c.weightx = 1; c.gridx = 1; content.add(comp, c);
-			}			
+			}
 
-			c.gridy++; 
-			c.gridy++; c.gridwidth=2; c.fill = GridBagConstraints.HORIZONTAL; c.gridx = 0; content.add(new JSeparator(), c); c.gridwidth=1; c.fill = GridBagConstraints.NONE;  			
-			
+			c.gridy++;
+			c.gridy++; c.gridwidth=2; c.fill = GridBagConstraints.HORIZONTAL; c.gridx = 0; content.add(new JSeparator(), c); c.gridwidth=1; c.fill = GridBagConstraints.NONE;
+
 		}
-		
+
 		//Filler
-		c.gridy++; 
+		c.gridy++;
 		c.weighty = 1; c.weightx = 1; c.gridx = 1; content.add(Box.createGlue(), c);
 
-		contentPane.validate();		
+		contentPane.validate();
 		pack();
 		repaint();
-		
+
 	}
-	
+
 	public void updateModel() throws Exception {
 		final Biotype type = biotypeComboBox.getSelection();
 		if(type!=null) {
 			biosample.setBiotype(type);
 			biosample.setSampleId(sampleIdField.getText());
-			
+
 			if(parentField.getBiosample()!=null && parentField.getBiosample().getId()<=0) {
 				throw new Exception("The Parent "+parentField.getBiosample()+" does not exist");
 			}
 			biosample.setParent(parentField.getBiosample());
-			
-			
 
-			
+
+
+
 			biosample.setSampleName(nameTextField.getText());
-//			if(type.getAmountUnit()!=null) {
-//				biosample.setAmount(amountTextField.getTextDouble());
-//			}
+			//			if(type.getAmountUnit()!=null) {
+			//				biosample.setAmount(amountTextField.getTextDouble());
+			//			}
 			int i = 0;
 			for (BiotypeMetadata m : type.getMetadata()) {
 				if(i>=comps.size()) break;
-				
-//				String data = ((MetadataComponent) comps.get(i)).getData();
-//				biosample.setMetadata(m, data);
-				
+
+				//				String data = ((MetadataComponent) comps.get(i)).getData();
+				//				biosample.setMetadata(m, data);
+
 				((MetadataComponent) comps.get(i)).updateModel(biosample, m);
 
 				i++;

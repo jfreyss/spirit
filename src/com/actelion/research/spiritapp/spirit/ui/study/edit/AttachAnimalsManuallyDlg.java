@@ -115,17 +115,13 @@ public class AttachAnimalsManuallyDlg extends JSpiritEscapeDialog {
 		refreshTable();
 		initBiotype();
 
-		biotypeComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					animalTable.getModel().setBiotype(biotypeComboBox.getSelection());
-					animalTable.resetPreferredColumnWidth();
-				} catch(Exception ex) {
-					initBiotype();
-					JExceptionDialog.showError(ex);
-				}
-
+		biotypeComboBox.addTextChangeListener(e-> {
+			try {
+				animalTable.getModel().setBiotype(biotypeComboBox.getSelection());
+				animalTable.resetPreferredColumnWidth();
+			} catch(Exception ex) {
+				initBiotype();
+				JExceptionDialog.showError(ex);
 			}
 		});
 

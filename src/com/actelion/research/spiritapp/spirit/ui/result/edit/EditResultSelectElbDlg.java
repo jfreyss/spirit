@@ -50,9 +50,7 @@ public class EditResultSelectElbDlg extends JEscapeDialog {
 
 		recentElbs = DAOResult.getRecentElbs(SpiritFrame.getUser());
 		comboBox.setChoices(recentElbs);
-		comboBox.addActionListener(e-> {
-			ok();
-		});
+		comboBox.addActionListener(e-> ok());
 		JButton okButton = new JButton("Continue");
 
 		okButton.addActionListener(ev-> {

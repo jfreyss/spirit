@@ -26,7 +26,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
@@ -134,7 +133,7 @@ public class BioViewerTab extends SpiritTab implements IBiosampleTab {
 
 	public BioViewerTab(SpiritFrame frame) {
 		super(frame, "BioViewer", IconType.SCANNER.getIcon());
-		
+
 		// Scan Panel
 		scanTextField.enableInputMethods(false);
 		scanTextField.addKeyListener(keyListener);
@@ -144,27 +143,23 @@ public class BioViewerTab extends SpiritTab implements IBiosampleTab {
 				scanTextField.selectAll();
 			}
 		});
-		scanTextField.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				newScan(scanTextField.getText());
-			}
+		scanTextField.addActionListener(e-> {
+			newScan(scanTextField.getText());
 		});
 
 		JButton b1 = new JButton(new ClearAction());
 		JButton b2 = new JButton(new SpiritAction.Action_Scan());
 		b1.setText("");
 		b2.setText("");
-		
+
 		scanTextField.setMaximumSize(new Dimension(120, 26));
 		scanTextField.setPreferredSize(new Dimension(120, 26));
-		
+
 		JPanel north = UIUtils.createHorizontalBox(b1, b2, scanTextField, Box.createHorizontalGlue(), new JButton(new ExportCSVAction()), new JButton(new ExportExcelAction()));
 		north.setBorder(BorderFactory.createEtchedBorder());
-				
 
-		
+
+
 
 		// Left Panel
 		JPanel listPanel = new JPanel(new BorderLayout());
@@ -200,13 +195,13 @@ public class BioViewerTab extends SpiritTab implements IBiosampleTab {
 
 		add(BorderLayout.NORTH, north);
 		add(BorderLayout.CENTER, mainSplitPane);
-		
-		
+
+
 		BiosampleActions.attachPopup(biosampleTab.getBiosampleTable());
 		addKeyListener(this, keyListener);
 		ComponentInputMap inputMap = (ComponentInputMap) getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
 		inputMap.put(KeyStroke.getKeyStroke("pressed F5"), "refresh");
-		inputMap.put(KeyStroke.getKeyStroke("ctrl released A"), "selectAll"); 
+		inputMap.put(KeyStroke.getKeyStroke("ctrl released A"), "selectAll");
 
 		setInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW, inputMap);
 		getActionMap().put("refresh", new AbstractAction() {
@@ -224,7 +219,7 @@ public class BioViewerTab extends SpiritTab implements IBiosampleTab {
 		});
 
 	}
-	
+
 
 	private void refresh() {
 		List<Biosample> before = new ArrayList<>(biosampleTab.getBiosamples());
@@ -245,7 +240,7 @@ public class BioViewerTab extends SpiritTab implements IBiosampleTab {
 		biosampleEditorPane.setBiosamples(highlighted.size()==1? highlighted: null);
 		biosampleDetailPane.setBiosamples(highlighted.size()==1? highlighted: null, false);
 	}
-	
+
 	private void newScan(String sampleId) {
 		if(sampleId==null) return;
 		if(sampleId.length()==0) return;
@@ -259,8 +254,8 @@ public class BioViewerTab extends SpiritTab implements IBiosampleTab {
 		} catch(Exception e) {
 			JExceptionDialog.showError(this, e);
 		}
-	}	
-	
+	}
+
 	/**
 	 * NewScan with loaded containers
 	 * @param containers
@@ -268,45 +263,45 @@ public class BioViewerTab extends SpiritTab implements IBiosampleTab {
 	private void newScan(final Collection<Container> containers) {
 		scanTextField.requestFocusInWindow();
 		scanTextField.selectAll();
-		
-//				Map<String, Container> id2Container = new HashMap<String, Container>();
-//				for (Container c : Biosample.getContainers(biosamples, true)) {
-//					for(Biosample b: c.getBiosamples()) {
-//						id2Container.put(b.getSampleId(), c);
-//					}
-//					if(c.getContainerId()!=null) {
-//						id2Container.put(c.getContainerId(), c);
-//					} 
-//				}
-//				
-//				//Add Unknown for not found tubes
-//				for (ScannedTube scannedTube : scannedTubes) {
-//					Container c = id2Container.get(scannedTube.getTubeId());			
-//					if(c==null) {
-//						c = new Container(scannedTube.getTubeId());
-//						Biosample notFound = new Biosample("NOTFOUND");
-//						notFound.setContainer(c);
-//						biosamples.add(notFound);						
-//					}
-//					if(scannedTube.getPosition()!=null) c.setScannedPosition(scannedTube.getPosition());
-//				}				
 
-				//Filter only the new ones
-				List<Biosample> biosamples = Container.getBiosamples(containers, true);
-				List<Biosample> toAdd = new ArrayList<Biosample>(biosamples);
-				toAdd.removeAll(biosampleTab.getBiosamples());
+		//				Map<String, Container> id2Container = new HashMap<String, Container>();
+		//				for (Container c : Biosample.getContainers(biosamples, true)) {
+		//					for(Biosample b: c.getBiosamples()) {
+		//						id2Container.put(b.getSampleId(), c);
+		//					}
+		//					if(c.getContainerId()!=null) {
+		//						id2Container.put(c.getContainerId(), c);
+		//					}
+		//				}
+		//
+		//				//Add Unknown for not found tubes
+		//				for (ScannedTube scannedTube : scannedTubes) {
+		//					Container c = id2Container.get(scannedTube.getTubeId());
+		//					if(c==null) {
+		//						c = new Container(scannedTube.getTubeId());
+		//						Biosample notFound = new Biosample("NOTFOUND");
+		//						notFound.setContainer(c);
+		//						biosamples.add(notFound);
+		//					}
+		//					if(scannedTube.getPosition()!=null) c.setScannedPosition(scannedTube.getPosition());
+		//				}
 
-				if(toAdd.size()>0) {
-					//Update the new rows
-					List<Biosample> rows = new ArrayList<Biosample>(biosampleTab.getBiosamples());
-					rows.addAll(toAdd);
-					biosampleTab.setBiosamples(rows);
-				}
-				biosampleTab.setSelectedBiosamples(biosamples);
-				selectionChanged();
-				Toolkit.getDefaultToolkit().beep();
-//			}
-//		};
+		//Filter only the new ones
+		List<Biosample> biosamples = Container.getBiosamples(containers, true);
+		List<Biosample> toAdd = new ArrayList<Biosample>(biosamples);
+		toAdd.removeAll(biosampleTab.getBiosamples());
+
+		if(toAdd.size()>0) {
+			//Update the new rows
+			List<Biosample> rows = new ArrayList<Biosample>(biosampleTab.getBiosamples());
+			rows.addAll(toAdd);
+			biosampleTab.setBiosamples(rows);
+		}
+		biosampleTab.setSelectedBiosamples(biosamples);
+		selectionChanged();
+		Toolkit.getDefaultToolkit().beep();
+		//			}
+		//		};
 	}
 
 
@@ -318,7 +313,7 @@ public class BioViewerTab extends SpiritTab implements IBiosampleTab {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			scanTextField.setText("");
-			biosampleTab.clear();			
+			biosampleTab.clear();
 			selectionChanged();
 		}
 	}
@@ -384,7 +379,7 @@ public class BioViewerTab extends SpiritTab implements IBiosampleTab {
 					biosampleTab.setBiosamples(JPAUtil.reattach(biosamples));
 					System.out.println("BioViewer.actionModelChanged()1");
 				} else {
-					//Refresh the table					
+					//Refresh the table
 					biosampleTab.setBiosamples(JPAUtil.reattach(biosampleTab.getBiosamples()));
 					System.out.println("BioViewer.actionModelChanged()2");
 				}
@@ -426,9 +421,9 @@ public class BioViewerTab extends SpiritTab implements IBiosampleTab {
 	@Override
 	public void onTabSelect() {
 	}
-	
+
 	@Override
 	public void onStudySelect() {
 	}
-	
+
 }

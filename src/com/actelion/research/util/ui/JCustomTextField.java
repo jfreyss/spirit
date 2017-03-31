@@ -26,8 +26,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
@@ -232,11 +230,8 @@ public class JCustomTextField extends JTextField {
 			}
 		});
 
-		addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JCustomTextField.this.fireTextChanged();
-			}
+		addActionListener(e-> {
+			JCustomTextField.this.fireTextChanged();
 		});
 	}
 

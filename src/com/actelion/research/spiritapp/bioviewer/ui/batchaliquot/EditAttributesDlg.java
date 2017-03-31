@@ -56,7 +56,7 @@ import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 
 public class EditAttributesDlg extends JEscapeDialog {
-	
+
 	private final Sampling d;
 	private BiotypeComboBox typeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 	private JPanel contentPanel = new JPanel(new GridBagLayout());
@@ -66,22 +66,19 @@ public class EditAttributesDlg extends JEscapeDialog {
 	private JCustomTextField amountTextField = new JCustomTextField(JCustomTextField.DOUBLE);
 	private JCustomTextField commentsTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 30);
 	private ContainerTypeComboBox containerTypeComboBox = new ContainerTypeComboBox(ContainerType.valuesOfRackable());
-	
-	
+
+
 	public EditAttributesDlg(final Sampling sampling) {
 		super(UIUtils.getMainFrame(), "Edit Metadata", true);
 		this.d = sampling;
-		
-		typeComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				refresh();
-			}
+
+		typeComboBox.addTextChangeListener(e-> {
+			refresh();
 		});
 		containerTypeComboBox.setTextWhenEmpty("");
 
 
-		//TopPanel 
+		//TopPanel
 		JPanel topPanel = UIUtils.createHorizontalBox(new JLabel("Sample Type: "), typeComboBox, Box.createHorizontalGlue());
 
 		//containerPanel
@@ -90,20 +87,20 @@ public class EditAttributesDlg extends JEscapeDialog {
 		c.anchor = GridBagConstraints.WEST;
 		c.insets = new Insets(1, 1, 1, 1);
 		c.weightx = 0; c.gridx = 0; c.gridy=0; containerPanel.add(new JLabel("Container: "), c);
-			
+
 		c.weightx = 1; c.gridx = 1; c.gridy=0; containerPanel.add(UIUtils.createHorizontalBox(containerTypeComboBox/*, new JLabel("Bloc:"), containerIndexComboBox*/), c);
-			
-		
+
+
 		//Center Panel
 		topPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.GRAY));
 		contentPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.GRAY));
 		containerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.GRAY));
-		
-		JPanel centerPanel = new JPanel(new BorderLayout(3,3));		
+
+		JPanel centerPanel = new JPanel(new BorderLayout(3,3));
 		centerPanel.add(BorderLayout.NORTH, topPanel);
 		centerPanel.add(BorderLayout.CENTER, contentPanel);
 		centerPanel.add(BorderLayout.SOUTH, containerPanel);
-		
+
 		typeComboBox.setSelection(d.getBiotype());
 		refresh();
 
@@ -114,58 +111,58 @@ public class EditAttributesDlg extends JEscapeDialog {
 			@Override
 			public void actionPerformed(ActionEvent ev) {
 				try {
-					
-//					if(containerIndexComboBox.isVisible() && containerIndexComboBox.getSelection()==null) {
-//						throw new Exception("You must specify a container index");			
-//					}
-//					
-//					Check that there are no samples coming from this sampling
-//					if(sampling.getSamples().size()>0) {
-//						
-//						int res = NamedSamplingDlg.createOptionDialog(EditAttributesDlg.this, "There are "+sampling.getSamples().size()+" samples already saved. Would you like to update the metadata and the comments?", new ArrayList<Biosample>(sampling.getSamples()));
-//						if(res!=JOptionPane.YES_OPTION) return;
-//
-//						//Update Model
-//						updateModel();
-//						
-//						//Update the samples
-//						for (Biosample b : sampling.getSamples()) {
-//							if(!b.getBiotype().equals( sampling.getBiotype())) throw new Exception("The biotype cannot be changed");
-//							sampling.updateMetadata(b);
-//							if(containerTypeComboBox.isEnabled()) b.setContainer(new Container(sampling.getContainerType()));							
-//						}							
-//
-//						JOptionPane.showMessageDialog(EditAttributesDlg.this, "The samples are updated, you can still cancel by closing the window without saving", "Samples deleted", JOptionPane.INFORMATION_MESSAGE);
-//					} else {
-						//Update Model
-						updateModel();
-//					}
-					
+
+					//					if(containerIndexComboBox.isVisible() && containerIndexComboBox.getSelection()==null) {
+					//						throw new Exception("You must specify a container index");
+					//					}
+					//
+					//					Check that there are no samples coming from this sampling
+					//					if(sampling.getSamples().size()>0) {
+					//
+					//						int res = NamedSamplingDlg.createOptionDialog(EditAttributesDlg.this, "There are "+sampling.getSamples().size()+" samples already saved. Would you like to update the metadata and the comments?", new ArrayList<Biosample>(sampling.getSamples()));
+					//						if(res!=JOptionPane.YES_OPTION) return;
+					//
+					//						//Update Model
+					//						updateModel();
+					//
+					//						//Update the samples
+					//						for (Biosample b : sampling.getSamples()) {
+					//							if(!b.getBiotype().equals( sampling.getBiotype())) throw new Exception("The biotype cannot be changed");
+					//							sampling.updateMetadata(b);
+					//							if(containerTypeComboBox.isEnabled()) b.setContainer(new Container(sampling.getContainerType()));
+					//						}
+					//
+					//						JOptionPane.showMessageDialog(EditAttributesDlg.this, "The samples are updated, you can still cancel by closing the window without saving", "Samples deleted", JOptionPane.INFORMATION_MESSAGE);
+					//					} else {
+					//Update Model
+					updateModel();
+					//					}
+
 					dispose();
 					success = true;
 				} catch (Exception e) {
 					JExceptionDialog.showError(e);
 				}
-				
+
 			}
 		});
-		
+
 		//Update View
 		containerTypeComboBox.setSelection(d.getContainerType());
 		amountTextField.setTextDouble(d.getAmount());
 		commentsTextField.setMaxChars(255);
-		
+
 		setLayout(new BorderLayout());
 		add(BorderLayout.CENTER, centerPanel);
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
-		
+
 		pack();
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setLocationRelativeTo(UIUtils.getMainFrame());		
+		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
 	}
 
-	
+
 	public void refresh() {
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = GridBagConstraints.WEST;
@@ -173,10 +170,10 @@ public class EditAttributesDlg extends JEscapeDialog {
 		components.clear();
 		contentPanel.removeAll();
 		if(type!=null) {
-					
+
 			//Metadata
 			for (BiotypeMetadata m : type.getMetadata()) {
-				c.gridy++; 
+				c.gridy++;
 				c.gridx = 0; contentPanel.add(new JLabel(m.getName()  + (m.isRequired()?"*":"") + ": "), c);
 				JComponent comp = MetadataComponentFactory.getComponentFor(m);
 				if(comp instanceof MetadataComponent) {
@@ -184,37 +181,37 @@ public class EditAttributesDlg extends JEscapeDialog {
 				}
 				components.add(comp);
 				c.gridx = 1; contentPanel.add(comp, c);
-			}			
-			
+			}
+
 			//Amount
 			if(type.getAmountUnit()!=null) {
-				c.gridy++; 
+				c.gridy++;
 				c.gridx = 0; contentPanel.add(new JLabel(type.getAmountUnit().getName() + ": "), c);
 				c.gridx = 1; contentPanel.add(UIUtils.createHorizontalBox(amountTextField, new JLabel(type.getAmountUnit().getUnit())), c);
 			}
 			//Comments
-			c.gridy++; 
+			c.gridy++;
 			c.gridx = 0; contentPanel.add(new JLabel("Comments: "), c);
 			c.gridx = 1; contentPanel.add(commentsTextField, c);
 			commentsTextField.setText(d.getComments());
-			
-			
-			
-			c.gridy++; 
+
+
+
+			c.gridy++;
 			c.weighty = 1;
 			c.weightx = 1;
 			c.gridx = 1; contentPanel.add(new JLabel(""), c);
-		}	
+		}
 		contentPanel.updateUI();
 		pack();
 	}
-	
+
 	public Sampling updateModel() {
 		Biotype type = typeComboBox.getSelection();
-	
+
 		d.setBiotype(type);
 		if(type!=null) {
-			
+
 			//Update Metadata
 			int i = 0;
 			Map<BiotypeMetadata, String> metadataMap = new HashMap<>();
@@ -226,22 +223,22 @@ public class EditAttributesDlg extends JEscapeDialog {
 				i++;
 			}
 			d.setMetadataMap(metadataMap);
-			
+
 			d.setAmount(amountTextField.getTextDouble());
-			
+
 			d.setComments(commentsTextField.getText());
-			
+
 			d.setContainerType(containerTypeComboBox.getSelection());
-//			if(containerIndexComboBox.isVisible()) {
-//				d.setBlocNumber(containerIndexComboBox.getSelection());				
-//			} else {
-//				d.setBlocNumber(null);
-//			}
-//			d.setWeighingRequired(weightCheckBox.isSelected());
-//			d.setLengthRequired(lengthCheckBox.isSelected());
-//			d.setCommentsRequired(commentCheckBox.isSelected());
-			
-			
+			//			if(containerIndexComboBox.isVisible()) {
+			//				d.setBlocNumber(containerIndexComboBox.getSelection());
+			//			} else {
+			//				d.setBlocNumber(null);
+			//			}
+			//			d.setWeighingRequired(weightCheckBox.isSelected());
+			//			d.setLengthRequired(lengthCheckBox.isSelected());
+			//			d.setCommentsRequired(commentCheckBox.isSelected());
+
+
 		} else {
 			d.setMetadataMap(new HashMap<BiotypeMetadata, String>());
 		}

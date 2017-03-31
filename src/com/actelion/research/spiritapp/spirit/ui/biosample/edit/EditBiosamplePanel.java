@@ -22,8 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.biosample.edit;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 import java.util.Set;
 
@@ -47,7 +45,7 @@ import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 
 public class EditBiosamplePanel extends JPanel {
-	
+
 	private int push = 0;
 	private final EditBiosampleDlg dlg;
 	private final EditBiosampleTable table = new EditBiosampleTable();
@@ -55,61 +53,52 @@ public class EditBiosamplePanel extends JPanel {
 	//Type
 	private final BiotypeComboBox typeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 	private final JButton formModeButton = new JButton("Switch to Form Mode");
-	
+
 	//Scan
-//	private SpiritScanner model = new SpiritScanner();
-//	private JButton scanButton = new JButton(new ScanRackForTableAction(model, table, Verification.NONE, true));
 	private JButton setLocationButton = new JButton(new SetLocationAction(table));
-		
+
 	/**
 	 * Standard constructor
 	 * @param biosampleBatchEditDlg
 	 */
 	public EditBiosamplePanel(EditBiosampleDlg biosampleBatchEditDlg) {
 		this.dlg = biosampleBatchEditDlg;
-		
+
 		setBorder(BorderFactory.createEtchedBorder());
 		setLayout(new BorderLayout());
-				
-		add(BorderLayout.NORTH, 
+
+		add(BorderLayout.NORTH,
 				UIUtils.createVerticalBox(
 						UIUtils.createHorizontalBox(formModeButton, Box.createHorizontalGlue()),
 						UIUtils.createTitleBox("Biotype", UIUtils.createHorizontalBox(new JLabel("Biotype: "), typeComboBox, Box.createHorizontalGlue(), setLocationButton))));
 		add(BorderLayout.CENTER, new JScrollPane(table));
-		
-		typeComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				eventBiotypeChanged();	
-			}
-		});			
 
-		formModeButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Biotype biotype = typeComboBox.getSelection();
-				if(biotype==null) return;
-				
-				if(table.getRows().size()==0) {
-					dlg.dispose();
-					Biosample b = new Biosample(biotype);
-					new BiosampleFormDlg(b);
-				} else if(table.getRows().size()==1) {
-					dlg.dispose();
-					new BiosampleFormDlg(table.getRows().get(0));
-				} else {
-					JExceptionDialog.showError(EditBiosamplePanel.this, "You cannot switch to form mode if you have more than one biosample");
-				}
-				
+		typeComboBox.addTextChangeListener(e-> {
+			eventBiotypeChanged();
+		});
+
+		formModeButton.addActionListener(e-> {
+			Biotype biotype = typeComboBox.getSelection();
+			if(biotype==null) return;
+
+			if(table.getRows().size()==0) {
+				dlg.dispose();
+				Biosample b = new Biosample(biotype);
+				new BiosampleFormDlg(b);
+			} else if(table.getRows().size()==1) {
+				dlg.dispose();
+				new BiosampleFormDlg(table.getRows().get(0));
+			} else {
+				JExceptionDialog.showError(EditBiosamplePanel.this, "You cannot switch to form mode if you have more than one biosample");
 			}
 		});
 	}
-	
+
 	public EditBiosampleTable getTable() {
 		return table;
 	}
-	
-	
+
+
 	private void eventBiotypeChanged() {
 		if(push>0) return;
 		push++;
@@ -123,11 +112,11 @@ public class EditBiosamplePanel extends JPanel {
 					String s = b.getMetadataValue(m);
 					if(s!=null && s.length()>0) hasData = true;
 				}
-			}	
-			
+			}
+
 			Biotype biotype = typeComboBox.getSelection();
 			if(biotype!=null) {
-				if(hasData) {		
+				if(hasData) {
 					if(!biotype.equals(table.getType())) {
 						//Raise an exception if the biotype was changed
 						JOptionPane.showMessageDialog(dlg, "You cannot change the type once you have entered some metadata", "Error", JOptionPane.ERROR_MESSAGE);
@@ -137,11 +126,7 @@ public class EditBiosamplePanel extends JPanel {
 					//Change the type
 					List<Biosample> biosamples = table.getBiosamples();
 					for (Biosample b : biosamples) {
-//						for (Metadata m : b.getMetadataMap().values()) {
-//							m.setBiosample(null);								
-//						}
-//						b.getMetadataMap().clear();
-						b.setBiotype(biotype);					
+						b.setBiotype(biotype);
 					}
 					Spirit.getConfig().setProperty("biosample.type", biotype==null?"": biotype.getName());
 					table.setRows(biotype, biosamples);
@@ -155,21 +140,21 @@ public class EditBiosamplePanel extends JPanel {
 					}
 				}
 			}
-			
+
 			setLocationButton.setVisible(biotype!=null && !biotype.isAbstract() && biotype.getCategory()!=BiotypeCategory.LIVING);
-			
+
 		} catch (Exception e) {
 			JExceptionDialog.showError(dlg, e);
 		} finally {
 			push--;
 		}
 	}
-	
-	
+
+
 
 	public void setRows(List<Biosample> biosamples) throws Exception {
-		
-				
+
+
 		Set<Biotype> biotypes = Biosample.getBiotypes(biosamples);
 		Biotype biotype = biotypes.size()==1? biotypes.iterator().next(): null;
 		table.setRows(biotype, biosamples);
@@ -182,7 +167,7 @@ public class EditBiosamplePanel extends JPanel {
 		}
 		eventBiotypeChanged();
 	}
-	
+
 	public Biotype getBiotype() {
 		return typeComboBox.getSelection();
 	}

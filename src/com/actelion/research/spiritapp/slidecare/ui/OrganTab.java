@@ -39,8 +39,6 @@ import javax.swing.Box;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleComboBox;
 import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
@@ -57,52 +55,46 @@ public class OrganTab extends JPanel {
 	private final BiosampleComboBox animalCombobox = new BiosampleComboBox();
 	private final JPanel poolPanel = new JPanel();
 	private int animalNo;
-	private BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes()); 
+	private BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 	private JCheckBox onlyInCassetteCheckBox = new JCheckBox("Must be in a cassette");
-	
+
 	public OrganTab(ContainerCreatorDlg dlg, int animalNo, boolean filterOnlyInCassette) {
 		super(new BorderLayout());
 		this.dlg = dlg;
 		this.animalNo = animalNo;
-		
+
 		biotypeComboBox.setSelectionString("Organ");
 		onlyInCassetteCheckBox.setSelected(filterOnlyInCassette);
-		
+
 		JPanel filterPanel = UIUtils.createHorizontalBox(
-				new JLabel(" Check samples of: "), 
-				animalCombobox, 
+				new JLabel(" Check samples of: "),
+				animalCombobox,
 				new JLabel("   Biotype:"),
-				biotypeComboBox, 
+				biotypeComboBox,
 				onlyInCassetteCheckBox,
 				Box.createHorizontalGlue());
-		
+
 		poolPanel.setPreferredSize(new Dimension(600, 200));
 		poolPanel.setBackground(Color.WHITE);
 		poolPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-		
+
 		add(BorderLayout.NORTH, filterPanel);
 		add(BorderLayout.CENTER, poolPanel);
-		animalCombobox.addActionListener(new ActionListener() {			
+		animalCombobox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				refreshItems();
 			}
 		});
-		biotypeComboBox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				refreshItems();
-			}
+		biotypeComboBox.addTextChangeListener(e-> {
+			refreshItems();
 		});
-		onlyInCassetteCheckBox.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				refreshItems();		
-			}
+		onlyInCassetteCheckBox.addChangeListener(e-> {
+			refreshItems();
 		});
-		
+
 	}
-	
+
 	public void refresh() {
 		List<Biosample> animals = dlg.getStudy().getTopAttachedBiosamples();
 		animalCombobox.setValues(animals, "Select One...");
@@ -111,13 +103,13 @@ public class OrganTab extends JPanel {
 		}
 		refreshItems();
 	}
-	
+
 	public void refreshItems() {
 		Biosample animal = animalCombobox.getSelection();
-		
+
 
 		TreeSet<Biotype> biotypes = new TreeSet<Biotype>();
-				
+
 		List<SampleDescriptor> containerSamples = new ArrayList<SampleDescriptor>();
 		if(animal!=null) {
 			containerSamples = getPossibleContainerSamples(animalNo, animal);
@@ -127,8 +119,8 @@ public class OrganTab extends JPanel {
 			}
 		}
 		biotypeComboBox.setValues(biotypes);
-		
-		
+
+
 
 		//create a map: classifier->list of ContainerSample
 		Map<String, List<SampleDescriptor>> map = new TreeMap<>();
@@ -142,7 +134,7 @@ public class OrganTab extends JPanel {
 			}
 			l.add(s);
 		}
-		
+
 		//Position items
 		poolPanel.removeAll();
 		poolPanel.setLayout(null);
@@ -156,15 +148,15 @@ public class OrganTab extends JPanel {
 				poolPanel.add(s);
 				y+=OrganSamplePanel.HEIGHT + 1;
 				maxY = Math.max(maxY, y);
-			}			
+			}
 			x+=OrganSamplePanel.WIDTH+10;
 		}
 		poolPanel.setPreferredSize(new Dimension(x, maxY));
-		
+
 		validate();
 		repaint();
-		
-		
+
+
 	}
 	private static List<SampleDescriptor> getPossibleContainerSamples(int animalNo, Biosample b) {
 		List<SampleDescriptor> res = new ArrayList<SampleDescriptor>();
@@ -174,24 +166,24 @@ public class OrganTab extends JPanel {
 	private static void getPossibleContainerSamplesRec(int animalNo, Biosample b, List<SampleDescriptor> res) {
 		//Create a compatible SlideSample
 		SampleDescriptor s = new SampleDescriptor(animalNo, b);
-		
-		//Find if is already present 
+
+		//Find if is already present
 		SampleDescriptor found = null;
 		for (SampleDescriptor sampling: res) {
 			if(sampling.equals(s)) {
 				found = sampling;
 			}
 		}
-		
+
 		if(found==null && b.getTopParent()!=b && b.getContainerType()!=ContainerType.SLIDE) {
-			res.add(s);													
+			res.add(s);
 		}
-		
+
 		//Recursion
 		for (Biosample child : b.getChildren()) {
 			getPossibleContainerSamplesRec(animalNo, child, res);
 		}
 	}
-	
-	
+
+
 }

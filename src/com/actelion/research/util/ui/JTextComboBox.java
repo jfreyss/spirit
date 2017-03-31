@@ -139,7 +139,7 @@ public class JTextComboBox extends JCustomTextField {
 				if (push > 0) return;
 				try {
 					push++;
-					setTextFromList(list.getSelectedValue());
+					selectText(list.getSelectedValue());
 					if (!ctrlDown) {
 						hidePopup();
 					}
@@ -291,7 +291,7 @@ public class JTextComboBox extends JCustomTextField {
 			public void keyTyped(KeyEvent e) {
 				if (e.getKeyChar() == 10) { // enter
 					if (popup != null && popup.isVisible()) {
-						setTextFromList();
+						selectText(list.getSelectedIndex()<0? getText(): list.getSelectedValue());
 						hidePopup();
 					}
 					// fireTextChanged();
@@ -692,13 +692,13 @@ public class JTextComboBox extends JCustomTextField {
 		repaint();
 	}
 
-	private void setTextFromList() {
-		if (list == null || popup == null || !popup.isVisible()) return;
-		String text = getText();
-		setTextFromList(text);
-	}
+	//	private void setTextFromList() {
+	//		if (list == null || popup == null || !popup.isVisible()) return;
+	//		String text = getText();
+	//		setTextFromList(text);
+	//	}
 
-	private void setTextFromList(String text) {
+	private void selectText(String text) {
 		if (multiChoices && separators.length() > 0) {
 
 			// Find current entered tokens

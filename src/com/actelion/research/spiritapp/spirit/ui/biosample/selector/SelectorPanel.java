@@ -54,7 +54,7 @@ public class SelectorPanel extends JPanel {
 		//queryComboBox
 		queryComboBox = new JTextComboBox(dlg.getQueryValues());
 		queryComboBox.setTextWhenEmpty(dlg.getQueryLinker()==null?"": dlg.getQueryLinker().toString());
-		queryComboBox.addActionListener(e-> {
+		queryComboBox.addTextChangeListener(e-> {
 			updateList();
 			dlg.selectionQueryChanged();
 		});
