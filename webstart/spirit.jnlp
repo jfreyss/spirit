@@ -2,9 +2,9 @@
 <jnlp spec="1.0+" codebase="https://jfreyss.github.io/spirit/webstart/spirit-bin">
 	<information>
 		<title>Spirit</title>		
-		<vendor>Actelion</vendor>
-		<homepage href="http://www.actelion.com"/>
-		<description>Spirit - Joel Freyss Actelion Pharmaceuticals Ltd</description>
+		<vendor>Idorsia Pharmaceuticals Ltd</vendor>
+		<homepage href="https://jfreyss.github.io/spirit/"/>
+		<description>Spirit - Joel Freyss - Idorsia Pharmaceuticals Ltd</description>
 		<description kind="short">Spirit</description>
 		<icon href="ico.png"/>
 		<icon kind="shortcut" href="ico.png"/>
@@ -12,7 +12,7 @@
 		<icon kind="splash2"  href="spirit.jpg"/>
 		<shortcut online="false">
 	      <desktop/>
-	      <menu submenu="Actelion"/>
+	      <menu submenu="Idorsia"/>
 	    </shortcut>
 	</information>
 	<security>
