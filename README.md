@@ -1,4 +1,4 @@
-# SPIRIT: a LIMS for study / biosample research
+# SPIRIT: a LIMS for study / biosample managament
 Spirit is a study/biosample management application for drug discovery research, which is developed and maintained by Actelion Pharmaceuticals Ltd. 
 
 More infos are available on the Spirit site: https://jfreyss.github.io/spirit/
