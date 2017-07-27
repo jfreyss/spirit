@@ -24,6 +24,7 @@ package com.actelion.research.spiritapp.spirit.ui.study;
 import java.awt.BorderLayout;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -98,67 +99,18 @@ public class StudyTab extends SpiritTab implements IStudyTab {
 	}
 
 	@Override
-	public<T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
+	public<T> void fireModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
 		if(!isShowing()) return;
 		if(action==SpiritChangeType.MODEL_DELETED && what==Study.class) {
 			studyTable.getModel().getRows().removeAll(details);
 			studyTable.getModel().fireTableDataChanged();
 			studyDetailPanel.setStudy(null);
 		} else if((action==SpiritChangeType.MODEL_UPDATED || action==SpiritChangeType.MODEL_ADDED) && what==Study.class) {
-			getFrame().setStudyId(((Study)details.get(0)).getStudyId());
-			//			setStudyIds(((Study)details.get(0)).getStudyId());
+			getFrame().setStudyId(((Study)details.iterator().next()).getStudyId());
 		}
 
 		studyTable.reload();
 	}
-
-	//	@Override
-	//	public String getStudyIds() {
-	//		String studyIds = searchPane.getSearchTree().getStudyIds();
-	//		if(studyIds.length()==0) {
-	//			StringBuilder sb = new StringBuilder();
-	//			if(studyTable.getRowCount()<=1) {
-	//				for(Study study: studyTable.getRows()) {
-	//					sb.append((sb.length()>0?", ":"") + study.getStudyId());
-	//				}
-	//			} else {
-	//				for(Study study: studyTable.getSelection()) {
-	//					sb.append((sb.length()>0?", ":"") + study.getStudyId());
-	//				}
-	//			}
-	//			studyIds = sb.toString();
-	//		}
-	//		return studyIds;
-	//	}
-	//
-	//	@Override
-	//	public void setStudyIds(final String studyIds) {
-	//		if(studyIds==null || studyIds.length()==0) return;
-	//		if(studyIds.equals(getStudyIds())) return; //no need to refresh
-	//
-	//		this.initialized = true;
-	//		searchPane.setStudyIds(studyIds);
-	//
-	//		//Execute this thread after the others
-	//		new SwingWorkerExtended("Loading Studies", studyTable, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
-	//			List<Study> studies;
-	//			@Override
-	//			protected void doInBackground() throws Exception {
-	//				StudyQuery q = new StudyQuery();
-	//				q.setStudyIds(studyIds);
-	//
-	//				studies = DAOStudy.queryStudies(q, SpiritFrame.getUser());
-	//			}
-	//			@Override
-	//			protected void done() {
-	//				if(!studyTable.getRows().containsAll(studies)) {
-	//					studyTable.setRows(studies);
-	//				}
-	//				studyTable.setSelection(studies);
-	//			}
-	//		};
-	//	}
-
 
 	@Override
 	public void setStudy(Study study) {

@@ -21,8 +21,6 @@
 
 package com.actelion.research.spiritapp.spirit.ui.util.formtree;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
@@ -40,19 +38,18 @@ public class InputNode extends AbstractNode<String> {
 	public InputNode(FormTree tree, String label, final Strategy<String> accessor) {
 		this(tree, null, label, accessor);
 	}
+
 	public InputNode(FormTree tree, FieldType fieldType, String label, final Strategy<String> accessor) {
-		
+
 		super(tree, label, accessor);
-		
+
 		textField.setFont(editFont);
-		textField.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				textField.selectAll();
-				getTree().firePropertyChange(FormTree.PROPERTY_SUBMIT_PERFORMED, false, true);
-				if(strategy!=null) strategy.onAction();
-			}
+		textField.addActionListener(e-> {
+			textField.selectAll();
+			getTree().firePropertyChange(FormTree.PROPERTY_SUBMIT_PERFORMED, false, true);
+			if(strategy!=null) strategy.onAction();
 		});
+
 		textField.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
@@ -60,25 +57,25 @@ public class InputNode extends AbstractNode<String> {
 				if(strategy!=null) strategy.onChange();
 			}
 		});
-		
-	
+
+
 		textField.setTextWhenEmpty(label);
 		textField.setToolTipText("<html> <b>" + MiscUtils.removeHtml(label) + "</b><br>"
-		+ (fieldType==FieldType.OR_CLAUSE? QueryTokenizer.getHelp(false): fieldType==FieldType.AND_CLAUSE? QueryTokenizer.getHelp(true): "") + "</html>");
+				+ (fieldType==FieldType.OR_CLAUSE? QueryTokenizer.getHelp(false): fieldType==FieldType.AND_CLAUSE? QueryTokenizer.getHelp(true): "") + "</html>");
 		addEventsToComponent();
 	}
-	
-	
-	
+
+
+
 	@Override
 	public JComponent getComponent() {
 		return textField;
 	}
-	
+
 	public JTextField getTextField() {
 		return textField;
 	}
-	
+
 	@Override
 	protected void updateModel() {
 		strategy.setModel(textField.getText());
@@ -96,5 +93,5 @@ public class InputNode extends AbstractNode<String> {
 	public JComponent getFocusable() {
 		return textField;
 	}
-	
+
 }

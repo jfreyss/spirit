@@ -35,43 +35,48 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
+/**
+ * DAO functions linked to orders from stores (WEB API)
+ *
+ * @author Joel Freyss
+ */
 public class DAOOrder {
 
 	public static Order getOrder(int id) {
 		EntityManager session = JPAUtil.getManager();
-		List<Order> res = (List<Order>) session.createQuery("SELECT o FROM Order o WHERE o.id = ?1")
+		List<Order> res = session.createQuery("SELECT o FROM Order o WHERE o.id = ?1")
 				.setParameter(1, id)
-				.getResultList();		
+				.getResultList();
 		return res.size()==1? res.get(0): null;
 	}
-	
+
 	public static List<Order> getOrders(SpiritUser user) {
 		EntityManager session = JPAUtil.getManager();
-		List<Order> res = (List<Order>) session.createQuery("SELECT o FROM Order o WHERE o.creUser = ?1")
+		List<Order> res = session.createQuery("SELECT o FROM Order o WHERE o.creUser = ?1")
 				.setParameter(1, user.getUsername())
 				.getResultList();
 		Collections.sort(res);
-		return res;		
+		return res;
 	}
 
 	public static List<Order> getActiveOrders(int orMoreRecentThan) {
-		
+
 		Date now = JPAUtil.getCurrentDateFromDatabase();
 		Date minDate = MiscUtils.addDays(now, -Math.max(0, orMoreRecentThan));
-		
+
 		EntityManager session = JPAUtil.getManager();
-		List<Order> res = (List<Order>) session.createQuery(
+		List<Order> res = session.createQuery(
 				"SELECT o FROM Order o "
-				+ " WHERE " 
-				+ " o.updDate > ?1"
-				+ " or (o.status <> '"+OrderStatus.CANCELED.name()+"' and o.status <> '"+OrderStatus.CLOSED.name()+"' and o.status <> '"+OrderStatus.REFUSED.name()+"')")
+						+ " WHERE "
+						+ " o.updDate > ?1"
+						+ " or (o.status <> '"+OrderStatus.CANCELED.name()+"' and o.status <> '"+OrderStatus.CLOSED.name()+"' and o.status <> '"+OrderStatus.REFUSED.name()+"')")
 				.setParameter(1, minDate).getResultList();
 		Collections.sort(res);
 		return res;
 	}
-	
+
 	/**
-	 * Persist the orders 
+	 * Persist the orders
 	 * @param orders
 	 * @param user
 	 */
@@ -81,18 +86,18 @@ public class DAOOrder {
 			if(!SpiritRights.canEdit(order, user)) throw new Exception("You are not allowed to edit "+order);
 			if(order.getContainerIds().isEmpty()) throw new Exception("The orders cannot be empty");
 		}
-		
+
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {
 			txn = session.getTransaction();
 			txn.begin();
 			Date now = JPAUtil.getCurrentDateFromDatabase();
-			
+
 			for (Order order : orders) {
 				order.setUpdDate(now);
 				order.setUpdUser(user.getUsername());
-				
+
 				if(order.getId()<=0) {
 					order.setCreDate(order.getUpdDate());
 					order.setCreUser(order.getUpdUser());
@@ -106,8 +111,8 @@ public class DAOOrder {
 		} finally {
 			if (txn != null && txn.isActive()) try {txn.rollback();} catch (Exception e) {}
 		}
-		
-		
+
+
 	}
-		
+
 }

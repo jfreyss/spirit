@@ -39,6 +39,11 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
+/**
+ * DAO functions linked to barcode generation
+ *
+ * @author Joel Freyss
+ */
 public class DAOBarcode {
 
 	/**
@@ -51,20 +56,31 @@ public class DAOBarcode {
 	public static synchronized void reset() {
 		prefix2PrecomputedIds.clear();
 	}
-	
+
+	/**
+	 * Gets the next barcodeId for a specific container (using the container's prefix: 2 first characters)
+	 * @param locType
+	 * @return
+	 */
 	public static String getNextId(ContainerType locType) {
-		String prefix = locType.getName().substring(0, 2).toUpperCase();
+		String prefix = (locType.getName()+"XX").substring(0, 2).toUpperCase();
 		return getNextId(Category.CONTAINER, prefix);
 	}
-	
+
+	/**
+	 * Gets the next barcodeId for a specific biotype (using the biotype's prefix)
+	 * @param locType
+	 * @throws Exception if the container has no prefix
+	 * @return
+	 */
 	public static String getNextId(Biotype biotype) throws Exception {
-		if(biotype==null) throw new Exception("You must give a type");
+		if(biotype==null) throw new Exception("You must give a biotype");
 		String prefix = biotype.getPrefix();
 		if(prefix==null || prefix.length()==0) throw new Exception("SampleIds cannot be generated for " +biotype.getName()+" because the prefix is null");
 		return DAOBarcode.getNextId(Category.BIOSAMPLE, prefix);
 	}
 
-	
+
 	public static String formatPattern(String pattern) {
 		//Replace patterns in the prefix
 		if(pattern.indexOf("{")>0) {
@@ -74,14 +90,19 @@ public class DAOBarcode {
 			pattern = pattern.replace("{YYYY}", new DecimalFormat("0000").format(cal.get(Calendar.YEAR)));
 			pattern = pattern.replace("{MM}", new DecimalFormat("00").format(cal.get(Calendar.MONTH) % 100));
 			pattern = pattern.replace("{DD}", new DecimalFormat("00").format(cal.get(Calendar.DAY_OF_MONTH) % 100));
-		}		
+		}
 		return pattern;
 	}
-	
-	public static String getExample(String prefix) {		
+
+	/**
+	 * Generates an example of a barcode, using the given prefix and the id: 1
+	 * @param prefix
+	 * @return
+	 */
+	public static String getExample(String prefix) {
 		return formatPattern(prefix) + idFormat.format(1);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static synchronized String getNextId(Category cat, String prefixPattern) {
 		String prefix = formatPattern(prefixPattern);
@@ -90,44 +111,44 @@ public class DAOBarcode {
 		List<String> list = prefix2PrecomputedIds.get(cat+"_"+prefix);
 		LoggerFactory.getLogger(DAOBarcode.class).debug("getNextId for "+prefix+" list.n="+(list==null?"":list.size())+" next="+(list==null || list.size()==0?"":list.get(0)));
 		boolean newPrefix = list == null;
-		
+
 		//Generate next id
 		if(list==null || list.size()==0) {
-			
-			
+
+
 			list = new ArrayList<>();
 			prefix2PrecomputedIds.put(cat+"_"+prefix, list);
-			
+
 			int reserveN = cat==Category.BIOSAMPLE || cat==Category.CONTAINER? 20: 1;
-			
+
 			/**Find the last used barcode (security check if BarcodeSequence is invalid)*/
 			int lastBarcodeN1 = -1;
 			{
 				EntityManager session = JPAUtil.getManager();
 				if(newPrefix) {
-					String lastBarcode; 
-				
+					String lastBarcode;
+
 					if(cat==Category.BIOSAMPLE) {
 						lastBarcode = (String) session.createQuery(
-							"SELECT max(sampleId) FROM Biosample b WHERE sampleId like ?1")
-							.setParameter(1, prefix+"%")
-							.getSingleResult();
+								"SELECT max(sampleId) FROM Biosample b WHERE sampleId like ?1")
+								.setParameter(1, prefix+"%")
+								.getSingleResult();
 					} else if(cat==Category.LOCATION) {
 						lastBarcode = (String) session.createQuery(
-							"SELECT max(l.name) FROM Location l WHERE l.name like ?1")
-							.setParameter(1, prefix+"0%")
-							.getSingleResult();
+								"SELECT max(l.name) FROM Location l WHERE l.name like ?1")
+								.setParameter(1, prefix+"0%")
+								.getSingleResult();
 					} else if(cat==Category.CONTAINER) {
 						lastBarcode = (String) session.createQuery(
-						"SELECT max(b.container.containerId) FROM Biosample b WHERE b.container.containerId like ?1")
-						.setParameter(1, prefix+"0%")
-						.getSingleResult();
-					
+								"SELECT max(b.container.containerId) FROM Biosample b WHERE b.container.containerId like ?1")
+								.setParameter(1, prefix+"0%")
+								.getSingleResult();
+
 					} else {
 						throw new IllegalArgumentException("Invalid category: "+cat);
 					}
 					if(lastBarcode==null) {
-						lastBarcodeN1 = 0; 
+						lastBarcodeN1 = 0;
 					} else {
 						lastBarcode = lastBarcode.substring(prefix.length());
 						if(lastBarcode.lastIndexOf('-')>0) lastBarcode = lastBarcode.substring(0, lastBarcode.lastIndexOf('-'));
@@ -138,8 +159,8 @@ public class DAOBarcode {
 						}
 					}
 				}
-			} 
-			
+			}
+
 			//Find the theoretical last barcode, and update it.
 			//Be careful to create a new session, or we may commit all other changes (open request must be followed by JPAUtil.closerequest in the finally close)
 			EntityTransaction txn = null;
@@ -147,7 +168,7 @@ public class DAOBarcode {
 			try {
 				session = JPAUtil.createManager();
 
-				List<BarcodeSequence> barcodeSequences = (List<BarcodeSequence>) session.createQuery(
+				List<BarcodeSequence> barcodeSequences = session.createQuery(
 						"SELECT bs FROM BarcodeSequence bs WHERE type = ?1 and category = ?2")
 						.setParameter(1, prefix)
 						.setParameter(2, cat)
@@ -164,7 +185,7 @@ public class DAOBarcode {
 						list.add(nextBarcode);
 					}
 					BarcodeSequence sequence = new BarcodeSequence(cat, prefix, nextBarcode);
-					session.persist(sequence);									
+					session.persist(sequence);
 				} else {
 					BarcodeSequence sequence = barcodeSequences.get(0);
 					String lastBarcode = sequence.getLastBarcode();
@@ -174,14 +195,14 @@ public class DAOBarcode {
 							//The sequence number is smaller than the actual sampleId
 							System.err.println("Error in the naming for sequence prefix: "+prefix+ ", restart at "+lastBarcodeN1+" instead of "+lastBarcodeN2);
 							lastBarcodeN2 = lastBarcodeN1;
-						} else if(lastBarcodeN1>=0 && lastBarcodeN2> lastBarcodeN1 + MAX_HOLE) { 
-							//Such a big hole in the sequence is very unlikely, 
+						} else if(lastBarcodeN1>=0 && lastBarcodeN2> lastBarcodeN1 + MAX_HOLE) {
+							//Such a big hole in the sequence is very unlikely,
 							System.err.println("Fix hole in NextId Sequence for prefix: "+prefix+ ", restart at "+lastBarcodeN1+" instead of "+lastBarcodeN2);
 							lastBarcodeN2 = lastBarcodeN1;
 						}
 					}
-					
-					
+
+
 					for (int i = 0; i < reserveN; i++) {
 						nextBarcode = prefix + idFormat.format(lastBarcodeN2+i+1);
 						list.add(nextBarcode);
@@ -190,13 +211,13 @@ public class DAOBarcode {
 				}
 				txn.commit();
 				txn = null;
-				
-			} finally {			
+
+			} finally {
 				if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
 				if(session!=null) try{session.close();}catch (Exception e) {}
 			}
 		}
-		
+
 		String res = list.remove(0);
 		return res;
 	}
@@ -209,7 +230,7 @@ public class DAOBarcode {
 		List<BarcodeSequence> barcodeSequences = session.createQuery("SELECT bs FROM BarcodeSequence bs WHERE type = ?1")
 			.setParameter(1, prefix)
 			.getResultList();
-		
+
 		String barcode = prefix + idFormat.format(maxId);
 		BarcodeSequence sequence = null;
 		if(barcodeSequences.size()>0) {
@@ -221,42 +242,42 @@ public class DAOBarcode {
 		} else {
 			sequence = new BarcodeSequence(Category.BIOSAMPLE, prefix, barcode);
 		}
-	
+
 		try {
 			txn = session.getTransaction();
 			txn.begin();
 			session.merge(sequence);
 			txn.commit();
-			txn = null;			
+			txn = null;
 			return true;
 		} finally {
 			if(txn!=null) txn.rollback();
-		}	
+		}
 	}
-	*/
-//
-//	public static String getNextBarcode(String prefix) throws Exception {
-//		EntityManager session = JPAUtil.getManager();
-//		//Load all
-//		Query query = session.createQuery(
-//				" SELECT max(l.name)  " +
-//				" FROM Location l " +
-//				" WHERE l.name like '" + prefix + "0%'");
-//		try {
-//			String last = (String) query.getSingleResult();
-//			int lastId;
-//			if(last==null) {
-//				lastId = 0;
-//			} else {
-//				lastId = Integer.parseInt(last.substring(prefix.length()));
-//			}
-//			
-//			
-//			return prefix + new DecimalFormat("0000000").format(lastId+1);
-//		} catch (Exception e) {
-//			throw e;
-//		}
-//	}
+	 */
+	//
+	//	public static String getNextBarcode(String prefix) throws Exception {
+	//		EntityManager session = JPAUtil.getManager();
+	//		//Load all
+	//		Query query = session.createQuery(
+	//				" SELECT max(l.name)  " +
+	//				" FROM Location l " +
+	//				" WHERE l.name like '" + prefix + "0%'");
+	//		try {
+	//			String last = (String) query.getSingleResult();
+	//			int lastId;
+	//			if(last==null) {
+	//				lastId = 0;
+	//			} else {
+	//				lastId = Integer.parseInt(last.substring(prefix.length()));
+	//			}
+	//
+	//
+	//			return prefix + new DecimalFormat("0000000").format(lastId+1);
+	//		} catch (Exception e) {
+	//			throw e;
+	//		}
+	//	}
 
 
 }

@@ -35,7 +35,7 @@ import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.form.BiosampleFormDlg;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
@@ -50,9 +50,10 @@ public class EditBiosamplePanel extends JPanel {
 	private final EditBiosampleDlg dlg;
 	private final EditBiosampleTable table = new EditBiosampleTable();
 
-	//Type
-	private final BiotypeComboBox typeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
+	//Top
 	private final JButton formModeButton = new JButton("Switch to Form Mode");
+	private JPanel formModeBox = UIUtils.createHorizontalBox(formModeButton, Box.createHorizontalGlue());
+	private final BiotypeComboBox typeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 
 	//Scan
 	private JButton setLocationButton = new JButton(new SetLocationAction(table));
@@ -69,7 +70,7 @@ public class EditBiosamplePanel extends JPanel {
 
 		add(BorderLayout.NORTH,
 				UIUtils.createVerticalBox(
-						UIUtils.createHorizontalBox(formModeButton, Box.createHorizontalGlue()),
+						formModeBox,
 						UIUtils.createTitleBox("Biotype", UIUtils.createHorizontalBox(new JLabel("Biotype: "), typeComboBox, Box.createHorizontalGlue(), setLocationButton))));
 		add(BorderLayout.CENTER, new JScrollPane(table));
 
@@ -91,6 +92,9 @@ public class EditBiosamplePanel extends JPanel {
 			} else {
 				JExceptionDialog.showError(EditBiosamplePanel.this, "You cannot switch to form mode if you have more than one biosample");
 			}
+		});
+		table.getModel().addTableModelListener(e-> {
+			formModeBox.setVisible(table.getRows().size()<=1);
 		});
 	}
 

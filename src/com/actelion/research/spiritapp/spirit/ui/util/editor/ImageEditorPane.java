@@ -30,7 +30,7 @@ import java.util.Map;
 
 import javax.swing.JEditorPane;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 
 public class ImageEditorPane extends JEditorPane {
 	

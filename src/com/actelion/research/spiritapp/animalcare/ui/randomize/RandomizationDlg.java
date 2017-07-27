@@ -36,7 +36,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
+import com.actelion.research.spiritapp.spirit.ui.util.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.util.component.AutosaveDecorator;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritcore.business.biosample.Biosample;

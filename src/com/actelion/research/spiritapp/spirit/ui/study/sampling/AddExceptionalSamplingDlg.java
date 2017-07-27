@@ -22,8 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.study.sampling;
 
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -45,11 +43,11 @@ import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleList;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.study.PhaseComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
@@ -71,37 +69,31 @@ import com.actelion.research.util.ui.iconbutton.JIconButton;
  *
  */
 public class AddExceptionalSamplingDlg extends JEscapeDialog {
-	
-	
+
+
 	private Study study;
 	private PhaseComboBox phaseComboBox = new PhaseComboBox();
 	private BiosampleList biosampleList = new BiosampleList();
 	private NamedSamplingComboBox namedSamplingComboBox;
 
-	
+
 	public AddExceptionalSamplingDlg(Study study) {
 		this(study, null, null);
-		
+
 	}
 
 	public AddExceptionalSamplingDlg(Study s, List<Biosample> specimen, Phase phase) {
 		super(UIUtils.getMainFrame(), "Add Exceptional Sampling");
-		
+
 		this.study = JPAUtil.reattach(s);
 
 		if(!study.isSynchronizeSamples()) {
 			JExceptionDialog.showError(new Exception("This feature can only be used for synchronized studies"));
 			return;
 		}
-				
-		namedSamplingComboBox = new NamedSamplingComboBox(study.getNamedSamplings(), true);
-		
-		//Components
-//		JButton newSamplingButton = new JButton("New Sampling");
-//		newSamplingButton.addActionListener(e -> {
-//			CreateChildrenDlg
-//		});
-		
+
+		namedSamplingComboBox = new NamedSamplingComboBox(study.getNamedSamplings());
+
 		JButton newPhaseButton = new JButton("New Phase");
 		newPhaseButton.addActionListener(e-> {
 			String phaseName = JOptionPane.showInputDialog(AddExceptionalSamplingDlg.this, "Please enter the new phase (Format: " + study.getPhaseFormat() + ")", "New Phase", JOptionPane.QUESTION_MESSAGE);
@@ -111,7 +103,7 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 				if(study.getPhase(newPhase.getShortName())!=null) {
 					throw new Exception("The phase "+newPhase+" exists already");
 				}
-						
+
 				List<Phase> phases = new ArrayList<>();
 				phases.addAll(study.getPhases());
 				phases.add(newPhase);
@@ -120,37 +112,34 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
-		});		
-		
+		});
+
 		List<Phase> phases = new ArrayList<>();
 		phases.addAll(study.getPhases());
 		phaseComboBox.setValues(phases);
 		phaseComboBox.selectCurrentPhase();
-				
+
 		final List<Biosample> animalInGroups = new ArrayList<>();
 		for(Biosample b: study.getTopAttachedBiosamples()) {
 			if(b.getInheritedGroup()!=null) animalInGroups.add(b);
-		}		
-		
-		biosampleList.setBiosamples(animalInGroups);		
-		
+		}
+
+		biosampleList.setBiosamples(animalInGroups);
+
 		JButton okButton = new JIconButton(IconType.SAVE.getIcon(), "Add Sampling & Create Samples");
-		okButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					eventOk();
-				} catch(Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
+		okButton.addActionListener(e-> {
+			try {
+				eventOk();
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});
 
-		//Layout		
-		JEditorPane infoPanel = new ImageEditorPane( 
+		//Layout
+		JEditorPane infoPanel = new ImageEditorPane(
 				"<html>Use this dialog to add a sampling not covered by the current study design (ex: sacrifice after some trigger).<br><br>"
-				+ " The study design will then be updated to match this case."
-				+ " </html>");
+						+ " The study design will then be updated to match this case."
+						+ " </html>");
 		LF.initComp(infoPanel);
 		infoPanel.setEditable(false);
 		infoPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(), BorderFactory.createEmptyBorder(2, 2, 2, 2)));
@@ -159,28 +148,28 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		sp.setPreferredSize(new Dimension(200,300));
 		JPanel centerPane = UIUtils.createTitleBox("",
 				UIUtils.createBox(UIUtils.createHorizontalBox(new JLabel("Sample(s): "), sp, Box.createHorizontalGlue()),
-					null,
-					UIUtils.createTable(
-						new JLabel("Apply Template: "), UIUtils.createHorizontalBox(namedSamplingComboBox/*, newSamplingButton*/),
-						new JLabel("At Phase: "), UIUtils.createHorizontalBox(phaseComboBox, newPhaseButton)				
-						)));
-		
-		
+						null,
+						UIUtils.createTable(
+								new JLabel("Apply Template: "), UIUtils.createHorizontalBox(namedSamplingComboBox),
+								new JLabel("At Phase: "), UIUtils.createHorizontalBox(phaseComboBox, newPhaseButton)
+								)));
+
+
 		JPanel contentPane = UIUtils.createBox(centerPane, infoPanel, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
 		setContentPane(contentPane);
-				
+
 		if(specimen!=null) biosampleList.setSelection(specimen);
-		if(phase!=null) phaseComboBox.setSelection(phase);		
-		
+		if(phase!=null) phaseComboBox.setSelection(phase);
+
 		pack();
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
 	}
-	
+
 	private void eventOk() throws Exception {
 		Phase phase = phaseComboBox.getSelection();
 		if(phase==null) throw new Exception("You must select a phase");
-		
+
 		List<Biosample> animals = biosampleList.getSelection();
 		if(animals.size()==0) throw new Exception("You must select one or more samples");
 		Group group = animals.get(0).getInheritedGroup();
@@ -190,22 +179,22 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 			if(!animals.get(i).getInheritedGroup().equals(group)) throw new Exception("The selected samples must all belong to the same group");
 			if(animals.get(i).getInheritedSubGroup()!=subgroup) throw new Exception("The selected samples must all belong to the same subgroup");
 		}
-		
+
 		NamedSampling ns = namedSamplingComboBox.getSelection();
 		if(ns==null) throw new Exception("You must select a sampling");
-				
+
 		//Check the phase is not after a necropsy
 		if(ns.isNecropsy()) {
 			//OK
 		} else {
 			if(group.getEndPhase(subgroup)!=null && phase.compareTo(group.getEndPhase(subgroup))>0) throw new Exception("You cannot apply a sampling after the necropsy at "+group.getEndPhase(subgroup));
 		}
-		
+
 		//Add the phase if needed
 		if(phase.getId()<=0) {
-			phase.setStudy(study);		
+			phase.setStudy(study);
 			study.getPhases().add(phase);
-		}				
+		}
 
 		//Proceed with this group/subgroup
 		//Create 2 sets of animals: 1 that will be updated with this sampling (samplesToStayInSubgroup) and 1 that will be moved to a new subgroup (samplesToMoveInNewSubgroup)
@@ -213,17 +202,17 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		Set<Biosample> samplesToStayInSubgroup = new HashSet<>(study.getTopAttachedBiosamples(group, subgroup));
 		for (Biosample animal : animals) {
 			if(animal.getStatus().isAvailable()) {
-				samplesToStayInSubgroup.remove(animal);				
+				samplesToStayInSubgroup.remove(animal);
 			}
 		}
-		
+
 		Set<Biosample> samplesToMoveInNewSubgroup = new HashSet<>(animals);
-		
+
 		LoggerFactory.getLogger(getClass()).debug("considered=                "+study.getTopAttachedBiosamples(group, subgroup));
 		LoggerFactory.getLogger(getClass()).debug("samplesToStayInSubgroup=   "+samplesToStayInSubgroup+" / subgroup="+subgroup);
 		LoggerFactory.getLogger(getClass()).debug("samplesToMoveInNewSubgroup="+samplesToMoveInNewSubgroup);
-		
-		if(samplesToStayInSubgroup.size()>0) {			
+
+		if(samplesToStayInSubgroup.size()>0) {
 			//Create a new subgroup
 			int newSubGroupNo = group.getNSubgroups();
 			int[] newSubGroupSizeArray = new int[newSubGroupNo+1];
@@ -232,7 +221,7 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 			}
 			newSubGroupSizeArray[subgroup] = group.getSubgroupSize(subgroup) - samplesToMoveInNewSubgroup.size();
 			newSubGroupSizeArray[newSubGroupNo] = samplesToMoveInNewSubgroup.size();
-			
+
 			group.setSubgroupSizes(newSubGroupSizeArray);
 
 			//Copy the actions to this new subgroup
@@ -241,19 +230,19 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 				action.setSubGroup(newSubGroupNo);
 				study.getStudyActions().add(action);
 			}
-			
+
 			//Assign the biosamples to this new subgroup
 			for(Biosample b: samplesToMoveInNewSubgroup) {
 				b.setInheritedSubGroup(newSubGroupNo);
 				toSave.add(b);
 			}
-			
+
 			//We add the sampling for the selected animals, which remain in the former group/subgroup at the given phase
 			study.resetCache();
-			
+
 			subgroup = newSubGroupNo;
-		} 
-		
+		}
+
 		//Modify the existing subgroup
 		if(ns.isNecropsy() && group.getEndPhase(subgroup)!=null) {
 			StudyAction a = study.getStudyAction(group, subgroup, group.getEndPhase(subgroup));
@@ -263,7 +252,7 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		}
 		study.setNamedSampling(group, phase, subgroup, ns, true);
 		LoggerFactory.getLogger(getClass()).debug("add sampling to " + group + " " + phase + " " + subgroup);
-		
+
 		//Save in a transaction
 		JPAUtil.pushEditableContext(SpiritFrame.getUser());
 		EntityManager session = JPAUtil.getManager();
@@ -275,22 +264,22 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 			if(toSave.size()>0) {
 				DAOBiosample.persistBiosamples(session, toSave, SpiritFrame.getUser());
 			}
-			
+
 			//Fire change Event
 			txn.commit();
 			txn = null;
-			dispose();			
+			dispose();
 		} catch (Exception e) {
 			throw e;
 		} finally {
 			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {}
 			JPAUtil.popEditableContext();
 		}
-		
+
 		SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, study);
 		if(toSave.size()>0) SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, toSave);
 
 	}
 
-	
+
 }

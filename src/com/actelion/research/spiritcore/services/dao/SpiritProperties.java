@@ -40,19 +40,19 @@ import com.actelion.research.spiritcore.util.MiscUtils;
 
 /**
  * Singleton used to encapsulate the SpiritProperty, stored in the Spirit database.
- * 
+ *
  * @author Joel Freyss
  */
 public class SpiritProperties {
 
 	private static SpiritProperties instance = null;
 	private Map<String, String> properties;
-	private Boolean hasWorkflow; 
-	
+	private Boolean hasWorkflow;
+
 	private SpiritProperties() {
 		properties = getProperties();
 	}
-	
+
 	public static SpiritProperties getInstance() {
 		if(instance==null) {
 			synchronized (SpiritProperties.class) {
@@ -63,11 +63,11 @@ public class SpiritProperties {
 		}
 		return instance;
 	}
-	
+
 	public static void clear() {
 		instance = null;
 	}
-	
+
 	/**
 	 * Gets the value of a simple property or the default value
 	 * @param p
@@ -78,7 +78,7 @@ public class SpiritProperties {
 		if(v==null) v = p.getDefaultValue();
 		return v;
 	}
-	
+
 	public int getValueInt(PropertyKey p) {
 		try {
 			return Integer.parseInt(getValue(p));
@@ -86,7 +86,7 @@ public class SpiritProperties {
 			return Integer.parseInt(p.getDefaultValue());
 		}
 	}
-	
+
 	/**
 	 * Gets the value of a simple property or the default value
 	 * The result is splitted by ','
@@ -112,8 +112,8 @@ public class SpiritProperties {
 			list.addFirst(tmp);
 			tmp = tmp.getParentProperty();
 		}
-		
-		assert list.size()==nestedValues.length;		
+
+		assert list.size()==nestedValues.length;
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < list.size(); i++) {
 			sb.append(list.get(i).getKey());
@@ -124,11 +124,12 @@ public class SpiritProperties {
 		if(v==null) v = p.getDefaultValue(nestedValues);
 		return v;
 	}
-		
+
 	public String[] getValues(PropertyKey p, String nestedValue) {
+		if(nestedValue==null) return new String[0];
 		return getValues(p, new String[]{nestedValue});
 	}
-	
+
 	/**
 	 * Gets the value of a nested property or the default value. One must give the values of all the parent properties
 	 * The result is splitted by ','
@@ -140,7 +141,7 @@ public class SpiritProperties {
 	public boolean isChecked(PropertyKey p, String nestedValues) {
 		return "true".equals(getValue(p, nestedValues));
 	}
-	
+
 	public boolean isChecked(PropertyKey p, String[] nestedValues) {
 		return "true".equals(getValue(p, nestedValues));
 	}
@@ -154,7 +155,7 @@ public class SpiritProperties {
 	public void setValue(PropertyKey p, String v) {
 		setValue(p, new String[]{}, v);
 	}
-	
+
 	/**
 	 * Set the value of a nested property (without saving)
 	 * @param p
@@ -163,7 +164,7 @@ public class SpiritProperties {
 	public void setValue(PropertyKey p, String nested, String v) {
 		setValue(p, new String[]{nested}, v);
 	}
-	
+
 	/**
 	 * Set the value of a simple or nested property (without saving)
 	 * @param p
@@ -173,9 +174,9 @@ public class SpiritProperties {
 	public void setValue(PropertyKey p, String[] nested, String v) {
 		StringBuilder propertyKey = new StringBuilder();
 		propertyKey.append(p.getKey());
-		
+
 		PropertyKey c = p.getParentProperty();
-		for (int i = nested.length-1; i >= 0; i--) {					
+		for (int i = nested.length-1; i >= 0; i--) {
 			assert c!=null;
 			propertyKey.insert(0, c.getKey() + "." + nested[i] + ".");
 			c = c.getParentProperty();
@@ -183,27 +184,27 @@ public class SpiritProperties {
 		assert c==null;
 		properties.put(propertyKey.toString(), v);
 	}
-	
+
 	public Map<String, String> getValues() {
 		LoggerFactory.getLogger(getClass()).debug("properties="+properties);
 		return properties;
 	}
-	
+
 	public void setValues(Map<String, String> map) {
 		assert map.containsKey(PropertyKey.DB_VERSION.getKey());
-		
+
 		this.properties = new HashMap<>();
 		this.properties.putAll(map);
 		LoggerFactory.getLogger(getClass()).debug("properties="+properties);
 	}
-	
+
 	public void saveValues() {
 		saveProperties(properties);
-		
+
 		//Force Reload
 		instance = null;
 	}
-		
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	private static Map<String, String> getProperties() {
 		Map<String, String> keyValuePairs = new HashMap<>();
@@ -212,16 +213,17 @@ public class SpiritProperties {
 			em = JPAUtil.createManager();
 			for(SpiritProperty p: (List<SpiritProperty>) em.createQuery("from SpiritProperty").getResultList()) {
 				if(p==null) continue;
-				keyValuePairs.put(p.getKey(), p.getValue());			
+				keyValuePairs.put(p.getKey(), p.getValue());
 			}
 			LoggerFactory.getLogger(SpiritProperties.class).debug("properties="+keyValuePairs);
 		} finally {
 			if(em!=null) em.close();
 		}
 		return keyValuePairs;
-	}	
+	}
+
 	/**
-	 * Save the given properties. Always open a new entitymanager, so this function can even be called in any context 
+	 * Save the given properties. Always open a new entitymanager, so this function can even be called in any context
 	 * @param keyValuePairs
 	 */
 	private static void saveProperties(Map<String, String> keyValuePairs) {
@@ -235,7 +237,7 @@ public class SpiritProperties {
 				LoggerFactory.getLogger(SpiritProperty.class).debug("Write "+entry.getKey()+" = "+entry.getValue());
 				SpiritProperty p = new SpiritProperty(entry.getKey(), entry.getValue());
 				em.merge(p);
-			}		
+			}
 			txn.commit();
 			txn = null;
 		} catch(Exception e) {
@@ -243,23 +245,23 @@ public class SpiritProperties {
 			txn = null;
 			throw e;
 		} finally {
-			em.close();
+			if(em!=null) em.close();
 		}
 	}
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	public String getDBVersion() {
 		return getValue(PropertyKey.DB_VERSION);
 	}
-	
+
 	/**
 	 * The DB version is a special property, because this one cannot be set by the user.
 	 * @param value
 	 */
 	public void setDBVersion(String value) {
 		setValue(PropertyKey.DB_VERSION, value);
-	}	
-	
+	}
+
 	public String[] getUserRoles() {
 		Set<String> roles = new TreeSet<>();
 		for (String string : MiscUtils.split(getValue(PropertyKey.USER_ROLES), ",")) {
@@ -269,13 +271,13 @@ public class SpiritProperties {
 		roles.add(SpiritUser.ROLE_READALL);
 		return roles.toArray(new String[roles.size()]);
 	}
-	
+
 	public boolean isOpen() {
 		return "open".equals(getValue(PropertyKey.RIGHTS_MODE));
 	}
-	
+
 	/**
-	 * Return true, if the system has been set to have a workflow. 
+	 * Return true, if the system has been set to have a workflow.
 	 * IE: there are promoters (other than ALL), or states come from an other state
 	 * @return
 	 */
@@ -284,15 +286,15 @@ public class SpiritProperties {
 			hasWorkflow = false;
 			for (String state : SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES)) {
 				if(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_FROM, state).length>0) {
-					hasWorkflow = true; 
+					hasWorkflow = true;
 					break;
 				}
 				if(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_PROMOTERS, state).length()>0 &&
 						!SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_PROMOTERS, state).equals("ALL")) {
-					hasWorkflow = true; 
+					hasWorkflow = true;
 					break;
 				}
-			}			
+			}
 		}
 		return hasWorkflow;
 	}

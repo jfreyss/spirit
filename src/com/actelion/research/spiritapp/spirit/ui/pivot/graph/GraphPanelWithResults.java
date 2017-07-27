@@ -40,16 +40,16 @@ import com.actelion.research.util.ui.UIUtils;
 public class GraphPanelWithResults extends JPanel {
 
 	private GraphPanel graphPanel = new GraphPanel();
-	private PivotPanel pivotCardPanel = new PivotPanel(false, null, null);
+	private PivotPanel pivotPanel = new PivotPanel(null, null);
 
 	public GraphPanelWithResults() {
 		super(new GridLayout());
-		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, graphPanel, pivotCardPanel);
+		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, graphPanel, pivotPanel);
 		add(splitPane);
 
-		splitPane.setDividerLocation(250);
+		splitPane.setDividerLocation(150);
 		graphPanel.setListSelectionListener(e->{
-			pivotCardPanel.setResults(graphPanel.getSelectedResults());
+			pivotPanel.setResults(graphPanel.getSelectedResults());
 		});
 	}
 
@@ -57,12 +57,20 @@ public class GraphPanelWithResults extends JPanel {
 		return graphPanel;
 	}
 
+	public PivotPanel getPivotPanel() {
+		return pivotPanel;
+	}
+
 	public PivotTable getPivotTable() {
-		return pivotCardPanel.getPivotTable();
+		return pivotPanel.getPivotTable();
 	}
 
 	public void setPivotTemplate(PivotTemplate tpl) {
-		pivotCardPanel.setCurrentPivotTemplate(tpl);
+		pivotPanel.setPivotTemplate(tpl);
+	}
+
+	public void setDefaultTemplates(PivotTemplate[] tpls) {
+		pivotPanel.setDefaultTemplates(tpls);
 	}
 
 	/**
@@ -73,11 +81,7 @@ public class GraphPanelWithResults extends JPanel {
 	 */
 	public void setResults(List<Result> results) {
 		graphPanel.setResults(results).afterDone(() -> {
-			if(graphPanel.getItemSize()>10) {
-				graphPanel.setSelectedIndex(0);
-			} else {
-				graphPanel.selectAll();
-			}
+			graphPanel.selectAll();
 		});
 	}
 
@@ -86,7 +90,6 @@ public class GraphPanelWithResults extends JPanel {
 		ResultQuery q = new ResultQuery();
 		q.setStudyIds("S-00629");
 		List<Result> results = DAOResult.queryResults(q, null);
-		System.out.println("AnalysisPanel.main() "+results);
 		GraphPanelWithResults p = new GraphPanelWithResults();
 		p.setResults(results);
 

@@ -42,7 +42,7 @@ import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.form.BiosampleFormPanel.EditMode;
 import com.actelion.research.spiritapp.spirit.ui.biosample.form.BiosampleFormPanel.ViewMode;
-import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
+import com.actelion.research.spiritapp.spirit.ui.util.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
@@ -133,7 +133,7 @@ public class BiosampleFormDlg extends JSpiritEscapeDialog {
 				}
 				dispose();
 
-				EditBiosampleDlg dlg = EditBiosampleDlg.createDialogForEditInTransactionMode(null, biosamples);
+				EditBiosampleDlg dlg = EditBiosampleDlg.createDialogForEditInTransactionMode(biosamples);
 				dlg.setVisible(true);
 
 			} catch(Exception ex) {
@@ -256,7 +256,7 @@ public class BiosampleFormDlg extends JSpiritEscapeDialog {
 
 		//Validation
 		Spirit.askForAuthentication();
-		toSave = EditBiosampleDlg.validate(this, toSave, null, true);
+		toSave = EditBiosampleDlg.validate(this, toSave, null, false, true);
 		if(toSave==null) {
 			return;
 		}

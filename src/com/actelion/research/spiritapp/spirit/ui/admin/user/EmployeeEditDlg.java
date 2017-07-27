@@ -36,9 +36,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.lf.EmployeeGroupComboBox;
-import com.actelion.research.spiritapp.spirit.ui.lf.UserIdComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.EmployeeGroupComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.UserIdComboBox;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;

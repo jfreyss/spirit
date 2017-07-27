@@ -2,7 +2,6 @@ package com.actelion.research.spiritcore.test;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -41,6 +40,19 @@ public class RevisionTest extends AbstractSpiritTest {
 	}
 
 	@Test
+	public void testQueryRevision() throws Exception {
+		List<Revision> revs = DAORevision.getRevisions(null, "S-00001", null, null, true, false, false, false, false);
+		System.out.println("RevisionTest.testQueryRevision() "+revs);
+		Assert.assertTrue(revs.size()>0);
+
+		revs = DAORevision.getRevisions(null, "S-00001", null, null, false, true, true, true, true);
+		Assert.assertTrue(revs.size()>0);
+
+		revs = DAORevision.getRevisions(null, "S-00000", null, null, true, true, true, true, true);
+		Assert.assertTrue(revs.size()==0);
+	}
+
+	@Test
 	public void testRevertInsert() throws Exception {
 		// Save a biosample
 		Biosample b = new Biosample(DAOBiotype.getBiotype("Bacteria"));
@@ -60,9 +72,8 @@ public class RevisionTest extends AbstractSpiritTest {
 		DAORevision.revert(rev, user, "Revert");
 
 		// Load Revisions
-		JPAUtil.clear();
+		JPAUtil.clearAll();
 		Assert.assertNull(DAOBiosample.getBiosample(sampleId));
-
 	}
 
 	@Test
@@ -82,7 +93,7 @@ public class RevisionTest extends AbstractSpiritTest {
 		Assert.assertEquals("New comments", DAOBiosample.getBiosample(sampleId).getComments());
 
 		// Load Revisions
-		JPAUtil.clear();
+		JPAUtil.clearAll();
 		List<Revision> revisions = DAORevision.getRevisions(b);
 		Assert.assertEquals(2, revisions.size());
 
@@ -154,7 +165,7 @@ public class RevisionTest extends AbstractSpiritTest {
 		Assert.assertNull(DAOBiosample.getBiosample(sampleId));
 
 		// Load Revisions
-		JPAUtil.clear();
+		JPAUtil.clearAll();
 		List<Revision> revisions = DAORevision.getRevisions(b);
 		Assert.assertEquals(2, revisions.size());
 
@@ -209,9 +220,9 @@ public class RevisionTest extends AbstractSpiritTest {
 		Assert.assertTrue("Loaded " + bios, bios.size() == 0);
 
 		JPAUtil.closeFactory();
-		
+
 		//Load revisions and revert
-		revisions = DAORevision.getRevisions(null, new Date(), 1, true, true, true, true, true);
+		revisions = DAORevision.getRevisions(null, null, null, null, true, true, true, true, true);
 
 		rev = revisions.get(0);
 		Assert.assertEquals(RevisionType.DEL, rev.getRevisionType());
@@ -277,33 +288,33 @@ public class RevisionTest extends AbstractSpiritTest {
 		biotype.setCategory(BiotypeCategory.PURIFIED);
 		biotype.getMetadata().add(new BiotypeMetadata("doc", DataType.D_FILE));
 		DAOBiotype.persistBiotype(biotype, user);
-		
+
 		//Create a sample with a doc and delete it
 		Biosample b = new Biosample(biotype);
 		b.setMetadataDocument(biotype.getMetadata("doc"), new Document("Test", "bytes".getBytes()));
 		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
 		DAOBiosample.deleteBiosamples(Collections.singleton(b), user);
-		
-		
-		
+
+
+
 		//Test revision
 		List<Revision> revs = DAORevision.getRevisions(b);
 		Assert.assertEquals(2, revs.size());
 		Assert.assertEquals(RevisionType.DEL, revs.get(0).getRevisionType());
-		
+
 		Biosample r1 = revs.get(0).getBiosamples().get(0);
 		Assert.assertEquals(biotype, r1.getBiotype());
 		Assert.assertEquals("Test", new String(r1.getMetadataDocument(biotype.getMetadata("doc")).getFileName()));
 		Assert.assertEquals("bytes", new String(r1.getMetadataDocument(biotype.getMetadata("doc")).getBytes()));
-		
+
 		//Restore
 		DAORevision.restore(Collections.singleton(r1), user, "restored");
 		List<Biosample> biosamples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForSampleIdOrContainerIds(r1.getSampleId()), user);
 		Assert.assertEquals(biotype, biosamples.get(0).getBiotype());
 		Assert.assertEquals("Test", new String(biosamples.get(0).getMetadataDocument(biotype.getMetadata("doc")).getFileName()));
 		Assert.assertEquals("bytes", new String(biosamples.get(0).getMetadataDocument(biotype.getMetadata("doc")).getBytes()));
-		
-		
+
+
 	}
 
 }

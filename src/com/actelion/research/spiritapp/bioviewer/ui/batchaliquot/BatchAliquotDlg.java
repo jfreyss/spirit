@@ -46,16 +46,16 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class BatchAliquotDlg extends JEscapeDialog {
-	
+
 	private BatchAliquotRackPanel[] rackPanels = new BatchAliquotRackPanel[] {
-			new BatchAliquotRackPanel(this, 0), 
-			new BatchAliquotRackPanel(this, 1), 
-			new BatchAliquotRackPanel(this, 2), 
+			new BatchAliquotRackPanel(this, 0),
+			new BatchAliquotRackPanel(this, 1),
+			new BatchAliquotRackPanel(this, 2),
 			new BatchAliquotRackPanel(this, 3)};
-	
+
 	public BatchAliquotDlg() {
 		super(UIUtils.getMainFrame(), "Batch Aliquot Creation");
-		
+
 		//RackPanels
 		JPanel centerPane = new JPanel(new GridLayout(2, 2));
 		for (BatchAliquotRackPanel rackPanel : rackPanels) {
@@ -65,7 +65,7 @@ public class BatchAliquotDlg extends JEscapeDialog {
 
 		//PRINT Button
 		JButton printButton = new JIconButton(IconType.PRINT, "Print Rack Labels");
-		printButton.addActionListener(new ActionListener() {			
+		printButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -77,14 +77,14 @@ public class BatchAliquotDlg extends JEscapeDialog {
 						}
 					}
 					new BrotherLabelsDlg(labels);
-					
+
 				} catch(Exception ex) {
 					JExceptionDialog.showError(ex);
 				}
-				
+
 			}
-		}); 
-		
+		});
+
 		//SAVE Button
 		JButton okButton = new JIconButton(IconType.SAVE, "Create");
 		okButton.addActionListener(e-> {
@@ -94,21 +94,21 @@ public class BatchAliquotDlg extends JEscapeDialog {
 				JExceptionDialog.showError(ex);
 			}
 		});
-		
+
 		//ContentPane
 		setContentPane(UIUtils.createBox(centerPane, null, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), printButton, okButton)));
-		
-		
-		UIUtils.adaptSize(this, 1400, 900);		
+
+
+		UIUtils.adaptSize(this, 1400, 900);
 	}
-	
+
 	public void refresh() {
 		if(rackPanels==null) return;
 		for (int i = 0; i < rackPanels.length; i++) {
-			rackPanels[i].refresh();	
+			rackPanels[i].refresh();
 		}
 	}
-	
+
 	public String getError(int rackNo, int row, int col) {
 		if(rackNo<0 || rackNo>=rackPanels.length) return null;
 		BatchAliquotRackPanel rp = rackPanels[rackNo];
@@ -122,45 +122,45 @@ public class BatchAliquotDlg extends JEscapeDialog {
 			BatchAliquotRackPanel rpParent = rackPanels[rp.getRackParent()];
 			Container cParent = rpParent.getContainer(row, col);
 			Container c = rp.getContainer(row, col);
-			
-			if(c==null && cParent==null) return null; 
+
+			if(c==null && cParent==null) return null;
 			else if(c==null && cParent!=null) return "a tube is missing";
 			else if(c!=null && cParent==null) return "the tube should not be here";
 			else if(c!=null && c.getBiosamples().size()>0) return "the tube is already used ("+c.getBlocDescription()+")";
-			
+
 		}
 		return null;
 	}
-	
+
 	public BatchAliquotRackPanel[] getRackPanels() {
 		return rackPanels;
 	}
-	
+
 	protected Container getContainer(int rackNo, int row, int col) {
 		if(rackNo<0 || rackNo>=rackPanels.length) return null;
 		BatchAliquotRackPanel rp = rackPanels[rackNo];
-		return rp.getContainer(row, col);		
-		
+		return rp.getContainer(row, col);
+
 	}
-	
+
 	private void eventCreateAliquots() throws Exception {
-		
+
 		//Generate Samples to be saved
 		List<Biosample> aliquotsToSave = new ArrayList<Biosample>();
 		List<Biosample> parentsToSave = new ArrayList<Biosample>();
 
 		for (int i = 0; i < rackPanels.length; i++) {
 			if(rackPanels[i].isEmpty()) continue;
-			
+
 			//Check errors
 			Location rack = rackPanels[i].getPlate();
 			for (int y = 0; y < rack.getRows(); y++) {
 				for (int x = 0; x < rack.getCols(); x++) {
 					String error = getError(i, y, x);
-					if(error!=null) throw new Exception("Error: Rack"+(i+1)+": "+LocationLabeling.ALPHA.formatPosition(rack, y, x)+": "+error);					
-				}	
+					if(error!=null) throw new Exception("Error: Rack"+(i+1)+": "+LocationLabeling.ALPHA.formatPosition(rack, y, x)+": "+error);
+				}
 			}
-			
+
 			if(rackPanels[i].isParent()) {
 				//parent Rack
 				Double vol = rackPanels[i].getVolume();
@@ -177,22 +177,22 @@ public class BatchAliquotDlg extends JEscapeDialog {
 				//Check the sampling
 				Sampling sampling = rackPanels[i].getSampling();
 				if(sampling.getBiotype()==null) throw new Exception("The attributes are not specified for the Rack"+(i+1));
-				
+
 				//Create compatible aliquots
 				aliquotsToSave.addAll(rackPanels[i].createCompatibleAliquots());
-				
+
 			}
 		}
-		
-		
-		EditBiosampleDlg dlg = EditBiosampleDlg.createDialogForEditInTransactionMode("Add Children", aliquotsToSave);
+
+
+		EditBiosampleDlg dlg = EditBiosampleDlg.createDialogForEditInTransactionMode(aliquotsToSave);
 		dlg.setVisible(true);
 		if(dlg.getSaved().size()>0) {
-//			DAOBiosample.persistBiosamples(parentsToSave, Spirit.getUser());
+			//			DAOBiosample.persistBiosamples(parentsToSave, Spirit.getUser());
 			JExceptionDialog.showInfo(UIUtils.getMainFrame(), dlg.getSaved().size() + " aliquot created and volumes updated");
 		}
 
-		
+
 	}
 
 

@@ -49,17 +49,17 @@ public class StatusReport extends AbstractReport {
 
 	@Override
 	protected void populateWorkBook() throws Exception {
-		
+
 
 		//Create Header
 		Sheet sheet = createSheet(wb, "Status");
 		sheet.setFitToPage(true);
-		createHeadersWithTitle(sheet, study, "Living Status");	
+		createHeadersWithTitle(sheet, study, "Living Status");
 		sheet.createRow(4).setHeightInPoints(23f);
-		
-		
+
+
 		int col = 0;
-		set(sheet, 5, col++, "TopId", Style.S_TH_CENTER);
+		set(sheet, 5, col++, "Participant", Style.S_TH_CENTER);
 		set(sheet, 5, col++, "No.", Style.S_TH_CENTER);
 		set(sheet, 5, col++, "ContainerId", Style.S_TH_CENTER);
 		set(sheet, 5, col++, "Group", Style.S_TH_CENTER);
@@ -68,30 +68,30 @@ public class StatusReport extends AbstractReport {
 		set(sheet, 5, col++, "Phase", Style.S_TH_CENTER);
 		set(sheet, 5, col++, "Observation", Style.S_TH_CENTER);
 		int maxCol = col-1;
-		
+
 		//Group separator?
 		int line = 5;
 		String cageBefore = null;
 		Group groupBefore = null;
-		
+
 		DAOResult.attachOrCreateStudyResultsToTops(study, study.getAttachedBiosamples(), null, null);
 		Test observationTest = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);
 		if(observationTest==null) throw new Exception("The test "+DAOTest.OBSERVATION_TESTNAME+" does not exist");
 		for (Biosample a : study.getAttachedBiosamples()) {
 			if(CompareUtils.compare(groupBefore, a.getInheritedGroup())!=0) {
-				drawLineUnder(sheet, line, 0, maxCol, (short)2);								
+				drawLineUnder(sheet, line, 0, maxCol, (short)2);
 			} else if(CompareUtils.compare(cageBefore, a.getContainerId())!=0) {
-				drawLineUnder(sheet, line, 0, maxCol, (short)1);				
+				drawLineUnder(sheet, line, 0, maxCol, (short)1);
 			}
-			
-			Pair<Status, Phase> actionStatus = a.getLastActionStatus();			
-//			if(actionStatus!=null && actionStatus.getStatus()!=a.getStatus()) throw new Exception("The status of "+a+" is inconsistent: last action is "+actionStatus.getStatus()+" but status is "+a.getStatus());
+
+			Pair<Status, Phase> actionStatus = a.getLastActionStatus();
+			//			if(actionStatus!=null && actionStatus.getStatus()!=a.getStatus()) throw new Exception("The status of "+a+" is inconsistent: last action is "+actionStatus.getStatus()+" but status is "+a.getStatus());
 
 			Phase lastPhase = actionStatus.getSecond();
-//			if(actionStatus!=null && !actionStatus.getPhase().equals(lastPhase)) throw new Exception("The endPhase of "+a+" is inconsistent: last action is at "+actionStatus.getPhase()+" but endphase is "+lastPhase);
+			//			if(actionStatus!=null && !actionStatus.getPhase().equals(lastPhase)) throw new Exception("The endPhase of "+a+" is inconsistent: last action is at "+actionStatus.getPhase()+" but endphase is "+lastPhase);
 			Result lastObservation = lastPhase==null? null: a.getAuxResult(observationTest, lastPhase);
-			
-			
+
+
 			Group g = a.getInheritedGroup();
 			line++; col=0;
 			set(sheet, line, col++, a.getSampleName(), Style.S_TD_CENTER);
@@ -99,9 +99,9 @@ public class StatusReport extends AbstractReport {
 			set(sheet, line, col++, a.getContainerId(), Style.S_TD_CENTER);
 			set(sheet, line, col++, g==null?"": g.getBlindedName(SpiritFrame.getUsername()) , Style.S_TD_LEFT);
 			set(sheet, line, col++, g==null || g.getNSubgroups()<=1?"": (a.getInheritedSubGroup()+1), Style.S_TD_CENTER);
-			
-			
-			
+
+
+
 			set(sheet, line, col++, g==null?"": actionStatus.getFirst()==null?"": actionStatus.getFirst().getName() , Style.S_TD_LEFT);
 			set(sheet, line, col++, g==null?"": lastPhase==null?"": lastPhase.getAbsoluteDateAndName() , Style.S_TD_LEFT);
 			set(sheet, line, col++, g==null?"": lastObservation==null?"": lastObservation.getFirstValue(), Style.S_TD_LEFT);
@@ -114,5 +114,5 @@ public class StatusReport extends AbstractReport {
 
 		if(wb.getNumberOfSheets()==0) throw new Exception("There was no randomization fone for "+study);
 	}
-	
+
 }

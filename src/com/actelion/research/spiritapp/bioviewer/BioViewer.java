@@ -43,9 +43,9 @@ import com.actelion.research.util.ui.SwingWorkerExtended;
 public class BioViewer extends SpiritFrame {
 
 	private static SplashConfig splashConfig = new SplashConfig(BioViewer.class.getResource("bioviewer.jpg"), "BioViewer", "BioViewer v" + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Actelion - J.Freyss");
-	
+
 	public BioViewer() {
-		super("BioViewer", "BioViewer - (C) Joel Freyss - Actelion 2012");
+		super("BioViewer", "BioViewer - (C) Joel Freyss - Idorsia Pharmaceuticals Ltd");
 
 	}
 
@@ -59,64 +59,64 @@ public class BioViewer extends SpiritFrame {
 		tabs.add(new ResultTab(this));
 		return tabs;
 	}
-	
-	
+
+
 	final AbstractAction LOGIN_ACTION = new SpiritAction.Action_Relogin(this, "BioViewer");
-	
+
 	public void eventUserChanged() {
 		LOGIN_ACTION.actionPerformed(null);
 	}
-//
-//	public void createMenu() {
-//		final JMenuBar menuBar = new JMenuBar();
-//
-//		JMenu edit = new JMenu("Edit");
-//		edit.setMnemonic('e');
-//		menuBar.add(edit);
-//		JMenuItem selectAll = new JMenuItem("Select All");
-//		selectAll.setAccelerator(KeyStroke.getKeyStroke("ctrl released A"));
-//		selectAll.setMnemonic('a');
-//		selectAll.addActionListener(new ActionListener() {
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				biosampleTab.getBiosampleTable().selectAll();
-//				selectionChanged();
-//			}
-//		});
-//		edit.add(selectAll);
-//
-//		JMenuItem clearAll = new JMenuItem(new ClearAction());
-//		clearAll.setMnemonic('c');
-//		edit.add(clearAll);
-//		JMenuItem refreshAll = new JMenuItem("Refresh", IconType.REFRESH.getIcon());
-//		refreshAll.setMnemonic('r');
-//		refreshAll.setAccelerator(KeyStroke.getKeyStroke("F5"));
-//		refreshAll.addActionListener(new ActionListener() {
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				refresh();
-//			}
-//		});
-//		edit.add(refreshAll);
-//		edit.add(new JSeparator());
-//		edit.add(new BiosampleActions.Action_NewBatch());
-//		edit.add(new ResultActions.Action_New());
-//		
-//		menuBar.add(SpiritMenu.getToolsMenu());
-//		menuBar.add(SpiritMenu.getHelpMenu(splashConfig));
-//
-//		setJMenuBar(menuBar);
-//	}
+	//
+	//	public void createMenu() {
+	//		final JMenuBar menuBar = new JMenuBar();
+	//
+	//		JMenu edit = new JMenu("Edit");
+	//		edit.setMnemonic('e');
+	//		menuBar.add(edit);
+	//		JMenuItem selectAll = new JMenuItem("Select All");
+	//		selectAll.setAccelerator(KeyStroke.getKeyStroke("ctrl released A"));
+	//		selectAll.setMnemonic('a');
+	//		selectAll.addActionListener(new ActionListener() {
+	//			@Override
+	//			public void actionPerformed(ActionEvent e) {
+	//				biosampleTab.getBiosampleTable().selectAll();
+	//				selectionChanged();
+	//			}
+	//		});
+	//		edit.add(selectAll);
+	//
+	//		JMenuItem clearAll = new JMenuItem(new ClearAction());
+	//		clearAll.setMnemonic('c');
+	//		edit.add(clearAll);
+	//		JMenuItem refreshAll = new JMenuItem("Refresh", IconType.REFRESH.getIcon());
+	//		refreshAll.setMnemonic('r');
+	//		refreshAll.setAccelerator(KeyStroke.getKeyStroke("F5"));
+	//		refreshAll.addActionListener(new ActionListener() {
+	//			@Override
+	//			public void actionPerformed(ActionEvent e) {
+	//				refresh();
+	//			}
+	//		});
+	//		edit.add(refreshAll);
+	//		edit.add(new JSeparator());
+	//		edit.add(new BiosampleActions.Action_NewBatch());
+	//		edit.add(new ResultActions.Action_New());
+	//
+	//		menuBar.add(SpiritMenu.getToolsMenu());
+	//		menuBar.add(SpiritMenu.getHelpMenu(splashConfig));
+	//
+	//		setJMenuBar(menuBar);
+	//	}
 
-	
+
 	public static void main(String[] args) {
 
 		SplashScreen2.show(splashConfig);
-		
+
 		new SwingWorkerExtended() {
 			@Override
 			protected void doInBackground() throws Exception {
-				SpiritAction.logUsage("BioViewer");					
+				SpiritAction.logUsage("BioViewer");
 				JPAUtil.getManager();
 			}
 			@Override
@@ -125,9 +125,9 @@ public class BioViewer extends SpiritFrame {
 				new BioViewer();
 			}
 		};
-	
-	}	
-	
+
+	}
+
 	public static void open() {
 		BioViewer app = new BioViewer();
 		app.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

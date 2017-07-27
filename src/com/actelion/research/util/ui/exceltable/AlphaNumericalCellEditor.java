@@ -21,10 +21,7 @@
 
 package com.actelion.research.util.ui.exceltable;
 
-import java.awt.Color;
-
 import javax.swing.AbstractCellEditor;
-import javax.swing.BorderFactory;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 
@@ -37,14 +34,14 @@ import com.actelion.research.util.ui.JCustomTextField;
  */
 public class AlphaNumericalCellEditor extends AbstractCellEditor implements TableCellEditor {
 	private JCustomTextField alphaTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC);
-	
+
 	public AlphaNumericalCellEditor() {
 		alphaTextField.setMargin(null);
-		alphaTextField.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
+		alphaTextField.setBorder(null);
 	}
-	
+
 	@Override
-	public JCustomTextField getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {		
+	public JCustomTextField getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 		alphaTextField.setText(value==null?"": value.toString());
 		alphaTextField.selectAll();
 		return alphaTextField;
@@ -53,6 +50,6 @@ public class AlphaNumericalCellEditor extends AbstractCellEditor implements Tabl
 	@Override
 	public String getCellEditorValue() {
 		return alphaTextField.getText();
-	}						
-	
+	}
+
 }

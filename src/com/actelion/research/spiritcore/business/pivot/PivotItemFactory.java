@@ -250,7 +250,7 @@ public class PivotItemFactory {
 	};
 
 
-	public static final PivotItem BIOSAMPLE_TOPID = new PivotItem(PivotItemClassifier.TOP, "TopId") {
+	public static final PivotItem BIOSAMPLE_TOPID = new PivotItem(PivotItemClassifier.PARTICIPANT, "ParticipantId") {
 		@Override
 		public String getTitle(ResultValue rv) {
 			Result r = rv.getResult();
@@ -260,7 +260,7 @@ public class PivotItemFactory {
 			return "<b>" + top.getSampleId();
 		}
 	};
-	public static final PivotItem BIOSAMPLE_TOPNAME = new PivotItem(PivotItemClassifier.TOP, "TopName") {
+	public static final PivotItem BIOSAMPLE_TOPNAME = new PivotItem(PivotItemClassifier.PARTICIPANT, "ParticipantName") {
 		@Override
 		public String getTitle(ResultValue rv) {
 			Result r = rv.getResult();

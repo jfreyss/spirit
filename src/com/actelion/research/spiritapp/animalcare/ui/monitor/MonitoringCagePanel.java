@@ -38,9 +38,9 @@ import javax.swing.JPanel;
 import javax.swing.text.JTextComponent;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel.ContainerDisplayMode;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerLabel;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerLabel.ContainerDisplayMode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.FoodWater;
@@ -333,7 +333,7 @@ public class MonitoringCagePanel extends JPanel {
 				groupLabel.append((groupLabel.length()>0? ",": "") + gr.getShortName());
 			}
 		}
-		Group group = container.getFirstGroup();
+		Group group = container.getGroup();
 		
 		StringBuilder sb = new StringBuilder();
 		for(Biosample b: container.getBiosamples()) {

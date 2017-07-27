@@ -50,10 +50,10 @@ import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;

@@ -22,7 +22,7 @@
 package com.actelion.research.spiritapp.spirit.ui;
 
 import java.awt.BorderLayout;
-import java.util.List;
+import java.util.Collection;
 
 import javax.swing.Icon;
 import javax.swing.JPanel;
@@ -89,7 +89,7 @@ public abstract class SpiritTab extends JPanel {
 	 * This function can be called just after onTabSelect, if the selected study is different from the one currently in the model
 	 */
 	public abstract void onStudySelect();
-	public abstract <T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details);
+	public abstract <T> void fireModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details);
 
 
 }

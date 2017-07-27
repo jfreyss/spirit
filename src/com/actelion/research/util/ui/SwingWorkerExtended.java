@@ -134,7 +134,7 @@ public class SwingWorkerExtended  {
 					//Ignore exception, most likely due to multi-threading
 					e.printStackTrace();
 				}
-				if(after!=null && !sw.isInterrupted()) {
+				if(after!=null && (sw==null || !sw.isInterrupted())) {
 					after.run();
 				}
 			}
@@ -188,13 +188,12 @@ public class SwingWorkerExtended  {
 								if(DEBUG) System.out.println("SwingWorkerExtended " + name + " -BG- " + (System.currentTimeMillis()-started) + "ms - " + callingThread);
 								SwingWorkerExtended.this.doInBackground();
 							} catch (final Throwable thrown) {
-								System.out.println("SwingWorkerExtended.excetion: "+isInterrupted()+" "+sw.isInterrupted()+" "+currentThreads.get(comp).containsValue(sw));
 								if(!isCancelled() && !isInterrupted() && !sw.isInterrupted() && currentThreads.get(comp).containsValue(sw)) {
-									if(SHOW_EXCEPTION) {
+									if(SHOW_EXCEPTION && thrown.getClass()==Exception.class) {
 										JExceptionDialog.showError(comp, thrown);
 									} else {
 										thrown.printStackTrace();
-										throw new RuntimeException(thrown);
+										if(thrown.getClass()==Exception.class) throw new RuntimeException(thrown);
 									}
 									if(DEBUG) System.out.println("SwingWorkerExtended " + name + " -DONE- " + (System.currentTimeMillis()-started) + "ms - " + callingThread);
 								}
@@ -425,7 +424,8 @@ public class SwingWorkerExtended  {
 
 	public static void awaitTermination() {
 		try {
-			bgPool.awaitTermination(1000, TimeUnit.MILLISECONDS);
+			boolean success = bgPool.awaitTermination(1000, TimeUnit.MILLISECONDS);
+			if(!success) System.err.println("SwingWorker: tasks took more than 1s to complete");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -441,7 +441,7 @@ public class SwingWorkerExtended  {
 		final JLabel label = new JLabel("Test in bg");
 
 		JFrame frame = new JFrame("Test");
-		frame.setContentPane(UIUtils.createCenterPanel(label, false));
+		frame.setContentPane(UIUtils.createCenterPanel(label));
 		frame.setSize(500, 500);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);

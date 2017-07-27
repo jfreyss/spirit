@@ -44,10 +44,10 @@ import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachedBiosampleTab
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
+import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
-import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.study.AttachedBiosample;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
@@ -56,10 +56,10 @@ import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
-import com.actelion.research.util.ui.exceltable.ExcelTableModel;
+import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
-public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosample> {
-	
+public class AttachedBiosampleTableModel extends ExtendTableModel<AttachedBiosample> {
+
 	public static enum Mode {
 		RND_WEIGHING,
 		RND_SETGROUPS,
@@ -68,9 +68,9 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 		MANUALASSIGN
 	}
 
-	
+
 	/** Biotype to link metadata (can be null) */
-	private Biotype biotype;	
+	private Biotype biotype;
 
 	private final Mode mode;
 
@@ -78,12 +78,12 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 	private Phase phase;
 	private Group group;
 	private int nData;
-	
-	
+
+
 	public static class InitialNoColumn extends Column<AttachedBiosample, Integer> {
 		private final boolean editable;
 		public InitialNoColumn(boolean editable) {
-			super("Tmp\nNo.", Integer.class, 35, 35);			
+			super("Tmp\nNo.", Integer.class, 35, 35);
 			this.editable = editable;
 		}
 		@Override
@@ -104,13 +104,13 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 		}
 		@Override
 		public boolean isEditable(AttachedBiosample row) {return editable;}
-		
+
 	}
-	
+
 	public class SampleIdColumn extends Column<AttachedBiosample, String> {
-		private SampleIdLabel sampleIdLabel = new SampleIdLabel();		
+		private SampleIdLabel sampleIdLabel = new SampleIdLabel();
 		private final boolean editable;
-		
+
 		public SampleIdColumn(boolean editable) {
 			super((biotype==null?"":biotype.getName()) + "\nId", String.class, 120, 120);
 			this.editable = editable;
@@ -128,55 +128,55 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 			}
 			//Load biosample from db if possible
 			Biosample b = DAOBiosample.getBiosample(value);
-			
+
 			if(b!=null) {
-				
+
 				//check the biotype
 				if(biotype!=null && b.getBiotype()!=null && !biotype.equals(b.getBiotype())) {
 					biotype = null;
 					initColumns();
 				}
-				
-				//If it exists, replace it and populate the name				
-				row.setSampleName(b.getSampleName());				
-			} else {			
+
+				//If it exists, replace it and populate the name
+				row.setSampleName(b.getSampleName());
+			} else {
 				//If it does not exist, create a new one
 				b = new Biosample(biotype, value);
 			}
-			
+
 			row.setBiosample(b);
 			row.setSampleId(b.getSampleId());
 
-			//The populate the rest of the data from external DB 
-			try {			
+			//The populate the rest of the data from external DB
+			try {
 				DBAdapter.getAdapter().populateFromExternalDB(b);
 			} catch (Exception e) {
 				e.printStackTrace();
-			}			
+			}
 		}
-		
+
 		@Override
 		public boolean isEditable(AttachedBiosample row) {return editable;}
-		
+
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<AttachedBiosample> table, AttachedBiosample row, int rowNo, Object value) {
-			if(row!=null) sampleIdLabel.setBiosample(row.getBiosample());				
+			if(row!=null) sampleIdLabel.setBiosample(row.getBiosample());
 			return sampleIdLabel;
 		}
-		
+
 		@Override
 		public TableCellEditor getCellEditor(AbstractExtendTable<AttachedBiosample> table) {
 			AttachedBiosampleIdCellEditor editor = new AttachedBiosampleIdCellEditor(AttachedBiosampleTableModel.this);
 			return editor;
 		}
-		
+
 		@Override
 		public void postProcess(AbstractExtendTable<AttachedBiosample> table, AttachedBiosample row, int rowNo, Object value, JComponent comp) {
 			if(row.isSkipRando()) {
 				comp.setBackground(Color.PINK);
 			}
 		}
-		
+
 		@Override
 		public void populateHeaderPopup(final AbstractExtendTable<AttachedBiosample> table, JPopupMenu popupMenu) {
 			super.populateHeaderPopup(table, popupMenu);
@@ -193,7 +193,7 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 			});
 		}
 	}
-	
+
 	public class SampleNameColumn extends Column<AttachedBiosample, String> {
 		public SampleNameColumn() {
 			super((biotype==null?"":biotype.getName()) + "\n" + (biotype==null || biotype.getSampleNameLabel()==null? "": biotype.getSampleNameLabel()), String.class, 30, 100);
@@ -210,13 +210,13 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 		public boolean isEditable(AttachedBiosample row) {
 			return biotype!=null && biotype.getSampleNameLabel()!=null && biotype.getSampleNameLabel().length()>0;
 		}
-		
+
 	}
-	
+
 	public class WeightColumn extends Column<AttachedBiosample, Double> {
 		private final boolean editable;
 		public WeightColumn(boolean editable) {
-			super((phase==null?"": phase.getShortName())+ "\nWeight[g]", Double.class, 50, 50);		
+			super((phase==null?"": phase.getShortName())+ "\nWeight[g]", Double.class, 50, 50);
 			this.editable = editable;
 		}
 		@Override
@@ -229,17 +229,17 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 		}
 		@Override
 		public boolean isEditable(AttachedBiosample row) {return editable;}
-		
+
 		@Override
 		public boolean shouldMerge(AttachedBiosample r1, AttachedBiosample r2) {
 			return false;
 		}
 	}
-	
+
 	public class DataColumn extends Column<AttachedBiosample, Double> {
 		private final boolean editable;
 		private final int index;
-		public DataColumn(int index, boolean editable) {			
+		public DataColumn(int index, boolean editable) {
 			super("\nData"+(index+1), Double.class, 50, 50);
 			this.index = index;
 			this.editable = editable;
@@ -256,24 +256,24 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 		@Override
 		public boolean isEditable(AttachedBiosample row) {return editable;}
 	}
-	
+
 	public class NewGroupColumn extends Column<AttachedBiosample, Group> {
 		public NewGroupColumn() {
 			super("StudyGroup\n", Group.class, 50, 110);
 		}
 		@Override
-		public Group getValue(AttachedBiosample row) {			
+		public Group getValue(AttachedBiosample row) {
 			return row.getGroup();
 		}
-		
+
 		@Override
 		public boolean isEditable(AttachedBiosample row) {return true;}
-		
+
 		@Override
 		public void setValue(AttachedBiosample row, Group value) {
 			row.setGroup(value);
 		}
-		
+
 		@Override
 		public void paste(AttachedBiosample row, String value) throws Exception {
 			if(value==null || value.length()==0) {
@@ -284,11 +284,11 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 					if(value.equals(group.getName()) || value.equals(group.getShortName())) {
 						setValue(row, group);
 						return;
-					} 
+					}
 				}
 			}
 		}
-		
+
 		private GroupLabel groupLabel = new GroupLabel();
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<AttachedBiosample> table, AttachedBiosample row, int rowNo, Object value) {
@@ -297,7 +297,7 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 		}
 		@Override
 		public TableCellEditor getCellEditor(AbstractExtendTable<AttachedBiosample> table) {
-			return new GroupCellEditor() {
+			return new GroupCellEditor(false) {
 				@Override
 				public Study getStudy(int row) {
 					return study;
@@ -305,15 +305,15 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 			};
 		}
 	}
-	
+
 
 	public final class SubgroupColumn extends Column<AttachedBiosample, Integer> {
 		public SubgroupColumn() {
-			super("StudyGroup\nSt.", Integer.class, 30, 30);	
+			super("StudyGroup\nSt.", Integer.class, 30, 30);
 			groupLabel.setFont(FastFont.SMALL);
 		}
 		@Override
-		public Integer getValue(AttachedBiosample row) {			
+		public Integer getValue(AttachedBiosample row) {
 			return row.getGroup()==null || row.getGroup().getNSubgroups()<=1? null: row.getSubGroup()+1;
 		}
 		@Override
@@ -325,16 +325,16 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 		public boolean isEditable(AttachedBiosample row) {
 			return row!=null && row.getGroup()!=null && row.getGroup().getNSubgroups()>1;
 		}
-		
+
 		private GroupLabel groupLabel = new GroupLabel();
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<AttachedBiosample> table, AttachedBiosample row, int rowNo, Object value) {
 			groupLabel.setText(value==null? null: "'"+value, row.getGroup());
 			return groupLabel;
-		}		
+		}
 	}
-	
-	
+
+
 	public static class FormerContainerColumn extends Column<AttachedBiosample, String> {
 		public FormerContainerColumn() {
 			super("ContainerId\n(origin)", String.class, 68, 68);
@@ -347,7 +347,7 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 		@Override
 		public boolean isEditable(AttachedBiosample row) {return false;}
 	}
-	
+
 	public class ContainerIdColumn extends Column<AttachedBiosample, String> {
 		public ContainerIdColumn() {
 			super("ContainerId\n", String.class, 68, 68);
@@ -365,12 +365,12 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 			Biotype type = row.getBiosample().getBiotype()==null? biotype: row.getBiosample().getBiotype();
 			return row.getBiosample()!=null && type!=null && !type.isAbstract() && !type.isHideContainer();
 		}
-		
+
 		@Override
-		public void postProcess(com.actelion.research.util.ui.exceltable.AbstractExtendTable<AttachedBiosample> table, AttachedBiosample row, int rowNo, Object value, JComponent comp) {
+		public void postProcess(AbstractExtendTable<AttachedBiosample> table, AttachedBiosample row, int rowNo, Object value, JComponent comp) {
 			comp.setFont(FastFont.BOLD);
 		}
-		
+
 		@Override
 		public TableCellEditor getCellEditor(AbstractExtendTable<AttachedBiosample> table) {
 			Biotype type = getBiotype();
@@ -380,13 +380,13 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 				return super.getCellEditor(table);
 			}
 		}
-	}	
-	
+	}
+
 	public static final class TextFieldLinkerColumn extends Column<AttachedBiosample, String> {
-		private BiosampleLinker linker; 
+		private BiosampleLinker linker;
 		public TextFieldLinkerColumn(BiosampleLinker linker) {
-			super(linker.getLabel(), String.class, 50);
-			this.linker = linker;			
+			super(linker.getLabelShort(), String.class, 50);
+			this.linker = linker;
 		}
 		@Override
 		public String getValue(AttachedBiosample row) {
@@ -395,19 +395,19 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 		}
 		@Override
 		public boolean isEditable(AttachedBiosample row) {
-			return row.getBiosample()!=null && row.getBiosample().getBiotype()!=null && row.getBiosample().getBiotype().equals(linker.getBiotypeForLabel());
+			return false;//row.getBiosample()!=null && row.getBiosample().getBiotype()!=null && row.getBiosample().getBiotype().equals(linker.getBiotypeForLabel());
 		}
-		
+
 		@Override
 		public void setValue(AttachedBiosample row, String value) {
 			linker.setValue(row.getBiosample(), value);
 		}
-		
+
 	}
-	
+
 	public static final class ParentColumn extends Column<AttachedBiosample, Biosample> {
 		private Biotype biotype;
-		private boolean top; 
+		private boolean top;
 		public ParentColumn(Biotype biotype, boolean top) {
 			super(biotype==null? (top?"TopParent\nId":"Parent\nId"): biotype.getName(), Biosample.class, 50);
 			this.biotype = biotype;
@@ -415,23 +415,23 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 		}
 		@Override
 		public Biosample getValue(AttachedBiosample row) {
-			Biosample v = row.getBiosample()==null? null: top? row.getBiosample().getTopParent(): row.getBiosample().getParent(); 
+			Biosample v = row.getBiosample()==null? null: top? row.getBiosample().getTopParent(): row.getBiosample().getParent();
 			return v;
 		}
 		@Override
 		public boolean isEditable(AttachedBiosample row) {
 			return row.getBiosample()!=null && !top;
 		}
-		
+
 		@Override
 		public void setValue(AttachedBiosample row, Biosample value) {
 			assert !top;
 			assert row.getBiosample()!=null;
 			row.getBiosample().setParent(value);
 		}
-		
+
 		private SampleIdLabel label = new SampleIdLabel(true, true);
-		
+
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<AttachedBiosample> table, AttachedBiosample row, int rowNo, Object value) {
 			label.setBiosample((Biosample) value);
@@ -441,19 +441,19 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 		public TableCellEditor getCellEditor(AbstractExtendTable<AttachedBiosample> table) {
 			BiosampleCellEditor editor = new BiosampleCellEditor(biotype);
 			return editor;
-			
+
 		}
-		
+
 	}
 
 	public AttachedBiosampleTableModel(Mode mode, Study study) {
 		this(mode, study, null, null, null);
 	}
-	
+
 	public AttachedBiosampleTableModel(Mode mode, Study study, Group group, Phase phase) {
 		this(mode, study, group, phase, null);
 	}
-	
+
 	public AttachedBiosampleTableModel(Mode mode, Study study, Group group, Phase phase, Biotype biotype) {
 		this.mode = mode;
 		this.study = study;
@@ -462,29 +462,29 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 		this.biotype = biotype;
 		initColumns();
 	}
-	
+
 	private static Set<BiosampleLinker> getLinkers(Biotype biotype) {
 		Set<BiosampleLinker> res = new TreeSet<>();
 		if(biotype==null) return res;
-		
+
 		for(BiotypeMetadata m: biotype.getMetadata()) {
 			res.add(new BiosampleLinker(m));
 		}
 		res.add(new BiosampleLinker(LinkerType.COMMENTS, biotype));
 		return res;
 	}
-	
-	public List<Column<AttachedBiosample, String>> createLinkers(Biotype biotype) {
+
+	public List<Column<AttachedBiosample, String>> createLinkerColumns(Biotype biotype) {
 		List<Column<AttachedBiosample, String>> res = new ArrayList<>();
 		for (BiosampleLinker linker : getLinkers(biotype)) {
 			res.add(new TextFieldLinkerColumn(linker));
-		}		
+		}
 		return res;
-	}	
-		
+	}
+
 	public void setBiotype(Biotype biotype) throws Exception {
 		this.biotype = biotype;
-		
+
 		//Check that the conversion is possible
 		for (AttachedBiosample ab : getRows()) {
 			Biosample b = ab.getBiosample();
@@ -493,7 +493,7 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 				throw new Exception("You cannot convert " + b.getSampleId() + " because its metadata are already filled. Please delete them first.");
 			}
 		}
-	
+
 		//Convert the biosamples to the corresponding biotype if possible
 		for (AttachedBiosample ab : getRows()) {
 			Biosample b = ab.getBiosample();
@@ -502,10 +502,10 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 			if(b.getBiotype()==null && biotype==null) continue;
 			b.setBiotype(biotype);
 		}
-		
+
 		initColumns();
 	}
-	
+
 
 	public void setGroup(Group group) {
 		this.group = group;
@@ -517,12 +517,12 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 	public Group getGroup() {
 		return group;
 	}
-	
+
 	public Study getStudy() {
 		return study;
 	}
 
-	
+
 	@Override
 	public AttachedBiosample createRecord() {
 		return new AttachedBiosample();
@@ -531,12 +531,12 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 	public void setNData(int nData) {
 		this.nData = nData;
 	}
-	
+
 	public int getNData() {
 		return nData;
 	}
-	
-	
+
+
 	/**
 	 * Return the specified biotype of the model, or guess from the biosample (if all have the same biotype)
 	 * @return
@@ -556,11 +556,11 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 		}
 		return myBiotype;
 	}
-	
-	
+
+
 	@Override
 	public void setRows(List<AttachedBiosample> rows) {
-		
+
 		//Remove the biotype if samples don't match (or throw an exception?)
 		if(biotype!=null) {
 			for (AttachedBiosample ab : rows) {
@@ -572,7 +572,7 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 			}
 		}
 		super.setRows(rows);
-		
+
 	}
 	/**
 	 * To be called after setting the rows or one of the fields (ndata,phase)
@@ -588,45 +588,45 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 				if(s.getBiosample().getContainerId()!=null && s.getBiosample().getContainerId().length()>0) hasFormerContainerId = true;
 			}
 			if(s.getWeight()!=null) hasWeights = true;
-			
+
 			maxIndex = Math.max(maxIndex, s.getDataList().size());
 		}
-		
+
 		List<Column<AttachedBiosample, ?>> columns = new ArrayList<Column<AttachedBiosample,?>>();
 		columns.add(COLUMN_ROWNO);
-		
-		
-		
-			
+
+
+
+
 		if(mode==Mode.MANUALASSIGN || mode==Mode.RND_SUMMARY) {
 			if(mode==Mode.RND_SUMMARY) {
 				columns.add(new InitialNoColumn(false));
 			}
-			
+
 			//Container
 			if(myBiotype!=null && !myBiotype.isAbstract() && !myBiotype.isHideContainer()) {
 				if(mode==Mode.RND_SUMMARY && hasFormerContainerId) {
 					columns.add(new AttachedBiosampleTableModel.FormerContainerColumn());
 				}
-				columns.add(new ContainerIdColumn());				
+				columns.add(new ContainerIdColumn());
 			}
-			
+
 			//Study
 			columns.add(new NewGroupColumn());
 			columns.add(new SubgroupColumn());
 
 			//Parent
 			if(myBiotype!=null && (myBiotype.getCategory()==BiotypeCategory.PURIFIED || myBiotype.getCategory()==BiotypeCategory.LIQUID || myBiotype.getCategory()==BiotypeCategory.SOLID)) {
-				if(myBiotype.getParent()!=null && !myBiotype.getParent().equals(myBiotype.getTopParent())) { 
+				if(myBiotype.getParent()!=null && !myBiotype.getParent().equals(myBiotype.getTopParent())) {
 					columns.add(new ParentColumn(myBiotype.getTopParent(), true));
 				}
 				columns.add(new ParentColumn(myBiotype.getParent(), false));
 			}
-			
-			
+
+
 			//SampleId/Name
-			columns.add(new SampleIdColumn(true));	
-			
+			columns.add(new SampleIdColumn(true));
+
 			if(myBiotype!=null && myBiotype.getSampleNameLabel()!=null) {
 				columns.add(new SampleNameColumn());
 			}
@@ -635,23 +635,23 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 			if(mode==Mode.RND_SUMMARY && hasWeights) {
 				columns.add(new WeightColumn(true));
 			}
-			
-			//Metadata
-			columns.addAll(createLinkers(myBiotype));
 
-		}  else { //Weighing, groups, cages			
+			//Metadata
+			columns.addAll(createLinkerColumns(myBiotype));
+
+		}  else { //Weighing, groups, cages
 			columns.add(new InitialNoColumn(mode==Mode.RND_WEIGHING));
 			columns.add(new SampleIdColumn(mode==Mode.RND_WEIGHING));
-			
+
 			if(mode==Mode.RND_WEIGHING || mode==Mode.RND_SETGROUPS ) {
 				for (int i = 0; i < nData; i++) {
-					columns.add(new DataColumn(i, mode==Mode.RND_WEIGHING));				
+					columns.add(new DataColumn(i, mode==Mode.RND_WEIGHING));
 				}
 			}
 			if(mode==Mode.RND_WEIGHING || mode==Mode.RND_SETGROUPS) {
 				columns.add(new WeightColumn(mode==Mode.RND_WEIGHING));
 			}
-			
+
 			if(mode==Mode.RND_SETCAGES) {
 				if(hasFormerContainerId) {
 					columns.add(new AttachedBiosampleTableModel.FormerContainerColumn());
@@ -660,10 +660,10 @@ public class AttachedBiosampleTableModel extends ExcelTableModel<AttachedBiosamp
 			}
 			if(mode==Mode.RND_WEIGHING) {
 				//Metadata
-				columns.addAll(createLinkers(myBiotype));
+				columns.addAll(createLinkerColumns(myBiotype));
 			}
 		}
-		
+
 		setColumns(columns);
 	}
 

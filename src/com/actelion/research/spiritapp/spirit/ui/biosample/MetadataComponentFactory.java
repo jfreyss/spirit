@@ -31,9 +31,9 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.util.component.DocumentTextField;
 import com.actelion.research.spiritapp.spirit.ui.util.component.DocumentZipTextField;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -52,7 +52,7 @@ public class MetadataComponentFactory {
 	/**
 	 * @param metadataType
 	 * @param metadata - if not null, prepopulate the component
-	 * @param shortVersion 
+	 * @param shortVersion
 	 * @return a Jcomponent which implements MetadataComponent
 	 */
 	public static JComponent getComponentFor(final BiotypeMetadata metadataType) {
@@ -70,10 +70,10 @@ public class MetadataComponentFactory {
 		}
 		return getComponentFor(metadataType.getDataType(), metadataType.getParameters(), metadataType.isRequired());
 	}
-	
+
 	public static JComponent getComponentFor(final DataType datatype, String parameters, boolean required) {
 		JComponent res = null;
-		switch (datatype) {		
+		switch (datatype) {
 		case ALPHA:
 			res = new AlphaNumericalComponent();
 			break;
@@ -106,28 +106,28 @@ public class MetadataComponentFactory {
 			break;
 		default:
 			res = new JLabel("Not editable: [" + datatype+"]");
-		}		
+		}
 		if(required) {
 			res.setBackground(LF.BGCOLOR_REQUIRED);
-		}		
+		}
 		return res;
 	}
-	
-	public static class AlphaNumericalComponent extends JCustomTextField implements MetadataComponent {		
+
+	public static class AlphaNumericalComponent extends JCustomTextField implements MetadataComponent {
 		public AlphaNumericalComponent() {
 			super(JCustomTextField.ALPHANUMERIC);
 			setMaxChars(255);
-			setColumns(28);			
-		}		
+			setColumns(28);
+		}
 		@Override
 		public String getData() {
 			return getText();
-		}			
+		}
 		@Override
 		public void setData(String val) {
 			if(val==null) setText("");
 			else setText(val);
-		}				
+		}
 		@Override
 		public void updateModel(Biosample b, BiotypeMetadata m) {
 			if(b!=null && m!=null) b.setMetadataValue(m, getData());
@@ -135,13 +135,13 @@ public class MetadataComponentFactory {
 		@Override
 		public void updateView(Biosample b, BiotypeMetadata m) {
 			setData(b==null || m==null? null: b.getMetadataValue(m));
-		}	
+		}
 		@Override
 		public void addTextChangeListener(TextChangeListener listener) {
 			super.addTextChangeListener(listener);
 		}
 	}
-	
+
 	public static class BiosampleComponent extends SampleIdBrowser implements MetadataComponent {
 		public BiosampleComponent(String parameters) {
 			super();
@@ -155,42 +155,42 @@ public class MetadataComponentFactory {
 					setBiotype(null);
 				}
 			}
-		}		
+		}
 		@Override
 		public String getData() {
 			return getText();
-		}		
+		}
 		@Override
 		public void setData(String metadata) {
-			new IllegalArgumentException("Not supported");			
-		}		
+			new IllegalArgumentException("Not supported");
+		}
 		@Override
 		public void updateModel(Biosample b, BiotypeMetadata m) {
 			if(b!=null && m!=null) b.setMetadataBiosample(m, getBiosample());
-			
+
 		}
 		@Override
 		public void updateView(Biosample b, BiotypeMetadata m) {
-			setBiosample(b==null || m==null? null: b.getMetadataBiosample(m));
+			setBiosample(b==null || m==null? null: b.getMetadataBiosample(m)==null? new Biosample(b.getMetadataValue(m)) :b.getMetadataBiosample(m));
 		}
 		@Override
 		public void addTextChangeListener(TextChangeListener listener) {
 			super.addTextChangeListener(listener);
 		}
 	}
-	
-	public static class ZipComponent extends DocumentZipTextField implements MetadataComponent {		
+
+	public static class ZipComponent extends DocumentZipTextField implements MetadataComponent {
 		public ZipComponent() {
 			super();
-		}				
+		}
 		@Override
 		public String getData() {
 			return getText();
-		}			
+		}
 		@Override
 		public void setData(String val) {
 			throw new IllegalArgumentException("Not supported");
-		}		
+		}
 		@Override
 		public void updateModel(Biosample b, BiotypeMetadata m) {
 			if(b!=null && m!=null) b.setMetadataDocument(m, getSelectedDocument());
@@ -204,19 +204,19 @@ public class MetadataComponentFactory {
 			super.addTextChangeListener(listener);
 		}
 	}
-	
-	public static class FileComponent extends DocumentTextField implements MetadataComponent {		
+
+	public static class FileComponent extends DocumentTextField implements MetadataComponent {
 		public FileComponent() {
 			super();
-		}				
+		}
 		@Override
 		public String getData() {
 			return getText();
-		}			
+		}
 		@Override
 		public void setData(String val) {
 			throw new IllegalArgumentException("Not supported");
-		}		
+		}
 		@Override
 		public void updateModel(Biosample b, BiotypeMetadata m) {
 			if(b!=null && m!=null) b.setMetadataDocument(m, getSelectedDocument());
@@ -230,19 +230,19 @@ public class MetadataComponentFactory {
 			super.addTextChangeListener(listener);
 		}
 	}
-	
+
 	public static class LargeComponent extends JLargeTextField implements MetadataComponent {
 		public LargeComponent() {
 			super();
-		}		
+		}
 		@Override
 		public String getData() {
 			return getText();
-		}			
+		}
 		@Override
 		public void setData(String val) {
 			setText(val);
-		}		
+		}
 		@Override
 		public void updateModel(Biosample b, BiotypeMetadata m) {
 			if(getText().length()==0) {
@@ -260,11 +260,12 @@ public class MetadataComponentFactory {
 			//ignore
 		}
 	}
-	
+
 	public static class MultiComponent extends JComboCheckBox implements MetadataComponent {
-		public MultiComponent(String parameters) {	
+		public MultiComponent(String parameters) {
 			super(Arrays.asList(MiscUtils.split(parameters)));
 			setColumns(28);
+			setAllowTyping(false);
 		}
 
 		@Override
@@ -290,8 +291,8 @@ public class MetadataComponentFactory {
 		}
 	}
 
-	public static class ComboComponent extends MetadataComboBox implements MetadataComponent {		
-		public ComboComponent(String parameters) {			
+	public static class ComboComponent extends MetadataComboBox implements MetadataComponent {
+		public ComboComponent(String parameters) {
 			super();
 			if(parameters==null) parameters = "";
 			String[] split = MiscUtils.split(parameters, ",");
@@ -303,7 +304,7 @@ public class MetadataComponentFactory {
 		@Override
 		public String getData() {
 			return (String)getSelectedItem();
-		}		
+		}
 		@Override
 		public void setData(String val) {
 			if(val==null) {
@@ -311,7 +312,7 @@ public class MetadataComponentFactory {
 			} else {
 				setSelectedItem(val);
 			}
-		}		
+		}
 		@Override
 		public void updateModel(Biosample b, BiotypeMetadata m) {
 			if(b!=null && m!=null) b.setMetadataValue(m, getData());
@@ -322,7 +323,7 @@ public class MetadataComponentFactory {
 		}
 		@Override
 		public void addTextChangeListener(final TextChangeListener listener) {
-			addActionListener(new ActionListener() {				
+			addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					listener.textChanged(ComboComponent.this);
@@ -332,41 +333,11 @@ public class MetadataComponentFactory {
 	}
 
 	public static class AutoCompleteComponent extends JTextComboBox implements MetadataComponent {
-		public AutoCompleteComponent(final String name) {			
-			super();			
+		public AutoCompleteComponent(final String name) {
+			super();
 			setEditable(true);
 			setColumns(28);
 		}
-		@Override
-		public String getData() {
-			return (String) getText();
-		}		
-		@Override
-		public void setData(String val) {
-			if(val==null) {
-				setText("");
-			} else {
-				setText(val);
-			}
-		}				
-		@Override
-		public void updateModel(Biosample b, BiotypeMetadata m) {
-			if(b!=null && m!=null) b.setMetadataValue(m, getData());
-		}		
-		@Override
-		public void updateView(Biosample b, BiotypeMetadata m) {
-			setData(b==null || m==null? null: b.getMetadataValue(m));
-		}		
-		@Override
-		public void addTextChangeListener(TextChangeListener listener) {
-			super.addTextChangeListener(listener);
-		}
-	}
-	
-	public static class NumericalComponent extends JCustomTextField implements MetadataComponent {		
-		public NumericalComponent() {
-			super(JCustomTextField.DOUBLE, 4);
-		}		
 		@Override
 		public String getData() {
 			return getText();
@@ -378,11 +349,11 @@ public class MetadataComponentFactory {
 			} else {
 				setText(val);
 			}
-		}				
+		}
 		@Override
 		public void updateModel(Biosample b, BiotypeMetadata m) {
 			if(b!=null && m!=null) b.setMetadataValue(m, getData());
-		}		
+		}
 		@Override
 		public void updateView(Biosample b, BiotypeMetadata m) {
 			setData(b==null || m==null? null: b.getMetadataValue(m));
@@ -392,7 +363,37 @@ public class MetadataComponentFactory {
 			super.addTextChangeListener(listener);
 		}
 	}
-	
+
+	public static class NumericalComponent extends JCustomTextField implements MetadataComponent {
+		public NumericalComponent() {
+			super(JCustomTextField.DOUBLE, 4);
+		}
+		@Override
+		public String getData() {
+			return getText();
+		}
+		@Override
+		public void setData(String val) {
+			if(val==null) {
+				setText("");
+			} else {
+				setText(val);
+			}
+		}
+		@Override
+		public void updateModel(Biosample b, BiotypeMetadata m) {
+			if(b!=null && m!=null) b.setMetadataValue(m, getData());
+		}
+		@Override
+		public void updateView(Biosample b, BiotypeMetadata m) {
+			setData(b==null || m==null? null: b.getMetadataValue(m));
+		}
+		@Override
+		public void addTextChangeListener(TextChangeListener listener) {
+			super.addTextChangeListener(listener);
+		}
+	}
+
 	public static class FormulaComponent extends NumericalComponent implements MetadataComponent {
 		public FormulaComponent(String parameters) {
 			setToolTipText(parameters);
@@ -401,10 +402,10 @@ public class MetadataComponentFactory {
 		}
 	}
 
-	public static class DateStringComponent extends DateTextField implements MetadataComponent {		
+	public static class DateStringComponent extends DateTextField implements MetadataComponent {
 		public DateStringComponent(boolean showToday) {
 			super(showToday);
-		}		
+		}
 		@Override
 		public String getData() {
 			return getText();
@@ -418,7 +419,7 @@ public class MetadataComponentFactory {
 		@Override
 		public void updateView(Biosample b, BiotypeMetadata m) {
 			setData(b==null || m==null? null: b.getMetadataValue(m));
-		}		
+		}
 		@Override
 		public void addTextChangeListener(TextChangeListener listener) {
 			super.addTextChangeListener(listener);

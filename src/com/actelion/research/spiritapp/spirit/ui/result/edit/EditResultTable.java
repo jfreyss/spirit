@@ -31,7 +31,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.SpiritExcelTable;
 import com.actelion.research.spiritapp.spirit.ui.result.column.AttributeColumn;
 import com.actelion.research.spiritapp.spirit.ui.result.column.CommentsColumn;
 import com.actelion.research.spiritapp.spirit.ui.result.column.CreationColumn;
@@ -42,6 +41,7 @@ import com.actelion.research.spiritapp.spirit.ui.result.column.QualityColumn;
 import com.actelion.research.spiritapp.spirit.ui.result.column.SampleIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.result.column.TopIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritExcelTable;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.Result;

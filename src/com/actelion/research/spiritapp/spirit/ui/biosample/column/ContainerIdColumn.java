@@ -25,7 +25,7 @@ import javax.swing.JComponent;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.ContainerIdCellEditor;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;

@@ -43,15 +43,15 @@ import com.actelion.research.util.ui.UIUtils;
 public class PrintingDlg extends JEscapeDialog {
 
 	private final JTabbedPane tabbedPane = new JCustomTabbedPane(JTabbedPane.NORTH);
-	
+
 	private List<Biosample> biosamples;
 	private ContainerType missingType;
-	
+
 	public PrintingDlg(Collection<Biosample> colBiosamples) {
 		super(UIUtils.getMainFrame(), "Label Printer");
-		
+
 		this.biosamples = JPAUtil.reattach(colBiosamples);
-		Collections.sort(this.biosamples);
+		//		Collections.sort(this.biosamples);
 
 		List<Container> containers = Biosample.getContainers(biosamples, true);
 
@@ -64,17 +64,17 @@ public class PrintingDlg extends JEscapeDialog {
 					allWithoutContainer = false;
 				}
 			}
-			
+
 			if(allWithoutContainer) {
 				missingType = (ContainerType) JOptionPane.showInputDialog(this, "What is the container's type of those biosamples?", "Missing ContainerType", JOptionPane.OK_CANCEL_OPTION, null,  ContainerType.values(), null);
 				if(missingType==null) return;
 			}
 		}
-		
-		
+
+
 		//TabbedPane
 		//Filters and Splits locations by ContainerType
-		ListHashMap<ContainerType, Container> type2containers = new ListHashMap<>();		
+		ListHashMap<ContainerType, Container> type2containers = new ListHashMap<>();
 		for (Biosample b : biosamples) {
 			if(b.getContainer()!=null && b.getContainerType()!=null) {
 				Container container = b.getContainer();
@@ -82,15 +82,15 @@ public class PrintingDlg extends JEscapeDialog {
 					type2containers.add(b.getContainerType(), container);
 				}
 			} else if(missingType!=null) {
-				Container container = new Container(missingType);				
+				Container container = new Container(missingType);
 				b.setContainer(container);
 				assert container.getBiosamples().contains(b);
 				type2containers.add(missingType, container);
 			}
 		}
-		
+
 		//Creates a new tab for each ContainerType
-		Set<ContainerType> containerTypes = new TreeSet<>(type2containers.keySet());		
+		Set<ContainerType> containerTypes = new TreeSet<>(type2containers.keySet());
 		for (ContainerType containerType : containerTypes) {
 			int n;
 			List<Container> list = type2containers.get(containerType);
@@ -100,33 +100,30 @@ public class PrintingDlg extends JEscapeDialog {
 					"<b style='font-size:11px'>" + containerType.getName() + "</b><br>" +
 					"<span style='font-size:10px;font-weight:plain'>   - " + n + " label" + (n>1?"s":"") + " -  </span>" +
 					"</div></html>";
-			
+
 			PrintingTab tab = new PrintingTab(this, containerType);
-			
+
 			tabbedPane.add(tabName, tab);
 			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, new ImageIcon(containerType.getImage(22)));
+			Collections.sort(list);
 			tab.setRows(list);
-			
-		}
-		
-		
-		//ContentPane		
-		setContentPane(tabbedPane);
-		
-		
 
-		
-		setSize(1150, 800);
-		setLocationRelativeTo(UIUtils.getMainFrame());
+		}
+
+
+		//ContentPane
+		setContentPane(tabbedPane);
+
+		UIUtils.adaptSize(this, 1150, 800);
 		setVisible(true);
 
-	
-	}
-	
-	
 
-	
-	
+	}
+
+
+
+
+
 
 }
 

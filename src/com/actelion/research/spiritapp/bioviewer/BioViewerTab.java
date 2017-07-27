@@ -365,7 +365,7 @@ public class BioViewerTab extends SpiritTab implements IBiosampleTab {
 	}
 	@SuppressWarnings("unchecked")
 	@Override
-	public<T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
+	public<T> void fireModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
 		if(!isShowing()) return;
 		if(what==Biosample.class) {
 			List<Biosample> biosamples = (List<Biosample>) details;

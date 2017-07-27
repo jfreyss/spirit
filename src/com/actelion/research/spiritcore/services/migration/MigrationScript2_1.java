@@ -26,31 +26,30 @@ import com.actelion.research.spiritcore.util.SQLConverter.SQLVendor;
 
 public class MigrationScript2_1 extends MigrationScript {
 
-	private String SCRIPT = 
-			"alter table spirit.biosample add metadata2 varchar2(4000);\n" 
-			+ "alter table spirit.biosample_aud add metadata2 varchar2(4000);\n" 
-			+ "alter table spirit.biosample add lastaction varchar2(256);\n" 
-			+ "alter table spirit.biosample_aud add lastaction varchar2(256);\n"
-			+ "alter table spirit.biosample add endphase_id number(19);\n" 
-			+ "alter table spirit.biosample_aud add endphase_id number(19);\n"
-			+ "alter table spirit.biosample add constraint biosample_endphase_fk foreign key (endphase_id) references spirit.study_phase (id);\n"
-			
-			+ "alter table spirit.biotype add nameUnique number(1);\n" 
+	private String SCRIPT =
+			"alter table spirit.biosample add metadata2 varchar2(4000);\n"
+					+ "alter table spirit.biosample_aud add metadata2 varchar2(4000);\n"
+					+ "alter table spirit.biosample add lastaction varchar2(256);\n"
+					+ "alter table spirit.biosample_aud add lastaction varchar2(256);\n"
+					+ "alter table spirit.biosample add endphase_id number(19);\n"
+					+ "alter table spirit.biosample_aud add endphase_id number(19);\n"
+					+ "alter table spirit.biosample add constraint biosample_endphase_fk foreign key (endphase_id) references spirit.study_phase (id);\n"
+
+			+ "alter table spirit.biotype add nameUnique number(1);\n"
 			+ "alter table spirit.biotype_aud add nameUnique number(1);\n"
-	
-	
+
+
 			+ "update spirit.biosample set endphase_id = (select phase_id from spirit.biosample_action where type = 'Status' and biosample_action.biosample_id = biosample.id and id = (select max(id)  from spirit.biosample_action where type = 'Status' and biosample_action.biosample_id = biosample.id ))where (select phase_id from spirit.biosample_action where type = 'Status' and biosample_action.biosample_id = biosample.id and id = (select max(id)  from spirit.biosample_action where type = 'Status' and biosample_action.biosample_id = biosample.id )) is not null;\n"
-//			+ "update spirit.biosample_aud set endphase_id =(select max(phase_id) from spirit.biosample_action_aud where type = 'Status' and biosample_action_aud.biosample_id = biosample_aud.id  and rev = (select max(rev) from spirit.biosample_action_aud where type = 'Status' and biosample_action_aud.biosample_id = biosample_aud.id  and biosample_action_aud.rev <= biosample_aud.rev)) where biosample_aud.ATTACHEDSTUDY_ID is not null and ENDPHASE_ID is null;\n"			
 			+ "update spirit.biosample_aud set endphase_id = (select phase_id from spirit.biosample_action_aud where type = 'Status' and biosample_action_aud.biosample_id = biosample_aud.id and id = (select max(id) from spirit.biosample_action_aud where type = 'Status' and biosample_action_aud.biosample_id = biosample_aud.id ) and biosample_action_aud.rev = biosample_aud.rev)where (select phase_id from spirit.biosample_action_aud where type = 'Status' and biosample_action_aud.biosample_id = biosample_aud.id and id = (select max(id) from spirit.biosample_action_aud where type = 'Status' and biosample_action_aud.biosample_id = biosample_aud.id ) and biosample_action_aud.rev = biosample_aud.rev) is not null;\n"
 			;
-	
+
 	public MigrationScript2_1() {
 		super("2.1");
 	}
-	
+
 	@Override
 	public String getMigrationSql(SQLVendor vendor) throws Exception {
 		return SQLConverter.convertScript(SCRIPT, vendor);
 	}
-	
+
 }

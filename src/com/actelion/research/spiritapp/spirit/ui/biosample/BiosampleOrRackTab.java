@@ -38,7 +38,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerActions;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerActions;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationActions;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.RackDepictor;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.RackDepictorListener;

@@ -25,7 +25,7 @@ import java.awt.Image;
 
 import javax.swing.ImageIcon;
 
-import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
+import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
 import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 

@@ -46,8 +46,11 @@ public class LinkedBiosampleColumn extends AbstractLinkerColumn<Biosample> {
 	@Override
 	public Biosample getValue(Biosample row) {
 		row = linker.getLinked(row);
-		if(row==null  || !row.getBiotype().equals(getType().getBiotype()) || row.getMetadataBiosample(getType())==null) return null;
+		if(row==null  || !row.getBiotype().equals(getType().getBiotype())) return null;
 		Biosample res = row.getMetadataBiosample(getType());
+		if(res==null) {
+			res = new Biosample(row.getMetadataValue(getType()));
+		}
 		return res;
 	}
 	@Override

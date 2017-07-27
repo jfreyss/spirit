@@ -34,7 +34,7 @@ public class LocationStudyColumn extends Column<Location, String> {
 	}
 	@Override
 	public String getValue(Location row) {
-		return MiscUtils.flatten(Study.getIvvOrStudyIds(Biosample.getStudies(row.getBiosamples())));
+		return MiscUtils.flatten(Study.getLocalIdOrStudyIds(Biosample.getStudies(row.getBiosamples())));
 	}
 	
 	@Override

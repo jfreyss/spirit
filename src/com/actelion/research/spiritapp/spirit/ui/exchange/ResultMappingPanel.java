@@ -36,8 +36,8 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.result.ResultTable;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.services.dao.DAOResult;

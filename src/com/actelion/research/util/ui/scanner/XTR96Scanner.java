@@ -41,7 +41,7 @@ public class XTR96Scanner {
 
 	public static final String SCANNER_NAME = "xtr96";
 	public static final boolean overwriteRegistry = false;
-	
+
 
 	public static class InputListenerThread extends Thread {
 		private Socket sock;
@@ -65,20 +65,20 @@ public class XTR96Scanner {
 					}
 				}
 			} catch (Exception e) {
-			}	
+			}
 		}
 		public String resetBuffer() {
 			String res = buffer;
 			buffer = "";
 			return res;
 		}
-		
-		
+
+
 	}
-	
+
 	public XTR96Scanner() {
 	}
-	
+
 	public static final boolean isSelected() {
 		return XTR96Scanner.SCANNER_NAME.equals(Config.getInstance("HTS").getProperty("scanner", XTR96Scanner.SCANNER_NAME));
 	}
@@ -86,7 +86,7 @@ public class XTR96Scanner {
 	public List<RackPos> scanTubes(ScannerConfiguration config) throws IOException, NoReadException {
 		return scanPlate(config).getTubes();
 	}
-	
+
 	public static List<RackPos> getTestTubes(int i) throws IOException, NoReadException {
 		List<RackPos> testTubes = new ArrayList<RackPos>();
 		if(i==0) {
@@ -98,25 +98,14 @@ public class XTR96Scanner {
 			testTubes.add(new RackPos("A/06", "GT00032536"));
 			testTubes.add(new RackPos("A/07", "GT00032537"));
 			testTubes.add(new RackPos("B/01", "No Read"));
-//			testTubes.add(new ScannedTube("A/08", "GT00032538"));
-//			testTubes.add(new ScannedTube("A/09", "GT00032539"));
-//			testTubes.add(new ScannedTube("A/10", "GT00032540"));
-//			testTubes.add(new ScannedTube("A/11", "GT00032541"));
-//			testTubes.add(new ScannedTube("A/12", "GT00032542"));
-//			throw new NoReadException(testTubes);
 		} else if(i==1) {
-			testTubes.add(new RackPos("A/01", "GT00033531"));
-			testTubes.add(new RackPos("A/02", "GT00033532"));
-			testTubes.add(new RackPos("A/03", "GT00033533"));
-			testTubes.add(new RackPos("A/04", "GT00033534"));
-			testTubes.add(new RackPos("A/05", "GT00033535"));
-			testTubes.add(new RackPos("A/06", "GT00033536"));
-			testTubes.add(new RackPos("A/07", "GT00033537"));
-//			testTubes.add(new ScannedTube("A/08", "GT00033538"));
-//			testTubes.add(new ScannedTube("A/09", "GT00033539"));
-//			testTubes.add(new ScannedTube("A/10", "GT00033540"));
-//			testTubes.add(new ScannedTube("A/11", "GT00033541"));
-//			testTubes.add(new ScannedTube("B/01", "GT00033542"));
+			testTubes.add(new RackPos("A/01", "0208853667"));
+			testTubes.add(new RackPos("A/02", "0208853668"));
+			testTubes.add(new RackPos("A/03", "0208853669"));
+			testTubes.add(new RackPos("A/04", "0208853670"));
+			testTubes.add(new RackPos("A/05", "0208853671"));
+			testTubes.add(new RackPos("A/06", "0208853672"));
+			testTubes.add(new RackPos("A/07", "0208853673"));
 		} else {
 			testTubes.add(new RackPos("A/01", "GT00034531"));
 			testTubes.add(new RackPos("A/02", "GT00034532"));
@@ -129,12 +118,12 @@ public class XTR96Scanner {
 			testTubes.add(new RackPos("A/09", "GT00034539"));
 			testTubes.add(new RackPos("A/10", "GT00034540"));
 			testTubes.add(new RackPos("B/01", "GT00034541"));
-			testTubes.add(new RackPos("B/02", "GT00034542"));			
+			testTubes.add(new RackPos("B/02", "GT00034542"));
 		}
 		return testTubes;
 	}
-	
-	
+
+
 	/**
 	 * Scans a rack and returns the list of Positionable Tube (ids and positions).<br>
 	 * The tubes are not loaded from the DB
@@ -144,15 +133,15 @@ public class XTR96Scanner {
 	 * @throws NoReadException
 	 */
 	public Plate scanPlate(ScannerConfiguration config) throws IOException, NoReadException {
-		
+
 		//Check that we have write access on the current drive
 		boolean test = new File(".").canWrite() && !new File(".").getAbsolutePath().startsWith("P:") && !new File(".").getAbsolutePath().contains("actelch02") && !new File(".").getAbsolutePath().contains("ares");
 		if(!test) throw new IOException("The working directory must be somewhere where you have write access.\n Currently it is: "+new File(".").getAbsolutePath());
-		
+
 		if("baerr".equals(System.getProperty("user.name")) || "freyssj".equals(System.getProperty("user.name"))) {
-			return new Plate(config.getRows(), config.getCols(), getTestTubes(0));
+			return new Plate(config.getRows(), config.getCols(), getTestTubes(1));
 		}
-		
+
 		if(overwriteRegistry) {
 			URL url = null;
 			try {
@@ -163,15 +152,15 @@ public class XTR96Scanner {
 				IOUtils.redirect(is, os);
 				is.close();
 				os.close();
-				
+
 				Runtime.getRuntime().exec("regedit /s c:/tmp/xtr96.reg");
-				
+
 			} catch (Exception e) {
 				System.err.println("Could not reset the scanner registry ("+url+")");
 				e.printStackTrace();
 			}
 		}
-		
+
 		//Run the Scanner
 		Socket sock = null;
 		OutputStream os = null;
@@ -197,9 +186,9 @@ public class XTR96Scanner {
 			}
 		}
 		if(os==null) throw new IOException("os is null");
-		
+
 		if(config.regEditConfig!=null) {
-			InputListenerThread thread = new InputListenerThread(sock);		
+			InputListenerThread thread = new InputListenerThread(sock);
 			thread.start();
 			os.write(("set tube = " + config.regEditConfig).getBytes());
 			do {
@@ -210,12 +199,12 @@ public class XTR96Scanner {
 			thread.interrupt();
 		}
 
-		
+
 		try {Thread.sleep(1000);}catch (Exception e) {}
 		//os.write("minimise".getBytes());
 		//try {Thread.sleep(100);}catch (Exception e) {}
 		{
-			InputListenerThread thread = new InputListenerThread(sock);		
+			InputListenerThread thread = new InputListenerThread(sock);
 			thread.start();
 			os.write("scan only".getBytes());
 			String last = "OK";
@@ -227,9 +216,9 @@ public class XTR96Scanner {
 			System.out.println("scan only-->"+thread.lastOutput);
 			thread.interrupt();
 		}
-		
+
 		try {Thread.sleep(2000);}catch (Exception e) {}
-		InputListenerThread thread = new InputListenerThread(sock);		
+		InputListenerThread thread = new InputListenerThread(sock);
 		thread.start();
 		{
 			os.write("decode".getBytes());
@@ -241,35 +230,35 @@ public class XTR96Scanner {
 			} while(thread.lastOutput.indexOf(last)<0 && count++<30);
 			System.out.println("decode-->"+thread.lastOutput);
 		}
-		
+
 		os.write("terminate".getBytes());
-		
+
 		thread.interrupt();
 		try { thread.wait();}catch (Exception e) {}
 		System.out.println("terminate-->"+thread.lastOutput);
 
 		try {Thread.sleep(1000);}catch (Exception e) {}
-		
+
 		if(p!=null) p.destroy();
 
 		return new Plate(config.getRows(), config.getCols(), parseResults(thread.buffer));
-		
+
 	}
-	
+
 	private static List<RackPos> parseResults(String res) throws NoReadException {
 		int index = res.indexOf("...A01");
 		if(index>0) res = res.substring(index+3);
-		
-		List<RackPos> tubes = new ArrayList<RackPos>();		
-		List<RackPos> noread = new ArrayList<RackPos>();		
+
+		List<RackPos> tubes = new ArrayList<RackPos>();
+		List<RackPos> noread = new ArrayList<RackPos>();
 		String[] s = res.split("\n");
 		for(String t: s) {
 			String[] v = t.split(",");
 			if(v.length!=2) continue;
-			
+
 			String pos = v[0].trim();
 			String barcode = v[1].trim();
-			
+
 			//normalize position to look like L/dd
 			String normalPos;
 			try {
@@ -278,18 +267,18 @@ public class XTR96Scanner {
 			} catch (Exception e) {
 				normalPos = "??";
 			}
-			
+
 			if(RackPos.NOREAD.equals(barcode)) {
 				noread.add(new RackPos(normalPos, barcode));
 			} else if(!"No Tube".equals(barcode)) {
-				tubes.add(new RackPos(normalPos, barcode));				
+				tubes.add(new RackPos(normalPos, barcode));
 			}
 		}
 
 		if(noread.size()>0) {
 			throw new NoReadException(noread);
 		}
-		
+
 		return tubes;
 	}
 

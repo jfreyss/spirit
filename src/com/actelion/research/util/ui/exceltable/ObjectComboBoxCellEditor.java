@@ -48,6 +48,8 @@ public class ObjectComboBoxCellEditor<T> extends AbstractCellEditor implements T
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 		cb.setSelection((T)value);
+		cb.setCaretPosition(0);
+		cb.selectAll();
 		return cb;
 	}
 

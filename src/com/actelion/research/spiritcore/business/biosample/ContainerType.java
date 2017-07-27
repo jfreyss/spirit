@@ -36,21 +36,24 @@ import javax.persistence.Transient;
 
 
 /**
- * @author freyssj
+ * ContainerType is used to represent the types of containers, together with their type of barcode and the syze of their labels.
+ *
+ * @author Joel Freyss
  */
 public enum ContainerType {
+	AMBER_1PP("Amber 1.0PP",			"Amber",	"amber", 		BrotherFormat._9x24,		BarcodeType.MATRIX),
 	CRYOTUBE("Cryotube",				"Cryo",		"cryotube", 	BrotherFormat._12x42,		BarcodeType.MATRIX),
-	TUBE_0_5PP("Matrix 0.5PP",			"Ma0.5",	"matrix05", 	BrotherFormat._12x33,		BarcodeType.MATRIX),
-	TUBE_1PP("Matrix 1.0PP",			"Ma1.0",	"matrix10", 	BrotherFormat._12x33,		BarcodeType.MATRIX),
-	TUBE_FX0_5("FluidX 0.5PP",			"Fx0.5", 	"fluidx", 		BrotherFormat._12x33,		BarcodeType.MATRIX),
-	TUBE_FX1_4("FluidX 1.4PP",			"Fx1.4", 	"fluidx", 		BrotherFormat._12x33,		BarcodeType.MATRIX),
-	TUBE_FX20("FluidX 20ml",			"Fx20", 	"fluidx", 		BrotherFormat._12x62,		BarcodeType.MATRIX),
 	TUBE_E0_5("Eppendorf 0.5ml",		"Ep0.5",	"eppendorf", 	BrotherFormat._12x33,		BarcodeType.NOBARCODE),
 	TUBE_E1_5("Eppendorf 1.5ml",		"Ep1.5", 	"eppendorf", 	BrotherFormat._12x42,		BarcodeType.NOBARCODE),
 	TUBE_E2_0("Eppendorf 2.0ml",		"Ep2.0", 	"eppendorf", 	BrotherFormat._12x42,		BarcodeType.NOBARCODE),
-	TUBE_1_4PP("Micronics 1.4PP",		"Mi1.4", 	"micronics", 	BrotherFormat._12x33,		BarcodeType.NOBARCODE),
 	TUBE_FA15("Falcon 15ml",			"Fa15", 	"tube_small", 	BrotherFormat._12x49,		BarcodeType.NOBARCODE),
 	TUBE_FA50("Falcon 50ml",			"Fa50", 	"tube_large", 	BrotherFormat._12x62N,		BarcodeType.NOBARCODE),
+	TUBE_FX0_5("FluidX 0.5PP",			"Fx0.5", 	"fluidx", 		BrotherFormat._12x33,		BarcodeType.MATRIX),
+	TUBE_FX1_4("FluidX 1.4PP",			"Fx1.4", 	"fluidx", 		BrotherFormat._12x33,		BarcodeType.MATRIX),
+	TUBE_FX20("FluidX 20ml",			"Fx20", 	"fluidx", 		BrotherFormat._12x62,		BarcodeType.MATRIX),
+	TUBE_0_5PP("Matrix 0.5PP",			"Ma0.5",	"matrix05", 	BrotherFormat._12x33,		BarcodeType.MATRIX),
+	TUBE_1PP("Matrix 1.0PP",			"Ma1.0",	"matrix10", 	BrotherFormat._12x33,		BarcodeType.MATRIX),
+	TUBE_1_4PP("Micronics 1.4PP",		"Mi1.4", 	"micronics", 	BrotherFormat._12x33,		BarcodeType.NOBARCODE),
 	TUBE_MICRO("Microtainer",			"Mi.", 		"micro", 		BrotherFormat._12x42,		BarcodeType.NOBARCODE),
 	TUBE_5("Tube 5ml",					"5ml", 		"tube_5", 		BrotherFormat._12x49,		BarcodeType.NOBARCODE),
 	TUBE_9("Tube 9ml",					"9ml", 		"tube_5", 		BrotherFormat._12x49,		BarcodeType.NOBARCODE),
@@ -59,7 +62,7 @@ public enum ContainerType {
 	BOTTLE("Bottle",					"Bottle", 	"bottle", 		BrotherFormat._12x33N,		BarcodeType.GENERATE, 99, "B."),
 	SLIDE("Slide",						"Slide", 	"slide", 		BrotherFormat._18x24,		BarcodeType.GENERATE, 8, "Bl."),
 	CAGE("Cage",						"Cage", 	"cage", 		null,						BarcodeType.GENERATE, 8, null),
-	UNKNOWN("Other",					"?", 		"unknown", 		BrotherFormat._12x33N,		BarcodeType.NOBARCODE),
+	UNKNOWN("Other",					"?", 		"unknown", 		BrotherFormat._12x33,		BarcodeType.NOBARCODE),
 	;
 
 
@@ -73,8 +76,8 @@ public enum ContainerType {
 
 	private ContainerType(String name, String shortName, String img, BrotherFormat brotherFormat, BarcodeType barcodeType) {
 		this(name, shortName, img, brotherFormat, barcodeType, 1, null);
-
 	}
+
 	private ContainerType(String name, String shortName, String img, BrotherFormat brotherFormat, BarcodeType barcodeType, int maxSize, String blocNoPrefix) {
 		this.img = img;
 		this.name = name;
@@ -104,10 +107,6 @@ public enum ContainerType {
 
 	public BrotherFormat getBrotherFormat() {
 		return brotherFormat;
-	}
-
-	public String[] getAlternativeMedia() {
-		return brotherFormat==null? new String[] {}: brotherFormat.getMedias();
 	}
 
 	public int getMaxSize() {
@@ -167,7 +166,7 @@ public enum ContainerType {
 	}
 
 	public static ContainerType[] valuesOfRackable() {
-		List<ContainerType> res = new ArrayList<ContainerType>();
+		List<ContainerType> res = new ArrayList<>();
 		for (ContainerType ct : values()) {
 			if(!ct.isMultiple()) {
 				res.add(ct);
@@ -180,13 +179,7 @@ public enum ContainerType {
 		return blocNoPrefix;
 	}
 
-	public String[] getMedias() {
-		if(getAlternativeMedia()==null) return new String[] {getName()};
-		String[] res = new String[getAlternativeMedia().length+1];
-		res[0] = getName();
-		for (int i = 1; i < res.length; i++) {
-			res[i] = getAlternativeMedia()[i-1];
-		}
-		return res;
+	public String getMedia() {
+		return brotherFormat==null? "": brotherFormat.getMedia();
 	}
 }

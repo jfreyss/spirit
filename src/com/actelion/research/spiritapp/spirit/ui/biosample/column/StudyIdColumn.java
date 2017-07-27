@@ -26,6 +26,7 @@ import java.text.DecimalFormat;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class StudyIdColumn extends Column<Biosample, String> {
@@ -33,30 +34,31 @@ public class StudyIdColumn extends Column<Biosample, String> {
 	public StudyIdColumn() {
 		super("Study\nStudyId", String.class, 30, 60);
 	}
-	
+
 	@Override
-	public float getSortingKey() {return 1.1f;}
-	
+	public float getSortingKey() {return 3.01f;}
+
 	@Override
 	public String getValue(Biosample row) {
 		return row.getInheritedStudy()==null?null: row.getInheritedStudy().getStudyId();
 	}
-	
+
 	@Override
 	public void setValue(Biosample row, String value) {
 		try {
-			int id = Integer.parseInt(value);
+			int index = MiscUtils.getIndexFirstDigit(value);
+			int id = Integer.parseInt(index>=0? value.substring(index): value);
 			value = "S-" + new DecimalFormat("00000").format(id);
 		} catch(Exception e) {
 			//nothing
 		}
 		Study study = DAOStudy.getStudyByStudyId(value);
-		row.setInheritedStudy(study);
+		row.setAttachedStudy(study);
 	}
-	
+
 	@Override
 	public boolean isEditable(Biosample row) {
 		return row!=null && (row.getParent()==null || row.getParent().getInheritedStudy()==null);
 	}
-		
+
 }

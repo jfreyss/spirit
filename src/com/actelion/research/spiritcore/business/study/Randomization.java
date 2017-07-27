@@ -27,14 +27,14 @@ import java.util.List;
 
 /**
  * The randomization is only used in the randomization process.
- * It should not be considered after animals have been assigned to the study. 
+ * It should not be considered after animals have been assigned to the study.
  * (except for adding animals from reserve)
- *  
+ *
  * @author freyssj
  *
  */
 public class Randomization {
-	
+
 	private final Phase phase;
 	private List<AttachedBiosample> samples = null;
 
@@ -42,10 +42,10 @@ public class Randomization {
 		this.phase = phase;
 		deserialize(phase, rndSamples);
 	}
-	
+
 	/**
 	 * Deserializes the samples, must be called before any other calls
-	 * The format is expected to be &{versi 
+	 * The format is expected to be &{versi
 	 */
 	protected void deserialize(Phase phase, String serializedRando) {
 		samples = new ArrayList<>();
@@ -56,74 +56,74 @@ public class Randomization {
 				for (int i=1; i<split.length; i++) {
 					AttachedBiosample s = deserialize(phase.getStudy(), split[i]);
 					samples.add(s);
-				}			
+				}
 			} else {
 				System.err.println("Cannot deserializes rando for phase "+phase+" in "+ phase.getStudy());
 				return;
 			}
 		}
 	}
-		
+
 
 	public AttachedBiosample deserialize(Study study, String s) {
 		AttachedBiosample b = new AttachedBiosample();
 		String[] split = s.split(":", -1); //split's limit <0 to return also empty strings
-//		if(versionNo==1) {
-			int i = -1;
-			//Version 1 of serialization
-			try {
-				b.setNo(Integer.parseInt(split[++i]));
-				b.setSampleName(split[++i].length()==0? null: split[i]);
-				b.setWeight(split[++i].length()==0? null: Double.parseDouble(split[i]));
-				b.setSampleId(split[++i]);
-				if(split[++i].length()==0) {
-					b.setGroup(null);
-				} else {
-					b.setGroup(study.getGroup(Integer.parseInt(split[i])));
-				}
-				b.setContainerId(split[++i].length()==0? null: split[i]);
-				b.setSubGroup(split[++i].length()==0? 0: Integer.parseInt(split[i]));
-				
-				for(int j = ++i; j<split.length; j++) {
-					try {
-						b.getDataList().add(Double.parseDouble(split[j]));
-					} catch(Exception e) {
-						b.getDataList().add(null);
-					}
-				}
-				
-			} catch (Exception e) {
-				e.printStackTrace();
+		//		if(versionNo==1) {
+		int i = -1;
+		//Version 1 of serialization
+		try {
+			b.setNo(Integer.parseInt(split[++i]));
+			b.setSampleName(split[++i].length()==0? null: split[i]);
+			b.setWeight(split[++i].length()==0? null: Double.parseDouble(split[i]));
+			b.setSampleId(split[++i]);
+			if(split[++i].length()==0) {
+				b.setGroup(null);
+			} else {
+				b.setGroup(study.getGroup(Integer.parseInt(split[i])));
 			}
-//		} else {
-//			//Older version of serialization (subgroup at the end, only one data)
-//			try {
-//				no = Integer.parseInt(split[0]);
-//				sampleName = split[1].length()==0? null: split[1];
-//				weight = split[2].length()==0? null: Double.parseDouble(split[2]);
-//				sampleId = split[3];
-//				if(split[4].length()==0) {
-//					group = null;
-//				} else {
-//					group = getGroup(study, Integer.parseInt(split[4]));
-//				}
-//				containerId = split[5].length()==0? null: split[5];
-//				
-//				try {
-//					dataList.add(Double.parseDouble(split[6]));
-//				} catch(Exception e) {
-//					
-//				}
-//				
-//				subGroup = split.length<8 || split[7].length()==0? 0: Integer.parseInt(split[7]);
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//		}
-		
+			b.setContainerId(split[++i].length()==0? null: split[i]);
+			b.setSubGroup(split[++i].length()==0? 0: Integer.parseInt(split[i]));
+
+			for(int j = ++i; j<split.length; j++) {
+				try {
+					b.getDataList().add(Double.parseDouble(split[j]));
+				} catch(Exception e) {
+					b.getDataList().add(null);
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		//		} else {
+		//			//Older version of serialization (subgroup at the end, only one data)
+		//			try {
+		//				no = Integer.parseInt(split[0]);
+		//				sampleName = split[1].length()==0? null: split[1];
+		//				weight = split[2].length()==0? null: Double.parseDouble(split[2]);
+		//				sampleId = split[3];
+		//				if(split[4].length()==0) {
+		//					group = null;
+		//				} else {
+		//					group = getGroup(study, Integer.parseInt(split[4]));
+		//				}
+		//				containerId = split[5].length()==0? null: split[5];
+		//
+		//				try {
+		//					dataList.add(Double.parseDouble(split[6]));
+		//				} catch(Exception e) {
+		//
+		//				}
+		//
+		//				subGroup = split.length<8 || split[7].length()==0? 0: Integer.parseInt(split[7]);
+		//			} catch (Exception e) {
+		//				e.printStackTrace();
+		//			}
+		//		}
+
 		return b;
 	}
-	
+
 	/**
 	 * Serialize the samples (Version 1)
 	 */
@@ -131,27 +131,27 @@ public class Randomization {
 		if(samples!=null && samples.size()>0) {
 			StringBuilder sb = new StringBuilder();
 			sb.append("&1\n");
-				for (int i = 0; i < samples.size(); i++) {
-				
+			for (int i = 0; i < samples.size(); i++) {
+
 				if(i>0) sb.append("\n");
 				sb.append(samples.get(i).serialize());
-			}		
+			}
 			phase.setSerializedRandomization(sb.toString());
-		} else {		
+		} else {
 			phase.setSerializedRandomization(null);
 		}
 	}
 
-	
-	
+
+
 	public int getNAnimals() {
 		return getSamples()==null || getSamples().size()==0? 0: getSamples().size();
 	}
-	
+
 	/**
 	 * Update the size of the list of animals to the  specified number. Throws an exception if the number is reduced and a sample is not empty
 	 * @param n
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public void setNAnimals(int n) throws Exception {
 		List<AttachedBiosample> rndSamplesList = getSamples();
@@ -176,17 +176,17 @@ public class Randomization {
 				sample.setNo(availableNos.remove(0));
 				rndSamplesList.add(sample);
 			}
-		}		
-		
+		}
+
 	}
-	
+
 	public void setNData(int n) throws Exception {
 		for (AttachedBiosample sample : getSamples()) {
 			while(sample.getDataList().size()>n) sample.getDataList().remove(n);
 			while(sample.getDataList().size()<n) sample.getDataList().add(null);
 		}
 	}
-	 
+
 	public int getNData() {
 		int n = 0;
 		for (AttachedBiosample rndSample : samples) {
@@ -194,14 +194,18 @@ public class Randomization {
 		}
 		return n;
 	}
-	
+
 	public List<AttachedBiosample> getSamples() {
 		return samples;
 	}
-	
+
 	public void setSamples(List<AttachedBiosample> samples) {
-		if(samples==null) throw new IllegalArgumentException("The list cannot be null");
+		assert samples!=null;
 		this.samples = samples;
+	}
+
+	public void reset() {
+		setSamples(new ArrayList<AttachedBiosample>());
 	}
 
 }

@@ -60,6 +60,8 @@ import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationLabeling;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
+import com.actelion.research.spiritcore.business.study.Group;
+import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
@@ -73,13 +75,19 @@ import com.actelion.research.util.FormatterUtils;
 import net.objecthunter.exp4j.Expression;
 
 /**
- * @author freyssj
+ * DAO functions linked to biosmamples
  *
+ * @author Joel Freyss
  */
 @SuppressWarnings("unchecked")
 public class DAOBiosample {
 
 	private static Logger logger = LoggerFactory.getLogger(DAOBiosample.class);
+
+	public static Biosample getBiosamplesById(int id) {
+		Map<Integer, Biosample> res = getBiosamplesByIds(Collections.singleton(id));
+		return res.get(id);
+	}
 
 	public static Map<Integer, Biosample> getBiosamplesByIds(Collection<Integer> ids) {
 		String hql = "select b from Biosample b where " + QueryTokenizer.expandForIn("b.id", ids);
@@ -246,7 +254,7 @@ public class DAOBiosample {
 			if (q.getKeywords() != null && q.getKeywords().length() > 0) {
 				StringBuilder expr = new StringBuilder();
 				expr.append(" \n(");
-				expr.append(" (b.id in (select b2.id from Biosample b2 where lower(b2.inheritedStudy.studyId) like lower(?) or lower(b2.inheritedStudy.ivv) like lower(?)))");
+				expr.append(" (b.id in (select b2.id from Biosample b2 where lower(b2.inheritedStudy.studyId) like lower(?) or lower(b2.inheritedStudy.localId) like lower(?)))");
 				expr.append(" or (b.id in (select b2.id from Biosample b2 where lower(b2.inheritedGroup.name) like lower(?)))");
 				expr.append(" or (b.id in (select b2.id from Biosample b2 where lower(b2.inheritedPhase.name) like lower(?)))");
 				expr.append(" or (b.id in (select b2.id from Biosample b2 where lower(b.parent.biotype.name) like lower(?)))");
@@ -321,9 +329,9 @@ public class DAOBiosample {
 				clause.append(" and (" + QueryTokenizer.expandQuery("lower(b.comments) like lower(?)", q.getComments(), true, true) + ")");
 			}
 
-			if (q.getDepartment() != null && q.getDepartment().length()>0) {
-				clause.append(" and b.group.name like ?");
-				parameters.add(q.getDepartment()+"%");
+			if (q.getDepartment() != null && q.getDepartment()!=null) {
+				clause.append(" and b.group = ?");
+				parameters.add(q.getDepartment());
 			}
 
 			if (q.getMinQuality() != null) {
@@ -502,7 +510,7 @@ public class DAOBiosample {
 		}
 		List<Biosample> biosamples = query.getResultList();
 
-		logger.debug("BiosampleQuery: queried in " + (System.currentTimeMillis() - start) + "ms >" + biosamples.size() + "biosamples");
+		logger.debug("BiosampleQuery: queried in " + (System.currentTimeMillis() - start) + "ms : n="+biosamples.size());
 
 		//Verify the metadata, as the search didn't check the exact fields
 		loop: for (Iterator<Biosample> iterator = biosamples.iterator(); iterator.hasNext();) {
@@ -514,6 +522,7 @@ public class DAOBiosample {
 				}
 			}
 		}
+		logger.debug("BiosampleQuery: filter1 in " + (System.currentTimeMillis() - start) + "ms : n="+biosamples.size());
 
 		// Filter samples that should not be searchable (location = private )
 		if (user != null) {
@@ -527,18 +536,6 @@ public class DAOBiosample {
 					iterator.remove();
 					continue;
 				}
-			}
-		}
-
-		// Filter biosamples based on the linkers that could not be managed by
-		// the queries (should not happen, if used properly)
-		for (Entry<BiosampleLinker, String> entry : postprocessFilters) {
-			String v1 = entry.getValue();
-			if (v1 == null) continue;
-			for (Iterator<Biosample> iterator = biosamples.iterator(); iterator.hasNext();) {
-				Biosample b = iterator.next();
-				String v2 = entry.getKey().getValue(b);
-				if (!v1.equals(v2)) iterator.remove();
 			}
 		}
 
@@ -586,7 +583,7 @@ public class DAOBiosample {
 		}
 
 
-		LoggerFactory.getLogger(DAOBiosample.class).debug("filtered in " + (System.currentTimeMillis() - start) + "ms");
+		LoggerFactory.getLogger(DAOBiosample.class).debug("filtered in " + (System.currentTimeMillis() - start) + "ms: n="+biosamples.size());
 		return biosamples;
 	}
 
@@ -638,8 +635,21 @@ public class DAOBiosample {
 		}
 	}
 
-	public static void persistBiosamples(Collection<Biosample> biosamples, SpiritUser user) throws Exception {
-		if(biosamples==null || biosamples.size()==0) return;
+	/**
+	 * Persists the biosamples.
+	 *
+	 *
+	 *  If the biosample is linked to new groups, phases, locations, those are also saved
+	 *
+	 *
+	 * @param biosamples
+	 * @param user
+	 * @return
+	 * @throws Exception
+	 */
+	public static List<Biosample> persistBiosamples(Collection<Biosample> biosamples, SpiritUser user) throws Exception {
+		List<Biosample> res = new ArrayList<>();
+		if(biosamples==null || biosamples.size()==0) return res;
 		logger.info("Persist "+biosamples.size()+" biosamples");
 
 		for (Biosample biosample : biosamples) {
@@ -653,44 +663,101 @@ public class DAOBiosample {
 			}
 		}
 
+
 		//Open the transaction
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
+
+		testConcurrentModification(session, biosamples);
+
 		try {
+
+			//Find dependancies that must be saved first
+			Set<Study> studyToSave = new HashSet<>();
+			for (Biosample b : biosamples) {
+				Study s = b.getInheritedStudy();
+				Group g = b.getInheritedGroup();
+				Phase p = b.getInheritedPhase();
+
+				//Do we need to save the group?
+				if(g!=null && g.getId()<=0) {
+					g.setStudy(s);
+					studyToSave.add(s);
+				}
+
+				//Do we need to save the phase?
+				if(p!=null && p.getId()<=0) {
+					p.setStudy(s);
+					studyToSave.add(s);
+				}
+			}
+
+
+
 			txn = session.getTransaction();
 			txn.begin();
-			persistBiosamples(session, biosamples, user);
+			if(studyToSave.size()>0) {
+				logger.info("Persist dependant studies: "+studyToSave);
+				Map<Integer, Study> id2study = JPAUtil.mapIds(DAOStudy.persistStudies(session, studyToSave, user));
+
+				//Flush to update the entity ids
+				session.flush();
+
+				//Relink to avoid object confusion
+				//(when 2 objects (group/phase) represents the same entity: only the first entity is saved and the other must be linked)
+				for (Biosample b : biosamples) {
+					if(b.getInheritedStudy()==null) continue;
+					Study s = id2study.get(b.getInheritedStudy().getId());
+					assert s!=null;
+					Group g = b.getInheritedGroup();
+					Phase p = b.getInheritedPhase();
+					if(g!=null && g.getId()<=0) {
+						g = s.getGroup(g.getName());
+						assert g!=null: b.getInheritedGroup() + " not found in "+s.getGroups();
+						b.setInheritedGroup(g);
+						logger.info("Relink "+b+" to "+g+" "+g.getId());
+					}
+					if(p!=null && p.getId()<=0) {
+						p = s.getPhase(p.getName());
+						assert p!=null;
+						b.setInheritedPhase(p);
+						logger.info("Relink "+b+" to "+p+" "+p.getId());
+					}
+				}
+			}
+
+			//Open the transaction
+			res = persistBiosamples(session, biosamples, user);
+
 			txn.commit();
 			txn = null;
 		} finally {
 			if (txn != null && txn.isActive())try {txn.rollback();} catch (Exception e2) {e2.printStackTrace();}
 		}
+		return res;
 	}
 
-	public static void testConcurrentModification(Collection<Biosample> biosamples) throws Exception {
+
+	private static void testConcurrentModification(EntityManager session, Collection<Biosample> biosamples) throws Exception {
 		Map<Integer, Biosample> id2biosample = JPAUtil.mapIds(biosamples);
 		if(id2biosample.size()==0) return;
-		EntityManager session = null;
-		try {
-			//			session = JPAUtil.createManager();
-			session = JPAUtil.getManager();
-			// Test that nobody else modified the biosamples
-			String jpql = "select b.updDate, b.updUser, b.id from Biosample b where " + QueryTokenizer.expandForIn("b.id", id2biosample.keySet());
-			List<Object[]> lastUpdates = session.createQuery(jpql).getResultList();
-			for (Object[] lastUpdate : lastUpdates) {
-				Date lastDate = (Date) lastUpdate[0];
-				String lastUser = (String) lastUpdate[1];
-				Biosample b = id2biosample.get(lastUpdate[2]);
-				if (b != null && b.getUpdDate() != null && lastDate != null) {
-					int diffSeconds = (int) ((lastDate.getTime() - b.getUpdDate().getTime()) / 1000L);
-					if (diffSeconds > 0)
-						throw new Exception("The biosample (" + b + ") has just been updated by " + lastUser + " [at " + FormatterUtils.formatDateOrTime(lastDate) + ", current version is from "+FormatterUtils.formatDateOrTime(b.getUpdDate()) + "].\nYou cannot overwrite those changes unless you reopen the newest version.");
-				}
-			}
-		} finally {
-			//			if(session!=null) session.close();
-		}
+		List<Object[]> lastUpdates = null;
 
+		// Test that nobody else modified the samples
+		String jpql = "select b.updDate, b.updUser, b.id from Biosample b where " + QueryTokenizer.expandForIn("b.id", id2biosample.keySet());
+		lastUpdates = session.createQuery(jpql).getResultList();
+
+		for (Object[] lastUpdate : lastUpdates) {
+			Date lastDate = (Date) lastUpdate[0];
+			String lastUser = (String) lastUpdate[1];
+			Biosample b = id2biosample.get(lastUpdate[2]);
+			logger.info("last update of " + b + " was " + lastDate + " by " + lastUser + " attached object: "+b.getUpdDate());
+			if (b != null && b.getUpdDate() != null && lastDate != null) {
+				int diffSeconds = (int) (lastDate.getTime() - b.getUpdDate().getTime());
+				if (diffSeconds > 0)
+					throw new Exception("The biosample (" + b + ") has just been updated by " + lastUser + " [at " + FormatterUtils.formatDateOrTime(lastDate) + ", current version is from "+FormatterUtils.formatDateOrTime(b.getUpdDate()) + "].\nYou cannot overwrite those changes unless you reopen the newest version.");
+			}
+		}
 	}
 
 	/**
@@ -700,13 +767,12 @@ public class DAOBiosample {
 	 * @param user
 	 * @throws Exception
 	 */
-	public static void persistBiosamples(EntityManager session, Collection<Biosample> biosamples, SpiritUser user) throws Exception {
+	public static List<Biosample> persistBiosamples(EntityManager session, Collection<Biosample> biosamples, SpiritUser user) throws Exception {
 		assert session!=null;
 		assert session.getTransaction().isActive();
 
 
-
-		testConcurrentModification(biosamples);
+		List<Biosample> res = new ArrayList<>();
 
 		//Create a map of actual locationId_pos to biosample, to make sure positions are unique
 		Map<String, String> locIdPos2container = new HashMap<>();
@@ -735,6 +801,7 @@ public class DAOBiosample {
 		// ///////////////////////
 
 		// Validation
+
 		for (Biosample biosample : biosamples) {
 
 			// Test that the biosample has a sampleid
@@ -750,7 +817,19 @@ public class DAOBiosample {
 
 			// Test that the biosample has a type
 			if (biosample.getBiotype() == null) {
-				throw new Exception("The biosample must have a type");
+				throw new Exception("The sampleId '" + biosample.getSampleId() + "' must have a biotype");
+			}
+
+			if(biosample.getAttachedStudy()!=null && biosample.getAttachedStudy().getId()<=0) {
+				throw new Exception("The sampleId '" + biosample.getSampleId() + "' is a study, which was not saved: "+biosample.getAttachedStudy());
+			}
+
+			if(biosample.getInheritedGroup()!=null && biosample.getInheritedGroup().getId()<=0) {
+				throw new Exception("The sampleId '" + biosample.getSampleId() + "' is a group, which was not saved: "+biosample.getInheritedGroup());
+			}
+
+			if(biosample.getInheritedPhase()!=null && biosample.getInheritedPhase().getId()<=0) {
+				throw new Exception("The sampleId '" + biosample.getSampleId() + "' is a phase, which was not saved: "+biosample.getInheritedPhase());
 			}
 		}
 
@@ -808,15 +887,10 @@ public class DAOBiosample {
 				}
 			}
 		}
+
+
+
 		for (Biosample biosample : biosamples) {
-
-			// Test that the sampleId is unique
-			if (biosample.getId() < 0) {
-				Biosample checkUniqueBio = getBiosample(biosample.getSampleId());
-				if (checkUniqueBio != null && checkUniqueBio.getId() != biosample.getId())
-					throw new Exception("The sampleId " + biosample.getSampleId() + " is not unique.");
-			}
-
 			// Update the top
 			biosample.setTopParent(biosample.getParent() == null ? biosample : biosample.getParent().getTopParent());
 
@@ -880,38 +954,6 @@ public class DAOBiosample {
 
 		}
 
-		//////////////////////////////////////////////////////
-		// Update Containers
-		Set<String> containerIds = Biosample.getContainerIds(biosamples);
-		Map<String, Container> cid2container = new HashMap<>();// Container.mapContainerId(getContainers(containerIds));
-		if(containerIds.size()>0) {
-			List<Biosample> inBiosamples = session.createQuery("from Biosample b where " + QueryTokenizer.expandForIn("b.container.containerId", containerIds)).getResultList();
-			cid2container.putAll(Container.mapContainerId(Biosample.getContainers(inBiosamples, true)));
-		}
-
-
-		for (Biosample biosample : biosamples) {
-
-			if(biosample.getContainerType()==null) {
-				biosample.setContainerId(null);
-			} else {
-				String containerId = biosample.getContainerId();
-				if (containerId!=null && containerId.length()>0) {
-					Container c = cid2container.get(containerId);
-					if(c!=null && c.getContainerType().isMultiple() && !SpiritRights.canEdit(c, user)) throw new Exception("You are not allowed to edit the container " + containerId);
-					if(c!=null && c.getContainerType().isMultiple() && c.getContainerType()!=biosample.getContainerType()) throw new Exception("The container's type of " + containerId+" is " + c.getContainerType());
-					if(c!=null && !c.getContainerType().isMultiple() && c.getBiosamples().size()>0 && !c.getBiosamples().contains(biosample)) throw new Exception("The container " + containerId + " of " + biosample + " is already used by "+c.getBiosamples());
-					if(c==null) cid2container.put(containerId, biosample.getContainer());
-				}
-
-				//Unset the container for abstract samples
-				if(biosample.getBiotype().isAbstract()) {
-					biosample.setContainer(null);
-				}
-			}
-
-		}
-
 		//Compute formula if needed
 		computeFormula(biosamples);
 
@@ -947,26 +989,83 @@ public class DAOBiosample {
 		}
 
 		//Persist or merge
-		List<Biosample> attached = new ArrayList<>();
 		for (Biosample b : biosamples) {
 			assert b.getBiotype()!=null && b.getBiotype().getId()>0: "The biotype of "+b+" ("+b.getBiotype()+") is not persistent";
 			if (b.getId() <= 0) {
 				b.setCreUser(b.getUpdUser());
 				b.setCreDate(b.getUpdDate());
+				System.out.println("DAOBiosample.persistBiosamples() persist "+b);
 				session.persist(b);
 			} else if (!session.contains(b)) {
+				System.out.println("DAOBiosample.persistBiosamples() merge "+b);
 				b = session.merge(b);
 			}
-			//			for (ActionBiosample a : b.getActions()) {
-			//				if(a.getUpdUser()==null) {
-			//					a.setUpdUser(b.getUpdUser());
-			//				}
-			//			}
-			attached.add(b);
+			res.add(b);
 		}
 
 
-		for (Biosample b : attached) {
+		//////////////////////////////////////////////////////
+		// Update Containers
+		Set<String> containerIds = Biosample.getContainerIds(biosamples);
+		Map<String, Container> cid2container = new HashMap<>();// Container.mapContainerId(getContainers(containerIds));
+		if(containerIds.size()>0) {
+			List<Biosample> inBiosamples = session.createQuery("from Biosample b where " + QueryTokenizer.expandForIn("b.container.containerId", containerIds)).getResultList();
+			cid2container.putAll(Container.mapContainerId(Biosample.getContainers(inBiosamples, true)));
+		}
+
+
+		for (Biosample biosample : biosamples) {
+
+			if(biosample.getContainerType()==null) {
+				biosample.setContainerId(null);
+			} else {
+				String containerId = biosample.getContainerId();
+				if (containerId!=null && containerId.length()>0) {
+					Container c = cid2container.get(containerId);
+					if(c!=null && c.getContainerType().isMultiple() && !SpiritRights.canEdit(c, user)) throw new Exception("You are not allowed to edit the container " + containerId);
+					if(c!=null && c.getContainerType().isMultiple() && c.getContainerType()!=biosample.getContainerType()) throw new Exception("The container's type of " + containerId+" is " + c.getContainerType());
+					if(c!=null && !c.getContainerType().isMultiple() && c.getBiosamples().size()>0 && !c.getBiosamples().contains(biosample)) throw new Exception("The container " + containerId + " of " + biosample + " is already used by "+c.getBiosamples());
+					if(c==null) cid2container.put(containerId, biosample.getContainer());
+				}
+
+				//Unset the container for abstract samples
+				if(biosample.getBiotype().isAbstract()) {
+					biosample.setContainer(null);
+				}
+			}
+
+		}
+
+		/*
+		// Test uniqueness of the sampleId
+		//Load samples from the DB with the same sampleIds, and exclude the samples to be saved
+		List<Object[]> existingSamplesList = session.createQuery("select b.sampleId, b.id from Biosample b where " + QueryTokenizer.expandForIn("b.sampleId", Biosample.getSampleIds(biosamples))).getResultList();
+		Map<String, Integer> existingSamples = new HashMap<>();
+		Set<Integer> idsToSave = new HashSet<>(JPAUtil.getIds(biosamples));
+		for (Object[] a : existingSamplesList) {
+			String sampleId = (String) a[0];
+			int id = (Integer) a[1];
+			if(!idsToSave.contains(id)) {
+				existingSamples.put(sampleId, id);
+			}
+		}
+		System.out.println("DAOBiosample.persistBiosamples() "+existingSamples);
+		for (Biosample biosample : biosamples) {
+
+			Integer checkUniqueId = existingSamples.get(biosample.getSampleId());// getBiosample(biosample.getSampleId());
+			if(checkUniqueId != null) {
+				if (biosample.getId()<=0) {
+					throw new Exception("The sampleId " + biosample.getSampleId() + " is present 2 times");
+				} else if (checkUniqueId.intValue() != biosample.getId()) {
+					throw new Exception("The sampleId " + biosample.getSampleId() + " is already present in the DB (cloning error?)");
+				}
+			}
+			existingSamples.put(biosample.getSampleId(), biosample.getId());
+		}
+		 */
+
+
+		for (Biosample b : res) {
 
 			List<Biosample> toCheck = new LinkedList<>();
 			toCheck.addAll(b.getChildren());
@@ -1007,11 +1106,12 @@ public class DAOBiosample {
 			for (Biosample b : linked) {
 				for (BiotypeMetadata bm : b.getBiotype().getMetadata()) {
 					if (bm.getDataType()==DataType.BIOSAMPLE && b.getMetadataBiosample(bm) != null) {
-						b.setMetadataBiosample(bm, b);
+						b.setMetadataBiosample(bm, b.getMetadataBiosample(bm));
 					}
 				}
 			}
 		}
+		return res;
 	}
 
 	public static int countRelations(Biotype biotype) {

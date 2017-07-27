@@ -36,9 +36,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleComboBox;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerActions;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerTable;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerTableModel.ContainerTableModelType;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerActions;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerTable;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerTableModel.ContainerTableModelType;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
 import com.actelion.research.spiritcore.business.biosample.Biosample;

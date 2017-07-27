@@ -58,17 +58,17 @@ public class WeighingAllReport extends AbstractReport {
 	private static ReportParameter USE_SINCEFIRST = new ReportParameter("Use 'since 1st treatment' instead of phases", Boolean.FALSE);
 	private static ReportParameter ADD_OBSERVATION_PARAMETER = new ReportParameter("Add Observations below the table", Boolean.FALSE);
 	private static ReportParameter ADD_RATIO = new ReportParameter("Add Ratio below the table", Boolean.FALSE);
-	
+
 	private Map<Group, Group> compareGroup2Groups = new HashMap<>();
 
 	public WeighingAllReport() {
-		super(ReportCategory.TOP, 
-				"Bodyweights (All phases in one table)", 
-					MiscUtils.convert2Html(
-						"TopId\tNo\tPhase1\tPhase2\tPhase3\n"
-						+ "Id1\t\t102\t105\t108\n"
-						+ "Id2\t\t110\t108\t111\n"
-						+ "Weight | Abs Inc. | % Inc."), 
+		super(ReportCategory.TOP,
+				"Bodyweights (All phases in one table)",
+				MiscUtils.convert2Html(
+						"Participant\tNo\tPhase1\tPhase2\tPhase3\n"
+								+ "Id1\t\t102\t105\t108\n"
+								+ "Id2\t\t110\t108\t111\n"
+								+ "Weight | Abs Inc. | % Inc."),
 				new ReportParameter[] { ONE_PER_DAY_PARAMETER, USE_SINCEFIRST, ADD_RATIO, ADD_OBSERVATION_PARAMETER });
 	}
 
@@ -85,11 +85,11 @@ public class WeighingAllReport extends AbstractReport {
 		boolean addObservations = getParameter(ADD_OBSERVATION_PARAMETER).equals(Boolean.TRUE);
 		boolean addRatio = getParameter(ADD_RATIO).equals(Boolean.TRUE);
 
-		
+
 		Test weighingTest = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
 		if(weighingTest==null) throw new Exception("Error test "+DAOTest.WEIGHING_TESTNAME+" not found");
-		
-		
+
+
 		// Load Weighings
 		DAOResult.attachOrCreateStudyResultsToTops(study);
 
@@ -97,7 +97,7 @@ public class WeighingAllReport extends AbstractReport {
 		Set<Integer> days = new HashSet<>();
 		Set<Integer> since1stSet = new TreeSet<>();
 		int phaseIndexRef = 0;
-		Phase refPhase = study.getReferencePhase(0);
+		Phase refPhase = study.getPhaseClosestFromDayZero();
 		Map<Pair<Biosample, String>, Phase> animalSince1st2Phase = new HashMap<>();
 		int index = 0;
 		for (Phase phase : study.getPhases()) {
@@ -121,12 +121,12 @@ public class WeighingAllReport extends AbstractReport {
 
 		//Calculate X Axis
 		Map<String, Integer> xAxis = new LinkedHashMap<>();
-		
+
 		if(sinceFirst) {
 			List<Integer> since1stList = new ArrayList<>(since1stSet);
 			for (int i = 0; i < since1stList.size(); i++) {
 				xAxis.put((since1stList.get(i)>0?"+":"") + since1stList.get(i), i);
-			}			
+			}
 		} else {
 			for (int i = 0; i < phases.size(); i++) {
 				xAxis.put(phases.get(i).getShortName(), i);
@@ -147,9 +147,9 @@ public class WeighingAllReport extends AbstractReport {
 			Map<Group, Map<String, String>> groupPhase2Range = new HashMap<>();
 			Map<Group, Map<String, String>> groupPhase2CountCell = new HashMap<>();
 			for (Group group : study.getGroups()) {
-				List<Biosample> animals = study.getTopAttachedBiosamples(group); 
+				List<Biosample> animals = study.getTopAttachedBiosamples(group);
 				if (animals.size() == 0) continue;
-				
+
 				Map<String, String> phase2RangeRef = groupPhase2Range.get(compareGroup2Groups.get(group));
 				Map<String, String> phase2CountCellRef = groupPhase2CountCell.get(compareGroup2Groups.get(group));
 
@@ -166,14 +166,14 @@ public class WeighingAllReport extends AbstractReport {
 				if (group.getNSubgroups() > 1) {
 					set(sheet, groupRow + 2, 0, "Subgroup", Style.S_TH_CENTER);
 				}
-				set(sheet, groupRow + 2, 1, "TopId", Style.S_TH_CENTER);
+				set(sheet, groupRow + 2, 1, "Participant", Style.S_TH_CENTER);
 				set(sheet, groupRow + 2, 2, "No", Style.S_TH_CENTER);
 				set(sheet, groupRow + 2, 3, "Necro", Style.S_TH_CENTER);
 
 				int animalRow = groupRow + 3;
 				for (Biosample animal : animals) {
 					if (group.getNSubgroups() > 1) {
-						set(sheet, animalRow, 0, "" + (1 + animal.getInheritedSubGroup()), Style.S_TD_DOUBLE0);						
+						set(sheet, animalRow, 0, "" + (1 + animal.getInheritedSubGroup()), Style.S_TD_DOUBLE0);
 					}
 					set(sheet, animalRow, 1, animal.getSampleId(), Style.S_TD_CENTER);
 					set(sheet, animalRow, 2, animal.getSampleName(), Style.S_TD_BOLD_CENTER);
@@ -207,7 +207,7 @@ public class WeighingAllReport extends AbstractReport {
 					animalRow = groupRow + 3;
 					List<Integer> animalRows = new ArrayList<>();
 					for (Biosample animal : animals) {
-						Phase phase; 
+						Phase phase;
 						if(sinceFirst) {
 							phase = animalSince1st2Phase.get(new Pair<Biosample, String>(animal, xLabel));
 						} else {
@@ -241,11 +241,11 @@ public class WeighingAllReport extends AbstractReport {
 						animalRow++;
 						if (phase2RangeRef != null) {
 							animalRow++;
-						}						
+						}
 					} else {
-						setFormula(sheet, countRow = animalRow++, 3 + phaseIndex, "IF(COUNT(" + range + ")>0, COUNT(" + range + "), \"\")", Style.S_TD_BLUE);
+						setFormula(sheet, countRow = animalRow++, 3 + phaseIndex, "IF(COUNT(" + range + ")>0, COUNT(" + range + "), 0)", Style.S_TD_BLUE);
 						countCell = convertToCell(countRow, 3 + phaseIndex);
-//						String isNumber1 = "ISNUMBER(" + countCell + ")";
+						//						String isNumber1 = "ISNUMBER(" + countCell + ")";
 
 						setFormula(sheet, animalRow++, 3 + phaseIndex, "IF(" + countCell + ">0, AVERAGE(" + range + "), \"\")", Style.S_TD_DOUBLE1_BLUE);
 						setFormula(sheet, stDevRow = animalRow++, 3 + phaseIndex, "IF(" + countCell + ">1, STDEV(" + range + "), \"\")", Style.S_TD_DOUBLE1_BLUE);
@@ -253,7 +253,7 @@ public class WeighingAllReport extends AbstractReport {
 						if (phase2RangeRef != null) {
 							assert phase2CountCellRef!=null;
 							assert phase2CountCellRef.get(xLabel)!=null;
-//							String isNumber2 = "ISNUMBER(" + countCell + " + " + phase2CountCellRef.get(phase) + ")";
+							//							String isNumber2 = "ISNUMBER(" + countCell + " + " + phase2CountCellRef.get(phase) + ")";
 							if(addRatio) {
 								setFormula(sheet, animalRow++, 3 + phaseIndex, "IF(" + countCell + ">0, AVERAGE("+range+")/AVERAGE(" + phase2RangeRef.get(xLabel) + "), \"\")", Style.S_TD_DOUBLE100_RED);
 							}
@@ -282,7 +282,7 @@ public class WeighingAllReport extends AbstractReport {
 					}
 					for (Result result : observations) {
 						if(i==0) {
-							set(sheet, animalRow, 2, "Obs.", Style.S_TD_BLUE);						
+							set(sheet, animalRow, 2, "Obs.", Style.S_TD_BLUE);
 							set(sheet, animalRow, 3, result.getBiosample().getSampleId(), Style.S_TD_BOLD_LEFT);
 							set(sheet, animalRow, 4, result.getInheritedPhase()==null?"": result.getInheritedPhase().getShortName(), Style.S_TD_BOLD_LEFT);
 							set(sheet, animalRow, 5, result.getFirstValue(), Style.S_TD_LEFT);
@@ -291,7 +291,7 @@ public class WeighingAllReport extends AbstractReport {
 					}
 				}
 				groupRow = animalRow + 2;
-				
+
 			} //end-group
 
 			wb.setSelectedTab(0);

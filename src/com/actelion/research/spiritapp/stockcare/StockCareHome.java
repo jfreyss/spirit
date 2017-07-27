@@ -25,6 +25,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
+import java.util.Collection;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -48,14 +49,14 @@ public class StockCareHome extends SpiritTab {
 
 	public StockCareHome(StockCare frame) {
 		super(frame, "", IconType.HOME.getIcon());
-		
+
 		List<StockCareItem> stockCareItems = StockCareItem.getStockCareItems();
 
 		////////////////////////////////////////////////////////
 		//HomePanel
 		ButtonGroup group = new ButtonGroup();
 
-		//Quick Buttons	
+		//Quick Buttons
 		JPanel buttonsPanel = new JPanel(new WrapLayout(FlowLayout.LEFT, 10, 10));
 		for(final StockCareItem item: stockCareItems) {
 			if(item==null) {
@@ -79,9 +80,9 @@ public class StockCareHome extends SpiritTab {
 				Box.createVerticalGlue()));
 		setBackground(Color.WHITE);
 		setOpaque(true);
-		
+
 	}
-	
+
 	public class Action_View extends AbstractAction {
 		private StockCareItem item;
 		public Action_View(StockCareItem item, boolean fullSize) {
@@ -89,7 +90,7 @@ public class StockCareHome extends SpiritTab {
 			this.item = item;
 			putValue(AbstractAction.SMALL_ICON, item.getIcon(fullSize));
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			((StockCare) getFrame()).setItem(item);
@@ -99,14 +100,14 @@ public class StockCareHome extends SpiritTab {
 	@Override
 	public void onTabSelect() {
 	}
-	
+
 	@Override
 	public void onStudySelect() {
 	}
 
 	@Override
-	public <T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
-		
+	public <T> void fireModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
+
 	}
 
 }

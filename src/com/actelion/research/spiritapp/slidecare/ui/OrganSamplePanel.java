@@ -50,7 +50,7 @@ import java.util.EnumSet;
 
 import javax.swing.JPanel;
 
-import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
+import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;

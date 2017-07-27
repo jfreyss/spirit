@@ -33,7 +33,7 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 
 import com.actelion.research.spiritapp.spirit.services.MTBalance;
-import com.actelion.research.spiritapp.spirit.ui.config.SpiritConfig;
+import com.actelion.research.spiritapp.spirit.ui.admin.config.SpiritConfig;
 
 public class BalanceDecorator {
 	private JDialog dlg;

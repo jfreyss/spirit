@@ -73,7 +73,7 @@ public class SpiritRights {
 		if(biosample.getCreUser()==null) return true;
 
 		if(biosample.getInheritedStudy()!=null) {
-			return canView(biosample.getInheritedStudy(), user);
+			return canRead(biosample.getInheritedStudy(), user);
 		} else {
 			//The creator or the manager of the creator/updater has the rights
 			for(String uid: user.getManagedUsers()) {
@@ -129,7 +129,7 @@ public class SpiritRights {
 		if(biosample.getCreUser()==null) return true;
 
 		for(String uid: user.getManagedUsers()) {
-			if(uid.equalsIgnoreCase(biosample.getCreUser()) || uid.equalsIgnoreCase(biosample.getUpdUser())) return true;
+			if(uid.equals(biosample.getCreUser()) || uid.equals(biosample.getUpdUser())) return true;
 		}
 		if(biosample.getEmployeeGroup()!=null && user.isMember(biosample.getEmployeeGroup())) return true;
 
@@ -147,10 +147,13 @@ public class SpiritRights {
 		if(biosample==null) return false;
 		if(biosample.getId()<=0) return false;
 		if(biosample.getCreUser()==null) return true;
-		if(user.getUsername().equalsIgnoreCase(biosample.getCreUser())) return true;
+		if(user.getUsername().equals(biosample.getCreUser())) return true;
 
+		for(String uid: user.getManagedUsers()) {
+			if(uid.equals(biosample.getCreUser()) || uid.equals(biosample.getUpdUser())) return true;
+		}
 
-		//Allow the study admin to delete a sample when the design changes
+		//Allow the study admin to delete a sample when the study design is changed
 		if(biosample.getInheritedStudy()!=null && canAdmin(biosample.getInheritedStudy(), user)) return true;
 
 		return false;
@@ -168,7 +171,7 @@ public class SpiritRights {
 		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
 			return false;
 		}
-		if(user.getUsername().equalsIgnoreCase(study.getCreUser())) return true;
+		if(user.getUsername().equals(study.getCreUser())) return true;
 		return false;
 	}
 
@@ -232,7 +235,7 @@ public class SpiritRights {
 		}
 
 		for(String uid: user.getManagedUsers()) {
-			if(uid.equalsIgnoreCase(study.getCreUser())) {
+			if(uid.equals(study.getCreUser())) {
 				return true;
 			}
 			if(study.getAdminUsersAsSet().contains(uid)) {
@@ -270,7 +273,7 @@ public class SpiritRights {
 		}
 
 		for(String uid: user.getManagedUsers()) {
-			if(uid.equalsIgnoreCase(study.getCreUser())) return true;
+			if(uid.equals(study.getCreUser())) return true;
 			//			if(study.getOwner()!=null && study.getOwner().equals(uid)) return true;
 			if(study.getAdminUsersAsSet().contains(uid)) return true;
 		}
@@ -384,7 +387,7 @@ public class SpiritRights {
 	}
 
 	/**
-	 * All users can read all results, except if the result is attached to a study without read rights
+	 * Results can be read except if they are attached to a study without read rights
 	 */
 	public static boolean canRead(Result result, SpiritUser user) {
 		if(user==null) return false;

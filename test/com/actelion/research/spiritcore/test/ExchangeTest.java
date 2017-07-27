@@ -77,7 +77,7 @@ public class ExchangeTest extends AbstractSpiritTest {
 			BiotypeMetadata bloodType = blood.getMetadata("Type");
 			Assert.assertNotNull(bloodType);
 		}
-		JPAUtil.clear();
+		JPAUtil.clearAll();
 		{
 			
 			
@@ -91,8 +91,8 @@ public class ExchangeTest extends AbstractSpiritTest {
 			Assert.assertTrue(DAOStudy.getStudies().size()>=2);
 			Study s1 = DAOStudy.queryStudies(StudyQuery.createForLocalId("IVV2016-1"), user).get(0);
 			Study s2 = DAOStudy.queryStudies(StudyQuery.createForLocalId("IVV2016-2"), user).get(0);
-			Assert.assertEquals("IVV2016-1", s1.getIvv());
-			Assert.assertEquals("IVV2016-2", s2.getIvv());
+			Assert.assertEquals("IVV2016-1", s1.getLocalId());
+			Assert.assertEquals("IVV2016-2", s2.getLocalId());
 			Assert.assertEquals(2, s1.getNamedSamplings().size());
 			
 			List<Sampling> samplings = s1.getSamplings("Blood Sampling", "Blood: EDTA; Alive");

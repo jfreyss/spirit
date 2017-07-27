@@ -37,8 +37,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationQuery;
@@ -162,7 +162,7 @@ public class LocationSearchPane extends JPanel {
 				if(res.size()==1) {
 					locationTable.setSelection(Collections.singletonList(res.get(0)));
 				} else {
-					locationTable.setSelection(null);
+					locationTable.clearSelection();
 				}
 
 				LocationSearchPane.this.firePropertyChange(PROPERTY_QUERIED, 0, 1);

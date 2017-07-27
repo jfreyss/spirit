@@ -63,20 +63,16 @@ public class JSpiritEscapeDialog extends JEscapeDialog {
 
 	private void init() {
 		//Clear cache
-		if(pushContext!=null) {
-			SpiritFrame.clear();
-		}
+		//		if(pushContext!=null) {
+		//			SpiritFrame.clearAll();
+		//		}
 
-		final AWTEventListener myListener = new AWTEventListener() {
-			@Override
-			public void eventDispatched(AWTEvent event) {
-				if(!(event instanceof KeyEvent)) return;
-				KeyEvent evt = (KeyEvent) event;
-				if(evt.getKeyCode()==0 || evt.getKeyCode()==27 || evt.getKeyCode()==39 || evt.getKeyCode()==37 || evt.getKeyCode()==40 || evt.getKeyCode()==10) return;
-				setMustAskForExit(true);
-			}
+		final AWTEventListener myListener = event-> {
+			if(!(event instanceof KeyEvent)) return;
+			KeyEvent evt = (KeyEvent) event;
+			if(evt.getKeyCode()==0 || evt.getKeyCode()==27 || evt.getKeyCode()==39 || evt.getKeyCode()==37 || evt.getKeyCode()==40 || evt.getKeyCode()==10) return;
+			setMustAskForExit(true);
 		};
-
 
 		addWindowFocusListener(new WindowFocusListener() {
 			@Override

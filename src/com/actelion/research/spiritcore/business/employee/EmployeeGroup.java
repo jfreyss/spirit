@@ -88,12 +88,26 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 		this.id = id;
 	}
 
+	/**
+	 * Gets the parent or null
+	 * @return
+	 */
 	public EmployeeGroup getParent() {
 		return parent;
 	}
 
 	public void setParent(EmployeeGroup parent) {
+		if(parent==this.parent) return;
+		if(this.parent!=null) {
+			this.parent.getChildren().remove(this);
+		}
+
 		this.parent = parent;
+
+		if(this.parent!=null) {
+			this.parent.getChildren().add(this);
+		}
+
 	}
 
 	public String getName() {
@@ -128,6 +142,7 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 	public void setChildren(Set<EmployeeGroup> children) {
 		this.children = children;
 	}
+
 	/**
 	 * @return the children
 	 */
@@ -152,8 +167,9 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 
 	@Override
 	public int hashCode() {
-		return id%Integer.MAX_VALUE;
+		return id;
 	}
+
 	@Override
 	public String toString() {
 		return name;
@@ -164,6 +180,7 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 		if(o==null) return -1;
 		return CompareUtils.compare(getName(), o.getName());
 	}
+
 	@Override
 	public boolean equals(Object o) {
 		if(this==o) return true;
@@ -182,6 +199,9 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 		return depth;
 	}
 
+	public boolean isFunctional() {
+		return getParent()!=null && getParent().getName().toUpperCase().contains("FUNCTIONAL");
+	}
 
 	public static List<Integer> getIds(Collection<EmployeeGroup> groups) {
 		List<Integer> res = new ArrayList<>();
@@ -198,5 +218,4 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 		}
 		return res;
 	}
-
 }

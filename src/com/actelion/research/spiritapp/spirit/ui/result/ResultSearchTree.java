@@ -34,13 +34,13 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeNode;
-import com.actelion.research.spiritapp.spirit.ui.lf.CreUserNode;
-import com.actelion.research.spiritapp.spirit.ui.lf.PhaseNode;
-import com.actelion.research.spiritapp.spirit.ui.lf.QualityComboBox;
-import com.actelion.research.spiritapp.spirit.ui.lf.UpdDateNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode.FieldType;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeNode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.CreUserNode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.PhaseNode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.QualityComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.UpdDateNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.CheckboxNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.ComboBoxNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
@@ -125,7 +125,7 @@ public class ResultSearchTree extends FormTree {
 
 
 
-		root.add(new InputNode(this, FieldType.AND_CLAUSE, "TopIds", new Strategy<String>() {
+		root.add(new InputNode(this, FieldType.AND_CLAUSE, "ParticipantIds", new Strategy<String>() {
 			@Override
 			public String getModel() {
 				return query.getTopSampleIds();

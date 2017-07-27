@@ -71,6 +71,11 @@ import com.actelion.research.util.CompareUtils;
 import net.objecthunter.exp4j.Expression;
 
 
+/**
+ * DAO functions linked to results
+ *
+ * @author Joel Freyss
+ */
 @SuppressWarnings("unchecked")
 public class DAOResult {
 
@@ -319,7 +324,7 @@ public class DAOResult {
 			expr.append(" or r.elb like ?");
 			expr.append(" or LOWER(b.name) like LOWER(?)");
 			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.inheritedStudy.studyId) like LOWER(?)))");
-			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.inheritedStudy.ivv) like LOWER(?)))");
+			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.inheritedStudy.localId) like LOWER(?)))");
 			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.biotype.name) like LOWER(?)))");
 			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.inheritedGroup.name) like LOWER(?)))");
 			expr.append(" or (b.id IN (SELECT b2.id FROM Biosample b2 WHERE LOWER(b2.inheritedPhase.name) like LOWER(?)))");
@@ -876,7 +881,7 @@ public class DAOResult {
 					elbLink.pubDate = rs.getDate("sealdate");
 
 					if(elbLink.pubDate!=null) {
-						elbLink.url = new URL("http://ares:8080/portal/jsp/displayniobepdf.jsp?labJournal="+elb);
+						elbLink.url = new URL("http://ares:8080/portal/jsp/searchNiobePdf.jsp?labJournal="+elb);
 					}
 				}
 				rs.close();

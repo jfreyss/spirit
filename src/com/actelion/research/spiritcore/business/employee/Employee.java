@@ -131,7 +131,17 @@ public class Employee implements Comparable<Employee>, IEntity {
 	}
 
 	public void setManager(Employee manager) {
+		if(this.manager == manager) return;
+		if(this.manager!=null) {
+			this.manager.getChildren().remove(this);
+		}
+
 		this.manager = manager;
+
+		if(this.manager!=null) {
+			this.manager.getChildren().add(this);
+		}
+
 	}
 
 	public Set<EmployeeGroup> getEmployeeGroups() {
@@ -145,16 +155,20 @@ public class Employee implements Comparable<Employee>, IEntity {
 	 * @return
 	 */
 	public EmployeeGroup getMainEmployeeGroup() {
-		for (EmployeeGroup gr : getEmployeeGroups()) {
+		if(getEmployeeGroups().size()==0) {
+			return null;
+		} else {
+			for (EmployeeGroup gr : getEmployeeGroups()) {
 
-			//Skip groups, whose parent is FUNCTIONAL (all uppercase)
-			if(gr.getParent()!=null && gr.getParent().getName().toUpperCase().equals(gr.getParent().getName())) continue;
+				//Skip groups, whose parent is FUNCTIONAL (all uppercase)
+				if(gr.getParent()!=null && gr.getParent().getName().toUpperCase().equals(gr.getParent().getName())) continue;
 
-			//Skip groups, whose parent is in the list.
-			if(gr.getParent()!=null && getEmployeeGroups().contains(gr.getParent())) continue;
-			return gr;
+				//Skip groups, whose parent is in the list.
+				if(gr.getParent()!=null && getEmployeeGroups().contains(gr.getParent())) continue;
+				return gr;
+			}
+			return getEmployeeGroups().iterator().next();
 		}
-		return null;
 	}
 
 	public void setEmployeeGroups(Set<EmployeeGroup> employeeGroups) {

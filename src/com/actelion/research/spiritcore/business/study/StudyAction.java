@@ -24,6 +24,7 @@ package com.actelion.research.spiritcore.business.study;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -53,7 +54,7 @@ import com.actelion.research.util.CompareUtils;
 /**
  * StudyAction is the container used to describe the actions, that can take place at a given group, subgroup, phase.
  * Those actions are the treatment, the sampling1, the sampling2 and the different measurements
- * 
+ *
  * @author freyssj
  *
  */
@@ -67,13 +68,13 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="action_sequence")
 	private int id = 0;
 
-	
+
 	@JoinColumn(name="study_id")
 	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade={})
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	private Study study;
-	
+
 	/** (null possible only for deletion) */
 	@JoinColumn(name="phase_id")
 	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)
@@ -81,38 +82,38 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=64)
 	private Phase phase;
-	
+
 	/** (null possible only for deletion) */
 	@JoinColumn(name="group_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)	
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=16)
 	private Group group;
 
 	@Column(name="stratifiedgroup")
-	private Integer subGroup = 0; 
+	private Integer subGroup = 0;
 
 	/**Some description*/
 	@Column(name="label")
 	private String label;
-	
+
 	@JoinColumn(name="namedtreatment_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)	
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=16)
-	private NamedTreatment namedTreatment;	
-	
+	private NamedTreatment namedTreatment;
+
 	@JoinColumn(name="namedsampling_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)	
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=16)
 	private NamedSampling namedSampling1;
 
 	@JoinColumn(name="namedsampling2_id")
-	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)	
+	@ManyToOne(fetch=FetchType.LAZY, optional=true, cascade=CascadeType.PERSIST)
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@BatchSize(size=16)
@@ -121,28 +122,28 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 
 	@Column(name="measurefood")
 	private Boolean measureFood = false;
-	
+
 	@Column(name="measurewater")
 	private Boolean measureWater = false;
-	
+
 	@Column(name="measureweight")
 	private Boolean measureWeight = false;
-		
+
 	/**
 	 * Extra Measurements, serialized as:
 	 * testId1#Input1_1#Input1_2, testId2#Input1_1#Input1_2,
 	 */
 	@Column(name="extrameasurement", length=256)
 	private String extraMeasurement;
-	
-		
-	private transient List<Measurement> extraMeasurementList; 
-	
 
-	
+
+	private transient List<Measurement> extraMeasurementList;
+
+
+
 	public StudyAction() {
 	}
-	
+
 	public StudyAction(Study study, Group group, int subGroupNo, Phase phase) {
 		if(study == null || group==null || phase==null) throw new IllegalArgumentException("Group and phase are required");
 		if(group.getStudy()!=null && !group.getStudy().equals(study)) throw new IllegalArgumentException("The study does not match: "+group.getStudy()+" vs "+phase.getStudy());
@@ -152,7 +153,7 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 		this.phase = phase;
 		this.subGroup = subGroupNo;
 	}
-	
+
 	public StudyAction(StudyAction copy) {
 		this(copy.getStudy(), copy.getGroup(), copy.getSubGroup(), copy.getPhase());
 		setLabel(copy.getLabel());
@@ -165,7 +166,7 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 		setMeasurements(new ArrayList<>(copy.getMeasurements()));
 	}
 
-	
+
 	public int getId() {
 		return id;
 	}
@@ -210,21 +211,21 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	public boolean equals(Object obj) {
 		if(obj==this) return true;
 		if(!(obj instanceof StudyAction)) return false;
-		StudyAction a = (StudyAction) obj;		
+		StudyAction a = (StudyAction) obj;
 		if(id>0 && id==a.id) return true;
-		
+
 		if((getStudy()==null && a.getStudy()!=null) || (getStudy()!=null && !getStudy().equals(a.getStudy()))) return false;
 		if((getGroup()==null && a.getGroup()!=null) || (getGroup()!=null && !getGroup().equals(a.getGroup()))) return false;
 		if((getPhase()==null && a.getPhase()!=null) || (getPhase()!=null && !getPhase().equals(a.getPhase()))) return false;
 		if(getSubGroup()!=a.getSubGroup()) return false;
 		return true;
 	}
-	
+
 	@Override
-	public int hashCode() {		
+	public int hashCode() {
 		return id;
 	}
-	
+
 	@Override
 	public int compareTo(StudyAction o) {
 		int c = CompareUtils.compare(getGroup(), o.getGroup());
@@ -233,14 +234,14 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 		if(c!=0) return c;
 		return getSubGroup() - o.getSubGroup();
 	}
-	
+
 	public NamedTreatment getLastNamedTreatment() {
 		NamedTreatment res = null;
 		for(Phase p: getStudy().getPhases()) {
 			if(p.equals(getPhase())) break;
 			StudyAction a = getStudy().getStudyAction(group, subGroup, p);
-			if(a!=null && a.getNamedTreatment()!=null) res = a.getNamedTreatment();  
-			
+			if(a!=null && a.getNamedTreatment()!=null) res = a.getNamedTreatment();
+
 		}
 		return res;
 	}
@@ -249,17 +250,17 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 
 	public String getNamedSamplingString() {
 		String s = (getNamedSampling1()==null? "": getNamedSampling1().getName() + " ") +
-			(getNamedSampling2()==null? "": getNamedSampling2().getName() + " ");			
+				(getNamedSampling2()==null? "": getNamedSampling2().getName() + " ");
 		return s.trim();
 	}
-	
+
 	public Set<NamedSampling> getNamedSamplings() {
 		Set<NamedSampling> res = new LinkedHashSet<>();
 		if(getNamedSampling1()!=null) res.add(getNamedSampling1());
 		if(getNamedSampling2()!=null) res.add(getNamedSampling2());
 		return res;
 	}
-	
+
 	public NamedSampling getNamedSampling1() {
 		return namedSampling1;
 	}
@@ -267,7 +268,7 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	public void setNamedSampling1(NamedSampling namedSampling) {
 		this.namedSampling1 = namedSampling;
 	}
-	
+
 	public NamedSampling getNamedSampling2() {
 		return namedSampling2;
 	}
@@ -287,7 +288,7 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	public Study getStudy() {
 		return study;
 	}
-	
+
 	public void remove() {
 		if(getStudy()==null || getStudy().getStudyActions()==null) return;
 		getStudy().getStudyActions().remove(this);
@@ -297,8 +298,8 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 		namedTreatment = null;
 		namedSampling1 = null;
 		namedSampling2 = null;
-	}	
-	
+	}
+
 	@Override
 	public StudyAction clone() {
 		try {
@@ -308,12 +309,12 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 			return null;
 		}
 	}
-	
+
 	public boolean isEmpty() {
-		return !hasMeasurements() && 
+		return !hasMeasurements() &&
 				getNamedTreatment()==null && getNamedSampling1()==null && getNamedSampling2()==null && (getLabel()==null || getLabel().length()==0);
 	}
-	
+
 	@Override
 	public String toString() {
 		return "[Action:"+id+" "+getGroup().getShortName()+"'"+getSubGroup()+"/"+getPhase()+(namedTreatment==null?"":" "+namedTreatment)+(namedSampling1==null?"":" "+namedSampling1)+(namedSampling2==null?"":" "+namedSampling2) + "]";
@@ -336,38 +337,38 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 	public void setMeasureWater(boolean measureWater) {
 		this.measureWater = measureWater;
 	}
-	
+
 	public int getSubGroup() {
 		return subGroup==null? 0: subGroup;
 	}
 	public void setSubGroup(int subGroup) {
 		this.subGroup = subGroup;
 	}
-	
+
 	public String getLabel() {
 		return label;
 	}
-	
+
 	public void setLabel(String label) {
 		this.label = label;
 	}
-	
+
 	public boolean hasMeasurements() {
 		return isMeasureFood() || getMeasurements().size()>0 || isMeasureWater() || isMeasureWeight();
 	}
-	
+
 	/**
 	 * Returns a list of Measurement (never null), after deserializing it from the DB, the Measurement's Test is not populated by this function.
 	 * However we populate it in DAOStudy.postLoad
-	 * @return 
+	 * @return
 	 */
 	public List<Measurement> getMeasurements() {
-		if(extraMeasurementList==null) {			
+		if(extraMeasurementList==null) {
 			extraMeasurementList = Measurement.deserialize(extraMeasurement);
 		}
 		return Collections.unmodifiableList(extraMeasurementList);
 	}
-	
+
 	public String getMeasurementAbbreviations() {
 		StringBuilder sb = new StringBuilder();
 		for(Measurement m : getMeasurements()) {
@@ -386,33 +387,61 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 		}
 		return sb.toString();
 	}
-	
+
 	/**
 	 * Sets the measurements, it is assumed that each measurement's test is not null
 	 * @param list
 	 */
 	public void setMeasurements(List<Measurement> list) {
-		this.extraMeasurementList = list;		
-		extraMeasurement = Measurement.serialize(extraMeasurementList);		
+		this.extraMeasurementList = list;
+		extraMeasurement = Measurement.serialize(extraMeasurementList);
 	}
-	
+
 	public void setMeasurementString(String extraMeasurement) {
 		this.extraMeasurementList = null;
 		this.extraMeasurement = extraMeasurement;
 	}
-	
+
 	public String getMeasurementString() {
 		return extraMeasurement;
 	}
 
-	public static Set<Measurement> getMeasurements(Collection<StudyAction> actions) {		
+	public static Set<Measurement> getMeasurements(Collection<StudyAction> actions) {
 		Set<Measurement> res = new HashSet<>();
 		for (StudyAction a: actions) {
 			res.addAll(a.getMeasurements());
-		}		
+		}
 		return res;
 	}
-	
-	
-	
+
+
+	/**
+	 * Comparator that compare all fields, to check if a modification occured
+	 */
+	public static Comparator<StudyAction> EXACT_COMPARATOR = new Comparator<StudyAction>() {
+		@Override
+		public int compare(StudyAction o1, StudyAction o2) {
+			int c;
+			c = CompareUtils.compare(o1.isMeasureFood(), o2.isMeasureFood());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.isMeasureWater(), o2.isMeasureWater());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.isMeasureWeight(), o2.isMeasureWeight());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.getMeasurementString(), o2.getMeasurementString());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.getNamedTreatment(), o2.getNamedTreatment());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.getNamedSamplingString(), o2.getNamedSamplingString());
+			if(c!=0) return c;
+
+			return 0;
+		}
+	};
+
 }

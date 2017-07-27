@@ -27,6 +27,7 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
+import java.util.Collection;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -50,7 +51,6 @@ import com.actelion.research.spiritapp.slidecare.ui.InventoryPanel;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.SpiritMenu;
-import com.actelion.research.spiritapp.spirit.ui.lf.StudyComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyDetailPanel;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritChangeObserver;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritContextObserver;
@@ -58,6 +58,7 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritAction;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.StudyComboBox;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
@@ -143,7 +144,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 
 
 		//StatusBar
-		statusBar.setCopyright("SlideCare - (C) Joel Freyss - Actelion 2013");
+		statusBar.setCopyright("SlideCare - (C) Joel Freyss - Idorsia Pharmaceuticals Ltd");
 
 
 		//contentPanel
@@ -320,7 +321,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	}
 
 	@Override
-	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
+	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
 		if(action==SpiritChangeType.LOGIN) {
 			eventUserChanged();
 		} else {

@@ -38,12 +38,12 @@ public enum Computed {
 	INC_DAY("Increase / Day [Absolute]", "Calculates the absolute increase from the last measured value and normalized by the number of days (if several values have been measured, only consider the first of the day)") {
 		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + FormatterUtils.formatMax2(val) + "/d";}
 	},
-//	INC_REF("Inc. / RefPhase [Abs.]", "Calculates the absolute increase from the result measured at the reference phase (as defined in the study design / group definition)") {
-//		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + Formatter.formatMax2(val);}
-//	},
-//	INC_REF_PERCENT("Inc. / RefPhase [%]", "Calculates the relative increase from the result measured at the reference phase (as defined in the study design / group definition)") {
-//		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + Formatter.formatMax2(val) + "%";}
-//	},
+	//	INC_REF("Inc. / RefPhase [Abs.]", "Calculates the absolute increase from the result measured at the reference phase (as defined in the study design / group definition)") {
+	//		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + Formatter.formatMax2(val);}
+	//	},
+	//	INC_REF_PERCENT("Inc. / RefPhase [%]", "Calculates the relative increase from the result measured at the reference phase (as defined in the study design / group definition)") {
+	//		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + Formatter.formatMax2(val) + "%";}
+	//	},
 	INC_START("Increase / d0 [Absolute]", "Calculates the absolute increase from the result measured at d0 (or the closest to d0 if none)") {
 		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + FormatterUtils.formatMax2(val);}
 	},
@@ -51,75 +51,75 @@ public enum Computed {
 		@Override public String format(Double val) {return val==null? null: (val>=0?"+":"") + FormatterUtils.formatMax2(val) + "%";}
 	},
 	;
-	
-	private String name;		
-	private String tooltip;		
+
+	private String name;
+	private String tooltip;
 	private Computed(String name, String tooltip) {this.name = name; this.tooltip = tooltip;}
 	public String getName() {return name;}
 	public String getTooltip() {return tooltip;}
 	@Override
 	public String toString() {return name;}
 	public abstract String format(Double val);
-	
-	
+
+
 	public static final Computed getValue(String name) {
 		for (Computed computed : values()) {
-			if(computed.getName().equals(name)) return computed;			
+			if(computed.getName().equals(name)) return computed;
 		}
 		return Computed.NONE;
 	}
-	
+
 	/**
 	 * Update the results by calculated the computed value
 	 * @param results
 	 */
 	public void calculateComputedValues(List<Result> results) {
 		if(results==null || results.size()==0) return;
-		
+
 		//Reset Calculated Values
 		ListHashMap<String, Result> sid_cid_tid_inputs2Result = new ListHashMap<String, Result>();
 		for (Result r : results) {
-			for(ResultValue rv: r.getResultValues()) { 
+			for(ResultValue rv: r.getResultValues()) {
 				rv.setCalculatedValue(null);
 			}
 		}
-		
+
 		if(this==NONE) return;
-		
+
 		for (Result r : results) {
 			String key = (r.getBiosample()==null?"":r.getBiosample().getId()) + "_" + r.getTest().getId()+"_"+r.getInputResultValuesAsString();
 			sid_cid_tid_inputs2Result.add(key, r);
 		}
-		
+
 		//Calculate value increase over phases
 		if(this==INC_DAY) {
 			loop: for (Result r : results) {
 				if(r.getInheritedPhase()==null) continue;
-				
+
 				//Retrieve values from map
 				String key = (r.getBiosample()==null?"":r.getBiosample().getId()) + "_" + r.getTest().getId()+"_"+r.getInputResultValuesAsString();
 				List<Result> otherResults = sid_cid_tid_inputs2Result.get(key);
 				if(otherResults.size()==0) continue;
-				
+
 				Result sel = null;
 				for (Result r2 : otherResults) {
 					//Find the result which was measured a day before, but only consider the first measure of the day
 					if(r2.getInheritedPhase()==null || r2==r) continue;
-					if(r2.getInheritedPhase().getDays()>r.getInheritedPhase().getDays()) continue;					
-					if(r2.getInheritedPhase().getDays()==r.getInheritedPhase().getDays() && r2.getInheritedPhase().getTime()<r.getInheritedPhase().getTime()) continue loop;					
+					if(r2.getInheritedPhase().getDays()>r.getInheritedPhase().getDays()) continue;
+					if(r2.getInheritedPhase().getDays()==r.getInheritedPhase().getDays() && r2.getInheritedPhase().getTime()<r.getInheritedPhase().getTime()) continue loop;
 					if(sel!=null && sel.getInheritedPhase().getDays()>r2.getInheritedPhase().getDays()) continue;
 					if(sel!=null && sel.getInheritedPhase().getDays()==r2.getInheritedPhase().getDays() && sel.getInheritedPhase().getTime()>r2.getInheritedPhase().getTime()) continue;
 					sel = r2;
 				}
 				if(sel==null) continue;
-				for(TestAttribute att : r.getTest().getOutputAttributes()) { 
+				for(TestAttribute att : r.getTest().getOutputAttributes()) {
 					if(att.getDataType()!=DataType.NUMBER) continue;
 					Double v1 = r.getResultValue(att).getDoubleValue();
 					if(v1==null) continue;
-					
+
 					Double v2 = sel.getResultValue(att).getDoubleValue();
 					if(v2==null) continue;
-					double val = (v1 - v2) / (r.getPhase().getDays() - sel.getPhase().getDays()); 								
+					double val = (v1 - v2) / (r.getPhase().getDays() - sel.getPhase().getDays());
 					val = (int)(Math.round(val*100))/100.0; //Round to 2 decimals
 					r.getResultValue(att).setCalculatedValue(val);
 				}
@@ -127,31 +127,31 @@ public enum Computed {
 		} else if(/*this==INC_REF || this==INC_REF_PERCENT ||*/ this==INC_START || this==INC_START_PERCENT) {
 			for (Result r : results) {
 				if(r.getPhase()==null) continue;
-				
+
 				//Retrieve values from map
 				String key = (r.getBiosample()==null?"":r.getBiosample().getId()) + "_" + r.getTest().getId()+"_"+r.getInputResultValuesAsString();
 				List<Result> resultFromOtherPhases = sid_cid_tid_inputs2Result.get(key);
 				if(resultFromOtherPhases.size()==0) continue;
-				
+
 				Result sel = null;
 				for (Result r2 : resultFromOtherPhases) {
-					if(r2.getPhase()==null || Math.abs(r2.getPhase().getDays())>1 ) continue;
+					if(r2.getPhase()==null /*|| Math.abs(r2.getPhase().getDays())>1 */) continue;
 					if(sel==null) {
 						sel = r2;
 					} else if(Math.abs(r2.getPhase().getTime())<Math.abs(sel.getPhase().getTime())){
 						sel = r2;
 					}
 				}
-				
-				
+
+
 				if(sel==null || CompareUtils.compare( r.getPhase(), sel.getPhase())==0) continue;
-				
-				for(TestAttribute att : r.getTest().getOutputAttributes()) { 
+
+				for(TestAttribute att : r.getTest().getOutputAttributes()) {
 					if(att.getDataType()!=DataType.NUMBER) continue;
 					Double v1 = r.getResultValue(att).getDoubleValue();
 					if(v1==null) continue;
-	
-					
+
+
 					Double v2 = sel.getResultValue(att).getDoubleValue();
 					if(v2==null) continue;
 					Double val;
@@ -161,7 +161,7 @@ public enum Computed {
 						val = v1 - v2;
 					}
 					val = val==null? null: (int)(Math.round(val*100))/100.0; //Round to 2 decimals
-					
+
 					r.getResultValue(att).setCalculatedValue(val);
 				}
 			}

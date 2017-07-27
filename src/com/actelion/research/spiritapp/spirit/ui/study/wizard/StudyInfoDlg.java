@@ -49,12 +49,12 @@ import javax.swing.JTextField;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
-import com.actelion.research.spiritapp.spirit.ui.lf.EmployeeGroupComboBox;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
-import com.actelion.research.spiritapp.spirit.ui.lf.UserIdTextArea;
+import com.actelion.research.spiritapp.spirit.ui.util.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.EmployeeGroupComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.UserIdTextArea;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
 import com.actelion.research.spiritcore.business.DataType;
@@ -258,7 +258,7 @@ public class StudyInfoDlg extends JEscapeDialog {
 		}
 
 		studyIdField.setText(study.getStudyId());
-		ivvField.setText(study.getIvv());
+		ivvField.setText(study.getLocalId());
 		
 		titleField.setText(study.getTitle());
 		List<EmployeeGroup> egs = study.getEmployeeGroups();
@@ -391,7 +391,7 @@ public class StudyInfoDlg extends JEscapeDialog {
 		
 		study.setStudyId(studyIdField.getText());
 		study.setState(stateComboBox.getSelection());
-		study.setIvv(ivvField.getText());
+		study.setLocalId(ivvField.getText());
 		study.setTitle(titleField.getText());
 		study.setNotes(notesTextArea.getText());
 		study.setState(stateComboBox.getSelection());

@@ -32,23 +32,22 @@ import com.actelion.research.util.ui.exceltable.Column;
 public class StudyGroupColumn extends Column<Result, Group> {
 	public StudyGroupColumn() {
 		super("Group", Group.class);
-		setHideable(true);
 	}
-	
+
 	@Override
 	public float getSortingKey() {
 		return 2.1f;
 	}
-	
+
 	@Override
 	public Group getValue(Result row) {
 		return row.getBiosample()==null? null: row.getBiosample().getInheritedGroup();
 	}
 	@Override
 	public boolean isEditable(Result row) {return false;}
-	
+
 	private GroupLabel groupLabel = new GroupLabel();
-	
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
 		groupLabel.setGroup((Group)value);

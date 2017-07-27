@@ -53,8 +53,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableColumn;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.SpiritExcelTable;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachedBiosampleTableModel.SampleIdColumn;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritExcelTable;
 import com.actelion.research.spiritcore.business.biosample.BarcodeSequence.Category;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
@@ -69,15 +69,15 @@ import com.actelion.research.util.ui.exceltable.Column;
 public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> {
 
 	private AttachedBiosampleIdCellEditor sampleIdCellEditor;
-	
+
 	public AttachedBiosampleTable(AttachedBiosampleTableModel model, boolean allowDnd) {
 		super(model);
-		
+
 		setCanAddRow(false);
 		setGoNextOnEnter(false);
 		setBorderStrategy(BorderStrategy.WHEN_DIFFERENT_VALUE);
 		setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		
+
 		if(allowDnd) {
 			setDropTarget(new DropTarget(this, dropListener));
 			DragSource dragSource = DragSource.getDefaultDragSource();
@@ -86,8 +86,8 @@ public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> 
 		getModel().fireTableStructureChanged();
 		resetPreferredColumnWidth();
 	}
-	
-	
+
+
 	@Override
 	public void initCellEditors() {
 		if(sampleIdCellEditor==null) {
@@ -98,48 +98,48 @@ public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> 
 		for (int i = 0; i < getColumnCount(); i++) {
 			Column<AttachedBiosample, ?> cb = getModel().getColumn(i);
 			TableColumn	col = getColumnModel().getColumn(i);
-			
-					
+
+
 			if((cb instanceof SampleIdColumn) && col.getCellEditor()!=sampleIdCellEditor) {
-				col.setCellEditor(sampleIdCellEditor);											
+				col.setCellEditor(sampleIdCellEditor);
 			}
-		}		
+		}
 	}
-	
+
 	public void regenerateSampleIds(Collection<AttachedBiosample> rows) {
 		if(rows.size()==0) return;
 		boolean empty = true;
-		
+
 		//Try to generate all sampleIds
 		for (AttachedBiosample b : rows) {
 			if(b.getSampleId()!=null && b.getSampleId().length()>0) {
 				empty = false;
 				break;
-			}			
+			}
 		}
-		
+
 		//If nothing was changed, suggest to force change
 		if(!empty) {
 			int res = JOptionPane.showConfirmDialog(this, "Do you want to recreate NEW sampleIds for those " +rows.size() + " samples", "Regenerate SampleIds", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 			if(res!=JOptionPane.YES_OPTION) return;
-			
+
 		}
 		for (AttachedBiosample b : rows) {
 			String id = DAOBarcode.getNextId(Category.BIOSAMPLE, getModel().getBiotype()==null?"INT":getModel().getBiotype().getPrefix());
 			if(b.getBiosample()==null) {
-				b.setBiosample(new Biosample(getModel().getBiotype(), id));   
-				b.setSampleId(id);		
+				b.setBiosample(new Biosample(getModel().getBiotype(), id));
+				b.setSampleId(id);
 			} else {
 				b.getBiosample().setSampleId(id);
-				b.setSampleId(id);		
+				b.setSampleId(id);
 			}
 		}
 		getModel().fireTableDataChanged();
 	}
-	
-	
-	
-	
+
+
+
+
 	public static class CageCellEditor extends AbstractCellEditor implements TableCellEditor {
 		private JTextComboBox cageComboBox;
 		public CageCellEditor(Study study) {
@@ -149,7 +149,7 @@ public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> 
 			}
 			cageComboBox = new JTextComboBox(cageNames);
 		}
-		
+
 		@Override
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 			cageComboBox.setText((String) value);
@@ -159,26 +159,26 @@ public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> 
 		@Override
 		public Object getCellEditorValue() {
 			return cageComboBox.getText();
-		}		
+		}
 	}
-	
+
 	@Override
 	public AttachedBiosampleTableModel getModel() {
 		return (AttachedBiosampleTableModel) super.getModel();
 	}
-	
-	
+
+
 	public List<Double> getDoubles(int index){
 		return AttachedBiosample.getData(getRows(), index);
 	}
-	
+
 	private DropListener dropListener = new DropListener();
 	private static final DataFlavor df = new DataFlavor(List.class, "ListRndSample");
-	
+
 	public static class RndTransferable implements Transferable {
 
 		private List<AttachedBiosample> list;
-		
+
 		public RndTransferable(List<AttachedBiosample> list) {
 			this.list = list;
 		}
@@ -194,18 +194,18 @@ public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> 
 
 		@Override
 		public List<AttachedBiosample> getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
-//			if(!df.equals(flavor)) throw new UnsupportedFlavorException(flavor);
+			//			if(!df.equals(flavor)) throw new UnsupportedFlavorException(flavor);
 			return list;
 		}
-		
+
 	}
-	
+
 	public class DropListener implements DropTargetListener, DragSourceListener, DragGestureListener {
 		@Override
 		public void dragGestureRecognized(DragGestureEvent dge) {
 			List<AttachedBiosample> list = getSelection();
 			if(list.size()==0) return;
-			
+
 			Transferable transferable = new RndTransferable(list);
 			dge.startDrag(null, transferable, this);
 
@@ -213,7 +213,7 @@ public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> 
 
 		@Override
 		public void dragEnter(DropTargetDragEvent dtde) {
-			
+
 		}
 
 		@Override
@@ -238,11 +238,11 @@ public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> 
 				dtde.rejectDrop();
 				return;
 			}
-			dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);		
+			dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
 			try {
 				List<AttachedBiosample> list = (List<AttachedBiosample>) t.getTransferData(df);
 				for (AttachedBiosample s : list) {
-					s.setGroup(getModel().getGroup());					
+					s.setGroup(getModel().getGroup());
 				}
 				List<AttachedBiosample> all = getRows();
 				all.removeAll(list);
@@ -256,7 +256,7 @@ public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> 
 				e.printStackTrace();
 				dtde.dropComplete(false);
 			}
-			
+
 		}
 
 		@Override
@@ -278,36 +278,34 @@ public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> 
 		@Override
 		public void dragDropEnd(DragSourceDropEvent dsde) {
 			if(!dsde.getDropSuccess()) return;
-			
+
 			List<AttachedBiosample> toBeRemoved = new ArrayList<AttachedBiosample>();
 			for (AttachedBiosample rndSample : getRows()) {
 				if(CompareUtils.compare(rndSample.getGroup(), getModel().getGroup())!=0) {
 					toBeRemoved.add(rndSample);
 				}
 			}
-			
+
 			getRows().removeAll(toBeRemoved);
 			getModel().fireTableDataChanged();
 		}
-		
-		
 	}
-	
+
 	public Study getStudy() {
 		return getModel().getStudy();
 	}
-	
+
 	public void setStudy(Study study) {
 		throw new IllegalArgumentException("Not to be called");
 	}
-	
+
 	@Override
 	public void setRows(List<AttachedBiosample> data) {
 		getModel().setRows(data);
 		getModel().initColumns();
 		resetPreferredColumnWidth();
 	}
-	
+
 	public class RegenerateSampleIdAction extends AbstractAction {
 		public RegenerateSampleIdAction() {
 			super("(Re)Generate selected SampleIds");
@@ -319,8 +317,8 @@ public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> 
 				JExceptionDialog.showError("You must select some rows");
 				return;
 			}
-			regenerateSampleIds(sel);				
-			repaint();	
+			regenerateSampleIds(sel);
+			repaint();
 		}
 	}
 }

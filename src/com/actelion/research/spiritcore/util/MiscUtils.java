@@ -27,13 +27,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.SortedSet;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -762,6 +767,100 @@ public class MiscUtils {
 			sb.append(s);
 		}
 		return sb.toString();
+	}
+
+	public static<T> List<T> listOf(T... elts) {
+		List<T> res = new ArrayList<>();
+		for (T t : elts) {
+			res.add(t);
+		}
+		return res;
+	}
+
+	public static<T> List<T> listOf(Collection<T>... elts) {
+		List<T> res = new ArrayList<>();
+		for (Collection<T> t : elts) {
+			res.addAll(t);
+		}
+		return res;
+	}
+
+	public static<T> SortedSet<T> setOf(T... elts) {
+		SortedSet<T> res = new TreeSet<>();
+		for (T t : elts) {
+			res.add(t);
+		}
+		return res;
+	}
+	public static<T> SortedSet<T> setOf(Collection<T>... elts) {
+		SortedSet<T> res = new TreeSet<>();
+		for (Collection<T> t : elts) {
+			res.addAll(t);
+		}
+		return res;
+	}
+
+	public static int getIndexFirstDigit(String s) {
+		if(s==null) return -1;
+		for (int i = 0; i < s.length(); i++) {
+			if(Character.isDigit(s.charAt(i))) return i;
+		}
+		return -1;
+	}
+
+
+	/**
+	 * Returns a summary message with the differences between the 2 collections in max ca.20 characters.
+	 * If the 2 sets are equals returns null.
+	 * @param c1
+	 * @param c2
+	 * @param customComparator
+	 * @return
+	 */
+	public static<T> String diffCollectionsSummary(Collection<T> c1, Collection<T> c2, Comparator<T> customComparator) {
+		Set<T>[] diff = diffCollections(c1, c2, customComparator);
+		if(diff[0].size()==0 && diff[1].size()==0 && diff[2].size()==0) {
+			return null;
+		} else if(diff[0].size()>0 && diff[1].size()==0 && diff[2].size()==0) {
+			return "added " + (diff[0].size()==1? diff[0].iterator().next(): diff[0].size());
+		} else if(diff[0].size()==0 && diff[1].size()>0 && diff[2].size()==0) {
+			return "modified " + (diff[1].size()==1? diff[1].iterator().next(): diff[1].size());
+		} else if(diff[0].size()==0 && diff[1].size()==0 && diff[2].size()>0) {
+			return "removed " + (diff[2].size()==1? diff[2].iterator().next(): diff[2].size());
+		} else {
+			return "updated";
+		}
+	}
+
+	/**
+	 * Returns an array containing the following elements:
+	 * <li>[0] elts in c1 but not in c2
+	 * <li>[1] elts in c1 such as elt1.equals(elt2) but customComparator.compare(elt1, elt2)!=0
+	 * <li>[2] elts not in c1 but in c2
+	 * @param c1
+	 * @param c2
+	 * @return
+	 */
+	public static<T> Set<T>[] diffCollections(Collection<T> c1, Collection<T> c2, Comparator<T> customComparator) {
+		Set<T> s0 = new LinkedHashSet<>(c1);
+		s0.removeAll(c2);
+
+		Set<T> s1 = new LinkedHashSet<>();
+		if(customComparator!=null) {
+			for (T t1 : c2) {
+				for (T t2 : c2) {
+					if(t1.equals(t2) && customComparator.compare(t1, t2)!=0) {
+						s1.add(t1);
+						break;
+					}
+				}
+			}
+		}
+
+		Set<T> s2 = new LinkedHashSet<>(c2);
+		s2.removeAll(c1);
+
+		return new Set[]{s0, s1, s2};
 	}
 
 }

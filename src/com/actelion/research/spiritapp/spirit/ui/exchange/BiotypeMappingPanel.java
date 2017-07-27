@@ -31,7 +31,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;

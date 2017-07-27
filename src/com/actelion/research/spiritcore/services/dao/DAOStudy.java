@@ -74,6 +74,11 @@ import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.spiritcore.util.QueryTokenizer;
 import com.actelion.research.spiritcore.util.Triple;
 
+/**
+ * DAO functions linked to studies
+ *
+ * @author Joel Freyss
+ */
 @SuppressWarnings("unchecked")
 public class DAOStudy {
 
@@ -124,7 +129,7 @@ public class DAOStudy {
 					} else if(level==RightLevel.READ) {
 						if(SpiritRights.canRead(study, user)) studies.add(study);
 					} else if(level==RightLevel.VIEW) {
-						if(SpiritProperties.getInstance().isOpen() || SpiritRights.canRead(study, user)) studies.add(study);
+						if(SpiritRights.canView(study, user)) studies.add(study);
 					}
 				}
 			} else {
@@ -200,10 +205,10 @@ public class DAOStudy {
 		return s;
 	}
 
-	public static List<Study> getStudyByIvvOrStudyId(String ivvs) {
+	public static List<Study> getStudyByLocalIdOrStudyId(String ids) {
 		EntityManager session = JPAUtil.getManager();
 		try {
-			String sql = "select s from Study s where " + QueryTokenizer.expandOrQuery("s.ivv = ? or s.studyId = ?", ivvs);
+			String sql = "select s from Study s where " + QueryTokenizer.expandOrQuery("s.localId = ? or s.studyId = ?", ids);
 			List<Study> res = session.createQuery(sql).getResultList();
 			postLoad(res);
 			return res;
@@ -251,13 +256,13 @@ public class DAOStudy {
 				clause.append(" and (" + QueryTokenizer.expandOrQuery("s.studyId = ?", q.getStudyIds()) + ")");
 			}
 
-			if(q.getIvvs()!=null && q.getIvvs().length()>0) {
-				clause.append(" and (" + QueryTokenizer.expandOrQuery("s.ivv = ?", q.getIvvs()) + ")");
+			if(q.getLocalIds()!=null && q.getLocalIds().length()>0) {
+				clause.append(" and (" + QueryTokenizer.expandOrQuery("s.localId = ?", q.getLocalIds()) + ")");
 			}
 
 			if(q.getKeywords()!=null && q.getKeywords().length()>0) {
 				String expr = "lower(s.studyId) like lower(?)" +
-						" or lower(s.ivv) like lower(?)" +
+						" or lower(s.localId) like lower(?)" +
 						" or lower(s.serializedMetadata) like lower(?)" +
 						" or lower(s.title) like lower(?)" +
 						" or lower(s.adminUsers) like lower(?)" +
@@ -335,7 +340,7 @@ public class DAOStudy {
 		if(user!=null) {
 			for (Iterator<Study> iterator = studies.iterator(); iterator.hasNext();) {
 				Study study = iterator.next();
-				if(!SpiritRights.canBlind(study, user)) iterator.remove();
+				if(!SpiritRights.canView(study, user)) iterator.remove();
 			}
 		}
 		LoggerFactory.getLogger(DAOStudy.class).info("queryStudies() in "+(System.currentTimeMillis()-s)+"ms");
@@ -366,15 +371,33 @@ public class DAOStudy {
 		}
 
 	}
+
+	private static void testConcurrentModification(EntityManager session, Collection<Study> studies) throws Exception {
+		for (Study study : studies) {
+			if(study.getId()>0) {
+				Object[] lastUpdate = (Object[]) session.createQuery("select s.updDate, s.updUser from Study s where s.id = "+study.getId()).getSingleResult();
+				Date lastDate = (Date) lastUpdate[0];
+				String lastUser = (String) lastUpdate[1];
+				logger.info("last update of " + study + " was " + lastDate + " by " + lastUser + " attached object: "+study.getUpdDate());
+
+				if(lastDate!=null && study.getUpdDate()!=null /*lastUser!=null && !lastUser.equals(user.getUsername())*/) {
+					int diffSeconds = (int) (lastDate.getTime() - study.getUpdDate().getTime());
+					if(diffSeconds>0) throw new Exception("The study "+study+" has just been updated by "+lastUser+" [" + diffSeconds + "seconds ago].\nYou cannot overwrite those changes unless you reopen the newest version.");
+				}
+			}
+		}
+	}
+
 	/**
 	 * Persists the study
 	 * @param study
 	 * @param user
-	 * @return
+	 * @return the persisted studies
 	 * @throws Exception
 	 */
-	public static void persistStudies(EntityManager session, Collection<Study> studies, SpiritUser user) throws Exception {
-		if(studies==null || studies.size()==0) return;
+	public static List<Study> persistStudies(EntityManager session, Collection<Study> studies, SpiritUser user) throws Exception {
+		List<Study> res = new ArrayList<>();
+		if(studies==null || studies.size()==0) return res;
 
 		logger.info("Persist "+studies.size()+ " studies");
 		assert user!=null;
@@ -383,28 +406,14 @@ public class DAOStudy {
 
 
 		//Test that nobody else modified the study
+		testConcurrentModification(session, studies);
+
+		//Check rights
 		for (Study study : studies) {
-
-			if(study.getId()>0) {
-				EntityManager ses = null;
-				try {
-					ses = JPAUtil.createManager();
-					Object[] lastUpdate = (Object[]) ses.createQuery("select s.updDate, s.updUser from Study s where s.id = "+study.getId()).getSingleResult();
-					Date lastDate = (Date) lastUpdate[0];
-					String lastUser = (String) lastUpdate[1];
-
-					if(lastDate!=null && lastUser!=null && !lastUser.equals(user.getUsername())) {
-						int diffSeconds = (int) ((lastDate.getTime() - study.getUpdDate().getTime())/1000);
-						if(diffSeconds>0) throw new Exception("The study "+study+" has just been updated by "+lastUser+" [" + diffSeconds + "seconds ago].\nYou cannot overwrite those changes unless you reopen the newest version.");
-					}
-				} finally {
-					if(ses!=null) ses.close();
-				}
-			}
 
 
 			if(!SpiritRights.canAdmin(study, user) && !SpiritRights.canBlind(study, user)) throw new Exception("You are not allowed to edit this study");
-			if(study.getId()<0 && getStudyByIvvOrStudyId(study.getIvv()).size()>0) throw new Exception("The internalId must be unique");
+			if(study.getId()<0 && getStudyByLocalIdOrStudyId(study.getLocalId()).size()>0) throw new Exception("The internalId must be unique");
 
 
 			Date now = JPAUtil.getCurrentDateFromDatabase();
@@ -435,10 +444,11 @@ public class DAOStudy {
 			for(Phase phase: study.getPhases()) {
 				phase.serializeRandomization();
 			}
+			res.add(study);
 		}
 		Cache.getInstance().remove("studies_"+user);
 		Cache.getInstance().remove("allstudies");
-
+		return res;
 	}
 
 	/**
@@ -615,19 +625,19 @@ public class DAOStudy {
 	 *
 	 * This function is supposed to be used exceptionally
 	 *
-	 * @param animals
+	 * @param samples
 	 * @param study1
 	 * @param study2
 	 * @param user
 	 * @return a map of animal (given as input) to a new animal (the duplicated)
 	 */
-	public static Map<Biosample, Biosample> duplicateAnimalsForManyStudies(List<Biosample> animals, Study newStudy, SpiritUser user) throws Exception {
+	public static Map<Biosample, Biosample> cloneParticipants(List<Biosample> samples, Study newStudy, SpiritUser user) throws Exception {
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
-		Map<Biosample, Biosample> old2new = new HashMap<Biosample, Biosample>();
+		Map<Biosample, Biosample> old2new = new HashMap<>();
 		try {
 			if(!SpiritRights.canAdmin(newStudy, user)) throw new Exception("You are not allowed to edit "+newStudy);
-			for (Biosample animal : animals) {
+			for (Biosample animal : samples) {
 				if(animal.getId()<=0) throw new Exception("The animal "+animal+" is not persistant");
 				if(animal.getParent()!=null) throw new Exception("The animal "+animal+" has already a parent");
 			}
@@ -636,7 +646,7 @@ public class DAOStudy {
 			txn.begin();
 			Date now = JPAUtil.getCurrentDateFromDatabase();
 
-			for (Biosample animal : animals) {
+			for (Biosample animal : samples) {
 				String sampleId = animal.getSampleId();
 				if(animal.getAttachedStudy()!=null) {
 					//
@@ -727,6 +737,71 @@ public class DAOStudy {
 		}
 		return old2new;
 
+	}
+
+
+	/**
+	 * Resolve the conflicts of samples with the same sampleId by cloning them and deriving them from the same parent.
+	 *
+	 * Careful, the samples have to be saved in the proper order
+	 *
+	 * @param toClone
+	 * @param conflicts
+	 * @return the updated samples in the order to be saved
+	 * @throws Exception
+	 */
+	public static List<Biosample> cloneParticipants(List<Biosample> toClone, List<Biosample> conflicts) throws Exception {
+		assert toClone.size() == conflicts.size();
+
+		List<Biosample> updated = new ArrayList<>();
+		for (int i = 0; i < toClone.size(); i++) {
+			Biosample b = toClone.get(i);
+			Biosample conflict = conflicts.get(i);
+
+			String id = b.getSampleId();
+
+
+			Biosample parent;
+			if(conflict.getAttachedStudy()==null) {
+				//Solve the conflict by setting the parent to the conflicting sample
+				// TOP -- conflict_A
+				parent = conflict;
+			} else if(conflict.getParent()==null) {
+				//Solve the conflict by adding a common parent
+				// TOP -- conflict_A
+				//     \- b_B
+				parent = conflict.clone();
+				parent.setId(0);
+				parent.setSampleId(id+"_");
+				parent.setContainer(null);
+				parent.setAttachedStudy(null);
+
+				updated.add(parent);
+				System.out.println("EditBiosampleDlg.validate() CREATE "+parent);
+
+				updated.add(conflict);
+				conflict.setParent(parent);
+				conflict.setSampleId(parent.getNextCloneId());
+				System.out.println("EditBiosampleDlg.validate() Change conflict to "+conflict+" from "+conflict.getParent());
+
+
+			} else {
+				//Solve the conflict by linking to the parent of the conflict
+				// TOP -- confict_A
+				//     \- b_B
+				parent = conflict.getParent();
+			}
+
+			b.setParent(parent);
+			b.setSampleId(parent.getNextCloneId());
+			updated.add(b);
+			System.out.println("EditBiosampleDlg.validate() Change sample to "+b+" from "+b.getParent());
+
+			//			parent.setSampleId(id);
+
+		}
+		System.out.println("DAOStudy.cloneParticipants() "+updated);
+		return updated;
 	}
 
 	/*

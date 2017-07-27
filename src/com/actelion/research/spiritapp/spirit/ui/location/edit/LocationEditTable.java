@@ -23,10 +23,10 @@ package com.actelion.research.spiritapp.spirit.ui.location.edit;
 
 import java.util.List;
 
+import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritExcelTable;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.util.ui.exceltable.ExcelTable;
 
-public class LocationEditTable extends ExcelTable<Location> {
+public class LocationEditTable extends SpiritExcelTable<Location> {
 
 	public LocationEditTable() {
 		super(new LocationEditTableModel());

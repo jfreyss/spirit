@@ -26,49 +26,36 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.swing.BorderFactory;
-
-import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
+import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.IBiosampleDetail;
-import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
+import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.util.FormatterUtils;
 
 public class BiosampleHistoryPanel extends ImageEditorPane implements IBiosampleDetail {
-	
-	private int display;
+
 	private Collection<Biosample> biosamples;
 	public BiosampleHistoryPanel() {
 		super();
-		setBorder(BorderFactory.createEmptyBorder());
-		
+
 		setOpaque(false);
 		setEditable(false);
-		setBackground(Color.white);		
-		
+		setBackground(Color.white);
+
 		BiosampleActions.attachPopup(this);
-		
 		addHyperlinkListener(new SpiritHyperlinkListener());
 	}
 
-	public void setDisplay(int display) {
-		this.display = display;
-		refresh();
-	}
-	
-	public int getDisplay() {
-		return display;
-	}
-	
 	@Override
 	public Collection<Biosample> getBiosamples() {
 		return biosamples;
-	}	
+	}
 
 	@Override
 	public void setBiosamples(Collection<Biosample> biosamples) {
@@ -82,56 +69,66 @@ public class BiosampleHistoryPanel extends ImageEditorPane implements IBiosample
 	}
 
 	private void refresh() {
-		
+
 		if(biosamples==null || biosamples.size()==0) {
 			setText("");
 			return;
 		}
-		
+
 		StringBuilder txt = new StringBuilder();
 		txt.append("<html><body style='background:white'>");
-		try {						
-		
+		txt.append("<b>Change history</b><table>");
+		try {
+
 			for(Biosample b: biosamples) {
-				txt.append("<b>Change history</b><table>");
-				try {
-					List<Revision> revisions = DAORevision.getRevisions(b);
-					for (int i = 0; i < revisions.size(); i++) {
-						Revision rev = revisions.get(i);
-						
-						String diff;
-						Biosample b1 = revisions.get(i).getBiosamples().get(0);
-						if(i+1<revisions.size()) {
-							Biosample b2 = revisions.get(i+1).getBiosamples().get(0);
-							diff = b1.getDifference(b2, SpiritFrame.getUsername());
-						} else {
-							Biosample b2 = revisions.get(0).getBiosamples().get(0);
-							diff = b1.getDifference(b2, SpiritFrame.getUsername());
-							if(diff.length()==0) diff = "First version";
+
+				if(b.getInheritedStudy()!=null && SpiritRights.isBlind(b.getInheritedStudy(), Spirit.getUser())) {
+					txt.append("<tr><td>Details are not visible for blind users</td></tr>");
+
+				} else {
+
+					try {
+						List<Revision> revisions = DAORevision.getRevisions(b);
+						for (int i = 0; i < revisions.size(); i++) {
+							Revision rev = revisions.get(i);
+
+							String diff;
+							Biosample b1 = revisions.get(i).getBiosamples().get(0);
+							if(i+1<revisions.size()) {
+								Biosample b2 = revisions.get(i+1).getBiosamples().get(0);
+								diff = b1.getDifference(b2);
+							} else {
+								Biosample b2 = revisions.get(0).getBiosamples().get(0);
+								diff = b1.getDifference(b2);
+								if(diff.length()==0) diff = "First version";
+							}
+
+							if(diff.length()==0) continue;
+							txt.append("<tr>");
+							if(biosamples.size()>1) {
+								txt.append("<th style='white-space:nowrap' valign=top>&nbsp;" + b.getSampleId() + "</th>");
+							}
+							txt.append("<th style='white-space:nowrap' valign=top>&nbsp;" + FormatterUtils.formatDateTimeShort(rev.getDate()) + "</th>");
+							txt.append("<th style='white-space:nowrap' valign=top>&nbsp;" + rev.getUser() + "&nbsp;</th>");
+							txt.append("<td style='white-space:nowrap' valign=top>" + diff.replace(";", "<br>") +"</td>");
+							txt.append("</tr>");
 						}
-						
-						if(diff.length()==0) continue;
-						txt.append("<tr>");
-						txt.append("<th style='white-space:nowrap' valign=top>&nbsp;" + FormatterUtils.formatDateTimeShort(rev.getDate()) + "</th>");
-						txt.append("<th style='white-space:nowrap' valign=top>&nbsp;" + rev.getUser() + "&nbsp;</th>");
-						txt.append("<td style='white-space:nowrap' valign=top>" + diff.replace(";", "<br>") +"</td>");
-						txt.append("</tr>");
+					} catch(Exception e) {
+						e.printStackTrace();
 					}
-					txt.append("</table>");
-				} catch(Exception e) {
-					e.printStackTrace();
 				}
 			}
-									
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		txt.append("</table>");
 		txt.append("</body></html>");
-		
+
 		setText(txt.toString());
 		setCaretPosition(0);
-		
+
 	}
-	
-	
+
+
 }

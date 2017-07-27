@@ -44,8 +44,8 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 
-import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyWizardDlg;
+import com.actelion.research.spiritapp.spirit.ui.util.HelpBinder;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.study.Group;
@@ -125,7 +125,7 @@ public class StudyGroupDlg extends JEscapeDialog {
 
 
 			newGroup.setFromGroup(null);
-			newGroup.setFromPhase(study.getReferencePhase());
+			newGroup.setFromPhase(study.getPhaseClosestFromDayZero());
 			newGroup.setStudy(study);
 
 			refreshGroups();

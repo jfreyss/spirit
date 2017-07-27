@@ -37,9 +37,9 @@ import java.util.Set;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkEvent.EventType;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
-import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.Document.DocumentType;
@@ -47,10 +47,11 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.Test;
+import com.actelion.research.spiritcore.business.study.NamedSampling;
+import com.actelion.research.spiritcore.business.study.NamedTreatment;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOResult.ElbLink;
-import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.MiscUtils;
@@ -59,15 +60,17 @@ import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.IOUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
+import com.actelion.research.util.ui.UIUtils;
 
 public class StudyEditorPane extends ImageEditorPane {
 
 	private Study study;
 
-	private boolean displayResults = true;
+	//	private boolean displayResults = true;
+	//	private boolean forRevision;
+	private boolean simplified = false;
 	private final String NIOBE_LINK = "\\\\actelch02\\PGM\\ActelionResearch\\Niobe\\Niobe.lnk";
 	private String sort = "date";
-	private boolean forRevision;
 
 	public StudyEditorPane() {
 		super();
@@ -137,12 +140,12 @@ public class StudyEditorPane extends ImageEditorPane {
 
 	}
 
-	public void setForRevision(boolean forRevision) {
-		this.forRevision = forRevision;
+	public void setSimplified(boolean simplified) {
+		this.simplified = simplified;
 	}
 
-	public void setDisplayResults(boolean displayResults) {
-		this.displayResults = displayResults;
+	public boolean isSimplified() {
+		return simplified;
 	}
 
 	public void setSort(String sort) {
@@ -161,7 +164,7 @@ public class StudyEditorPane extends ImageEditorPane {
 			//Study Infos
 
 			sb.append("<span style='font-size:120%;font-weight:bold'>" + study.getStudyId() + "</span> ");
-			if(study.getIvv()!=null) sb.append(" / " + MiscUtils.removeHtml(study.getIvv()) + "");
+			if(study.getLocalId()!=null) sb.append(" / " + MiscUtils.removeHtml(study.getLocalId()) + "");
 			sb.append("<br>");
 			if(study.getTitle()!=null) {
 				sb.append("<span style='font-size:95%'>" + MiscUtils.removeHtml(study.getTitle()) + "</span><br>");
@@ -218,8 +221,30 @@ public class StudyEditorPane extends ImageEditorPane {
 				sb.append("<div style='width:100%;padding-top:5px;font-size:95%;padding-bottom:5px;border-bottom:solid 1px gray'>" + MiscUtils.convert2Html(study.getNotes()) + "</div>");
 			}
 
-			if(displayResults && !forRevision) {
+			if(!simplified) {
+				//Add the treatment info
+				if(study.getNamedTreatments().size()>0) {
+					sb.append("<h2 style='font-size:12px; color:#990000'>Treatments</h2>");
+					sb.append("<table>");
+					for (NamedTreatment nt : study.getNamedTreatments()) {
+						sb.append("<tr><td style='color:" + UIUtils.getHtmlColor(nt.getColor()) + "'>" + nt.getName() + "</td><td>" + nt.getCompoundAndUnits() + "</td></tr>");
+					}
+					sb.append("</table>");
+				}
 
+				//Add the sampling info
+				if(study.getNamedSamplings().size()>0) {
+					sb.append("<h2 style='font-size:12px; color:#990000'>Samplings</h2>");
+					sb.append("<table>");
+					for (NamedSampling ns : study.getNamedSamplings()) {
+						sb.append("<tr><td valign=top style='white-space:nowrap;margin:1px'>");
+						if(ns.getName()!=null) sb.append("<b style='font-size:11px'><u>" + ns.getName() + "</u></b><br>");
+
+						sb.append(ns.getHtmlBySampling());
+						sb.append("</td></td>");
+					}
+					sb.append("</tr></table>");
+				}
 				//Display Documents
 				Map<DocumentType, List<Document>> docs = Document.mapDocumentTypes(study.getDocuments());
 				if(study.getDocuments().size()>0) {
@@ -233,6 +258,9 @@ public class StudyEditorPane extends ImageEditorPane {
 						sb.append("</div>");
 					}
 				}
+
+				/*
+			if(displayResults && !forRevision) {
 
 
 				try {
@@ -251,7 +279,8 @@ public class StudyEditorPane extends ImageEditorPane {
 					e.printStackTrace();
 					sb.append(e.getMessage());
 				}
-
+	}
+				 */
 
 				if(DBAdapter.getAdapter().isInActelionDomain()) {
 					//Find related ELBs
@@ -329,15 +358,15 @@ public class StudyEditorPane extends ImageEditorPane {
 					}
 				}
 
-			}
 
-			sb.append("<div style='font-size:90%; color:gray'>");
-			sb.append("Created the " + FormatterUtils.formatDateTimeShort(study.getCreDate()) + " by " + study.getCreUser() + "<br>");
-			if (study.getUpdDate() != null && study.getUpdDate().getTime() > study.getCreDate().getTime() + 1000) {
-				sb.append("Updated the " + FormatterUtils.formatDateTimeShort(study.getUpdDate()) + " by " + study.getUpdUser() + "<br>");
-			}
+				sb.append("<div style='font-size:90%; color:gray'>");
+				sb.append("Created the " + FormatterUtils.formatDateTimeShort(study.getCreDate()) + " by " + study.getCreUser() + "<br>");
+				if (study.getUpdDate() != null && study.getUpdDate().getTime() > study.getCreDate().getTime() + 1000) {
+					sb.append("Updated the " + FormatterUtils.formatDateTimeShort(study.getUpdDate()) + " by " + study.getUpdUser() + "<br>");
+				}
 
-			sb.append("</body></html>");
+				sb.append("</body></html>");
+			}
 		}
 
 		setText(sb.toString());

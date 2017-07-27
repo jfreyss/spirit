@@ -53,18 +53,20 @@ import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.Linke
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
+import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.util.ui.exceltable.Column;
-import com.actelion.research.util.ui.exceltable.ExcelTableModel;
+import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
-public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
+public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 
 	private Biotype type;
+	private Study study;
 
 	private boolean compactView = false;
 
 	public EditBiosampleTableModel() {
-		setBiotype(null);
+		initColumns();
 	}
 
 	public void setCompactView(boolean compactView) {
@@ -84,12 +86,15 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 		initColumns();
 	}
 
+	public void setStudy(Study study) {
+		this.study = study;
+	}
+
 	public void initColumns() {
 		//Analyze the data
 		boolean hasParents2 = false;
 		boolean hasScanPos = false;
 		boolean hasAttachedSamples = false;
-		boolean hasStudiedSamples = false;
 		Set<Biosample> myRows = new HashSet<>(getRows());
 		for (Biosample b : getRows()) {
 			if(b.getParent()!=null && b.getParent().getParent()!=null && !myRows.contains(b.getParent().getParent())) {
@@ -101,9 +106,6 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 			if(b.getAttachedStudy()!=null) {
 				hasAttachedSamples = true;
 			}
-			if(b.getInheritedStudy()!=null) {
-				hasStudiedSamples = true;
-			}
 		}
 
 		List<Column<Biosample, ?>> defaultColumns = new ArrayList<>();
@@ -113,11 +115,6 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 
 		if(hasScanPos) {
 			defaultColumns.add(new ScannedPosColumn());
-		}
-
-		//StudyId
-		if(hasStudiedSamples) {
-			defaultColumns.add(new StudyIdColumn());
 		}
 
 		//Container Elements
@@ -138,11 +135,12 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 
 		//Study Elements
 		if(type!=null && type.getCategory()==BiotypeCategory.LIVING || hasAttachedSamples) {
+			defaultColumns.add(new StudyIdColumn());
 			defaultColumns.add(new StudyGroupColumn(this));
 			defaultColumns.add(new StudySubGroupColumn());
 		}
 		if(type==null || type.getCategory()==BiotypeCategory.SOLID || type.getCategory()==BiotypeCategory.LIQUID) {
-			defaultColumns.add(new StudyPhaseColumn());
+			defaultColumns.add(new StudyPhaseColumn(this));
 		}
 
 		if(type!=null && type.getCategory()==BiotypeCategory.PURIFIED && type.getParent()==null) {
@@ -184,7 +182,7 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 
 	@Override
 	public List<Column<Biosample, ?>> getPossibleColumns() {
-		List<Column<Biosample, ?>> res = new ArrayList<Column<Biosample,?>>();
+		List<Column<Biosample, ?>> res = new ArrayList<>();
 		res.add(new BiosampleElbColumn());
 		res.add(new ContainerTypeColumn());
 		res.add(new ContainerIdColumn());
@@ -193,7 +191,7 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 		res.add(new StudyIdColumn());
 		res.add(new StudyGroupColumn(this));
 		res.add(new StudySubGroupColumn());
-		res.add(new StudyPhaseColumn());
+		res.add(new StudyPhaseColumn(this));
 		res.add(new StudyTopSampleIdColumn());
 		res.add(new ParentBiosampleColumn(this));
 		res.add(new BioQualityColumn());
@@ -209,7 +207,9 @@ public class EditBiosampleTableModel extends ExcelTableModel<Biosample> {
 	@Override
 	public Biosample createRecord() {
 		if(type==null) return null;
-		return new Biosample(type);
+		Biosample res = new Biosample(type);
+		res.setAttachedStudy(study);
+		return res;
 	}
 
 	@Override

@@ -21,8 +21,7 @@
 
 package com.actelion.research.spiritapp.stockcare;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -63,47 +62,47 @@ import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class StockCare extends SpiritFrame implements ISpiritChangeObserver, ISpiritContextObserver {
-	
+
 	private static SplashConfig splashConfig = new SplashConfig(StockCare.class.getResource("stockcare.png"), "StockCare", "StockCare v" + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Actelion - J.Freyss");
-	
+
 	private StockCareItem currentItem;
-	
+
 	private Map<Biotype, BiosampleTab> biotype2tab = new HashMap<>();
 	private BiosampleTab biosampleTab;
 	private LocationTab inventoryTab;
-	
-	
+
+
 	public StockCare() {
-		super("StockCare", "StockCare - (C) Joel Freyss - Actelion 2013");
+		super("StockCare", "StockCare - (C) Joel Freyss - Idorsia Pharmaceuticals Ltd");
 		setStudyLevel(null, true);
-	}	
-	
+	}
+
 	@Override
 	public List<SpiritTab> getTabs() {
 		List<SpiritTab> tabs = new ArrayList<>();
 		tabs.add(new StockCareHome(this));
 
 		long s = System.currentTimeMillis();
-		if(currentItem!=null) {		
+		if(currentItem!=null) {
 			//Create the BiosampleTabs
 			//one tab for the hierarchy and one per aggregated type
 			Biotype[] biotypes = currentItem.getBiotypes();
-			biosampleTab = new StockCareBiosampleTab(biotypes, false);		
+			biosampleTab = new StockCareBiosampleTab(biotypes, false);
 			for(Biotype biotype: currentItem.getBiotypes()) {
 				biotype2tab.put(biotype, biosampleTab);
 			}
 			tabs.add(biosampleTab);
-//			tabbedPane.add(currentItem.getName(), biosampleTab);
-//			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, currentItem.getIcon());
-			
+			//			tabbedPane.add(currentItem.getName(), biosampleTab);
+			//			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, currentItem.getIcon());
+
 			for(final Biotype biotype: currentItem.getAggregatedBiotypes()) {
 				if(biotype.isHidden()) continue;
 				BiosampleTab tab = new StockCareBiosampleTab(new Biotype[] {biotype}, true);
 				tabs.add(tab);
-//				tabbedPane.addTab(biotype.getName(), tab);
-//				tabbedPane.setIconAt(tabbedPane.getTabCount()-1, new ImageIcon(ImageFactory.getImageThumbnail(biotype)));
+				//				tabbedPane.addTab(biotype.getName(), tab);
+				//				tabbedPane.setIconAt(tabbedPane.getTabCount()-1, new ImageIcon(ImageFactory.getImageThumbnail(biotype)));
 			}
-		
+
 			// Create the InventoryTab
 			if(biotypes.length>1 || !biotypes[0].isAbstract()) {
 				inventoryTab = new LocationTab(StockCare.this, currentItem.getBiotypes()[currentItem.getBiotypes().length-1]) {
@@ -114,390 +113,388 @@ public class StockCare extends SpiritFrame implements ISpiritChangeObserver, ISp
 							@Override
 							public java.util.List<Biosample> getBiosamples() {return new ArrayList<Biosample>();}
 						});
-		
-						//Create				
+
+						//Create
 						final JIconButton createButton = new JIconButton(new BiosampleActions.Action_New(currentItem.getMainBiotype()));
-		
+
 						//Checkin
 						final JIconButton checkinButton = new JIconButton(new BiosampleActions.Action_Checkin(null));
-						
+
 						//Checkout
 						final JIconButton checkoutButton = new JIconButton(new BiosampleActions.Action_Checkout(null));
-		
-						getLocationDepictor().addRackDepictorListener(new RackDepictorListener() {					
+
+						getLocationDepictor().addRackDepictorListener(new RackDepictorListener() {
 							@Override
 							public void onSelect(Collection<Integer> pos, final Container lastContainer, boolean dblClick) {
 								final List<Biosample> biosamples = Container.getBiosamples(getLocationDepictor().getSelectedContainers());
-		
+
 								editButton.setAction(new BiosampleActions.Action_BatchEdit(biosamples));
 								checkinButton.setAction(new BiosampleActions.Action_Checkin(biosamples));
 								checkoutButton.setAction(new BiosampleActions.Action_Checkout(biosamples));
-		
+
 							}
 						});
-		
+
 						return UIUtils.createHorizontalBox(Box.createHorizontalGlue(), editButton, createButton, checkinButton, checkoutButton);
 					}
 				};
 				tabs.add(inventoryTab);
-//				tabbedPane.add("Location", inventoryTab);		
-//				tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.LOCATION.getIcon());
+				//				tabbedPane.add("Location", inventoryTab);
+				//				tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.LOCATION.getIcon());
 			}
-	
+
 			//Create the ResultTab
 			if(currentItem.hasResults()) {
 				PivotTemplate[] tpls = currentItem.getDefaultTemplates();
 				ResultTab resultTab = new ResultTab(StockCare.this, currentItem.getMainBiotype()) {
-					@Override 
+					@Override
 					protected JPanel createButtonsPanel() {
 						//Edit button
 						final JIconButton editButton = new JIconButton(new ResultActions.Action_Edit_Results() {
 							@Override
 							public List<Result> getResults() {
 								return getSelection();
-							}					
+							}
 						});
 						editButton.setEnabled(false);
-	
+
 						//Create button
 						final JIconButton createButton = new JIconButton(new ResultActions.Action_New());
-						
+
 						//Enable edit button when selection is made
-						ListSelectionListener listener = new ListSelectionListener() {						
+						ListSelectionListener listener = new ListSelectionListener() {
 							@Override
 							public void valueChanged(ListSelectionEvent e) {
 								List<Result> sel = getSelection();
 								editButton.setEnabled(sel.size() > 0 && SpiritRights.canEditResults(sel, SpiritFrame.getUser()));
 							}
 						};
-						getPivotCardPanel().getPivotTable().getSelectionModel().addListSelectionListener(listener);
-						getPivotCardPanel().getPivotTable().getColumnModel().getSelectionModel().addListSelectionListener(listener);
+						getPivotPanel().getPivotTable().getSelectionModel().addListSelectionListener(listener);
+						getPivotPanel().getPivotTable().getColumnModel().getSelectionModel().addListSelectionListener(listener);
 						return UIUtils.createHorizontalBox(Box.createHorizontalGlue(), editButton, createButton);
-					}		
+					}
 				};
 				if(tpls!=null && tpls.length>0) {
 					resultTab.setCurrentPivotTemplate(currentItem.getDefaultTemplates()[0]);
 					resultTab.setDefaultTemplates(currentItem.getDefaultTemplates());
 				}
 				tabs.add(resultTab);
-//				tabbedPane.add("Result", resultTab);
-//				tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.RESULT.getIcon());
+				//				tabbedPane.add("Result", resultTab);
+				//				tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.RESULT.getIcon());
 			}
-			
-			
-			
+
+
+
 			System.out.println("StockCare.initTabs(2) "+(System.currentTimeMillis()-s)+"ms");
-			
-//			tabbedPane.setSelectedIndex(selectedTabIndex);
+
+			//			tabbedPane.setSelectedIndex(selectedTabIndex);
 		}
-		
-		
+
+
 		return tabs;
 	}
-	
-//	public void eventUserChanged() {
-//
-//		SpiritUser user =  SpiritFrame.getUser();
-//		String userStatus;
-//		if(user==null) {
-//			userStatus = "No user logged in";
-//		} else {
-//			userStatus = user.getUsername() + " ("+ (user.getMainGroup()==null?"NoDept":user.getMainGroup().getName())+ ") logged in";
-//		}
-//		statusBar.setUser(userStatus);
-//		initMenuBar();
-//	}
-	
-//	/**
-//	 * Init Menu. To be called after a biotype is selected
-//	 */
-//	private void initMenuBar() {
-//		JMenuBar menuBar = new JMenuBar();
-//		
-//		JMenu editMenu = new JMenu("Edit");
-//		editMenu.setMnemonic('v');
-//		if(currentItem!=null) {			
-//			editMenu.add(new BiosampleActions.Action_New(currentItem.getMainBiotype()));
-//			AbstractAction action = new ResultActions.Action_New(currentItem.getDefaultTest());
-//			action.setEnabled(currentItem.hasResults());
-//			editMenu.add(action);
-//			editMenu.add(new JSeparator());
-//		}
-//		SpiritMenu.addEditMenuItems(editMenu, null);
-//
-//		menuBar.add(editMenu);
-//		menuBar.add(SpiritMenu.getDevicesMenu());
-//		menuBar.add(SpiritMenu.getToolsMenu());
-//		menuBar.add(SpiritMenu.getAdminMenu());
-//		menuBar.add(SpiritMenu.getHelpMenu(splashConfig));
-//		
-//		setJMenuBar(menuBar);
-//	}
-	
+
+	//	public void eventUserChanged() {
+	//
+	//		SpiritUser user =  SpiritFrame.getUser();
+	//		String userStatus;
+	//		if(user==null) {
+	//			userStatus = "No user logged in";
+	//		} else {
+	//			userStatus = user.getUsername() + " ("+ (user.getMainGroup()==null?"NoDept":user.getMainGroup().getName())+ ") logged in";
+	//		}
+	//		statusBar.setUser(userStatus);
+	//		initMenuBar();
+	//	}
+
+	//	/**
+	//	 * Init Menu. To be called after a biotype is selected
+	//	 */
+	//	private void initMenuBar() {
+	//		JMenuBar menuBar = new JMenuBar();
+	//
+	//		JMenu editMenu = new JMenu("Edit");
+	//		editMenu.setMnemonic('v');
+	//		if(currentItem!=null) {
+	//			editMenu.add(new BiosampleActions.Action_New(currentItem.getMainBiotype()));
+	//			AbstractAction action = new ResultActions.Action_New(currentItem.getDefaultTest());
+	//			action.setEnabled(currentItem.hasResults());
+	//			editMenu.add(action);
+	//			editMenu.add(new JSeparator());
+	//		}
+	//		SpiritMenu.addEditMenuItems(editMenu, null);
+	//
+	//		menuBar.add(editMenu);
+	//		menuBar.add(SpiritMenu.getDevicesMenu());
+	//		menuBar.add(SpiritMenu.getToolsMenu());
+	//		menuBar.add(SpiritMenu.getAdminMenu());
+	//		menuBar.add(SpiritMenu.getHelpMenu(splashConfig));
+	//
+	//		setJMenuBar(menuBar);
+	//	}
+
 	private class StockCareBiosampleTab extends BiosampleTab {
 		private final Biotype aggregatedBiotype;
 		public StockCareBiosampleTab(Biotype[] biotypes, boolean aggregated) {
 			super(StockCare.this, biotypes);
-			this.aggregatedBiotype = aggregated? biotypes[0]: null; 					
+			this.aggregatedBiotype = aggregated? biotypes[0]: null;
 		}
-			
-		@Override 
+
+		@Override
 		protected JPanel createButtonsPanel() {
 			//Edit button
 			final JIconButton editButton = new JIconButton(new BiosampleActions.Action_BatchEdit() {
 				@Override
 				public List<Biosample> getBiosamples() {
 					return getBiosampleOrRackTab().getSelection(Biosample.class);
-				}					
+				}
 			});
 			editButton.setEnabled(false);
+			List<Component> buttons = new ArrayList<>();
 
 
 			final BiosampleActions.Action_New createAction = new BiosampleActions.Action_New(currentItem.getMainBiotype());
 			final BiosampleActions.Action_NewChild childAction = new BiosampleActions.Action_NewChild(null);
-			
+
 			//Create button
-			final JIconButton createButton = aggregatedBiotype==null? 
-					new JIconButton(createAction):
-					new JIconButton(new BiosampleActions.Action_New(aggregatedBiotype));
-			final JIconButton childButton = aggregatedBiotype==null? 
-					new JIconButton(childAction):
-					new JIconButton(new BiosampleActions.Action_New(aggregatedBiotype));
+			final JIconButton createButton = aggregatedBiotype==null? new JIconButton(createAction): new JIconButton(new BiosampleActions.Action_New(aggregatedBiotype));
+			final JIconButton childButton = aggregatedBiotype==null? new JIconButton(childAction): new JIconButton(new BiosampleActions.Action_New(aggregatedBiotype));
 			childButton.setVisible(currentItem.getBiotypes().length>1);
+
+			buttons.add(Box.createHorizontalGlue());
+			buttons.add(editButton);
+			buttons.add(childButton);
+			buttons.add(createButton);
 			//Specific action (only for the main item)
-			Box actionsBox = Box.createHorizontalBox();
 			if(aggregatedBiotype==null) {
 				for(AbstractAction action: currentItem.getActions()) {
 					JIconButton button = new JIconButton(action);
-					actionsBox.add(button);
+					buttons.add(button);
 				}
 			}
-			
+
 			//Enable edit button when selection is made
-			getBiosampleOrRackTab().addPropertyChangeListener(BiosampleOrRackTab.PROPERTY_SELECTION, new PropertyChangeListener() {
-				@Override
-				public void propertyChange(PropertyChangeEvent evt) {
-					List<Biosample> sel = getBiosampleOrRackTab().getSelection(Biosample.class);
-//					createAction.setParent(sel.size()==1? sel.get(0): null);
-					childAction.setParent(sel.size()==1? sel.get(0): null);
-					editButton.setEnabled(sel.size() > 0 && SpiritRights.canEditBiosamples(sel, SpiritFrame.getUser()));
-				}
+			getBiosampleOrRackTab().addPropertyChangeListener(BiosampleOrRackTab.PROPERTY_SELECTION, evt-> {
+				List<Biosample> sel = getBiosampleOrRackTab().getSelection(Biosample.class);
+				//					createAction.setParent(sel.size()==1? sel.get(0): null);
+				childAction.setParent(sel.size()==1? sel.get(0): null);
+				editButton.setEnabled(sel.size() > 0 && SpiritRights.canEditBiosamples(sel, SpiritFrame.getUser()));
 			});
-			
-			return UIUtils.createHorizontalBox(Box.createHorizontalGlue(), editButton, childButton, createButton, actionsBox);
-		}		
+
+			return UIUtils.createHorizontalBox(buttons.toArray(new Component[0]));
+		}
 	}
-	
-//	private void initTabs() {
-//		//Remove all tabs except the home
-//		int selectedTabIndex = tabbedPane.getSelectedIndex();
-//
-//		for(int i=tabbedPane.getTabCount()-1; i>0; i--) {
-//			tabbedPane.remove(i);
-//		}
-//		if(currentItem==null) return;
-//		biotype2tab.clear();
-//		
-//		long s = System.currentTimeMillis();
-//				
-//		//Create the BiosampleTabs
-//		//one tab for the hierarchy and one per aggregated type
-//		Biotype[] biotypes = currentItem.getBiotypes();
-//		biosampleTab = new StockCareBiosampleTab(biotypes, false);		
-//		for(Biotype biotype: currentItem.getBiotypes()) {
-//			biotype2tab.put(biotype, biosampleTab);
-//		}
-//		tabbedPane.add(currentItem.getName(), biosampleTab);
-//		tabbedPane.setIconAt(tabbedPane.getTabCount()-1, currentItem.getIcon());
-//		
-//		for(final Biotype biotype: currentItem.getAggregatedBiotypes()) {
-//			if(biotype.isHidden()) continue;
-//			BiosampleTab tab = new StockCareBiosampleTab(new Biotype[] {biotype}, true); 
-//			tabbedPane.addTab(biotype.getName(), tab);
-//			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, new ImageIcon(ImageFactory.getImageThumbnail(biotype)));
-//		}
-//	
-//		// Create the InventoryTab
-//		if(biotypes.length>1 || !biotypes[0].isAbstract()) {
-//			inventoryTab = new LocationTab(StockCare.this, currentItem.getBiotypes()[currentItem.getBiotypes().length-1]) {
-//				@Override
-//				protected JPanel createButtonsPanel() {
-//					//Edit
-//					final JIconButton editButton = new JIconButton(new BiosampleActions.Action_BatchEdit() {
-//						@Override
-//						public java.util.List<Biosample> getBiosamples() {return new ArrayList<Biosample>();}
-//					});
-//	
-//					//Create				
-//					final JIconButton createButton = new JIconButton(new BiosampleActions.Action_New(currentItem.getMainBiotype()));
-//	
-//					//Checkin
-//					final JIconButton checkinButton = new JIconButton(new BiosampleActions.Action_Checkin(null));
-//					
-//					//Checkout
-//					final JIconButton checkoutButton = new JIconButton(new BiosampleActions.Action_Checkout(null));
-//	
-//					getLocationDepictor().addRackDepictorListener(new RackDepictorListener() {					
-//						@Override
-//						public void onSelect(Collection<Integer> pos, final Container lastContainer, boolean dblClick) {
-//							final List<Biosample> biosamples = Container.getBiosamples(getLocationDepictor().getSelectedContainers());
-//	
-//							editButton.setAction(new BiosampleActions.Action_BatchEdit(biosamples));
-//							checkinButton.setAction(new BiosampleActions.Action_Checkin(biosamples));
-//							checkoutButton.setAction(new BiosampleActions.Action_Checkout(biosamples));
-//	
-//						}
-//					});
-//	
-//					return UIUtils.createHorizontalBox(Box.createHorizontalGlue(), editButton, createButton, checkinButton, checkoutButton);
-//				}
-//			};
-//			tabbedPane.add("Location", inventoryTab);		
-//			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.LOCATION.getIcon());
-//		}
-//
-//		//Create the ResultTab
-//		if(currentItem.hasResults()) {
-//			PivotTemplate[] tpls = currentItem.getDefaultTemplates();
-//			ResultTab resultTab = new ResultTab(StockCare.this, currentItem.getMainBiotype()) {
-//				@Override 
-//				protected JPanel createButtonsPanel() {
-//					//Edit button
-//					final JIconButton editButton = new JIconButton(new ResultActions.Action_Edit_Results() {
-//						@Override
-//						public List<Result> getResults() {
-//							return getSelection();
-//						}					
-//					});
-//					editButton.setEnabled(false);
-//
-//					//Create button
-//					final JIconButton createButton = new JIconButton(new ResultActions.Action_New());
-//					
-//					//Enable edit button when selection is made
-//					ListSelectionListener listener = new ListSelectionListener() {						
-//						@Override
-//						public void valueChanged(ListSelectionEvent e) {
-//							List<Result> sel = getSelection();
-//							editButton.setEnabled(sel.size() > 0 && SpiritRights.canEditResults(sel, SpiritFrame.getUser()));
-//						}
-//					};
-//					getPivotCardPanel().getPivotTable().getSelectionModel().addListSelectionListener(listener);
-//					getPivotCardPanel().getPivotTable().getColumnModel().getSelectionModel().addListSelectionListener(listener);
-//					return UIUtils.createHorizontalBox(Box.createHorizontalGlue(), editButton, createButton);
-//				}		
-//			};
-//			if(tpls!=null && tpls.length>0) {
-//				resultTab.setCurrentPivotTemplate(currentItem.getDefaultTemplates()[0]);
-//				resultTab.setDefaultTemplates(currentItem.getDefaultTemplates());
-//			}
-//			tabbedPane.add("Result", resultTab);
-//			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.RESULT.getIcon());
-//		}
-//		
-//		
-//		
-//		System.out.println("StockCare.initTabs(2) "+(System.currentTimeMillis()-s)+"ms");
-//		
-//		tabbedPane.setSelectedIndex(selectedTabIndex);
-//	}
-	
-//	@SuppressWarnings("unchecked")
-//	@Override 
-//	public <T> void actionModelChanged(final SpiritChangeType action, final Class<T> w, final List<T> details) {
-//		if(action==SpiritChangeType.MODEL_ADDED && w==Biosample.class){
-//			List<Biosample> biosamples = (List<Biosample>) details;
-//			Map<Biotype, List<Biosample>> map = Biosample.mapBiotype(biosamples);
-//			for (Biotype biotype : map.keySet()) {
-//				BiosampleTab tab = biotype2tab.get(biotype);
-//				tabbedPane.setSelectedComponent(tab);
-//				tab.setBiosamples(biosamples);				
-//			}
-//		} else {
-//			SwingUtilities.invokeLater(new Runnable() {			
-//				@Override
-//				public void run() {
-//					Component c = tabbedPane.getSelectedComponent();
-//					if(c instanceof SpiritTab) {
-//						((SpiritTab) c).fireModelChanged(action, w, details);
-//					}								
-//				}
-//			});
-//		}
-//	}
-//	
-//	
-//	@Override
-//	public void setStudy(Study study) {
-//	}
-//
-//	@Override
-//	public void setBiosamples(List<Biosample> biosamples) {
-//		tabbedPane.setSelectedComponent(biosampleTab);
-//		biosampleTab.setBiosamples(biosamples);
-//	}
-//	
-//	@Override
-//	public void setRack(Location rack) {
-//		tabbedPane.setSelectedComponent(biosampleTab);
-//		biosampleTab.setRack(rack);
-//	}
-//
-//	@Override
-//	public void setLocation(Location location, int pos) {
-//		tabbedPane.setSelectedComponent(inventoryTab);
-//		inventoryTab.setBioLocation(location, pos);
-//		if(location!=null) statusBar.setInfos(location + " selected");
-//	}
-//
-//	@Override
-//	public void setResults(List<Result> results) {
-//	}
-//
-//	@Override
-//	public void query(BiosampleQuery q) {
-//	}
-//
-//	@Override
-//	public void query(ResultQuery q, int graphIndex) {
-//	}
-//
-//	@Override
-//	public void setStatus(String status) {
-//		statusBar.setInfos(status);
-//	}
-//	@Override
-//	public void setUser(String status) {
-//		statusBar.setUser(status);
-//	}
-//	
-	
+
+	//	private void initTabs() {
+	//		//Remove all tabs except the home
+	//		int selectedTabIndex = tabbedPane.getSelectedIndex();
+	//
+	//		for(int i=tabbedPane.getTabCount()-1; i>0; i--) {
+	//			tabbedPane.remove(i);
+	//		}
+	//		if(currentItem==null) return;
+	//		biotype2tab.clear();
+	//
+	//		long s = System.currentTimeMillis();
+	//
+	//		//Create the BiosampleTabs
+	//		//one tab for the hierarchy and one per aggregated type
+	//		Biotype[] biotypes = currentItem.getBiotypes();
+	//		biosampleTab = new StockCareBiosampleTab(biotypes, false);
+	//		for(Biotype biotype: currentItem.getBiotypes()) {
+	//			biotype2tab.put(biotype, biosampleTab);
+	//		}
+	//		tabbedPane.add(currentItem.getName(), biosampleTab);
+	//		tabbedPane.setIconAt(tabbedPane.getTabCount()-1, currentItem.getIcon());
+	//
+	//		for(final Biotype biotype: currentItem.getAggregatedBiotypes()) {
+	//			if(biotype.isHidden()) continue;
+	//			BiosampleTab tab = new StockCareBiosampleTab(new Biotype[] {biotype}, true);
+	//			tabbedPane.addTab(biotype.getName(), tab);
+	//			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, new ImageIcon(ImageFactory.getImageThumbnail(biotype)));
+	//		}
+	//
+	//		// Create the InventoryTab
+	//		if(biotypes.length>1 || !biotypes[0].isAbstract()) {
+	//			inventoryTab = new LocationTab(StockCare.this, currentItem.getBiotypes()[currentItem.getBiotypes().length-1]) {
+	//				@Override
+	//				protected JPanel createButtonsPanel() {
+	//					//Edit
+	//					final JIconButton editButton = new JIconButton(new BiosampleActions.Action_BatchEdit() {
+	//						@Override
+	//						public java.util.List<Biosample> getBiosamples() {return new ArrayList<Biosample>();}
+	//					});
+	//
+	//					//Create
+	//					final JIconButton createButton = new JIconButton(new BiosampleActions.Action_New(currentItem.getMainBiotype()));
+	//
+	//					//Checkin
+	//					final JIconButton checkinButton = new JIconButton(new BiosampleActions.Action_Checkin(null));
+	//
+	//					//Checkout
+	//					final JIconButton checkoutButton = new JIconButton(new BiosampleActions.Action_Checkout(null));
+	//
+	//					getLocationDepictor().addRackDepictorListener(new RackDepictorListener() {
+	//						@Override
+	//						public void onSelect(Collection<Integer> pos, final Container lastContainer, boolean dblClick) {
+	//							final List<Biosample> biosamples = Container.getBiosamples(getLocationDepictor().getSelectedContainers());
+	//
+	//							editButton.setAction(new BiosampleActions.Action_BatchEdit(biosamples));
+	//							checkinButton.setAction(new BiosampleActions.Action_Checkin(biosamples));
+	//							checkoutButton.setAction(new BiosampleActions.Action_Checkout(biosamples));
+	//
+	//						}
+	//					});
+	//
+	//					return UIUtils.createHorizontalBox(Box.createHorizontalGlue(), editButton, createButton, checkinButton, checkoutButton);
+	//				}
+	//			};
+	//			tabbedPane.add("Location", inventoryTab);
+	//			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.LOCATION.getIcon());
+	//		}
+	//
+	//		//Create the ResultTab
+	//		if(currentItem.hasResults()) {
+	//			PivotTemplate[] tpls = currentItem.getDefaultTemplates();
+	//			ResultTab resultTab = new ResultTab(StockCare.this, currentItem.getMainBiotype()) {
+	//				@Override
+	//				protected JPanel createButtonsPanel() {
+	//					//Edit button
+	//					final JIconButton editButton = new JIconButton(new ResultActions.Action_Edit_Results() {
+	//						@Override
+	//						public List<Result> getResults() {
+	//							return getSelection();
+	//						}
+	//					});
+	//					editButton.setEnabled(false);
+	//
+	//					//Create button
+	//					final JIconButton createButton = new JIconButton(new ResultActions.Action_New());
+	//
+	//					//Enable edit button when selection is made
+	//					ListSelectionListener listener = new ListSelectionListener() {
+	//						@Override
+	//						public void valueChanged(ListSelectionEvent e) {
+	//							List<Result> sel = getSelection();
+	//							editButton.setEnabled(sel.size() > 0 && SpiritRights.canEditResults(sel, SpiritFrame.getUser()));
+	//						}
+	//					};
+	//					getPivotCardPanel().getPivotTable().getSelectionModel().addListSelectionListener(listener);
+	//					getPivotCardPanel().getPivotTable().getColumnModel().getSelectionModel().addListSelectionListener(listener);
+	//					return UIUtils.createHorizontalBox(Box.createHorizontalGlue(), editButton, createButton);
+	//				}
+	//			};
+	//			if(tpls!=null && tpls.length>0) {
+	//				resultTab.setCurrentPivotTemplate(currentItem.getDefaultTemplates()[0]);
+	//				resultTab.setDefaultTemplates(currentItem.getDefaultTemplates());
+	//			}
+	//			tabbedPane.add("Result", resultTab);
+	//			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.RESULT.getIcon());
+	//		}
+	//
+	//
+	//
+	//		System.out.println("StockCare.initTabs(2) "+(System.currentTimeMillis()-s)+"ms");
+	//
+	//		tabbedPane.setSelectedIndex(selectedTabIndex);
+	//	}
+
+	//	@SuppressWarnings("unchecked")
+	//	@Override
+	//	public <T> void actionModelChanged(final SpiritChangeType action, final Class<T> w, final List<T> details) {
+	//		if(action==SpiritChangeType.MODEL_ADDED && w==Biosample.class){
+	//			List<Biosample> biosamples = (List<Biosample>) details;
+	//			Map<Biotype, List<Biosample>> map = Biosample.mapBiotype(biosamples);
+	//			for (Biotype biotype : map.keySet()) {
+	//				BiosampleTab tab = biotype2tab.get(biotype);
+	//				tabbedPane.setSelectedComponent(tab);
+	//				tab.setBiosamples(biosamples);
+	//			}
+	//		} else {
+	//			SwingUtilities.invokeLater(new Runnable() {
+	//				@Override
+	//				public void run() {
+	//					Component c = tabbedPane.getSelectedComponent();
+	//					if(c instanceof SpiritTab) {
+	//						((SpiritTab) c).fireModelChanged(action, w, details);
+	//					}
+	//				}
+	//			});
+	//		}
+	//	}
+	//
+	//
+	//	@Override
+	//	public void setStudy(Study study) {
+	//	}
+	//
+	//	@Override
+	//	public void setBiosamples(List<Biosample> biosamples) {
+	//		tabbedPane.setSelectedComponent(biosampleTab);
+	//		biosampleTab.setBiosamples(biosamples);
+	//	}
+	//
+	//	@Override
+	//	public void setRack(Location rack) {
+	//		tabbedPane.setSelectedComponent(biosampleTab);
+	//		biosampleTab.setRack(rack);
+	//	}
+	//
+	//	@Override
+	//	public void setLocation(Location location, int pos) {
+	//		tabbedPane.setSelectedComponent(inventoryTab);
+	//		inventoryTab.setBioLocation(location, pos);
+	//		if(location!=null) statusBar.setInfos(location + " selected");
+	//	}
+	//
+	//	@Override
+	//	public void setResults(List<Result> results) {
+	//	}
+	//
+	//	@Override
+	//	public void query(BiosampleQuery q) {
+	//	}
+	//
+	//	@Override
+	//	public void query(ResultQuery q, int graphIndex) {
+	//	}
+	//
+	//	@Override
+	//	public void setStatus(String status) {
+	//		statusBar.setInfos(status);
+	//	}
+	//	@Override
+	//	public void setUser(String status) {
+	//		statusBar.setUser(status);
+	//	}
+	//
+
 	public void setItem(StockCareItem item) {
 		this.currentItem = item;
-//		initMenuBar();
-//		initTabs();
+		//		initMenuBar();
+		//		initTabs();
 		recreateUI();
 		getTabbedPane().setSelectedIndex(1);
 	}
 
-	
+
 	public static void main(String[] args) {
 
 		// Splash
 		SplashScreen2.show(splashConfig);
-		new SwingWorkerExtended() {			
+		new SwingWorkerExtended() {
 			@Override
 			protected void doInBackground() throws Exception {
-				SpiritAction.logUsage("StockCare");					
+				SpiritAction.logUsage("StockCare");
 				JPAUtil.getManager();
 			}
 			@Override
 			protected void done() {
 				Spirit.initUI();
-				new StockCare();				
-			}			
+				new StockCare();
+			}
 		};
 	}
-	
+
 
 }

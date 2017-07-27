@@ -28,7 +28,7 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
+import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
 import com.actelion.research.spiritcore.business.biosample.Container;
@@ -48,7 +48,7 @@ public class DefaultRackDepictorRenderer implements RackDepictorRenderer {
 			bgColor = EMPTY_COLOR;		
 		} else {
 			if(c.getStudy()!=null) {
-				Group gr = c.getFirstGroup();
+				Group gr = c.getGroup();
 				bgColor = gr==null? Color.WHITE: UIUtils.getDilutedColor(gr.getBlindedColor(SpiritFrame.getUsername()), Color.WHITE, .2);
 			} else {
 				Biosample b = c.getBiosamples().isEmpty()? null: c.getBiosamples().iterator().next();

@@ -37,7 +37,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.UIUtils;
 

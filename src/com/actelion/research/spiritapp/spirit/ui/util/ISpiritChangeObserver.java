@@ -21,11 +21,9 @@
 
 package com.actelion.research.spiritapp.spirit.ui.util;
 
-import java.util.List;
-
-
+import java.util.Collection;
 
 public interface ISpiritChangeObserver {
-	
-	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, List<T> details);
+
+	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details);
 }

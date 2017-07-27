@@ -84,11 +84,11 @@ public class EditGroupPanel extends JPanel {
 
 	private final JRadioButton splitRadioButton = new JRadioButton("Normal group assignement");
 	private final PhaseComboBox splitPhaseComboBox;
-	private final JGenericComboBox<Group> splitGroupComboBox;
+	private final GroupComboBox splitGroupComboBox;
 
 	private final JRadioButton divideRadioButton = new JRadioButton("The initial samples are divided into subsamples (ex: animal -> epithelial cells)");
 	private final PhaseComboBox dividePhaseComboBox;
-	private final JGenericComboBox<Group> divideGroupComboBox;
+	private final GroupComboBox divideGroupComboBox;
 	private final SamplingLabel divideSampleLabel = new SamplingLabel();
 	private final JIconButton divideSampleButton = new JIconButton(IconType.EDIT);
 

@@ -45,11 +45,11 @@ import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyActions;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyEditorPane;
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.StudyDepictor;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.HSQLFileAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -292,7 +292,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 			{
 				//StudyId
 				sb.append("<span style='font-size:130%'><a href='stu:" + s.getId() + "' style='font-weight:bold'>" + s.getStudyId() + "</a> ");
-				if(s.getIvv()!=null && s.getIvv().length()>0) sb.append(" / <b>" + s.getIvv() + "</b>");
+				if(s.getLocalId()!=null && s.getLocalId().length()>0) sb.append(" / <b>" + s.getLocalId() + "</b>");
 				sb.append("</span>");
 				
 				//StudyDates / States

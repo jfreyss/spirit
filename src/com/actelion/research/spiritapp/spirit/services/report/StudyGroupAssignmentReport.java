@@ -44,13 +44,13 @@ import com.actelion.research.util.CompareUtils;
 public class StudyGroupAssignmentReport extends AbstractReport {
 
 	public StudyGroupAssignmentReport() {
-		super(ReportCategory.STUDY, 
-				"Group Assignment", 
+		super(ReportCategory.STUDY,
+				"Group Assignment",
 				"Group Assignment done through the Group Assignment Wizard, showing the data before and after the randomization.<ul>"
-				+ "<li>Each tab shows the assignment done at one given phase</ul>"
-				+ MiscUtils.convert2Html("No\tBW\tTopId\tNewNo\tContainerId\tGroup\tMetadata\tTreatment\n"
-						+ "\t\tTopId1\n"
-						+ "\t\tTopId2\n"));
+						+ "<li>Each tab shows the assignment done at one given phase</ul>"
+						+ MiscUtils.convert2Html("No\tBW\tParticipantId\tNewNo\tContainerId\tGroup\tMetadata\tTreatment\n"
+								+ "\t\tParticipantId1\n"
+								+ "\t\tParticipantId2\n"));
 	}
 
 
@@ -61,13 +61,13 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 		List<Phase> phases = new ArrayList<>();
 		phases.addAll(study.getPhases());
 		phases.add(null);
-		
+
 		//Rnd Data
 		for(Phase phase: phases) {
 
 			List<AttachedBiosample> samples;
 			int nData;
-			
+
 			if(phase==null) {
 				//Current Status
 				nData = 0;
@@ -87,16 +87,16 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 			} else {
 				//Intermediate phase
 				if(!phase.hasRandomization()) continue;
-	
+
 				//Load data
 				Randomization rnd = phase.getRandomization();
 				DAOStudy.loadBiosamplesFromStudyRandomization(rnd);
 				samples = rnd.getSamples();
 				if(samples.size()==0) continue;
-				
+
 				nData = rnd.getNData();
 			}
-			
+
 			Collections.sort(samples, new Comparator<AttachedBiosample>() {
 				@Override
 				public int compare(AttachedBiosample o1, AttachedBiosample o2) {
@@ -109,21 +109,21 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 				}
 			});
 
-			
+
 			//Create Header
 			Sheet sheet = createSheet(wb, "GA "+ (phase==null?"Final": phase.getShortName()));
 			sheet.setFitToPage(true);
-			createHeadersWithPhase(sheet, study, phase, "Group Assignment Data");	
+			createHeadersWithPhase(sheet, study, phase, "Group Assignment Data");
 			sheet.createRow(4).setHeightInPoints(23f);
-			
-			
+
+
 			int col = 0;
 			set(sheet, 5, col++, "No.", Style.S_TH_CENTER);
 			set(sheet, 5, col++, "BW [g]", Style.S_TH_CENTER);
 			for(int i=0; i<nData; i++) set(sheet, 5, col++, "Data"+(i+1), Style.S_TH_CENTER);
 			set(sheet, 4, 0, "Before Rando.", Style.S_TH_CENTER, 1, col);
-			
-			
+
+
 			set(sheet, 5, col++, "AnimalId", Style.S_TH_CENTER);
 			set(sheet, 5, col++, "New No.", Style.S_TH_CENTER);
 			set(sheet, 5, col++, "Cage", Style.S_TH_CENTER);
@@ -137,7 +137,7 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 			set(sheet, 5, col++, "Treatment", Style.S_TH_CENTER);
 			set(sheet, 4, 2, "After Rando.", Style.S_TH_CENTER, 1, col-2);
 			int maxCol = col-1;
-			
+
 			//Group separator?
 			int line = 5;
 			String cageBefore = null;
@@ -145,11 +145,11 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 			for (AttachedBiosample r : samples) {
 				if(r.getBiosample()==null || r.getBiosample().getId()<=0) continue;
 				if(CompareUtils.compare(groupBefore, r.getGroup())!=0) {
-					drawLineUnder(sheet, line, 0, maxCol, (short)2);								
+					drawLineUnder(sheet, line, 0, maxCol, (short)2);
 				} else if(CompareUtils.compare(cageBefore, r.getContainerId())!=0) {
-					drawLineUnder(sheet, line, 0, maxCol, (short)1);				
+					drawLineUnder(sheet, line, 0, maxCol, (short)1);
 				}
-				
+
 				line++;
 				Group g = r.getGroup();
 				Biosample b = r.getBiosample();
@@ -178,5 +178,5 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 
 		if(wb.getNumberOfSheets()==0) throw new Exception("There was no randomization fone for "+study);
 	}
-	
+
 }

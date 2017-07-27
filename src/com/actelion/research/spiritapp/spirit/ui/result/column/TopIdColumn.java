@@ -30,28 +30,27 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class TopIdColumn extends Column<Result, Biosample> {
-	
+
 	private SampleIdLabel sampleIdLabel = new SampleIdLabel();
 
 	public TopIdColumn() {
-		super("TopId", Biosample.class);
-		setHideable(true);
+		super("ParticipantId", Biosample.class);
 	}
-	
+
 	@Override
 	public float getSortingKey() {
 		return 2.6f;
 	}
-	
+
 	@Override
 	public Biosample getValue(Result row) {
 		if(row.getBiosample()==null) return null;
 		Biosample top = row.getBiosample().getTopParent();
-		return top==row.getBiosample()? null: top;
+		return top;
 	}
 	@Override
 	public boolean isEditable(Result row) {return false;}
-	
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
 		sampleIdLabel.setBiosample((Biosample)value);

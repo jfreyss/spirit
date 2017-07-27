@@ -29,29 +29,30 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.actelion.research.spiritcore.business.Quality;
+import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
 public class BiosampleQuery implements Serializable {
-	
+
 	public static final int SELECT_ALL = 0;
 	public static final int SELECT_MOST_LEFT = 1;
 	public static final int SELECT_MOST_RIGHT = 2;
-	
+
 	private Location locationRoot;
-	
+
 	/**Study.Id*/
 	private Collection<Integer> sids;
 	/**Biosample.Id*/
 	private Collection<Integer> bids;
-	
+
 	private Collection<LocPos> locPoses;
-	
+
 	/**Locations*/
 	private Collection<Location> locations;
-	
-	
+
+
 	private String elb;
 	private String studyIds;
 	private String group;
@@ -59,19 +60,19 @@ public class BiosampleQuery implements Serializable {
 	private Phase phase;
 	private String sampleIds;
 	private String containerIds;
-	private String sampleIdOrContainerIds;	
-	private String keywords;	
-	private String comments;	
+	private String sampleIdOrContainerIds;
+	private String keywords;
+	private String comments;
 	private Biotype[] biotypes;
-	
+
 	private String sampleId;
 	private String sampleNames;
-	
+
 	private String parentSampleIds;
 	private String topSampleIds;
-	
+
 	private Map<BiosampleLinker, String> linker2values = new HashMap<>();
-	
+
 	private Date expiryDateMin;
 	private Date expiryDateMax;
 	private String updUser;
@@ -79,21 +80,21 @@ public class BiosampleQuery implements Serializable {
 	private String creUser;
 	private String updDays;
 	private String creDays;
-	private String department;
+	private EmployeeGroup department;
 	private boolean searchMySamples = false;
 	private ContainerType containerType;
 	private int selectOneMode = 0;
 	private Quality minQuality = null;
 	private Quality maxQuality = null;
-	
-	
-	
+
+
+
 	private boolean filterTrashed = false;
 	private boolean filterNotInContainer = false;
 	private boolean filterNotInLocation = false;
 	private boolean filterInStudy = false;
-	
-	
+
+
 	public void copyFrom(BiosampleQuery copy) {
 		bids = copy.bids;
 		elb = copy.elb;
@@ -109,7 +110,7 @@ public class BiosampleQuery implements Serializable {
 		locationRoot = copy.locationRoot;
 		locations = copy.locations==null? null: new ArrayList<>(copy.locations);
 		locPoses = copy.locPoses==null? null: new ArrayList<>(copy.locPoses);
-			
+
 		linker2values = new HashMap<>(copy.linker2values);
 		biotypes = copy.biotypes;
 		keywords = copy.keywords;
@@ -131,7 +132,7 @@ public class BiosampleQuery implements Serializable {
 		filterNotInLocation = copy.filterNotInLocation;
 		filterTrashed = copy.filterTrashed;
 	}
-	
+
 	public String getStudyIds() {
 		return studyIds;
 	}
@@ -167,11 +168,11 @@ public class BiosampleQuery implements Serializable {
 		this.updUser = updUser;
 	}
 
-	public String getDepartment() {
+	public EmployeeGroup getDepartment() {
 		return department;
 	}
 
-	public void setDepartment(String department) {
+	public void setDepartment(EmployeeGroup department) {
 		this.department = department;
 	}
 
@@ -181,16 +182,16 @@ public class BiosampleQuery implements Serializable {
 	public void setUpdDate(String updDate) {
 		this.updDate = updDate;
 	}
-	
-	
+
+
 	public void setCreDays(int days) {
 		this.creDays = days<=0? null: days+" days";
 	}
-	
+
 	public void setUpdDays(int days) {
 		this.updDays = days<=0? null: days+" days";
 	}
-	
+
 
 	/**
 	 * @return the updDate
@@ -250,61 +251,61 @@ public class BiosampleQuery implements Serializable {
 	}
 	public String getSampleNames() {
 		return sampleNames;
-	}	
-	
+	}
+
 	public void setElbs(String elb) {
 		this.elb = elb;
 	}
 	public String getElbs() {
 		return elb;
 	}
-	
+
 	public static BiosampleQuery createQueryForSampleNames(String sampleNames) {
 		BiosampleQuery q = new BiosampleQuery();
 		q.setSampleNames(sampleNames);
-		return q;		
+		return q;
 	}
 	public static BiosampleQuery createQueryForStudyIds(String studyIds) {
 		BiosampleQuery q = new BiosampleQuery();
 		q.setStudyIds(studyIds);
-		return q;		
+		return q;
 	}
 	public static BiosampleQuery createQueryForSids(Collection<Integer> sids) {
 		BiosampleQuery q = new BiosampleQuery();
 		q.setSids(sids);
-		return q;		
+		return q;
 	}
 	public static BiosampleQuery createQueryForBiotype(Biotype biotype) {
 		BiosampleQuery q = new BiosampleQuery();
 		q.setBiotype(biotype);
-		return q;		
+		return q;
 	}
 	public static BiosampleQuery createQueryForPhase(Phase phase) {
 		BiosampleQuery q = new BiosampleQuery();
 		q.setPhase(phase);
-		return q;		
+		return q;
 	}
 
 	public static BiosampleQuery createQueryForSampleIdOrContainerIds(String ids) {
 		BiosampleQuery q = new BiosampleQuery();
 		q.setSampleIdOrContainerIds(ids);
-		if(ids==null || ids.length()==0) q.setSampleId("---NO ENTRY---"); 
-		return q;				
+		if(ids==null || ids.length()==0) q.setSampleId("---NO ENTRY---");
+		return q;
 	}
 	public static BiosampleQuery createQueryForContainerIds(Collection<String> ids) {
 		BiosampleQuery q = new BiosampleQuery();
 		q.setContainerIds(MiscUtils.flatten(ids, " "));
-		if(ids==null || ids.size()==0) q.setSampleId("---NO ENTRY---"); 
-		return q;				
+		if(ids==null || ids.size()==0) q.setSampleId("---NO ENTRY---");
+		return q;
 	}
 	public static BiosampleQuery createQueryForLocPoses(Collection<LocPos> locPoses) {
 		BiosampleQuery q = new BiosampleQuery();
 		q.setLocPoses(locPoses);
 		return q;
 	}
-	
 
-	
+
+
 	public String getContainerIds() {
 		return containerIds;
 	}
@@ -342,7 +343,7 @@ public class BiosampleQuery implements Serializable {
 	public void setSelectOneMode(int selectOneMode) {
 		this.selectOneMode = selectOneMode;
 	}
-	
+
 	/**
 	 * @param locationId the locationId to set
 	 */
@@ -356,19 +357,19 @@ public class BiosampleQuery implements Serializable {
 	public Location getLocationRoot() {
 		return locationRoot;
 	}
-	
-	
+
+
 
 	public boolean isEmpty() {
 		return locationRoot==null && isNull(elb) && isNull(studyIds)
-		 && isNull(group) && phase==null && isNull(sampleId) && isNull(topSampleIds) && isNull(containerIds) && isNull(sampleIdOrContainerIds) 
-		 && isNull(sampleNames)	&& isNull(sampleIds)
-		 && (biotypes==null || biotypes.length==0) 
-		 && isNull(locations)
-		 && isNull(updUser) && isNull(updDate) && isNull(creUser) && isNull(updDays) && isNull(creDays) && isNull(department)
-		 && !searchMySamples && containerType==null;
+				&& isNull(group) && phase==null && isNull(sampleId) && isNull(topSampleIds) && isNull(containerIds) && isNull(sampleIdOrContainerIds)
+				&& isNull(sampleNames)	&& isNull(sampleIds)
+				&& (biotypes==null || biotypes.length==0)
+				&& isNull(locations)
+				&& isNull(updUser) && isNull(updDate) && isNull(creUser) && isNull(updDays) && isNull(creDays) && department==null
+				&& !searchMySamples && containerType==null;
 	}
-	
+
 	private boolean isNull(String s) {
 		return s==null || s.trim().length()==0;
 	}
@@ -383,41 +384,41 @@ public class BiosampleQuery implements Serializable {
 		if(query.getStudyIds()!=null) {
 			sb.append(" "+query.getStudyIds());
 			if(query.getGroup()!=null && query.getGroup().length()>0) {
-				sb.append("/" + query.getGroup());				
+				sb.append("/" + query.getGroup());
 			}
 			if(query.getPhase()!=null) {
-				sb.append("/" + query.getPhase());				
+				sb.append("/" + query.getPhase());
 			}
 			if(query.getPhases()!=null) {
-				sb.append("/" + query.getPhases());				
+				sb.append("/" + query.getPhases());
 			}
 		}
-		
-		
+
+
 
 		if(query.getContainerType()!=null) sb.append(" "+query.getContainerType());
 		if(query.getContainerIds()!=null) sb.append(" "+query.getContainerIds());
-		
-		
+
+
 		if(query.getBiotypes()!=null && query.getBiotypes().length>0) sb.append(" "+query.getBiotypes()[0].getName());
 		if(query.getSampleId()!=null) sb.append(" "+query.getSampleId());
 		if(query.getParentSampleIds()!=null) sb.append(" "+query.getParentSampleIds());
 		if(query.getTopSampleIds()!=null) sb.append(" "+query.getTopSampleIds());
-	
+
 		if(query.getSampleNames()!=null) sb.append(" "+query.getSampleNames());
-//		if(query.getParentName()!=null) sb.append(" "+query.getParentName());
-//		if(query.getTopName()!=null) sb.append(" "+query.getTopName());
-			
+		//		if(query.getParentName()!=null) sb.append(" "+query.getParentName());
+		//		if(query.getTopName()!=null) sb.append(" "+query.getTopName());
+
 		if(query.getKeywords()!=null) sb.append(" "+query.getKeywords());
-		
+
 		for(String s :query.getLinker2values().values()) {
 			if(s!=null) sb.append(" "+s);
 		}
 
 		if(query.getDepartment()!=null) {
 			sb.append(" "+query.getDepartment());
-		}		
-		
+		}
+
 		if(query.getCreUser()!=null) {
 			sb.append(" "+query.getCreUser());
 		}
@@ -430,8 +431,8 @@ public class BiosampleQuery implements Serializable {
 		if(query.getUpdDays()!=null) {
 			sb.append(" "+query.getUpdDays());
 		}
-		
-		
+
+
 		String n = sb.toString().trim();
 		n = n.replaceAll("[ ]+", " ");
 		n = n.replaceAll("[ ]+:", ":");
@@ -480,7 +481,7 @@ public class BiosampleQuery implements Serializable {
 	public boolean isFilterNotInContainer() {
 		return filterNotInContainer;
 	}
-	
+
 	public void setFilterNotInContainer(boolean filterNotInContainer) {
 		this.filterNotInContainer = filterNotInContainer;
 	}
@@ -506,11 +507,11 @@ public class BiosampleQuery implements Serializable {
 	public void setMinQuality(Quality quality) {
 		this.minQuality = quality;
 	}
-	
+
 	public Quality getMaxQuality() {
 		return maxQuality;
 	}
-	
+
 	public void setMaxQuality(Quality maxQuality) {
 		this.maxQuality = maxQuality;
 	}
@@ -522,7 +523,7 @@ public class BiosampleQuery implements Serializable {
 		return filterInStudy;
 	}
 
-	
+
 	public boolean isFilterNotInLocation() {
 		return filterNotInLocation;
 	}
@@ -537,7 +538,7 @@ public class BiosampleQuery implements Serializable {
 	public void setFilterInStudy(boolean filterInStudy) {
 		this.filterInStudy = filterInStudy;
 	}
-	
+
 	public Map<BiosampleLinker, String> getLinker2values() {
 		return linker2values;
 	}
@@ -570,15 +571,15 @@ public class BiosampleQuery implements Serializable {
 	public void setExpiryDateMin(Date expiryDateMin) {
 		this.expiryDateMin = expiryDateMin;
 	}
-	
+
 	public Date getExpiryDateMax() {
 		return expiryDateMax;
 	}
-	
+
 	public void setExpiryDateMax(Date expiryDateMax) {
 		this.expiryDateMax = expiryDateMax;
 	}
-	
+
 	public String getPhases() {
 		return phases;
 	}

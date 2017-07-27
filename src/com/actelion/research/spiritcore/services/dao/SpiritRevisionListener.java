@@ -26,12 +26,18 @@ import org.hibernate.envers.RevisionListener;
 
 import com.actelion.research.spiritcore.services.SpiritUser;
 
+/**
+ * When a new revision is created, we make sure to add the logged in user, and the date of the DB.
+ *
+ * @author Joel Freyss
+ *
+ */
 @RevisionEntity
 public class SpiritRevisionListener implements RevisionListener {
 
 	@Override
 	public void newRevision(Object obj) {
-		SpiritRevisionEntity rev = (SpiritRevisionEntity) obj;		
+		SpiritRevisionEntity rev = (SpiritRevisionEntity) obj;
 		SpiritUser user = JPAUtil.getSpiritUser();
 		rev.setUserId(user==null?"NA": user.getUsername());
 		rev.setTimestamp(JPAUtil.getCurrentDateFromDatabase().getTime());

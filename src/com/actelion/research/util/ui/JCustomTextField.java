@@ -26,6 +26,10 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.Shape;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
@@ -92,7 +96,7 @@ public class JCustomTextField extends JTextField {
 	public JCustomTextField(int type) {
 		setType(type);
 		init();
-		if(type==DOUBLE  || type==INTEGER) setMaxChars(10);
+		if(type==DOUBLE || type==INTEGER) setMaxChars(10);
 	}
 
 	public JCustomTextField(int columns, String initial, String textWhenEmpty) {
@@ -108,20 +112,22 @@ public class JCustomTextField extends JTextField {
 	}
 
 	public JCustomTextField(int type, String initial) {
-		this(type, initial, type==INTEGER? 3: type==DOUBLE? 5: type==DATE? 8: 15);
-	}
-
-	public JCustomTextField(int type, String initial, int columns) {
 		super();
 		setType(type);
 		init();
 		super.setText(initial);
+	}
+
+	public JCustomTextField(int type, String initial, int columns) {
+		this(type, initial);
 		setColumns(columns);
 	}
 
 	public void setIcon(Icon icon) {
+		Insets insets = getMargin();
+		if(insets==null) insets = new Insets(0, 0, 0, 12);
+		setMargin(new Insets(insets.top, insets.left - (this.icon==null?0: this.icon.getIconWidth()) + (icon==null?0: icon.getIconWidth()), insets.bottom, insets.right));
 		this.icon = icon;
-		setMargin(new Insets(0, icon==null? 0: icon.getIconWidth()+5, 0, 0));
 		repaint();
 	}
 
@@ -131,7 +137,7 @@ public class JCustomTextField extends JTextField {
 
 	public void setType(int type) {
 		setHorizontalAlignment(type==DOUBLE || type==INTEGER? JTextField.RIGHT: JTextField.LEFT);
-		setColumns(type==INTEGER? 3: type==DOUBLE? 5: type==DATE? 8: 18);
+		setColumns(type==INTEGER? 3: type==DOUBLE? 5: type==DATE? 8: 14);
 	}
 
 	@Override
@@ -142,6 +148,12 @@ public class JCustomTextField extends JTextField {
 	@Override
 	public Dimension getMinimumSize() {
 		return getPreferredSize();
+	}
+
+	@Override
+	public void setPreferredSize(Dimension preferredSize) {
+		setColumns(0);
+		super.setPreferredSize(preferredSize);
 	}
 
 	public Integer getTextInt() {
@@ -160,6 +172,11 @@ public class JCustomTextField extends JTextField {
 		}
 	}
 
+	/**
+	 * Returns the date, parsed according to the format set up in FormatterUtils
+	 * @return
+	 * @throws Exception if the text is not empty and the date is not well formatted
+	 */
 	public Date getTextDate() throws Exception {
 		Date parsed = FormatterUtils.parseDate(getText());
 		if(parsed==null && getText().length()>0) throw new Exception("The date not well formatted");
@@ -230,8 +247,12 @@ public class JCustomTextField extends JTextField {
 			}
 		});
 
-		addActionListener(e-> {
-			JCustomTextField.this.fireTextChanged();
+		addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JCustomTextField.this.fireTextChanged();
+			}
 		});
 	}
 
@@ -264,23 +285,28 @@ public class JCustomTextField extends JTextField {
 		super.paintComponent(g);
 
 
+		//Paint Icon
 		int textX = 5;
 		if(this.icon!=null){
 			int iconWidth = icon.getIconWidth();
 			int iconHeight = icon.getIconHeight();
 			textX = textX + iconWidth + 2;
 			int y = (this.getHeight() - iconHeight)/2;
-			icon.paintIcon(this, g, 2, y);
+			this.icon.paintIcon(this, g, 2, y);
 		}
 
+		//Paint textWhenEmpty
 		if(getText().length()==0 && textWhenEmpty!=null) {
 			g.setColor(isEnabled()? LABEL_COLOR: LABEL_COLOR_DISABLED);
 			g.setFont(getFont());
+			Shape clip = g.getClip();
+			g.setClip(new Rectangle(textX, 2, getWidth()-textX-16, getHeight()-4));
 			if(getHorizontalAlignment()==SwingConstants.RIGHT) {
 				g.drawString(textWhenEmpty, getWidth() - g.getFontMetrics().stringWidth(textWhenEmpty)- 5, getHeight()/2+5);
 			} else {
 				g.drawString(textWhenEmpty, textX, getHeight()/2+5);
 			}
+			g.setClip(clip);
 		}
 	}
 

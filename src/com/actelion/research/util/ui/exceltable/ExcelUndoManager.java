@@ -31,7 +31,7 @@ import javax.swing.undo.UndoableEdit;
 
 @SuppressWarnings("rawtypes")
 public class ExcelUndoManager extends UndoManager {
-	
+
 
 	protected class OneChangeEdit extends AbstractUndoableEdit {
 		private int columnIndex;
@@ -45,10 +45,10 @@ public class ExcelUndoManager extends UndoManager {
 			this.oldValue = oldValue;
 			this.newValue = newValue;
 		}
-		
+
 		@Override
 		public void undo() {
-			super.undo();			
+			super.undo();
 			table.setValueAt(oldValue, rowIndex, columnIndex);
 			table.getModel().fireTableCellUpdated(rowIndex, columnIndex);
 			table.setRowSelectionInterval(rowIndex, rowIndex);
@@ -57,7 +57,7 @@ public class ExcelUndoManager extends UndoManager {
 
 		@Override
 		public void redo() {
-			super.redo();			
+			super.redo();
 			table.setValueAt(newValue, rowIndex, columnIndex);
 			table.getModel().fireTableCellUpdated(rowIndex, columnIndex);
 			table.setRowSelectionInterval(rowIndex, rowIndex);
@@ -68,17 +68,17 @@ public class ExcelUndoManager extends UndoManager {
 			return "Edit:"+rowIndex+"x"+columnIndex+" - " + oldValue +" -> "+ newValue;
 		}
 	}
-	
+
 	protected class TransactionEdit extends AbstractUndoableEdit {
 		List<OneChangeEdit> changes = new ArrayList<OneChangeEdit>();
 		boolean closed;
 		public TransactionEdit() {
-			
+
 		}
-		
+
 		@Override
 		public void undo() {
-			super.undo();			
+			super.undo();
 			for (int i = changes.size()-1; i>=0; i--) {
 				changes.get(i).undo();
 			}
@@ -86,7 +86,7 @@ public class ExcelUndoManager extends UndoManager {
 
 		@Override
 		public void redo() {
-			super.redo();			
+			super.redo();
 			for (int i = 0; i<changes.size(); i++) {
 				changes.get(i).redo();
 			}
@@ -96,24 +96,24 @@ public class ExcelUndoManager extends UndoManager {
 			return "TransactionEdit closed="+closed;
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	protected class RowEdit<ROW> extends AbstractUndoableEdit {
 		private int row;
 		private ROW oldRow;
 		private ROW newRow;
-		
+
 		public RowEdit(int row, ROW oldRow, ROW newRow) {
 			if(row<0) throw new IllegalArgumentException("Invalid row "+row);
 			this.row = row;
 			this.oldRow = oldRow;
 			this.newRow = newRow;
 		}
-		
+
 		@Override
 		public void undo() {
-			super.undo();			
-			ExcelTableModel<ROW> model = table.getModel();
+			super.undo();
+			ExtendTableModel<ROW> model = table.getModel();
 			model.getRows().set(row, oldRow);
 			table.getModel().reorderTree();
 			table.setRowSelectionInterval(row, row);
@@ -123,7 +123,7 @@ public class ExcelUndoManager extends UndoManager {
 		@Override
 		public void redo() {
 			super.redo();
-			ExcelTableModel<ROW> model = table.getModel();
+			ExtendTableModel<ROW> model = table.getModel();
 			model.getRows().set(row, newRow);
 			table.getModel().reorderTree();
 			table.setRowSelectionInterval(row, row);
@@ -134,20 +134,20 @@ public class ExcelUndoManager extends UndoManager {
 			return "RowEdit "+row+" "+oldRow+">"+newRow;
 		}
 	}
-	
-	
+
+
 	//private Object old = null;
 	private ExcelTable table;
 	private int push = 0;
 	private boolean transaction = false;
 	private boolean hasChanges = false;
-	
-	
+
+
 	public ExcelUndoManager(ExcelTable table) {
 		this.table = table;
-	}	
-	
-	
+	}
+
+
 	@Override
 	public void undo() {
 		table.editingStopped(new ChangeEvent(table));
@@ -178,23 +178,23 @@ public class ExcelUndoManager extends UndoManager {
 	public boolean isPushed() {
 		return push>0;
 	}
-	
+
 	@Override
 	public synchronized boolean addEdit(UndoableEdit anEdit) {
 		if(push>0) return false;
 
 		if(anEdit instanceof OneChangeEdit) {
-			OneChangeEdit oneEdit = (OneChangeEdit) anEdit;			
-			if((oneEdit.oldValue==null && oneEdit.oldValue==oneEdit.newValue) || 
-				(oneEdit.oldValue!=null && oneEdit.newValue!=null && 
+			OneChangeEdit oneEdit = (OneChangeEdit) anEdit;
+			if((oneEdit.oldValue==null && oneEdit.oldValue==oneEdit.newValue) ||
+					(oneEdit.oldValue!=null && oneEdit.newValue!=null &&
 					oneEdit.oldValue.toString().equals(oneEdit.newValue.toString()))) return false;
 		}
-		
+
 		hasChanges = true;
-		if(anEdit instanceof OneChangeEdit) {		
+		if(anEdit instanceof OneChangeEdit) {
 			OneChangeEdit oneEdit = (OneChangeEdit) anEdit;
-			
-			
+
+
 			if(transaction) {
 				if((lastEdit() instanceof TransactionEdit) && !((TransactionEdit) lastEdit()).closed) {
 					TransactionEdit last = (TransactionEdit) lastEdit();
@@ -208,17 +208,17 @@ public class ExcelUndoManager extends UndoManager {
 				}
 				return true;
 			} else {
-				OneChangeEdit last = (lastEdit() instanceof OneChangeEdit)? (OneChangeEdit) lastEdit(): null;				
+				OneChangeEdit last = (lastEdit() instanceof OneChangeEdit)? (OneChangeEdit) lastEdit(): null;
 				if(last!=null && last.columnIndex==oneEdit.columnIndex && last.rowIndex==oneEdit.rowIndex) {
 					oneEdit.oldValue = last.oldValue;
 					if(((oneEdit.oldValue==null || oneEdit.oldValue.equals("")) && (oneEdit.newValue==null || oneEdit.newValue.equals(""))) || (oneEdit.oldValue!=null && oneEdit.oldValue.equals(oneEdit.newValue))) return false;
 					replaceEdit(oneEdit);
 				} else {
 					if(((oneEdit.oldValue==null || oneEdit.oldValue.equals("")) && (oneEdit.newValue==null || oneEdit.newValue.equals(""))) || (oneEdit.oldValue!=null && oneEdit.oldValue.equals(oneEdit.newValue))) return false;
-					super.addEdit(oneEdit);			
+					super.addEdit(oneEdit);
 				}
 				return true;
-			}		
+			}
 		} else {
 			super.addEdit(anEdit);
 			return true;
@@ -227,12 +227,12 @@ public class ExcelUndoManager extends UndoManager {
 
 
 	public void setTransaction(boolean transaction) {
-//		System.out.println("ExcelUndoManager.setTransaction() = "+transaction);
+		//		System.out.println("ExcelUndoManager.setTransaction() = "+transaction);
 		this.transaction = transaction;
 		if(!transaction && lastEdit() instanceof TransactionEdit) {
 			TransactionEdit last = (TransactionEdit) lastEdit();
-			last.closed = true;			
-//			System.out.println("ExcelUndoManager.setTransaction() Closed " );
+			last.closed = true;
+			//			System.out.println("ExcelUndoManager.setTransaction() Closed " );
 		}
 	}
 
@@ -252,9 +252,9 @@ public class ExcelUndoManager extends UndoManager {
 	public boolean hasChanges() {
 		return hasChanges;
 	}
-	
+
 	public<T> void addOfflineRowChange(int row, T oldRow, T newRow) {
-		addEdit(new RowEdit<T>(row, oldRow, newRow));		
+		addEdit(new RowEdit<T>(row, oldRow, newRow));
 	}
-	
+
 }

@@ -47,11 +47,11 @@ public class AnimalCare extends SpiritFrame {
 	private static SplashConfig splashConfig = new SplashConfig(AnimalCare.class.getResource("animalcare.jpg"), "AnimalCare", "AnimalCare v" + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Actelion - J.Freyss");
 
 	public AnimalCare() {
-		super("AnimalCare", "AnimalCare - (C) Joel Freyss - Actelion");	
+		super("AnimalCare", "AnimalCare - (C) Joel Freyss - Idorsia Pharmaceuticals Ltd");
 		setStudyLevel(RightLevel.BLIND, false);
-		
+
 	}
-	
+
 	@Override
 	public List<SpiritTab> getTabs() {
 		List<SpiritTab> tabs = new ArrayList<>();
@@ -62,81 +62,81 @@ public class AnimalCare extends SpiritFrame {
 		tabs.add(new ResultTab(this));
 		return tabs;
 	}
-	
-//	@Override
-//	public <T> void actionModelChanged(final SpiritChangeType action, final Class<T> w, final List<T> details) {
-//		new SwingWorkerExtended("Refreshing", this,  SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
-//			@Override
-//			protected void done() {
-//				if(action==SpiritChangeType.LOGIN) {					
-////					recreateUI();
-//				} else if(w==Biotype.class || w==Test.class) {					
-//					//Refresh all tabs to refresh filters
-////					refreshTabs();
-//				} else {					
-//					
-//					//Switch to appropriate tab
-//					if(w==Study.class) {
-//						tabbedPane.setSelectedComponent(studyTab);
-//					} else if(w==Biosample.class) {
-//						tabbedPane.setSelectedComponent(biosampleTab);
-//					} else if(w==Location.class) {
-//						tabbedPane.setSelectedComponent(locationTab);
-//					} else if(w==Result.class) {
-//						tabbedPane.setSelectedComponent(resultTab);
-//					}
-//					 
-//					//Fire event
-//					Component c = tabbedPane.getSelectedComponent();					
-//					if(c instanceof SpiritTab) {
-//						((SpiritTab) c).fireModelChanged(action, w, details);
-//					}
-//				}
-//			}
-//		};
-//	}
-	
-//	public void eventUserChanged() {
-//		if(SpiritFrame.getUser()!=null) {
-//			statusBar.setUser("Logged in as " + SpiritFrame.getUser().getUsername() + " - " + (SpiritFrame.getUser().getMainGroup()!=null? SpiritFrame.getUser().getMainGroup().getName():""));
-//		}
-//		dashboardTab.refresh();
-//		studyTab.refresh();
-//	}	
 
-	
-	
+	//	@Override
+	//	public <T> void actionModelChanged(final SpiritChangeType action, final Class<T> w, final List<T> details) {
+	//		new SwingWorkerExtended("Refreshing", this,  SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+	//			@Override
+	//			protected void done() {
+	//				if(action==SpiritChangeType.LOGIN) {
+	////					recreateUI();
+	//				} else if(w==Biotype.class || w==Test.class) {
+	//					//Refresh all tabs to refresh filters
+	////					refreshTabs();
+	//				} else {
+	//
+	//					//Switch to appropriate tab
+	//					if(w==Study.class) {
+	//						tabbedPane.setSelectedComponent(studyTab);
+	//					} else if(w==Biosample.class) {
+	//						tabbedPane.setSelectedComponent(biosampleTab);
+	//					} else if(w==Location.class) {
+	//						tabbedPane.setSelectedComponent(locationTab);
+	//					} else if(w==Result.class) {
+	//						tabbedPane.setSelectedComponent(resultTab);
+	//					}
+	//
+	//					//Fire event
+	//					Component c = tabbedPane.getSelectedComponent();
+	//					if(c instanceof SpiritTab) {
+	//						((SpiritTab) c).fireModelChanged(action, w, details);
+	//					}
+	//				}
+	//			}
+	//		};
+	//	}
+
+	//	public void eventUserChanged() {
+	//		if(SpiritFrame.getUser()!=null) {
+	//			statusBar.setUser("Logged in as " + SpiritFrame.getUser().getUsername() + " - " + (SpiritFrame.getUser().getMainGroup()!=null? SpiritFrame.getUser().getMainGroup().getName():""));
+	//		}
+	//		dashboardTab.refresh();
+	//		studyTab.refresh();
+	//	}
+
+
+
 	public static void main(String[] args) {
-		
+
 
 		SplashScreen2.show(splashConfig);
 
-		new SwingWorkerExtended() {			
+		new SwingWorkerExtended() {
 			@Override
 			protected void doInBackground() throws Exception {
 				try {
-					SpiritAction.logUsage("AnimalCare");					
+					SpiritAction.logUsage("AnimalCare");
 					JPAUtil.getManager();
 				} catch(Exception e) {
 					JExceptionDialog.showError(e);
-					System.exit(1);	
+					System.exit(1);
 				}
-			}			
+			}
 			@Override
 			protected void done() {
 				Spirit.initUI();
 				new AnimalCare();
 			}
 		};
-		
+
 	}
-	
+
 	public static void open() {
 		AnimalCare animalCare = new AnimalCare();
 		animalCare.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-//		animalCare.eventUserChanged();		
+		//		animalCare.eventUserChanged();
 	}
-	
-	
+
+
 
 }

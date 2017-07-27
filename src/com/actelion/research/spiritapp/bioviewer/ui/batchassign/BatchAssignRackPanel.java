@@ -44,10 +44,10 @@ import com.actelion.research.spiritapp.bioviewer.ui.batchassign.BatchAssignDlg.R
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleOrRackTab;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.DefaultRackDepictorRenderer;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.RackDepictor;
-import com.actelion.research.spiritapp.spirit.ui.scanner.ScanRackForBiosampleOrRackTabAction;
-import com.actelion.research.spiritapp.spirit.ui.scanner.SelectRackAction;
-import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner;
-import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner.Verification;
+import com.actelion.research.spiritapp.spirit.ui.util.scanner.ScanRackForBiosampleOrRackTabAction;
+import com.actelion.research.spiritapp.spirit.ui.util.scanner.SelectRackAction;
+import com.actelion.research.spiritapp.spirit.ui.util.scanner.SpiritScanner;
+import com.actelion.research.spiritapp.spirit.ui.util.scanner.SpiritScanner.Verification;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;

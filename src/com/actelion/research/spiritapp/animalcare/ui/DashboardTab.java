@@ -24,6 +24,7 @@ package com.actelion.research.spiritapp.animalcare.ui;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -39,10 +40,10 @@ import com.actelion.research.spiritapp.spirit.ui.IHomeTab;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.SpiritTab;
 import com.actelion.research.spiritapp.spirit.ui.home.LastActivityEditorPane;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
-import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
@@ -197,7 +198,7 @@ public class DashboardTab extends SpiritTab implements IHomeTab {
 	}
 
 	@Override
-	public <T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
+	public <T> void fireModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
 		if(isShowing()) {
 			refresh();
 		}

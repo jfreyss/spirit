@@ -28,13 +28,11 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -52,19 +50,19 @@ import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.UIUtils;
 
 /**
- * There are 3 types of panel:
- * - Parent: name displayed, big child
- * - Main: big name, children, big positions, containers
- * - Children: name, children, small positions
- * 
- * 
+ * There are 3 types of LocationPanel:
+ * - PARENT: name displayed, big child
+ * - MAIN: big name, children, big positions, containers
+ * - CHILD: name, children, small positions
+ *
+ *
  * Examples
  * parent (H91)
  *  - parent (Lab)
  *    - main (Tank)
  *       - child (Tower)    - child (Tower)
  *       	- child (Box)     - child (Box)
- *       
+ *
  * @author freyssj
  *
  */
@@ -73,36 +71,36 @@ public class LocationPanel extends JPanel {
 	private static Color MAIN_BACKGROUND = new Color(230, 240, 255);
 	protected static enum Type {PARENT, MAIN, CHILD}
 	private Type type;
-	
+
 	private final int LEGEND_HEIGHT = FastFont.BIGGER.getSize() + 8;
 	private final LocationDepictor depictor;
 	private Location location;
-		
+
 	private final int MARGIN = 2;
 	private final int PADDING = -1;
 	private int offset_children = 3;
 	private int offset_positions = 3;
-	
+
 	private int displayChildrenDepth = 0;
 	private int depth = 0;
 	private boolean displayPositions;
 	private boolean hover;
-	
+
 	protected LocationPanel(final LocationDepictor depictor) {
 		super(null);
 		this.depictor = depictor;
 		setFocusable(true);
-		
+
 		MouseAdapter ma = new PopupAdapter() {
-						
+
 			@Override
 			public void mouseExited(MouseEvent e) {
 				if(type==Type.MAIN) return;
-				hover = false; 
-				repaint();				
+				hover = false;
+				repaint();
 				setCursor(null);
 			}
-			
+
 			@Override
 			public void mouseMoved(MouseEvent e) {
 				if(type==Type.MAIN) return;
@@ -113,7 +111,7 @@ public class LocationPanel extends JPanel {
 					setCursor(hover? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR): null);
 				}
 			}
-			
+
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(!hover) return;
@@ -137,38 +135,38 @@ public class LocationPanel extends JPanel {
 				}
 			}
 
-			
+
 		};
-		
+
 		addMouseListener(ma);
 		addMouseMotionListener(ma);
 		setOpaque(false);
 	}
-	
+
 	protected LocationPanel initializeLayoutForMain(Location main, int depth, int displayChildrenDepth) {
 		removeAll();
-		this.location = main;			
+		this.location = main;
 		this.type = Type.MAIN;
 		this.depth = depth;
-		this.displayChildrenDepth = displayChildrenDepth;		
+		this.displayChildrenDepth = displayChildrenDepth;
 		this.displayPositions = true;
 
 		setToolTipText(location==null?null : getTooltip(location));
 		updateView();
-		return this; 
+		return this;
 	}
-	
+
 	/**
 	 * Create a hierarchy of PARENT LocationPanel (no content, no children, just the name)
-	 * 
+	 *
 	 * Return the main locationPanel
 	 * @param hierarchy [TOP, ..., Parent, MAIN]
 	 * @param displayChildrenDepth
 	 */
 	protected LocationPanel initializeLayoutForParents(List<Location> hierarchy, int depth, int displayChildrenDepth) {
 		if(hierarchy==null || hierarchy.size()==0) return this;
-		if(hierarchy.size()==1) return initializeLayoutForMain(hierarchy.get(0), depth, displayChildrenDepth);			
-				
+		if(hierarchy.size()==1) return initializeLayoutForMain(hierarchy.get(0), depth, displayChildrenDepth);
+
 		this.location = hierarchy.get(0);
 		this.type = Type.PARENT;
 		this.depth = depth;
@@ -177,33 +175,33 @@ public class LocationPanel extends JPanel {
 
 		Rectangle r2 = new Rectangle(0, LEGEND_HEIGHT, getWidth(), getHeight()-LEGEND_HEIGHT);
 		LocationPanel ld = new LocationPanel(depictor);
-		ld.setBounds(r2);			
-		add(ld);				
-		
+		ld.setBounds(r2);
+		add(ld);
+
 		setToolTipText(getTooltip(location));
 		return ld.initializeLayoutForParents(hierarchy.subList(1, hierarchy.size()), depth, displayChildrenDepth);
 	}
-	
+
 	protected LocationPanel initializeLayoutForTop(List<Location> children, int depth, int displayChildrenDepth) {
 		if(children==null) children = new ArrayList<>();
-		
-		
+
+
 		this.type = Type.CHILD;
 		this.location = null;
 		this.depth = depth;
 		this.displayChildrenDepth = displayChildrenDepth;
-		
-		int cols = (getWidth()<=0? 1200: getWidth()) / 300;		
-//		cols = (int) (Math.sqrt(children.size())+1);
+
+		int cols = (getWidth()<=0? 1200: getWidth()) / 300;
+		//		cols = (int) (Math.sqrt(children.size())+1);
 		int rows = (children.size()-1) / cols + 1;
-		
-		double width  = ((double)getWidth() - MARGIN*2) / cols; 
+
+		double width  = ((double)getWidth() - MARGIN*2) / cols;
 		double height = ((double)getHeight() - LEGEND_HEIGHT - MARGIN) / rows;
-		
+
 		if(height>350) height = 350;
 		if(width>height*3) width = height*3;
 		int i = 0;
-		
+
 		removeAll();
 		for (Location child : children) {
 			int row = i / cols;
@@ -218,9 +216,9 @@ public class LocationPanel extends JPanel {
 		setToolTipText(null);
 
 		return this;
-		
+
 	}
-	
+
 	protected void initializeLayoutForChild(Location child, int depth, int displayChildrenDepth) {
 		this.type = Type.CHILD;
 		this.location = child;
@@ -230,18 +228,18 @@ public class LocationPanel extends JPanel {
 		setToolTipText(getTooltip(location));
 
 		updateView();
-		
+
 	}
-	
-		
+
+
 	protected void updateView() {
 		removeAll();
 		if(getWidth()<=0) return;
 		if(location==null || !SpiritRights.canRead(location, SpiritFrame.getUser())) return;
-		
+
 		offset_children = LEGEND_HEIGHT;
-		offset_positions = offset_children; 
-		
+		offset_positions = offset_children;
+
 
 		//////////////////////////////////////////////////////////////////////////////////////////
 		//Display children locations
@@ -251,135 +249,130 @@ public class LocationPanel extends JPanel {
 					&& depictor.getAcceptedAdminLocations().size()>0
 					&& location.getLocationType().getCategory()!=LocationCategory.MOVEABLE
 					&& !Collections.disjoint(depictor.getAcceptedAdminLocations(), location.getHierarchy());
-					
-			for (Location l : location.getChildren()) {
-				//Skip location if we have a restriction (ex: query on bacteria freezer)
-				if(checkFilters && l.getLocationType().getCategory()!=LocationCategory.MOVEABLE && depictor.getAcceptedAdminLocations()!=null && depictor.getAcceptedAdminLocations().size()>0 && !depictor.getAcceptedAdminLocations().contains(l)) {
-					continue;
-				}
-				//Skip location if we don't have sufficient rights
-				if(!SpiritRights.canRead(l, SpiritFrame.getUser())) continue; 				
-				children.add(l);
-			}
-			Collections.sort(children);
-						
-			int nChildren = Math.min(120, children.size());
-			int height = !displayPositions || location.getBiosamples().size()==0? getHeight(): getHeight()/2;
-			if(nChildren>0) {
-				int rows;
-				int cols;
-				double heightChild;				
-				double widthChild;
-				
-				if(location.getLocationType().getDisposition()==Disposition.HORIZONTAL) {
-					cols = Math.min(12, nChildren);
-					rows = (nChildren-1) / cols + 1;
-					cols = (nChildren-1) / rows + 1;
-					heightChild = (height-offset_children-MARGIN+PADDING)/rows;				
-					widthChild = (getWidth()-MARGIN*2+PADDING)/cols;
-					
-				} else if(location.getLocationType().getDisposition()==Disposition.VERTICAL) {
-					rows = Math.min(12, nChildren);
-					cols = (nChildren-1) / rows + 1;
-					rows = (nChildren-1) / cols + 1;
-					heightChild = (height-offset_children-MARGIN+PADDING)/rows;				
-					widthChild = (getWidth()-MARGIN*2+PADDING)/cols;
-				} else {
-					cols = Math.min(12, (int) Math.sqrt(nChildren-1) + 1); 				
-					rows = (nChildren-1) / cols + 1;
-					
-					heightChild = (height-offset_children-MARGIN+PADDING)/rows;				
-					widthChild = (getWidth()-MARGIN*2+PADDING)/cols;
-				}
-				
-//				heightChild = Math.min(heightChild, 400/(depth+1));
-//				widthChild = Math.min(widthChild, 400/(depth+1));
-				
-				offset_positions = offset_children + (int)(rows*heightChild+10);
-				
-				int child = 0;
-				for(Location loc: children) {
-					Rectangle r = new Rectangle(
-							(int) ((child % cols) * widthChild + MARGIN),
-							(int) ((child / cols) * heightChild + offset_children),
-							(int) (widthChild - PADDING),
-							(int) (heightChild - PADDING));
-							
-					LocationPanel ld = new LocationPanel(depictor);
-					add(ld);
-					ld.setBounds(r);
-					ld.initializeLayoutForChild(loc, depth+1, heightChild>=16 && widthChild>=32? displayChildrenDepth-1: 0);
-					child++;
-					if(child>=nChildren) break;
-				}
-			}
+
+					for (Location l : location.getChildren()) {
+						//Skip location if we have a restriction (ex: query on bacteria freezer)
+						if(checkFilters && l.getLocationType().getCategory()!=LocationCategory.MOVEABLE && depictor.getAcceptedAdminLocations()!=null && depictor.getAcceptedAdminLocations().size()>0 && !depictor.getAcceptedAdminLocations().contains(l)) {
+							continue;
+						}
+						//Skip location if we don't have sufficient rights
+						if(!SpiritRights.canRead(l, SpiritFrame.getUser())) continue;
+						children.add(l);
+					}
+					Collections.sort(children);
+
+					int nChildren = Math.min(120, children.size());
+					int height = !displayPositions || location.getBiosamples().size()==0? getHeight(): getHeight()/2;
+					if(nChildren>0) {
+						int rows;
+						int cols;
+						double heightChild;
+						double widthChild;
+
+						if(location.getLocationType().getDisposition()==Disposition.HORIZONTAL) {
+							cols = Math.min(12, nChildren);
+							rows = (nChildren-1) / cols + 1;
+							cols = (nChildren-1) / rows + 1;
+							heightChild = (height-offset_children-MARGIN+PADDING)/rows;
+							widthChild = (getWidth()-MARGIN*2+PADDING)/cols;
+
+						} else if(location.getLocationType().getDisposition()==Disposition.VERTICAL) {
+							rows = Math.min(12, nChildren);
+							cols = (nChildren-1) / rows + 1;
+							rows = (nChildren-1) / cols + 1;
+							heightChild = (height-offset_children-MARGIN+PADDING)/rows;
+							widthChild = (getWidth()-MARGIN*2+PADDING)/cols;
+						} else {
+							cols = Math.min(12, (int) Math.sqrt(nChildren-1) + 1);
+							rows = (nChildren-1) / cols + 1;
+
+							heightChild = (height-offset_children-MARGIN+PADDING)/rows;
+							widthChild = (getWidth()-MARGIN*2+PADDING)/cols;
+						}
+
+						//				heightChild = Math.min(heightChild, 400/(depth+1));
+						//				widthChild = Math.min(widthChild, 400/(depth+1));
+
+						offset_positions = offset_children + (int)(rows*heightChild+10);
+
+						int child = 0;
+						for(Location loc: children) {
+							Rectangle r = new Rectangle(
+									(int) ((child % cols) * widthChild + MARGIN),
+									(int) ((child / cols) * heightChild + offset_children),
+									(int) (widthChild - PADDING),
+									(int) (heightChild - PADDING));
+
+							LocationPanel ld = new LocationPanel(depictor);
+							add(ld);
+							ld.setBounds(r);
+							ld.initializeLayoutForChild(loc, depth+1, heightChild>=16 && widthChild>=32? displayChildrenDepth-1: 0);
+							child++;
+							if(child>=nChildren) break;
+						}
+					}
 		}
-		
-		
+
+
 		//////////////////////////////////////////////////////////////////////////////////////////
 		//Display Containers
 		if(displayPositions) {
 			depictor.getRackPanel().setBiolocation(location);
 			JScrollPane rackPanelScrollPane = new JScrollPane(depictor.getRackPanel());
 			rackPanelScrollPane.getVerticalScrollBar().setUnitIncrement(200);
-			rackPanelScrollPane.getHorizontalScrollBar().setUnitIncrement(200);			
-			rackPanelScrollPane.setBounds(0, offset_positions, getWidth(), getHeight()-offset_positions);			
+			rackPanelScrollPane.getHorizontalScrollBar().setUnitIncrement(200);
+			rackPanelScrollPane.setBounds(0, offset_positions, getWidth(), getHeight()-offset_positions);
 			add(rackPanelScrollPane);
 		}
-		
+
 	}
-	
-	
-	
-	
-	
-	
 
 	public Location getBioLocation() {
 		return location;
 	}
-	
+
 	@Override
 	public void paint(Graphics graphics) {
-		
+
 		Graphics2D g = (Graphics2D) graphics;
-		Toolkit tk = Toolkit.getDefaultToolkit();
-  		@SuppressWarnings("rawtypes")
-		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
-  		if (map != null) {
-  		    ((Graphics2D)g).addRenderingHints(map);
-  		}
-		
+
+		UIUtils.applyDesktopProperties(g);
 		int d = Math.min(depth, 4);
-		
+
 		if(type==Type.MAIN) {
-			g.setPaint(new GradientPaint(0, 0, MAIN_BACKGROUND, getWidth(), getHeight(), getBackground(depth)));			
+			g.setPaint(new GradientPaint(0, 0, MAIN_BACKGROUND, getWidth(), getHeight(), getBackground(depth)));
 			g.fillRect(0, 0, getWidth(), getHeight());
 		} else {
-			g.setPaint(new GradientPaint(0, 0, getChildBackground(depth), getWidth(), getHeight(), getBackground(depth)));			
-			g.fillRect(0, 0, getWidth(), getHeight());			
+			g.setPaint(new GradientPaint(0, 0, getChildBackground(depth), getWidth(), getHeight(), getBackground(depth)));
+			g.fillRect(0, 0, getWidth(), getHeight());
 		}
 
 		Privacy inherited = location==null? Privacy.PUBLIC: location.getInheritedPrivacy();
-		Color fgColor = hover? Color.BLUE: 
-				location==null || location.getPrivacy()==Privacy.INHERITED? Color.BLACK: 
+		Color fgColor = hover? Color.BLUE:
+			location==null || location.getPrivacy()==Privacy.INHERITED? Color.BLACK:
 				UIUtils.darker(location.getPrivacy()==Privacy.PRIVATE? Color.RED: location.getPrivacy()==Privacy.PROTECTED? Color.ORANGE: Color.BLACK, .5);
 
 		if(location!=null) {
-			
+
 			//Header
-			Color bgColor = hover || type==Type.MAIN? 
-					UIUtils.getColor(140, 140, 255): UIUtils.getColor(190+d*10, 190+d*10, 210+d*10);// Color.WHITE; //eg==null || inherited==Privacy.PUBLIC? Color.WHITE: UIUtils.getRandomBackground(eg.getName().hashCode());
-			Color bg1 = UIUtils.getDilutedColor(bgColor, Color.LIGHT_GRAY, .7);		
+			Color bgColor;
+			if(hover/*|| type==Type.MAIN*/) {
+				bgColor = UIUtils.getColor(140, 140, 255);
+			} else if(location.getInheritedEmployeeGroup()!=null) {
+				bgColor = UIUtils.getRandomBackground(location.getInheritedEmployeeGroup().getName().hashCode());
+			} else {
+				bgColor = UIUtils.getColor(190+d*10, 190+d*10, 210+d*10);
+			}
+			Color bg1 = UIUtils.getDilutedColor(bgColor, Color.LIGHT_GRAY, .7);
 			Color bg2 = UIUtils.getTransparentColor(bg1);
-			
+
 			g.setPaint(new GradientPaint(0,1, bg1, 0, LEGEND_HEIGHT, bg2));
 			g.fillRect(0, 0, getWidth(), LEGEND_HEIGHT);
-	
-			
+
+
 			//Draw Name
 			if(type==Type.MAIN || type==Type.PARENT) {
-				
+
 				//Draw Icon
 				if(location.getLocationType()!=null) {
 					Image img = location.getLocationType().getImageThumbnail();
@@ -387,18 +380,18 @@ public class LocationPanel extends JPanel {
 				}
 				int left = 25;
 
-				
+
 				//Draw Description below
 				String fullName = location.getName();
 				if(location.getDescription()!=null && location.getDescription().length()>0) fullName+=" - "+location.getDescription();
-				
+
 				//Draw Name
 				g.setFont(type==Type.MAIN? FastFont.BIGGEST: FastFont.BIGGER);
 				g.setColor(fgColor);
 				g.drawString(fullName, left, FastFont.BIGGER.getSize()+4);
 				left += g.getFontMetrics().stringWidth(fullName) + 5;
-				
-				
+
+
 				if(type==Type.MAIN) {
 					//Draw Occupancy of the box
 					if(location.getOccupancy()>0) {
@@ -407,14 +400,14 @@ public class LocationPanel extends JPanel {
 						g.drawString(s, left, g.getFont().getSize()+4);
 						left += g.getFontMetrics().stringWidth(s)+5;
 					}
-				
+
 					//Draw Barcode to the right
 					g.setColor(Color.GRAY);
 					g.setFont(FastFont.SMALLER);
 					String s = location.getLocationId();
 					g.drawString(s, Math.max(left+10, getWidth() - g.getFontMetrics().stringWidth(s) - 4), g.getFont().getSize()+2);
-				}				
-	
+				}
+
 				//Privacy
 				if(location.getEmployeeGroup()!=null) {
 					String s = location.getPrivacy() + " (" + location.getEmployeeGroup().getName() + ")";
@@ -422,47 +415,47 @@ public class LocationPanel extends JPanel {
 					g.setColor(inherited.getBgColor().darker().darker());
 					g.drawString(s, left+10, g.getFont().getSize()+4);
 				}
-				
+
 			} else if(getHeight()>16) { //Child Mode with sufficient height
-				
+
 				//Draw Icon
 				if(location.getLocationType()!=null) {
 					Image img = location.getLocationType().getImage();
 					if(img!=null) g.drawImage(img, 1, 1, 14, 14, this);
 				}
 				int left = 16;
-				
+
 				g.setColor(fgColor);
 				String s = location.getName();
 				if(location.getDescription()!=null && location.getDescription().length()>0) s+=" - "+location.getDescription();
 				g.setFont(location.getLocationType()==null || location.getLocationType().getCategory()==LocationCategory.ADMIN? FastFont.BOLD: location.getLocationType().getCategory()==LocationCategory.CONTAINER? FastFont.REGULAR: FastFont.MEDIUM);
 				g.drawString(s, left, g.getFont().getSize()+1);
-								
+
 			}
 		}
-			
+
 		paintChildren(graphics);
 
-		g.setColor(UIUtils.getColor(50+20*d,50+20*d,50+20*d));		
+		g.setColor(UIUtils.getColor(50+20*d,50+20*d,50+20*d));
 		g.drawLine(0, 0, getWidth()-1, 0);
 		g.drawLine(0, 0, 0, getHeight()-1);
 		g.drawLine(getWidth()-1, 0, getWidth()-1, getHeight()-1);
 		g.drawLine(0, getHeight()-1, getWidth()-1, getHeight()-1);
-		g.setColor(UIUtils.brighter(g.getColor(),.5));		
+		g.setColor(UIUtils.brighter(g.getColor(),.5));
 		g.drawLine(getWidth()-2, 1, getWidth()-2, getHeight()-2);
 		g.drawLine(1, getHeight()-2, getWidth()-2, getHeight()-2);
 
 
 	}
-	
+
 	public void setDisplayChildrenDepth(int displayChildrenDepth) {
 		this.displayChildrenDepth = displayChildrenDepth;
 	}
-	
+
 	protected Type getType() {
 		return type;
 	}
-	
+
 	public String[][] getLocationLayout() {
 		return depictor.getRackPanel().getLocationLayout();
 	}
@@ -470,19 +463,19 @@ public class LocationPanel extends JPanel {
 	public LocationDepictor getDepictor() {
 		return depictor;
 	}
-	
+
 	public String getTooltip(Location location) {
 		if(location==null || location.getId()<=0) return null;
 		EmployeeGroup eg = location.getInheritedEmployeeGroup();
-		return "<html><div style='font-size:8px'>" + 
-				location.getLocationType().getName() + ":<br> <b style='font-size:9px'>" + location.getHierarchyFull() + "</b><br>" + 				
-				(location.getDescription()==null || location.getDescription().length()==0?"": location.getDescription() + "<br>") +
-				(location.getInheritedPrivacy()!=Privacy.PUBLIC? location.getInheritedPrivacy().getName() + (eg==null?"": " to " + eg.getName() + "<br>"): "") +
-				(location.getUpdUser()!=null && location.getUpdDate()!=null && location.getCreDate()!=null && location.getUpdDate().after(location.getCreDate())? "<i>Updated by " + location.getUpdUser() + " [" + FormatterUtils.formatDateOrTime(location.getUpdDate())+ "]</i><br>": "") +
-				(location.getCreUser()!=null && location.getCreDate()!=null? "<i>Created by " + location.getCreUser() + " [" + FormatterUtils.formatDateOrTime(location.getCreDate())+ "]</i>": "") +
-				"</div></html>";
+		return "<html><div style='font-size:8px'>" +
+		location.getLocationType().getName() + ":<br> <b style='font-size:9px'>" + location.getHierarchyFull() + "</b><br>" +
+		(location.getDescription()==null || location.getDescription().length()==0?"": location.getDescription() + "<br>") +
+		(location.getInheritedPrivacy()!=Privacy.PUBLIC? location.getInheritedPrivacy().getName() + (eg==null?"": " to " + eg.getName() + "<br>"): "") +
+		(location.getUpdUser()!=null && location.getUpdDate()!=null && location.getCreDate()!=null && location.getUpdDate().after(location.getCreDate())? "<i>Updated by " + location.getUpdUser() + " [" + FormatterUtils.formatDateOrTime(location.getUpdDate())+ "]</i><br>": "") +
+		(location.getCreUser()!=null && location.getCreDate()!=null? "<i>Created by " + location.getCreUser() + " [" + FormatterUtils.formatDateOrTime(location.getCreDate())+ "]</i>": "") +
+		"</div></html>";
 	}
-	
+
 	private Color getChildBackground(int depth) {
 		return UIUtils.getColor(230,230,235);
 	}

@@ -23,8 +23,6 @@ package com.actelion.research.spiritapp.spirit.ui.biosample.edit;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -41,13 +39,13 @@ import javax.swing.JToggleButton;
 import javax.swing.SpinnerNumberModel;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.PhaseComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.sampling.NamedSamplingComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.sampling.NamedSamplingDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.sampling.NamedSamplingEditorPane;
+import com.actelion.research.spiritapp.spirit.ui.util.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JHeaderLabel;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
@@ -65,24 +63,24 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class CreateChildrenDlg extends JEscapeDialog {
-	
+
 	private JToggleButton radio1 = new JToggleButton("Manual creation");
 	private JToggleButton radio2 = new JToggleButton("Use a sampling's template");
-	
+
 	private final JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
 	private final BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
-	
+
 	private final NamedSamplingComboBox namedSamplingComboBox = new NamedSamplingComboBox();
-	
+
 	private final List<Biosample> parents;
 	private List<Biosample> children;
 	private PhaseComboBox phaseComboBox ;
-	
-	public CreateChildrenDlg(List<Biosample> parents, Phase phase) {		
+
+	public CreateChildrenDlg(List<Biosample> parents, Phase phase) {
 		super(UIUtils.getMainFrame(), "Add Children", true);
-		
+
 		this.parents = parents;
-		
+
 		final Set<Biotype> types = Biosample.getBiotypes(parents);
 		final Biotype type = types.size()==1? types.iterator().next(): null;
 		Set<Study> studies = Biosample.getStudies(parents);
@@ -96,19 +94,19 @@ public class CreateChildrenDlg extends JEscapeDialog {
 			phaseComboBox = new PhaseComboBox();
 			phaseComboBox.setEnabled(false);
 		}
-		
-		
+
+
 		//TopPanel
-		JPanel topPanel = UIUtils.createTitleBox("", 
+		JPanel topPanel = UIUtils.createTitleBox("",
 				UIUtils.createVerticalBox(
 						new JHeaderLabel("How do you want to create the children of " + (parents.size()==1? parents.iterator().next().getSampleIdName(): " these "+parents.size() + " biosamples")),
 						UIUtils.createHorizontalBox(new JLabel("Phase: "), phaseComboBox, Box.createHorizontalGlue()),
 						UIUtils.createGrid(radio1, radio2)));
-		
-		
-		final JPanel centerPanel = new JPanel(new CardLayout());		
+
+
+		final JPanel centerPanel = new JPanel(new CardLayout());
 		centerPanel.add(new JPanel(), "empty");
-		
+
 		//Create Aliquots by type
 		{
 			centerPanel.add(UIUtils.createTitleBox("Manual Creation", UIUtils.createTable(
@@ -126,126 +124,105 @@ public class CreateChildrenDlg extends JEscapeDialog {
 				biotypeComboBox.setSelection(uniqueChild!=null? uniqueChild: type);
 			}
 		}
-		
+
 		//Use a sampling's template
 		{
 			final JButton createTemplateButton = new JIconButton(IconType.NEW, "New Template");
 			final JButton deleteTemplateButton = new JIconButton(IconType.DELETE, "Delete");
 			final JButton editTemplateButton = new JIconButton(IconType.EDIT, "Edit");
-			
+
 
 			final NamedSamplingEditorPane previewTemplate = new NamedSamplingEditorPane();
 			centerPanel.add(UIUtils.createTitleBox("Use a sampling's template",
 					UIUtils.createBox(new JScrollPane(previewTemplate),
-						UIUtils.createTable(2, 
-								new JLabel("Template:"), UIUtils.createHorizontalBox(namedSamplingComboBox, Box.createHorizontalGlue()),
-								null, UIUtils.createHorizontalBox(deleteTemplateButton, editTemplateButton, createTemplateButton, Box.createHorizontalGlue()))
-						)), "panel2");
-			
+							UIUtils.createTable(2,
+									new JLabel("Template:"), UIUtils.createHorizontalBox(namedSamplingComboBox, Box.createHorizontalGlue()),
+									null, UIUtils.createHorizontalBox(deleteTemplateButton, editTemplateButton, createTemplateButton, Box.createHorizontalGlue()))
+							)), "panel2");
+
 			refreshSamplings();
-			
-			deleteTemplateButton.addActionListener(new ActionListener() {				
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					NamedSampling sel = namedSamplingComboBox.getSelection();
-					if(sel==null || sel.getStudy()!=null || !SpiritRights.canEdit(sel, SpiritFrame.getUser())) {
-						JExceptionDialog.showError(CreateChildrenDlg.this, "You must select an editable template");
-						return;
-					} 
-					int res = JOptionPane.showOptionDialog(CreateChildrenDlg.this, "Are you sure you want to delete "+sel+"?", "Delete Template", JOptionPane.NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {"Delete", "Cancel"}, "Cancel");
-					if(res==0) {
-						try {
-							JPAUtil.pushEditableContext(SpiritFrame.getUser());
-							DAONamedSampling.deleteNamedSampling(sel, SpiritFrame.getUser());
-						} catch(Exception ex) {
-							JExceptionDialog.showError(ex);
-						} finally {
-							JPAUtil.popEditableContext();
-						}
-						refreshSamplings();
-					}
-					
+
+			deleteTemplateButton.addActionListener(e-> {
+				NamedSampling sel = namedSamplingComboBox.getSelection();
+				if(sel==null || sel.getStudy()!=null || !SpiritRights.canEdit(sel, SpiritFrame.getUser())) {
+					JExceptionDialog.showError(CreateChildrenDlg.this, "You must select an editable template");
+					return;
 				}
-			});
-			
-			createTemplateButton.addActionListener(new ActionListener() {				
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					NamedSamplingDlg dlg = new NamedSamplingDlg(null, new NamedSampling(), null);
-					if(dlg.getSavedNamedSampling()!=null) {
-						refreshSamplings();
-						namedSamplingComboBox.setSelection(dlg.getSavedNamedSampling());
+				int res = JOptionPane.showOptionDialog(CreateChildrenDlg.this, "Are you sure you want to delete "+sel+"?", "Delete Template", JOptionPane.NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {"Delete", "Cancel"}, "Cancel");
+				if(res==0) {
+					try {
+						JPAUtil.pushEditableContext(SpiritFrame.getUser());
+						DAONamedSampling.deleteNamedSampling(sel, SpiritFrame.getUser());
+					} catch(Exception ex) {
+						JExceptionDialog.showError(ex);
+					} finally {
+						JPAUtil.popEditableContext();
 					}
-				}
-			});
-			editTemplateButton.addActionListener(new ActionListener() {				
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					NamedSampling sel = namedSamplingComboBox.getSelection();
-					if(sel==null || sel.getStudy()!=null || !SpiritRights.canEdit(sel, SpiritFrame.getUser())) {
-						JExceptionDialog.showError(CreateChildrenDlg.this, "You must select an editable template");
-						return;
-					} 
-					new NamedSamplingDlg(sel.getStudy(), sel, null);
 					refreshSamplings();
 				}
 			});
-			
-			
-			deleteTemplateButton.setEnabled(false);
-			editTemplateButton.setEnabled(false);
-			namedSamplingComboBox.addActionListener(new ActionListener() {				
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					NamedSampling sel = namedSamplingComboBox.getSelection();
-					previewTemplate.setNamedSampling(sel);
-					
-					boolean enable = sel!=null && sel.getStudy()==null && SpiritRights.canEdit(sel, SpiritFrame.getUser());
-					deleteTemplateButton.setEnabled(enable);
-					editTemplateButton.setEnabled(enable);
-					editTemplateButton.setToolTipText(enable? null: "Edition is only possible if you are the creator of the template, and it is not associated to a study");
-					editTemplateButton.setToolTipText(enable? null: "Deletion is only possible if you are the creator of the template, and it is not associated to a study");
+
+			createTemplateButton.addActionListener(e-> {
+				NamedSamplingDlg dlg = new NamedSamplingDlg(null, new NamedSampling(), null);
+				if(dlg.getSavedNamedSampling()!=null) {
+					refreshSamplings();
+					namedSamplingComboBox.setSelection(dlg.getSavedNamedSampling());
 				}
 			});
-			
+
+			editTemplateButton.addActionListener(e-> {
+				NamedSampling sel = namedSamplingComboBox.getSelection();
+				if(sel==null || sel.getStudy()!=null || !SpiritRights.canEdit(sel, SpiritFrame.getUser())) {
+					JExceptionDialog.showError(CreateChildrenDlg.this, "You must select an editable template");
+					return;
+				}
+				new NamedSamplingDlg(sel.getStudy(), sel, null);
+				refreshSamplings();
+			});
+
+
+			deleteTemplateButton.setEnabled(false);
+			editTemplateButton.setEnabled(false);
+			namedSamplingComboBox.addActionListener(e-> {
+				NamedSampling sel = namedSamplingComboBox.getSelection();
+				previewTemplate.setNamedSampling(sel);
+
+				boolean enable = sel!=null && sel.getStudy()==null && SpiritRights.canEdit(sel, SpiritFrame.getUser());
+				deleteTemplateButton.setEnabled(enable);
+				editTemplateButton.setEnabled(enable);
+				editTemplateButton.setToolTipText(enable? null: "Edition is only possible if you are the creator of the template, and it is not associated to a study");
+				editTemplateButton.setToolTipText(enable? null: "Deletion is only possible if you are the creator of the template, and it is not associated to a study");
+			});
+
 		}
-		
-		
-		
+
+
+
 		//Buttons
 		final JButton okButton = new JButton("Create Biosamples...");
 		okButton.setEnabled(false);
-		
+
 		ButtonGroup group = new ButtonGroup();
 		group.add(radio1);
 		group.add(radio2);
 		//Events
-		radio1.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				((CardLayout)centerPanel.getLayout()).show(centerPanel, "panel1");
-				okButton.setEnabled(true);
-			}
+		radio1.addActionListener(e-> {
+			((CardLayout)centerPanel.getLayout()).show(centerPanel, "panel1");
+			okButton.setEnabled(true);
 		});
-		radio2.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				((CardLayout)centerPanel.getLayout()).show(centerPanel, "panel2");
-				okButton.setEnabled(true);
-			}
+		radio2.addActionListener(e-> {
+			((CardLayout)centerPanel.getLayout()).show(centerPanel, "panel2");
+			okButton.setEnabled(true);
 		});
-		okButton.addActionListener(new ActionListener() {					
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					if(radio1.isSelected()) createTemplate1();
-					else if(radio2.isSelected()) createTemplate2();
-					else throw new Exception("You must select one of the radio button");
-					dispose();
-				} catch (Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
-			} 
+		okButton.addActionListener(e-> {
+			try {
+				if(radio1.isSelected()) createTemplate1();
+				else if(radio2.isSelected()) createTemplate2();
+				else throw new Exception("You must select one of the radio button");
+				dispose();
+			} catch (Exception ex) {
+				JExceptionDialog.showError(ex);
+			}
 		});
 
 
@@ -257,44 +234,43 @@ public class CreateChildrenDlg extends JEscapeDialog {
 		setContentPane(contentPane);
 		UIUtils.adaptSize(this, 600, 400);
 		setLocationRelativeTo(UIUtils.getMainFrame());
-		
-		
+
+
 	}
-	
+
 	private void refreshSamplings() {
-		
+
 		Study study = Biosample.getStudy(parents);
-		List<NamedSampling> samplings = DAONamedSampling.getNamedSamplings(SpiritFrame.getUser(), study);			
-		namedSamplingComboBox.setValues(samplings, true);
+		List<NamedSampling> samplings = DAONamedSampling.getNamedSamplings(SpiritFrame.getUser(), study);
+		namedSamplingComboBox.setValues(samplings);
 	}
 
 	public List<Biosample> getChildren(){
 		return children;
 	}
-	
-	
-	public void createTemplate1() {				
-		List<Biosample> res = new ArrayList<Biosample>();
-		for (Biosample parent : parents) {
-			parent = JPAUtil.reattach(parent);
+
+
+	public void createTemplate1() {
+		List<Biosample> res = new ArrayList<>();
+		for (Biosample parent : JPAUtil.reattach(parents)) {
 			for (int i = 0; i < (Integer) spinner.getValue(); i++) {
 				Biosample b = new Biosample();
-				b.setBiotype(biotypeComboBox.getSelection());			
+				b.setBiotype(biotypeComboBox.getSelection());
 				b.setInheritedStudy(parent.getInheritedStudy());
 				b.setInheritedGroup(parent.getInheritedGroup());
 				b.setInheritedPhase(parent.getInheritedPhase()==null? phaseComboBox.getSelection(): parent.getInheritedPhase());
 				b.setTopParent(parent.getTopParent());
 				b.setParent(parent);
-				res.add(b);											
+				res.add(b);
 			}
 		}
 		children = res;
 	}
 
-	public void createTemplate2() throws Exception {				
+	public void createTemplate2() throws Exception {
 		NamedSampling sampling = namedSamplingComboBox.getSelection();
 		if(sampling==null) throw new Exception("You must select a sampling");
-		children = BiosampleCreationHelper.processTemplateOutsideStudy(sampling, JPAUtil.reattach(parents), true);
+		children = BiosampleCreationHelper.processTemplate(phaseComboBox.getSelection(), sampling, JPAUtil.reattach(parents), true);
 	}
 
 }

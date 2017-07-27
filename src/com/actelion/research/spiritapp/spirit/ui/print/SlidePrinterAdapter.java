@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritapp.spirit.ui.print;
 
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -44,10 +43,10 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextArea;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritapp.spirit.services.print.PrintableOfContainers.Model;
+import com.actelion.research.spiritapp.spirit.services.print.PrintTemplate;
+import com.actelion.research.spiritapp.spirit.services.print.SpiritPrinter;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JFileBrowser;
-import com.actelion.research.spiritapp.spirit.services.print.SpiritPrinter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
@@ -62,143 +61,140 @@ import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.UIUtils;
 
 public class SlidePrinterAdapter extends PrintAdapter {
-	
+
 	private JPanel configPanel;
-	private JCheckBox printStudyIdCheckBox = new JCheckBox("Print StudyId", false);
-	private JCheckBox printBlocNoCheckBox = new JCheckBox("Print BlocNo", false);
-	
-	private JRadioButton slideMateRadioButton = new JRadioButton("Print to SlideMate", true); 	
-	private JRadioButton ptouchRadioButton = new JRadioButton("Print to PTouch Printer"); 
-	private JRadioButton tsvRadioButton = new JRadioButton("Export to Comma Separated"); 	
+	private JCheckBox printInternalIdCheckBox = new JCheckBox("Print InternalId instead of studyId", true);
+	private JCheckBox printBlocNoCheckBox = new JCheckBox("Print BlocNo", true);
+
+	private JRadioButton slideMateRadioButton = new JRadioButton("Print to SlideMate", true);
+	private JRadioButton ptouchRadioButton = new JRadioButton("Print to PTouch Printer");
+	private JRadioButton tsvRadioButton = new JRadioButton("Export to Comma Separated");
 
 	private JFileBrowser slideMateBrowser = new JFileBrowser();
 
 	private JFileBrowser tsvBrowser = new JFileBrowser();
 
-	
-
 	private JGenericComboBox<PrintService> printerComboBox;
 	private JGenericComboBox<Media> mediaComboBox = new JGenericComboBox<>();
-	
+
 	public SlidePrinterAdapter(final PrintingTab tab, final ContainerType containerType) {
 		super(tab);
 
-		slideMateBrowser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);		
-		slideMateBrowser.setFile(Spirit.getConfig().getProperty("printer.slidemate.path", ""));
-		if(slideMateBrowser.getFile().length()==0) slideMateBrowser.setFile("Y:\\SlideMateCache (BOURQUG)");
+		slideMateBrowser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		slideMateBrowser.setFile(Spirit.getConfig().getProperty("printer.slidemate.path", "Y:\\SlideMateCache (BOURQUG)"));
 
-		tsvBrowser.setFileSelectionMode(JFileChooser.FILES_ONLY);		
-		tsvBrowser.setFile(Spirit.getConfig().getProperty("printer.slidecsv.path", ""));
-		if(tsvBrowser.getFile().length()==0) slideMateBrowser.setFile("Y:\\SlideMateCache (BOURQUG)\\labels.csv");
-		
-		PrintService[] services = SpiritPrinter.getPrintServices();		
+		tsvBrowser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		tsvBrowser.setFile(Spirit.getConfig().getProperty("printer.slidecsv.path", "Y:\\SlideMateCache (BOURQUG)\\labels.csv"));
+
+		PrintService[] services = SpiritPrinter.getPrintServices();
 		printerComboBox = new JGenericComboBox<PrintService>(services, true);
 		for(PrintService service: services) {
-			if(service.getName().contains("AW-S")){
+			if(service.getName().contains("AW-S") || service.getName().contains("Brother")){
 				printerComboBox.setSelection(service);
 				break;
 			}
 		}
-		
-		
+
+
 		JPanel ptouchPanel = UIUtils.createTable(
 				new JLabel("Brother Printer: "), printerComboBox,
-				new JLabel("Media: "), mediaComboBox
-				);
-		
-		
+				new JLabel("Media: "), mediaComboBox);
+
+
 		configPanel = UIUtils.createVerticalBox(
-				
-				UIUtils.createHorizontalBox(Box.createHorizontalStrut(10), printStudyIdCheckBox, Box.createHorizontalStrut(10), printBlocNoCheckBox, Box.createHorizontalGlue()),
-				
+
+				UIUtils.createHorizontalBox(Box.createHorizontalStrut(10), printInternalIdCheckBox, Box.createHorizontalStrut(10), printBlocNoCheckBox, Box.createHorizontalGlue()),
+
 				Box.createVerticalStrut(15),
-				
+
 				UIUtils.createHorizontalBox(slideMateRadioButton, Box.createHorizontalGlue()),
 				UIUtils.createHorizontalBox(Box.createHorizontalStrut(20), new JLabel("Path to the slideMade printing file: "), slideMateBrowser, Box.createHorizontalGlue()),
-				
+
 				Box.createVerticalStrut(15),
-				
+
 				UIUtils.createHorizontalBox(tsvRadioButton, Box.createHorizontalGlue()),
 				UIUtils.createHorizontalBox(Box.createHorizontalStrut(20), new JLabel("Path to the csv file: "), tsvBrowser, Box.createHorizontalGlue()),
-				
+
 				Box.createVerticalStrut(15),
-				
+
 				UIUtils.createHorizontalBox(ptouchRadioButton, new JInfoLabel("You need a 'Brother' printer with a media '" + containerType.getBrotherFormat()+ "'"), Box.createHorizontalGlue()),
 				UIUtils.createHorizontalBox(Box.createHorizontalStrut(20), ptouchPanel, Box.createHorizontalGlue()),
 				Box.createVerticalGlue()
 				);
-		 
-		
+
+
 		ButtonGroup gr = new ButtonGroup();
 		gr.add(tsvRadioButton);
 		gr.add(ptouchRadioButton);
 		gr.add(slideMateRadioButton);
 
-		
+
 		ptouchRadioButton.setSelected(Spirit.getConfig().getProperty("printer.slide.type", "").equals("ptouch")) ;
 		tsvRadioButton.setSelected(Spirit.getConfig().getProperty("printer.slide.type", "").equals("tsv")) ;
-		
-		
-		ActionListener refreshActionListener = new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				refreshButtons();
-			}
-		};
+
+
+		ActionListener refreshActionListener = e-> refreshButtons();
 		ptouchRadioButton.addActionListener(refreshActionListener);
 		slideMateRadioButton.addActionListener(refreshActionListener);
 		tsvRadioButton.addActionListener(refreshActionListener);
-		printStudyIdCheckBox.addActionListener(refreshActionListener);
+		printInternalIdCheckBox.addActionListener(refreshActionListener);
 		printBlocNoCheckBox.addActionListener(refreshActionListener);
-		
 
-		printerComboBox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				List<Media> media = SpiritPrinter.loadMedias(printerComboBox.getSelection(), containerType.getName());
-				mediaComboBox.setValues(media, false);
-				
+
+		printerComboBox.addActionListener(e-> {
+			List<Media> media = SpiritPrinter.loadMedias(printerComboBox.getSelection(), containerType.getName());
+			mediaComboBox.setValues(media, false);
+			String sel = null;
+			if(sel==null) {
+				//Chose Media with appropriate media format
 				for (Media m : media) {
-					if(m.toString().equalsIgnoreCase(containerType.getName())) {
-						mediaComboBox.setSelection(m);
+					if(m.toString().equalsIgnoreCase(containerType.getBrotherFormat().getMedia())) {
+						sel = m.toString();
 						break;
 					}
 				}
-				fireConfigChanged();
 			}
-		});
-		mediaComboBox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				fireConfigChanged();
+			if(sel==null) {
+				//Chose Media with appropriate containerType
+				for (Media m : media) {
+					if(m.toString().equalsIgnoreCase(containerType.getName())) {
+						sel = m.toString();
+						break;
+					}
+				}
 			}
+			mediaComboBox.setSelectionString(sel);
+			fireConfigChanged();
 		});
-		
+		mediaComboBox.addActionListener(e-> {
+			fireConfigChanged();
+		});
+
 		if(services.length>0) {
-			printerComboBox.getActionListeners()[0].actionPerformed(null);			
+			printerComboBox.getActionListeners()[0].actionPerformed(null);
 		}
-		
-		
+
+
 		refreshButtons();
-				
-		
+
+
 
 	}
-	
+
 	private void refreshButtons() {
 		slideMateBrowser.setEnabled(slideMateRadioButton.isSelected());
 		tsvBrowser.setEnabled(tsvRadioButton.isSelected());
 		printerComboBox.setEnabled(ptouchRadioButton.isSelected());
 		mediaComboBox.setEnabled(ptouchRadioButton.isSelected());
 		fireConfigChanged();
-		
+
 		Spirit.getConfig().setProperty("printer.slide.type", ptouchRadioButton.isSelected()? "ptouch": tsvRadioButton.isSelected()?"tsv": "");
 
 	}
-	
+
 	@Override
 	public JComponent getConfigPanel() {
-		return configPanel;		
+		return configPanel;
 	}
 
 	@Override
@@ -217,7 +213,7 @@ public class SlidePrinterAdapter extends PrintAdapter {
 			return null;
 		}
 	}
-	
+
 	@Override
 	public JComponent getPreviewPanel(Container container) {
 		if(slideMateRadioButton.isSelected()) {
@@ -225,96 +221,102 @@ public class SlidePrinterAdapter extends PrintAdapter {
 		} else {
 			PrintService ps = printerComboBox.getSelection();
 			Media media = mediaComboBox.getSelection();
-			return BrotherPrinterAdapter.getPreviewPanel(container, ps, media, false, getModel());
+			return BrotherPrinterAdapter.getPreviewPanel(container, ps, media, getModel());
 		}
 	}
-	
-	private Model getModel() {
-		return printBlocNoCheckBox.isSelected()? Model.LINES_BLOCNO: Model.LINES_METADATA;
+
+	private PrintTemplate getModel() {
+		PrintTemplate tpl = new PrintTemplate();
+		tpl.setPerLine(true);
+		tpl.setBarcodePosition(-1);
+		tpl.setOverlapPosition(0);
+		tpl.setShowInternalIdFirst(printInternalIdCheckBox.isSelected());
+		tpl.setShowBlocNo(printBlocNoCheckBox.isSelected());
+		return tpl;
 	}
-	
-	
+
+
 
 	@Override
 	public void print(List<Container> containers) throws Exception {
-		
-		
+
+
 		if(containers==null || containers.size()==0) throw new Exception("No containers");
-			
+
 		if(slideMateRadioButton.isSelected()) {
-			
+
 			Spirit.getConfig().setProperty("printer.slidemate.path", slideMateBrowser.getFile());
-			
+
 			File destDir = new File(slideMateBrowser.getFile());
 			if(!destDir.exists() || !destDir.isDirectory()) throw new Exception("The directory "+destDir+" does not exist or is not a directory");
-			
+
 			File archiveDir = new File(destDir, "Archive");
 			if(!archiveDir.exists()) archiveDir.mkdirs();
-			
+
 			String fileName = SpiritFrame.getUser()+"-" + new SimpleDateFormat("yyyyMMDD-HHmmss").format(new Date())+ ".txt";
-			
+
 			String content = getSlideMatePrint(containers).toString();
 			IOUtils.stringToFile(content, new File(destDir, fileName));
 			if(archiveDir.exists())IOUtils.stringToFile(content, new File(archiveDir, fileName));
-			
+
 		} else if(tsvRadioButton.isSelected()) {
-				
+
 			if(tsvBrowser.getFile().trim().length()==0) throw new Exception("You must select a file");
 			Spirit.getConfig().setProperty("printer.tsv.path", tsvBrowser.getFile());
 			File destFile = new File(tsvBrowser.getFile());
-			
+
 			File archiveDir = new File(destFile.getParentFile(), "Archive");
 			if(!archiveDir.exists()) archiveDir.mkdirs();
-			
+
 			String fileName = SpiritFrame.getUser() + "-" + new SimpleDateFormat("yyyyMMDD-HHmmss").format(new Date())+ ".txt";
-			
+
 			String content = getSlideMatePrint(containers).toString();
 			IOUtils.stringToFile(content, destFile);
 			if(archiveDir.exists()) IOUtils.stringToFile(content, new File(archiveDir, fileName));
-				
+
 		} else {
 			PrintService ps = printerComboBox.getSelection();
 			Media media = mediaComboBox.getSelection();
-			BrotherPrinterAdapter.print(containers, ps, media, false, getModel());
+			BrotherPrinterAdapter.print(containers, ps, media, getModel());
 		}
-				
+
 	}
-	
+
 	private String getSlideMatePrint(List<Container> containers) {
 		return getPrint(containers, true);
 	}
 
 	private String getTsvPrint(List<Container> containers) {
-		return getPrint(containers, false);		
+		return getPrint(containers, false);
 	}
-	
+
 	private String getPrint(List<Container> containers, boolean slideMate) {
-		
+
 		if(containers==null) return "";
-		
+
 		StringBuilder sb = new StringBuilder();
 		for (Container c : containers) {
-			
+
 
 			Set<Biosample> biosamples = c.getBiosamples();
 			if(biosamples.size()==0) return "\r\n";
-			
+
 			Study study = Biosample.getStudy(biosamples);
-			String studyId = study==null? "": !printStudyIdCheckBox.isSelected()? study.getIvv(): study.getStudyIdIvv();
-			
+			String studyId = study==null? "": printInternalIdCheckBox.isSelected()? study.getLocalId(): study.getStudyIdAndInternalId();
+
 			Group group = Biosample.getGroup(biosamples);
-			
-			
+
+
 			//10 items
 			String staining = c.getMetadata(BiotypeMetadata.STAINING);
 			String sectionNo = c.getMetadata(BiotypeMetadata.SECTIONNO);
-			String name = Biosample.getInfos(c.getBiosamples(), EnumSet.of(InfoFormat.SAMPLENAME, InfoFormat.PARENT_SAMPLENAME), InfoSize.ONELINE); 
-			
+			String name = Biosample.getInfos(c.getBiosamples(), EnumSet.of(InfoFormat.SAMPLENAME, InfoFormat.PARENT_SAMPLENAME), InfoSize.ONELINE);
+
 			if((printBlocNoCheckBox.isSelected() || name.length()==0) && c.getBlocNo()!=null) name = "Bl."+c.getBlocNo();
 
 			if(name.length()>25) name = name.substring(0, 25);
-			
-			//Note: For the slide printer, empty lines are not allowed, they should have at least a dot. 
+
+			//Note: For the slide printer, empty lines are not allowed, they should have at least a dot.
 			//Only one template is used: 10 lines
 			List<Biosample> tops = new ArrayList<Biosample>();
 			for (Biosample b : c.getBiosamples()) {
@@ -322,7 +324,7 @@ public class SlidePrinterAdapter extends PrintAdapter {
 					tops.add(b.getTopParentInSameStudy());
 				}
 			}
-			
+
 			if(slideMate) {
 				if(studyId.length()==0) studyId = ".";
 				if(staining.length()==0) staining = ".";
@@ -331,15 +333,15 @@ public class SlidePrinterAdapter extends PrintAdapter {
 
 				sb.append("$" + studyId); 									//1 -StudyId
 				sb.append("$" + c.getContainerOrBiosampleId());				//2 -Barcode
-				sb.append("$" + (group==null?".": group.getName()));		//3 -Group	
+				sb.append("$" + (group==null?".": group.getName()));		//3 -Group
 				sb.append("$" + (tops.size()<1?".": tops.get(0).getSampleId() + (tops.get(0).getSampleName()!=null && tops.get(0).getSampleName().length()>0? " [" + tops.get(0).getSampleName() + "]":"")).replace('$', ' ') );
 				sb.append("$" + (tops.size()<2?".": tops.get(1).getSampleId() + (tops.get(1).getSampleName()!=null && tops.get(1).getSampleName().length()>0? " [" + tops.get(1).getSampleName() + "]":"")).replace('$', ' ') );
 				sb.append("$" + (tops.size()<3?".": tops.get(2).getSampleId() + (tops.get(2).getSampleName()!=null && tops.get(2).getSampleName().length()>0? " [" + tops.get(2).getSampleName() + "]":"")).replace('$', ' ') );
 				sb.append("$" + (tops.size()<4?".": tops.get(3).getSampleId() + (tops.get(3).getSampleName()!=null && tops.get(3).getSampleName().length()>0? " [" + tops.get(3).getSampleName() + "]":"")).replace('$', ' ') );
-	
-				sb.append("$" + name);	 		//8				
+
+				sb.append("$" + name);	 		//8
 				sb.append("$" + staining); 		//9
-				sb.append("$" + sectionNo); 	//10 -SectionNo			
+				sb.append("$" + sectionNo); 	//10 -SectionNo
 				sb.append("\r\n");
 
 			} else {
@@ -347,24 +349,24 @@ public class SlidePrinterAdapter extends PrintAdapter {
 				//TSV
 				sb.append(studyId);		 													//1 -StudyId
 				sb.append(TAB + c.getContainerOrBiosampleId().replace(TAB, ' '));			//2 -Barcode
-				sb.append(TAB + (group==null?"": group.getName()).replace(TAB, ' '));		//3 -Group	
-				sb.append(TAB + (tops.size()!=1?"": tops.get(0).getSampleId() + (tops.get(0).getSampleName()!=null && tops.get(0).getSampleName().length()>0? " [" + tops.get(0).getSampleName() + "]":"")).replace(TAB, ' '));	
-				sb.append(TAB + name.replace(TAB, ' '));	 						
-				sb.append(TAB + staining.replace(TAB, ' ')); 		
-				sb.append(TAB + sectionNo.replace(TAB, ' '));	 				
+				sb.append(TAB + (group==null?"": group.getName()).replace(TAB, ' '));		//3 -Group
+				sb.append(TAB + (tops.size()!=1?"": tops.get(0).getSampleId() + (tops.get(0).getSampleName()!=null && tops.get(0).getSampleName().length()>0? " [" + tops.get(0).getSampleName() + "]":"")).replace(TAB, ' '));
+				sb.append(TAB + name.replace(TAB, ' '));
+				sb.append(TAB + staining.replace(TAB, ' '));
+				sb.append(TAB + sectionNo.replace(TAB, ' '));
 				sb.append("\r\n");
 			}
 		}
 		String s = sb.toString();
-		
+
 		if(slideMate) {
 			//Replace all empty lines with '.' (bug from the slideprinter)
 			s = s.replaceAll("\\$\\$", "\\$.\\$").replaceAll("\\$\\$", "\\$.\\$");
 		}
-		
+
 		return s;
 	}
-	
 
-		
+
+
 }

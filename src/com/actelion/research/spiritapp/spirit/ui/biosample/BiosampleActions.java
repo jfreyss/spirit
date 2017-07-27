@@ -48,13 +48,14 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
+import javax.swing.KeyStroke;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.admin.AdminActions;
+import com.actelion.research.spiritapp.spirit.ui.audit.BiosampleHistoryDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.BiosampleDiscardDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.BiosampleDuplicatesDlg;
-import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.BiosampleHistoryDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.SetBiosampleQualityDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.SetBiosampleStatusDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.dialog.SetExpiryDateDlg;
@@ -63,10 +64,8 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.edit.CreateChildrenDl
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.form.BiosampleFormDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.selector.SelectorDlg;
-import com.actelion.research.spiritapp.spirit.ui.container.CheckinDlg;
-import com.actelion.research.spiritapp.spirit.ui.container.CheckoutDlg;
-import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
-import com.actelion.research.spiritapp.spirit.ui.lf.UserIdComboBox;
+import com.actelion.research.spiritapp.spirit.ui.location.CheckinDlg;
+import com.actelion.research.spiritapp.spirit.ui.location.CheckoutDlg;
 import com.actelion.research.spiritapp.spirit.ui.pivot.PivotTable;
 import com.actelion.research.spiritapp.spirit.ui.print.PrintingDlg;
 import com.actelion.research.spiritapp.spirit.ui.result.edit.EditResultDlg;
@@ -74,6 +73,8 @@ import com.actelion.research.spiritapp.spirit.ui.study.SetLivingStatusDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritAction;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
+import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.UserIdComboBox;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -154,7 +155,7 @@ public class BiosampleActions {
 				String biotype = Spirit.getConfig().getProperty("biosample.type", "");
 				Biosample biosample = new Biosample();
 				biosample.setBiotype(DAOBiotype.getBiotype(biotype));
-				EditBiosampleDlg.createDialogForEditInTransactionMode(null, Collections.singletonList(biosample)).setVisible(true);
+				EditBiosampleDlg.createDialogForEditInTransactionMode(Collections.singletonList(biosample)).setVisible(true);
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
@@ -193,7 +194,7 @@ public class BiosampleActions {
 					}
 				}
 
-				EditBiosampleDlg.createDialogForEditInTransactionMode(null, res).setVisible(true);
+				EditBiosampleDlg.createDialogForEditInTransactionMode(res).setVisible(true);
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
@@ -261,6 +262,7 @@ public class BiosampleActions {
 			this.biosamples = biosamples;
 			putValue(Action.MNEMONIC_KEY, (int)('p'));
 			putValue(Action.SMALL_ICON, IconType.PRINT.getIcon());
+			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control P"));
 			if(biosamples==null) {
 				setEnabled(true);
 			} else {
@@ -341,6 +343,7 @@ public class BiosampleActions {
 	public static class Action_BatchEdit extends AbstractAction {
 
 		private final List<Biosample> biosamples;
+		private final Study candidatesForStudy;
 
 		/**
 		 * Constructor for an edit action (generic, you must implement getBiosamples)
@@ -350,6 +353,15 @@ public class BiosampleActions {
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(Action.SMALL_ICON, IconType.EDIT.getIcon());
 			this.biosamples = null;
+			this.candidatesForStudy = null;
+		}
+
+		public Action_BatchEdit(String title, Study candidatesForStudy) {
+			super(title);
+			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
+			putValue(Action.SMALL_ICON, IconType.BIOSAMPLE.getIcon());
+			this.biosamples = null;
+			this.candidatesForStudy = candidatesForStudy;
 		}
 
 		/**
@@ -362,6 +374,7 @@ public class BiosampleActions {
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(Action.SMALL_ICON, IconType.EDIT.getIcon());
 			setEnabled(SpiritRights.canEditBiosamples(biosamples,SpiritFrame.getUser()));
+			this.candidatesForStudy = null;
 		}
 
 		public List<Biosample> getBiosamples() {
@@ -379,12 +392,14 @@ public class BiosampleActions {
 					throw new Exception("You are not allowed to edit those biosamples");
 				}
 
-				if(biosamples.size()==1 && biosamples.get(0).getInheritedStudy()==null) {
+				if(candidatesForStudy==null && biosamples.size()==1 && biosamples.get(0).getInheritedStudy()==null) {
 					//We open the component editor only if we have one item and no study
 					new BiosampleFormDlg(biosamples.get(0));
 				} else {
 					//Open the batch edit dialog
-					EditBiosampleDlg.createDialogForEditInTransactionMode(null, getBiosamples()).setVisible(true);
+					EditBiosampleDlg dlg = EditBiosampleDlg.createDialogForEditInTransactionMode(getBiosamples());
+					dlg.setCandidatesForStudy(candidatesForStudy);
+					dlg.setVisible(true);
 				}
 
 			} catch(Exception ex) {
@@ -454,7 +469,7 @@ public class BiosampleActions {
 				dlg.setVisible(true);
 				List<Biosample> children = dlg.getChildren();
 				if(children!=null) {
-					EditBiosampleDlg dlg2 = EditBiosampleDlg.createDialogForEditInTransactionMode("Create Children", children);
+					EditBiosampleDlg dlg2 = EditBiosampleDlg.createDialogForEditInTransactionMode(children);
 					dlg2.setVisible(true);
 				}
 			} catch (Exception ex) {
@@ -753,6 +768,13 @@ public class BiosampleActions {
 
 	//////////////////////////////////////////////////
 	public static void attachPopup(final BiosampleTable table) {
+		table.getInputMap().put(KeyStroke.getKeyStroke("control P"), "print");
+		table.getActionMap().put("print", new Action_Print(null) {
+			@Override
+			public List<Biosample> getBiosamples() {
+				return table.getSelection();
+			}
+		});
 		table.addMouseListener(new PopupAdapter(table) {
 			@Override
 			protected void showPopup(MouseEvent e) {

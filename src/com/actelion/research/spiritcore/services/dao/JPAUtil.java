@@ -32,6 +32,7 @@ import java.util.StringTokenizer;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.FlushModeType;
 import javax.persistence.Persistence;
 
 import org.slf4j.LoggerFactory;
@@ -94,12 +95,13 @@ public class JPAUtil {
 		}
 
 		/**
-		 * Not Thread-safe. Clear the cache of all entityManagers
+		 * Clear the cache of all entityManagers associated to all threads.
+		 * Make sure all related threads are stopped
 		 */
 		public void clear() {
 			for(final EntityManager em : new ArrayList<>(getAll())) {
-				LoggerFactory.getLogger(JPAUtil.class).debug("Clear EM: "+em+" open="+em.isOpen());
 				if(em!=null && em.isOpen() ) {
+					LoggerFactory.getLogger(JPAUtil.class).debug("Clear EM: "+em+" active="+em.getTransaction().isActive());
 					if(em.getTransaction().isActive()) em.getTransaction().rollback();
 					em.clear();
 				}
@@ -130,6 +132,7 @@ public class JPAUtil {
 			if(!connected) {
 				if(em!=null) all.remove(em);
 				em  = factory.createEntityManager();
+				em.setFlushMode(FlushModeType.AUTO);
 				LoggerFactory.getLogger(JPAUtil.class).debug("Create EntityManager");
 				all.add(em);
 				set(em);
@@ -186,13 +189,16 @@ public class JPAUtil {
 		});
 	}
 
+	public static void clear() {
+		getManager().clear();
+	}
 	/**
 	 * Clear all entity manager and Spirit Cache.
 	 * Not Thread safe
 	 */
-	public static void clear() {
+	public static void clearAll() {
 		try {
-			LoggerFactory.getLogger(JPAUtil.class).debug("clear sessions");
+			LoggerFactory.getLogger(JPAUtil.class).debug("Clear Sessions");
 			popEditableContext();
 			if(readEntityManager!=null) {
 				readEntityManager.clear();
@@ -259,6 +265,7 @@ public class JPAUtil {
 		if(factory==null) {
 			initialize();
 		}
+
 		return factory.createEntityManager();
 	}
 
@@ -445,6 +452,7 @@ public class JPAUtil {
 		EntityManager session = thread2entityManager.get(thread);
 		if(session==null || !session.isOpen()) {
 			session = factory.createEntityManager();
+			session.setFlushMode(FlushModeType.AUTO);
 			thread2entityManager.put(thread, session);
 		}
 		return session;

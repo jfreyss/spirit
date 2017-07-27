@@ -40,20 +40,21 @@ import com.actelion.research.util.ui.JComboCheckBox;
  * @author freyssj
  */
 public class MultiComboboxCellEditor extends AbstractCellEditor implements TableCellEditor {
-	private JComboCheckBox cb = new JComboCheckBox();	
-//	private JTextComboBox cb = new JTextComboBox();	
+	private JComboCheckBox cb = new JComboCheckBox();
+	//	private JTextComboBox cb = new JTextComboBox();
 	private final List<String> choices = new ArrayList<String>();
-	
+
 	public MultiComboboxCellEditor(String csvChoices) {
-		
+
 		for(String s: BiotypeMetadata.splitChoices(csvChoices)) {
-			choices.add(s);		
+			choices.add(s);
 		}
-		Collections.sort(choices);		
+		Collections.sort(choices);
+		cb.setAllowTyping(false);
 		cb.setMargin(null);
 		cb.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
 	}
-	
+
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 		cb.setChoices(choices);
@@ -67,5 +68,5 @@ public class MultiComboboxCellEditor extends AbstractCellEditor implements Table
 	public String getCellEditorValue() {
 		String s =  cb.getText();
 		return s;
-	}				
+	}
 }

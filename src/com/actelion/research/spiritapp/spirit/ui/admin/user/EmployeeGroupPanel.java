@@ -104,7 +104,7 @@ public class EmployeeGroupPanel extends JPanel {
 	}
 
 	public void refresh() {
-		SpiritFrame.clear();
+		SpiritFrame.clearAll();
 		List<EmployeeGroup> emps = DBAdapter.getAdapter().getEmployeeGroups();
 		employeeGroupTable.setRows(emps);
 	}

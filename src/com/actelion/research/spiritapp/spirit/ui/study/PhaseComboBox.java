@@ -29,38 +29,31 @@ import javax.swing.JLabel;
 
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.util.ui.JGenericComboBox;
+import com.actelion.research.util.ui.JObjectComboBox;
 
-public class PhaseComboBox extends JGenericComboBox<Phase> {
-	
+public class PhaseComboBox extends JObjectComboBox<Phase> {
+
+	private PhaseLabel phaseLabel = new PhaseLabel();
+
 	public PhaseComboBox() {
-		this("");
+		this("Phase...");
 	}
+
 	public PhaseComboBox(String label) {
 		setTextWhenEmpty(label);
 	}
-	
+
 	public PhaseComboBox(Collection<Phase> phases) {
 		this();
 		setValues(phases);
 	}
+
 	public PhaseComboBox(Collection<Phase> phases, String label) {
 		this();
 		setTextWhenEmpty(label);
 		setValues(phases);
 	}
-	
-	private PhaseLabel phaseLabel = new PhaseLabel();
-	
-	@Override
-	public Component processCellRenderer(JLabel comp, Phase value, int index) {
-		phaseLabel.setPhase(value);
-		phaseLabel.setBackground(comp.getBackground());
-		phaseLabel.setForeground(comp.getForeground());
-		phaseLabel.setBorder(comp.getBorder());
-		return phaseLabel;
-	}
-	
+
 	public void selectCurrentPhase() {
 		Date now = JPAUtil.getCurrentDateFromDatabase();
 		for (Phase phase : getValues()) {
@@ -70,4 +63,21 @@ public class PhaseComboBox extends JGenericComboBox<Phase> {
 			}
 		}
 	}
+
+	@Override
+	public Component processCellRenderer(JLabel comp, String object, int index) {
+		Phase phase = getMap().get(object);
+		phaseLabel.setPhase(phase);
+		phaseLabel.setBackground(comp.getBackground());
+		phaseLabel.setForeground(comp.getForeground());
+		phaseLabel.setBorder(comp.getBorder());
+		return phaseLabel;
+	}
+
+
+	@Override
+	public String convertObjectToString(Phase obj) {
+		return obj==null?"": obj.getName();
+	}
+
 }

@@ -23,6 +23,7 @@ package com.actelion.research.spiritapp.spirit.ui.print;
 
 import java.util.List;
 
+import javax.swing.Box;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 
@@ -43,18 +44,16 @@ public class CagePrinterAdapter extends PrintAdapter {
 	public CagePrinterAdapter(final PrintingTab tab, final ContainerType containerType) {
 		super(tab);
 	}
-	
-	
+
+
 	@Override
 	public JPanel getConfigPanel() {
 		return UIUtils.createVerticalBox(
 				printGroupTreatmentCheckBox,
 				printTreatmentDescCheckBox,
-				printBackgroundCheckBox);
-//		UIUtils.createHorizontalBox(printGroupTreatmentCheckBox, Box.createHorizontalGlue()),
-//		UIUtils.createHorizontalBox(printTreatmentDescCheckBox, Box.createHorizontalGlue()));
+				printBackgroundCheckBox, Box.createVerticalGlue());
 	}
-	
+
 	@Override
 	public void eventSetRows(List<Container> containers) {
 		Study s = Biosample.getStudy(Container.getBiosamples(containers));
@@ -62,12 +61,12 @@ public class CagePrinterAdapter extends PrintAdapter {
 			printGroupTreatmentCheckBox.setEnabled(false);
 			printGroupTreatmentCheckBox.setSelected(false);
 			printTreatmentDescCheckBox.setEnabled(false);
-			printTreatmentDescCheckBox.setSelected(false);			
+			printTreatmentDescCheckBox.setSelected(false);
 		} else {
 			printGroupTreatmentCheckBox.setEnabled(true);
 			printGroupTreatmentCheckBox.setSelected(true);
 			printTreatmentDescCheckBox.setEnabled(true);
-			printTreatmentDescCheckBox.setSelected(Spirit.getConfig().getProperty("print.cage.fullTreatment", false));			
+			printTreatmentDescCheckBox.setSelected(Spirit.getConfig().getProperty("print.cage.fullTreatment", false));
 		}
 	}
 
@@ -76,7 +75,7 @@ public class CagePrinterAdapter extends PrintAdapter {
 		Spirit.getConfig().setProperty("print.cage.fullTreatment", printTreatmentDescCheckBox.isSelected());
 		CagePrinterPDF.printCages(containers, printGroupTreatmentCheckBox.isSelected(), printTreatmentDescCheckBox.isSelected(), printBackgroundCheckBox.isSelected());
 	}
-	
 
-	
+
+
 }

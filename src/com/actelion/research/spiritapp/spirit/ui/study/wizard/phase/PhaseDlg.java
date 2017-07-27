@@ -42,8 +42,8 @@ import javax.swing.JScrollPane;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
-import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyWizardDlg;
+import com.actelion.research.spiritapp.spirit.ui.util.HelpBinder;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.result.Result;

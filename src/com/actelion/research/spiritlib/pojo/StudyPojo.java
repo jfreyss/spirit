@@ -31,57 +31,57 @@ import java.util.Set;
 
 /**
  * POJO reprensenting a study.
- * 
- * 
+ *
+ *
  * @author freyssj
  *
  */
 public class StudyPojo implements Serializable {
-	
+
 	private int id;
 	private String studyId;
-	private String ivv;
+	private String localId;
 	private String title;
-	
+
 	private String state;
 	private String adminUsers = "";
 	private String expertUsers = "";
 	private String blindAllUsers = "";
 	private String blindDetailsUsers = "";
-	
+
 	private String notes = "";
 	private Map<String, String> metadata;
-	
+
 	private String updUser = "";
 	private String creUser = "";
 
 	private Date updDate = new Date();
 	private Date creDate = new Date();
-	
-	private List<GroupPojo> groups = new ArrayList<>();	
+
+	private List<GroupPojo> groups = new ArrayList<>();
 	private List<PhasePojo> phases = new ArrayList<>();
 
-	private List<NamedTreatmentPojo> namedTreatments = new ArrayList<>();	
-	private List<NamedSamplingPojo> namedSamplings = new ArrayList<>();		
+	private List<NamedTreatmentPojo> namedTreatments = new ArrayList<>();
+	private List<NamedSamplingPojo> namedSamplings = new ArrayList<>();
 	private List<StudyActionPojo> studyActions = new ArrayList<>();
-	
+
 	private Date day1;
-	
-	private boolean synchronizeSamples;	
+
+	private boolean synchronizeSamples;
 	private String phaseFormat;
-	
-	
+
+
 	//TODO measurements
 
-	//TODO docs	
-//	private Set<Document> documents = new HashSet<>();
+	//TODO docs
+	//	private Set<Document> documents = new HashSet<>();
 
 	private Set<String> attachedSampleIds = new HashSet<>();
-	
+
 	public StudyPojo() {
-		
+
 	}
-	
+
 	public int getId() {
 		return id;
 	}
@@ -97,12 +97,12 @@ public class StudyPojo implements Serializable {
 		this.studyId = studyId;
 	}
 
-	public String getIvv() {
-		return ivv;
+	public String getLocalId() {
+		return localId;
 	}
 
-	public void setIvv(String ivv) {
-		this.ivv = ivv;
+	public void setLocalId(String localId) {
+		this.localId = localId;
 	}
 
 	public String getTitle() {
@@ -151,7 +151,7 @@ public class StudyPojo implements Serializable {
 	public void setMetadata(Map<String, String> metadata) {
 		this.metadata = metadata;
 	}
-	
+
 	public String getUpdUser() {
 		return updUser;
 	}
@@ -255,7 +255,7 @@ public class StudyPojo implements Serializable {
 	public void setAttachedSampleIds(Set<String> attachedSampleIds) {
 		this.attachedSampleIds = attachedSampleIds;
 	}
-	
+
 	public String getBlindAllUsers() {
 		return blindAllUsers;
 	}
@@ -276,6 +276,6 @@ public class StudyPojo implements Serializable {
 	public String toString() {
 		return "[Study: " +studyId+"]";
 	}
-	
-	
+
+
 }

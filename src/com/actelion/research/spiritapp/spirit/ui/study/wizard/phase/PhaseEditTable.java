@@ -31,11 +31,11 @@ import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.ExcelTable;
-import com.actelion.research.util.ui.exceltable.ExcelTableModel;
+import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
 public class PhaseEditTable extends ExcelTable<Phase> {
-	
-	public static class PhaseEditTableModel extends ExcelTableModel<Phase>{ 
+
+	public static class PhaseEditTableModel extends ExtendTableModel<Phase>{
 		public PhaseEditTableModel(final Study study, final Map<Phase, Pair<Integer, Integer>> phase2count) {
 			List<Column<Phase, ?>> columns = new ArrayList<>();
 			columns.add(new Column<Phase, String>("Name", String.class, 50) {
@@ -43,6 +43,7 @@ public class PhaseEditTable extends ExcelTable<Phase> {
 				public String getValue(Phase row) {
 					return row.getName();
 				}
+				@Override
 				public void setValue(Phase row, String value) {
 					String v = Phase.cleanName(value, study.getPhaseFormat());
 					if(v.length()==0) {
@@ -52,7 +53,7 @@ public class PhaseEditTable extends ExcelTable<Phase> {
 						} catch(Exception e) {
 							JExceptionDialog.showError(e);
 						}
-					} else {					
+					} else {
 						row.setName(v);
 					}
 				}
@@ -97,13 +98,13 @@ public class PhaseEditTable extends ExcelTable<Phase> {
 			}
 			setColumns(columns);
 		}
-		
+
 		@Override
 		public Phase createRecord() {
 			return new Phase();
 		}
 	}
-	
+
 	public PhaseEditTable(Study study, Map<Phase, Pair<Integer, Integer>> phase2count) {
 		super(new PhaseEditTableModel(study, phase2count));
 		setCanSort(false);
@@ -114,7 +115,7 @@ public class PhaseEditTable extends ExcelTable<Phase> {
 	public PhaseEditTableModel getModel() {
 		return (PhaseEditTableModel) super.getModel();
 	}
-	
+
 	public List<Phase> getNonEmptyRows() {
 		List<Phase> res = new ArrayList<>();
 		for (Phase phase : getRows()) {

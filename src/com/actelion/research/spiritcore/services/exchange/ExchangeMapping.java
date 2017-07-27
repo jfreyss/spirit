@@ -294,10 +294,10 @@ public class ExchangeMapping {
 		}
 
 		//Study
-		Set<String> ids = Study.getIvvOrStudyIds(exchange.getStudies());
-		Map<String, List<Study>> id2existingStudy = Study.mapIvvAndStudyId(DAOStudy.getStudyByIvvOrStudyId(MiscUtils.flatten(ids, " ")));
+		Set<String> ids = Study.getLocalIdOrStudyIds(exchange.getStudies());
+		Map<String, List<Study>> id2existingStudy = Study.mapIvvAndStudyId(DAOStudy.getStudyByLocalIdOrStudyId(MiscUtils.flatten(ids, " ")));
 		for (Study s : exchange.getStudies()) {
-			List<Study> l = id2existingStudy.get(s.getIvv());
+			List<Study> l = id2existingStudy.get(s.getLocalId());
 			if(l==null || l.size()!=1 || l.get(0).getGroups().size()!=s.getGroups().size() || l.get(0).getPhases().size()!=s.getPhases().size()) {
 				l = id2existingStudy.get(s.getStudyId());
 			}
@@ -313,7 +313,7 @@ public class ExchangeMapping {
 			}
 		}
 		for (Study s : exchange.getStudies()) {
-			if(id2existingStudy.get(s.getStudyId())!=null || id2existingStudy.get(s.getIvv())!=null) {
+			if(id2existingStudy.get(s.getStudyId())!=null || id2existingStudy.get(s.getLocalId())!=null) {
 				hasExistingEntities = true;
 			}
 		}

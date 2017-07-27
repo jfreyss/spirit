@@ -52,8 +52,8 @@ import javax.swing.text.JTextComponent;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.ContainerComboBox;
-import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.study.NamedTreatmentComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.util.component.BalanceDecorator;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
@@ -274,7 +274,7 @@ public class MonitoringDlg extends JEscapeDialog {
 					if (c != 0) return c;
 					c = CompareUtils.compare(o1.getFirstBiosample()==null?"": o1.getFirstBiosample().getSampleIdName(), o2.getFirstBiosample()==null?"": o2.getFirstBiosample().getSampleIdName());
 				} else {
-					c = CompareUtils.compare(o1.getFirstGroup(), o2.getFirstGroup());
+					c = CompareUtils.compare(o1.getGroup(), o2.getGroup());
 					if (c != 0) return c;
 					c = CompareUtils.compare(o1.getContainerId(), o2.getContainerId());
 				}

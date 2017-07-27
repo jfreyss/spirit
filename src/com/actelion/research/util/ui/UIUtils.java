@@ -40,6 +40,8 @@ import java.awt.Toolkit;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +55,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 
 public final class UIUtils {
@@ -193,15 +196,12 @@ public final class UIUtils {
 	public static JPanel createTable(int columns, List<? extends Component> comps) {
 		return createTable(columns, 0, 0, comps.toArray(new Component[comps.size()]));
 	}
-
 	public static JPanel createTable(int columns, int ipadx, int ipady, List<? extends Component> comps) {
 		return createTable(columns, ipadx, ipady, comps.toArray(new Component[comps.size()]));
 	}
-
 	public static JPanel createTable(int columns, Component... comps) {
 		return createTable(columns, 0, 0, comps);
 	}
-
 	public static JPanel createTable(int columns, int ipadx, int ipady, Component... comps) {
 		JPanel panel = new JPanel(new GridBagLayout());
 		panel.setOpaque(false);
@@ -220,6 +220,39 @@ public final class UIUtils {
 		}
 		c.gridy++; c.weighty= 1; panel.add(Box.createGlue(), c);
 		return panel;
+	}
+
+	/**
+	 * Pivot a list of components by changing the order
+	 * Ex:
+	 * <pre>
+	 * comp0	comp4	comp8
+	 * comp1	comp5	comp9
+	 * comp2	comp6	comp7
+	 * comp3	comp7
+	 * </pre>
+	 * becomes:
+	 * <pre>
+	 * comp0	comp1	comp2
+	 * comp3	comp4	comp5
+	 * comp6	comp7	comp8
+	 * comp9	comp10	comp11
+	 * </pre>
+	 *
+	 * @param comps
+	 * @param columns
+	 * @return
+	 */
+	public static<T> List<T> pivot(List<T> comps, int columns) {
+		List<T> res = new ArrayList<>();
+		int rows = (comps.size()+columns-1)/columns;
+		for (int i = 0; i < comps.size(); i++) {
+			int nx = i%columns;
+			int ny = i/columns;
+			int n = nx*rows + ny;
+			res.add(n<comps.size()? comps.get(n): null);
+		}
+		return res;
 	}
 
 	public static JPanel createTitleBoxSmall(final String title, JComponent comp) {
@@ -397,25 +430,28 @@ public final class UIUtils {
 	}
 
 
-	public static JPanel createCenterPanel(Component comp, boolean alignTop) {
+	public static JPanel createCenterPanel(Component comp) {
+		return createCenterPanel(comp, SwingConstants.CENTER);
+	}
+
+	/**
+	 * Align horizontally. Vertical alignment according to vAlign (SwingConstants.TOP, SwingConstants.BOTTOM or SwingConstants.CENTER)
+	 * @param comp
+	 * @param vAlign
+	 * @return
+	 */
+	public static JPanel createCenterPanel(Component comp, int vAlign) {
 		JPanel panel = new JPanel(new GridBagLayout());
 		panel.setOpaque(false);
 		GridBagConstraints c = new GridBagConstraints();
 		c.weightx = c.weighty = 0;
 		c.gridx = 2; c.gridy = 2; panel.add(comp, c);
-		c.weightx = 1; c.weighty = alignTop?0: 1;
-		c.gridx = 1; c.gridy = 2; panel.add(new JLabel(), c);
-		c.weightx = 1; c.weighty = 1;
+		c.weightx = 1; c.weighty = vAlign==SwingConstants.TOP? 0: 1;
+		c.gridx = 1; c.gridy = 1; panel.add(new JLabel(), c);
+		c.weightx = 1; c.weighty = vAlign==SwingConstants.BOTTOM? 0: 1;
 		c.gridx = 3; c.gridy = 3; panel.add(new JLabel(), c);
 		return panel;
 	}
-
-	public static JPanel createCenterPanel(Border border, Component comp, boolean alignTop) {
-		JPanel panel = createCenterPanel(comp, alignTop);
-		panel.setBorder(border);
-		return panel;
-	}
-
 
 	/**
 	 * Draws a string starting at coordinate x,y and try to fit it in the given width and height.
@@ -655,4 +691,11 @@ public final class UIUtils {
 		}
 	}
 
+	public static void main(String[] args) {
+		System.out.println("UIUtils.main() "+pivot(Arrays.asList(new String[]{
+				"A", "B",
+				"C", "D",
+				"E", "F",
+		"G"}), 2));
+	}
 }

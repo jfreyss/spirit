@@ -23,8 +23,8 @@ package com.actelion.research.spiritapp.spirit.ui.admin;
 
 import java.awt.Dimension;
 
-import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
+import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;

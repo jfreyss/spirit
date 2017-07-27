@@ -66,7 +66,7 @@ public class Spirit extends SpiritFrame {
 
 
 	public Spirit(Runnable afterLogin) {
-		super("Spirit", "Spirit - (C) Joel Freyss - Actelion", afterLogin);
+		super("Spirit", "Spirit - (C) Joel Freyss - Idorsia Pharmaceuticals Ltd", afterLogin);
 	}
 
 	@Override

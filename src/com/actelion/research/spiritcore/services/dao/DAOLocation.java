@@ -52,6 +52,11 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.QueryTokenizer;
 
+/**
+ * DAO functions linked to locations
+ *
+ * @author Joel Freyss
+ */
 @SuppressWarnings("unchecked")
 public class DAOLocation {
 	private static Logger logger = LoggerFactory.getLogger(DAOLocation.class);
@@ -115,7 +120,7 @@ public class DAOLocation {
 
 			if(location.getId()<=0 && (location.getName()==null || location.getName().length()==0) && location.getParent()==null) continue;
 
-			LoggerFactory.getLogger(DAOLocation.class).debug("persist "+location.getHierarchyFull() + "("+location.getId()+") - parent "+(location.getParent()==null?"NA": location.getParent().getHierarchyFull() + "("+location.getParent().getId()+")"));
+			LoggerFactory.getLogger(DAOLocation.class).debug("persist " + location.getHierarchyFull() + "(" + location.getId() + ") - parent " + (location.getParent()==null?"NA": location.getParent().getHierarchyFull() + "(" + location.getParent().getId() + ")"));
 
 			//Name is required
 			location.setName(location.getName()==null? "": location.getName().trim());
@@ -126,14 +131,16 @@ public class DAOLocation {
 			if(location.getLocationType()==null) throw new Exception("You must specify the type for "+location);
 
 			//Department is required for private or protected locations
-			if((location.getPrivacy()==Privacy.PRIVATE || location.getPrivacy()==Privacy.PROTECTED)) {
-				if(location.getEmployeeGroup()==null) throw new Exception("You must specify the department for "+location);
+			if(location.getPrivacy()==null) {
+				throw new Exception("The privacy is required for " + location);
+			} else if((location.getPrivacy()==Privacy.PRIVATE || location.getPrivacy()==Privacy.PROTECTED)) {
+				if(location.getEmployeeGroup()==null) throw new Exception("You must specify the department for " + location);
 			}
 
 			//Check positions
 			if(location.getLabeling()!=LocationLabeling.NONE) {
-				if(location.getRows()<=0)  throw new Exception("You must specify the rows for "+location);
-				if(location.getCols()<=0)  throw new Exception("You must specify the cols for "+location);
+				if(location.getRows()<=0)  throw new Exception("You must specify the rows for " + location);
+				if(location.getCols()<=0)  throw new Exception("You must specify the cols for " + location);
 			}
 
 			//Check cycles
@@ -149,22 +156,18 @@ public class DAOLocation {
 			if(location.getParent()!=null) {
 				for (Location l : location.getParent().getChildren()) {
 					if(!l.equals(location) && l.getName().equals(location.getName())) {
-						throw new Exception("The location "+location.getName()+" must be unique under "+location.getParent());
+						throw new Exception("The location " + location.getName() + " must be unique under " + location.getParent());
 					}
 				}
 			} else {
 				for (Location l : getLocationRoots()) {
 					if(!l.equals(location) && l.getName().equals(location.getName())) {
-						throw new Exception("The location "+location.getName()+" must be unique");
+						throw new Exception("The location " + location.getName() + " must be unique");
 					}
-				}
-				if(location.getLocationType().getCategory()==LocationCategory.CONTAINER) {
-					//						throw new Exception("The "+location.getLocationType()+" must have a parent");
 				}
 			}
 
 			if (location.getParent() != null && location.getParent().getId() <= 0 && !locations.contains(location.getParent())) {
-				//					System.err.println(locations + " > contains "+location.getParent()+" = "+locations.contains(location.getParent()));
 				throw new Exception("The parent of " + location + " id:" + location.getId() + " ->" + location.getParent() + " id:"+(location.getParent().getId())+ " is invalid, 2nd parent:"+location.getParent().getParent());
 			}
 
@@ -173,6 +176,10 @@ public class DAOLocation {
 				Location parent = map.get(location.getParent());
 				if(parent==null) throw new Exception("Could not persist "+location+" without saving its parent first: "+location.getParent());
 				location.setParent(parent);
+			}
+
+			if(location.getPrivacy()==null) {
+				location.setPrivacy(Privacy.INHERITED);
 			}
 
 

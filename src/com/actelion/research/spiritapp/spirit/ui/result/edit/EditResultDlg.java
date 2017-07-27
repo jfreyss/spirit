@@ -21,14 +21,9 @@
 
 package com.actelion.research.spiritapp.spirit.ui.result.edit;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,7 +34,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
@@ -49,8 +43,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
@@ -244,135 +236,94 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 
 	private void init() {
 		//Build the layout
-		JPanel topPanel = new JPanel(new GridBagLayout());
+		JPanel topPanel = null;
 		if(editWholeExperiment) {
-			GridBagConstraints c = new GridBagConstraints();
-			c.anchor = GridBagConstraints.WEST;
-			c.gridy = 0; c.gridx = 0; topPanel.add(new JCustomLabel("ELB: ", Font.BOLD), c);
-			c.gridy = 0; c.gridx = 1; topPanel.add(elbTextField, c);
-			elbTextField.setEnabled(false);
-			c.gridy = 0; c.gridx = 2; c.weightx = 1; topPanel.add(new JLabel(), c);
-			topPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(), BorderFactory.createEmptyBorder(2, 2, 2, 2)));
+			topPanel = UIUtils.createTitleBox(UIUtils.createHorizontalBox(new JLabel("ELB: "), elbTextField, Box.createHorizontalGlue()));
 		}
 
 		JButton deleteButton = new JIconButton(IconType.DELETE, "Delete experiment");
 		deleteButton.setVisible(editWholeExperiment && !newExperiment);
 		deleteButton.setDefaultCapable(false);
-		deleteButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				eventDelete();
-			}
+		deleteButton.addActionListener(e-> {
+			eventDelete();
 		});
-
 
 		JButton excelButton = new JIconButton(IconType.EXCEL, "To Excel");
-		excelButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					EditResultTab tab = resultsTabs.get(tabbedPane.getSelectedIndex());
-					POIUtils.exportToExcel(tab.getTable().getTabDelimitedTable(), POIUtils.ExportMode.HEADERS_TOP);
-
-				} catch (Exception ex) {
-					JExceptionDialog.showError(EditResultDlg.this, ex);
-				}
+		excelButton.addActionListener(e-> {
+			try {
+				EditResultTab tab = resultsTabs.get(tabbedPane.getSelectedIndex());
+				POIUtils.exportToExcel(tab.getTable().getTabDelimitedTable(), POIUtils.ExportMode.HEADERS_TOP);
+			} catch (Exception ex) {
+				JExceptionDialog.showError(EditResultDlg.this, ex);
 			}
 		});
 
-
-		/**
-		 * Save Action
-		 */
 		JButton okButton = new JIconButton(IconType.SAVE, editWholeExperiment? (!newExperiment? "Update Experiment": "Save Experiment"): "Update Results");
+		okButton.addActionListener(e-> {
+			final SpiritUser user = SpiritFrame.getUser();
+			assert user!=null;
 
-		okButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				final long start = System.currentTimeMillis();
-				final SpiritUser user = SpiritFrame.getUser();
-				assert user!=null;
+			new SwingWorkerExtended("Saving", getContentPane()) {
+				private Exception exception = null;
+				private List<Result> toSave;
+				@Override
+				protected void doInBackground() throws Exception {
+					try {
+						toSave = validateResults();
+						if(toSave==null) return;
 
-				new SwingWorkerExtended("Saving", getContentPane()) {
-					private Exception exception = null;
-					private List<Result> toSave;
-					@Override
-					protected void doInBackground() throws Exception {
-						try {
-							toSave = validateResults();
-							if(toSave==null) return;
+						if(editWholeExperiment) {
+							DAOResult.persistExperiment(newExperiment, elbTextField.getText().trim(), toSave, user);
 
-							if(editWholeExperiment) {
-								DAOResult.persistExperiment(newExperiment, elbTextField.getText().trim(), toSave, user);
-
-							} else {
-								//Save the visible results
-								DAOResult.persistResults(toSave, user);
-							}
-
-						} catch (Exception e) {
-							e.printStackTrace();
-							exception = e;
-						}
-					}
-					@Override
-					protected void done() {
-
-						if(exception==null) {
-
-							if(toSave==null) return;
-							try {
-
-								JOptionPane.showMessageDialog(EditResultDlg.this, toSave.size() + " Results saved", "Success", JOptionPane.INFORMATION_MESSAGE);
-								SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_ADDED, Result.class, toSave);
-								dispose();
-								System.out.println("EditResultDlg.eventOk12() "+(System.currentTimeMillis()-start)+"ms");
-							} catch(Exception e) {
-								JExceptionDialog.showError(EditResultDlg.this, e);
-							}
-
-						} else if(exception instanceof ValidationException) {
-							ValidationException e = (ValidationException) exception;
-							String col = e.getCol();
-							Result result = (Result) e.getRow();
-							int index = -1;
-							for (int i = 0; index<0 && i < resultsTabs.size(); i++) {
-								EditResultTab tab = resultsTabs.get(i);
-								index = tab.getTable().getRows().indexOf(result);
-							}
-							if(index>=0 && index<tabbedPane.getTabCount()) {
-								tabbedPane.setSelectedIndex(index);
-								EditResultTable table = resultsTabs.get(index).getTable();
-								table.setSelection(result, col);
-							} else {
-								System.err.println("Could not select "+e.getCol()+" "+e.getRow()+ ">? " + index);
-							}
-							JExceptionDialog.showError(EditResultDlg.this, e);
 						} else {
-							JExceptionDialog.showError(EditResultDlg.this, exception);
+							//Save the visible results
+							DAOResult.persistResults(toSave, user);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+						exception = e;
+					}
+				}
+				@Override
+				protected void done() {
+					if(exception==null) {
+
+						if(toSave==null) return;
+						try {
+							JOptionPane.showMessageDialog(EditResultDlg.this, toSave.size() + " Results saved", "Success", JOptionPane.INFORMATION_MESSAGE);
+							SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_ADDED, Result.class, toSave);
+							dispose();
+						} catch(Exception e) {
+							JExceptionDialog.showError(EditResultDlg.this, e);
 						}
 
-
+					} else if(exception instanceof ValidationException) {
+						ValidationException e = (ValidationException) exception;
+						String col = e.getCol();
+						Result result = (Result) e.getRow();
+						int index = -1;
+						for (int i = 0; index<0 && i < resultsTabs.size(); i++) {
+							EditResultTab tab = resultsTabs.get(i);
+							index = tab.getTable().getRows().indexOf(result);
+						}
+						if(index>=0 && index<tabbedPane.getTabCount()) {
+							tabbedPane.setSelectedIndex(index);
+							EditResultTable table = resultsTabs.get(index).getTable();
+							table.setSelection(result, col);
+						} else {
+							System.err.println("Could not select "+e.getCol()+" "+e.getRow()+ ">? " + index);
+						}
+						JExceptionDialog.showError(EditResultDlg.this, e);
+					} else {
+						JExceptionDialog.showError(EditResultDlg.this, exception);
 					}
+				}
 
-				};
-
-
-			}
+			};
 		});
 
-
-
-
-		JPanel content = new JPanel(new BorderLayout());
-		if(topPanel.getComponentCount()>1) {
-			content.add(BorderLayout.NORTH, topPanel);
-		}
-		content.add(BorderLayout.CENTER, tabbedPane);
-		content.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(deleteButton, excelButton, Box.createHorizontalGlue(), okButton));
-		setContentPane(content);
-		setSize(new Dimension(1000, 780));
-		setLocationRelativeTo(UIUtils.getMainFrame());
+		setContentPane(UIUtils.createBox(tabbedPane, topPanel, UIUtils.createHorizontalBox(deleteButton, excelButton, Box.createHorizontalGlue(), okButton)));
+		UIUtils.adaptSize(this, 1000, 780);
 		setVisible(true);
 	}
 
@@ -416,37 +367,32 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		}
 
 		//Center panel
-		tabbedPane.setBorder(BorderFactory.createEtchedBorder());
-		tabbedPane.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				int sel = tabbedPane.getSelectedIndex();
-				if(sel<0) return;
-				String title = tabbedPane.getTitleAt(sel);
-				if(title.equals("+") && sel>=0 && sel==tabbedPane.getTabCount()-1) {
-					tabbedPane.removeTabAt(sel);
+		tabbedPane.addChangeListener(e-> {
+			int sel = tabbedPane.getSelectedIndex();
+			if(sel<0) return;
+			String title = tabbedPane.getTitleAt(sel);
+			if(title.equals("+") && sel>=0 && sel==tabbedPane.getTabCount()-1) {
+				tabbedPane.removeTabAt(sel);
 
-					//Create a new resultsPanel
-					EditResultTab resultsTab = resultsTabs.size()>0? resultsTabs.get(resultsTabs.size()-1): null;
-					EditResultTab newPanel = new EditResultTab(EditResultDlg.this);
-					newPanel.getTestChoice().setSelection(resultsTab==null? null: resultsTab.getTestChoice().getSelection());
-					resultsTabs.add(newPanel);
-					newPanel.setResults(new ArrayList<Result>());
-					tabbedPane.addTab("Select Test", newPanel);
+				//Create a new resultsPanel
+				EditResultTab resultsTab = resultsTabs.size()>0? resultsTabs.get(resultsTabs.size()-1): null;
+				EditResultTab newPanel = new EditResultTab(EditResultDlg.this);
+				newPanel.getTestComboBox().setSelection(resultsTab==null? null: resultsTab.getTestComboBox().getSelection());
+				resultsTabs.add(newPanel);
+				newPanel.setResults(new ArrayList<Result>());
+				tabbedPane.addTab("Select Test", newPanel);
+				tabbedPane.setSelectedIndex(sel);
+
+				//Update the tab
+				newPanel.getTestComboBox().reset();
+				newPanel.getTestComboBox().setSelection(null);
+
+				if(editWholeExperiment) {
+					tabbedPane.addTab("+", new JPanel());
 					tabbedPane.setSelectedIndex(sel);
-
-					//Update the tab
-					newPanel.getTestChoice().reset();
-					newPanel.getTestChoice().setSelection(null);
-
-					if(editWholeExperiment) {
-						tabbedPane.addTab("+", new JPanel());
-						tabbedPane.setSelectedIndex(sel);
-					}
 				}
 			}
 		});
-
 
 		addResults(results, false);
 
@@ -470,15 +416,9 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		Map<Test, List<Result>> mapTest = Result.mapTest(results);
 		List<Test> tests = new ArrayList<>(mapTest.keySet());
 		for (Test test : tests) {
-			//			Map<Study, List<Result>> map = Result.mapStudy(mapTest.get(test));
-			//			List<Study> studies = new ArrayList<>(map.keySet());
-			//			Collections.sort(studies);
-			//			Collections.reverse(studies);
-			//			for (Study study : studies) {
 			EditResultTab tab = new EditResultTab(this);
 			tab2results.put(tab, mapTest.get(test));
 			resultsTabs.add(tab);
-			//			}
 		}
 
 		if(emptyCurrentTab) {
@@ -495,7 +435,6 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		//Update the components
 		updateCenterPanel();
 
-
 		//Set the results
 		for(EditResultTab tab: tab2results.keySet()) {
 			tab.setResults(tab2results.get(tab));
@@ -509,15 +448,12 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 				if(!result.isEmpty()) {empty = false; break;}
 			}
 			if(empty) {
-				System.out.println("EditResultDlg.addResults(2) remove tab");
 				removeTab(resultTab);
 			}
 		}
-		System.out.println("EditResultDlg.addResults(2) > "+resultsTabs.size()+" tabs");
 
 		tabbedPane.setSelectedIndex(Math.max(0, tabbedPane.getTabCount()-2));
 	}
-
 
 	protected void removeTab(EditResultTab tab) {
 		int index = resultsTabs.indexOf(tab);
@@ -542,9 +478,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		}
 	}
 
-
 	public void eventDelete() {
-
 		try {
 			String elb = elbTextField.getText();
 
@@ -588,8 +522,6 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 	 */
 	public List<Result> validateResults() throws Exception {
 
-		long start = System.currentTimeMillis();
-
 		//Synchronize the results with the elb, test, phases
 		final List<Result> toSave = new ArrayList<>();
 		List<Result> warnQualityResults = new ArrayList<>();
@@ -618,24 +550,20 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 				toSave.add(result);
 			}
 		}
-		System.out.println("EditResultDlg.eventOk2() "+(System.currentTimeMillis()-start)+"ms");
-
 
 		//Check that all results linked to a biosample have a study
 		for (Result result : toSave) {
 			Study s = result.getBiosample()!=null && result.getBiosample().getInheritedStudy()!=null? result.getBiosample().getInheritedStudy(): null;
 			if(s!=null) {
 				if(result.getPhase()!=null && result.getPhase().getStudy().getId()!=s.getId()) {
-					throw new ValidationException("The phase for the result "+result+" should be on study "+result.getPhase().getStudy().getIvv(), result, "Phase");
+					throw new ValidationException("The phase for the result "+result+" should be on study "+result.getPhase().getStudy().getLocalId(), result, "Phase");
 				}
 			}
 		}
-		System.out.println("EditResultDlg.eventOk5() "+(System.currentTimeMillis()-start)+"ms");
-
 
 		//Check the autocompletion fields for approximate spelling
 		CorrectionMap<TestAttribute, Result> correctionMap = new CorrectionMap<TestAttribute, Result>();
-		int obviousProblems = 0;
+		//		int obviousProblems = 0;
 		for (Result result : toSave) {
 			Test test = result.getTest();
 			for (TestAttribute att : test.getAttributes()) {
@@ -654,7 +582,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 							correction = correctionMap.addCorrection(att, value, new ArrayList<String>(possibleValues), true);
 						}
 						correction.getAffectedData().add(result);
-						obviousProblems++;
+						//						obviousProblems++;
 					}
 
 				} else if(att.getDataType()==DataType.AUTO) {
@@ -666,15 +594,13 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 							correction = correctionMap.addCorrection(att, value, new ArrayList<String>(possibleValues), false);
 						}
 						correction.getAffectedData().add(result);
-						if(correction.getSuggestedValue()!=null) obviousProblems++;
+						//						if(correction.getSuggestedValue()!=null) obviousProblems++;
 					}
 				}
 			}
 		}
-		System.out.println("EditResultDlg.eventOk7() "+(System.currentTimeMillis()-start)+"ms");
 
 		//Display the correction dialog
-		System.out.println("EditResultDlg.eventOk() number of problems="+obviousProblems+"/"+correctionMap.getItemsWithSuggestions());
 		if(correctionMap.getItemsWithSuggestions()>0) {
 			CorrectionDlg<TestAttribute, Result> dlg = new CorrectionDlg<TestAttribute, Result>(this, correctionMap) {
 				@Override
@@ -694,9 +620,6 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 			};
 			if(dlg.getReturnCode()!=CorrectionDlg.OK) return null;
 		}
-		System.out.println("EditResultDlg.eventOk8() "+(System.currentTimeMillis()-start)+"ms");
-
-
 
 		//Check unicity of results
 		Map<String, List<Result>> input2Results = new HashMap<>();
@@ -717,7 +640,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		for (List<Result> list  : input2Results.values()) {
 			if(list.size()>1) {
 				Result r = list.get(0);
-				String ns = "<b><u>" + r.getTest().getFullName() + " " + (r.getPhase()==null?"": r.getPhase().getStudy().getIvv()+" - "+ r.getPhase().getLabel()) + "</u></b><br>";
+				String ns = "<b><u>" + r.getTest().getFullName() + " " + (r.getPhase()==null?"": r.getPhase().getStudy().getLocalId()+" - "+ r.getPhase().getLabel()) + "</u></b><br>";
 				if(!ns.equals(s)) {
 					s = ns;
 					sb.append(s);
@@ -751,8 +674,6 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 				return null;
 			}
 		}
-		System.out.println("EditResultDlg.eventOk9() "+(System.currentTimeMillis()-start)+"ms");
-
 
 		if(warnQualityResults.size()>0) {
 			int res = JOptionPane.showConfirmDialog(this, "Some of the results are linked to biosamples with questionable or bogus quality.\nWould you like to set the quality of those results to questionable or bogus?", "Quality of the biosamples?", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -767,8 +688,6 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 			}
 		}
 
-		System.out.println("EditResultDlg.eventOk10() "+(System.currentTimeMillis()-start)+"ms");
-
 		return toSave;
 	}
 
@@ -778,10 +697,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		textArea.setCaretPosition(0);
 		textArea.setPreferredSize(new Dimension(400, 400));
 
-		JPanel panel = new JPanel(new BorderLayout());
-		panel.add(BorderLayout.NORTH, new JCustomLabel(header, Font.BOLD));
-		panel.add(BorderLayout.CENTER, new JScrollPane(textArea));
-
+		JPanel panel = UIUtils.createBox(new JScrollPane(textArea), new JCustomLabel(header, Font.BOLD));
 		int res = JOptionPane.showOptionDialog(parent, panel, title, 0, JOptionPane.QUESTION_MESSAGE, null, options, null);
 		return res;
 

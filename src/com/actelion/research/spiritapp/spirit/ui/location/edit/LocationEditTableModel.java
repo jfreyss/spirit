@@ -38,9 +38,9 @@ import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.util.ui.exceltable.Column;
-import com.actelion.research.util.ui.exceltable.ExcelTableModel;
+import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
-public class LocationEditTableModel extends ExcelTableModel<Location> {
+public class LocationEditTableModel extends ExtendTableModel<Location> {
 	public LocationEditTableModel() {
 		LocationNameColumn nameColumn = new LocationNameColumn();
 		nameColumn.setDiplayIcon(false);
@@ -57,7 +57,6 @@ public class LocationEditTableModel extends ExcelTableModel<Location> {
 		if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER) {
 			columns.add(new LocationPrivacyColumn());
 		}
-
 
 		setTreeColumn(nameColumn);
 		setColumns(columns);

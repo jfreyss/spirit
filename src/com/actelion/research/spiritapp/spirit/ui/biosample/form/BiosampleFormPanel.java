@@ -25,8 +25,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -39,7 +37,7 @@ import javax.swing.JRadioButton;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleFinder;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.services.SpiritRights;
@@ -129,47 +127,32 @@ public class BiosampleFormPanel extends JPanel {
 			}
 		});
 
-		changeButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Biotype biotype = biosample==null? null: biosample.getBiotype();
-				BiosampleFinder finder = new BiosampleFinder(dlg, "Select a parent biosample", null, biotype, null, biosample, false) {
-					@Override
-					public void onSelect(Biosample sel) {
-						dispose();
-						dlg.changeBiosample(BiosampleFormPanel.this, sel);
-					}
-				};
-				finder.setVisible(true);
-			}
+		changeButton.addActionListener(e-> {
+			Biotype biotype = biosample==null? null: biosample.getBiotype();
+			BiosampleFinder finder = new BiosampleFinder(dlg, "Select a parent biosample", null, biotype, null, biosample, false) {
+				@Override
+				public void onSelect(Biosample sel) {
+					dispose();
+					dlg.changeBiosample(BiosampleFormPanel.this, sel);
+				}
+			};
+			finder.setVisible(true);
 		});
-		createButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Biotype biotype = biosample==null? null: biosample.getBiotype();
-				dlg.changeBiosample(BiosampleFormPanel.this, new Biosample(biotype));
-			}
+		createButton.addActionListener(e-> {
+			Biotype biotype = biosample==null? null: biosample.getBiotype();
+			dlg.changeBiosample(BiosampleFormPanel.this, new Biosample(biotype));
 		});
 
-		createOneButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				setViewMode(ViewMode.FORM);
-			}
+		createOneButton.addActionListener(e-> {
+			setViewMode(ViewMode.FORM);
 		});
-		createBatchButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				setViewMode(ViewMode.BATCH);
-				scannerPanel.setBiotype(biotype);
-			}
+		createBatchButton.addActionListener(e-> {
+			setViewMode(ViewMode.BATCH);
+			scannerPanel.setBiotype(biotype);
 		});
 
-		removeButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				dlg.eventRemove(BiosampleFormPanel.this);
-			}
+		removeButton.addActionListener(e-> {
+			dlg.eventRemove(BiosampleFormPanel.this);
 		});
 
 		setViewMode(ViewMode.FORM);

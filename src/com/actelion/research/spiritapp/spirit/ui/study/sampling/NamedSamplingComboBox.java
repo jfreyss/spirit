@@ -23,47 +23,40 @@ package com.actelion.research.spiritapp.spirit.ui.study.sampling;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.util.ArrayList;
 import java.util.Collection;
 
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 import com.actelion.research.spiritcore.business.study.NamedSampling;
-import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.services.dao.DAOStudy;
-import com.actelion.research.util.ui.JGenericComboBox;
+import com.actelion.research.util.ui.JObjectComboBox;
 
-public class NamedSamplingComboBox extends JGenericComboBox<NamedSampling> {
+public class NamedSamplingComboBox extends JObjectComboBox<NamedSampling> {
 
-	
+
 	public NamedSamplingComboBox() {
-		this(new ArrayList<NamedSampling>());
+		setTextWhenEmpty("NamedSampling...");
 	}
 
-	public NamedSamplingComboBox(Collection<NamedSampling> values) {		
-		this(values, false);
+	public NamedSamplingComboBox(Collection<NamedSampling> values) {
+		this();
+		setValues(values);
 	}
-	
-	public NamedSamplingComboBox(Collection<NamedSampling> values, boolean allowNull) {		
-		super();
-		setValues(values, allowNull);		
-	}
-	
+
 	@Override
 	public Dimension getPreferredSize() {
 		return new Dimension(320, 28);
 	}
-	
+
 	@Override
-	public Component processCellRenderer(JLabel comp, NamedSampling ns, int index) {
+	public Component processCellRenderer(JLabel comp, String object, int index) {
+		NamedSampling ns = getMap().get(object);
 		if(ns==null) {
 			comp.setText(" ");
 			comp.setToolTipText(null);
 		} else {
-			comp.setText("<html>" + (ns.getStudy()==null?"": "<b>" + ns.getStudy().getStudyId() + "</b> - ") +  
-							"<span style='" + (ns.getId()>0?"":"font-weight:bold") + "'>"+  ns.getName() + "<span>" + 
-							"</html>");
+			comp.setText("<html>" + (ns.getStudy()==null?"": "<b>" + ns.getStudy().getStudyId() + "</b> - ") +
+					"<span style='" + (ns.getId()>0?"":"font-weight:bold") + "'>"+  ns.getName() + "<span>" +
+					"</html>");
 			try {
 				comp.setToolTipText("<html>" + ns.getHtmlBySampling());
 			} catch(Exception e) {
@@ -72,17 +65,10 @@ public class NamedSamplingComboBox extends JGenericComboBox<NamedSampling> {
 		}
 		return comp;
 	}
-	
-	public static void main(String[] args) {
-		Study s = DAOStudy.getStudyByStudyId("S-00085");
-		JFrame f = new JFrame();
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
-		NamedSamplingComboBox cb = new NamedSamplingComboBox();
-		cb.setValues(s.getNamedSamplings());
-		f.setContentPane(cb);
-		f.pack();
-		f.setVisible(true);
+
+
+	@Override
+	public String convertObjectToString(NamedSampling obj) {
+		return obj==null?"": obj.getName();
 	}
-	
 }

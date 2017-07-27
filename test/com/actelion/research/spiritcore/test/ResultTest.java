@@ -94,7 +94,7 @@ public class ResultTest extends AbstractSpiritTest {
 		Assert.assertEquals(2, t.getInfoAttributes().size());
 
 		// Save some results
-		Study s = DAOStudy.getStudyByIvvOrStudyId("IVV2016-1").get(0);
+		Study s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
 		Biosample a1 = s.getTopAttachedBiosamples().iterator().next();
 		Result r1 = new Result(t);
 		r1.setElb("test");
@@ -117,7 +117,7 @@ public class ResultTest extends AbstractSpiritTest {
 
 
 		// Retrieve result
-		JPAUtil.clear();
+		JPAUtil.clearAll();
 		List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForElb("test"), user);
 		Assert.assertEquals(1, results.size());
 		r1 = results.get(0);
@@ -151,7 +151,7 @@ public class ResultTest extends AbstractSpiritTest {
 
 	@Test
 	public void testFilters() throws Exception {
-		Study s = DAOStudy.getStudyByIvvOrStudyId("IVV2016-1").get(0);
+		Study s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
 		Assert.assertTrue(DAOTest.getTestsFromElbs("ELB-2016-1").size() > 0);
 		Assert.assertTrue(DAOTest.getTestsFromStudies(Collections.singleton(s)).size() > 0);
 		Assert.assertTrue(DAOResult.getElbsForStudy(s.getStudyId()).size() > 0);

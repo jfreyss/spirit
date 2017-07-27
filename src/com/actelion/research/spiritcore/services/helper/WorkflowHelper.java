@@ -35,7 +35,7 @@ import com.actelion.research.util.ui.UIUtils;
 
 public class WorkflowHelper {
 
-	
+
 	/**
 	 * Return an HTML comment of the current state
 	 * @param currentState
@@ -45,7 +45,7 @@ public class WorkflowHelper {
 		boolean hasWorkflow = SpiritProperties.getInstance().hasStudyWorkflow();
 		String[] states = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES);
 		StringBuilder sb = new StringBuilder();
-		
+
 		sb.append("<html>");
 		if(currentState!=null && currentState.length()>0) {
 			sb.append("<b>"+currentState+"</b><br>");
@@ -59,12 +59,12 @@ public class WorkflowHelper {
 			}
 		}
 		if(!hasNext) {
-			sb.append("&nbsp;&nbsp;&nbsp;--&gt;&nbsp;&nbsp;End state<br>");			
+			sb.append("&nbsp;&nbsp;&nbsp;--&gt;&nbsp;&nbsp;End state<br>");
 		}
-			
+
 		return sb.toString();
 	}
-	
+
 	/**
 	 * Returns an HTML table describing the workflow states
 	 * @return
@@ -77,40 +77,44 @@ public class WorkflowHelper {
 		sb.append("<tr><td>User rights/<br>state</td>");
 		sb.append("<td width=120 style='background:#DDDDEA; white-space:nowrap'><b>Admin Rights</b><br><i>(edit design/users)</i></td>"
 				+ "<td width=120 style='background:#DDDDEA; white-space:nowrap'><b>Expert Rights</b><br><i>(add samples/results)</i></td>"
-				+ "<td width=90 style='background:#DDDDEA; white-space:nowrap'><b>View Rights</b><br><i>(only read access)</i></td>");
+				+ "<td width=90  style='background:#DDDDEA; white-space:nowrap'><b>Read Rights</b><br><i>(only read access)</i></td>");
 		if(hasWorkflow) {
 			sb.append("<td style='background:#DDDDEA'><u>Promoters</u></td>");
 			sb.append("<td style='background:#DDDDEA'><u>From</u></td>");
 		}
 		sb.append("</tr>");
-		
+
 		boolean specificRights = DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && !SpiritProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY);
-		
+
 		for (String state : states) {
-			String view = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_READ, state);
-			if(view.length()==0) view = "NONE";
+			String read = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_READ, state);
+			if(read.length()==0) read = "NONE";
 			String expert = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_EXPERT, state);
-			if(specificRights && !expert.contains("ALL") && !expert.contains("NONE")) expert = "custom" + (expert.length()>0?"+" + expert:"");
+			if(specificRights && !expert.contains("ALL") && !expert.contains("NONE")) expert = "user def." + (expert.length()>0?"+" + expert:"");
 			String admin = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_ADMIN, state);
-			if(specificRights && !admin.contains("ALL") && !admin.contains("NONE")) admin = "custom" + (admin.length()>0?"+" + admin:"");
+			if(specificRights && !admin.contains("ALL") && !admin.contains("NONE")) admin = "user def." + (admin.length()>0?"+" + admin:"");
 			String[] from = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_FROM, state);
 			String[] promoters = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_PROMOTERS, state);
-			
+
+			admin = admin.replace("ALL", "<span style='color:green'>ALL</span>").replace("NONE", "<span style='color:red'>NONE</span>");
+			expert = expert.replace("ALL", "<span style='color:green'>ALL</span>").replace("NONE", "<span style='color:red'>NONE</span>");
+			if(read.equals("NONE") && SpiritProperties.getInstance().isOpen()) read = "<span style='color:orange'>DESIGN ONLY</span";
+			read = read.replace("ALL", "<span style='color:green'>ALL</span>").replace("NONE", "<span style='color:red'>NONE</span>");
 			sb.append("<tr><td style='background:#EAEAEF'><b>" + state + "</b></td>");
 			sb.append("<td style='background:#EAEAEF'>" + admin + "</td>");
 			sb.append("<td style='background:#EAEAEF'>" + expert + "</td>");
-			sb.append("<td style='background:#EAEAEF'>" + view + "</td>");
+			sb.append("<td style='background:#EAEAEF'>" + read + "</td>");
 			if(hasWorkflow) {
 				sb.append("<td style='background:#EAEAEF'>"+MiscUtils.flatten(promoters, ", ")+"&nbsp;</td>");
 				sb.append("<td style='background:#EAEAEF'>"+MiscUtils.flatten(from, ", ")+"&nbsp;</td>");
 			}
-			sb.append("</tr>");					
+			sb.append("</tr>");
 		}
 		return sb.toString();
 	}
 
 	/**
-	 * Return the possible promotion states for the given user. 
+	 * Return the possible promotion states for the given user.
 	 * The current study state is always returned.
 	 * @param study
 	 * @param user
@@ -123,11 +127,11 @@ public class WorkflowHelper {
 		for (String state : states) {
 			String[] from = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_FROM, state);
 			String[] promoters = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_PROMOTERS, state);
-			
+
 			if(!hasWorkflow || user.isSuperAdmin()) {
-				possibleStates.add(state);		
+				possibleStates.add(state);
 			} else if(state.equals(study.getState())) {
-				possibleStates.add(state);		
+				possibleStates.add(state);
 			} else if(((study.getState()==null || study.getState().length()==0) && from.length==0 ) || MiscUtils.contains(from, study.getState())) {
 				if(MiscUtils.contains(promoters, "ALL")) {
 					possibleStates.add(state);

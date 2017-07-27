@@ -21,21 +21,18 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.editor;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import javax.swing.AbstractCellEditor;
-import javax.swing.BorderFactory;
+import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 
-import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleTable;
-import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritapp.spirit.ui.study.PhaseLabel;
 import com.actelion.research.spiritcore.business.study.Phase;
-import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.util.ui.JTextComboBox;
 
 
@@ -44,14 +41,58 @@ import com.actelion.research.util.ui.JTextComboBox;
  * @author J
  *
  */
-public class PhaseCellEditor extends AbstractCellEditor implements TableCellEditor {
+public abstract class PhaseCellEditor extends AbstractCellEditor implements TableCellEditor {
 
-	private JTextComboBox textComboBox;
-	private Biosample b;
-	
-	public PhaseCellEditor() {
+	private boolean allowTyping;
+	private Study study;
+	private final List<Phase> phases = new ArrayList<>();
+	private final JTextComboBox cb = new JTextComboBox() {
+		PhaseLabel gl = new PhaseLabel();
+		@Override
+		public Component processCellRenderer(JLabel comp, String value, int index) {
+			gl.setPhase(index>=1 && index-1<phases.size()? phases.get(index-1): null);
+			return gl;
+		}
+	};
+
+	public PhaseCellEditor(boolean allowTyping) {
+		this.allowTyping = allowTyping;
+		cb.setAllowTyping(allowTyping);
 	}
-	
+
+	public abstract Study getStudy(int row);
+
+	@Override
+	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+		this.study = getStudy(row);
+		phases.clear();
+		List<String> choices = new ArrayList<>();
+		if(study!=null) {
+			phases.addAll(study.getPhases());
+			for (Phase p : phases) {
+				choices.add(p.getName());
+			}
+		}
+		cb.setChoices(choices);
+		cb.setText(value==null?"": ((Phase)value).getName());
+		return cb;
+	}
+
+	@Override
+	public Phase getCellEditorValue() {
+		if(cb.getText().length()==0) return null;
+
+		for (Phase p : phases) {
+			if(p.getName().equals(cb.getText())) return p;
+		}
+		if(allowTyping) {
+			Phase p = new Phase(cb.getText());
+			p.setStudy(study);
+			return p;
+		}
+		return null;
+	}
+	/*
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, final int row, int column) {
 		final EditBiosampleTable t = (EditBiosampleTable) table;
@@ -77,7 +118,7 @@ public class PhaseCellEditor extends AbstractCellEditor implements TableCellEdit
 		} else if(value instanceof Phase) {
 			textComboBox.setText(((Phase)value).getShortName());
 		}
-		
+
 		textComboBox.selectAll();
 		return textComboBox;
 	}
@@ -87,5 +128,6 @@ public class PhaseCellEditor extends AbstractCellEditor implements TableCellEdit
 		Biosample b = JPAUtil.reattach(this.b);
 		Phase phase = b==null || b.getInheritedStudy()==null? null: b.getInheritedStudy().getPhase(textComboBox.getText());
 		return phase;
-	}				
+	}
+	 */
 }

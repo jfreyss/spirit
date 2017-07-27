@@ -32,7 +32,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdLabel;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.ui.JCustomLabel;
@@ -40,22 +40,22 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class StudyTopSampleIdColumn extends Column<Biosample, Biosample> {
-	
+
 	private static SampleIdLabel sampleIdLabel = new SampleIdLabel();
-	
+
 	public StudyTopSampleIdColumn() {
-		super("\nTopId", Biosample.class, 90, 200);	
+		super("\nParticipant", Biosample.class, 90, 200);
 	}
-	
+
 	@Override
 	public String getCategory() {
-		return "Top";
+		return "Participant";
 	}
-	
-	
+
+
 	@Override
 	public float getSortingKey() {return 3.9f;}
-	
+
 	@Override
 	public Biosample getValue(Biosample row) {
 		if(row==null) return null;
@@ -64,10 +64,7 @@ public class StudyTopSampleIdColumn extends Column<Biosample, Biosample> {
 
 	@Override
 	public boolean isEditable(Biosample row) {return false;}
-	
-	@Override
-	public String getToolTipText() {return "The TopParent Id";}	
-	
+
 	@Override
 	public void populateHeaderPopup(final AbstractExtendTable<Biosample> table, JPopupMenu popupMenu) {
 		popupMenu.add(new JSeparator());
@@ -98,14 +95,14 @@ public class StudyTopSampleIdColumn extends Column<Biosample, Biosample> {
 			}
 		});
 	}
-	
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
-		sampleIdLabel.setBiosample((Biosample)value);			
+		sampleIdLabel.setBiosample((Biosample)value);
 		sampleIdLabel.setHighlight(false);
 		return sampleIdLabel;
 	}
-	
+
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		comp.setBackground(LF.BGCOLOR_LINKED);

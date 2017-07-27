@@ -23,11 +23,11 @@ package com.actelion.research.spiritapp.spirit.ui.result;
 
 import java.awt.BorderLayout;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.SpiritTab;
@@ -40,17 +40,18 @@ import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Study;
+import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class ResultTab extends SpiritTab {
 
 	private final ResultSearchPane searchPane;
 
-	private JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
+	//	private JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
 	private final GraphPanelWithResults graphPanel;
-	private final PivotPanel pivotPanel;
+	//	private final PivotPanel pivotPanel;
 
-	private final JPanel center = new JPanel(new BorderLayout());
+	//	private final JPanel center = new JPanel(new BorderLayout());
 	private List<Result> results = new ArrayList<>();
 
 	public ResultTab(SpiritFrame frame) {
@@ -62,19 +63,19 @@ public class ResultTab extends SpiritTab {
 
 		this.searchPane = new ResultSearchPane(this, forcedBiotype);
 		this.graphPanel = new GraphPanelWithResults();
-		this.pivotPanel = new PivotPanel(true, null, null);
+		//		this.pivotPanel = new PivotPanel(true, null, null);
 
-		tabbedPane.add("Graphical", graphPanel);
-		tabbedPane.add("All Data", pivotPanel);
-
-		tabbedPane.addChangeListener(e-> {
-			refreshResults();
-		});
+		//		tabbedPane.add("Graphical", graphPanel);
+		//		tabbedPane.add("All Data", pivotPanel);
+		//
+		//		tabbedPane.addChangeListener(e-> {
+		//			refreshResults();
+		//		});
 
 		JPanel queryPanel = new JPanel(new BorderLayout());
 		queryPanel.add(BorderLayout.CENTER, searchPane);
 
-		JSplitPane contentPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, queryPanel, tabbedPane);
+		JSplitPane contentPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, queryPanel, UIUtils.createBox(graphPanel, createButtonsPanel()));
 		contentPane.setDividerLocation(300);
 		contentPane.setOneTouchExpandable(true);
 
@@ -82,10 +83,7 @@ public class ResultTab extends SpiritTab {
 		setLayout(new BorderLayout());
 		add(BorderLayout.CENTER, contentPane);
 
-		JPanel buttonsPanel = createButtonsPanel();
-		if(buttonsPanel!=null) center.add(BorderLayout.SOUTH, buttonsPanel);
-
-		ResultActions.attachPopup(pivotPanel.getPivotTable());
+		//		ResultActions.attachPopup(pivotPanel.getPivotTable());
 		ResultActions.attachPopup(graphPanel.getPivotTable());
 
 		searchPane.addPropertyChangeListener(evt-> {
@@ -94,7 +92,7 @@ public class ResultTab extends SpiritTab {
 	}
 
 	@Override
-	public<T> void fireModelChanged(final SpiritChangeType action, final Class<T> what, final List<T> details) {
+	public<T> void fireModelChanged(final SpiritChangeType action, final Class<T> what, final Collection<T> details) {
 		if(what==Test.class || what==Study.class || what==Result.class) {
 			searchPane.getSearchTree().repopulate();
 		}
@@ -110,32 +108,34 @@ public class ResultTab extends SpiritTab {
 
 	public void setErrorText(String errorText) {
 		graphPanel.getGraphPanel().setErrorText(errorText);
-		pivotPanel.setResults(new ArrayList<>());
+		//		pivotPanel.setResults(new ArrayList<>());
 	}
 
 	private void refreshResults() {
-		if(tabbedPane.getSelectedIndex()==0) {
-			graphPanel.setResults(results);
-		} else {
-			pivotPanel.setResults(results);
-		}
+		//		if(tabbedPane.getSelectedIndex()==0) {
+		graphPanel.setResults(results);
+		//		} else {
+		//			pivotPanel.setResults(results);
+		//		}
 	}
 
 	public void query(ResultQuery q, int graphIndex) {
 		searchPane.setQuery(q).afterDone(() -> {
 			if(graphIndex>=0) {
-				tabbedPane.setSelectedIndex(0);
+				//				tabbedPane.setSelectedIndex(0);
 				graphPanel.getGraphPanel().setSelectedIndex(graphIndex);
 			}
 		});
 	}
 
 	public void setCurrentPivotTemplate(PivotTemplate pivotTemplate) {
-		pivotPanel.setCurrentPivotTemplate(pivotTemplate);
+		//		pivotPanel.setCurrentPivotTemplate(pivotTemplate);
+		graphPanel.setPivotTemplate(pivotTemplate);
 	}
 
 	public void setDefaultTemplates(PivotTemplate[] pivotTemplates) {
-		pivotPanel.setDefaultTemplates(pivotTemplates);
+		//		pivotPanel.setDefaultTemplates(pivotTemplates);
+		graphPanel.setDefaultTemplates(pivotTemplates);
 	}
 
 	/**
@@ -146,15 +146,16 @@ public class ResultTab extends SpiritTab {
 		return null;
 	}
 
-	public PivotPanel getPivotCardPanel() {
-		return pivotPanel;
+	public PivotPanel getPivotPanel() {
+		return graphPanel.getPivotPanel();
 	}
+
 	public List<Result> getSelection() {
-		return pivotPanel.getPivotTable().getSelectedResults();
+		return graphPanel.getPivotTable().getSelectedResults();
 	}
 
 	public List<Result> getResults() {
-		return pivotPanel.getResults();
+		return results;
 	}
 
 	@Override

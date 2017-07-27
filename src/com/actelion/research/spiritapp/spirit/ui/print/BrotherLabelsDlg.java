@@ -184,13 +184,13 @@ public class BrotherLabelsDlg extends JEscapeDialog {
 					if(marginCombobox.getSelectedIndex()==0) {
 						PrintableOfContainers.setTopMargin(13);
 					} else {
-						PrintableOfContainers.setTopMargin(2);
+						PrintableOfContainers.setTopMargin(1);
 					}
 
 					fireConfigChanged();
 				}
 			});
-			marginCombobox.setSelectedIndex(Spirit.getConfig().getProperty("print.brother.margin", 0));
+			marginCombobox.setSelectedIndex(Spirit.getConfig().getProperty("print.brother.margin", 1));
 
 			if(services.length>0) {
 				printerComboBox.setSelection(services[0]);

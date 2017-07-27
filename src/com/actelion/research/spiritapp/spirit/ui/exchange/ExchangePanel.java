@@ -89,7 +89,7 @@ public class ExchangePanel extends JPanel {
 		//StudyTable
 		List<Triple<String, String, Object>> studyRows = new ArrayList<>();
 		for (Study study : exchange.getStudies()) {
-			studyRows.add(new Triple<String, String, Object>(study.getIvvOrStudyId(), study.getTitle(), study));
+			studyRows.add(new Triple<String, String, Object>(study.getLocalIdOrStudyId(), study.getTitle(), study));
 		}
 		studyTable.setRows(studyRows);
 		studyLabel.setText(studyRows.size() + " studies");

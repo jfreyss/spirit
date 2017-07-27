@@ -25,7 +25,7 @@ import javax.swing.JComponent;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.AutoCompletionCellEditor;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -36,7 +36,7 @@ import com.actelion.research.util.ui.exceltable.AlphaNumericalCellEditor;
 public class SampleNameColumn extends AbstractLinkerColumn<String> {
 
 	protected SampleNameColumn(BiosampleLinker linker) {
-		super(linker, String.class, 40, 260);		
+		super(linker, String.class, 40, 260);
 		lbl.setFont(FastFont.BOLD);
 	}
 
@@ -46,20 +46,20 @@ public class SampleNameColumn extends AbstractLinkerColumn<String> {
 		if(row==null) return null;
 		return row.getSampleName();
 	}
-	
+
 	@Override
 	public void setValue(Biosample row, String value) {
-		row.setSampleName((String) value);
-	}	
-	
+		row.setSampleName(value);
+	}
+
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
-		super.postProcess(table, row, rowNo, value, comp);		
+		super.postProcess(table, row, rowNo, value, comp);
 		if(row!=null && table.isEditable() && !linker.isLinked() && row.getBiotype()!=null && row.getBiotype().isNameRequired()) {
 			comp.setBackground(LF.BGCOLOR_REQUIRED);
 		}
 	}
-	
+
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {
 		Biotype t = getBiotype();
@@ -69,9 +69,9 @@ public class SampleNameColumn extends AbstractLinkerColumn<String> {
 			return new AlphaNumericalCellEditor();
 		}
 	}
-	
+
 	@Override
 	public boolean isAutoWrap() {
-		return true;
+		return false;
 	}
 }

@@ -37,28 +37,28 @@ import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.FormatterUtils;
 
 public class PropertyKey {
-	
+
 	public static enum Tab {
 		INTERNAL,
 		SYSTEM,
 		STUDY
 	}
-	
-	
+
+
 	/**
 	 * Contains the DB version. This property is required, otherwise it assumed to be the latest
 	 */
 	public static final PropertyKey DB_VERSION = new PropertyKey(Tab.INTERNAL, "DB Version", "", "db.version", null);
-	
+
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// SYSTEM PROPERTIES
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	public static final PropertyKey LAST_CHANGES = new PropertyKey(Tab.SYSTEM, "Last changes", "Home page shows changes from the last n. days", "system.home.days", "365", "1,3,7,15,31,90,365,3650");	
-	public static final PropertyKey USER_ROLES = new PropertyKey(Tab.SYSTEM, "Roles", "comma separated list of roles (in addition to admin, readall)", "user.roles", "");	
+	public static final PropertyKey LAST_CHANGES = new PropertyKey(Tab.SYSTEM, "Last changes", "Home page shows changes from the last n. days", "system.home.days", "365", "1,3,7,15,31,90,365,3650");
+	public static final PropertyKey USER_ROLES = new PropertyKey(Tab.SYSTEM, "Roles", "comma separated list of roles (in addition to admin, readall)", "user.roles", "");
 	public static final PropertyKey USER_LOGIN_ROLE = new PropertyKey(Tab.SYSTEM, "Login with one specific role", "Are users requested to login with a specic role?<br>(if true, the user will be asked for a role upon login instead of having all roles simultaneously)", "user.login.role", "false", "true,false");
 	public static final PropertyKey RIGHT_ROLEONLY = new PropertyKey(Tab.SYSTEM, "Are user-rights role-based only", "Are the rights only role based??<br>(if true, the rights are purely role based and not user/dept specific)", "user.login.dept", "false", "true,false");
-	public static final PropertyKey RIGHTS_MODE = new PropertyKey(Tab.SYSTEM, "User Rights", "open=all study designs are viewable, all biosamples and their results are readable.<br>restricted=biosamples and their results are limited to department", "rights.mode", "restricted", "open, restricted");
+	public static final PropertyKey RIGHTS_MODE = new PropertyKey(Tab.SYSTEM, "User Rights", "open = study designs are visible by everyone, all biosamples (outside studies) and their results are readable.<br>restricted = biosamples and their results are limited to the departments of the owner", "rights.mode", "restricted", "open, restricted");
 	public static final PropertyKey DATE_MODE = new PropertyKey(Tab.SYSTEM, "DateTime Format", "Localized DateTime format. Be sure to never change it", "format.date", FormatterUtils.LocaleFormat.SWISS.toString(), MiscUtils.flatten(FormatterUtils.LocaleFormat.values())) {
 		@Override
 		public String getDefaultValue() {
@@ -76,11 +76,11 @@ public class PropertyKey {
 		}
 	};
 	public static final PropertyKey FILE_SIZE = new PropertyKey(Tab.SYSTEM, "Max FileSize [Mo]:", "Max file size for the documents", "system.document.max", "15");
-	
+
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// STUDY PROPERTIES
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
+
 	/**
 	 * study.metadata contains the list of configurable metadata (csv)
 	 * For each metadata, we can define:
@@ -92,28 +92,28 @@ public class PropertyKey {
 	public static final PropertyKey STUDY_METADATA = new PropertyKey(Tab.STUDY, "Metadata", "Extra metadata used to configure the study (CSV)", "study.metadata", "CLINICAL, PROJECT, SITE, LICENSENO, EXPERIMENTER, DISEASEAREA");
 	public static final PropertyKey STUDY_STATES = new PropertyKey(Tab.STUDY, "States", "configurable states allowed by the study (CSV)", "study.states", "EXAMPLE, TEST, ONGOING, PUBLISHED, STOPPED");
 
-	
-	
+
+
 	public static final PropertyKey STUDY_METADATA_NAME = new PropertyKey(STUDY_METADATA, "Name", "Display for the end user", "name", "") {
 		@Override public String getDefaultValue(String nestedValue) {
 			return
-				"CLINICAL".equals(nestedValue)?"Clinical Status":
-					"PROJECT".equals(nestedValue)?"Project":
-						"SITE".equals(nestedValue)?"Site":
-							"LICENSENO".equals(nestedValue)?"License No.":
-								"EXPERIMENTER".equals(nestedValue)?"Experimenter":
-									"DISEASEAREA".equals(nestedValue)?"Disease Area": "";
+					"CLINICAL".equals(nestedValue)?"Clinical Status":
+						"PROJECT".equals(nestedValue)?"Project":
+							"SITE".equals(nestedValue)?"Site":
+								"LICENSENO".equals(nestedValue)?"License No.":
+									"EXPERIMENTER".equals(nestedValue)?"Experimenter":
+										"DISEASEAREA".equals(nestedValue)?"Disease Area": "";
 		};
 	};
 	public static final PropertyKey STUDY_METADATA_DATATYPE = new PropertyKey(STUDY_METADATA, "DataType", "", "datatype", "", "ALPHA, AUTO, LIST, DATE") {
 		@Override public String getDefaultValue(String nestedValue) {
-			return "CLINICAL".equals(nestedValue)? DataType.LIST.name(): 
-				"LICENSENO".equals(nestedValue)? DataType.ALPHA.name(): 
-					"EXPERIMENTER".equals(nestedValue)? DataType.ALPHA.name(): 
+			return "CLINICAL".equals(nestedValue)? DataType.LIST.name():
+				"LICENSENO".equals(nestedValue)? DataType.ALPHA.name():
+					"EXPERIMENTER".equals(nestedValue)? DataType.ALPHA.name():
 						DataType.ALPHA.name();};
 	};
 	public static final PropertyKey STUDY_METADATA_PARAMETERS = new PropertyKey(STUDY_METADATA, "Parameters", "list of choices if datatype is LIST", "parameters", "") {
-		@Override public String getDefaultValue(String nestedValue) {return "CLINICAL".equals(nestedValue)?"PRECLINICAL, CLINICAL": "";};		
+		@Override public String getDefaultValue(String nestedValue) {return "CLINICAL".equals(nestedValue)?"PRECLINICAL, CLINICAL": "";};
 	};
 	public static final PropertyKey STUDY_METADATA_ROLES = new PropertyKey(STUDY_METADATA, "Roles", "Who is allowed to change it?<br>Leave empty if not concerned.", "roles", "", USER_ROLES);
 	public static final PropertyKey STUDY_METADATA_STATES = new PropertyKey(STUDY_METADATA, "States", "In which states, can we change it?<br>Leave empty if not concerned.", "states", "", STUDY_STATES);
@@ -140,23 +140,23 @@ public class PropertyKey {
 	public static final PropertyKey STUDY_STATES_SEALED = new PropertyKey(STUDY_STATES, "Sealed", "Should we seal the study in this state? (no more editable except by an admin)", "seal", "false", "true,false");
 
 	public static final PropertyKey STUDY_STATE_DEFAULT = new PropertyKey(Tab.STUDY, "Default State", "when creating a new study", "study.state", "ONGOING", STUDY_STATES);
-	
-	
+
+
 	private static Map<Tab, List<PropertyKey>> tab2properties;
-	
+
 	private Tab tab;
 	private PropertyKey parentProperty;
 	private String key;
 	private String defaultValue;
-	
+
 	private String label;
 	private String tooltip;
-	
+
 	private String options;
 	private PropertyKey linkedOptions;
-	
+
 	private List<PropertyKey> nestedProperties = new ArrayList<>();
-	
+
 	private PropertyKey(PropertyKey parentKey, String label, String tooltip, String key, String defaultValue) {
 		this(null, parentKey, label, tooltip, key, defaultValue, null, null);
 	}
@@ -174,7 +174,7 @@ public class PropertyKey {
 	}
 	private PropertyKey(Tab tab, String label, String tooltip, String key, String defaultValue, PropertyKey choicesKey) {
 		this(tab, null, label, tooltip, key, defaultValue, null, choicesKey);
-	}	
+	}
 	private PropertyKey(Tab tab, PropertyKey parentKey, String label, String tooltip, String key, String defaultValue, String options, PropertyKey linkedOptions) {
 		this.tab = tab;
 		this.parentProperty = parentKey;
@@ -182,10 +182,10 @@ public class PropertyKey {
 		this.tooltip = tooltip;
 		this.key = key;
 		this.defaultValue = defaultValue;
-		this.options = options;		
+		this.options = options;
 		this.linkedOptions = linkedOptions;
-		
-		
+
+
 		//Build the tree of properties
 		if(tab!=null) {
 			if(tab2properties==null) tab2properties = new HashMap<>();
@@ -200,15 +200,15 @@ public class PropertyKey {
 			throw new RuntimeException("tab or parentProperty need to be set");
 		}
 	}
-	
+
 	public static List<PropertyKey> getPropertyKeys(Tab tab) {
 		return tab2properties.get(tab);
 	}
-	
+
 	public Tab getTab() {
 		return tab;
 	}
-	
+
 	public final PropertyKey getParentProperty() {
 		return parentProperty;
 	}
@@ -226,13 +226,13 @@ public class PropertyKey {
 	}
 	public String getOptions() {
 		return options;
-	}	
+	}
 	/**
 	 * Returns the list of special choices and options concatenated in one list
 	 */
 	public String[] getChoices() {
 		return getChoices(null);
-	}	
+	}
 	/**
 	 * Returns the list of special choices, addedChoices and options concatenated in one list
 	 */
@@ -240,7 +240,7 @@ public class PropertyKey {
 		Set<String> res = new LinkedHashSet<>();
 		if(getSpecialChoices()!=null) {
 			res.addAll(Arrays.asList(getSpecialChoices()));
-		} 
+		}
 		if(addedOptions!=null) {
 			res.addAll(Arrays.asList(MiscUtils.split(addedOptions, ",")));
 		}
@@ -252,16 +252,16 @@ public class PropertyKey {
 	public PropertyKey getLinkedOptions() {
 		return linkedOptions;
 	}
-	
+
 	public List<PropertyKey> getNestedProperties() {
 		return nestedProperties;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		return key.equals(((PropertyKey)obj).getKey());
 	}
-	
+
 	//can be overriden
 	public String[] getSpecialChoices() {
 		return null;
@@ -278,5 +278,5 @@ public class PropertyKey {
 	public String toString() {
 		return key;
 	}
-	
+
 }

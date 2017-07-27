@@ -21,36 +21,33 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample;
 
+import java.awt.Image;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.swing.Box;
 import javax.swing.ImageIcon;
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerTypeComboBox;
-import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeNode;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeToggleNode;
-import com.actelion.research.spiritapp.spirit.ui.lf.CreDateNode;
-import com.actelion.research.spiritapp.spirit.ui.lf.CreUserNode;
-import com.actelion.research.spiritapp.spirit.ui.lf.DepartmentNode;
-import com.actelion.research.spiritapp.spirit.ui.lf.GroupNode;
-import com.actelion.research.spiritapp.spirit.ui.lf.PhaseNode;
-import com.actelion.research.spiritapp.spirit.ui.lf.QualityComboBox;
-import com.actelion.research.spiritapp.spirit.ui.lf.StudyNode;
-import com.actelion.research.spiritapp.spirit.ui.lf.UpdDateNode;
-import com.actelion.research.spiritapp.spirit.ui.lf.UpdUserNode;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerTypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationFormNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode.FieldType;
+import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeNode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeToggleNode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.CreDateNode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.CreUserNode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.DepartmentNode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.GroupNode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.PhaseNode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.QualityComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.StudyNode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.UpdDateNode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.UpdUserNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.CheckboxNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.ComboBoxNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
@@ -70,16 +67,14 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
+import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.ListHashMap;
-import com.actelion.research.spiritcore.util.Pair;
-import com.actelion.research.util.ui.FastFont;
-import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.JCustomTextField;
 
 public class BiosampleSearchTree extends FormTree {
 
@@ -153,35 +148,17 @@ public class BiosampleSearchTree extends FormTree {
 
 	private final BiotypeNode bioTypeNode;
 
-	private final JCheckBox exactCheckBox = new JCheckBox("Exact Match", false);
-
 	private final InputNode keywordsNode = new InputNode(this, FieldType.AND_CLAUSE, "Keywords", new Strategy<String>() {
 		@Override
 		public String getModel() {
 			String s = query.getKeywords();
-			if(exactCheckBox.isSelected()) {
-				if(s!=null && s.startsWith("\"") && s.endsWith("\"")) s = s.substring(1, s.length()-1);
-			}
 			return s;
 		}
 		@Override
 		public void setModel(String modelValue) {
-			if(exactCheckBox.isSelected()) {
-				modelValue = modelValue.trim();
-				if(modelValue!=null && modelValue.length()>0 && !modelValue.startsWith("\"")) modelValue = "\""+modelValue+"\"";
-			}
 			query.setKeywords(modelValue);
 		}
-	}) {
-
-		@Override
-		public JComponent getComponent() {
-			exactCheckBox.setIconTextGap(0);
-			exactCheckBox.setFont(FastFont.SMALL);
-			textField.setColumns(13);
-			return UIUtils.createHorizontalBox(textField, UIUtils.createVerticalBox(exactCheckBox), Box.createHorizontalGlue());
-		}
-	};
+	});
 
 	private final LocationFormNode locationFormNode = new LocationFormNode(this, "Location", new Strategy<Location>() {
 		@Override
@@ -248,7 +225,7 @@ public class BiosampleSearchTree extends FormTree {
 		setRootVisible(false);
 		this.selectableBiotypes = selectableBiotypes;
 		query.setFilterTrashed(selectableBiotypes!=null && selectableBiotypes.length>0);
-		exactCheckBox.setOpaque(false);
+		//		exactCheckBox.setOpaque(false);
 
 		//Study Category
 		if(frame==null) {
@@ -419,19 +396,17 @@ public class BiosampleSearchTree extends FormTree {
 				query.setUpdDays(modelValue);
 			}
 		}));
-		advancedNode.add(new DepartmentNode(this, new Strategy<String>() {
+		advancedNode.add(new DepartmentNode(this, new Strategy<EmployeeGroup>() {
 			@Override
-			public String getModel() {
+			public EmployeeGroup getModel() {
 				return query.getDepartment();
 			}
 			@Override
-			public void setModel(String modelValue) {
+			public void setModel(EmployeeGroup modelValue) {
 				query.setDepartment(modelValue);
 			}
 		}));
 		advancedNode.add(catSelectOneNode);
-		//		advancedNode.add(minQualityNode);
-		//		advancedNode.add(maxQualityNode);
 		advancedNode.add(onlyContainerCheckbox);
 		advancedNode.add(onlyLocationCheckbox);
 
@@ -467,7 +442,6 @@ public class BiosampleSearchTree extends FormTree {
 		}
 
 		setRoot(top);
-
 		eventStudyChanged();
 	}
 
@@ -483,7 +457,6 @@ public class BiosampleSearchTree extends FormTree {
 			e.printStackTrace();
 		}
 
-		System.out.println("BiosampleSearchTree.eventStudyChanged() "+studies.size());
 		//Update biotype/container filters
 		if(studies.size()>0) {
 			Set<ContainerType> allContainerTypes = new TreeSet<ContainerType>();
@@ -534,97 +507,79 @@ public class BiosampleSearchTree extends FormTree {
 
 		moreNode.clearChildren();
 		if(type!=null) {
-			//
-			//Gets linkers
-			ListHashMap<Pair<String, Biotype>, BiosampleLinker> linkers = getLinkers(type);
-			List<Pair<String, Biotype>> keys = new ArrayList<Pair<String, Biotype>>(linkers.keySet());
-			Collections.sort(keys, new Comparator<Pair<String, Biotype>>() {
-				@Override
-				public int compare(Pair<String, Biotype> o1, Pair<String, Biotype> o2) {
-					return o1.getSecond().compareTo(o2.getSecond());
-				}
-			});
-			for (Pair<String, Biotype> key : keys) {
-				final Biotype biotype2 = key.getSecond();
-				LabelNode linkerNode = new LabelNode(this, key.getFirst());
-				linkerNode.setIcon(new ImageIcon(ImageFactory.getImage(biotype2, 26)));
+
+			//Add filter for parents biotypes
+			List<Biotype> parentTypes = type.getHierarchy();
+			for(int i=0; i<parentTypes.size()-1; i++) {
+				Biotype b = parentTypes.get(i);
+
+				LabelNode linkerNode = new LabelNode(this, b.getName());
+				linkerNode.setIcon(new ImageIcon(ImageFactory.getImage(b, 26)));
 				linkerNode.setCanExpand(true);
 				linkerNode.setExpanded(false);
 				moreNode.add(linkerNode);
-				for (final BiosampleLinker linker : linkers.get(key)) {
-					String label = linker.getLabelShort();
-					if(linker.getType()==LinkerType.SAMPLEID && biotype2.getCategory()==BiotypeCategory.LIBRARY) {
-						linkerNode.add(new TextComboBoxNode(this, label, false, new Strategy<String>() {
-							@Override public String getModel() {return query.getLinker2values().get(linker);}
-							@Override public void setModel(String modelValue) {
-								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
-								else query.getLinker2values().put(linker, modelValue);
-							}
-						}) {
-							@Override
-							public Collection<String> getChoices() {
-								return DAOBiotype.getAutoCompletionFieldsForSampleId(biotype2);
-							}
-						});
-					} else if(linker.getBiotypeMetadata()!=null && (linker.getBiotypeMetadata().getDataType()==DataType.AUTO || linker.getBiotypeMetadata().getDataType()==DataType.LIST /* || linker.getBiotypeMetadata().getDataType()==DataType.DICO*/)) {
-						linkerNode.add(new TextComboBoxNode(this, label, false, new Strategy<String>() {
-							@Override public String getModel() {return query.getLinker2values().get(linker);}
-							@Override public void setModel(String modelValue) {
-								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
-								else query.getLinker2values().put(linker, modelValue);
-							}
-						}) {
-							@Override
-							public Collection<String> getChoices() {
-								return DAOBiotype.getAutoCompletionFields(linker.getBiotypeMetadata(), frame==null? studyNode.getStudy(): frame.getStudy());
-							}
-						});
-					} else if(linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().getDataType()==DataType.D_FILE) {
-						continue;
-					} else if(linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().getDataType()==DataType.FILES) {
-						continue;
-					} else if(linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().getDataType()==DataType.MULTI) {
-						linkerNode.add(new MultiNode(this, label, linker.getBiotypeMetadata().extractChoices(), new Strategy<String>() {
-							@Override public String getModel() {return query.getLinker2values().get(linker);}
-							@Override public void setModel(String modelValue) {
-								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
-								else query.getLinker2values().put(linker, modelValue);
-							}
-						}));
-					} else if(linker.getType()==LinkerType.SAMPLENAME && biotype2.isNameAutocomplete()) {
-						linkerNode.add(new TextComboBoxNode(this, label, false, new Strategy<String>() {
-							@Override public String getModel() {return query.getLinker2values().get(linker);}
-							@Override public void setModel(String modelValue) {
-								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
-								else query.getLinker2values().put(linker, modelValue);
-							}
-						}) {
-							@Override
-							public Collection<String> getChoices() {
-								return DAOBiotype.getAutoCompletionFieldsForName(biotype2, frame==null? studyNode.getStudy(): frame.getStudy());
-							}
-						});
-					} else if(linker.getType()==LinkerType.COMMENTS) {
-						linkerNode.add(new TextComboBoxNode(this, label, false, new Strategy<String>() {
-							@Override public String getModel() { return query.getLinker2values().get(linker);}
-							@Override public void setModel(String modelValue) {
-								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
-								else query.getLinker2values().put(linker, modelValue);
-							}
-						}) {
-							@Override public Collection<String> getChoices() {return DAOBiotype.getAutoCompletionFieldsForComments(biotype2, frame==null? studyNode.getStudy(): frame.getStudy());}
-						});
+
+				if(!b.isHideSampleId()) {
+					addFilter(linkerNode, new BiosampleLinker(b, LinkerType.SAMPLEID));
+				}
+
+				if(b.getSampleNameLabel()!=null) {
+					addFilter(linkerNode, new BiosampleLinker(b, LinkerType.SAMPLENAME));
+				}
+				for(BiotypeMetadata mt2: b.getMetadata()) {
+					addFilter(linkerNode, new BiosampleLinker(mt2));
+				}
+				addFilter(linkerNode, new BiosampleLinker(b, LinkerType.COMMENTS));
+			}
+
+			LabelNode linkerNode = new LabelNode(this, type.getName());
+			linkerNode.setIcon(new ImageIcon(ImageFactory.getImage(type, 26)));
+			linkerNode.setCanExpand(true);
+			linkerNode.setExpanded(false);
+			moreNode.add(linkerNode);
+
+			//Filter for sampleId
+			if(!type.isHideSampleId()) {
+				addFilter(linkerNode, new BiosampleLinker(LinkerType.SAMPLEID, type));
+			}
+
+			//Filter for sampleName
+			if(type.getSampleNameLabel()!=null) {
+				addFilter(linkerNode, new BiosampleLinker(LinkerType.SAMPLENAME, type));
+			}
+
+			//Filter for metadata
+			for(BiotypeMetadata mt2: type.getMetadata()) {
+				if(mt2.getDataType()==DataType.BIOSAMPLE && mt2.getParameters()!=null) {
+					//Filter for metadata: linked biosample
+					Biotype biotype2 = DAOBiotype.getBiotype(mt2.getParameters());
+					if(biotype2==null) {
+						addFilter(linkerNode, new BiosampleLinker(mt2));
 					} else {
-						linkerNode.add(new InputNode(this, FieldType.AND_CLAUSE, label, new Strategy<String>() {
-							@Override public String getModel() {return query.getLinker2values().get(linker);}
-							@Override public void setModel(String modelValue) {
-								if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
-								else query.getLinker2values().put(linker, modelValue);
-							}
-						}));
+						AbstractNode<?> node;
+						if(!biotype2.isHideSampleId()) {
+							node = addFilter(linkerNode, new BiosampleLinker(mt2, LinkerType.SAMPLEID, biotype2));
+						} else {
+							node = new LabelNode(this, biotype2.getName());
+						}
+
+						if(biotype2.getSampleNameLabel()!=null) {
+							addFilter(node, new BiosampleLinker(mt2, LinkerType.SAMPLENAME, biotype2));
+						}
+						for(BiotypeMetadata mt3: biotype2.getMetadata()) {
+							addFilter(node, new BiosampleLinker(mt2, mt3));
+						}
+						addFilter(node, new BiosampleLinker(mt2, LinkerType.COMMENTS, biotype2));
 					}
+				} else {
+					//Filter for metadata: not linked biosample
+					addFilter(linkerNode, new BiosampleLinker(mt2));
 				}
 			}
+
+			//Filter for comments
+			addFilter(linkerNode, new BiosampleLinker(LinkerType.COMMENTS, type));
+
 		}
 
 		if(selectableBiotypes==null || selectableBiotypes.length>1 || !selectableBiotypes[0].isAbstract()) {
@@ -640,6 +595,102 @@ public class BiosampleSearchTree extends FormTree {
 		updateView();
 	}
 
+	private AbstractNode<?> addFilter(AbstractNode<?> linkerNode, BiosampleLinker linker) {
+		AbstractNode<?> res = null;
+		Biotype biotype2 = linker.getBiotypeForLabel();
+		if(biotype2==null) return null;
+		String label = linker.getLabelShort();
+		if(linker.getType()==LinkerType.SAMPLEID && biotype2.getCategory()==BiotypeCategory.LIBRARY) {
+			linkerNode.add(res = new TextComboBoxNode(this, label, false, new Strategy<String>() {
+				@Override public String getModel() {return query.getLinker2values().get(linker);}
+				@Override public void setModel(String modelValue) {
+					if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
+					else query.getLinker2values().put(linker, modelValue);
+				}
+			}) {
+				@Override
+				public Collection<String> getChoices() {
+					return DAOBiotype.getAutoCompletionFieldsForSampleId(biotype2);
+				}
+			});
+		} else if(linker.getType()==LinkerType.SAMPLENAME && biotype2.isNameAutocomplete()) {
+			linkerNode.add(res = new TextComboBoxNode(this, label, new Strategy<String>() {
+				@Override public String getModel() {return query.getLinker2values().get(linker);}
+				@Override public void setModel(String modelValue) {
+					if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
+					else query.getLinker2values().put(linker, modelValue);
+				}
+			}) {
+				@Override
+				public Collection<String> getChoices() {
+					return DAOBiotype.getAutoCompletionFieldsForName(biotype2, frame==null? studyNode.getStudy(): frame.getStudy());
+				}
+			});
+		} else if(linker.getType()==LinkerType.SAMPLENAME || linker.getType()==LinkerType.SAMPLEID){
+			linkerNode.add(res = new InputNode(this, label, new Strategy<String>() {
+				@Override public String getModel() {return query.getLinker2values().get(linker);}
+				@Override public void setModel(String modelValue) {
+					if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
+					else query.getLinker2values().put(linker, modelValue);
+				}
+			}));
+		} else if(linker.getType()==LinkerType.COMMENTS) {
+			linkerNode.add(res = new TextComboBoxNode(this, label, false, new Strategy<String>() {
+				@Override public String getModel() { return query.getLinker2values().get(linker);}
+				@Override public void setModel(String modelValue) {
+					if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
+					else query.getLinker2values().put(linker, modelValue);
+				}
+			}) {
+				@Override public Collection<String> getChoices() {return DAOBiotype.getAutoCompletionFieldsForComments(biotype2, frame==null? studyNode.getStudy(): frame.getStudy());}
+			});
+		} else if(linker.getBiotypeMetadata()!=null) {
+			if(linker.getBiotypeMetadata().getDataType()==DataType.AUTO || linker.getBiotypeMetadata().getDataType()==DataType.LIST) {
+
+				linkerNode.add(res = new TextComboBoxNode(this, label, false, new Strategy<String>() {
+					@Override public String getModel() {return query.getLinker2values().get(linker);}
+					@Override public void setModel(String modelValue) {
+						if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
+						else query.getLinker2values().put(linker, modelValue);
+					}
+				}) {
+					@Override
+					public Collection<String> getChoices() {
+						return DAOBiotype.getAutoCompletionFields(linker.getBiotypeMetadata(), frame==null? studyNode.getStudy(): frame.getStudy());
+					}
+				});
+			} else if(linker.getBiotypeMetadata().getDataType()==DataType.D_FILE) {
+				//skip
+			} else if(linker.getBiotypeMetadata().getDataType()==DataType.FILES) {
+				//skip
+			} else if(linker.getBiotypeMetadata().getDataType()==DataType.MULTI) {
+				linkerNode.add(res = new MultiNode(this, label, linker.getBiotypeMetadata().extractChoices(), new Strategy<String>() {
+					@Override public String getModel() {return query.getLinker2values().get(linker);}
+					@Override public void setModel(String modelValue) {
+						if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
+						else query.getLinker2values().put(linker, modelValue);
+					}
+				}));
+			} else {
+				linkerNode.add(res = new InputNode(this, label, new Strategy<String>() {
+					@Override public String getModel() {return query.getLinker2values().get(linker);}
+					@Override public void setModel(String modelValue) {
+						if(modelValue==null || modelValue.length()==0) query.getLinker2values().remove(linker);
+						else query.getLinker2values().put(linker, modelValue);
+					}
+				}));
+
+			}
+		}
+		if(res!=null && linker.getBiotypeForLabel()!=null) {
+			Image icon = ImageFactory.getImage(linker.getBiotypeForLabel(), 22);
+			System.out.println("BiosampleSearchTree.addFilter() "+linker+"> "+icon);
+			if(icon!=null && (res.getComponent()) instanceof JCustomTextField) {
+				((JCustomTextField) res.getComponent()).setIcon(new ImageIcon(icon));
+			}
+		}
+		return res;
+	}
 
 	public BiosampleQuery getQuery() {
 		query.setSelectOneMode(BiosampleQuery.SELECT_ALL);
@@ -681,67 +732,74 @@ public class BiosampleSearchTree extends FormTree {
 	}
 
 
-	public static ListHashMap<Pair<String, Biotype>, BiosampleLinker> getLinkers(Biotype biotype) {
-		ListHashMap<Pair<String, Biotype>, BiosampleLinker> res = new ListHashMap<Pair<String, Biotype>, BiosampleLinker>();
-
-		//Look at own metadata
-		{
-
-			Pair<String, Biotype> key = new Pair<String, Biotype>(biotype.getName(), biotype);
-			if(!biotype.isHideSampleId()) {
-				res.add(key, new BiosampleLinker(LinkerType.SAMPLEID, biotype));
-			}
-			if(biotype.getSampleNameLabel()!=null) {
-				res.add(key, new BiosampleLinker(LinkerType.SAMPLENAME, biotype));
-			}
-			for(BiotypeMetadata mt2: biotype.getMetadata()) {
-				res.add(key, new BiosampleLinker(mt2));
-			}
-			res.add(key, new BiosampleLinker(LinkerType.COMMENTS, biotype));
-		}
-
-
-		//Look at aggregated Data
-		for(BiotypeMetadata mt: biotype.getMetadata()) {
-			if(mt.getDataType()!=DataType.BIOSAMPLE) continue;
-			if(mt.getParameters()==null) continue;
-			Biotype biotype2 = DAOBiotype.getBiotype(mt.getParameters());
-			if(biotype2==null) continue;
-			String label = mt.getName();
-			Pair<String, Biotype> key = new Pair<String, Biotype>(label, biotype2);
-
-			if(!biotype2.isHideSampleId()) {
-				res.add(key, new BiosampleLinker(mt, LinkerType.SAMPLEID));
-			}
-			if(biotype2.getSampleNameLabel()!=null) {
-				res.add(key, new BiosampleLinker(mt, LinkerType.SAMPLENAME, biotype2));
-			}
-			for(BiotypeMetadata mt2: biotype2.getMetadata()) {
-				res.add(key, new BiosampleLinker(mt, mt2));
-			}
-			res.add(key, new BiosampleLinker(mt, LinkerType.COMMENTS, biotype2));
-		}
-
-		//Look at parent types
-		Biotype b = biotype.getParent();
-		while(b!=null) {
-			String label = b.getName();
-			Pair<String, Biotype> key = new Pair<String, Biotype>(label, b);
-
-			if(!b.isHideSampleId()) {
-				res.add(key, new BiosampleLinker(b, LinkerType.SAMPLEID));
-			}
-
-			if(b.getSampleNameLabel()!=null) {
-				res.add(key, new BiosampleLinker(b, LinkerType.SAMPLENAME));
-			}
-			for(BiotypeMetadata mt2: b.getMetadata()) {
-				res.add(key, new BiosampleLinker(mt2));
-			}
-			res.add(key, new BiosampleLinker(b, LinkerType.COMMENTS));
-
-			b = b.getParent();
-		}
-		return res;
-	}
+	//	/**
+	//	 * Gets the list of linkers from a given biotype to be displayed such as
+	//	 * - Parent2
+	//	 * - Parent1
+	//	 * - Biotype
+	//	 *   - Aggregated
+	//	 *   - ...
+	//	 *
+	//	 * @param biotype
+	//	 * @return
+	//	 */
+	//	public static ListHashMap<Pair<String, Biotype>, BiosampleLinker> getLinkers(Biotype biotype) {
+	//		ListHashMap<Pair<String, Biotype>, BiosampleLinker> res = new ListHashMap<>();
+	//
+	//		//Look at own metadata
+	//
+	//		Pair<String, Biotype> key = new Pair<String, Biotype>(biotype.getName(), biotype);
+	//		if(!biotype.isHideSampleId()) {
+	//			res.add(key, new BiosampleLinker(LinkerType.SAMPLEID, biotype));
+	//		}
+	//		if(biotype.getSampleNameLabel()!=null) {
+	//			res.add(key, new BiosampleLinker(LinkerType.SAMPLENAME, biotype));
+	//		}
+	//		for(BiotypeMetadata mt2: biotype.getMetadata()) {
+	//			res.add(key, new BiosampleLinker(mt2));
+	//		}
+	//		res.add(key, new BiosampleLinker(LinkerType.COMMENTS, biotype));
+	//
+	//		//Look at aggregated Data
+	//		for(BiotypeMetadata mt: biotype.getMetadata()) {
+	//			if(mt.getDataType()!=DataType.BIOSAMPLE) continue;
+	//			if(mt.getParameters()==null) continue;
+	//			Biotype biotype2 = DAOBiotype.getBiotype(mt.getParameters());
+	//			if(biotype2==null) continue;
+	//			String label = mt.getName();
+	//			key = new Pair<String, Biotype>(label, biotype2);
+	//
+	//			if(!biotype2.isHideSampleId()) {
+	//				res.add(key, new BiosampleLinker(mt, LinkerType.SAMPLEID));
+	//			}
+	//			if(biotype2.getSampleNameLabel()!=null) {
+	//				res.add(key, new BiosampleLinker(mt, LinkerType.SAMPLENAME, biotype2));
+	//			}
+	//			for(BiotypeMetadata mt2: biotype2.getMetadata()) {
+	//				res.add(key, new BiosampleLinker(mt, mt2));
+	//			}
+	//			res.add(key, new BiosampleLinker(mt, LinkerType.COMMENTS, biotype2));
+	//		}
+	//
+	//		//Look at parent types
+	//		Biotype b = biotype.getParent();
+	//		while(b!=null) {
+	//			key = new Pair<String, Biotype>(b.getName(), b);
+	//
+	//			if(!b.isHideSampleId()) {
+	//				res.add(key, new BiosampleLinker(b, LinkerType.SAMPLEID));
+	//			}
+	//
+	//			if(b.getSampleNameLabel()!=null) {
+	//				res.add(key, new BiosampleLinker(b, LinkerType.SAMPLENAME));
+	//			}
+	//			for(BiotypeMetadata mt2: b.getMetadata()) {
+	//				res.add(key, new BiosampleLinker(mt2));
+	//			}
+	//			res.add(key, new BiosampleLinker(b, LinkerType.COMMENTS));
+	//
+	//			b = b.getParent();
+	//		}
+	//		return res;
+	//	}
 }

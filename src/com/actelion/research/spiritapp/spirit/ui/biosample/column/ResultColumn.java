@@ -37,30 +37,30 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class ResultColumn extends Column<Biosample, String> {
-	
+
 	public ResultColumn() {
-		super("Results", String.class, 80);
+		super("Linked\nResults", String.class, 80);
 	}
 	@Override
-	public float getSortingKey() {return 10.2f;}
-	
-	
+	public float getSortingKey() {return 20.2f;}
+
+
 	@Override
 	public String getValue(Biosample row) {
 		//TODO: For faster Load, load a bunch of data from the model and assign to the aux values.
-		
+
 		List<Result> results;
 		try {
 
-			results = DAOResult.queryResults(ResultQuery.createQueryForBiosampleId((int)row.getId()), null);
+			results = DAOResult.queryResults(ResultQuery.createQueryForBiosampleId(row.getId()), null);
 			if(results.size()==0) return null;
 		} catch(Exception e) {
 			e.printStackTrace();
 			return e.toString();
 		}
-		
-		
-		
+
+
+
 		Set<Test> tests = Result.getTests(results);
 		if(tests.size()>1) {
 			return tests.size()+" Tests / " + results.size()+" Results";
@@ -78,7 +78,7 @@ public class ResultColumn extends Column<Biosample, String> {
 					if(s1!=null && s1.length()>0) {
 						sb.append(s1 + ": ");
 					}
-					sb.append(s2==null?"":s2);				
+					sb.append(s2==null?"":s2);
 				} else {
 					sb.append(sub.size()+" Results");
 				}
@@ -87,19 +87,23 @@ public class ResultColumn extends Column<Biosample, String> {
 		} else {
 			return null;
 		}
-		
-		
+
+
 	}
-	
+
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		comp.setForeground(Color.BLUE);
 	}
-	
-	
+
 	@Override
 	public boolean isMultiline() {
 		return true;
 	}
-	
+
+	@Override
+	public boolean isHideable() {
+		return true;
+	}
+
 }

@@ -23,9 +23,6 @@ package com.actelion.research.spiritapp.spirit.ui.print;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,11 +35,10 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.SwingUtilities;
 
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerTable;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerTableModel.ContainerTableModelType;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerTable;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerTableModel.ContainerTableModelType;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.util.ui.JCustomLabel;
@@ -64,15 +60,18 @@ public class PrintingTab extends JPanel {
 	private JRadioButton printAllButton = new JRadioButton("Print all", true);
 	private JRadioButton printSelectionButton = new JRadioButton("Print");
 	private JLabel printLabel = new JCustomLabel("", Font.ITALIC);
-	
+
+	private SwingWorkerExtended previewThread;
+
+
 	public PrintingTab(final PrintingDlg dlg, final ContainerType containerType) {
 		super(new BorderLayout());
 		this.dlg = dlg;
-		
+
 		ButtonGroup buttonGroup = new ButtonGroup();
 		buttonGroup.add(printAllButton);
 		buttonGroup.add(printSelectionButton);
-		
+
 		if(containerType==ContainerType.SLIDE) {
 			printAdapter = new SlidePrinterAdapter(this, containerType);
 		} else if(containerType==ContainerType.K7) {
@@ -82,7 +81,7 @@ public class PrintingTab extends JPanel {
 		} else {
 			printAdapter = new BrotherPrinterAdapter(this, containerType);
 		}
-		
+
 		//Are preview Panel enabled?
 		boolean hasPreview;
 		try {
@@ -94,107 +93,93 @@ public class PrintingTab extends JPanel {
 				if(panel!=null) {
 					hasPreview = true;
 				} else {
-					previewPanel = null; 
+					previewPanel = null;
 					hasPreview = false;
 				}
 			}
-			
-			
+
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			previewPanel = null;
 			hasPreview = false;
 		}
 
-		
-		containerTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {			
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if(e.getValueIsAdjusting()) return;
-				updatePrintLabel();
-			}
+
+		containerTable.getSelectionModel().addListSelectionListener(e-> {
+			if(e.getValueIsAdjusting()) return;
+			updatePrintLabel();
 		});
-		
+
 		containerPanel = new JPanel(new BorderLayout());
 		containerPanel.add(BorderLayout.CENTER, new JScrollPane(containerTable));
-			
-		printerPanel = printAdapter.getConfigPanel();		
+
+		printerPanel = printAdapter.getConfigPanel();
 		previewPanel = new JPanel(new BorderLayout());
-		
-		
+
+
 		JButton printButton = new JIconButton(IconType.PRINT, "Print");
-		printButton.addActionListener(new ActionListener() {				
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					printLabel.setForeground(Color.BLUE);
-					printLabel.setText("Printing...");
-					
-					List<Container> sel;
-					if(printAllButton.isSelected()) {
-						sel = containerTable.getRows();
-					} else {
-						sel = containerTable.getSelection();
-					}
-					
-					printAdapter.print(sel);
-					printLabel.setText("Sent to printer successfully");
-					printLabel.setForeground(Color.GREEN);
-				} catch (Exception ex) {
-					JExceptionDialog.showError(ex);
-					printLabel.setForeground(Color.RED);
-					printLabel.setText("Error: "+ex.getMessage());
+		printButton.addActionListener(e-> {
+			try {
+				printLabel.setForeground(Color.BLUE);
+				printLabel.setText("Printing...");
+
+				List<Container> sel;
+				if(printAllButton.isSelected()) {
+					sel = containerTable.getRows();
+				} else {
+					sel = containerTable.getSelection();
 				}
-					
+
+				printAdapter.print(sel);
+				printLabel.setText("Sent to printer successfully");
+				printLabel.setForeground(Color.GREEN);
+			} catch (Exception ex) {
+				JExceptionDialog.showError(ex);
+				printLabel.setForeground(Color.RED);
+				printLabel.setText("Error: "+ex.getMessage());
 			}
 		});
 
-		
+
 		//PrintPanel
 		JPanel printPanel = new JPanel(new BorderLayout());
-		printPanel.setMinimumSize(new Dimension(0,0));
 		if(hasPreview) {
-//			printPanel.add(BorderLayout.NORTH, UIUtils.createBox(BorderFactory.createEtchedBorder(), printerPanel, UIUtils.createHorizontalTitlePanel("Config")));
-//			printPanel.add(BorderLayout.CENTER, UIUtils.createBox(BorderFactory.createEtchedBorder(), previewPanel, UIUtils.createHorizontalTitlePanel("Preview")));
-			printPanel.add(BorderLayout.NORTH, UIUtils.createTitleBox("Settings", printerPanel));
-			printPanel.add(BorderLayout.CENTER, UIUtils.createTitleBox("Preview", previewPanel));
+			printPanel = UIUtils.createGrid(UIUtils.createTitleBox("Settings", printerPanel), UIUtils.createTitleBox("Preview", previewPanel));
 		} else {
-//			printPanel.add(BorderLayout.NORTH, UIUtils.createBox(BorderFactory.createEtchedBorder(), printerPanel, UIUtils.createHorizontalTitlePanel("Config")));
-			printPanel.add(BorderLayout.NORTH, UIUtils.createTitleBox("Settings", printerPanel));
+			printPanel = UIUtils.createTitleBox("Settings", printerPanel);
 		}
-		
-		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, containerPanel, printPanel);
-		splitPane.setDividerLocation(400);
+
+		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, printPanel, containerPanel);
+		splitPane.setDividerLocation(250);
 		add(BorderLayout.CENTER, splitPane);
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), printLabel, Box.createHorizontalStrut(15), printAllButton, printSelectionButton, Box.createHorizontalStrut(15), printButton));
-		
 
-		//Preview listeners
-		if(hasPreview) {
-			containerTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {					
-				@Override
-				public void valueChanged(ListSelectionEvent e) {
-					makePreview();
-				}
-			});
-			makePreview();
-		}
+
 
 		updatePrintLabel();
-		
+
+
+		//Preview
+		if(hasPreview) {
+			containerTable.getSelectionModel().addListSelectionListener(e-> {
+				makePreview();
+			});
+			SwingUtilities.invokeLater(()-> makePreview());
+		}
 	}
-	
+
 	public PrintingDlg getDialog() {
 		return dlg;
 	}
-	
+
 	public void setRows(List<Container> containers) {
 		containerTable.setRows(containers);
 		if(containers.size()>0) containerTable.setSelection(Collections.singleton(containers.get(0)));
 		printAdapter.eventSetRows(containers);
-		
+
 	}
-	
+
 	private void updatePrintLabel() {
 		printLabel.setText("");
 		printLabel.setForeground(Color.BLACK);
@@ -205,48 +190,44 @@ public class PrintingTab extends JPanel {
 
 		} else {
 			printSelectionButton.setEnabled(true);
-			printSelectionButton.setText("Print selection ("+containerTable.getSelection().size()+")");			
+			printSelectionButton.setText("Print selection ("+containerTable.getSelection().size()+")");
 		}
 	}
-	
+
 	public void fireConfigChanged() {
 		makePreview();
 	}
-	
-	private SwingWorkerExtended previewThread;
+
 	public void makePreview() {
 		if(previewThread!=null) previewThread.cancel();
-		
-		if(previewPanel==null) return;
-		previewPanel.setBackground(Color.lightGray);
-		
-		final Container container = containerTable.getSelection().size()>0? containerTable.getSelection().get(0): 
-			containerTable.getModel().getRows().size()>0? containerTable.getModel().getRows().get(0): null;
 
-		previewThread = new SwingWorkerExtended("Preview", previewPanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+		if(previewPanel==null) return;
+		previewPanel.setBackground(Color.LIGHT_GRAY);
+
+		final Container container = containerTable.getSelection().size()>0? containerTable.getSelection().get(0): containerTable.getModel().getRows().size()>0? containerTable.getModel().getRows().get(0): null;
+
+		previewThread = new SwingWorkerExtended("Preview", previewPanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 			private JComponent prev;
+
 			@Override
 			protected void doInBackground() throws Exception {
 				prev = printAdapter.getPreviewPanelForList(containerTable.getRows());
 				if(prev==null) {
-
 					prev = printAdapter.getPreviewPanel(container);
 				}
-				
 			}
-			
+
 			@Override
 			protected void done() {
 				previewPanel.setBackground(null);
 				previewPanel.removeAll();
-				prev.setMinimumSize(new Dimension(400, 250)); 
 				previewPanel.add(BorderLayout.CENTER, new JScrollPane(prev));
 				PrintingTab.this.validate();
 			}
 		};
 	}
-	
-	
-	
+
+
+
 
 }

@@ -77,22 +77,22 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 	@Column(name="name", nullable = false)
 	private String name;
 
-	/**Do we perform a necropsy after? */ 
+	/**Do we perform a necropsy after? */
 	@Column(name="necropsy")
 	private Boolean necropsy;
-	
+
 	@OneToMany(fetch = FetchType.LAZY, cascade=CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "study_sampling_id")
 	private List<Sampling> samplings = new ArrayList<>();
-	
+
 	@Column(name="creuser")
 	private String creUser = "";
-		
+
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date creDate = new Date();
 
 	public NamedSampling() {}
-	
+
 	public NamedSampling(String name) {
 		this.name = name;
 	}
@@ -102,11 +102,12 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 		return id;
 	}
 
+	@Override
 	public void setId(int id) {
 		this.id = id;
 	}
 
-	
+
 	public String getName() {
 		return name;
 	}
@@ -118,7 +119,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 	public List<Sampling> getAllSamplings() {
 		return samplings;
 	}
-	
+
 
 	/**
 	 * Return the top sampling ordered
@@ -132,7 +133,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 		this.samplings = samplings;
 	}
 
-	
+
 	public void setStudy(Study study) {
 		this.study = study;
 	}
@@ -144,22 +145,22 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 	public void remove() {
 		if(study==null || study.getNamedSamplings()==null) return;
 		for (Iterator<NamedSampling> iter = study.getNamedSamplings().iterator(); iter.hasNext();) {
-			NamedSampling ns = iter.next();			
+			NamedSampling ns = iter.next();
 			if (ns.equals(this)) {
 				iter.remove();
 			}
 		}
-		
+
 		for(Sampling s: getAllSamplings()) {
 			for(Biosample b: s.getSamples()) {
 				b.setAttachedSampling(null);
 			}
 			s.getSamples().clear();
 		}
-		
+
 		study = null;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return id;
@@ -173,22 +174,22 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 		NamedSampling ns = (NamedSampling) obj;
 		return getId() > 0 && getId() == ns.getId();
 	}
-	
+
 
 	@Override
 	public int compareTo(NamedSampling o) {
 		if(this==o) return 0;
 		int c = -CompareUtils.compare(getStudy(), o.getStudy());
 		if(c!=0) return c;
-		
+
 		c = (isNecropsy()?1:0) - (o.isNecropsy()?1:0);
 		if(c!=0) return c;
-		
+
 		c = CompareUtils.compare(getName(), o.getName());
-		if(c!=0) return c;		
-		return -(int)(getId()-o.getId());		
+		if(c!=0) return c;
+		return -(getId()-o.getId());
 	}
-	
+
 
 	@Override
 	public String toString() {
@@ -219,31 +220,31 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 	}
 
 	private String getDetailsRec(int depth, Sampling top) {
-		
+
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < 2+depth*2; i++) sb.append("&nbsp;");
-		
+
 		sb.append("-&nbsp;" + top.getDetailsWithMeasurements()+"<br>");
-		
+
 		for (Sampling child : top.getChildren()) {
 			sb.append(getDetailsRec(depth+1, child));
 		}
 		return sb.toString();
-		
+
 	}
 
 	private Sampling getSampling(int id) {
 		if(id<=0) return null;
 		for (Sampling s : getAllSamplings()) {
-			if(s.getId()==id) return s;		
+			if(s.getId()==id) return s;
 		}
 		return null;
 	}
-	
-	
+
+
 	/**
 	 * Copy all sampling items from the given input to this object.
-	 * 
+	 *
 	 * @param input
 	 */
 	public void copyFrom(NamedSampling input) {
@@ -251,8 +252,8 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 		setName(input.getName());
 		setNecropsy(input.isNecropsy());
 		setStudy(input.getStudy());
-		
-		
+
+
 		//delete outdated sampling objects (or without id)
 		for(Iterator<Sampling> iter = getAllSamplings().iterator(); iter.hasNext(); ) {
 			Sampling s = iter.next();
@@ -270,14 +271,14 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 			Sampling thisSampling = getSampling(inputSampling.getId());
 			if(thisSampling!=null) {
 				//there is a match between this and ns and we keep the link
-				input2this.put(inputSampling, thisSampling);				
+				input2this.put(inputSampling, thisSampling);
 			} else {
 				//work with a copy (id>0 -> copy.id=sampling.id)
 				thisSampling = new Sampling();
 				thisSampling.setId(inputSampling.getId());
 				getAllSamplings().add(thisSampling);
 			}
-			
+
 			//always copy the attributes of the sampling
 			thisSampling.setBiotype(inputSampling.getBiotype());
 			thisSampling.setSampleName(inputSampling.getSampleName());
@@ -291,22 +292,22 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 			thisSampling.setBlocNo(inputSampling.getBlocNo());
 			thisSampling.setSamples(inputSampling.getSamples());
 			thisSampling.setMeasurements(inputSampling.getMeasurements());
-			
+
 			input2this.put(inputSampling, thisSampling);
 		}
-		
+
 		//Recreate hierarchy
 		for (Sampling existingSampling : new ArrayList<Sampling>( input.getAllSamplings())) {
 			Sampling s = input2this.get(existingSampling);
 			s.setParent(input2this.get(existingSampling.getParent()));
-			
+
 			s.getChildren().clear();
 			for (Sampling child : existingSampling.getChildren()) {
 				s.getChildren().add(input2this.get(child));
-			}			
+			}
 		}
 	}
-	
+
 	public NamedSampling duplicate() {
 		NamedSampling res = new NamedSampling();
 		res.setName(getName());
@@ -315,7 +316,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 
 		//Create new sampling objects
 		for (Sampling existingSampling : getAllSamplings()) {
-			Sampling s = new Sampling();			
+			Sampling s = new Sampling();
 			s.setBiotype(existingSampling.getBiotype());
 			s.setSampleName(existingSampling.getSampleName());
 			s.setMetadataMap(existingSampling.getMetadataMap());
@@ -326,20 +327,20 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 			s.setAmount(existingSampling.getAmount());
 			s.setContainerType(existingSampling.getContainerType());
 			s.setBlocNo(existingSampling.getBlocNo());
-			res.getAllSamplings().add(s);		
+			res.getAllSamplings().add(s);
 			old2new.put(existingSampling, s);
 		}
-		
+
 		//Recreate hierarchy
 		for (Sampling existingSampling : getAllSamplings()) {
 			Sampling s = old2new.get(existingSampling);
 			s.setParent(old2new.get(existingSampling.getParent()));
-			
+
 			for (Sampling child : existingSampling.getChildren()) {
 				s.getChildren().add(old2new.get(child));
-			}			
+			}
 		}
-		
+
 		return res;
 	}
 
@@ -358,16 +359,16 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 	public void setCreDate(Date creDate) {
 		this.creDate = creDate;
 	}
-	
+
 	/**
 	 * Returns a map of (ContainerType/ContainerIndex) -> List of Samplings
 	 * @return
 	 */
 	public Map<Pair<ContainerType, Integer>, List<Sampling>> getContainerToSamplingsMap() {
 		Map<Pair<ContainerType, Integer>, List<Sampling>> map = new HashMap<>();
-		
+
 		for (Sampling s : getAllSamplings()) {
-			Pair<ContainerType, Integer> key = s.getContainerType()==null? null: new Pair<ContainerType, Integer>(s.getContainerType(), s.getBlocNo());			
+			Pair<ContainerType, Integer> key = s.getContainerType()==null? null: new Pair<ContainerType, Integer>(s.getContainerType(), s.getBlocNo());
 			List<Sampling> l = map.get(key);
 			if(l==null) {
 				l = new ArrayList<>();
@@ -375,7 +376,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 			}
 			l.add(s);
 		}
-		
+
 		return map;
 	}
 
@@ -386,22 +387,21 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 		}
 		return sb.toString();
 	}
-	
+
 	private void getHtmlBySamplingRec(Sampling ps, int depth, StringBuilder sb) {
 		for (int i = 0; i < depth; i++) {
 			sb.append("&nbsp;&nbsp;");
 		}
-		sb.append("-" + ps.getDetailsWithMeasurements() + "<br>");		
+		sb.append("-" + ps.getDetailsWithMeasurements() + "<br>");
 		for(Sampling ns: ps.getChildren()) {
 			getHtmlBySamplingRec(ns, depth+1, sb);
 		}
 	}
-	
-	
+
 	public String getHtmlByContainer() {
-		StringBuilder sb = new StringBuilder();		
+		StringBuilder sb = new StringBuilder();
 		NamedSampling ns = this;
-	
+
 		Map<Pair<ContainerType, Integer>, List<Sampling>> map = ns.getContainerToSamplingsMap();
 		List<Pair<ContainerType, Integer>> keys = new ArrayList<>(map.keySet());
 		Collections.sort(keys, new Comparator<Pair<ContainerType, Integer>>() {
@@ -411,18 +411,18 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 			}
 		});
 		for (Pair<ContainerType, Integer> key: keys) {
-			
+
 			sb.append("<b style='font-size:105%'>");
 			if(key!=null) sb.append("Container: " + key.getFirst() + (key.getSecond()==null?"": " " + key.getSecond())  );
 			else sb.append("No Container");
 			sb.append("</u></b><br>");
 			sb.append("<div style='margin-left:20px'>");
 			for (Sampling sampling : map.get(key)) {
-				sb.append("- " +  sampling.toString() +"<br>");					
+				sb.append("- " +  sampling.toString() +"<br>");
 			}
 			sb.append("</div>");
 		}
-		
+
 
 		return sb.toString();
 	}
@@ -444,7 +444,7 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 			if(sb.length()>0) sb.append(", ");
 			sb.append(counter.getCount(b) + " "+b.getName());
 		}
-		
+
 		return sb.toString();
 	}
 
@@ -458,6 +458,23 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 		return res;
 	}
 
+	/**
+	 * Comparator that compare all fields, to check if a modification occured
+	 */
+	public static Comparator<NamedSampling> EXACT_COMPARATOR = new Comparator<NamedSampling>() {
+		@Override
+		public int compare(NamedSampling o1, NamedSampling o2) {
+			int c = o1.getName().compareTo(o2.getName());
+			if(c!=0) return c;
 
-	
+			c = CompareUtils.compare(o1.isNecropsy(), o2.isNecropsy());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.getHtmlBySampling(), o2.getHtmlBySampling());
+			if(c!=0) return c;
+
+			return 0;
+		}
+	};
+
 }

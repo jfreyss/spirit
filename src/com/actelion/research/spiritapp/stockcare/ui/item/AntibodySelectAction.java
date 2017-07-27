@@ -31,10 +31,10 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.selector.SelectorDlg;
 import com.actelion.research.spiritapp.stockcare.ui.FilterDlg;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
+import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
-import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -47,13 +47,13 @@ public class AntibodySelectAction extends AbstractAction {
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		
+
 		try {
 			final Biotype antibodyType = DAOBiotype.getBiotype("Antibody");
 			if(antibodyType==null) throw new Exception("Antibody does not exist");
-			
-			final BiotypeMetadata antibodyAggMetadata = antibodyType.getMetadata("Fluorophore");
-			if(antibodyAggMetadata==null) throw new Exception("Antibody.Fluorophore does not exist");
+
+			final BiotypeMetadata antibodyAggMetadata = antibodyType.getMetadata("Fluorophore/Label");
+			if(antibodyAggMetadata==null) throw new Exception("Antibody.Fluorophore/Label does not exist");
 
 			Biotype fluorophoreType = DAOBiotype.getBiotype("Fluorophore");
 			if(fluorophoreType==null) throw new Exception("Fluorophore does not exist");
@@ -61,19 +61,19 @@ public class AntibodySelectAction extends AbstractAction {
 			if(mt1==null) throw new Exception("Fluorophore.Instrument compatibility does not exist");
 			final BiotypeMetadata mt2 = antibodyType.getMetadata("Target Species");
 			if(mt2==null) throw new Exception("Antibody.Target Species does not exist");
-//					
-			
+			//
+
 			FilterDlg dlg = new FilterDlg("Please select the instrument and target species", new BiotypeMetadata[] {mt1, mt2}) {
 				@Override
 				public void onFilterChange() {
-					new SwingWorkerExtended() {												
+					new SwingWorkerExtended() {
 						List<Biosample> pool;
 						@Override
 						protected void doInBackground() throws Exception {
 							setInfo("");
 							String[] res = getFilters();
 							BiosampleQuery q = new BiosampleQuery();
-							q.setBiotype(antibodyType);											
+							q.setBiotype(antibodyType);
 							if(res[0].length()>0) q.getLinker2values().put(new BiosampleLinker(antibodyAggMetadata, mt1), "*"+res[0]+"*");
 							if(res[1].length()>0) q.getLinker2values().put(new BiosampleLinker(antibodyType, mt2), res[1]);
 							pool = DAOBiosample.queryBiosamples(q, SpiritFrame.getUser());
@@ -83,28 +83,28 @@ public class AntibodySelectAction extends AbstractAction {
 						protected void done() {
 							setInfo(pool.size()+" "+antibodyType);
 						}
-						
+
 					};
-					
+
 				}
 			};
 			if(!dlg.isSuccess()) return;
 			String[] res = dlg.getFilters();
-			
-			
+
+
 			BiosampleQuery q = new BiosampleQuery();
 			q.setBiotype(antibodyType);
 			if(res[0].length()>0) q.getLinker2values().put(new BiosampleLinker(antibodyAggMetadata, mt1), "*"+res[0]+"*");
 			if(res[1].length()>0) q.getLinker2values().put(new BiosampleLinker(antibodyType, mt2), res[1]);
 			List<Biosample> pool = DAOBiosample.queryBiosamples(q, SpiritFrame.getUser());
-			
+
 			BiosampleLinker querySel = new BiosampleLinker(LinkerType.SAMPLENAME, antibodyType);
 			BiosampleLinker discrimSel = new BiosampleLinker(antibodyAggMetadata, fluorophoreType.getMetadata("Type"));
-//			BiosampleLinker discrimSel = new BiosampleLinker(antibodyAggMetadata, LinkerType.SAMPLENAME, fluorophoreType);
+			//			BiosampleLinker discrimSel = new BiosampleLinker(antibodyAggMetadata, LinkerType.SAMPLENAME, fluorophoreType);
 			BiosampleLinker displaySel = new BiosampleLinker(antibodyAggMetadata, LinkerType.SAMPLEID);
-			
+
 			new SelectorDlg(pool, querySel, discrimSel, displaySel);
-			
+
 		} catch(Exception ex) {
 			JExceptionDialog.showError(ex);
 		}

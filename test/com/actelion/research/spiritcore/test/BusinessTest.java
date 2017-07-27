@@ -43,7 +43,7 @@ public class BusinessTest {
 	@Test
 	public void testPhases() {
 		Phase p0 = new Phase("");
-		Assert.assertEquals(0, p0.getDays());
+		Assert.assertEquals("", p0.getName());
 		Assert.assertEquals("", p0.getLabel());
 
 		Phase p1 = new Phase("d-2_5h");
@@ -92,10 +92,9 @@ public class BusinessTest {
 		Assert.assertEquals(0, p7.getMinutes());
 		Assert.assertEquals("treatment", p7.getLabel());
 
-		Phase p8 = new Phase(" treatment ");
-		Assert.assertEquals(0, p8.getDays());
+		Phase p8 = new Phase("treatment ");
 		Assert.assertEquals(0, p8.getMinutes());
-		Assert.assertEquals("treatment", p8.getLabel());
+		Assert.assertEquals("treatment", p8.getName());
 
 		Phase p9 = new Phase("d5 6 20 treatment ");
 		Assert.assertEquals(5, p9.getDays());

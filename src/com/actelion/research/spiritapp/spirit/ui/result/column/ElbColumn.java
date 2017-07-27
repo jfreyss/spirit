@@ -27,21 +27,20 @@ import com.actelion.research.util.ui.exceltable.Column;
 public class ElbColumn extends Column<Result, String> {
 	public ElbColumn() {
 		super("ELB", String.class);
-		setHideable(true);
 	}
-	
+
 	@Override
 	public float getSortingKey() {
 		return 1f;
 	}
-	
+
 	@Override
 	public String getValue(Result row) {
 		return row.getElb();
 	}
-	
+
 	@Override
 	public boolean isEditable(Result row) {return false;}
-	
+
 
 }

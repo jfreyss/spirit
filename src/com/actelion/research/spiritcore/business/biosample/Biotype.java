@@ -315,11 +315,27 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	}
 
 	/**
+	 * Return all parents in a list [top, parent2, parent1, self]
+	 * @return
+	 */
+	public List<Biotype> getHierarchy() {
+		List<Biotype> res = new ArrayList<>();
+		Biotype b = this;
+		while(b!=null) {
+			res.add(0, b);
+			b = b.getParent();
+		}
+		return res;
+	}
+
+
+	/**
 	 * @return the parent
 	 */
 	public Biotype getTopParent() {
 		Biotype top = this;
-		while(top.getParent()!=null) {
+		int count = 0;
+		while(top.getParent()!=null && count++<10) {
 			top = top.getParent();
 		}
 		return top;

@@ -40,8 +40,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -72,7 +72,7 @@ public class PivotDlg extends JEscapeDialog {
 	public PivotDlg(JDialog owner, final EditResultTab tab, final PivotMode pivotMode) throws Exception {
 		super(owner, "Import from pivot table", true);
 		this.tab = tab;
-		final Test test = tab.getTestChoice().getSelection();
+		final Test test = tab.getTestComboBox().getSelection();
 
 		if(pivotMode==PivotMode.ANIMAL_PHASE) {
 			for (Result r : tab.getTable().getRows()) {
@@ -336,7 +336,7 @@ public class PivotDlg extends JEscapeDialog {
 
 
 	private void populateTextArea() throws Exception {
-		Test test = tab.getTestChoice().getSelection();
+		Test test = tab.getTestComboBox().getSelection();
 		List<Result> export = new ArrayList<>(tab.getTable().getRows());
 
 		//Remove empty results

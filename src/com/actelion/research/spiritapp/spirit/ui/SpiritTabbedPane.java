@@ -32,8 +32,8 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeListener;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.StudyComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.StudyComboBox;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;

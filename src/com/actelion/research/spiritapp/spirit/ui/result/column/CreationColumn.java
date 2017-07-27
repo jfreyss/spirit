@@ -32,7 +32,7 @@ import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTableModel;
-import com.actelion.research.spiritapp.spirit.ui.lf.CreationLabel;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.CreationLabel;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.services.SpiritRights;

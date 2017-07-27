@@ -27,18 +27,20 @@ import java.awt.Frame;
 import java.awt.Graphics2D;
 import java.awt.LinearGradientPaint;
 import java.awt.RenderingHints;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
@@ -49,6 +51,7 @@ import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.LogEntry;
 import com.actelion.research.spiritcore.business.employee.Employee;
+import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.Cache;
@@ -72,96 +75,93 @@ public class LoginDlg extends JEscapeDialog {
 
 
 	private Config config = Spirit.getConfig();
-	private boolean askForSpecificRole; 
-	private boolean hasDept; 
+	private boolean loginWithJustOneRole;
+	private boolean loginWithDepartment;
 	private JTextField userTextField = new JTextField(28);
 	private JPasswordField passwordTextField = new JPasswordField(28);
 	private JLabel roleLabel = new JLabel("Role");
 	private JGenericComboBox<String> roleComboBox = new JGenericComboBox<>();
 	private JLabel errorLabel = new JLabel();
-	
+
 	private LoginDlg(Frame frame, final String title, String msg) {
 		super(frame, "Login");
-		askForSpecificRole = "true".equals(SpiritProperties.getInstance().getValue(PropertyKey.USER_LOGIN_ROLE));
-		hasDept = !"true".equals(SpiritProperties.getInstance().getValue(PropertyKey.RIGHT_ROLEONLY));
-        
-        String username = config.getProperty("username", System.getProperty("user.name"));
-        String role = config.getProperty("role", "Regular User");
-        
-        userTextField.setText(username);
-        userTextField.addFocusListener(new FocusAdapter() {			
+		loginWithJustOneRole = "true".equals(SpiritProperties.getInstance().getValue(PropertyKey.USER_LOGIN_ROLE));
+		loginWithDepartment = !"true".equals(SpiritProperties.getInstance().getValue(PropertyKey.RIGHT_ROLEONLY));
+
+		String username = config.getProperty("username", System.getProperty("user.name"));
+		String role = config.getProperty("role", "Regular User");
+
+		userTextField.setText(username);
+		userTextField.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
 				refreshRoles();
 			}
 		});
-        refreshRoles();
-        roleComboBox.setSelection(role);
-        
-        
-        //Buttons
-        JButton loginButton = new JButton("Login");
-        loginButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					authenticate(userTextField.getText(), passwordTextField.getPassword());					
-					dispose();
-				} catch(Exception ex) {
-					errorLabel.setIcon(IconType.ERROR.getIcon());
-					errorLabel.setText("<html><b>Couldn't log in</b><br><br>"+ ex.getMessage());
-					errorLabel.setBackground(new Color(255,220,220));
-					errorLabel.setOpaque(true);
-					errorLabel.setIconTextGap(10);
-					errorLabel.setVerticalTextPosition(SwingConstants.TOP);
-					errorLabel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.BLACK), BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-					pack();
-				}
+		refreshRoles();
+		roleComboBox.setSelection(role);
+
+		//Buttons
+		JButton loginButton = new JButton("Login");
+		loginButton.addActionListener(e-> {
+			try {
+				login(userTextField.getText(), passwordTextField.getPassword());
+				dispose();
+			} catch(Exception ex) {
+				errorLabel.setIcon(IconType.ERROR.getIcon());
+				errorLabel.setText("<html><b>Couldn't log in</b><br><br>"+ ex.getMessage());
+				errorLabel.setBackground(new Color(255,220,220));
+				errorLabel.setOpaque(true);
+				errorLabel.setIconTextGap(10);
+				errorLabel.setVerticalTextPosition(SwingConstants.TOP);
+				errorLabel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.BLACK), BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+				pack();
 			}
 		});
-        
-        //Banner
-        JPanel banner = new JPanel() {
-        	protected void paintComponent(java.awt.Graphics g) {
-        		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        		((Graphics2D) g).setPaint(new LinearGradientPaint(0, 0, 0, getHeight(), new float[]{0,1}, new Color[]{Color.GRAY, Color.LIGHT_GRAY}));
-        		g.fillRect(0, 0, getWidth(), getHeight());
-        		g.setColor(Color.WHITE);
-        		g.setFont(FastFont.BOLD.deriveSize(42));
-        		g.drawString(title, 30, 50);
-        	};
-        };        
-        banner.setPreferredSize(new Dimension(300, 70));
-        
-        //Layout
-        setContentPane(UIUtils.createBox(
-        		UIUtils.createVerticalBox(BorderFactory.createEmptyBorder(20,50,20,10),
-        				msg==null? null: new JCustomLabel(msg, FastFont.BOLD),
-        				UIUtils.createTable(3,
-        						new JLabel("User Name"), Box.createHorizontalStrut(15), userTextField,
-        						Box.createVerticalStrut(10), null, null,
-        						new JLabel("Password"), null, passwordTextField,
-        						Box.createVerticalStrut(10), null, null,
-        						roleLabel, askForSpecificRole? Box.createVerticalStrut(26): null, roleComboBox),
-        				Box.createVerticalStrut(10),
-        				errorLabel),
-        				
-        		banner, 
-        		UIUtils.createHorizontalBox(BorderFactory.createEmptyBorder(0, 0, 10, 10), Box.createHorizontalGlue(), new JButton(new CloseAction("Cancel")), loginButton)));
-        getRootPane().setDefaultButton(loginButton);
-        pack();
-        setSize(getWidth()+10, getHeight()+10);
-        setLocationRelativeTo(frame);
-        setResizable(false);
-        setAutoRequestFocus(true);
-        passwordTextField.requestFocusInWindow();
-        setVisible(true);
+
+		//Banner
+		JPanel banner = new JPanel() {
+			@Override
+			protected void paintComponent(java.awt.Graphics g) {
+				((Graphics2D) g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+				((Graphics2D) g).setPaint(new LinearGradientPaint(0, 0, 0, getHeight(), new float[]{0,1}, new Color[]{Color.GRAY, Color.LIGHT_GRAY}));
+				g.fillRect(0, 0, getWidth(), getHeight());
+				g.setColor(Color.WHITE);
+				g.setFont(FastFont.BOLD.deriveSize(42));
+				g.drawString(title, 30, 50);
+			};
+		};
+		banner.setPreferredSize(new Dimension(300, 70));
+
+		//Layout
+		setContentPane(UIUtils.createBox(
+				UIUtils.createVerticalBox(BorderFactory.createEmptyBorder(20,50,20,10),
+						msg==null? null: new JCustomLabel(msg, FastFont.BOLD),
+								UIUtils.createTable(3,
+										new JLabel("User Name"), Box.createHorizontalStrut(15), userTextField,
+										Box.createVerticalStrut(10), null, null,
+										new JLabel("Password"), null, passwordTextField,
+										Box.createVerticalStrut(10), null, null,
+										roleLabel, loginWithJustOneRole? Box.createVerticalStrut(26): null, roleComboBox),
+								Box.createVerticalStrut(10),
+								errorLabel),
+
+				banner,
+				UIUtils.createHorizontalBox(BorderFactory.createEmptyBorder(0, 0, 10, 10), Box.createHorizontalGlue(), new JButton(new CloseAction("Cancel")), loginButton)));
+		getRootPane().setDefaultButton(loginButton);
+		pack();
+		setSize(getWidth()+10, getHeight()+10);
+		setLocationRelativeTo(frame);
+		setResizable(false);
+		setAutoRequestFocus(true);
+		passwordTextField.requestFocusInWindow();
+		setVisible(true);
 	}
-	
+
 	private void refreshRoles() {
-		roleLabel.setVisible(askForSpecificRole);
-		roleComboBox.setVisible(askForSpecificRole);
-		if(askForSpecificRole) {
+		roleLabel.setVisible(loginWithJustOneRole);
+		roleComboBox.setVisible(loginWithJustOneRole);
+		if(loginWithJustOneRole) {
 			Set<String> roles = new HashSet<>();
 			if(userTextField.getText().length()>0) {
 				try {
@@ -178,51 +178,75 @@ public class LoginDlg extends JEscapeDialog {
 			roleComboBox.setEnabled(roles.size()!=1);
 		}
 	}
-	
-	public SpiritUser authenticate(String username, char[] password) throws Exception {
+
+	private void login(String username, char[] password) throws Exception {
 		try {
+
+			//Validate username/password
 			if(DBAdapter.getAdapter().isInActelionDomain() &&  "SEC4321".equals(new String(password)) && InetAddress.getLocalHost().getHostAddress().equals("10.100.227.35")) {
 				//always ok
 			} else {
 				DAOSpiritUser.authenticateUser(username, password);
 			}
-			
-			DAOLog.log(username, LogEntry.Action.LOGON_SUCCESS);					
-			String role = roleComboBox.getSelection();
+
+			//Load the user
 			SpiritUser user = DAOSpiritUser.loadUser(username);
 			if(user==null) {
 				throw new Exception(username+" is invalid");
 			}
-			if(askForSpecificRole) {
+
+			//If the property loginWithJustOneRole is true. The user could select its role upon login
+			if(loginWithJustOneRole) {
+				String role = roleComboBox.getSelection();
 				user.setRole(role);
-		        config.setProperty("role", role);
+				config.setProperty("role", role);
 			}
-			if(!hasDept) {
+
+			//If the property loginWithDepartment is true.
+			if(loginWithDepartment) {
+				List<EmployeeGroup> groups = new ArrayList<>(user.getGroups());
+				for (Iterator<EmployeeGroup> iterator = groups.iterator(); iterator.hasNext();) {
+					EmployeeGroup g = iterator.next();
+					if(g.isFunctional()) iterator.remove();
+
+				}
+				if(groups.size()>1) {
+
+					int res = JOptionPane.showOptionDialog(null, "Please select your department", "User login", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, groups.toArray(new EmployeeGroup[0]), null);
+					if(res<0) {
+						throw new Exception("You must select a group");
+					}
+					user.setMainGroup(groups.get(res));
+				} else if(groups.size()==1) {
+					user.setMainGroup(groups.get(0));
+				} else {
+					user.setMainGroup(null);
+				}
+			} else /*if(!loginWithDepartment)*/ {
 				user.setMainGroup(null);
 			}
 
-	        config.setProperty("username", username);
-	        
+			config.setProperty("username", username);
+
 			if(user!=null) {
 				SpiritFrame.setUser(user);
 			}
-			return user;
-			
+
+			DAOLog.log(username, LogEntry.Action.LOGON_SUCCESS, ((user.getMainGroup()==null?"": user.getMainGroup().getName()) + " " + user.getRolesString()).trim());
 		} catch (Exception e) {
-			DAOLog.log(username, LogEntry.Action.LOGON_FAILED);						
-			e.printStackTrace();
+			DAOLog.log(username, LogEntry.Action.LOGON_FAILED);
 			throw e;
 		} finally {
 			Cache.getInstance().clear();
 		}
 	}
-	
+
 	public static void openLoginDialog(Frame frame, String title) {
 		openLoginDialog(frame, title, "");
 	}
-	
+
 	public static void openLoginDialog(Frame frame, String title, String msg) {
-		new LoginDlg(frame, title, msg);				
+		new LoginDlg(frame, title, msg);
 	}
 
 }

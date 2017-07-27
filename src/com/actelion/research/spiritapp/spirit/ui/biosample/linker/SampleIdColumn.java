@@ -32,7 +32,7 @@ import javax.swing.JSeparator;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdLabel;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;

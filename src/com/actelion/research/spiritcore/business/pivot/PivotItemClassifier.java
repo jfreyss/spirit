@@ -24,23 +24,23 @@ package com.actelion.research.spiritcore.business.pivot;
 import java.awt.Color;
 
 public enum PivotItemClassifier {
-		STUDY_GROUP("Study", new Color(255, 200, 200)),
-		STUDY_PHASE("Phase", new Color(245, 200, 200)),		
-		LOCATION("Location", new Color(240, 240, 225)),
-		TOP("TopSample", new Color(180, 240, 255)),
-		BIOSAMPLE("Sample", new Color(180, 240, 255)),
-//		COMPOUND("Compound", new Color(210, 210, 240)),
-		RESULT("Result", new Color(255, 255, 180));
-		
-		private final String label;
-		private final Color bgcolor;
-		private PivotItemClassifier(String label, Color bgcolor) {
-			this.label = label;
-			this.bgcolor = bgcolor;
-		}
-		
-		public String getLabel() {return label; }
-		public Color getBgcolor() {return bgcolor;}
-		@Override
-		public String toString() {return label;}
+	STUDY_GROUP("Study", new Color(255, 200, 200)),
+	STUDY_PHASE("Phase", new Color(245, 200, 200)),
+	LOCATION("Location", new Color(240, 240, 225)),
+	PARTICIPANT("Participant", new Color(180, 240, 255)),
+	BIOSAMPLE("Sample", new Color(180, 240, 255)),
+	//		COMPOUND("Compound", new Color(210, 210, 240)),
+	RESULT("Result", new Color(255, 255, 180));
+
+	private final String label;
+	private final Color bgcolor;
+	private PivotItemClassifier(String label, Color bgcolor) {
+		this.label = label;
+		this.bgcolor = bgcolor;
 	}
+
+	public String getLabel() {return label; }
+	public Color getBgcolor() {return bgcolor;}
+	@Override
+	public String toString() {return label;}
+}

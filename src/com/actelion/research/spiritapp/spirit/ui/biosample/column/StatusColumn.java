@@ -26,7 +26,6 @@ import javax.swing.JComponent;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Status;
-import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
@@ -34,23 +33,22 @@ public class StatusColumn extends Column<Biosample, Status> {
 
 	public StatusColumn() {
 		super("Status", Status.class, 50, 100);
-		lbl.setFont(FastFont.SMALL);
 	}
-	
+
 	@Override
 	public float getSortingKey() {
 		return 9.6f;
 	}
-	
+
 	@Override
 	public Status getValue(Biosample row) {
 		return row.getStatus();
-	}		
+	}
 	@Override
 	public boolean isEditable(Biosample row) {
 		return false;
-	}	
-	
+	}
+
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		super.postProcess(table, row, rowNo, value, comp);
@@ -66,4 +64,9 @@ public class StatusColumn extends Column<Biosample, Status> {
 	@Override
 	public boolean shouldMerge(Biosample r1, Biosample r2) {return false;}
 
+
+	@Override
+	public boolean isHideable() {
+		return true;
+	}
 }

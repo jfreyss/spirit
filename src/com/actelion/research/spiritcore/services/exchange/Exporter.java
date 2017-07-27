@@ -147,7 +147,7 @@ public class Exporter {
 			StudyPojo r = new StudyPojo();
 			r.setId(s.getId());
 			r.setStudyId(s.getStudyId());
-			r.setIvv(s.getIvv());
+			r.setLocalId(s.getLocalId());
 			r.setTitle(s.getTitle());
 			r.setAttachedSampleIds(Biosample.getSampleIds(s.getAttachedBiosamples()));
 			r.setBlindAllUsers(s.getBlindAllUsers());

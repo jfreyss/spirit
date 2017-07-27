@@ -54,7 +54,7 @@ import com.itextpdf.text.pdf.PdfWriter;
 
 public class CagePrinterPDF {
 
-	
+
 	public static void printCages(List<Container> cages, boolean printGroupsTreatments, boolean printTreatmentDesc, boolean whiteBackground) throws Exception {
 		final int margin = 15;
 		File f = File.createTempFile("cages__", ".pdf");
@@ -71,21 +71,21 @@ public class CagePrinterPDF {
 		FileOutputStream os = new FileOutputStream(f);
 		PdfWriter writer = PdfWriter.getInstance(doc, os);
 		doc.open();
-		
+
 
 		PdfContentByte canvas = writer.getDirectContentUnder();
-		
+
 		float tileW = (doc.getPageSize().getWidth()) /4;
 		float tileH = (doc.getPageSize().getHeight()) /2;
 		for (int i = 0; i < cages.size(); i++) {
 			Container cage = cages.get(i);
-			
-			Study study = cage.getStudy();		
+
+			Study study = cage.getStudy();
 			Set<Group> groups = cage.getGroups();
-			Group group = cage.getFirstGroup();
+			Group group = cage.getGroup();
 			Set<Biosample> animals = new TreeSet<>(Biosample.COMPARATOR_NAME);
 			animals.addAll(cage.getBiosamples());
-						
+
 			//Find the treatments applied to this group
 			String treatmentDescription = null;
 			Set<NamedTreatment> allTreatments = new TreeSet<>();
@@ -94,7 +94,7 @@ public class CagePrinterPDF {
 					treatmentDescription = "";
 				} else {
 					allTreatments.addAll(gr.getAllTreatments(-1));
-					String s = gr.getTreatmentDescription(-1, printTreatmentDesc);		
+					String s = gr.getTreatmentDescription(-1, printTreatmentDesc);
 					if(treatmentDescription==null) {
 						treatmentDescription = s;
 					} else if(!treatmentDescription.equals(s)) {
@@ -102,29 +102,30 @@ public class CagePrinterPDF {
 					}
 				}
 			}
-			
-			
-			
+
+
 			//Draw
-			if(i%8==0) {				
+			if(i%8==0) {
 				if(i>0)doc.newPage();
 				drawCageSeparation(doc, canvas);
 			}
-			
+
 			int col = (i%8)%4;
 			int row = (i%8)/4;
-			
-			
+
+
 			float x = margin + tileW*col;
-			float x2 = x+tileW-margin;
+			float x2 = x + tileW - margin;
 			float baseY = tileH*row;
 			float y;
-			
+
 			//Display Sex
 			canvas.moveTo(tileW*col - 50, doc.getPageSize().getHeight() - (tileH*row+50));
 			Image img = null;
 			String sex = getMetadata(animals, "Sex");
-			if(sex.equals("M")) {
+			if(study.isBlindAll()) {
+				img = nosexImg;
+			} else if(sex.equals("M")) {
 				img = maleImg;
 			} else if(sex.equals("F")) {
 				img = femaleImg;
@@ -144,7 +145,7 @@ public class CagePrinterPDF {
 				canvas.fill();
 				canvas.restoreState();
 			}
-	        BaseColor treatmentColor = BaseColor.BLACK;
+			BaseColor treatmentColor = BaseColor.BLACK;
 			if(allTreatments.size()==1 && !study.isBlind() && printGroupsTreatments) {
 				NamedTreatment t = allTreatments.iterator().next();
 				if(t.getColor()!=null) {
@@ -159,32 +160,32 @@ public class CagePrinterPDF {
 				}
 			}
 
-	        
+
 			canvas.beginText();
-			canvas.setFontAndSize(BaseFont.createFont(BaseFont.HELVETICA_BOLD, "Cp1252", false), 16f);			
+			canvas.setFontAndSize(BaseFont.createFont(BaseFont.HELVETICA_BOLD, "Cp1252", false), 16f);
 			canvas.showTextAligned(Element.ALIGN_LEFT, cage.getContainerId(), x, doc.getPageSize().getHeight() - (baseY + 23), 0);
-			
+
 			canvas.setFontAndSize(BaseFont.createFont(BaseFont.HELVETICA_OBLIQUE, "Cp1252", false), 11f);
 			y =42 + baseY; canvas.showTextAligned(Element.ALIGN_LEFT, "Type: ", x, doc.getPageSize().getHeight() - y , 0);
-	        y+=15; canvas.showTextAligned(Element.ALIGN_LEFT, "Animals_ID: ", x, doc.getPageSize().getHeight() - y , 0);
-	        y+=86; canvas.showTextAligned(Element.ALIGN_LEFT, "Delivery date: ", x, doc.getPageSize().getHeight() - y , 0);
-	        y+=13; canvas.showTextAligned(Element.ALIGN_LEFT, "PO Number: ", x, doc.getPageSize().getHeight() - y , 0);
-	        y+=22; canvas.showTextAligned(Element.ALIGN_LEFT, "Study: ", x, doc.getPageSize().getHeight() - y , 0);
-	        y+=14; if(study!=null && !study.isBlind() && printGroupsTreatments)canvas.showTextAligned(Element.ALIGN_LEFT, "Group: ", x, doc.getPageSize().getHeight() - y , 0);
-	        y+=23; if(study!=null && !study.isBlind() && printGroupsTreatments)canvas.showTextAligned(Element.ALIGN_LEFT, "Treatment: ", x, doc.getPageSize().getHeight() - y , 0);
-	        y+=50; canvas.showTextAligned(Element.ALIGN_LEFT, "License: ", x, doc.getPageSize().getHeight() - y , 0);
-	        y+=13; canvas.showTextAligned(Element.ALIGN_LEFT, "Experimenter: ", x, doc.getPageSize().getHeight() - y , 0);
-	        canvas.endText();
-	        
-			y = 42 + baseY; print(canvas, getMetadata(animals, "Type"), x+65, doc.getPageSize().getHeight() - y , x2, 11, 11, FontFactory.HELVETICA, BaseColor.BLACK, 11f);			
+			y+=15; canvas.showTextAligned(Element.ALIGN_LEFT, "Animals_ID: ", x, doc.getPageSize().getHeight() - y , 0);
+			y+=86; canvas.showTextAligned(Element.ALIGN_LEFT, "Delivery date: ", x, doc.getPageSize().getHeight() - y , 0);
+			y+=13; canvas.showTextAligned(Element.ALIGN_LEFT, "PO Number: ", x, doc.getPageSize().getHeight() - y , 0);
+			y+=22; canvas.showTextAligned(Element.ALIGN_LEFT, "Study: ", x, doc.getPageSize().getHeight() - y , 0);
+			y+=14; if(study!=null && !study.isBlind() && printGroupsTreatments)canvas.showTextAligned(Element.ALIGN_LEFT, "Group: ", x, doc.getPageSize().getHeight() - y , 0);
+			y+=23; if(study!=null && !study.isBlind() && printGroupsTreatments)canvas.showTextAligned(Element.ALIGN_LEFT, "Treatment: ", x, doc.getPageSize().getHeight() - y , 0);
+			y+=50; canvas.showTextAligned(Element.ALIGN_LEFT, "License: ", x, doc.getPageSize().getHeight() - y , 0);
+			y+=13; canvas.showTextAligned(Element.ALIGN_LEFT, "Experimenter: ", x, doc.getPageSize().getHeight() - y , 0);
+			canvas.endText();
+
+			y = 42 + baseY; print(canvas, study.isBlindAll()? "Blinded": getMetadata(animals, "Type"), x+65, doc.getPageSize().getHeight() - y , x2, 11, 11, FontFactory.HELVETICA, BaseColor.BLACK, 11f);
 			y+=15;
-			
+
 			if(animals.size()<=6) {
 				int n = 0;
 				for (Biosample animal: animals) {
 					print(canvas, animal.getSampleId(), x+75, doc.getPageSize().getHeight() - y - 12*n, x2-50, 12, 12, FontFactory.HELVETICA, BaseColor.BLACK, 11f);
 					if(animal.getSampleName()!=null && animal.getSampleName().length()>0) {
-						print(canvas, "[ " + animal.getSampleName() + " ]", x2-50, doc.getPageSize().getHeight() - y - 12*n, x2, 12, 12, FontFactory.HELVETICA_BOLD, BaseColor.BLACK, 11f);
+						print(canvas, "[ " + animal.getSampleName() + " ]", x2-60, doc.getPageSize().getHeight() - y - 12*n, x2, 12, 12, FontFactory.HELVETICA_BOLD, BaseColor.BLACK, 11f);
 					}
 					n++;
 				}
@@ -201,51 +202,51 @@ public class CagePrinterPDF {
 					n++;
 				}
 			}
-			
-	        y+=86; print(canvas, getMetadata(animals, "Delivery Date"), x+75, doc.getPageSize().getHeight() - y, x2, 0, 10, FontFactory.HELVETICA, BaseColor.BLACK, 10f);
-	        y+=13; print(canvas, getMetadata(animals, "PO Number"), x+75, doc.getPageSize().getHeight() - y, x2, 0, 10, FontFactory.HELVETICA, BaseColor.BLACK, 10f);	        
-	        y+=22; print(canvas, study.getStudyIdIvv(), x+40, doc.getPageSize().getHeight() - y, x2, 0, 11, BaseFont.HELVETICA_BOLD, BaseColor.BLACK, 11f);	        
-	        y+=14; if(!study.isBlind() && printGroupsTreatments) print(canvas, getGroups(animals), x+40, doc.getPageSize().getHeight() - y, x2, 22, 11, BaseFont.HELVETICA_BOLD, BaseColor.BLACK, 11f);	        
-	        y+=23; if(!study.isBlind() && printGroupsTreatments) print(canvas, treatmentDescription, x+62, doc.getPageSize().getHeight() - y, x2, 50, printTreatmentDesc?9: 12, FontFactory.HELVETICA, treatmentColor, printTreatmentDesc?9f: 10f);        
-	        y+=50; print(canvas, study.getMetadata().get("LICENSENO"), x+74, doc.getPageSize().getHeight() - y, x2, 15, 10, FontFactory.HELVETICA, BaseColor.BLACK, 10f);
-	        y+=13; print(canvas, study.getMetadata().get("EXPERIMENTER"), x+74, doc.getPageSize().getHeight() - y, x2, 20, 10, FontFactory.HELVETICA, BaseColor.BLACK, 10f);
+
+			y+=86; print(canvas, getMetadata(animals, "Delivery Date"), x+75, doc.getPageSize().getHeight() - y, x2, 0, 10, FontFactory.HELVETICA, BaseColor.BLACK, 10f);
+			y+=13; print(canvas, getMetadata(animals, "PO Number"), x+75, doc.getPageSize().getHeight() - y, x2, 0, 10, FontFactory.HELVETICA, BaseColor.BLACK, 10f);
+			y+=22; print(canvas, study.getStudyIdAndInternalId(), x+40, doc.getPageSize().getHeight() - y, x2, 0, 11, BaseFont.HELVETICA_BOLD, BaseColor.BLACK, 11f);
+			y+=14; if(!study.isBlind() && printGroupsTreatments) print(canvas, getGroups(animals), x+40, doc.getPageSize().getHeight() - y, x2, 22, 11, BaseFont.HELVETICA_BOLD, BaseColor.BLACK, 11f);
+			y+=23; if(!study.isBlind() && printGroupsTreatments) print(canvas, treatmentDescription, x+62, doc.getPageSize().getHeight() - y, x2, 50, printTreatmentDesc?9: 12, FontFactory.HELVETICA, treatmentColor, printTreatmentDesc?9f: 10f);
+			y+=50; print(canvas, study.getMetadata().get("LICENSENO"), x+74, doc.getPageSize().getHeight() - y, x2, 15, 10, FontFactory.HELVETICA, BaseColor.BLACK, 10f);
+			y+=13; print(canvas, study.getMetadata().get("EXPERIMENTER"), x+74, doc.getPageSize().getHeight() - y, x2, 20, 10, FontFactory.HELVETICA, BaseColor.BLACK, 10f);
 		}
-		
+
 		doc.close();
 		os.close();
 		Desktop.getDesktop().open(f);
 		try {Thread.sleep(500);}catch (Exception e) {}
-		
+
 	}
 
 	private static void print(PdfContentByte canvas, String txt, float x, float y, float maxX, int maxHeight, int lineHeight, String fontName, BaseColor color, float fontSize) throws Exception {
 		float width = maxX - x - 5;
-		float minHeight = Math.min(y, y - maxHeight + lineHeight - 3);
+		float minY = Math.min(y, y - maxHeight + lineHeight - 3);
 		if(txt==null) return;
-				
+
 		canvas.setFontAndSize(BaseFont.createFont(fontName, "Cp1252", false), fontSize);
-		while(txt.length()>0 && y>=minHeight) {
-			int index = -1;
+		while(txt.length()>0 && y>=minY) {
+			int index = 0;
 			while(true) {
-				int index2 = Math.min((txt+" ").indexOf(" ", index+1), (txt+":").indexOf(": ", index+1));
-				if(index2<0) break;
+				int index2 = index+1;
+				if(index2>=txt.length()) {index=index2;break;}
 				float w = canvas.getEffectiveStringWidth(txt.substring(0, index2), true);
+				System.out.println("CagePrinterPDF.print()   "+ txt.substring(0, index2)+" "+w+","+width);
 				if(w>width) break;
 				index = index2;
 			}
 			if(index<0) index = txt.length();
 			String t = txt.substring(0, index);
+			System.out.println("CagePrinterPDF.print() "+t+" at " + x+"x"+y+ " (of "+txt+") minY="+minY);
 			txt = txt.substring(index).trim();
-			
-			System.out.println("CagePrinterPDF.print() "+t+" "+y+"/"+minHeight);
-			Phrase phrase = new Paragraph(t, FontFactory.getFont(fontName, fontSize, color));						
+			Phrase phrase = new Paragraph(t, FontFactory.getFont(fontName, fontSize, color));
 			ColumnText.showTextAligned(canvas, Element.ALIGN_LEFT, phrase, x, y, 0);
 			y-=lineHeight;
 		}
 	}
-	
+
 	private static String getGroups(Collection<Biosample> animals) {
-		
+
 		String res = "";
 		for (Group g : Biosample.getGroups(animals)) {
 			String m = g==null? "N/A": g.getName();
@@ -253,7 +254,7 @@ public class CagePrinterPDF {
 		}
 		return res;
 	}
-	
+
 	private static String getMetadata(Collection<Biosample> animals, String metadata) {
 		Set<String> res = new HashSet<>();
 		for (Biosample a : animals) {
@@ -263,7 +264,7 @@ public class CagePrinterPDF {
 		}
 		return MiscUtils.flatten(res);
 	}
-	
+
 	private static void drawCageSeparation(Document doc, PdfContentByte canvas) {
 		canvas.setLineWidth(1f);
 		canvas.setColorStroke(BaseColor.BLACK);

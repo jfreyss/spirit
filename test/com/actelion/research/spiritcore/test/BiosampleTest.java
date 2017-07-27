@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -29,6 +30,7 @@ import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAODocument;
+import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.IOUtils;
@@ -40,16 +42,17 @@ public class BiosampleTest extends AbstractSpiritTest {
 
 	@BeforeClass
 	public static void init() throws Exception {
-		ExchangeTest.initDemoExamples(user);
+		initDemoExamples(user);
 	}
 
 	@Test
-	public void testBiosamples() throws Exception {
+	public void testMetadata() throws Exception {
 		// Persist biotype
 		Biotype biotype = new Biotype();
 		biotype.setCategory(BiotypeCategory.PURIFIED);
 		biotype.setName("BioTest");
 		biotype.setPrefix("test-");
+		biotype.setSampleNameLabel("Name");
 		biotype.getMetadata().add(new BiotypeMetadata("meta1", DataType.ALPHA));
 		biotype.getMetadata().add(new BiotypeMetadata("meta2", DataType.NUMBER));
 		biotype.getMetadata().add(new BiotypeMetadata("meta3", DataType.D_FILE));
@@ -68,20 +71,23 @@ public class BiosampleTest extends AbstractSpiritTest {
 		DAOBiosample.persistBiosamples(list, user);
 
 		// Update
+		b1.setSampleName("CD4");
 		b1.setMetadataValue("meta1", "ALPHA1 ALPHA3");
-		b2.setMetadataValue("meta1", "ALPHA1 ALPHA2");
 		b1.setMetadataValue("meta2", "10");
-
 		File f = File.createTempFile("test_", ".txt");
 		f.getParentFile().mkdirs();
 		IOUtils.bytesToFile("Some file content".getBytes(), f);
 		b1.setMetadataDocument(biotype.getMetadata("meta3"), new Document(f));
 		b1.setMetadataValue(biotype.getMetadata("meta4"), MiscUtils.repeat("large", 1000));
 		b1.setMetadataValue(biotype.getMetadata("meta5"), "b; a;c");
+
+		b2.setSampleName("CD6");
+		b2.setMetadataValue("meta1", "ALPHA1 ALPHA2");
+
 		DAOBiosample.persistBiosamples(list, user);
 
-		
-		JPAUtil.clear();
+
+		JPAUtil.clearAll();
 
 		// Query
 		BiosampleQuery q = new BiosampleQuery();
@@ -105,6 +111,18 @@ public class BiosampleTest extends AbstractSpiritTest {
 		q.setKeywords("ALPHA2 ALPHA3");
 		Assert.assertEquals(0, DAOBiosample.queryBiosamples(q, user).size());
 
+		q.setKeywords("CD4");
+		Assert.assertEquals(1, DAOBiosample.queryBiosamples(q, user).size());
+
+		q = new BiosampleQuery();
+		q.getLinker2values().put(new BiosampleLinker(LinkerType.SAMPLENAME), "CD4");
+		Assert.assertEquals(1, DAOBiosample.queryBiosamples(q, user).size());
+
+		q = new BiosampleQuery();
+		q.getLinker2values().put(new BiosampleLinker(LinkerType.SAMPLENAME), "cd6");
+		Assert.assertEquals(1, DAOBiosample.queryBiosamples(q, user).size());
+
+
 		// Delete biotype (not allowed)
 		try {
 			DAOBiotype.deleteBiotype(biotype, user);
@@ -122,6 +140,56 @@ public class BiosampleTest extends AbstractSpiritTest {
 		// Retest query
 		q.setKeywords("ALPHA1");
 		Assert.assertEquals(0, DAOBiosample.queryBiosamples(q, user).size());
+
+	}
+
+	@Test
+	public void testLinkedBiosamples() throws Exception {
+		Biotype antibody = DAOBiotype.getBiotype("Antibody");
+		Biotype fluorophore = DAOBiotype.getBiotype("Fluorophore");
+		Assert.assertNotNull(antibody);
+		Assert.assertNotNull(fluorophore);
+
+		System.out.println("BiosampleTest.testLinkedBiosamples() "+antibody.getMetadata());
+		System.out.println("BiosampleTest.testLinkedBiosamples() "+fluorophore.getMetadata());
+
+
+		//Persist an antibody linked to a fluorophore
+		Biosample f1 = new Biosample(fluorophore);
+		f1.setMetadataValue("Type", "Primary");
+
+		Biosample b1 = new Biosample(antibody);
+		b1.setMetadataBiosample("Fluorophore", f1);
+
+		DAOBiosample.persistBiosamples(MiscUtils.listOf(f1, b1), user);
+
+
+		//Check the links
+		b1 = DAOBiosample.getBiosample(b1.getSampleId());
+		Assert.assertNotNull(b1);
+		Assert.assertNotNull(b1.getMetadataBiosample("Fluorophore"));
+		System.out.println("BiosampleTest.testLinkedBiosamples() "+f1+">"+f1.getMetadataAsString());
+		System.out.println("BiosampleTest.testLinkedBiosamples() "+b1+">"+b1.getMetadataBiosample("Fluorophore")+" "+b1.getMetadataBiosample("Fluorophore").getMetadataAsString());
+		Assert.assertEquals("Primary", b1.getMetadataBiosample("Fluorophore").getMetadataValue("Type"));
+
+
+		//
+		//Test1 update fluorophore's type
+		f1.setMetadataValue("Type", "Secundary");
+		DAOBiosample.persistBiosamples(MiscUtils.listOf(f1), user);
+
+		//Check the linked biosample
+		b1 = DAOBiosample.getBiosample(b1.getSampleId());
+		Assert.assertEquals("Secundary", b1.getMetadataBiosample("Fluorophore").getMetadataValue("Type"));
+
+		//
+		//Test2 update fluorophore's id
+		f1.setSampleId("MyOwnFluo");
+		DAOBiosample.persistBiosamples(MiscUtils.listOf(f1), user);
+
+		//Check the linked biosample
+		b1 = DAOBiosample.getBiosample(b1.getSampleId());
+		Assert.assertEquals("MyOwnFluo", b1.getMetadataBiosample("Fluorophore").getSampleId());
 
 	}
 
@@ -231,7 +299,7 @@ public class BiosampleTest extends AbstractSpiritTest {
 		t.setNameRequired(true);
 		t.setNameUnique(true);
 		DAOBiotype.persistBiotypes(Collections.singleton(t), user);
-		
+
 		//Reload biotype
 		t = DAOBiotype.getBiotype("testNameUnique");
 		Assert.assertNotNull(t);
@@ -247,19 +315,19 @@ public class BiosampleTest extends AbstractSpiritTest {
 		} catch(Exception e) {
 			//No name-> ok to have an error
 		}
-		
-		
+
+
 		// Create sample with required name->Ok
 		b.setSampleName("Test");
 		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
-		
-		
+
+
 		// Create samples with duplicated name->error
 		Biosample b2 = new Biosample(t);
 		Biosample b3 = new Biosample(t);
 		b2.setSampleName("Test2");
 		b3.setSampleName("Test2");
-		
+
 		try {
 			DAOBiosample.persistBiosamples(Arrays.asList(new Biosample[]{b2, b3}), user);
 			throw new AssertionFailedError("Name is duplicated, should fail");
@@ -276,9 +344,9 @@ public class BiosampleTest extends AbstractSpiritTest {
 		} catch(Exception e) {
 			//No name-> ok to have an error
 		}
-		
 
-		
+
+
 	}
 	@Test
 	public void testQueries() throws Exception {
@@ -310,7 +378,7 @@ public class BiosampleTest extends AbstractSpiritTest {
 		q.setContainerType(ContainerType.BOTTLE);
 		q.setCreDays(5);
 		q.setCreUser("test");
-		q.setDepartment("test");
+		q.setDepartment(DAOEmployee.getEmployeeGroup("test"));
 		q.setElbs("test");
 		q.setElbs("test");
 		q.setExpiryDateMax(new Date());
@@ -356,7 +424,7 @@ public class BiosampleTest extends AbstractSpiritTest {
 		Assert.assertTrue(a.getStatus().isAvailable());
 		Assert.assertEquals(Status.INLAB, a.getLastActionStatus().getFirst());
 		Assert.assertNotNull(a.getLastActionStatus().getSecond());
-//		Assert.assertNotNull("Planned necropsy".equals(a.getLastActionStatus().getComments()));
+		//		Assert.assertNotNull("Planned necropsy".equals(a.getLastActionStatus().getComments()));
 
 		// Test status
 		a.setStatus(Status.DEAD, a.getInheritedStudy().getPhase("d0"));
@@ -373,26 +441,26 @@ public class BiosampleTest extends AbstractSpiritTest {
 		// Test with Plasma now
 		Biosample b = DAOBiosample.getBiosample("PLA000003");
 		Assert.assertNotNull(b);
-//		Assert.assertEquals(1, b.getActions(ActionLocation.class).size());
-//		int n = b.getActions().size();
+		//		Assert.assertEquals(1, b.getActions(ActionLocation.class).size());
+		//		int n = b.getActions().size();
 
-//		// Change status (only 1 recorded)
-//		b.setStatus(Status.USEDUP);
-//		b.setStatus(Status.TRASHED);
-//		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
-//
-//		b = DAOBiosample.getBiosample("PLA000003");
-//		Assert.assertTrue(!b.getStatus().isAvailable());
-//		Assert.assertTrue(b.getStatus().getForeground() != null);
-//		Assert.assertTrue(b.getStatus().getBackground() != null);
-//		Assert.assertEquals(n + 1, b.getActions().size());
-//
-//		// An other status change
-//		b.setStatus(Status.LOWVOL);
-//		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
-//		b = DAOBiosample.getBiosample("PLA000003");
-//		Assert.assertTrue(b.getStatus().isAvailable());
-//		Assert.assertEquals(n + 2, b.getActions().size());
+		//		// Change status (only 1 recorded)
+		//		b.setStatus(Status.USEDUP);
+		//		b.setStatus(Status.TRASHED);
+		//		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
+		//
+		//		b = DAOBiosample.getBiosample("PLA000003");
+		//		Assert.assertTrue(!b.getStatus().isAvailable());
+		//		Assert.assertTrue(b.getStatus().getForeground() != null);
+		//		Assert.assertTrue(b.getStatus().getBackground() != null);
+		//		Assert.assertEquals(n + 1, b.getActions().size());
+		//
+		//		// An other status change
+		//		b.setStatus(Status.LOWVOL);
+		//		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
+		//		b = DAOBiosample.getBiosample("PLA000003");
+		//		Assert.assertTrue(b.getStatus().isAvailable());
+		//		Assert.assertEquals(n + 2, b.getActions().size());
 
 		// Test location change
 		Location loc = DAOLocation.getLocation(null, "InTransfer");
@@ -404,31 +472,70 @@ public class BiosampleTest extends AbstractSpiritTest {
 		Assert.assertEquals(loc, b.getLocation());
 		Assert.assertEquals(ContainerType.CRYOTUBE, b.getContainerType());
 		Assert.assertEquals("11", b.getContainerId());
-//		Assert.assertEquals(2, b.getActions(ActionLocation.class).size());
-//		Assert.assertEquals(2, b.getActions(ActionContainer.class).size());
+		//		Assert.assertEquals(2, b.getActions(ActionLocation.class).size());
+		//		Assert.assertEquals(2, b.getActions(ActionContainer.class).size());
 
-//		// Test ownership
-//		DAOBiosample.changeOwnership(Collections.singleton(b), DAOSpiritUser.loadUser("admin"), user);
-//		b = DAOBiosample.getBiosample("PLA000003");
-//		Assert.assertEquals("admin", b.getCreUser());
-//		Assert.assertEquals(1, b.getActions(ActionOwnership.class).size());
+		//		// Test ownership
+		//		DAOBiosample.changeOwnership(Collections.singleton(b), DAOSpiritUser.loadUser("admin"), user);
+		//		b = DAOBiosample.getBiosample("PLA000003");
+		//		Assert.assertEquals("admin", b.getCreUser());
+		//		Assert.assertEquals(1, b.getActions(ActionOwnership.class).size());
 
-//		// Test Comment
-//		b.addAction(new ActionComments(b, "Test"));
-//		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
-//		b = DAOBiosample.getBiosample("PLA000003");
-//		Assert.assertEquals(1, b.getActions(ActionComments.class).size());
-//		Assert.assertEquals(user.getUsername(), b.getActions(ActionComments.class).get(0).getUpdUser());
+		//		// Test Comment
+		//		b.addAction(new ActionComments(b, "Test"));
+		//		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
+		//		b = DAOBiosample.getBiosample("PLA000003");
+		//		Assert.assertEquals(1, b.getActions(ActionComments.class).size());
+		//		Assert.assertEquals(user.getUsername(), b.getActions(ActionComments.class).get(0).getUpdUser());
 
-//		// Test Treatment
-//		a = DAOBiosample.getBiosample("ANL000036");
-//		a.addAction(new ActionTreatment(a, a.getInheritedStudy().getPhase("d0"), 100.0, null, null, null, null, "test"));
-//		DAOBiosample.persistBiosamples(Collections.singleton(a), user);
-//		a = DAOBiosample.getBiosample("ANL000036");
-//		Assert.assertEquals(1, a.getActions(ActionTreatment.class).size());
-//		Assert.assertEquals(100, a.getActions(ActionTreatment.class).get(0).getWeight(), 0.01);
-//		Assert.assertEquals("d0", a.getActions(ActionTreatment.class).get(0).getPhase().getName());
+		//		// Test Treatment
+		//		a = DAOBiosample.getBiosample("ANL000036");
+		//		a.addAction(new ActionTreatment(a, a.getInheritedStudy().getPhase("d0"), 100.0, null, null, null, null, "test"));
+		//		DAOBiosample.persistBiosamples(Collections.singleton(a), user);
+		//		a = DAOBiosample.getBiosample("ANL000036");
+		//		Assert.assertEquals(1, a.getActions(ActionTreatment.class).size());
+		//		Assert.assertEquals(100, a.getActions(ActionTreatment.class).get(0).getWeight(), 0.01);
+		//		Assert.assertEquals("d0", a.getActions(ActionTreatment.class).get(0).getPhase().getName());
 
+	}
+
+	@Test
+	public void testDifferences() {
+		Biosample b1 = new Biosample(DAOBiotype.getBiotype("Human"));
+		b1.setContainerType(null);
+		b1.setSampleId("Hum1");
+
+		Biosample b2 = new Biosample(DAOBiotype.getBiotype("Animal"));
+		b2.setContainerType(ContainerType.CAGE);
+		b2.setContainerId("Cage1");
+		b2.setSampleId("Hum1");
+
+		Map<String, String> map = b1.getDifferenceMap(b2);
+		Assert.assertEquals(2, map.size());
+		Assert.assertNotNull(map.get("Container"));
+		Assert.assertNotNull(map.get("Biotype"));
+		Assert.assertEquals("", b1.getDifference(null));
+		Assert.assertEquals("Container=NA; Biotype=Human", b1.getDifference(b2));
+
+
+		b1 = new Biosample(DAOBiotype.getBiotype("Animal"));
+		b1.setContainerType(ContainerType.CAGE);
+		b1.setContainerId("Cage1");
+		b1.setSampleName("No1");
+		b1.setMetadataValue("Type", "Rat");
+		b1.setMetadataValue("Sex", "M");
+		b1.setComments("Animal1");
+
+		b2 = new Biosample(DAOBiotype.getBiotype("Animal"));
+		b2.setContainerType(ContainerType.CAGE);
+		b2.setContainerId("Cage1");
+		b2.setSampleName("No2");
+		b2.setMetadataValue("Type", "Mice");
+		b2.setMetadataValue("Sex", "M");
+		b2.setComments("Animal1");
+
+		Assert.assertEquals("No=No1; Type=Rat", b1.getDifference(b2));
+		Assert.assertEquals("No=No2; Type=Mice", b2.getDifference(b1));
 	}
 
 }

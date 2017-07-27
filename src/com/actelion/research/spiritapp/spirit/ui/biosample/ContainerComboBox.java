@@ -27,7 +27,7 @@ import java.awt.Dimension;
 
 import javax.swing.JLabel;
 
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerLabel;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.util.ui.JGenericComboBox;
 

@@ -41,7 +41,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleComboBox;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;

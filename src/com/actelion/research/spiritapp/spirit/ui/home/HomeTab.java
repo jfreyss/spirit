@@ -24,7 +24,7 @@ package com.actelion.research.spiritapp.spirit.ui.home;
 import java.awt.BorderLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.util.List;
+import java.util.Collection;
 
 import javax.swing.JScrollPane;
 
@@ -59,7 +59,7 @@ public class HomeTab extends SpiritTab implements IHomeTab {
 	}
 
 	@Override
-	public <T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
+	public <T> void fireModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
 		if(isShowing()) {
 			editorPane.updateRecentChanges();
 		}

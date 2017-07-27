@@ -22,8 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.location;
 
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Collections;
@@ -33,7 +31,6 @@ import javax.swing.JButton;
 import javax.swing.border.Border;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.container.CheckinDlg;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.LocationFormat;
@@ -47,29 +44,26 @@ public class LocationPosTextField extends JCustomTextField {
 	private Biosample biosample;
 	private JButton setLocationButton = new JButton("Set");
 	private Dimension size = new Dimension(160, 27);
-	
+
 	@Override
 	public Dimension getMinimumSize() {
 		return size;
 	}
-	
-	public LocationPosTextField() {		
+
+	public LocationPosTextField() {
 		super(JCustomTextField.ALPHANUMERIC, 22);
-		
+
 		setFont(FastFont.REGULAR);
 		setLayout(null);
-		
+
 		setLocationButton.setFont(FastFont.SMALLER);
 		setLocationButton.setBorder(null);
 		setLocationButton.setToolTipText("Set the location (or checkin/relocate)");
 		add(setLocationButton);
-		
-		setLocationButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if(LocationPosTextField.this.isFocusOwner() || setLocationButton.isFocusOwner()) {
-					openLocationDlg();
-				}
+
+		setLocationButton.addActionListener(e-> {
+			if(LocationPosTextField.this.isFocusOwner() || setLocationButton.isFocusOwner()) {
+				openLocationDlg();
 			}
 		});
 		addMouseListener(new MouseAdapter() {
@@ -80,7 +74,7 @@ public class LocationPosTextField extends JCustomTextField {
 				}
 			}
 		});
-		
+
 		setBiosample(null);
 	}
 
@@ -92,33 +86,33 @@ public class LocationPosTextField extends JCustomTextField {
 			refreshText();
 		}
 	}
-	
+
 	@Override
 	public void setBorder(Border border) {
 		if(border==null) return;
-		super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 12)));			
+		super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 12)));
 	}
 	@Override
 	public void doLayout() {
 		super.doLayout();
 		Dimension size = getSize();
-		setLocationButton.setBounds(size.width-18, 2, 18, size.height-4);
+		setLocationButton.setBounds(size.width-20, 2, 20, size.height-4);
 	}
-	
+
 	public void setBiosample(Biosample b) {
 		this.biosample = b;
 		refreshText();
 	}
-	
+
 	public void updateBiosample() throws Exception {
 		if(biosample==null) return;
 		if(biosample.getContainer()==null) biosample.setContainer(new Container());
-			
+
 		DAOLocation.updateLocation(biosample, getText(), SpiritFrame.getUser());
 	}
-	
-	private void refreshText() {	
-		String txt = biosample==null || biosample.getLocation()==null? "": biosample.getLocationString(LocationFormat.FULL_POS, SpiritFrame.getUser());			 
+
+	private void refreshText() {
+		String txt = biosample==null || biosample.getLocation()==null? "": biosample.getLocationString(LocationFormat.FULL_POS, SpiritFrame.getUser());
 		setText(txt);
 	}
 

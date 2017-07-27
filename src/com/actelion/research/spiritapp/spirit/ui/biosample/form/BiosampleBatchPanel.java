@@ -39,10 +39,10 @@ import javax.swing.event.ChangeListener;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.SetLocationAction;
-import com.actelion.research.spiritapp.spirit.ui.scanner.ScanRackForTableAction;
-import com.actelion.research.spiritapp.spirit.ui.scanner.SelectRackAction;
-import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner;
-import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner.Verification;
+import com.actelion.research.spiritapp.spirit.ui.util.scanner.ScanRackForTableAction;
+import com.actelion.research.spiritapp.spirit.ui.util.scanner.SelectRackAction;
+import com.actelion.research.spiritapp.spirit.ui.util.scanner.SpiritScanner;
+import com.actelion.research.spiritapp.spirit.ui.util.scanner.SpiritScanner.Verification;
 import com.actelion.research.spiritcore.business.biosample.BarcodeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;

@@ -40,13 +40,13 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class ChildrenColumn extends Column<Biosample, String> {
-	
+
 	public ChildrenColumn() {
-		super("Items/Children", String.class, 80);
+		super("Linked\nChildren", String.class, 80);
 	}
 	@Override
-	public float getSortingKey() {return 10.1f;}
-	
+	public float getSortingKey() {return 20.1f;}
+
 	/**
 	 * Split the children by biotype
 	 * @param row
@@ -54,13 +54,13 @@ public class ChildrenColumn extends Column<Biosample, String> {
 	 */
 	@SuppressWarnings("unchecked")
 	private Map<Biotype, Set<Biosample>> getMap(Biosample row) {
-		
-		Map<Biotype, Set<Biosample>> map = (Map<Biotype, Set<Biosample>>) row.getAuxiliaryInfos().get("tmp_children"); 
+
+		Map<Biotype, Set<Biosample>> map = (Map<Biotype, Set<Biosample>>) row.getAuxiliaryInfos().get("tmp_children");
 		if(map==null) {
-			map = new TreeMap<Biotype, Set<Biosample>>();			
+			map = new TreeMap<Biotype, Set<Biosample>>();
 			for (Biosample child : row.getHierarchy(HierarchyMode.CHILDREN)) {
 				if(child.getStatus()==Status.TRASHED || child.getStatus()==Status.USEDUP) continue;
-				
+
 				Set<Biosample> set = map.get(child.getBiotype());
 				if(set==null) {
 					set = new HashSet<Biosample>();
@@ -72,14 +72,14 @@ public class ChildrenColumn extends Column<Biosample, String> {
 		}
 		return map;
 	}
-	
+
 	@Override
 	public String getValue(Biosample row) {
-		
+
 		Map<Biotype, Set<Biosample>> map = getMap(row);
 		if(map.size()==0) return null;
-		
-		StringBuilder sb = new StringBuilder();		
+
+		StringBuilder sb = new StringBuilder();
 		if(map.size()>3) {
 			int n = 0;
 			for (Biotype biotype : map.keySet()) {
@@ -90,26 +90,32 @@ public class ChildrenColumn extends Column<Biosample, String> {
 		} else if(map.size()>=1) {
 			for (Biotype biotype : map.keySet()) {
 				Set<Biosample> set = map.get(biotype);
-				String location = Biosample.getInfos(set, EnumSet.of(InfoFormat.LOCATION), InfoSize.ONELINE); 
+				String location = Biosample.getInfos(set, EnumSet.of(InfoFormat.LOCATION), InfoSize.ONELINE);
 				String infos = Biosample.getBiotypeString(set);
 				sb.append(set.size() + " " + infos + (location==null?"": "  " + location) + "\n");
 			}
 		}
-		
+
 		return sb.toString();
 	}
-	
+
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		comp.setForeground(Color.BLUE);
 	}
-	
-	
+
+
 	@Override
 	public boolean isMultiline() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean shouldMerge(Biosample r1, Biosample r2) {return false;}
+
+	@Override
+	public boolean isHideable() {
+		return true;
+	}
+
 }

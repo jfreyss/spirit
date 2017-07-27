@@ -34,6 +34,11 @@ import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
 
+/**
+ * DAO functions linked to food water intake
+ *
+ * @author Joel Freyss
+ */
 public class DAOFoodWater {
 
 
@@ -43,21 +48,21 @@ public class DAOFoodWater {
 		EntityManager session = JPAUtil.getManager();
 		Query query = session.createQuery(
 				" SELECT fw  " +
-				" FROM FoodWater fw " +
-				" WHERE fw.phase.study = :study"
+						" FROM FoodWater fw " +
+						" WHERE fw.phase.study = :study"
 				);
-		
-		query.setParameter("study", study); 
-		List<FoodWater> fws = (List<FoodWater>) query.getResultList();
-		
-		List<FoodWater> res = new ArrayList<FoodWater>(); 
+
+		query.setParameter("study", study);
+		List<FoodWater> fws = query.getResultList();
+
+		List<FoodWater> res = new ArrayList<FoodWater>();
 		for(FoodWater fw: fws) {
-			if(phase!=null && !phase.equals(fw.getPhase())) continue; 
+			if(phase!=null && !phase.equals(fw.getPhase())) continue;
 			res.add(fw);
 		}
-			
-		
-		
+
+
+
 		Collections.sort(res);
 		return res;
 	}
@@ -66,8 +71,8 @@ public class DAOFoodWater {
 		assert fw.getContainerId()!=null;
 		assert fw.getPhase()!=null;
 
-		EntityManager session = JPAUtil.getManager();		
-		//Start the transaction				
+		EntityManager session = JPAUtil.getManager();
+		//Start the transaction
 		EntityTransaction txn = null;
 		try {
 			txn = session.getTransaction();
@@ -82,13 +87,13 @@ public class DAOFoodWater {
 			} else if(!session.contains(fw)) {
 				session.merge(fw);
 			}
-			
+
 			txn.commit();
 		} finally {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
-		}	
+		}
 	}
 
-	
-	
+
+
 }

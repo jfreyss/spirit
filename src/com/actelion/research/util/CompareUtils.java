@@ -150,6 +150,16 @@ public class CompareUtils {
 		}
 		return 0;
 	}
+
+	public static int compare(int[] a1, int[] a2) {
+		if(a1.length!=a2.length) return a1.length-a2.length;
+		for (int i = 0; i < a1.length; i++) {
+			int c = a1[i] - a2[i];
+			if(c!=0) return c;
+		}
+		return 0;
+	}
+
 	public static int compare(Object o1, Object o2) {
 		if(o1==null && o2==null) return 0;
 		if(o1==null) return 1; //Null at the end
@@ -208,7 +218,10 @@ public class CompareUtils {
 	public static final Comparator<Object> STRING_COMPARATOR = new Comparator<Object>() {
 		@Override
 		public int compare(Object o1, Object o2) {
-			return CompareUtils.compare(o1, o2);
+			if(o1==null && o2==null) return 0;
+			if(o1==null) return 1; //Null at the end
+			if(o2==null) return -1;
+			return CompareUtils.compare(o1.toString(), o2.toString());
 		}
 	};
 

@@ -41,7 +41,7 @@ import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleList;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleDlg;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerTypeComboBox;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerTypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.PhaseComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
@@ -230,7 +230,7 @@ public class ApplySamplingDlg extends JEscapeDialog {
 			if(biosamples==null || biosamples.size()==0) throw new Exception("There are no samples to be created, matching those criterias");
 
 			//Open an Edit Dlg transactionLess (we are already in a transaction)
-			EditBiosampleDlg editDlg =  EditBiosampleDlg.createDialogForEditInTransactionMode(null, biosamples);
+			EditBiosampleDlg editDlg =  EditBiosampleDlg.createDialogForEditInTransactionMode(biosamples);
 			editDlg.setVisible(true);
 
 			dispose();

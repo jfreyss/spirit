@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -72,26 +73,27 @@ import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.FormatterUtils;
 
 /**
- * 
+ *
  * @author freyssj
  *
  */
 @Entity
 @Audited
 @Table(name="study", indexes = {
-	@Index(name="study_id_index", columnList = "studyId"), @Index(name="study_ivv_index", columnList = "ivv"),
+		@Index(name="study_id_index", columnList = "studyId"), @Index(name="study_ivv_index", columnList = "ivv"),
 })
 @SequenceGenerator(name="study_sequence", sequenceName="study_sequence", allocationSize=1)
 @BatchSize(size=8)
 public class Study implements Serializable, IEntity, Comparable<Study> {
 
 	@Id
-	@RevisionNumber	
+	@RevisionNumber
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="study_sequence")
 	private int id = 0;
-	
+
 	/**
 	 * Unique Id, system wise, given by the system
 	 */
@@ -102,50 +104,50 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	 * Id given by the user, may not be unique
 	 */
 	@Column(name="ivv", nullable=true)
-	private String ivv;
-	
+	private String localId;
+
 	@Column(name="description", length=256)
 	private String title = "";
-		
+
 	@Column(name="write_users", length=512)
 	private String adminUsers = "";
 
 	@Column(name="read_users", length=512)
 	private String expertUsers = "";
-	
+
 	@Column(name="blind_users", length=512)
 	private String blindUsers = "";
-	
+
 	@Column(name="comments", length=2048)
 	private String notes = "";
-	
+
 	@Column(name="metadata", length=4000)
 	private String serializedMetadata;
-	
+
 	private String updUser = "";
 	private String creUser = "";
 
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date updDate = new Date();
-		
+
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date creDate = new Date();
-	
+
 	@OneToMany(cascade = CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="study")
 	@SortNatural
-//	@BatchSize(size=4)
+	//	@BatchSize(size=4)
 	private Set<Group> groups = new TreeSet<>();
-	
-	@OneToMany(cascade = CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="study")	
+
+	@OneToMany(cascade = CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="study")
 	@SortNatural
-//	@BatchSize(size=4)
+	//	@BatchSize(size=4)
 	private Set<Phase> phases = new TreeSet<>();
 
 	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="study")
 	@SortNatural
-//	@BatchSize(size=4)
+	//	@BatchSize(size=4)
 	private Set<NamedTreatment> namedTreatments = new TreeSet<>();
-	
+
 	/**
 	 * The Named Sampling shows how the samples can be created.
 	 * It is saved as a separate object (so cascade=refresh)
@@ -154,42 +156,42 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	@SortNatural
 	@BatchSize(size=4)
 	private Set<NamedSampling> namedSamplings = new TreeSet<>();
-		
-	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="study")	
+
+	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="study")
 	private Set<StudyAction> actions = new HashSet<>();
-	
+
 	/**
 	 * Starting date (date for d1, or the closest to d1)
 	 */
 	@Column(name="startingdate", nullable=true)
 	private Date startingDate = null;
-	
+
 	@Column(name="status", nullable=true, length=24)
 	private String state = null;
-	
+
 	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY)
 	@JoinColumn(name="department_id")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@BatchSize(size=8)
 	private EmployeeGroup employeeGroup1 = null;
-	
+
 	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY)
 	@JoinColumn(name="department2_id")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@BatchSize(size=8)
 	private EmployeeGroup employeeGroup2 = null;
-	
+
 	@Column(name="synchrosamples")
 	private Boolean synchronizeSamples = Boolean.TRUE;
-	
-	
+
+
 	@Enumerated(EnumType.STRING)
 	@Column(name="phaseFormat", nullable=true)
 	private PhaseFormat phaseFormat = PhaseFormat.DAY_MINUTES;
-	
-	
+
+
 	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true)
-	@Audited(targetAuditMode=RelationTargetAuditMode.AUDITED)	
+	@Audited(targetAuditMode=RelationTargetAuditMode.AUDITED)
 	private Set<Document> documents = new HashSet<>();
 
 	/**
@@ -197,12 +199,12 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	 * NB: The relation is still held by the biosample, so to unset a group use biosample.setAttachedStudy(null)
 	 */
 	@OneToMany(cascade={}, fetch=FetchType.LAZY, mappedBy="attachedStudy")
-	@Audited(targetAuditMode=RelationTargetAuditMode.NOT_AUDITED)	
+	@Audited(targetAuditMode=RelationTargetAuditMode.NOT_AUDITED)
 	@BatchSize(size=4)
 	private Set<Biosample> attachedBiosamples = new TreeSet<>();
-	
+
 	/** Helpful function for faster access groupId_groupName_subgroup->phaseName->action */
-	private transient Map<Pair<Group, Integer>, Map<Phase, StudyAction>> mapGroupPhase2Action = null;	
+	private transient Map<Pair<Group, Integer>, Map<Phase, StudyAction>> mapGroupPhase2Action = null;
 	private transient Map<String, String> metadataMap = null;
 	private transient Set<String> adminUsersSet;
 	private transient Set<String> expertUsersSet;
@@ -210,20 +212,23 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	private transient Set<String> blindDetailsUsersSet;
 	private transient Map<Pair<Group, Integer>, Phase> phaseFirstTreatments = new HashMap<>();
 
-	
+
 	/**
 	 * Basic constructor
 	 */
 	public Study() {
-		
 	}
-	
+
+	public Study(int id) {
+		this.id = id;
+	}
+
 	@Override
-	public String toString() {		
-		return getIvvOrStudyId(); 
+	public String toString() {
+		return getLocalIdOrStudyId();
 	}
-	
-	
+
+
 	@Override
 	public int getId() {
 		return id;
@@ -233,16 +238,16 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		return title;
 	}
 
-	public String getIvv() {
-		return ivv;
+	public String getLocalId() {
+		return localId;
 	}
-	
+
 	/**
-	 * Returns the IVV or the StudyId
+	 * Returns a string formatted like "StudyId[ (InternalId)]"
 	 * @return
 	 */
-	public String getStudyIdIvv() {
-		return getStudyId() + (getIvv()!=null && getIvv().length()>0? "(" + getIvv() + ")": "") ;
+	public String getStudyIdAndInternalId() {
+		return getStudyId() + (getLocalId()!=null && getLocalId().length()>0? " (" + getLocalId() + ")": "") ;
 	}
 
 	/**
@@ -250,8 +255,8 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	 * This function never returns null
 	 * @return
 	 */
-	public String getIvvOrStudyId() {
-		return getIvv()!=null && getIvv().length()>0? getIvv() : getStudyId();
+	public String getLocalIdOrStudyId() {
+		return getLocalId()!=null && getLocalId().length()>0? getLocalId() : getStudyId();
 	}
 
 
@@ -263,10 +268,12 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		return notes;
 	}
 
+	@Override
 	public String getUpdUser() {
 		return updUser;
 	}
 
+	@Override
 	public Date getUpdDate() {
 		return updDate;
 	}
@@ -275,6 +282,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		return creDate;
 	}
 
+	@Override
 	public void setId(int id) {
 		this.id = id;
 	}
@@ -283,13 +291,18 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		this.title = description;
 	}
 
-	public void setIvv(String ivv) {
-		this.ivv = ivv;
+	public void setLocalId(String ivv) {
+		this.localId = ivv;
 	}
 
 	public void setAdminUsers(String writeUsers) {
 		adminUsersSet = null;
 		this.adminUsers = writeUsers;
+	}
+
+	public void setAdminUsers(Collection<String> writeUsers) {
+		adminUsersSet = null;
+		this.adminUsers = MiscUtils.flatten(writeUsers);
 	}
 
 	public void setNotes(String notes) {
@@ -310,7 +323,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 
 	public Set<Group> getGroups() {
 		return groups;
-	}	
+	}
 
 	public List<Group> getGroupsHierarchical() {
 		List<Group> res = new ArrayList<>();
@@ -339,7 +352,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		}
 		return res;
 	}
-	
+
 	/**
 	 * Returns all the groups that are splitted. ie. all G where exists(group G2 where G2.fromGroup = G)
 	 * @return
@@ -351,28 +364,28 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		}
 		return res;
 	}
-	
+
 	public void setGroups(Set<Group> groups) {
 		this.groups = groups;
 	}
-	
+
 	public Set<Phase> getPhases() {
 		return phases;
-	}	
-	
+	}
+
 	public void setPhases(Set<Phase> phases) {
 		this.phases = phases;
 	}
-	
+
 	public Phase getPhase(int phaseId) {
 		for (Phase p : getPhases()) {
 			if(p.getId()==phaseId) {
 				return p;
-			}	
+			}
 		}
-		return null;		
+		return null;
 	}
-	
+
 	/**
 	 * Return the first phase matching the date
 	 * @param date
@@ -384,24 +397,24 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		for (Phase p : getPhases()) {
 			if(Phase.isSameDay(p.getAbsoluteDate(), date)) {
 				return p;
-			}	
+			}
 		}
-		return null;		
+		return null;
 	}
 
 	public Phase getPhase(String phaseName) {
 		for (Phase p : getPhases()) {
 			if(p.getName().equalsIgnoreCase(phaseName)) {
 				return p;
-			}	
+			}
 			if(p.getShortName().equalsIgnoreCase(phaseName)) {
 				return p;
-			}	
+			}
 		}
 		return null;
 	}
-	
-		
+
+
 	/**
 	 * Return the first sampling from this study, that matching the sampling.namedSampling.name and the sampling.detailslong
 	 */
@@ -409,7 +422,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		List<Sampling> samplings = getSamplings(namedSamplingName, samplingDetailsLong);
 		return samplings.size()>0? samplings.get(0): null;
 	}
-	
+
 	/**
 	 * Return all samplings from this study, matching the sampling.namedSampling.name and the sampling.detailslong
 	 */
@@ -421,12 +434,12 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 					if(s.getDetailsLong().equalsIgnoreCase(samplingDetailsLong)) {
 						res.add(s);
 					}
-				}				
-			}	
+				}
+			}
 		}
 		return res;
 	}
-	
+
 	/**
 	 * Return one sampling from this study, that matches the sampling.id
 	 */
@@ -436,28 +449,28 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 				if(s.getId()==id) {
 					return s;
 				}
-			}			
+			}
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Returns what could be the initial phase (the phase closest to d0)
 	 * @return
 	 */
-	public Phase getReferencePhase() {
-		return getReferencePhase(0);		
+	public Phase getPhaseClosestFromDayZero() {
+		return getPhaseClosestFromDay(0);
 	}
-	
+
 	/**
 	 * Returns what could be the initial phase (the phase closest to the given day)
 	 * @return
 	 */
-	public Phase getReferencePhase(int d) {
+	public Phase getPhaseClosestFromDay(int d) {
 		Phase sel = null;
 		int selDiff = 24*60*2;
 		for (Phase p : phases) {
-			int diff = Math.abs(p.getDays()-d)*24*60 + Math.abs(p.getHours())*60 + Math.abs(p.getMinutes());  
+			int diff = Math.abs(p.getDays()-d)*24*60 + Math.abs(p.getHours())*60 + Math.abs(p.getMinutes());
 			if(diff<selDiff) {
 				sel = p;
 				selDiff = diff;
@@ -471,37 +484,43 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		return id;
 	}
 
-	public Group getGroup(String groupName) {		
+	public Group getGroup(String groupName) {
 		for (Group group : getGroups()) {
 			if(group.getName().equals(groupName)) return group;
 		}
 		return null;
 	}
-	
-	public Group getGroup(Integer id) {		
+
+	public Group getGroup(Integer id) {
 		if(id==null) return null;
 		for (Group g : getGroups()) {
 			if(g.getId()==id) {
 				return g;
-			}			
+			}
 		}
 		return null;
 	}
 
 	public Study duplicate() {
-		Study study = clone();		
-		study.setIvv(null);
+		Study study = clone();
+		study.id = 0;
+		study.localId = null;
 		study.setAttachedBiosamples(new TreeSet<Biosample>());
 		study.setNotes("Duplicated from "+getStudyId());
+		study.updDate = null;
+		study.updUser = null;
+		study.creDate = null;
+		study.creUser = null;
 		return study;
 	}
-	
+
 	@Override
-	protected Study clone() {
+	public Study clone() {
 		Study study = new Study();
+		study.id = id;
 		study.setState(getState());
-		study.setDay1(getDayOneDate());
-		study.setIvv(getIvv());
+		study.setDayOneDate(getDayOneDate());
+		study.setLocalId(getLocalId());
 		study.setTitle(getTitle());
 		study.setNotes(getNotes());
 		study.setAdminUsers(getAdminUsers());
@@ -511,7 +530,11 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		study.setDocuments(new HashSet<Document>());
 		study.setSynchronizeSamples(isSynchronizeSamples());
 		study.serializedMetadata = serializedMetadata;
-		
+		study.updDate = updDate;
+		study.updUser = updUser;
+		study.creDate = creDate;
+		study.creUser = creUser;
+
 		//Clone Phases
 		IdentityHashMap<Phase, Phase> phaseClones = new IdentityHashMap<>();
 		study.setPhases(new TreeSet<Phase>());
@@ -521,7 +544,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			study.getPhases().add(oc);
 			phaseClones.put(o, oc);
 		}
-		
+
 		//Clone Groups
 		IdentityHashMap<Group, Group> groupClones = new IdentityHashMap<>();
 		study.setGroups(new TreeSet<Group>());
@@ -556,8 +579,8 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			oc.setApplication2(o.getApplication2());
 			study.getNamedTreatments().add(oc);
 			treatmentClones.put(o, oc);
-		}		
-		
+		}
+
 
 		//Clone Samplings
 		IdentityHashMap<NamedSampling, NamedSampling> samplingClones = new IdentityHashMap<>();
@@ -576,17 +599,17 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			oc.setStudy(study);
 			oc.setGroup(groupClones.get(o.getGroup()));
 			oc.setSubGroup(o.getSubGroup());
-			
+
 			oc.setPhase(phaseClones.get(o.getPhase()));
 			oc.setNamedTreatment(treatmentClones.get(o.getNamedTreatment()));
 			oc.setNamedSampling1(samplingClones.get(o.getNamedSampling1()));
 			oc.setNamedSampling2(samplingClones.get(o.getNamedSampling2()));
-			study.getStudyActions().add(oc);			
-		}		
-	
+			study.getStudyActions().add(oc);
+		}
+
 		return study;
 	}
-		
+
 	@Override
 	public boolean equals(Object obj) {
 		if(obj==this) return true;
@@ -594,7 +617,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		int id2 = ((Study)obj).getId();
 		return id == id2;
 	}
-		
+
 	public Set<NamedTreatment> getNamedTreatments() {
 		return namedTreatments;
 	}
@@ -607,7 +630,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	public void setNamedSamplings(Set<NamedSampling> namedSamplings) {
 		this.namedSamplings = namedSamplings;
 	}
-	
+
 	public void setStudyActions(Set<StudyAction> actions) {
 		this.actions = actions;
 		mapGroupPhase2Action = null;
@@ -623,7 +646,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		actions.addAll(col);
 		mapGroupPhase2Action = null;
 	}
-	
+
 	/**
 	 * Get the actions for the given group (if group==null, returns all actions)
 	 * Does not use the cache
@@ -637,9 +660,9 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 				res.add(action);
 			}
 		}
-		return res;	
+		return res;
 	}
-	
+
 
 	/**
 	 * Cache the actions for faster access.
@@ -649,14 +672,14 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		for (Iterator<StudyAction> iter = getStudyActions().iterator(); iter.hasNext();) {
 			StudyAction action = iter.next();
 			if(action.getGroup()==null || action.getPhase()==null) {
-//				iter.remove();
+				//				iter.remove();
 				continue;
 			}
-//		for (StudyAction action : getStudyActions()) {
-//			assert action.getGroup()!=null;
-//			assert action.getPhase()!=null;
-			
-			Pair<Group, Integer> key1 = new Pair<Group, Integer>(action.getGroup(), action.getSubGroup());			
+			//		for (StudyAction action : getStudyActions()) {
+			//			assert action.getGroup()!=null;
+			//			assert action.getPhase()!=null;
+
+			Pair<Group, Integer> key1 = new Pair<Group, Integer>(action.getGroup(), action.getSubGroup());
 			Map<Phase, StudyAction> map = mapGroupPhase2Action.get(key1);
 			if(map==null) {
 				mapGroupPhase2Action.put(key1, map = new HashMap<>());
@@ -666,7 +689,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	}
 
 	/**
-	 * Delete the cache, to be called if the user performed some update operations directly on the collections (getGroups().add, action.setGroup) 
+	 * Delete the cache, to be called if the user performed some update operations directly on the collections (getGroups().add, action.setGroup)
 	 */
 	public void resetCache() {
 		for (Group g : getGroups()) {
@@ -688,12 +711,12 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		if(mapGroupPhase2Action==null) cacheGroupPhase2Action();
 
 		Set<StudyAction> res = new HashSet<>();
-		Pair<Group, Integer> key1 = new Pair<Group, Integer>(group, subgroup);	
+		Pair<Group, Integer> key1 = new Pair<Group, Integer>(group, subgroup);
 		Map<Phase, StudyAction> map = mapGroupPhase2Action.get(key1);
 		if(map!=null) res.addAll(map.values());
-		return res;	
+		return res;
 	}
-	
+
 	/**
 	 * Return the action for the given phase (cannot be null)
 	 * Use the cache (the first call will initialize the cache)
@@ -706,22 +729,22 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			StudyAction a = map.get(phase);
 			if(a!=null) res.add(a);
 		}
-		return res;	
+		return res;
 	}
 
-	
+
 	/**
 	 * Gets an Action (this function uses a cache)
-	 * @return the action, or null if none was set 
-	 */	
-	public StudyAction getStudyAction(Group group, int subgroup, Phase phase) {		
+	 * @return the action, or null if none was set
+	 */
+	public StudyAction getStudyAction(Group group, int subgroup, Phase phase) {
 		if(group==null || phase==null) return null;
 
 		if(mapGroupPhase2Action==null) cacheGroupPhase2Action();
 		Map<Phase, StudyAction> map = mapGroupPhase2Action.get(new Pair<>(group, subgroup));
 		return map==null? null: map.get(phase);
 	}
-	
+
 	/**
 	 * Get the studyAction for the given animal and phase
 	 * BEFORE: if the group was split, this function will NOT return the studyaction from the originating group
@@ -731,7 +754,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		if(phase==null || animal==null || animal.getInheritedGroup()==null) {
 			return null;
 		}
-		
+
 		Group group = animal.getInheritedGroup();
 		int subGroup = animal.getInheritedSubGroup();
 		while(group.getFromPhase()!=null && group.getFromGroup()!=null && group.getFromPhase().getTime()>phase.getTime()) {
@@ -749,12 +772,12 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	 * @return
 	 */
 	public StudyAction getOrCreateStudyAction(Group group, int subGroup, Phase phase) {
-		mapGroupPhase2Action = null;		
+		mapGroupPhase2Action = null;
 
 		StudyAction action = getStudyAction(group, subGroup, phase);
-		
-		if(action==null) {		
-			action = new StudyAction(this, group, subGroup, phase);			
+
+		if(action==null) {
+			action = new StudyAction(this, group, subGroup, phase);
 			actions.add(action);
 			mapGroupPhase2Action=null;
 		}
@@ -773,9 +796,9 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	}
 	public Set<NamedSampling> getNamedSamplings(Phase phase) {
 		if(phase==null) throw new IllegalArgumentException("Cannot be called with a null phase");
-		Set<NamedSampling> res = new TreeSet<>();		
+		Set<NamedSampling> res = new TreeSet<>();
 		if(getStudyActions()==null) return res;//Initialization error?
-		
+
 		for (StudyAction action : getStudyActions()) {
 			if(action.getPhase().equals(phase)) {
 				if(action.getNamedSampling1()!=null) res.add(action.getNamedSampling1());
@@ -789,39 +812,39 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		StudyAction action = getOrCreateStudyAction(group, subGroup, phase);
 		if(set) action.setNamedTreatment(nt);
 		else action.setNamedTreatment(null);
-		
+
 		phaseFirstTreatments.clear();
 	}
-	
+
 	public void setNamedSampling(Group group, Phase phase, int subGroup, NamedSampling ns, boolean set) throws Exception {
 		if(group==null || phase==null) throw new IllegalArgumentException("Cannot be called with a null group or phase");
 		StudyAction action = getOrCreateStudyAction(group, subGroup, phase);
-		
+
 		if(ns==null) {
 			action.setNamedSampling1(null);
 			action.setNamedSampling2(null);
 			return;
 		}
-		
-		if(set) {			
+
+		if(set) {
 			//Returns if it is already done
 			if(ns.equals(action.getNamedSampling1()) || ns.equals(action.getNamedSampling2())) return;
-			
+
 			if(action.getNamedSampling1()==null) action.setNamedSampling1(ns);
 			else if(action.getNamedSampling2()==null) action.setNamedSampling2(ns);
-			else throw new Exception("You cannot apply more than 2 samplings"); 
+			else throw new Exception("You cannot apply more than 2 samplings");
 		} else {
 			if(ns.equals(action.getNamedSampling1())) action.setNamedSampling1(null);
 			if(ns.equals(action.getNamedSampling2())) action.setNamedSampling2(null);
 		}
-		
+
 		//move sampling2 to sampling1 if sampling1 is not set
 		if(action.getNamedSampling1()==null && action.getNamedSampling2()!=null) {
 			action.setNamedSampling1(action.getNamedSampling2());
 			action.setNamedSampling2(null);
 		}
 	}
-	
+
 	/**
 	 * @param creUser the creUser to set
 	 */
@@ -834,14 +857,14 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	public String getCreUser() {
 		return creUser;
 	}
-	
+
 	@Override
 	public int compareTo(Study s) {
 		if(s==null) return -1;
 		return -(getStudyId()==null?"":getStudyId()).compareTo(s.getStudyId()==null?"":s.getStudyId());
 	}
 
-	
+
 	/**
 	 * @param restrictedUsers the restrictedUsers to set
 	 */
@@ -849,19 +872,19 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		this.expertUsers = expertUsers;
 		expertUsersSet = null;
 	}
-	
+
 	/**
 	 * @return the restrictedUsers
 	 */
 	public String getExpertUsers() {
 		return expertUsers;
 	}
-	
+
 	private void populateUserSets() {
 		if(adminUsersSet==null) {
 			adminUsersSet = new TreeSet<>(Arrays.asList(MiscUtils.split(getAdminUsers(), MiscUtils.SPLIT_SEPARATORS_WITH_SPACE)));
 			expertUsersSet = new TreeSet<>(Arrays.asList(MiscUtils.split(getExpertUsers(), MiscUtils.SPLIT_SEPARATORS_WITH_SPACE)));
-			
+
 			blindAllUsersSet = new TreeSet<>();
 			blindDetailsUsersSet = new TreeSet<>();
 			for(String u: MiscUtils.split(blindUsers, MiscUtils.SPLIT_SEPARATORS_WITH_SPACE)) {
@@ -870,19 +893,19 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 					blindAllUsersSet.add(u.substring(2));
 				} else if(u.startsWith("1#")) {
 					//group/treatments
-					blindDetailsUsersSet.add(u.substring(2));				
+					blindDetailsUsersSet.add(u.substring(2));
 				} else {
-					blindDetailsUsersSet.add(u.indexOf('#')<0? u: u.substring(u.indexOf('#')+1));								
+					blindDetailsUsersSet.add(u.indexOf('#')<0? u: u.substring(u.indexOf('#')+1));
 				}
-			}			
+			}
 		}
 	}
-	
+
 	public Set<String> getAdminUsersAsSet() {
 		populateUserSets();
 		return Collections.unmodifiableSet(adminUsersSet);
 	}
-	
+
 	public Set<String> getExpertUsersAsSet() {
 		populateUserSets();
 		return Collections.unmodifiableSet(expertUsersSet);
@@ -896,7 +919,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		populateUserSets();
 		return Collections.unmodifiableSet(blindDetailsUsersSet);
 	}
-	
+
 	public void remove() {
 		for(StudyAction action: new ArrayList<>(getStudyActions())) {
 			action.remove();
@@ -907,7 +930,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		for(Phase phase: new ArrayList<>(getPhases())) {
 			phase.remove();
 		}
-		
+
 		for (NamedTreatment n : new ArrayList<>(getNamedTreatments())) {
 			n.remove();
 		}
@@ -915,25 +938,55 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			n.remove();
 		}
 	}
-	
+
 	/**
 	 * @param documents the documents to set
 	 */
 	public void setDocuments(Set<Document> documents) {
 		this.documents = documents;
 	}
-	
+
 	/**
 	 * @return the documents
 	 */
 	public Set<Document> getDocuments() {
 		return documents;
 	}
-		
+
+	/**
+	 * Return the absolute date for the day "d_1" of the study. Can be null if dates are not used
+	 * @return
+	 */
 	public Date getDayOneDate() {
 		return startingDate;
 	}
-	
+
+	/**
+	 * @param day1 the startingDate to set
+	 */
+	public void setDayOneDate(Date day1) {
+		this.startingDate = day1;
+	}
+
+	public void setStartingDate(Date startingDate) {
+		if(startingDate!=null) {
+			Integer days = getPhases().size()==0? null: getFirstPhase().getDays();
+			if(days==null) days = 1;
+
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(startingDate);
+			cal.set(Calendar.DAY_OF_YEAR, cal.get(Calendar.DAY_OF_YEAR) - (days-1));
+			setDayOneDate(cal.getTime());
+		} else {
+			setDayOneDate(null);
+		}
+	}
+
+	/**
+	 * Calculates and returns the first day of the study based on the first phase and the dayOne.
+	 * If dates are not used, returns null
+	 * @return
+	 */
 	public Date getFirstDate() {
 		if(startingDate!=null && getPhases()!=null) {
 			Integer days = getPhases().size()==0? null: getPhases().iterator().next().getDays();
@@ -946,28 +999,16 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			return null;
 		}
 	}
-	
-	
-	public Phase getFirstPhase() {
-		return getPhases().size()==0? null: getPhases().iterator().next();
-	}
-	
-	public Phase getLastPhase() {
-		Phase lastPhase = null; 
-		Iterator<Phase> iterator = getPhases().iterator();
-		while(iterator.hasNext()) {
-			Phase p = iterator.next();
-			if(!iterator.hasNext()) {lastPhase=p;}	
-		}
-		return lastPhase;
-	}
-	
+
+	/**
+	 * Calculates and returns the lase day of the study based on the lase phase and the dayOne.
+	 * @return
+	 */
 	public Date getLastDate() {
-		if(startingDate!=null) {
-			
+		if(startingDate!=null && getPhases()!=null) {
 			Integer days = getPhases().size()==0? null: getLastPhase().getDays();
 			if(days==null) days = 1;
-			
+
 			Calendar cal = Calendar.getInstance();
 			cal.setTime(startingDate);
 			cal.set(Calendar.DAY_OF_YEAR, cal.get(Calendar.DAY_OF_YEAR) + (days-1));
@@ -976,36 +1017,40 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			return null;
 		}
 	}
-	
+
+
 	/**
-	 * @param day1 the startingDate to set
+	 * Returns the first phase
+	 * @return
 	 */
-	public void setDay1(Date day1) {
-		this.startingDate = day1;
+	public Phase getFirstPhase() {
+		return getPhases()==null || getPhases().size()==0? null: getPhases().iterator().next();
 	}
-	
-	public void setStartingDate(Date startingDate) {
-		if(startingDate!=null) {
-			Integer days = getPhases().size()==0? null: getFirstPhase().getDays();
-			if(days==null) days = 1;
-			
-			Calendar cal = Calendar.getInstance();
-			cal.setTime(startingDate);
-			cal.set(Calendar.DAY_OF_YEAR, cal.get(Calendar.DAY_OF_YEAR) - (days-1));
-			setDay1(cal.getTime());
-		} else {
-			setDay1(null);
+
+	/**
+	 * Returns the lastphase
+	 * @return
+	 */
+	public Phase getLastPhase() {
+		if(getPhases()==null) return null;
+		Phase lastPhase = null;
+		Iterator<Phase> iterator = getPhases().iterator();
+		while(iterator.hasNext()) {
+			Phase p = iterator.next();
+			if(!iterator.hasNext()) {lastPhase=p;}
 		}
+		return lastPhase;
 	}
-	
+
+
 	public String getStudyId() {
 		return studyId;
 	}
-	
+
 	public void setStudyId(String name) {
 		this.studyId = name;
 	}
-	
+
 	public String getState() {
 		return state;
 	}
@@ -1023,9 +1068,9 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			if(employeeGroups.size()>3) throw new IllegalArgumentException(employeeGroups +".length>3");
 			this.employeeGroup1 = employeeGroups.size()>0? employeeGroups.get(0): null;
 			this.employeeGroup2 = employeeGroups.size()>1? employeeGroups.get(1): null;
-		} 
+		}
 	}
-	
+
 	/**
 	 * @return the department
 	 */
@@ -1035,7 +1080,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		if(employeeGroup2!=null) res.add(employeeGroup2);
 		return Collections.unmodifiableList(res);
 	}
-	
+
 	public String getEmployeeGroupsAsString() {
 		List<EmployeeGroup> egs = getEmployeeGroups();
 		if(egs.size()==0) return "["+getCreUser()+"]";
@@ -1053,7 +1098,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	public void setAttachedBiosamples(Set<Biosample> attachedBiosamples) {
 		this.attachedBiosamples = attachedBiosamples;
 	}
-	
+
 	/**
 	 * Returns the attached biosamples (ie those belonging to a group and no phases)
 	 * @return the attachedBiosamples
@@ -1061,15 +1106,15 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	public Set<Biosample> getAttachedBiosamples() {
 		return attachedBiosamples;
 	}
-	
+
 	/**
-	 * This method is in most case identical to getAttachedBiosamples except when we use the dividing feature, 
+	 * This method is in most case identical to getAttachedBiosamples except when we use the dividing feature,
 	 * where animals can be divided into tissues, which are still attached to the study
-	 * In that case we only return the top biosamples in study, sorted by group/sampleName/sampleId 
+	 * In that case we only return the top biosamples in study, sorted by group/sampleName/sampleId
 	 * @return the attachedBiosamples
 	 */
 	public List<Biosample> getTopAttachedBiosamples() {
-		List<Biosample> res = new ArrayList<>();		
+		List<Biosample> res = new ArrayList<>();
 		for(Biosample b: getAttachedBiosamples()) {
 			if(b.getInheritedPhase()!=null) continue; //dividing sample
 			res.add(b);
@@ -1080,59 +1125,63 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 
 
 	/**
-	 * Same as getTopAttachedBiosample, but with an imposed filter on the group 
+	 * Same as getTopAttachedBiosample, but with an imposed filter on the group
 	 * (if group==null, it means returns all samples with goup == null)(
 	 * @param group
 	 * @return
 	 */
 	public List<Biosample> getTopAttachedBiosamples(Group group) {
-		List<Biosample> res = new ArrayList<>();		
+		List<Biosample> res = new ArrayList<>();
 		for (Biosample b : getAttachedBiosamples()) {
 			if(b.getInheritedPhase()!=null) continue; //dividing sample
 			if(group!=null && !group.equals(b.getInheritedGroup())) continue;
 			if(group==null && b.getInheritedGroup()!=null) continue;
-			res.add(b);			
+			res.add(b);
 		}
 		Collections.sort(res, Biosample.COMPARATOR_GROUP_SAMPLENAME);
 		return res;
 	}
-		
+
 	public List<Biosample> getTopAttachedBiosamples(Group group, int subgroup) {
-		List<Biosample> res = new ArrayList<>();		
+		List<Biosample> res = new ArrayList<>();
 		for (Biosample b : getAttachedBiosamples()) {
 			if(b.getInheritedPhase()!=null) continue; //dividing sample
 			if(group!=null && !group.equals(b.getInheritedGroup())) continue;
-			if(group==null && b.getInheritedGroup()!=null) continue;			
-			if(b.getInheritedSubGroup()!=subgroup && group.getNSubgroups()>1) continue; 
-			res.add(b);			
+			if(group==null && b.getInheritedGroup()!=null) continue;
+			if(b.getInheritedSubGroup()!=subgroup && group.getNSubgroups()>1) continue;
+			res.add(b);
 		}
 		Collections.sort(res, Biosample.COMPARATOR_GROUP_SAMPLENAME);
 		return res;
 	}
-	
+
 	public SortedSet<Phase> getPhasesWithGroupAssignments() {
 		SortedSet<Phase> res = new TreeSet<>();
-		
+
 		//Iterate through the groups to find the randophases
 		for (Group g : getGroups()) {
 			if(g.getFromPhase()==null || g.getDividingSampling()!=null) continue;
 			res.add(g.getFromPhase());
-		}		
+		}
 		return res;
 	}
 
 	public boolean isBlind() {
 		return getBlindAllUsersAsSet().size()>0 || getBlindDetailsUsersAsSet().size()>0;
 	}
-	
+
+	public boolean isBlindAll() {
+		return getBlindAllUsersAsSet().size()>0;
+	}
+
 	public String getBlindAllUsers() {
 		return MiscUtils.flatten(getBlindAllUsersAsSet(), ", ");
 	}
-	
+
 	public String getBlindDetailsUsers() {
 		return MiscUtils.flatten(getBlindDetailsUsersAsSet(), ", ");
 	}
-	
+
 	public void setBlindUsers(Collection<String> all, Collection<String> group) {
 		StringBuilder sb = new StringBuilder();
 		for (String u : all) {
@@ -1146,15 +1195,15 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 
 		this.blindUsers = sb.toString();
 	}
-	
+
 	public void setBlindAllUsers(Collection<String> set) {
-		setBlindUsers(set, getBlindDetailsUsersAsSet());				
+		setBlindUsers(set, getBlindDetailsUsersAsSet());
 	}
-	
+
 	public void setBlindDetailsUsers(Collection<String> set) {
-		setBlindUsers(getBlindAllUsersAsSet(), set);				
-	}	
-	
+		setBlindUsers(getBlindAllUsersAsSet(), set);
+	}
+
 	public Document getConsentForm() {
 		for(Iterator<Document> iter = getDocuments().iterator(); iter.hasNext(); ) {
 			Document d = iter.next();
@@ -1164,11 +1213,11 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		}
 		return null;
 	}
-	
+
 	public void setSynchronizeSamples(boolean synchronizeSamples) {
 		this.synchronizeSamples = synchronizeSamples;
 	}
-	
+
 	public boolean isSynchronizeSamples() {
 		return this.synchronizeSamples == Boolean.TRUE;
 	}
@@ -1176,7 +1225,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	public Set<Biosample> getSamples(StudyAction action, NamedSampling ns) {
 		assert ns!=null;
 		assert action!=null;
-				
+
 		Set<Biosample> res = new HashSet<>();
 		for(Sampling s: ns.getAllSamplings()) {
 			for(Biosample b : s.getSamples()) {
@@ -1187,7 +1236,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		}
 		return res;
 	}
-		
+
 	/**
 	 * Gets all Measurements from studyActions (done on living)
 	 * Note the Tests are not loaded, only the id is returned
@@ -1200,7 +1249,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		}
 		return res;
 	}
-	
+
 	/**
 	 * Gets all Measurements from samplings (done on samples).
 	 * Note the Tests are not loaded, only the id is returned
@@ -1215,35 +1264,35 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		}
 		return res;
 	}
-	
+
 	public Set<Phase> getEmptyPhases(){
 		return new HashSet<>();
-//		Set<Phase> res = new HashSet<>(getPhases());
-		
-//		for (StudyAction a: getStudyActions()) {
-//			if(!a.isEmpty()) {
-//				res.remove(a.getPhase());
-//			}
-//		}
-//		
-//		for (Group group : getGroups()) {
-//			res.remove(group.getFromPhase());
-//		}
-//		
-//		for(Phase p: getPhases()) {
-//			if(p.getLabel()!=null && p.getLabel().length()>0) res.remove(p);
-//		}
-//		return res;
+		//		Set<Phase> res = new HashSet<>(getPhases());
+
+		//		for (StudyAction a: getStudyActions()) {
+		//			if(!a.isEmpty()) {
+		//				res.remove(a.getPhase());
+		//			}
+		//		}
+		//
+		//		for (Group group : getGroups()) {
+		//			res.remove(group.getFromPhase());
+		//		}
+		//
+		//		for(Phase p: getPhases()) {
+		//			if(p.getLabel()!=null && p.getLabel().length()>0) res.remove(p);
+		//		}
+		//		return res;
 	}
-	
+
 	public PhaseFormat getPhaseFormat() {
 		if(phaseFormat==null) phaseFormat = PhaseFormat.DAY_MINUTES;
 		return phaseFormat;
 	}
-	
+
 	public void setPhaseFormat(PhaseFormat phaseFormat) {
 		this.phaseFormat = phaseFormat;
-	}	
+	}
 
 	public Phase getPhaseFirstTreatment(Group group, int subgroup) {
 		if(group==null) return null;
@@ -1262,7 +1311,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		}
 		return phaseFirstTreatment;
 	}
-	
+
 	public static Map<String, Study> mapStudyId(Collection<Study> studies){
 		Map<String, Study> res = new HashMap<>();
 		if(studies==null) return res;
@@ -1271,16 +1320,16 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		}
 		return res;
 	}
-	
+
 	public static Map<String, List<Study>> mapIvvAndStudyId(Collection<Study> studies){
 		Map<String, List<Study>> res = new HashMap<>();
 		if(studies==null) return res;
-		for (Study s : studies) {			
+		for (Study s : studies) {
 			if(s==null) continue;
-			if(s.getIvv()!=null && s.getIvv().length()>0) {
-				List<Study> l = res.get(s.getIvv());
+			if(s.getLocalId()!=null && s.getLocalId().length()>0) {
+				List<Study> l = res.get(s.getLocalId());
 				if(l==null) {
-					res.put(s.getIvv(), l = new ArrayList<>());
+					res.put(s.getLocalId(), l = new ArrayList<>());
 				}
 				l.add(s);
 			}
@@ -1290,16 +1339,16 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			}
 			l.add(s);
 
-			
+
 		}
 		return res;
 	}
-	
-	public static Set<String> getIvvOrStudyIds(Collection<Study> studies){
+
+	public static Set<String> getLocalIdOrStudyIds(Collection<Study> studies){
 		Set<String> res = new HashSet<>();
 		if(studies==null) return res;
 		for (Study s : studies) {
-			if(s!=null) res.add(s.getIvvOrStudyId());
+			if(s!=null) res.add(s.getLocalIdOrStudyId());
 		}
 		return res;
 	}
@@ -1317,13 +1366,13 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		if(metadataMap==null) {
 			metadataMap = MiscUtils.deserializeStringMap(this.serializedMetadata);
 		}
-		return metadataMap; 
+		return metadataMap;
 	}
-	
+
 	public  void setMetadata(Map<String, String> metadataMap) {
 		this.metadataMap = metadataMap;
 	}
-	
+
 	/**
 	 * PreSave serializes the data. However this function must be called from within the DAO because setters do not call this function
 	 */
@@ -1340,14 +1389,14 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		if(metadataMap!=null) {
 			this.serializedMetadata = MiscUtils.serializeStringMap(metadataMap);
 		}
-		
+
 		//Serialize Sampling
 		for (NamedSampling ns : getNamedSamplings()) {
 			for (Sampling s : ns.getAllSamplings()) {
 				s.preSave();
-			}			
+			}
 		}
-		
+
 		//Update relations
 		for (Phase p : new ArrayList<>(getPhases())) {
 			p.setStudy(this);
@@ -1356,7 +1405,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			g.setStudy(this);
 		}
 	}
-	
+
 	public boolean isMentioned(String user) {
 		if(getAdminUsersAsSet().contains(user)) return true;
 		if(getBlindAllUsersAsSet().contains(user)) return true;
@@ -1365,7 +1414,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		if(getCreUser().equals(user)) return true;
 		return false;
 	}
-	
+
 	public void resetIds() {
 		for (Phase a : phases) {
 			a.setId(0);
@@ -1389,6 +1438,102 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			a.setId(0);
 		}
 		id = 0;
+	}
+
+
+	/**
+	 * Returns a map containing the differences between 2 samples (usually 2 different versions).
+	 * The result is an empty string if there are no differences or if b is null
+	 * @param b
+	 * @return
+	 */
+	public String getDifference(Study s) {
+		return MiscUtils.flatten(getDifferenceMap(s));
+	}
+
+	/**
+	 * Returns a map containing the differences between 2 samples (usually 2 different versions).
+	 * The result is an empty map if there are no differences or if b is null
+	 * @param b
+	 * @return
+	 */
+	public Map<String, String> getDifferenceMap(Study s) {
+		Map<String, String> map = new LinkedHashMap<>();
+
+		//Compare infos
+		if(!CompareUtils.equals(getAdminUsers(), s.getAdminUsers())) {
+			map.put("AdminUsers", getAdminUsers());
+		}
+		if(!CompareUtils.equals(getBlindAllUsers(), s.getBlindAllUsers())) {
+			map.put("BlindAllUsers", getBlindAllUsers());
+		}
+		if(!CompareUtils.equals(getBlindDetailsUsers(), s.getBlindDetailsUsers())) {
+			map.put("BlindDetailsUsers", getBlindDetailsUsers());
+		}
+		if(!CompareUtils.equals(getExpertUsers(), s.getExpertUsers())) {
+			map.put("ExpertUsers", getExpertUsers());
+		}
+		if(!CompareUtils.equals(getLocalId(), s.getLocalId())) {
+			map.put("InternalId", getLocalId());
+		}
+		if(!CompareUtils.equals(getNotes(), s.getNotes())) {
+			map.put("Notes", ""+(getNotes()==null?0:getNotes().length()));
+		}
+		if(!CompareUtils.equals(getState(), s.getState())) {
+			map.put("State", getState());
+		}
+		if(!CompareUtils.equals(getStudyId(), s.getStudyId())) {
+			map.put("StudyId", getStudyId());
+		}
+		if(!CompareUtils.equals(getTitle(), s.getTitle())) {
+			map.put("Title", getTitle());
+		}
+		if(!CompareUtils.equals(getConsentForm(), s.getConsentForm())) {
+			map.put("ConsentForm", getConsentForm()==null?"": getConsentForm().getFileName());
+		}
+		if(!CompareUtils.equals(getFirstDate(), s.getFirstDate())) {
+			map.put("FirstDate", getFirstDate()==null?"": FormatterUtils.formatDate(getFirstDate()));
+		}
+		for(String key: MiscUtils.setOf(getMetadata().keySet(), s.getMetadata().keySet())) {
+			if(!CompareUtils.equals(getMetadata().get(key), s.getMetadata().get(key))) {
+				map.put(key, getMetadata().get(key));
+			}
+		}
+		if(!CompareUtils.equals(getCreUser(), s.getCreUser())) {
+			map.put("Owner", getCreUser()==null?"NA":getCreUser());
+		}
+
+		//Compare Dept
+		String empgroupCompare = MiscUtils.diffCollectionsSummary(getEmployeeGroups(), s.getEmployeeGroups(), null);
+		if(empgroupCompare!=null) map.put("Departments", empgroupCompare);
+
+
+		//Compare documents
+		String documentCompare = MiscUtils.diffCollectionsSummary(getDocuments(), s.getDocuments(), null);
+		if(documentCompare!=null) map.put("Documents", documentCompare);
+
+		//Compare groups
+		String groupCompare = MiscUtils.diffCollectionsSummary(getGroups(), s.getGroups(), Group.EXACT_COMPARATOR);
+		if(groupCompare!=null) map.put("Groups", groupCompare);
+
+		//Compare phases
+		String phaseCompare = MiscUtils.diffCollectionsSummary(getPhases(), s.getPhases(), Phase.EXACT_COMPARATOR);
+		if(phaseCompare!=null) map.put("Phases", phaseCompare);
+
+		//Compare treatment
+		String treatmentCompare = MiscUtils.diffCollectionsSummary(getNamedTreatments(), s.getNamedTreatments(), NamedTreatment.EXACT_COMPARATOR);
+		if(treatmentCompare!=null) map.put("Treatments", treatmentCompare);
+
+		//Compare samplings
+		String samplingCompare = MiscUtils.diffCollectionsSummary(getNamedSamplings(), s.getNamedSamplings(), NamedSampling.EXACT_COMPARATOR);
+		if(samplingCompare!=null) map.put("Samplings", samplingCompare);
+
+		//Compare actions
+		String actionCompare = MiscUtils.diffCollectionsSummary(getStudyActions(), s.getStudyActions(), StudyAction.EXACT_COMPARATOR);
+		if(actionCompare!=null) map.put("Actions", actionCompare);
+
+
+		return map;
 	}
 
 }

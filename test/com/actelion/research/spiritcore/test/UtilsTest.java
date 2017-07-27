@@ -120,6 +120,7 @@ public class UtilsTest {
 		}
 
 	}
+
 	@Test
 	public void testMiscUtilsSerializeStrings() {
 		String s = "test1;test2;test\\\\\\;;";
@@ -136,7 +137,6 @@ public class UtilsTest {
 		List<String> l2 = Arrays.asList(new String[]{" ", "", ";;"});
 		Assert.assertArrayEquals(l2.toArray(), MiscUtils.deserializeStrings(MiscUtils.serializeStrings(l2)).toArray());
 	}
-
 
 	@Test
 	public void testEncryption() throws Exception {
@@ -238,6 +238,20 @@ public class UtilsTest {
 		System.out.println(list);
 		Collections.sort(list, CompareUtils.STRING_COMPARATOR);
 
+	}
+
+	@Test
+	public void testDiffCollections() {
+		List<String> l1 = MiscUtils.listOf("Joel", "Antony", "Roman");
+		Assert.assertEquals(null, MiscUtils.diffCollectionsSummary(l1, MiscUtils.listOf("Roman", "Joel", "Antony"), null));
+		Assert.assertEquals("added Roman", MiscUtils.diffCollectionsSummary(l1, MiscUtils.listOf("Joel", "Antony"), null));
+		Assert.assertEquals("removed Thomas", MiscUtils.diffCollectionsSummary(l1, MiscUtils.listOf("Joel", "Antony", "Roman", "Thomas"), null));
+		Assert.assertEquals("updated", MiscUtils.diffCollectionsSummary(l1, MiscUtils.listOf("Joel", "Antony", "ROMAN"), null));
+
+		//		class G {
+		//			int id; String name;
+		//			G(int id, String)
+		//		}
 	}
 
 }

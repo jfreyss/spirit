@@ -104,6 +104,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 	private int sizeFactor = 0;
 	private Map<Phase, Phase> nextPhaseMap;
 	private Set<Phase> emptyPhases = new HashSet<>();
+	private boolean forRevision;
 
 	public StudyDepictor() {
 		addMouseListener(this);
@@ -134,6 +135,18 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			}
 		});
 
+	}
+
+	/**
+	 * If the depictor is set to be in revion mode, we don't display the date
+	 * @param forRevision
+	 */
+	public void setForRevision(boolean forRevision) {
+		this.forRevision = forRevision;
+	}
+
+	public boolean isForRevision() {
+		return forRevision;
 	}
 
 	public void setSizeFactor(int sizeFactor) {
@@ -213,9 +226,9 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 				g.setColor(Color.BLACK);
 				g.setFont(FastFont.BIGGER);
 				g.drawString(s, 2, FastFont.BIGGER.getSize());
-				if(study.getIvv()!=null && study.getIvv().length()>0) {
+				if(study.getLocalId()!=null && study.getLocalId().length()>0) {
 					g.setFont(FastFont.REGULAR);
-					g.drawString(study.getIvv(), 2, FastFont.BIGGER.getSize()+FastFont.REGULAR.getSize()+2);
+					g.drawString(study.getLocalId(), 2, FastFont.BIGGER.getSize()+FastFont.REGULAR.getSize()+2);
 				}
 			}
 
@@ -242,7 +255,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 
 
 								// Show cursor for current date?
-								if(study.getFirstDate()!=null && study.getPhases().size()>0) {
+								if(!forRevision && study.getFirstDate()!=null && study.getPhases().size()>0) {
 									int x = maxX+12;
 									for (Phase p : study.getPhases()) {
 										if (emptyPhases.contains(p)) continue;
@@ -308,7 +321,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 	}
 
 	public Selection getSelectionAt(int x, int y) {
-		if (study == null || !SpiritRights.canExpert(study, SpiritFrame.getUser())) return null;
+		if (study == null) return null;
 		Group selGroup = null;
 		int selSubgroupNo = 0;
 		Phase selPhase = null;
@@ -595,7 +608,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 					if(phaseWidth<19) {
 						w+=fm2.stringWidth("00/00/00");
 					} else if(p.getLabel()!=null && p.getLabel().length()>0) {
-						w+= fm2.stringWidth(p.getLabel().length()>10? p.getLabel().substring(0,10): p.getLabel());
+						w+= fm1.stringWidth(p.getLabel().length()>10? p.getLabel().substring(0,10): p.getLabel());
 					}
 					height = Math.max(height, w + 2);
 				}
@@ -900,7 +913,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			Date date = phase.getAbsoluteDate();
 
 			// Background: yellow if the absolute date is today
-			if (date != null && Phase.isSameDay(date, now)) {
+			if (!forRevision && date != null && Phase.isSameDay(date, now)) {
 				g.setColor(UIUtils.getColor(255, 255, 0, 60));
 				g.fillRect(x - 12, 1, x2 - x, toY - 1);
 			}
@@ -915,41 +928,44 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			g.setTransform(rotated);
 
 			// Draw phase.shortname
-			int y1 = x2-x>19 && date != null? y-4: y;
+			boolean on2lines = x2-x>19;
+			int y1 = on2lines? y-4: y;
 			String s = phase.getShortName().replace("_", " ");
 			g.setColor(Color.BLACK);
 			g.setFont(FastFont.BOLD);
 			g.drawString(s, x, y1);
-			int w = g.getFontMetrics().stringWidth(s)+3;
+			int w = g.getFontMetrics().stringWidth(s)+2;
 
 
-
-			// Draw phase.absolute Date
+			// format date
 			if (date != null) {
 				calendar.setTime(date);
 				int d = calendar.get(Calendar.DAY_OF_WEEK);
-				g.setColor(Color.DARK_GRAY);
-				g.setFont(FastFont.SMALL);
-				s = FormatterUtils.formatDate(date);
-
-				if(x2-x>19) {
-					//2 lines: write date+day+label
-					String day = new String[] { "", "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" }[d];
-					g.drawString(s + " " + day, x, y+FastFont.SMALL.getSize()-6);
-
-					if (phase.getLabel() != null && phase.getLabel().length()>0) {
-						s = phase.getLabel();
-						if(s.length()>10) s = s.substring(0, 10);
-						g.setFont(FastFont.SMALL);
-						g.setColor(Color.BLACK);
-						g.drawString(s, x+w, y1);
-						w+= g.getFontMetrics().stringWidth(s)+3;
-					}
-				} else {
-					//1 line: write date only
-					g.drawString(s, x+w, y1);
-				}
+				s = FormatterUtils.formatDate(date) + " " + new String[] { "", "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" }[d];
+			} else {
+				s = "";
 			}
+
+			g.setColor(Color.DARK_GRAY);
+			if(on2lines) {
+				//2nd line: write label
+				g.setFont(FastFont.MEDIUM);
+				g.drawString(s, x, y+FastFont.MEDIUM.getSize()-6);
+				//1st line: write date+day
+				g.setFont(FastFont.SMALL);
+				if (phase.getLabel() != null && phase.getLabel().length()>0) {
+					s = phase.getLabel();
+					if(s.length()>10) s = s.substring(0, 10);
+					g.setColor(Color.BLACK);
+					g.drawString(s, x+w, y1);
+					w+= g.getFontMetrics().stringWidth(s)+3;
+				}
+			} else {
+				//1 line: write date+day only
+				g.setFont(FastFont.SMALL);
+				g.drawString(s, x+w, y1);
+			}
+
 
 			g.setColor(c);
 			g.setTransform(normal);

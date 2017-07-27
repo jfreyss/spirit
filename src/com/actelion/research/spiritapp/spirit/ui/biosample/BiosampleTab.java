@@ -38,9 +38,9 @@ import javax.swing.event.ListSelectionListener;
 import com.actelion.research.spiritapp.spirit.ui.IBiosampleTab;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.SpiritTab;
-import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
 import com.actelion.research.spiritapp.spirit.ui.pivot.PivotPanel;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
+import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -107,7 +107,7 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 		});
 
 		//PivotTab
-		pivotCardPanel = new PivotPanel(true, tableOrRackTab, biosampleDetailPanel);
+		pivotCardPanel = new PivotPanel(tableOrRackTab, biosampleDetailPanel);
 		pivotCardPanel.addPropertyChangeListener(PivotPanel.PROPERTY_PIVOT_CHANGED, new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
@@ -171,7 +171,7 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public<T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
+	public<T> void fireModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
 		if(!isShowing()) return;
 		if(what==Biosample.class) {
 			List<Biosample> biosamples = (List<Biosample>) details;
@@ -181,7 +181,7 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 				tableOrRackTab.setBiosamples(biosamples);
 				tableOrRackTab.setSelectedBiosamples(biosamples);
 			} else if(action==SpiritChangeType.MODEL_UPDATED) {
-				if(tableOrRackTab.getBiosamples().size()>200 || !tableOrRackTab.getBiosamples().containsAll(biosamples)) {
+				if(/*tableOrRackTab.getBiosamples().size()>200 ||*/ !tableOrRackTab.getBiosamples().containsAll(biosamples)) {
 					//The table is too big or some edited or some samples are contained in the table, sets only the biosamples that were edited
 					biosamples = JPAUtil.reattach(biosamples);
 					tableOrRackTab.setBiosamples(biosamples);

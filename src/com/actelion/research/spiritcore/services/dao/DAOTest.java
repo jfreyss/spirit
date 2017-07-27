@@ -50,8 +50,9 @@ import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.QueryTokenizer;
 
 /**
+ * DAO functions linked to Tests
  *
- * @author freyssj
+ * @author Joel Freyss
  */
 public class DAOTest {
 

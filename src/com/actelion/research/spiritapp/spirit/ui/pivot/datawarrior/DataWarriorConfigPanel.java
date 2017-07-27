@@ -45,8 +45,8 @@ import javax.swing.JSeparator;
 import javax.swing.JToggleButton;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.pivot.Computed;
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorConfig;
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorConfig.ChartType;

@@ -395,7 +395,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 
 	@Override
 	public String toString() {
-		return sampleId ;
+		return sampleId==null?"": sampleId;
 	}
 
 	@Override
@@ -542,19 +542,20 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 * @param value
 	 */
 	public void setMetadataValue(String metadataName, String value) {
-		for (BiotypeMetadata mType : biotype.getMetadata()) {
-			assert mType.getBiotype().getId()==biotype.getId(): "Id mismatch in "+mType+" > "+mType.getBiotype()+":"+mType.getBiotype().getId()+" <> "+ biotype+":"+biotype.getId();
-			if(mType.getName().equals(metadataName)) {
-				setMetadataValue(mType, value);
-				return;
-			}
-		}
-
-		throw new IllegalArgumentException("Invalid metadatatype: " + metadataName+" not in " + biotype.getMetadata());
+		//		for (BiotypeMetadata mType : biotype.getMetadata()) {
+		//			assert mType.getBiotype().getId()==biotype.getId(): "Id mismatch in "+mType+" > "+mType.getBiotype()+":"+mType.getBiotype().getId()+" <> "+ biotype+":"+biotype.getId();
+		//			if(mType.getName().equals(metadataName)) {
+		//				setMetadataValue(mType, value);
+		//				return;
+		//			}
+		//		}
+		BiotypeMetadata bType = getBiotype().getMetadata(metadataName);
+		if(bType==null) throw new IllegalArgumentException("Invalid metadatatype: " + metadataName+" not in " + biotype.getMetadata());
+		setMetadataValue(bType, value);
 	}
 
 	/**
-	 * Sets the metadataValue
+	 * Sets the metadataValue for any datatype (to set Files or Biosample, please call setMetadataDocument or setMetadataBiosample)
 	 * Throws an exception if bType is invalid
 	 * @param bType
 	 * @param value
@@ -563,14 +564,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		assert bType!=null;
 		assert biotype!=null;
 		assert biotype.equals(bType.getBiotype());
-		//		if(bType.getDataType()==DataType.LARGE) {
-		//			getMetadataValues().put(bType, "");
-		//			if(value==null || value.length()==0) {
-		//				linkedDocuments.remove(bType.getId());
-		//			} else {
-		//				linkedDocuments.put(bType.getId(), new Document(bType.getName(), value.getBytes()));
-		//			}
-		//		} else
+
 		if(bType.getDataType()==DataType.MULTI) {
 			//Sort Multi values
 			String[] v = MiscUtils.split(value, ";");
@@ -581,6 +575,20 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		}
 	}
 
+	/**
+	 * Sets the document for a metadata where dataType = FILES
+	 * @param metadataName
+	 * @param bio
+	 */
+	public void setMetadataDocument(String metadataName, Document doc) {
+		setMetadataDocument(biotype.getMetadata(metadataName), doc);
+	}
+
+	/**
+	 * Sets the document for a metadata where dataType = FILES
+	 * @param metadataName
+	 * @param bio
+	 */
 	public void setMetadataDocument(BiotypeMetadata bType, Document doc) {
 		assert bType!=null;
 		assert biotype!=null;
@@ -594,6 +602,20 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		getMetadataValues().put(bType, doc==null? "": doc.getFileName());
 	}
 
+	/**
+	 * Sets the biosample for a metadata where dataType = BIOSAMPLE
+	 * @param metadataName
+	 * @param bio
+	 */
+	public void setMetadataBiosample(String metadataName, Biosample bio) {
+		setMetadataBiosample(biotype.getMetadata(metadataName), bio);
+	}
+
+	/**
+	 * Sets the biosample for a metadata where dataType = BIOSAMPLE
+	 * @param bType
+	 * @param bio
+	 */
 	public void setMetadataBiosample(BiotypeMetadata bType, Biosample bio) {
 		assert bType!=null;
 		assert biotype!=null;
@@ -629,8 +651,12 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	public String getMetadataValue(BiotypeMetadata bType) {
 		assert bType!=null;
 		assert biotype!=null;
-
 		return getMetadataValues().get(bType);
+	}
+
+	public Document getMetadataDocument(String bType) {
+		if(getBiotype()==null) return null;
+		return getMetadataDocument(getBiotype().getMetadata(bType));
 	}
 
 	/**
@@ -639,10 +665,16 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 * @return
 	 */
 	public Document getMetadataDocument(BiotypeMetadata bType) {
+		if(metadataValues==null) postLoad();
 		assert bType!=null;
 		assert bType.getDataType().isDocument();
 		assert biotype!=null;
+
 		return linkedDocuments.get(bType.getId());
+	}
+
+	public Biosample getMetadataBiosample(String bType) {
+		return getMetadataBiosample(getBiotype().getMetadata(bType));
 	}
 
 	/**
@@ -651,10 +683,18 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 * @return
 	 */
 	public Biosample getMetadataBiosample(BiotypeMetadata bType) {
+		if(metadataValues==null) postLoad();
 		assert bType!=null;
 		assert bType.getDataType()==DataType.BIOSAMPLE;
 		assert biotype!=null;
-		return linkedBiosamples.get(bType);
+		Biosample b = linkedBiosamples.get(bType);
+		if(b==null) {
+			if(getMetadataValue(bType)!=null) {
+				b = new Biosample(getMetadataValue(bType));
+			}
+		}
+		return b;
+
 	}
 
 	public Location getLocation() {
@@ -733,9 +773,12 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			return;
 		}
 
-		//Check the phase matches the group
-		if(getInheritedGroup()!=null && inheritedPhase!=null && !inheritedPhase.getStudy().equals(inheritedGroup.getStudy())) {
-			throw new IllegalArgumentException("The phase should come from the study "+inheritedGroup.getStudy()+" not "+inheritedPhase.getStudy());
+		if(getInheritedGroup()!=null && inheritedPhase!=null) {
+			if(inheritedPhase.getStudy() ==null ) {
+				inheritedPhase.setStudy(getInheritedGroup().getStudy());
+			} else if(!inheritedPhase.getStudy().equals(getInheritedGroup().getStudy())) {
+				throw new IllegalArgumentException("The phase should come from the study "+getInheritedGroup().getStudy()+" not "+inheritedPhase.getStudy());
+			}
 		}
 
 		//Make sure the study matched the phase
@@ -780,9 +823,9 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	public String getInheritedGroupString(String user) {
 		if(getInheritedStudy()==null) {
 			return "";
-		} else if(user!=null && inheritedStudy.getBlindAllUsers().contains(user)) {
+		} else if(user!=null && getInheritedStudy().getBlindAllUsers().contains(user)) {
 			return "Blinded";
-		} else if(user!=null && inheritedStudy.getBlindDetailsUsers().contains(user==null?"": user)) {
+		} else if(user!=null && getInheritedStudy().getBlindDetailsUsers().contains(user==null?"": user)) {
 			return getInheritedGroup()==null?"": getInheritedGroup().getShortName() + (getInheritedGroup().getNSubgroups()>1? " '"+(getInheritedSubGroup()+1):"");
 		} else {
 			return getInheritedGroup()==null?"": getInheritedGroup().getName() + (getInheritedGroup().getNSubgroups()>1? " '"+(getInheritedSubGroup()+1):"");
@@ -794,8 +837,8 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	}
 
 	/**
-	 * Clone this sample except its children and container (don't follow the relationships)
-	 * Keep the same parent however
+	 * Clones this sample except its children and container (don't follow the relationships)
+	 * Keeps the same parent and id
 	 */
 	@Override
 	public Biosample clone() {
@@ -829,6 +872,8 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			res.serializedMetadata2 = serializedMetadata2;
 			res.linkedBiosamples = new HashMap<>(linkedBiosamples);
 			res.linkedDocuments = new HashMap<>();
+			res.updDate = updDate;
+			res.updUser = updUser;
 			for(Map.Entry<Integer, Document> e: linkedDocuments.entrySet()) {
 				byte[] copy = new byte[e.getValue().getBytes().length];
 				System.arraycopy(e.getValue().getBytes(), 0, copy, 0, copy.length);
@@ -919,12 +964,14 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		c = -(getInheritedStudy()==null?"": getInheritedStudy().getStudyId()).compareTo((o2.getInheritedStudy()==null?"": o2.getInheritedStudy().getStudyId()));
 		if(c!=0) return c;
 
-		//Compare groups
-		c = CompareUtils.compare(getInheritedGroup(), o2.getInheritedGroup());
-		if(c!=0) return c;
+		if(getInheritedStudy()!=null && !getInheritedStudy().isBlindAll()) {
+			//Compare groups
+			c = CompareUtils.compare(getInheritedGroup(), o2.getInheritedGroup());
+			if(c!=0) return c;
 
-		c = CompareUtils.compare(getInheritedSubGroup(), o2.getInheritedSubGroup());
-		if(c!=0) return c;
+			c = CompareUtils.compare(getInheritedSubGroup(), o2.getInheritedSubGroup());
+			if(c!=0) return c;
+		}
 
 		//Compare phases
 		c = CompareUtils.compare(getInheritedPhase(), o2.getInheritedPhase());
@@ -1285,21 +1332,16 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 */
 	public void setInheritedStudy(Study study) {
 		this.inheritedStudy = study;
+		if(this.inheritedStudy==null) {
+			this.inheritedGroup = null;
+			this.inheritedPhase = null;
+		}
 	}
 
 	/**
 	 * @param amount the amount to set
 	 */
 	public void setAmount(Double amount) {
-		//		if(amount!=null && amount>=1E6) {
-		//			throw new IllegalArgumentException("Invalid amount: "+amount);
-		//		} else if(amount!=null && amount>=1E2) {
-		//			amount = ((int)(amount*10+0.49))/10.0;
-		//		} else if(amount!=null && amount>=1E1) {
-		//			amount = ((int)(amount*100+0.49))/100.0;
-		//		} else if(amount!=null) {
-		//			amount = ((int)(amount*1000+0.49))/1000.0;
-		//		}
 		this.amount = amount;
 	}
 
@@ -1501,7 +1543,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 
 	public static enum InfoFormat {
 		STUDY,
-		TYPE,
+		BIOTYPE,
 		TOPIDNAMES,
 		SAMPLEID,
 		SAMPLENAME,
@@ -1537,7 +1579,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 * @return
 	 */
 	public static String getInfosMetadata(Collection<Biosample> biosamples) {
-		return getInfos(biosamples, EnumSet.of(InfoFormat.TYPE, InfoFormat.SAMPLENAME, InfoFormat.METATADATA, InfoFormat.COMMENTS, InfoFormat.AMOUNT), InfoSize.ONELINE);
+		return getInfos(biosamples, EnumSet.of(InfoFormat.BIOTYPE, InfoFormat.SAMPLENAME, InfoFormat.METATADATA, InfoFormat.COMMENTS, InfoFormat.AMOUNT), InfoSize.ONELINE);
 	}
 
 	/**
@@ -1567,7 +1609,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 
 		Set<Biotype> types = getBiotypes(biosamples);
 		String separator1 = infoSize==InfoSize.ONELINE?" ": "\n"; //Separator between different items (ex: groups and metadata)
-		String separator2 = infoSize!=InfoSize.EXPANDED?" ": "\n"; //Separator between similar items (ex: metadata)
+		String separator2 = infoSize==InfoSize.EXPANDED?"\n": " "; //Separator between similar items (ex: metadata)
 
 
 		//STUDY Display
@@ -1576,7 +1618,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			//Add the study
 			Study study = Biosample.getStudy(biosamples);
 			if(study!=null) {
-				sb.append(study.getStudyId() + (study.getIvv()!=null && study.getIvv().length()>0?" (" + study.getIvv() + ")":"") + separator1);
+				sb.append(study.getStudyId() + (study.getLocalId()!=null && study.getLocalId().length()>0?" (" + study.getLocalId() + ")":"") + separator1);
 			}
 
 			//Add the group
@@ -1616,7 +1658,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		}
 
 		//TYPE Display
-		if(dataFormat.contains(InfoFormat.TYPE)) {
+		if(dataFormat.contains(InfoFormat.BIOTYPE)) {
 			if(types.size()==1) {
 				String s = types.iterator().next().getName();
 				sb.append(s + separator2);
@@ -1660,11 +1702,8 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 				Set<String> l = map.get(mt);
 				String val = l.size()==1? l.iterator().next(): null;
 				if(val!=null && val.length()>0 ) {
-					if(count++>10) {
-						sb2.append("..." + separator2);
-						break;
-					}
 					sb2.append(val + separator2);
+					if(++count>6) break;
 				}
 			}
 		}
@@ -1724,11 +1763,8 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 				Set<String> l = map.get(mt);
 				String val = l.size()==1? l.iterator().next(): null;
 				if(val!=null && val.length()>0 ) {
-					if(count++>10) {
-						sb2.append("..." + separator2);
-						break;
-					}
 					sb2.append(val + separator2);
+					if(++count>6) break;
 				}
 			}
 		}
@@ -1799,6 +1835,19 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		return res;
 	}
 
+	public static Set<String> getMetadata(BiotypeMetadata metadata, Collection<Biosample> biosamples) {
+		if(biosamples==null) return null;
+		Set<String> res = new HashSet<>();
+		for (Biosample b : biosamples) {
+			if(b.getBiotype()==null) continue;
+			String s = b.getMetadataValue(metadata);
+			if(s!=null && s.length()>0) {
+				res.add(s);
+			}
+		}
+		return res;
+	}
+
 	public static Set<Biosample> getTopParents(Collection<Biosample> biosamples) {
 		Set<Biosample> res = new HashSet<>();
 		for (Biosample b : biosamples) {
@@ -1851,6 +1900,14 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		return res;
 	}
 
+	/**
+	 * Display the identifier as followed:
+	 * - no biotype: sampleId
+	 * - biotype where sampleId is hidden: sampleName (or sampleId if none)
+	 * - sampleId [sampleName] otherwise
+	 *
+	 * @return
+	 */
 	public String getSampleIdName() {
 		if(getBiotype()==null) {
 			return getSampleId();
@@ -1908,6 +1965,11 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		return res;
 	}
 
+	public static ContainerType getContainerType(Collection<Biosample> biosamples) {
+		SortedSet<ContainerType> res = getContainerTypes(biosamples);
+		return res.size()==1? res.first(): null;
+	}
+
 	public static SortedSet<String> getContainerIds(Collection<Biosample> biosamples) {
 		SortedSet<String> res = new TreeSet<>();
 		if(biosamples==null) return null;
@@ -1916,6 +1978,29 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		}
 		return res;
 	}
+
+	public static boolean isInDifferentContainers(Collection<Biosample> biosamples) {
+		if(biosamples==null || biosamples.size()<=1) return false;
+
+		//Count number of Containers
+		List<String> l = new ArrayList<>();
+		for (Biosample b : biosamples) {
+			if(b.getContainerId()!=null && b.getContainerId().length()>0) {
+				if(l.contains(b.getContainerId())) {
+					//ok
+				} else if(l.size()>=1) {
+					return true;
+				} else {
+					l.add(b.getContainerId());
+				}
+			} else {
+				if(l.size()>=1) return true;
+				l.add(b.getContainerId());
+			}
+		}
+		return false;
+	}
+
 
 	public static SortedSet<Integer> getScannedPoses(Collection<Biosample> biosamples, Location loc) {
 		SortedSet<Integer> res = new TreeSet<>();
@@ -2446,14 +2531,6 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	}
 
 
-	protected Map<Integer, Document> getLinkedDocuments() {
-		return linkedDocuments;
-	}
-
-	protected Map<BiotypeMetadata, Biosample> getLinkedBiosamples() {
-		return linkedBiosamples;
-	}
-
 	/**
 	 * Don't use postLoad, called by getMetadata
 	 */
@@ -2544,17 +2621,28 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 * @param b
 	 * @return
 	 */
-	public String getDifference(Biosample b, String user) {
-		if(b==null) return "";
+	public String getDifference(Biosample b) {
+		return MiscUtils.flatten(getDifferenceMap(b)).replace("ACTION=", "");
+	}
+
+	/**
+	 * Returns a map containing the differences between 2 samples (usually 2 different versions).
+	 * The result is an empty string if there are no differences or if b is null
+	 * @param b
+	 * @return
+	 */
+	public Map<String, String> getDifferenceMap(Biosample b) {
+
 		Map<String, String> map = new LinkedHashMap<>();
+		if(b==null) return map;
 		if(!CompareUtils.equals(getInheritedStudy(), b.getInheritedStudy())) {
 			map.put("Study", getInheritedStudy()==null?"NA":getInheritedStudy().getStudyId());
 		}
-		if(!CompareUtils.equals(getInheritedGroupString(user), b.getInheritedGroupString(user))) {
-			map.put("Group", getInheritedGroupString(user));
+		if(!CompareUtils.equals(getInheritedGroup(), b.getInheritedGroup())) {
+			map.put("Group", getInheritedGroup()==null?"": getInheritedGroup().getName());
 		}
 		if(!CompareUtils.equals(getInheritedPhase(), b.getInheritedPhase())) {
-			map.put("phase", getInheritedPhaseString());
+			map.put("Phase", getInheritedPhaseString());
 		}
 		if(!CompareUtils.equals(getContainerType(), b.getContainerType()) || !CompareUtils.equals(getContainerId(), b.getContainerId()) || !CompareUtils.equals(getContainerIndex(), b.getContainerIndex())) {
 			map.put("Container", (getContainerType()==null? "NA": getContainerType().getName()) + (getContainerId()!=null && getContainerId().length()>0? " " + getContainerId():"") + (getContainerIndex()!=null? ":"+getContainerIndex():""));
@@ -2597,9 +2685,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			}
 		}
 
-		String s = MiscUtils.flatten(map);
-		s = s.replace("ACTION=", "");
-		return s;
+		return map;
 	}
 
 
@@ -2618,4 +2704,24 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		this.lastAction = lastAction==null? null: lastAction.serialize();
 	}
 
+	public String getNextCloneId() {
+		Set<String> childrenSampleIds = Biosample.getSampleIds(getChildren());
+		for (int i = 0; i < 26; i++) {
+			String sampleId = trimRight(getSampleId()) + (char) ('A'+i);
+			if(!childrenSampleIds.contains(sampleId)) return sampleId;
+		}
+		return null;
+	}
+
+	/**
+	 * Special trim function, which remove all non alphanumerical characters from the string
+	 * (ie. '. label()' returns 'label'
+	 * @param s
+	 * @return
+	 */
+	private String trimRight(String s) {
+		int i2 = s.length();
+		for(;i2>0 && !Character.isLetterOrDigit(s.charAt(i2-1)); i2--) {}
+		return s.substring(0, i2);
+	}
 }

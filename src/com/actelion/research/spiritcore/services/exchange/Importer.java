@@ -172,14 +172,14 @@ public class Importer {
 			Study study = new Study();
 			study.setId(s.getId());
 			study.setStudyId(s.getStudyId());
-			study.setIvv(s.getIvv());
+			study.setLocalId(s.getLocalId());
 			study.setTitle(s.getTitle());
 			study.setBlindAllUsers(Arrays.asList(MiscUtils.split(s.getBlindAllUsers())));
 			study.setBlindDetailsUsers(Arrays.asList(MiscUtils.split(s.getBlindDetailsUsers())));
 			
 			study.setCreDate(s.getCreDate());
 			study.setCreUser(s.getCreUser());
-			study.setDay1(s.getDay1());
+			study.setDayOneDate(s.getDay1());
 			
 			study.setNotes(s.getNotes());
 			PhaseFormat phaseFormat = s.getPhaseFormat()==null || s.getPhaseFormat().length()==0? null: PhaseFormat.valueOf(s.getPhaseFormat());

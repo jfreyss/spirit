@@ -93,21 +93,6 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 					comp.setBackground(row.getQuality().getBackground());
 				}
 			}
-
-			//			@Override
-			//			public boolean mouseDoubleClicked(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
-			//
-			//				TestAttribute ta = type==OutputType.OUTPUT? row.getTest().getOutputAttributes().get(index):
-			//					type==OutputType.INPUT? row.getTest().getInputAttributes().get(index):
-			//						row.getTest().getInfoAttributes().get(index);
-			//
-			//				if((ta.getDataType()==DataType.D_FILE || ta.getDataType()==DataType.FILES) && row.getResultValue(ta).getLinkedDocument()!=null) {
-			//					DocumentTextField.open(row.getResultValue(ta).getLinkedDocument());
-			//					return true;
-			//				}
-			//				return false;
-			//			}
-
 			@Override
 			public boolean isMultiline() {
 				return true;
@@ -192,39 +177,31 @@ public class ResultTableModel extends ExtendTableModel<Result> {
 
 		Set<Biosample> biosamples = Result.getBiosamples(getRows());
 		Set<Biosample> topSamples = Biosample.getTopParentsInSameStudy(biosamples);
-		boolean differentParents = !biosamples.equals(topSamples);
-
+		boolean sameTops = biosamples.equals(topSamples);
 
 
 		List<Column<Result, ?>> columns = new ArrayList<>();
 		columns.add(COLUMN_ROWNO);
 		if(!compact) columns.add(new ElbColumn());
+		if(!compact) columns.add(new ContainerColumn().setHideable(true));
 		if(!compact) columns.add(new StudyIdColumn());
 		if(!compact) columns.add(new StudyGroupColumn());
-		if(!compact) columns.add(new StudySubGroupColumn());
-		columns.add(new TopIdColumn().setHideable(!differentParents));
-		columns.add(new SampleIdColumn());
+		if(!compact) columns.add(new StudySubGroupColumn().setHideable(true));
 		columns.add(new PhaseColumn());
-		if(!compact) columns.add(new MetadataColumn().setHideable(true));
+		columns.add(new TopIdColumn());
+		columns.add(new SampleIdColumn().setHideable(sameTops));
+		if(!compact) columns.add(new MetadataColumn().setHideable(false));
 		columns.add(new TestNameColumn());
 
 		columns.addAll(createInputOutputColumns());
 
 		columns.add(new CommentsColumn());
+		columns.add(new QualityColumn().setHideable(true));
 		columns.add(new CreationColumn(true));
+		columns.add(new CreationColumn(false).setHideable(true));
 
 		setColumns(columns);
-
-	}
-
-
-	@Override
-	public List<Column<Result, ?>> getPossibleColumns() {
-		List<Column<Result, ?>> res = new ArrayList<>();
-		res.add(new ContainerColumn());
-		res.add(new QualityColumn());
-		res.add(new CreationColumn(false));
-		return res;
+		showAllHideable(false);
 	}
 
 	public List<Column<Result, ?>> createInputOutputColumns() {

@@ -43,12 +43,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToggleButton;
 
-import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
-import com.actelion.research.spiritapp.spirit.ui.lf.ScannerConfigurationComboBox;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.DefaultRackDepictorRenderer;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.RackDepictor;
-import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner;
+import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.ScannerConfigurationComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.scanner.SpiritScanner;
 import com.actelion.research.spiritcore.business.biosample.AmountUnit;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -393,7 +393,7 @@ class BatchAliquotRackPanel extends JPanel {
 					
 					Biosample b = sampling.createCompatibleBiosample();
 					b.setInheritedStudy(cParent.getStudy());
-					b.setInheritedGroup(cParent.getFirstGroup());
+					b.setInheritedGroup(cParent.getGroup());
 					b.setInheritedPhase(cParent.getPhase());
 					b.setParent(cParent.getBiosamples().iterator().next());
 					b.setContainer(clonedContainer);

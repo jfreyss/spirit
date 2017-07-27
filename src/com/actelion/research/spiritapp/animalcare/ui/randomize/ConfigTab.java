@@ -34,7 +34,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;

@@ -26,36 +26,36 @@ import java.util.Collections;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
-import com.actelion.research.util.ui.exceltable.ExcelTableModel;
+import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
-public class EditResultTableModel extends ExcelTableModel<Result> {
+public class EditResultTableModel extends ExtendTableModel<Result> {
 
 	private Test test;
 
 	public EditResultTableModel() {
 		super();
 	}
-		
+
 	@Override
 	public Result createRecord() {
 		if(test==null) return null;
 		Result result = new Result(test);
 		return result;
 	}
-	
+
 	public Test getTest() {
 		return test;
 	}
-	
+
 	public void setTest(Test test) {
 		this.test = test;
 	}
 
 	@Override
 	public void setValueAt(Object newValue, int rowIndex, int columnIndex) {
-		super.setValueAt(newValue, rowIndex, columnIndex);		
+		super.setValueAt(newValue, rowIndex, columnIndex);
 		Result result = getRow(rowIndex);
-		DAOResult.computeFormula(Collections.singleton(result));				
+		DAOResult.computeFormula(Collections.singleton(result));
 	}
-	
+
 }

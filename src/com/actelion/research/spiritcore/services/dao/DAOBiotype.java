@@ -48,10 +48,12 @@ import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 
-@SuppressWarnings("unchecked")
 /**
- * Important: don't use Cache, as it may be not be thread safe
+ * DAO functions linked to biotypes
+ *
+ * @author Joel Freyss
  */
+@SuppressWarnings("unchecked")
 public class DAOBiotype {
 
 	private static Logger logger = LoggerFactory.getLogger(DAOBiotype.class);

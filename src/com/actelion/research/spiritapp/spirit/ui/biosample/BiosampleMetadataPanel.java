@@ -35,10 +35,10 @@ import java.util.TreeSet;
 import javax.swing.BorderFactory;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
-import com.actelion.research.spiritapp.spirit.ui.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
+import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.Quality;
@@ -60,6 +60,13 @@ import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.UIUtils;
 
+/**
+ * Print the details of a set of Biosamples.
+ * The samples must all be in the same container, and they must be attached to the session, no reloading is done here
+ *
+ * @author Joel Freyss
+ *
+ */
 public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampleDetail {
 
 	private int display;
@@ -100,12 +107,11 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 
 	@Override
 	public void setBiosamples(Collection<Biosample> biosamples) {
-		this.biosamples = biosamples==null/* || biosamples.size()!=1*/? new ArrayList<Biosample>(): biosamples;
+		this.biosamples = biosamples==null? new ArrayList<Biosample>(): biosamples;
 		refresh();
 	}
 
 	private void refresh() {
-		this.biosamples = JPAUtil.reattach(biosamples);
 		StringBuilder txt;
 		txt = new StringBuilder();
 		txt.append("<html><body>");
@@ -320,7 +326,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 
 			//Comments
 			if(b.getComments()!=null && b.getComments().length()>0) {
-				txt.append("<td colspan=2 style='font-size:90%'><i>" + MiscUtils.removeHtmlAndNewLines(b.getComments()) + "</i></td>");
+				txt.append("<td colspan=2><i>" + MiscUtils.removeHtmlAndNewLines(b.getComments()) + "</i></td>");
 			}
 			//LastAction
 			ActionBiosample action = b.getLastAction();

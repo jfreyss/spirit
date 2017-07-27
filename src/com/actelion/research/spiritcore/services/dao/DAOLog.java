@@ -32,53 +32,56 @@ import javax.persistence.Query;
 import com.actelion.research.spiritcore.business.LogEntry;
 import com.actelion.research.spiritcore.util.QueryTokenizer;
 
+/**
+ * Class responsible for logging user activity (login success, login failure).
+ *
+ * @author Joel Freyss
+ */
 public class DAOLog {
 
 	public static void log(String user, LogEntry.Action action) {
 		log(user, action, "");
 	}
-	
+
 	public static void log(String user, LogEntry.Action action, String comments) {
 		assert user!=null;
 		assert action!=null;
-		
+
 		String pcName = "";
-		try { 
+		try {
 			java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
 			pcName = localMachine==null? null: localMachine.getHostAddress();
 		} catch(Exception e) {
 			System.err.println(e);
 		}
-		
 
-		EntityManager em = JPAUtil.getManager();
-
-		
-		
 		LogEntry log = new LogEntry();
 		log.setUser(user);
 		log.setDate(JPAUtil.getCurrentDateFromDatabase());
 		log.setAction(action);
 		log.setComments(comments);
 		log.setIpAddress(pcName);
-		
+
+		EntityManager em = JPAUtil.createManager();
 		EntityTransaction txn = em.getTransaction();
 		try {
 			txn.begin();
 			em.persist(log);
 			txn.commit();
-		} catch(Exception e) { 
+		} catch(Exception e) {
 			if(txn!=null && txn.isActive()) txn.rollback();
 			throw e;
+		} finally {
+			em.close();
 		}
 	}
-	
+
 	public static List<LogEntry> getLogs(String user, LogEntry.Action action, int sinceDays) {
-		EntityManager em = JPAUtil.getManager();
+		EntityManager em = JPAUtil.createManager();
 		try {
-			Query query = em.createQuery("from LogEntry l where 1=1" + 
+			Query query = em.createQuery("from LogEntry l where 1=1" +
 					(user!=null && user.length()>0? " and " + QueryTokenizer.expandOrQuery("l.user like ?", user) :"") +
-					(sinceDays>=0? " and l.date >= ?1":"") + 
+					(sinceDays>=0? " and l.date >= ?1":"") +
 					(action!=null? " and l.action = '" + action.name() + "'":""));
 			if(sinceDays>=0) {
 				Calendar cal = Calendar.getInstance();
@@ -91,6 +94,8 @@ public class DAOLog {
 			return res;
 		} catch(Exception e) {
 			throw new RuntimeException(e);
+		} finally {
+			em.close();
 		}
 	}
 }

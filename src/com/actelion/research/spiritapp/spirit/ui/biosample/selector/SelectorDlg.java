@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
@@ -47,17 +46,17 @@ import javax.swing.UIManager;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils.ExportMode;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
+import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerMethod;
+import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
-import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerMethod;
-import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.util.ListHashMap;
@@ -77,30 +76,30 @@ public class SelectorDlg extends JEscapeDialog {
 	private JGenericComboBox<BiosampleLinker> queryOnComboBox;
 	private JGenericComboBox<BiosampleLinker> discriminatorComboBox;
 	private JGenericComboBox<BiosampleLinker> displayComboBox;
-	
+
 	private JEditorPane editorPane = new ImageEditorPane();
-	
+
 	//selectorPanel
 	private final JPanel selectorPanel = new JPanel();
 	private List<SelectorPanel> selectorPanels = new ArrayList<SelectorPanel>();
 	private JButton excelButton = new JIconButton(IconType.EXCEL, "Export to Excel");
-	
+
 	//resultPanel
 	private final BiosampleTable biosampleTable = new BiosampleTable();
-	
-	
+
+
 	public SelectorDlg(List<Biosample> pool) {
 		this(pool, null, null, null);
 	}
-	
+
 	public SelectorDlg(List<Biosample> pool, BiosampleLinker querySel, BiosampleLinker discriminatorSel, BiosampleLinker displaySel) {
-		super(UIUtils.getMainFrame(), "Help me select some biosamples");		
-		
+		super(UIUtils.getMainFrame(), "Help me select some biosamples");
+
 		LF.initComp(editorPane);
 
 		//Validate input
 		try {
-			if(pool.size()<2) throw new Exception("You must select a pool of biosamples to pick from");		
+			if(pool.size()<2) throw new Exception("You must select a pool of biosamples to pick from");
 			this.pool = pool;
 
 			Set<Biotype> biotypes = Biosample.getBiotypes(pool);
@@ -110,7 +109,7 @@ public class SelectorDlg extends JEscapeDialog {
 			JExceptionDialog.showError(e);
 			return;
 		}
-		
+
 		//Create components
 		Set<BiosampleLinker> directLinkers = BiosampleLinker.getLinkers(pool, LinkerMethod.DIRECT_LINKS);
 		Set<BiosampleLinker> indirectLinkers = BiosampleLinker.getLinkers(pool, LinkerMethod.ALL_LINKS);
@@ -119,33 +118,33 @@ public class SelectorDlg extends JEscapeDialog {
 
 		discriminatorComboBox = new JGenericComboBox<BiosampleLinker>(indirectLinkers, true);
 		discriminatorComboBox.setPreferredWidth(220);
-		
+
 		displayComboBox = new JGenericComboBox<BiosampleLinker>(indirectLinkers, true);
 		displayComboBox.setPreferredWidth(220);
-		
+
 		if(querySel!=null) queryOnComboBox.setSelection(querySel);
 		if(discriminatorSel!=null) discriminatorComboBox.setSelection(discriminatorSel);
 		if(displaySel!=null) displayComboBox.setSelection(displaySel);
-		
-		queryOnComboBox.addActionListener(new ActionListener() {			
+
+		queryOnComboBox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				reset();
 			}
 		});
-		discriminatorComboBox.addActionListener(new ActionListener() {			
+		discriminatorComboBox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				updatePanelLayout();
 			}
 		});
-		displayComboBox.addActionListener(new ActionListener() {			
+		displayComboBox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				updatePanelLayout();
 			}
 		});
-		
+
 		//northWestPanel
 		JPanel northWestPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -154,20 +153,20 @@ public class SelectorDlg extends JEscapeDialog {
 		c.gridx = 0; c.gridy = 1; northWestPanel.add(new JLabel("Query on: "), c);
 		c.gridx = 0; c.gridy = 2; northWestPanel.add(new JLabel("Discriminator: "), c);
 		c.gridx = 0; c.gridy = 3; northWestPanel.add(new JLabel("Display: "), c);
-		
+
 		c.weightx = 1;
 		c.gridx = 1; c.gridy = 1; northWestPanel.add(queryOnComboBox, c);
 		c.gridx = 1; c.gridy = 2; northWestPanel.add(discriminatorComboBox, c);
 		c.gridx = 1; c.gridy = 3; northWestPanel.add(displayComboBox, c);
-		
+
 		c.gridwidth = 2;
-		
+
 		//northEastPanel
 		JPanel northEastPanel = new JPanel(new BorderLayout());
 		northEastPanel.add(BorderLayout.CENTER, new JScrollPane(editorPane));
 		editorPane.setEditable(false);
-		
-		
+
+
 		//northPanel
 		JPanel northPanel = new JPanel(new GridBagLayout());
 		c.gridwidth = 1; c.fill = GridBagConstraints.BOTH;
@@ -176,67 +175,60 @@ public class SelectorDlg extends JEscapeDialog {
 		}
 		c.weightx = 1; c.gridx = 1; c.gridy = 1; northPanel.add(northEastPanel, c);
 
-		northPanel.setBorder(BorderFactory.createEtchedBorder());
-		
-		
+
 		//splitPane
 		JPanel splitPaneNorth = new JPanel(new BorderLayout());
 		splitPaneNorth.add(BorderLayout.NORTH, northPanel);
-		splitPaneNorth.add(BorderLayout.CENTER, UIUtils.createBox(BorderFactory.createEtchedBorder(), new JScrollPane(selectorPanel),
-				UIUtils.createHorizontalTitlePanel("Query"), null, null, null));		
-		
+		splitPaneNorth.add(BorderLayout.CENTER, UIUtils.createTitleBox("Query", new JScrollPane(selectorPanel)));
+
 		BiosampleActions.attachPopup(biosampleTable);
-		
-		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPaneNorth, UIUtils.createBox(BorderFactory.createEtchedBorder(), new JScrollPane(biosampleTable),
-				UIUtils.createHorizontalTitlePanel("Selection"), null, null, null));
+
+		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPaneNorth, UIUtils.createTitleBox("Selection", new JScrollPane(biosampleTable)));
 		splitPane.setDividerLocation(460);
 		splitPane.setPreferredSize(new Dimension(1050, 750));
-		
+
 		//button
-		excelButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					POIUtils.exportToExcel(biosampleTable.getTabDelimitedTable(), ExportMode.HEADERS_TOP);
-					
-				} catch(Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
+		excelButton.addActionListener(e-> {
+			try {
+				POIUtils.exportToExcel(biosampleTable.getTabDelimitedTable(), ExportMode.HEADERS_TOP);
+
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});
-		
+
 		//ContentPane
 		JPanel contentPane = new JPanel(new BorderLayout());
 		contentPane.add(BorderLayout.CENTER, splitPane);
 		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), excelButton));
-		
+
 		//Init
 		reset();
 		updatePanelLayout();
 
-		
+
 		setContentPane(contentPane);
 		pack();
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
-		
-		
-		
+
+
+
 	}
-	
+
 	/**
-	 * Reset all the panels 
+	 * Reset all the panels
 	 */
 	private void reset() {
 		selectorPanels.clear();
 		selectorPanels.add(new SelectorPanel(this));
-		
+
 		updatePanelLayout();
 		selectionQueryChanged();
 		selectionBiosampleChanged();
 		selectorPanel.validate();
 	}
-	
+
 	/**
 	 * Update layout of the selectorPanels
 	 */
@@ -250,7 +242,7 @@ public class SelectorDlg extends JEscapeDialog {
 		c.gridx = GridBagConstraints.RELATIVE;
 		c.weightx = 0;
 		c.weighty = 1;
-		
+
 		//Add SelectorPanels
 		for (SelectorPanel sp : selectorPanels) {
 			selectorPanel.add(sp, c);
@@ -258,12 +250,12 @@ public class SelectorDlg extends JEscapeDialog {
 		}
 		c.weightx = 1;
 		selectorPanel.add(new JLabel(), c);
-		
+
 		validate();
-		
+
 		if(comp!=null) comp.requestFocusInWindow();
 	}
-	
+
 	public List<Biosample> getPool() {
 		return pool;
 	}
@@ -286,13 +278,13 @@ public class SelectorDlg extends JEscapeDialog {
 		}
 		return res;
 	}
-	
+
 	public List<Biosample> getBiosamples(String queryValue) {
 		List<Biosample> res = new ArrayList<Biosample>();
 		if(getQueryLinker()!=null) {
 			for(Biosample b: pool) {
 				if(queryValue==null || queryValue.equals(getQueryLinker().getValue(b))) {
-					res.add(b);					
+					res.add(b);
 				}
 			}
 		}
@@ -300,40 +292,40 @@ public class SelectorDlg extends JEscapeDialog {
 	}
 
 	private Set<String> getUsedDiscriminators(){
-		BiosampleLinker linker2 = getDiscriminatorLinker();	
+		BiosampleLinker linker2 = getDiscriminatorLinker();
 		Set<String> used = new TreeSet<String>();
 		if(linker2!=null) {
 			for (Biosample b : getSelectedBiosamples()) {
 				String val = linker2.getValue(b);
-				if(val!=null && val.length()>0) used.add(val);				
+				if(val!=null && val.length()>0) used.add(val);
 			}
 		}
 		return used;
 	}
-	
+
 	private void updateDiscriminatorsPanel() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<html><div style='font-size:10px'><b>" + pool.size() + " " + biotype.getName()+"</b>: ");
-		
+
 		BiosampleLinker linker1 = getQueryLinker();
 		if(linker1!=null) {
 			Set<String> allQuerable = new TreeSet<String>();
 			for(Biosample b: pool) {
 				String val = linker1.getValue(b);
-				if(val!=null && val.length()>0) allQuerable.add(val);	
-			}			
+				if(val!=null && val.length()>0) allQuerable.add(val);
+			}
 			sb.append(allQuerable.size() + " " + linker1.getLabelShort());
-		
 
-			BiosampleLinker linker2 = getDiscriminatorLinker();	
+
+			BiosampleLinker linker2 = getDiscriminatorLinker();
 			if(linker2!=null) {
 				Set<String> allDiscriminators = new TreeSet<String>();
 				for(Biosample b: pool) {
 					String val = linker2.getValue(b);
-					if(val!=null && val.length()>0) allDiscriminators.add(val);				
+					if(val!=null && val.length()>0) allDiscriminators.add(val);
 				}
 				Set<String> used = getUsedDiscriminators();
-				
+
 				sb.append(" and " + allDiscriminators.size() + " " + linker2.getLabelShort()+":");
 				sb.append("<div style='padding-left:20px;font-size:9px'>");
 				boolean first = true;
@@ -346,12 +338,12 @@ public class SelectorDlg extends JEscapeDialog {
 			}
 		}
 		sb.append("</div>");
-		
+
 		editorPane.setText(sb.toString());
-		
-	
+
+
 	}
-	
+
 	/**
 	 * Return the selected biosamples (including nulls)
 	 * @return a list [0->sample of 1st panel, 1->sample of 2nd panel, ...]
@@ -363,7 +355,7 @@ public class SelectorDlg extends JEscapeDialog {
 		}
 		return res;
 	}
-	
+
 	/**
 	 * Return the selected String (including nulls)
 	 * @return a list [0->query of 1st panel, 1->query of 2nd panel, ...]
@@ -376,13 +368,13 @@ public class SelectorDlg extends JEscapeDialog {
 		return res;
 	}
 
-	
+
 	public boolean isGray(SelectorPanel panel, Biosample biosample) {
 		BiosampleLinker linker = getDiscriminatorLinker();
 		if(linker==null) return false;
 		String linkedValue = linker.getValue(biosample);
 		if(linkedValue==null) return true;
-		
+
 		for (int i = 0; i < selectorPanels.size(); i++) {
 			SelectorPanel p = selectorPanels.get(i);
 			if(p==panel) continue;
@@ -395,7 +387,7 @@ public class SelectorDlg extends JEscapeDialog {
 	}
 
 	/**
-	 * To be called when one of the queryItem changes. 
+	 * To be called when one of the queryItem changes.
 	 * Used to add a panel if all are taken, to remove those that are empty and to gray out items
 	 */
 	public void selectionQueryChanged() {
@@ -412,14 +404,14 @@ public class SelectorDlg extends JEscapeDialog {
 				if(sp.getQuery().length()>0) {
 					selectorPanels.add(new SelectorPanel(SelectorDlg.this));
 					changed = true;
-				}				
+				}
 			}
 		}
 		if(changed) {
 			updatePanelLayout();
 		}
 	}
-	
+
 	/**
 	 * To be called when one of the selected Biosample changes
 	 */
@@ -431,7 +423,7 @@ public class SelectorDlg extends JEscapeDialog {
 		biosampleTable.setRows(sel);
 		excelButton.setEnabled(sel.size()>0);
 		updateDiscriminatorsPanel();
-		
+
 		//Calculates possible choices
 		BiosampleLinker l1 = getQueryLinker();
 		BiosampleLinker l2 = getDiscriminatorLinker();
@@ -441,19 +433,19 @@ public class SelectorDlg extends JEscapeDialog {
 			for (Biosample b : pool) {
 				String s1 = l1.getValue(b);
 				String s2 = l2.getValue(b);
-				
+
 				if(s1!=null && s1.length()>0 && s2!=null && s2.length()>0) query2Discriminators.add(s1, s2);
-			}			
-			
+			}
+
 			Set<String> selectedQueries = new HashSet<String>(getSelectedQueries());
-			
+
 			Set<String> used = getUsedDiscriminators();
-			
-			
+
+
 			loop: for (String q : query2Discriminators.keySet()) {
 				if(selectedQueries.contains(q)) {
 					//ok
-				} else {					
+				} else {
 					for (String d : query2Discriminators.get(q)) {
 						if(!used.contains(d)) {
 							canBeChosen.add(q);
@@ -463,45 +455,45 @@ public class SelectorDlg extends JEscapeDialog {
 				}
 			}
 		}
-		
+
 		repaint();
-		
+
 	}
-	
-	
+
+
 	private Set<String> canBeChosen = new HashSet<String>();
 	public boolean isCompatibleWithSelected(String query) {
 		return canBeChosen.contains(query);
 	}
-	
-	
+
+
 	public static void main(String[] args) throws Exception {
-		
+
 		try {
-			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");			
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
 			UIManager.put("nimbusSelectionBackground", new Color(173,207,231));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		
+
 		BiosampleQuery q = new BiosampleQuery();
 		q.setBiotype(DAOBiotype.getBiotype("Antibody"));
 		List<Biosample> res = DAOBiosample.queryBiosamples(q, null);
-//		DAOBiosample.fullLoad(res);
+		//		DAOBiosample.fullLoad(res);
 
-		
+
 		Biotype antibodyType = DAOBiotype.getBiotype("Antibody");
 		BiotypeMetadata antibodyAggMetadata = antibodyType.getMetadata("Fluorophore");
 		if(antibodyAggMetadata==null) throw new Exception("Antibody.Fluorophore does not exist");
-		
+
 		Biotype fluorophoreType = DAOBiotype.getBiotype("Fluorophore");
 		if(fluorophoreType==null) throw new Exception("Fluorophore does not exist");
 
 		BiosampleLinker querySel = new BiosampleLinker(LinkerType.SAMPLENAME, antibodyType);
 		BiosampleLinker discrimSel = new BiosampleLinker(antibodyAggMetadata, fluorophoreType.getMetadata("Type"));
 		BiosampleLinker displaySel = new BiosampleLinker(antibodyAggMetadata, LinkerType.SAMPLEID);
-		
+
 		new SelectorDlg(res, querySel, discrimSel, displaySel);
 	}
 }

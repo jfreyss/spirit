@@ -26,7 +26,7 @@ import java.util.List;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionListener;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.SpiritExtendTable;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritExtendTable;
 import com.actelion.research.spiritcore.business.result.Result;
 
 public class ResultTable extends SpiritExtendTable<Result> implements ListSelectionListener {

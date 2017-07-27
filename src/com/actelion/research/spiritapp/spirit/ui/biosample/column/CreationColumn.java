@@ -32,7 +32,7 @@ import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTableModel;
-import com.actelion.research.spiritapp.spirit.ui.lf.CreationLabel;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.CreationLabel;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.services.SpiritRights;
@@ -43,7 +43,7 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class CreationColumn extends Column<Biosample, String> {
-	
+
 	private final boolean creation;
 
 	private CreationLabel ownerLabel = new CreationLabel();
@@ -52,44 +52,43 @@ public class CreationColumn extends Column<Biosample, String> {
 		super(creation?"\nOwner": "\nLastUpdate", String.class, 45);
 		this.creation = creation;
 	}
-	
 	@Override
-	public String getCategory() {
-		return "Cre";
+	public boolean isHideable() {
+		return !creation;
 	}
-	
+
 	@Override
 	public float getSortingKey() {return 12.1f;}
-	
+
 	@Override
 	public String getValue(Biosample row) {
-		return creation? row.getCreUser() + "\t" + FormatterUtils.formatDate(row.getCreDate()): 
+		return creation? row.getCreUser() + "\t" + FormatterUtils.formatDate(row.getCreDate()):
 			row.getUpdUser()  + "\t" + FormatterUtils.formatDate(row.getUpdDate());
-	}	
-	
+	}
+
 	@Override
 	public boolean isEditable(Biosample row) {
 		return false;
 	}
-	
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
-		ownerLabel.setValue(creation? row.getCreUser(): row.getUpdUser(), creation? row.getEmployeeGroup(): null, creation? row.getCreDate(): row.getUpdDate(), 
-				SpiritRights.canEdit(row, SpiritFrame.getUser())? RightLevel.WRITE: 
-				RightLevel.READ);
-		return ownerLabel;	
+		ownerLabel.setValue(creation? row.getCreUser(): row.getUpdUser(), creation? row.getEmployeeGroup(): null, creation? row.getCreDate(): row.getUpdDate(),
+				SpiritRights.canEdit(row, SpiritFrame.getUser())? RightLevel.WRITE:
+					RightLevel.READ);
+		return ownerLabel;
 	}
-	
+
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		comp.setBackground(BiosampleTableModel.COLOR_NONEDIT);
-	}		
-	
+	}
+
 	@Override
 	public void populateHeaderPopup(final AbstractExtendTable<Biosample> table, JPopupMenu popupMenu) {
 		popupMenu.add(new JSeparator());
 		popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
-		
+
 		popupMenu.add(new AbstractAction("Sort by " + (creation?"CreUser": "UpdUser")) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -113,5 +112,5 @@ public class CreationColumn extends Column<Biosample, String> {
 			}
 		});
 	}
-	
+
 }

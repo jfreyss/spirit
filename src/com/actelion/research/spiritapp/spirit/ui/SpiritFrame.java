@@ -21,11 +21,11 @@
 
 package com.actelion.research.spiritapp.spirit.ui;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Toolkit;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -46,18 +46,18 @@ import com.actelion.research.spiritapp.spirit.SpiritDB;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTab;
 import com.actelion.research.spiritapp.spirit.ui.exchange.ExchangeActions;
-import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
-import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationActions;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationTab;
 import com.actelion.research.spiritapp.spirit.ui.result.ResultActions;
 import com.actelion.research.spiritapp.spirit.ui.result.ResultTab;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyActions;
+import com.actelion.research.spiritapp.spirit.ui.util.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritChangeObserver;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritContextObserver;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
+import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.Exchange;
 import com.actelion.research.spiritcore.business.RightLevel;
@@ -249,19 +249,6 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 	}
 
 	public static void initUI() {
-		try {
-			System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
-			System.setProperty("awt.useSystemAAFontSettings","on");
-			System.setProperty("swing.aatext", "true");
-
-			UIManager.put("nimbusSelectionBackground", new Color(173,207,231));
-			UIManager.put("Table.alternateRowColor", UIManager.getColor("Table.background"));
-			UIManager.put("Table.background", Color.WHITE);
-			//			UIManager.setLookAndFeel(new SubstanceDustLookAndFeel());
-			// 			listUIProperties();
-		} catch (Exception e2) {
-			e2.printStackTrace();
-		}
 
 		//ToolTop binder
 		ToolTipManager.sharedInstance().setInitialDelay(750);
@@ -448,7 +435,7 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 	}
 
 	@Override
-	public <T> void actionModelChanged(final SpiritChangeType action, final Class<T> w, final List<T> details) {
+	public <T> void actionModelChanged(final SpiritChangeType action, final Class<T> w, final Collection<T> details) {
 		LoggerFactory.getLogger(getClass()).debug("changed " + action + " " + (w==null?"":w.getName()) + " n="+(details==null? 0: details.size()));
 		new SwingWorkerExtended("Refreshing", this,  SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			@Override
@@ -562,9 +549,9 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		return DAOStudy.getStudyByStudyId(tabbedPane.getStudyId());
 	}
 
-	public static void clear() {
+	public static void clearAll() {
 		SwingWorkerExtended.awaitTermination();
-		JPAUtil.clear();
+		JPAUtil.clearAll();
 	}
 
 

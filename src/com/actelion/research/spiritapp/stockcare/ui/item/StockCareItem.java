@@ -31,7 +31,7 @@ import java.util.Set;
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 
-import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
+import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
@@ -48,12 +48,16 @@ import com.actelion.research.spiritcore.services.dao.DAOTest;
 
 public class StockCareItem {
 
+	private String name;
+	private final Biotype[] biotypes;
+	private final AbstractAction[] actions;
+
 	public static List<StockCareItem> getStockCareItems() {
 		if(items==null) {
-			
+
 			synchronized (StockCareItem.class) {
 				if(items==null) {
-					items = new ArrayList<StockCareItem>();		
+					items = new ArrayList<StockCareItem>();
 					if(DBAdapter.getAdapter().isInActelionDomain()) {
 						//Items configured by Actelion
 						add("Cells", "Cell Aliquot", null);
@@ -63,15 +67,25 @@ public class StockCareItem {
 						items.add(null);
 					}
 
-					//Items from other components: biotypes which are leaves, component, not hidden 
-					Set<Biotype> notLeaves = new HashSet<Biotype>(); 
+					//Items from other components: biotypes which are leaves, component, not hidden
+					Set<Biotype> referenced = new HashSet<>();
+
+					//Find biotypes references in other types
 					for(Biotype biotype: DAOBiotype.getBiotypes()) {
-						if(biotype.getParent()!=null) notLeaves.add(biotype.getParent());
+						if(biotype.getParent()!=null) referenced.add(biotype.getParent());
+						for (BiotypeMetadata mt : biotype.getMetadata()) {
+							if(mt.getDataType()==DataType.BIOSAMPLE && mt.getParameters()!=null && mt.getParameters().length()>0) {
+								Biotype biotype2 = DAOBiotype.getBiotype(mt.getParameters());
+								if(biotype2!=null) referenced.add(biotype2);
+							}
+						}
 					}
+					System.out.println("StockCareItem.getStockCareItems() "+referenced);
+					//Add all other purifified/library biotypes not referenced elsewhere
 					for(Biotype biotype: DAOBiotype.getBiotypes()) {
 						if(biotype.getCategory()==BiotypeCategory.LIVING || biotype.getCategory()==BiotypeCategory.SOLID || biotype.getCategory()==BiotypeCategory.LIQUID) continue;
 						if(biotype.isHidden()) continue;
-						if(notLeaves.contains(biotype)) continue;
+						if(referenced.contains(biotype)) continue;
 						add(biotype.getName(), biotype, null);
 					}
 				}
@@ -79,65 +93,61 @@ public class StockCareItem {
 		}
 		return items;
 	}
-	
-	
+
+
 	private static List<StockCareItem> items = null;
-	
+
 	private static void add(String name, String aliquotType, AbstractAction[] actions) {
 		add(name, DAOBiotype.getBiotype(aliquotType), actions);
 	}
-	
-	private static void add(String name, Biotype type, AbstractAction[] actions) {		
+
+	private static void add(String name, Biotype type, AbstractAction[] actions) {
 		try {
 			if(type==null) throw new Exception("no type for "+name);
-			
+
 			for (StockCareItem item : items) {
 				if(item!=null && item.getBiotypes()[item.getBiotypes().length-1].equals(type)) return; //already added
-			}			
-			
+			}
+
 			List<Biotype> hierarchy = new ArrayList<>();
 			hierarchy.add(type);
 			while(type.getParent()!=null) {
 				type = type.getParent();
 				hierarchy.add(0, type);
 			}
-			
+
 			//Ignore type with a too comple hierarchy
 			if(hierarchy.size()>3) return;
 			items.add(new StockCareItem(name, hierarchy.toArray(new Biotype[hierarchy.size()]), actions==null? new AbstractAction[0]: actions));
-			
+
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
-	private String name;
-	private final Biotype[] biotypes;
-	private final AbstractAction[] actions;
-	
+
 	public StockCareItem(String name, Biotype[] biotypes, AbstractAction[] actions) throws Exception {
 		this.name = name;
 		this.biotypes = biotypes;
 		this.actions = actions;
-		
+
 		if(biotypes.length<1 || biotypes.length>3)  throw new Exception("The biotypes for "+name + " must between [1,3]");
 		for (Biotype biotype : biotypes) {
 			if(biotype==null) throw new Exception("The biotype for "+name + " cannot be null");
 		}
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public Biotype[] getBiotypes() {
 		return biotypes;
 	}
+
 	public Biotype getMainBiotype() {
 		return biotypes[biotypes.length-1];
 	}
 
-	
 	public Set<Biotype> getAggregatedBiotypes() {
 		Set<Biotype> res = new HashSet<Biotype>();
 		Set<Biotype> already = new HashSet<Biotype>(Arrays.asList(biotypes));
@@ -151,15 +161,15 @@ public class StockCareItem {
 				}
 			}
 		}
-		
+
 		return res;
 	}
 
-	
+
 	public AbstractAction[] getActions() {
 		return actions;
 	}
-	
+
 	public ImageIcon getIcon(boolean fullSize) {
 		Biotype biotype = biotypes[biotypes.length-1];
 		Image img;
@@ -170,18 +180,16 @@ public class StockCareItem {
 		}
 		return new ImageIcon(img);
 	}
-	
 
-	public ImageIcon getIcon() { 
+
+	public ImageIcon getIcon() {
 		return getIcon(false);
 	}
-	
-	//TODO
+
 	public boolean hasResults() {
 		return name.equals("Bacteria");
 	}
-	
-	//TODO
+
 	public Test getDefaultTest() {
 		if(name.equals("Bacteria")) {
 			return DAOTest.getTest("MIC");
@@ -189,7 +197,7 @@ public class StockCareItem {
 			return null;
 		}
 	}
-	
+
 	public PivotTemplate[] getDefaultTemplates() {
 		if(name.equals("Bacteria")) {
 			PivotTemplate tpl1 = new ColumnPivotTemplate("Bacteria") {
@@ -212,13 +220,13 @@ public class StockCareItem {
 				}
 			};
 			return new PivotTemplate[]{tpl1, tpl2};
-			
-			
+
+
 		} else {
 			return null;
 		}
 	}
 
-	
-	
+
+
 }

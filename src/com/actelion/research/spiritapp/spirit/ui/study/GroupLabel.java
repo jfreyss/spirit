@@ -26,8 +26,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
-import javax.swing.SwingUtilities;
-
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.util.ui.UIUtils;
@@ -40,10 +38,8 @@ public class GroupLabel extends JLabelNoRepaint {
 	public GroupLabel() {
 		setText(null);
 		setMinimumSize(new Dimension(50, 22));
-		setVerticalAlignment(SwingUtilities.TOP);
-//		setOpaque(true);
 	}
-	
+
 	public GroupLabel(Group group) {
 		this();
 		setGroup(group);
@@ -62,13 +58,13 @@ public class GroupLabel extends JLabelNoRepaint {
 		this.group = group;
 		setText(txt);
 	}
-	
+
 	@Override
 	protected void paintComponent(Graphics graphics) {
 
 		Graphics2D g = (Graphics2D) graphics;
 		Color bgColor = getBackground();
-		
+
 		//Set Background
 		if(isOpaque() && group != null) {
 			bgColor = UIUtils.getDilutedColor(bgColor, group.getBlindedColor(SpiritFrame.getUsername()));
@@ -76,7 +72,7 @@ public class GroupLabel extends JLabelNoRepaint {
 		}
 
 		super.paintComponent(g);
-		
+
 		//Restore Background
 		if(isOpaque()) {
 			setBackground(bgColor);

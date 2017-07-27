@@ -30,6 +30,8 @@ import javax.swing.JOptionPane;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.admin.user.UserAdminDlg;
+import com.actelion.research.spiritapp.spirit.ui.audit.LogEntryDlg;
+import com.actelion.research.spiritapp.spirit.ui.audit.RecentChancesDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
@@ -40,7 +42,6 @@ import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
-import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
@@ -74,43 +75,11 @@ public class AdminActions {
 			new TestOverviewDlg();
 		}
 	}
-	
-	public static class Action_Revert extends AbstractAction {		
-		private Revision revision;
-		
-		public Action_Revert(Revision revision) {
-			super("Cancel this change");
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('v'));
-			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()) || (revision.getUser()!=null && revision.getUser().equals(SpiritFrame.getUsername())));
-			this.revision = revision;
-			
-		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			final String reason = JOptionPane.showInputDialog(UIUtils.getMainFrame(), "Do you want to restore the entities to the previous state?\nPlease give a reason!", "Reason", JOptionPane.QUESTION_MESSAGE);
-			if(reason!=null) {
-				new SwingWorkerExtended("Revert", UIUtils.getMainFrame()) {
-					@Override
-					protected void doInBackground() throws Exception {
-						DAORevision.revert(revision, SpiritFrame.getUser(), "Revert" + (reason.length()==0?"":"(" + reason + ")"));
-					}
-					@Override
-					protected void done() {
-						JExceptionDialog.showInfo(UIUtils.getMainFrame(), "The changes have been successfully reverted");
-						
-						//full refresh
-						SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
-					}
-				};
-			} else {
-				JOptionPane.showMessageDialog(UIUtils.getMainFrame(), "Revert canceled");
-			}			
-		}
-	}
-	
+
+
 	public static class Action_Restore extends AbstractAction {
 		private final List<? extends IObject> objects;
-		
+
 		public Action_Restore(List<? extends IObject> objects) {
 			super("Restore this version");
 			this.objects = objects;
@@ -127,14 +96,14 @@ public class AdminActions {
 				if(o instanceof Biosample) {
 					biosamples.add((Biosample)o);
 				} else if(o instanceof Result) {
-					results.add((Result)o);					
+					results.add((Result)o);
 				} else if(o instanceof Study) {
-					studies.add((Study)o);					
+					studies.add((Study)o);
 				}
 			}
 			String details = (biosamples.size()>0? biosamples.size()+" samples, ": "") + (results.size()>0? results.size()+" results, ": "") + (studies.size()>0? studies.size()+" studies, ": "");
 			if(details.length()>0) details = details.substring(0, details.length()-2);
-			
+
 			final String reason = JOptionPane.showInputDialog(UIUtils.getMainFrame(), "If you are sure to restore this version ("+details+"). Please give a reason!", "Reason", JOptionPane.QUESTION_MESSAGE);
 			if(reason!=null) {
 				new SwingWorkerExtended("Rollback", UIUtils.getMainFrame()) {
@@ -142,16 +111,17 @@ public class AdminActions {
 					protected void doInBackground() throws Exception {
 						DAORevision.restore(objects, SpiritFrame.getUser(), "Rollback" + (reason.length()==0?"":"(" + reason + ")"));
 					}
+					@Override
 					protected void done() {
 						JExceptionDialog.showInfo(UIUtils.getMainFrame(), objects.size()+" objects rollbacked");
-						
-						if(biosamples.size()>0) {					
+
+						if(biosamples.size()>0) {
 							SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, biosamples);
 						}
-						if(results.size()>0) {					
+						if(results.size()>0) {
 							SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Result.class, results);
 						}
-						if(studies.size()>0) {					
+						if(studies.size()>0) {
 							SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, studies);
 						}
 					}
@@ -161,7 +131,7 @@ public class AdminActions {
 			}
 		}
 	}
-	
+
 	public static class Action_Revisions extends AbstractAction {
 		private String userId;
 		public Action_Revisions(String userId) {
@@ -175,7 +145,7 @@ public class AdminActions {
 			new RecentChancesDlg(userId);
 		}
 	}
-	
+
 	public static class Action_RenameElb extends AbstractAction {
 		public Action_RenameElb() {
 			super("Rename ELB (Admin)");
@@ -188,7 +158,7 @@ public class AdminActions {
 			new ELBRenameDlg();
 		}
 	}
-	
+
 	public static class Action_LastLogins extends AbstractAction {
 		public Action_LastLogins() {
 			super("Recent Connections (Admin)");
@@ -201,7 +171,7 @@ public class AdminActions {
 			new LogEntryDlg();
 		}
 	}
-	
+
 	public static class Action_ManageUsers extends AbstractAction {
 		public Action_ManageUsers() {
 			super("Edit Users/Groups (Admin)");
@@ -211,11 +181,11 @@ public class AdminActions {
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			new UserAdminDlg();			
+			new UserAdminDlg();
 		}
 	}
-	
-	
+
+
 	public static class Action_ExpiredSamples extends AbstractAction {
 		public Action_ExpiredSamples() {
 			super("Query Expired Samples");
@@ -226,9 +196,9 @@ public class AdminActions {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			new ExpiredSamplesDlg();
-			
+
 		}
 	}
 
-	
+
 }

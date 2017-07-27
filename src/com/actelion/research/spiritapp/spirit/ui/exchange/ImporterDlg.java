@@ -154,7 +154,7 @@ public class ImporterDlg extends JEscapeDialog {
 			for (final Study study : exchange.getStudies()) {
 				StudyMappingPanel studyMappingPanel = new StudyMappingPanel(this, study);
 				studyMappingPanels.add(studyMappingPanel);
-				studyPanels.add(UIUtils.createTitleBox(study.getStudyIdIvv(), studyMappingPanel));
+				studyPanels.add(UIUtils.createTitleBox(study.getStudyIdAndInternalId(), studyMappingPanel));
 			}
 			studyPanels.add(Box.createVerticalGlue());
 			tabbedPane.add("Studies", new JScrollPane(UIUtils.createVerticalBox(studyPanels)));

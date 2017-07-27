@@ -52,7 +52,19 @@ import com.actelion.research.util.ui.UIUtils;
  * BoxPlot is the class used to represent a boxPlot graph showing the 1st quartile, median, 3rd quartile for each of the given series.
  * Each series shows the numeric/alphanumeric values of a group over one or several phases.
  *
- * If there are more than one phase, the graph is a hybrid version beteeen a boxplot and a line graph
+ * If there are more than one phase, the graph is a hybrid version between a boxplot and a line graph
+ *
+ * A typical use is:
+ * <pre>
+ * BoxPlot boxPlot = new BoxPlot();
+ * boxPlot.setTitle1(title1);
+ * boxPlot.setTitle2(title2);
+ * boxPlot.setSeries(allSeries);
+ * boxPlot.setxLabels(xLabels);
+ * boxPlot.setLogScale(false);
+ * boxPlot.setKruskalWallis(kw);
+ * boxPlot.setBackground(UIUtils.WHITESMOKE);
+ * </pre>
  *
  * @author Joel Freyss
  *

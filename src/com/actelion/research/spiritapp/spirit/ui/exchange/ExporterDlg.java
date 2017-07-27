@@ -36,8 +36,8 @@ import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.lf.StudyComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JFileBrowser;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.StudyComboBox;
 import com.actelion.research.spiritcore.business.Exchange;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;

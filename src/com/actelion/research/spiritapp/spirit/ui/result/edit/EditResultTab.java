@@ -266,7 +266,7 @@ public class EditResultTab extends JPanel implements IClosableTab {
 		return table;
 	}
 
-	public TestComboBox getTestChoice() {
+	public TestComboBox getTestComboBox() {
 		return testComboBox;
 	}
 

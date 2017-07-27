@@ -29,9 +29,9 @@ import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.EmployeeGroupComboBox;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.location.edit.LocationEditTable;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.EmployeeGroupComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.Privacy;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
@@ -87,7 +87,7 @@ public class LocationPrivacyColumn extends Column<Location, String> {
 
 	@Override
 	public String getValue(Location row) {
-		return row.getPrivacy()==null?"": row.getPrivacy().getName() + ((row.getPrivacy()==Privacy.PROTECTED || row.getPrivacy()==Privacy.PRIVATE) && row.getEmployeeGroup()!=null? " to " +row.getEmployeeGroup().getName():"");
+		return row.getPrivacy()==null || row.getPrivacy()==Privacy.INHERITED?"": row.getPrivacy().getName() + ((row.getPrivacy()==Privacy.PROTECTED || row.getPrivacy()==Privacy.PRIVATE) && row.getEmployeeGroup()!=null? " to " +row.getEmployeeGroup().getName():"");
 	}
 
 	@Override
@@ -99,7 +99,6 @@ public class LocationPrivacyColumn extends Column<Location, String> {
 
 	@Override
 	public void setValue(Location row, String value) {
-		System.out.println("LocationPrivacyColumn.setValue() "+value);
 		if(value==null) return;
 		int index = value.indexOf(" to ");
 		String privacy = value;

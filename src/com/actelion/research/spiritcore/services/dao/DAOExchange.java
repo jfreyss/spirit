@@ -37,9 +37,14 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
 
+/**
+ * DAO functions linked to import / export of exchange files
+ *
+ * @author Joel Freyss
+ */
 public class DAOExchange {
 
-	
+
 	public static void persist(ExchangeMapping mapping, SpiritUser user) throws Exception {
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
@@ -53,44 +58,44 @@ public class DAOExchange {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
 		}
 	}
-	
+
 	public static void persist(EntityManager session, ExchangeMapping mapping, SpiritUser user) throws Exception {
 		if(user==null) throw new Exception("You must give a user");
-		
+
 		//Retrieve the mapped objects
 		List<Study> studies = mapping.getMappedStudies();
-		
+
 		List<Biotype> biotypes = mapping.getMappedBiotypes();
 		List<Biosample> biosamples = mapping.getMappedBiosamples();
 
 		List<Location> locations = mapping.getMappedLocations();
-		
+
 		List<Test> tests = mapping.getMappedTests();
 		List<Result> results = mapping.getMappedResults();
 
-		
+
 		if(biotypes.size()>0 && !user.isSuperAdmin()) throw new Exception("You must be an admin to save biotypes");
 		if(tests.size()>0 && !user.isSuperAdmin()) throw new Exception("You must be an admin to save tests");
-		
+
 		//Save the different entities. Careful: the order of those statements is important: test/biotype, studies, locations, biosample, results
-	
+
 		LoggerFactory.getLogger(DAOExchange.class).debug("Persist Biotypes: "+biotypes);
-		DAOBiotype.persistBiotypes(session, biotypes, user);		
+		DAOBiotype.persistBiotypes(session, biotypes, user);
 
 		LoggerFactory.getLogger(DAOExchange.class).debug("Persist Tests: "+tests);
 		DAOTest.persistTests(session, tests, user);
-		
+
 		LoggerFactory.getLogger(DAOExchange.class).debug("Persist Studies: "+studies);
 		DAOStudy.persistStudies(session, studies, user);
 
 		LoggerFactory.getLogger(DAOExchange.class).debug("Persist Locations: n="+locations.size());
 		DAOLocation.persistLocations(session, locations, user);
-		
+
 		LoggerFactory.getLogger(DAOExchange.class).debug("Persist Biosamples: n="+biosamples.size());
-		DAOBiosample.persistBiosamples(session, biosamples, user);					
-		
+		DAOBiosample.persistBiosamples(session, biosamples, user);
+
 		LoggerFactory.getLogger(DAOExchange.class).debug("Persist Results: n="+results.size());
 		DAOResult.persistResults(session, results, user);
-		
+
 	}
 }

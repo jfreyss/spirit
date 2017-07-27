@@ -44,7 +44,7 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.linker.LinkedBiosampl
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.MetadataColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.SampleIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.SampleNameColumn;
-import com.actelion.research.spiritapp.spirit.ui.lf.SpiritExcelTable;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritExcelTable;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -58,12 +58,10 @@ import com.actelion.research.util.ui.exceltable.FillCellAction;
 
 
 public class EditBiosampleTable extends SpiritExcelTable<Biosample> {
-	
-	
+
+
 	private SampleIdCellEditor sampleIdCellEditor;
 
-	
-	
 	/**
 	 * Creates a generic table
 	 */
@@ -81,10 +79,10 @@ public class EditBiosampleTable extends SpiritExcelTable<Biosample> {
 	 * @param model
 	 */
 	public EditBiosampleTable(EditBiosampleTableModel model) {
-		super(model);	
-		
+		super(model);
+
 		setBorderStrategy(BorderStrategy.WHEN_DIFFERENT_VALUE);
-		
+
 		getTableHeader().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -98,14 +96,12 @@ public class EditBiosampleTable extends SpiritExcelTable<Biosample> {
 					} else if(col instanceof AbstractLinkerColumn) {
 						BiosampleTable.expandBiotype(EditBiosampleTable.this, ((AbstractLinkerColumn<?>) col).getBiotype().getName(), null);
 					}
-					
+
 				}
 			}
 		});
-
 	}
-	
-	
+
 	@Override
 	public void initCellEditors() {
 
@@ -114,56 +110,56 @@ public class EditBiosampleTable extends SpiritExcelTable<Biosample> {
 			Column<Biosample, ?> cb = getModel().getColumn(i);
 			TableColumn col = getColumnModel().getColumn(i);
 			if(cb.getCellEditor(null)!=null) continue; //already one
-			
-			
+
+
 			if(cb instanceof SampleIdColumn) {
 				if(sampleIdCellEditor==null) sampleIdCellEditor = new SampleIdCellEditor();
-				col.setCellEditor(sampleIdCellEditor);											
+				col.setCellEditor(sampleIdCellEditor);
 			}
-		}		
-	
+		}
+
 
 	}
-	
+
 	@Override
 	public EditBiosampleTableModel getModel() {
 		return (EditBiosampleTableModel) super.getModel();
 	}
-	
+
 	public void setRows(Biotype type, List<Biosample> biosamples) throws Exception {
-		
-		//Check validity		
+
+		//Check validity
 		if(biosamples!=null) {
-			for (Biosample biosample : biosamples) {				
+			for (Biosample biosample : biosamples) {
 				if(type!=null && biosample.getBiotype()==null) {
 					biosample.setBiotype(type);
 				} else if(type!=null && !biosample.getBiotype().equals(type)) {
 					throw new Exception("The biosamples should have the same bioType in the table view");
 				}
 			}
-			
-			
+
+
 		}
 		//Reset the model
 		getModel().setRows(biosamples);
 		getModel().setBiotype(type);
 		resetPreferredColumnWidth();
 	}
-	
-	
+
+
 	public List<Biosample> getBiosamples(){
 		return getModel().getRows();
 	}
-	
+
 	public Biotype getType() {
 		return getModel().getBiotype();
 	}
-	
+
 	public void generateSampleId(Biosample b) {
 		String id = sampleIdCellEditor.generateSampleIdFor(b);
-		if(id!=null) b.setSampleId(id);		
+		if(id!=null) b.setSampleId(id);
 	}
-	
+
 	public class GenerateForLinkedAction extends AbstractAction {
 		public GenerateForLinkedAction() {
 			super("Generate new AnimalIds");
@@ -174,33 +170,33 @@ public class EditBiosampleTable extends SpiritExcelTable<Biosample> {
 				for (Biosample b : getRows()) {
 					Biotype type = DAOBiotype.getBiotype(Biotype.ANIMAL);
 					if(b.getId()>0 || (b.getSampleId()!=null && b.getSampleId().length()>0)) continue;
-						String id = DAOBarcode.getNextId(type);
-						b.setSampleId(id);
-						b.setBiotype(type);
-				}		
-				repaint();	
+					String id = DAOBarcode.getNextId(type);
+					b.setSampleId(id);
+					b.setBiotype(type);
+				}
+				repaint();
 			} catch (Exception ex) {
 				ex.printStackTrace();
 				JExceptionDialog.showError(ex);
 			}
 		}
 	}
-	
-//	public class PrintAction extends AbstractAction {
-//		public PrintAction() {
-//			super("Print Labels for selected biosamples");
-//		}
-//		@Override
-//		public void actionPerformed(ActionEvent e) {
-//			List<Biosample> biosamples = new ArrayList<Biosample>();
-//			for (int r: getSelectedRows()) {
-//				biosamples.add(getModel().getRows().get(r));
-//			}
-//			
-//			PrinterDlg.createForBiosamples(biosamples);
-//		}
-//	}
-	
+
+	//	public class PrintAction extends AbstractAction {
+	//		public PrintAction() {
+	//			super("Print Labels for selected biosamples");
+	//		}
+	//		@Override
+	//		public void actionPerformed(ActionEvent e) {
+	//			List<Biosample> biosamples = new ArrayList<Biosample>();
+	//			for (int r: getSelectedRows()) {
+	//				biosamples.add(getModel().getRows().get(r));
+	//			}
+	//
+	//			PrinterDlg.createForBiosamples(biosamples);
+	//		}
+	//	}
+
 	@Override
 	protected void populateHeaderPopup(JPopupMenu popupMenu, Column<Biosample, ?> column) {
 		List<String> fillChoices = null;
@@ -218,40 +214,40 @@ public class EditBiosampleTable extends SpiritExcelTable<Biosample> {
 		popupMenu.add(new JSeparator());
 		popupMenu.add(new JCustomLabel("Misc", Font.BOLD));
 		popupMenu.add(new FillCellAction(this, column, fillChoices));
-		
-		
+
+
 		if(column instanceof LinkedBiosampleColumn) {
-			popupMenu.add(new GenerateForLinkedAction());			
-//		} else if(column instanceof SampleIdColumn) {
-//			popupMenu.add(new GenerateForScanEditorAction());
-//		} else if(column instanceof ParentBiosampleColumn) {
-//			popupMenu.add(new ConvertNoToAnimalIdAction(this));			
+			popupMenu.add(new GenerateForLinkedAction());
+			//		} else if(column instanceof SampleIdColumn) {
+			//			popupMenu.add(new GenerateForScanEditorAction());
+			//		} else if(column instanceof ParentBiosampleColumn) {
+			//			popupMenu.add(new ConvertNoToAnimalIdAction(this));
 		}
-		
+
 		BiosampleTable.populateExpandPopup(this, popupMenu);
-		
+
 	}
 
 
-	
-//	@Override
-//	public void setValueAt(Object aValue, int row, int column) {
-////		Column<Biosample, ?> col = getModel().getColumn(convertColumnIndexToModel(column));
-////		if(col instanceof AuxiliaryColumn && !getUndoManager().isPushed()) {
-////			//Auxiliary column should ask confirmation when editing
-////			Double val = ((AuxiliaryColumn)col).getValue(getRows().get(row));
-////			if(val!=null && aValue!=null && !val.equals(aValue)) {
-////				int res = JOptionPane.showConfirmDialog(this, "Are you sure to replace the value "+val+" by "+ aValue + "?", "Replace Value", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-////				setRowSelectionInterval(row, row);
-////				setColumnSelectionInterval(column, column);
-////				requestFocusInWindow();					
-////				if(res!=JOptionPane.YES_OPTION) return;
-////			}		
-////		}
-//		super.setValueAt(aValue, row, column);
-//		
-//		repaint();
-//	}
 
-	
+	//	@Override
+	//	public void setValueAt(Object aValue, int row, int column) {
+	////		Column<Biosample, ?> col = getModel().getColumn(convertColumnIndexToModel(column));
+	////		if(col instanceof AuxiliaryColumn && !getUndoManager().isPushed()) {
+	////			//Auxiliary column should ask confirmation when editing
+	////			Double val = ((AuxiliaryColumn)col).getValue(getRows().get(row));
+	////			if(val!=null && aValue!=null && !val.equals(aValue)) {
+	////				int res = JOptionPane.showConfirmDialog(this, "Are you sure to replace the value "+val+" by "+ aValue + "?", "Replace Value", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+	////				setRowSelectionInterval(row, row);
+	////				setColumnSelectionInterval(column, column);
+	////				requestFocusInWindow();
+	////				if(res!=JOptionPane.YES_OPTION) return;
+	////			}
+	////		}
+	//		super.setValueAt(aValue, row, column);
+	//
+	//		repaint();
+	//	}
+
+
 }

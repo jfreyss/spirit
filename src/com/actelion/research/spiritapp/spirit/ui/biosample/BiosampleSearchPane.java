@@ -24,8 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui.biosample;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -87,11 +85,8 @@ public class BiosampleSearchPane extends JPanel {
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(new JButton(new Action_ViewMine()), Box.createHorizontalGlue(), resetButton, searchButton));
 
 		setPreferredSize(new Dimension(200, 200));
-		tree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				new Action_Search().actionPerformed(null);
-			}
+		tree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, evt-> {
+			new Action_Search().actionPerformed(null);
 		});
 	}
 
@@ -240,7 +235,7 @@ public class BiosampleSearchPane extends JPanel {
 			if(SpiritFrame.getUser().getMainGroup()==null) {
 				q.setCreUser(SpiritFrame.getUser().getUsername());
 			} else {
-				q.setDepartment(SpiritFrame.getUser().getMainGroup().getName());
+				q.setDepartment(SpiritFrame.getUser().getMainGroup());
 			}
 			q.setBiotypes(forcedBiotypes);
 			if(forcedBiotypes==null || forcedBiotypes.length==0) q.setCreDays(186);

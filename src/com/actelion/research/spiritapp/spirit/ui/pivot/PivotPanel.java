@@ -25,8 +25,6 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Desktop;
 import java.awt.Window;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.StringReader;
@@ -47,9 +45,9 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
@@ -135,111 +133,96 @@ public class PivotPanel extends JPanel {
 	 *            detailPanel to refresh when a biosample is selected, if null
 	 *            the detailpanel will be created
 	 */
-	public PivotPanel(final boolean allDataMode, final JComponent tableTab, BiosampleTabbedPane externalDetailPane) {
+	public PivotPanel(final JComponent tableTab, BiosampleTabbedPane externalDetailPane) {
 		super(new BorderLayout());
 
 		this.tableTab = tableTab;
 
-		pivotButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				setPivotMode(pivotButton.isSelected());
+		pivotButton.addActionListener(e-> {
+			setPivotMode(pivotButton.isSelected());
 
-				if (!pivotButton.isSelected() && dlg != null) {
-					dlg.dispose();
-				}
-
-				PivotPanel.this.firePropertyChange(PROPERTY_PIVOT_CHANGED, null, "");
+			if (!pivotButton.isSelected() && dlg != null) {
+				dlg.dispose();
 			}
+
+			PivotPanel.this.firePropertyChange(PROPERTY_PIVOT_CHANGED, null, "");
 		});
-		final JComponent centerPane;
-		if(allDataMode) {
-			/////////////////////////////////
-			// Bottom
-			JBGScrollPane subTableSp;
-			if (tableTab==null) {
-				subResultTable = new ResultTable();
-				subResultTable.getModel().showAllHideable(true);
-				subTableSp = new JBGScrollPane(subResultTable, 1);
-				ResultActions.attachPopup(subResultTable);
-				ResultActions.attachPopup(subTableSp);
+		final JSplitPane centerPane;
+		//		if(allDataMode) {
+		/////////////////////////////////
+		// Bottom
+		JBGScrollPane subTableSp;
+		if (tableTab==null) {
+			subResultTable = new ResultTable();
+			subResultTable.getModel().showAllHideable(true);
+			subTableSp = new JBGScrollPane(subResultTable, 1);
+			ResultActions.attachPopup(subResultTable);
+			ResultActions.attachPopup(subTableSp);
 
-				subResultTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-					@Override
-					public void valueChanged(ListSelectionEvent e) {
-						if (!biosampleDetail.isVisible())
-							return;
-						biosampleDetail.setBiosamples(Result.getBiosamples(subResultTable.getSelection()));
-					}
-				});
-			} else {
-				subBiosampleTable = new BiosampleTable();
-				subTableSp = new JBGScrollPane(subBiosampleTable, 1);
-
-				BiosampleActions.attachPopup(subBiosampleTable);
-				BiosampleActions.attachPopup(subTableSp);
-
-				subBiosampleTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-					@Override
-					public void valueChanged(ListSelectionEvent e) {
-						if (!biosampleDetail.isVisible())
-							return;
-						biosampleDetail.setBiosamples(subBiosampleTable.getSelection());
-					}
-				});
-			}
-
-			JComponent subListPane;
-			if (externalDetailPane == null) {
-				biosampleDetail = new BiosampleTabbedPane();
-				subListPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, subTableSp, biosampleDetail);
-				((JSplitPane) subListPane).setDividerLocation((UIUtils.getMainFrame() == null ? 1600 : UIUtils.getMainFrame().getWidth()) - 600);
-			} else {
-				biosampleDetail = externalDetailPane;
-				subListPane = subTableSp;
-			}
-
-			// CenterPane
-			centerPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JBGScrollPane(pivotTable, 1), subListPane);
-			((JSplitPane)centerPane).setOneTouchExpandable(true);
-			((JSplitPane)centerPane).setDividerLocation(10000);
+			subResultTable.getSelectionModel().addListSelectionListener(e-> {
+				if (!biosampleDetail.isVisible()) return;
+				biosampleDetail.setBiosamples(Result.getBiosamples(subResultTable.getSelection()));
+			});
 		} else {
-			centerPane = new JBGScrollPane(pivotTable, 1);
+			subBiosampleTable = new BiosampleTable();
+			subTableSp = new JBGScrollPane(subBiosampleTable, 1);
+
+			BiosampleActions.attachPopup(subBiosampleTable);
+			BiosampleActions.attachPopup(subTableSp);
+
+			subBiosampleTable.getSelectionModel().addListSelectionListener(e-> {
+				if (!biosampleDetail.isVisible()) return;
+				biosampleDetail.setBiosamples(subBiosampleTable.getSelection());
+			});
+		}
+		assert subBiosampleTable!=null || subResultTable!=null;
+
+		JComponent subListPane;
+		if (externalDetailPane == null) {
+			biosampleDetail = new BiosampleTabbedPane();
+			subListPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, subTableSp, biosampleDetail);
+			((JSplitPane) subListPane).setDividerLocation((UIUtils.getMainFrame() == null ? 1600 : UIUtils.getMainFrame().getWidth()) - 600);
+		} else {
+			biosampleDetail = externalDetailPane;
+			subListPane = subTableSp;
 		}
 
+		// CenterPane
+		centerPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(pivotTable), subListPane);
+		centerPane.setOneTouchExpandable(true);
+		centerPane.setDividerLocation(10000);
+
 		// pivotTable Listeners
-		ListSelectionListener listener = new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if (e.getValueIsAdjusting() || biosampleDetail==null || !biosampleDetail.isVisible())
-					return;
+		ListSelectionListener listener = e -> {
+			if (e.getValueIsAdjusting() || biosampleDetail==null || !biosampleDetail.isVisible()) return;
+			final List<Result> results = pivotTable.getSelectedResults();
+			if (tableTab==null) {
+				subResultTable.setRows(results);
+			} else {
+				List<Biosample> list = new ArrayList<>(Result.getBiosamples(results));
+				Collections.sort(list);
+				subBiosampleTable.setRows(list);
+			}
 
-				final List<Result> results = pivotTable.getSelectedResults();
-				if (tableTab==null) {
-					subResultTable.setRows(results);
-				} else {
-					List<Biosample> list = new ArrayList<Biosample>(Result.getBiosamples(results));
-					Collections.sort(list);
-					subBiosampleTable.setRows(list);
-				}
+			if (results.size()==0) {
+				centerPane.setDividerLocation(1.0);
+			} else  if (results.size() > 0 && centerPane.getDividerLocation()>centerPane.getHeight()-205) {
+				int tableHeight = (subBiosampleTable==null? subResultTable.getPreferredSize().height: subBiosampleTable.getPreferredSize().height);
+				centerPane.setDividerLocation(centerPane.getHeight() - Math.min(200, 45 + tableHeight));
+			}
 
-				if (results.size() > 0 && ((JSplitPane)centerPane).getDividerLocation() > getHeight() - 100) {
-					((JSplitPane)centerPane).setDividerLocation(centerPane.getHeight() - 250);
+			// Check selected biosamples
+			final Set<Biosample> biosamples = new HashSet<>();
+			for (Result r : results) {
+				if (r.getBiosample() != null) {
+					biosamples.add(r.getBiosample());
 				}
+			}
+			biosampleDetail.setBiosamples(biosamples);
 
-				// Check selected biosamples
-				final Set<Biosample> biosamples = new HashSet<>();
-				for (Result r : results) {
-					if (r.getBiosample() != null) {
-						biosamples.add(r.getBiosample());
-					}
-				}
-				biosampleDetail.setBiosamples(biosamples);
-
-				Collection<Biosample> list = pivotTable.getHighlightedSamples();
-				if (list.size() > 0) {
-					biosampleDetail.setBiosamples(list);
-				}
+			Collection<Biosample> list = pivotTable.getHighlightedSamples();
+			if (list.size() > 0) {
+				biosampleDetail.setBiosamples(list);
 			}
 		};
 		pivotTable.getSelectionModel().addListSelectionListener(listener);
@@ -263,18 +246,9 @@ public class PivotPanel extends JPanel {
 
 		// TopPanel
 		{
-			//			reportButton.setFont(FastFont.SMALL);
-			//			reportButton.setVisible(allDataMode);
 			dwButton.setFont(FastFont.SMALL);
 			csvButton.setFont(FastFont.SMALL);
 			excelButton.setFont(FastFont.SMALL);
-
-			//			reportButton.setToolTipText("Analyze the displayed results and suggest graphs");
-			//			reportButton.addActionListener(e-> {
-			//				assert pivotTable != null;
-			//				assert pivotTable.getPivotDataTable() != null;
-			//				new PivotAnalyzerDlg(pivotTable.getPivotDataTable().getResults());
-			//			});
 			dwButton.addActionListener(e -> exportToDw());
 			csvButton.addActionListener(e-> exportToExcel(true));
 			excelButton.addActionListener(e -> exportToExcel(false));
@@ -287,12 +261,9 @@ public class PivotPanel extends JPanel {
 		add(BorderLayout.CENTER, cardPanel);
 
 		// Add buttonlistener
-		setupButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				setupButton.setSelected(true);
-				openEditTemplateDlg();
-			}
+		setupButton.addActionListener(e-> {
+			setupButton.setSelected(true);
+			openEditTemplateDlg();
 		});
 
 		setPivotMode(tableTab == null);
@@ -305,20 +276,17 @@ public class PivotPanel extends JPanel {
 		templatePanel.removeAll();
 		for (final PivotTemplate template : defaultTemplates) {
 			final PivotTemplateButton button = new PivotTemplateButton(template);
-			button.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					firePropertyChange(PROPERTY_PIVOT_CHANGED, "", null);
-					setCurrentPivotTemplate(button.getPivotTemplate());
-					button.setSelected(true);
-				}
+			button.addActionListener(e-> {
+				firePropertyChange(PROPERTY_PIVOT_CHANGED, "", null);
+				setPivotTemplate(button.getPivotTemplate());
+				button.setSelected(true);
 			});
 
 			templatePanel.add(button);
 			buttonGroup.add(button);
 
 			if (currentPivotTemplate == null) {
-				setCurrentPivotTemplate(button.getPivotTemplate());
+				setPivotTemplate(button.getPivotTemplate());
 				button.setSelected(true);
 			}
 
@@ -563,7 +531,7 @@ public class PivotPanel extends JPanel {
 		}
 	}
 
-	public void setCurrentPivotTemplate(PivotTemplate pivotTemplate) {
+	public void setPivotTemplate(PivotTemplate pivotTemplate) {
 		PivotTemplate newTemplate = pivotTemplate;
 		newTemplate.copyDisplaySettings(this.currentPivotTemplate);
 		this.currentPivotTemplate = newTemplate;

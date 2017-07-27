@@ -53,8 +53,8 @@ public class StudyDiscardDlg {
 		final SpiritUser user = Spirit.askForAuthentication();		
 		final Study study = JPAUtil.reattach(s);			
 		
-		final List<Biosample> biosamples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForStudyIds(s.getStudyIdIvv()), user);
-		final List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForStudyIds(s.getStudyIdIvv()), user);
+		final List<Biosample> biosamples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForStudyIds(s.getStudyIdAndInternalId()), user);
+		final List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForStudyIds(s.getStudyIdAndInternalId()), user);
 
 		int res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(), "Are you sure you want to 'DEFINITELY' delete " + study + "\b (" + biosamples.size() + " samples, " + results.size() + " results)", "DELETE Study", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new String[] {"Delete", "Cancel"}, "Cancel");
 		if(res!=0) return;

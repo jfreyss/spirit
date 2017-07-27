@@ -27,6 +27,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,13 +68,13 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudySubGroupC
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyTopSampleIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.LinkerColumnFactory;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.SampleIdColumn;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.location.DirectionCombobox;
 import com.actelion.research.spiritapp.spirit.ui.print.BrotherLabelsDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritChangeObserver;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
@@ -707,7 +708,7 @@ public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChange
 	}
 
 	@Override
-	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
+	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
 		if(what==Biosample.class) {
 			table.reload();
 		}

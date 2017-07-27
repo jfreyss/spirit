@@ -39,28 +39,27 @@ public class CombinedColumn extends Column<Biosample, CombinedColumnMap> {
 	private final JMapLabelNoRepaint comp = new JMapLabelNoRepaint();
 
 	public CombinedColumn() {
-		super("Sample\nMetadata", CombinedColumnMap.class, 
-				60, 
+		super("Sample\nMetadata", CombinedColumnMap.class,
+				60,
 				420);
 	}
-	
-	
+
+
 	@Override
 	public float getSortingKey() {
 		return 6.5f;
 	}
-	
-	
+
+
 	@Override
 	public CombinedColumnMap getValue(Biosample row) {
 		CombinedColumnMap map = new CombinedColumnMap();
 		if(row.getBiotype()!=null) map.put("Biotype", row.getBiotype().getName());
 		for(BiosampleLinker linker: BiosampleLinker.getLinkers(row, LinkerMethod.DIRECT_LINKS) ) {
 			if(linker.getType()==LinkerType.SAMPLEID) continue;
-//			if(linker.getType()==LinkerType.SAMPLENAME) continue;
 			if(linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().isSecundary()) continue;
 			if(linker.getAggregatedMetadata()!=null && linker.getAggregatedMetadata().isSecundary()) continue;
-			
+
 			String value = linker.getValue(row);
 			if(value==null || value.length()==0) continue;
 			map.put(linker.getLabelShort(), value);
@@ -68,7 +67,7 @@ public class CombinedColumn extends Column<Biosample, CombinedColumnMap> {
 		if(map.size()==0) return null;
 		return map;
 	}
-	
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
 		CombinedColumnMap map = value==null? getValue(row): (CombinedColumnMap) value;
@@ -76,18 +75,18 @@ public class CombinedColumn extends Column<Biosample, CombinedColumnMap> {
 		comp.setMap(map);
 		return comp;
 	}
-		
+
 	@Override
 	public void setValue(Biosample row, CombinedColumnMap value) {
 		//Done by the custom editor
 	}
-	
+
 	@Override
 	public boolean isEditable(Biosample row) {return true;}
-	
+
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {
 		return new MetadataFullCellEditor((EditBiosampleTable) table);
 	}
-	
+
 }

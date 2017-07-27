@@ -41,7 +41,6 @@ import com.actelion.research.spiritapp.spirit.ui.SpiritTab;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTabbedPane;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerActions;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.LocationDepictor;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.RackDepictorListener;
 import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
@@ -162,8 +161,9 @@ public class LocationTab extends SpiritTab {
 
 		//If the locationBrowser is changed, update the location
 		locationBrowser.addPropertyChangeListener(LocationBrowser.PROPERTY_LOCATION_SELECTED, evt-> {
-			searchPane.getLocationTable().addRow(locationBrowser.getBioLocation());
-			setBioLocation(locationBrowser.getBioLocation());
+			Location l = locationBrowser.getBioLocation();
+			searchPane.getLocationTable().addRow(l);
+			setBioLocation(l);
 		});
 
 		//hide or show the selected biosamples if a selection is made
@@ -297,7 +297,7 @@ public class LocationTab extends SpiritTab {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
+	public <T> void fireModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
 		if(!isShowing()) return;
 
 		if(what==Location.class && action==SpiritChangeType.MODEL_DELETED) {

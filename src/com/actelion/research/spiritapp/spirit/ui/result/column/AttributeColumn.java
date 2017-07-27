@@ -32,8 +32,8 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.editor.AutoCompletion
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.DateStringCellEditor;
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.MetadataComboboxCellEditor;
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.MultiComboboxCellEditor;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
 import com.actelion.research.spiritapp.spirit.ui.result.edit.BiosampleIdCellEditor;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;

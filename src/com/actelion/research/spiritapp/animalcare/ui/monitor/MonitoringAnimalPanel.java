@@ -51,9 +51,9 @@ import javax.swing.text.JTextComponent;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdLabel;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel.ContainerDisplayMode;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerLabel;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerLabel.ContainerDisplayMode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.ActionTreatment;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -455,7 +455,6 @@ public class MonitoringAnimalPanel extends JPanel {
 	private void openTreatmentDialog() {
 		if(SpiritRights.isBlindAll(phase.getStudy(), SpiritFrame.getUser())) return;
 		final ActionTreatment actionTreatment = getTreatment(animal, phase);
-		System.out.println("MonitoringAnimalPanel.openTreatmentDialog() "+actionTreatment);
 		try {
 
 			String presetFormulation = actionTreatment==null || actionTreatment.getFormulation()==null? dlg.getFormulation(nt): actionTreatment.getFormulation();

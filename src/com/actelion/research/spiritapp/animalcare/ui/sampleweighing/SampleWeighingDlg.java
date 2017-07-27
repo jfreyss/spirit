@@ -22,7 +22,6 @@
 package com.actelion.research.spiritapp.animalcare.ui.sampleweighing;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -44,8 +43,6 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.animalcare.ui.monitor.MonitorTextField;
 import com.actelion.research.spiritapp.animalcare.ui.monitor.MonitoringAnimalPanel;
@@ -53,12 +50,12 @@ import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleList;
 import com.actelion.research.spiritapp.spirit.ui.biosample.ContainerComboBox;
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdLabel;
-import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
-import com.actelion.research.spiritapp.spirit.ui.helper.CreateSamplesHelper;
 import com.actelion.research.spiritapp.spirit.ui.result.edit.EditResultDlg;
+import com.actelion.research.spiritapp.spirit.ui.study.CreateSamplesHelper;
 import com.actelion.research.spiritapp.spirit.ui.study.GroupComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.PhaseComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.PhaseLabel;
+import com.actelion.research.spiritapp.spirit.ui.util.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.util.component.BalanceDecorator;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -76,11 +73,11 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
+import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 import com.actelion.research.util.ui.iconbutton.IconType;
@@ -133,8 +130,8 @@ public class SampleWeighingDlg extends JEscapeDialog {
 
 
 		//init components
-		phaseComboBox.setValues(study.getPhases(), "");
-		groupComboBox.setValues(study.getGroups(), "");
+		phaseComboBox.setValues(study.getPhases());
+		groupComboBox.setValues(study.getGroups());
 
 		List<Biosample> animals = study.getTopAttachedBiosamples();
 		animalList.setBiosamples(animals);
@@ -146,27 +143,23 @@ public class SampleWeighingDlg extends JEscapeDialog {
 		cageComboBox.setValues(cages, true);
 		cageComboBox.setEnabled(cages.size()>1);
 
-		ActionListener al = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				//				if(push>0) return;
-				animalList.clearSelection();
-				initViewInBackground();
-			}
+		ActionListener al = e-> {
+			animalList.clearSelection();
+			initViewInBackground();
 		};
-		phaseComboBox.addActionListener(al);
-		groupComboBox.addActionListener(al);
+		TextChangeListener tl = e-> {
+			animalList.clearSelection();
+			initViewInBackground();
+		};
+		phaseComboBox.addTextChangeListener(tl);
+		groupComboBox.addTextChangeListener(tl);
 		cageComboBox.addActionListener(al);
 		onlyRequired.addActionListener(al);
 		onlyAlive.addActionListener(al);
 
-		animalList.addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				//				if(push>0) return;
-				if(!e.getValueIsAdjusting()) {
-					initViewInBackground();
-				}
+		animalList.addListSelectionListener(e-> {
+			if(!e.getValueIsAdjusting()) {
+				initViewInBackground();
 			}
 		});
 
@@ -176,8 +169,9 @@ public class SampleWeighingDlg extends JEscapeDialog {
 		sp.setPreferredSize(new Dimension(220, 110));
 		JPanel filterPanel = UIUtils.createTitleBox("Filters", UIUtils.createBox(
 				UIUtils.createVerticalBox(
-						UIUtils.createHorizontalBox(new JLabel("Phase: "), phaseComboBox, new JCustomLabel("Enter the phase to enter the weight of the top sample", Color.GRAY), Box.createHorizontalGlue()),
-						UIUtils.createHorizontalBox(new JLabel("Group: "), groupComboBox, Box.createHorizontalStrut(15), new JLabel("Container: "), cageComboBox, Box.createHorizontalGlue()),
+						UIUtils.createTable(3,
+								new JLabel("Phase: "), phaseComboBox, null,
+								new JLabel("Group: "), groupComboBox, UIUtils.createHorizontalBox(Box.createHorizontalStrut(15), new JLabel("Container: "), cageComboBox)),
 						Box.createVerticalStrut(10),
 						UIUtils.createHorizontalBox(onlyRequired, Box.createHorizontalGlue()),
 						UIUtils.createHorizontalBox(onlyAlive, Box.createHorizontalGlue()),

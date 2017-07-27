@@ -21,20 +21,15 @@
 
 package com.actelion.research.spiritapp.spirit.ui.print;
 
-import javax.swing.JTable;
-
 import com.actelion.research.spiritapp.spirit.services.print.PrintLabel;
-import com.actelion.research.util.ui.exceltable.ExcelTable;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritExcelTable;
 
-public class PrintLabelEditTable extends ExcelTable<PrintLabel> {
+public class PrintLabelEditTable extends SpiritExcelTable<PrintLabel> {
 
 	public PrintLabelEditTable() {
 		super(new PrintLabelEditTableModel());
-		setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-		
-		setRowHeight(26);
 	}
-	
+
 	@Override
 	public PrintLabelEditTableModel getModel() {
 		return (PrintLabelEditTableModel) super.getModel();

@@ -72,7 +72,7 @@ public class EmployeePanel extends JPanel {
 
 				try {
 					DAOEmployee.removeEmployee(sel.get(0), SpiritFrame.getUser());
-					SpiritFrame.clear();
+					SpiritFrame.clearAll();
 					refresh();
 				} catch (Exception e) {
 					JExceptionDialog.showError(e);
@@ -83,7 +83,7 @@ public class EmployeePanel extends JPanel {
 			List<Employee> sel = employeeTable.getSelection();
 			if(sel.size()==1) {
 				new EmployeeEditDlg(sel.get(0));
-				SpiritFrame.clear();
+				SpiritFrame.clearAll();
 				refresh();
 				employeeTable.setSelection(sel);
 			}
@@ -156,7 +156,7 @@ public class EmployeePanel extends JPanel {
 		Employee emp = new Employee();
 		if(prefix!=null) emp.setUserName(prefix);
 		new EmployeeEditDlg(emp);
-		SpiritFrame.clear();
+		SpiritFrame.clearAll();
 
 		refresh();
 		employeeTable.setSelection(Collections.singletonList(emp));

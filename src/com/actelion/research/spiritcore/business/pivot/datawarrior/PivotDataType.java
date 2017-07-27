@@ -106,7 +106,7 @@ public enum PivotDataType {
 			break;
 		case TOPSAMPLE:
 			for(PivotItem item: table.getTemplate().getPivotItems(Where.ASROW)) {
-				if(item.getClassifier()==PivotItemClassifier.TOP) {
+				if(item.getClassifier()==PivotItemClassifier.PARTICIPANT) {
 					res.add(item.getFullName());
 				}
 			}

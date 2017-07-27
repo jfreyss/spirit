@@ -30,7 +30,7 @@ import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.location.LocationPosTextField;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.util.ui.exceltable.ExcelTableModel;
+import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
 /**
  * LocationCellEditor
@@ -42,15 +42,15 @@ public class LocationCellEditor extends AbstractCellEditor implements TableCellE
 
 	public LocationCellEditor() {
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-		ExcelTableModel<Biosample> model = (ExcelTableModel<Biosample>) table.getModel();
+		ExtendTableModel<Biosample> model = (ExtendTableModel<Biosample>) table.getModel();
 		Biosample b = row<model.getRows().size()? model.getRows().get(row): null;
-		
+
 		locationTextField.setBiosample(b);
-		SwingUtilities.invokeLater(new Runnable() {				
+		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
 				locationTextField.setCaretPosition(locationTextField.getText().length());
@@ -62,5 +62,5 @@ public class LocationCellEditor extends AbstractCellEditor implements TableCellE
 	@Override
 	public String getCellEditorValue() {
 		return locationTextField.getText();
-	}		
+	}
 }

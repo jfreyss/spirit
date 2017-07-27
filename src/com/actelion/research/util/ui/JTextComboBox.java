@@ -55,12 +55,14 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
+import javax.swing.Icon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
@@ -90,13 +92,17 @@ public class JTextComboBox extends JCustomTextField {
 	private JDialog popup;
 	private final DefaultListModel<String> model = new DefaultListModel<>();
 	private final JList<String> list = new JList<>(model);
+	private Icon comboIcon;
+
+
 	private ListCellRenderer renderer = new DefaultListCellRenderer() {
 		@Override
 		public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 			Component res = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+			if(res instanceof JLabel) ((JLabel) res).setIcon(comboIcon);
 			if (value == null || value.toString().length() == 0) {
 				setText(" ");
-				return this;
+				return res;
 			} else {
 				Color bg = res.getBackground();
 				Color fg = res.getForeground();
@@ -116,7 +122,7 @@ public class JTextComboBox extends JCustomTextField {
 	private boolean progressiveFiltering = true;
 	private int push = 0;
 
-	private boolean multiChoices = false; // set by the user
+	private boolean multiChoices = false;
 	private static final String DEFAULT_SEPARATORS = ",; ";
 	private String separators = DEFAULT_SEPARATORS;
 
@@ -154,7 +160,6 @@ public class JTextComboBox extends JCustomTextField {
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-
 				if (popup == null || !popup.isVisible()) {
 					selectAll();
 				}
@@ -165,6 +170,8 @@ public class JTextComboBox extends JCustomTextField {
 		addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
+				//If this component is inside a JTable, the keylistener is called before the focuslistener. So ignore this and do this in the editor
+				if(getParent() instanceof JTable) return;
 				selectAll();
 			}
 
@@ -173,6 +180,7 @@ public class JTextComboBox extends JCustomTextField {
 				cachedChoices = null;
 				hidePopup();
 				fireTextChanged();
+				setCaretPosition(0);
 			}
 		});
 
@@ -188,8 +196,9 @@ public class JTextComboBox extends JCustomTextField {
 
 			@Override
 			public void insertString(int offs, String str, AttributeSet a) throws BadLocationException {
-				if (str == null)
+				if (str == null) {
 					return;
+				}
 				if (push > 0) {
 					super.insertString(offs, str, a);
 				} else if (getMaxChars() <= 0 || (getLength() + str.length()) <= getMaxChars()) {
@@ -200,7 +209,6 @@ public class JTextComboBox extends JCustomTextField {
 						selectWithPrefix(offs, prefix);
 					}
 				}
-
 			}
 
 			/**
@@ -228,6 +236,7 @@ public class JTextComboBox extends JCustomTextField {
 						setCaretPosition(selectedChoice.length());
 						moveCaretPosition(offs + 1);
 						olderSel = selectedChoice;
+						selectAndScroll();
 						return;
 					}
 				}
@@ -243,14 +252,13 @@ public class JTextComboBox extends JCustomTextField {
 					setCaretPosition(getLength());
 					moveCaretPosition(Math.min(offs, getLength()));
 					getHorizontalVisibility().setValue(horizVisibility);
-					showPopup(); // reset to previous value and show popup
+					// reset to previous value and show popup
 					// because the updated string does not match
 					// anything
+					showPopup();
 				} else {
-					//					super.remove(0, super.getLength());
-					//					super.insertString(0, prefix, null);
-					//					olderSel = prefix;
-					showPopup(); // show popup because the initial string does not match anything
+					// show popup because the initial string does not match anything
+					showPopup();
 				}
 			}
 		};
@@ -260,14 +268,18 @@ public class JTextComboBox extends JCustomTextField {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				int dir = 0;
-				if (e.getKeyCode() == 38) { // down key
+				if (e.getKeyCode() == 38) { // up key
 					dir = -1;
-				} else if (e.getKeyCode() == 40) { // up key
+					e.consume();
+				} else if (e.getKeyCode() == 40) { // down key
 					dir = 1;
+					e.consume();
 				} else if (e.getKeyCode() == 33) { // page-up key
 					dir = -10;
+					e.consume();
 				} else if (e.getKeyCode() == 34) { // page-down key
 					dir = 10;
+					e.consume();
 				}
 
 				if (dir != 0) {
@@ -294,8 +306,6 @@ public class JTextComboBox extends JCustomTextField {
 						selectText(list.getSelectedIndex()<0? getText(): list.getSelectedValue());
 						hidePopup();
 					}
-					// fireTextChanged();
-					// fireActionPerformed();
 					e.consume();
 				} else if (e.getKeyChar() == 27) {// escape
 					if (popup != null && popup.isVisible()) {
@@ -309,6 +319,7 @@ public class JTextComboBox extends JCustomTextField {
 						setCaretPosition(getText().length());
 						moveCaretPosition(caret);
 					}
+					e.consume();
 				}
 			}
 
@@ -427,7 +438,6 @@ public class JTextComboBox extends JCustomTextField {
 	 */
 	public void setAllowTyping(boolean allowTyping) {
 		this.allowTyping = allowTyping;
-		//		setBackground(allowTyping ? Color.WHITE : UIUtils.WHITESMOKE);
 	}
 
 	public boolean isAllowTyping() {
@@ -619,14 +629,17 @@ public class JTextComboBox extends JCustomTextField {
 
 	private boolean ctrlDown = false;
 
+	public boolean isPopupVisible() {
+		return popup != null && popup.isVisible();
+	}
+
 	public void showPopup() {
 		if(!isEnabled()) return;
 		final Point p = getLocationOnScreen();
 		populateList();
 
 		if (!isVisible() || (popup != null && popup.isVisible())) {
-			list.getParent().getParent()
-			.setPreferredSize(new Dimension(Math.max(100, Math.max(list.getPreferredSize().width + 30, getWidth())), Math.min(list.getPreferredSize().height + 15, 330)));
+			list.getParent().getParent().setPreferredSize(new Dimension(Math.max(100, Math.max(list.getPreferredSize().width + 30, getWidth())), Math.min(list.getPreferredSize().height + 15, 330)));
 			popup.pack();
 			return;
 		}
@@ -641,62 +654,60 @@ public class JTextComboBox extends JCustomTextField {
 		final JPanel contentPane = UIUtils.createBox(scrollPane, null, infoPanel, null, null);
 		contentPane.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
-		SwingUtilities.invokeLater(() -> {
-			final WindowFocusListener wl = new WindowFocusListener() {
-				@Override
-				public void windowLostFocus(WindowEvent e) {
-					hidePopup();
+		SwingUtilities.invokeLater(new Runnable() {
+
+			@Override
+			public void run() {
+				final WindowFocusListener wl = new WindowFocusListener() {
+					@Override
+					public void windowLostFocus(WindowEvent e) {
+						hidePopup();
+					}
+
+					@Override
+					public void windowGainedFocus(WindowEvent e) {
+					}
+				};
+
+				// Create popup if not yet created, and add a window listener to
+				// hide the popup when the window loses the focus
+				if (popup != null)
+					popup.dispose();
+				if (getTopLevelAncestor() instanceof JDialog) {
+					if (popup == null)
+						((JDialog) getTopLevelAncestor()).addWindowFocusListener(wl);
+					popup = new JDialog((JDialog) getTopLevelAncestor(), false);
+				} else if (getTopLevelAncestor() instanceof JFrame) {
+					if (popup == null)
+						((JFrame) getTopLevelAncestor()).addWindowFocusListener(wl);
+					popup = new JDialog((JFrame) getTopLevelAncestor(), false);
+				} else {
+					return;
 				}
 
-				@Override
-				public void windowGainedFocus(WindowEvent e) {
+				// Shows the popup
+				popup.setUndecorated(true);
+				popup.setContentPane(contentPane);
+				popup.setAlwaysOnTop(true);
+				popup.setFocusableWindowState(false);
+				popup.pack();
+
+				int x = p.x;
+				int y = p.y + getBounds().height;
+				if (y + popup.getHeight() > Toolkit.getDefaultToolkit().getScreenSize().height) {
+					x = p.x + getBounds().width;
+					y = Toolkit.getDefaultToolkit().getScreenSize().height - popup.getHeight();
 				}
-			};
-
-			// Create popup if not yet created, and add a window listener to
-			// hide the popup when the window loses the focus
-			if (popup != null)
-				popup.dispose();
-			if (getTopLevelAncestor() instanceof JDialog) {
-				if (popup == null)
-					((JDialog) getTopLevelAncestor()).addWindowFocusListener(wl);
-				popup = new JDialog((JDialog) getTopLevelAncestor(), false);
-			} else if (getTopLevelAncestor() instanceof JFrame) {
-				if (popup == null)
-					((JFrame) getTopLevelAncestor()).addWindowFocusListener(wl);
-				popup = new JDialog((JFrame) getTopLevelAncestor(), false);
-			} else {
-				return;
+				if (x + popup.getWidth() > Toolkit.getDefaultToolkit().getScreenSize().width) {
+					x = Toolkit.getDefaultToolkit().getScreenSize().width - popup.getWidth();
+				}
+				popup.setLocation(x, y);
+				popup.setVisible(true);
+				selectAndScroll();
 			}
-
-			// Shows the popup
-			popup.setUndecorated(true);
-			popup.setContentPane(contentPane);
-			popup.setAlwaysOnTop(true);
-			popup.setFocusableWindowState(false);
-			popup.pack();
-
-			int x = p.x;
-			int y = p.y + getBounds().height;
-			if (y + popup.getHeight() > Toolkit.getDefaultToolkit().getScreenSize().height) {
-				x = p.x + getBounds().width;
-				y = Toolkit.getDefaultToolkit().getScreenSize().height - popup.getHeight();
-			}
-			if (x + popup.getWidth() > Toolkit.getDefaultToolkit().getScreenSize().width) {
-				x = Toolkit.getDefaultToolkit().getScreenSize().width - popup.getWidth();
-			}
-			popup.setLocation(x, y);
-			popup.setVisible(true);
-			selectAndScroll();
 		});
 		repaint();
 	}
-
-	//	private void setTextFromList() {
-	//		if (list == null || popup == null || !popup.isVisible()) return;
-	//		String text = getText();
-	//		setTextFromList(text);
-	//	}
 
 	private void selectText(String text) {
 		if (multiChoices && separators.length() > 0) {
@@ -821,6 +832,22 @@ public class JTextComboBox extends JCustomTextField {
 		return res.toArray(new String[res.size()]);
 	}
 
+	@Override
+	public void setIcon(Icon icon) {
+		this.comboIcon = icon;
+		applyRenderer();
+	}
+
+	@Override
+	public Icon getIcon() {
+		return comboIcon;
+	}
+
+
+	/**
+	 * Example of use
+	 * @param args
+	 */
 	public static void main(String[] args) {
 
 		try {
@@ -837,6 +864,8 @@ public class JTextComboBox extends JCustomTextField {
 		choices.add("2a.maybe");
 		choices.add("2b.canbe");
 		choices.add("3.unknown");
+		choices.add("4");
+		choices.add("5");
 		choices.add("Sol1");
 		choices.add("Sol2");
 
@@ -865,35 +894,33 @@ public class JTextComboBox extends JCustomTextField {
 		JTextComboBox cb4 = new JTextComboBox(true);
 		JTextComboBox cb5 = new JTextComboBox(true);
 		JTextComboBox cb6 = new JTextComboBox(true);
-		JTextComboBox cb7 = new JTextComboBox(false);
-		JTextComboBox cb8 = new JTextComboBox(false);
-		JTextComboBox cb9 = new JTextComboBox(false);
-		cb7.setRenderer(new DefaultListCellRenderer() {
+		JTextComboBox cb7 = new JTextComboBox(false) {
 			@Override
-			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-				setIcon(value==null || value.toString().trim().equals("")?  IconType.ANIMAL.getIcon(): value.toString().startsWith("2")? IconType.ADMIN.getIcon(): IconType.BALANCE.getIcon());
-				return this;
+			public Component processCellRenderer(JLabel comp, String value, int index) {
+				comp.setIcon(value==null || value.toString().trim().equals("")?  null: value.toString().startsWith("2")? IconType.ADMIN.getIcon(): IconType.BALANCE.getIcon());
+				return comp;
 			}
-		});
-		cb8.setRenderer(new DefaultListCellRenderer() {
+		};
+		JTextComboBox cb8 = new JTextComboBox(false) {
 			@Override
-			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-				setFont(FastFont.REGULAR.deriveSize(12 + index%10));
-				setText(getText()+" "+index);
-				return this;
+			public Component processCellRenderer(JLabel comp, String value, int index) {
+				comp.setFont(FastFont.REGULAR.deriveSize(12 + index%10));
+				comp.setText(getText()+" "+index);
+				return comp;
 			}
-		});
-		cb9.setRenderer(new DefaultListCellRenderer() {
+
+		};
+		JTextComboBox cb9 = new JTextComboBox(false) {
 			@Override
-			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-				setIcon(value==null || value.toString().trim().equals("")?  IconType.ANIMAL.getIcon(): value.toString().startsWith("2")? IconType.ADMIN.getIcon(): IconType.BALANCE.getIcon());
-				return this;
+			public Component processCellRenderer(JLabel comp, String value, int index) {
+				comp.setIcon(value==null || value.toString().trim().equals("")?  IconType.ANIMAL.getIcon(): value.toString().startsWith("2")? IconType.ADMIN.getIcon(): IconType.BALANCE.getIcon());
+				return comp;
 			}
-		});
+		};
+
+		cb1.setIcon(IconType.CSV.getIcon());
 		cb1.setChoices(choices);
+		cb2.setIcon(IconType.CSV.getIcon());
 		cb2.setChoices(choices2);
 		cb3.setChoices(choices3);
 
@@ -907,7 +934,6 @@ public class JTextComboBox extends JCustomTextField {
 		JFrame testFrame = new JFrame();
 
 		cb1.setMultipleChoices(false);
-		cb1.setEnabled(false);
 		cb2.setMultipleChoices(false);
 		cb3.setMultipleChoices(false);
 		cb4.setMultipleChoices(true);
@@ -927,10 +953,18 @@ public class JTextComboBox extends JCustomTextField {
 
 	}
 
+	/**
+	 * To be overridden by sub-classed to implement a custom rendering (icon, font, ...)
+	 * By default, the icon is empty
+	 * @param comp
+	 * @param value
+	 * @param index
+	 * @return
+	 */
 	public Component processCellRenderer(JLabel comp, String value, int index) {
-		setIcon(null);
-		if (value == null || value.length() == 0)
+		if (value == null || value.length() == 0) {
 			comp.setText(" ");
+		}
 		return comp;
 	}
 

@@ -34,10 +34,10 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleOrRackTab;
-import com.actelion.research.spiritapp.spirit.ui.scanner.ScanRackForBiosampleOrRackTabAction;
-import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner;
-import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner.Verification;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
+import com.actelion.research.spiritapp.spirit.ui.util.scanner.ScanRackForBiosampleOrRackTabAction;
+import com.actelion.research.spiritapp.spirit.ui.util.scanner.SpiritScanner;
+import com.actelion.research.spiritapp.spirit.ui.util.scanner.SpiritScanner.Verification;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.business.location.Location;

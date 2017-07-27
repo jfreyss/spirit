@@ -27,18 +27,33 @@ import com.actelion.research.spiritcore.services.SpiritUser;
 
 /**
  * Proxy to the DBAdapter to load/authenticate user
- * 
+ *
  * @author Joel Freyss
  */
 public class DAOSpiritUser {
-	
-	
-	public static SpiritUser loadUser(String username) throws Exception {		
-		return DBAdapter.getAdapter().loadUser(username);
-	}
-		
+
+
+	/**
+	 * Authenticates the username/password.
+	 * <li>Does nothing if it is ok
+	 * <li>Throws an exception if the authentification failed
+	 * @param username
+	 * @param password
+	 * @throws Exception
+	 */
 	public static void authenticateUser(String username, char[] password) throws Exception {
 		DBAdapter.getAdapter().authenticateUser(username, password);
 	}
-		
+
+	/**
+	 * Loads the given user
+	 * @param username
+	 * @return
+	 * @throws Exception
+	 */
+	public static SpiritUser loadUser(String username) throws Exception {
+		return DBAdapter.getAdapter().loadUser(username);
+	}
+
+
 }

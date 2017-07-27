@@ -23,7 +23,7 @@ package com.actelion.research.spiritapp.spirit.ui.result.column;
 
 import javax.swing.JComponent;
 
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerLabel;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;

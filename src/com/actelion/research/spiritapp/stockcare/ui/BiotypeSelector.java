@@ -36,7 +36,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
+import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;

@@ -48,7 +48,7 @@ public class JPAUtilTest extends AbstractSpiritTest {
 		
 		
 		//refresh -> reload from db
-		JPAUtil.clear();
+		JPAUtil.clearAll();
 		b = DAOBiosample.getBiosample("Test");
 		Assert.assertEquals("other comments", b.getComments());
 		

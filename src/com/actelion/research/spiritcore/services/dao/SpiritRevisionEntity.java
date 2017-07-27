@@ -29,12 +29,17 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Transient;
 
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.RevisionNumber;
 import org.hibernate.envers.RevisionTimestamp;
 
+/**
+ * Class overriding the default RevisionEntity of Hibernate, to add the logged in userId
+ *
+ * @author Joel Freyss
+ *
+ */
 @Entity(name="revinfo")
 @RevisionEntity(SpiritRevisionListener.class)
 public class SpiritRevisionEntity {
@@ -48,7 +53,7 @@ public class SpiritRevisionEntity {
 	@RevisionTimestamp
 	@Column(name="revtstmp")
 	private long timestamp;
-	
+
 	@Column(name="userId", length=20)
 	private String userId;
 
@@ -62,12 +67,10 @@ public class SpiritRevisionEntity {
 		this.userId = userId;
 	}
 
-
 	public void setId(int id) {
 		this.id = id;
 	}
 
-	@Transient
 	public Date getRevisionDate() {
 		return new Date( timestamp );
 	}
@@ -104,6 +107,6 @@ public class SpiritRevisionEntity {
 	@Override
 	public String toString() {
 		return "SpiritRevisionEntity(id = " + id + ", revisionDate = " + DateFormat.getDateTimeInstance().format( getRevisionDate() ) + ")";
-	}	
-	
+	}
+
 }

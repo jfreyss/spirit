@@ -21,8 +21,6 @@
 
 package com.actelion.research.spiritapp.spirit.ui.location;
 
-
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -30,41 +28,47 @@ import java.util.List;
 import java.util.Set;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.lf.SpiritExtendTable;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritExtendTable;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.util.ui.FastFont;
 
+
+/**
+ * LocationTable is used to represent an hierarchical view of locations
+ *
+ * @author Joel Freyss
+ *
+ */
 public class LocationTable extends SpiritExtendTable<Location> {
-	
+
 	public LocationTable() {
 		this(new LocationTableModel());
 	}
-	
+
 	public LocationTable(LocationTableModel model) {
 		super(model);
 		LocationActions.attachPopup(this);
 		setBorderStrategy(BorderStrategy.NO_BORDER);
-		setRowHeight(FastFont.getDefaultFontSize()+3);		
+		setRowHeight(FastFont.getDefaultFontSize()+3);
 	}
-	
+
 	@Override
 	public LocationTableModel getModel() {
 		return (LocationTableModel) super.getModel();
 	}
-	
+
 	/**
 	 * Sets the rows of the table, while adding the complete parent hierarchy
 	 */
 	@Override
 	public void setRows(List<Location> rows) {
-		System.out.println("LocationTable.setRows() "+rows);
 		List<Location> rowsWithHierarchy = new ArrayList<>();
 
 		//We must add the roots and the specified rows
 		List<Location> toBeAdded = new ArrayList<>(rows);
 		toBeAdded.addAll(DAOLocation.getLocationRoots(SpiritFrame.getUser()));
-		
+
 		//Make sure we have all the parents
 		Set<Location> present = new HashSet<>();
 		for (Location loc : toBeAdded) {
@@ -78,12 +82,14 @@ public class LocationTable extends SpiritExtendTable<Location> {
 
 		super.setRows(rowsWithHierarchy);
 	}
-	
+
 	public void addRow(Location loc) {
 		List<Location> rows = getRows();
-		rows.add(loc);
-		setRows(rows);
+		if(!rows.contains(loc)) {
+			rows.add(loc);
+			setRows(rows);
+		}
 	}
-	
-	
+
+
 }

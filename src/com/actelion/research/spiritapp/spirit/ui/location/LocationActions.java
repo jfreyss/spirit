@@ -38,6 +38,7 @@ import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.spirit.services.print.PrintLabel;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
+import com.actelion.research.spiritapp.spirit.ui.audit.LocationHistoryDlg;
 import com.actelion.research.spiritapp.spirit.ui.location.edit.LocationEditDlg;
 import com.actelion.research.spiritapp.spirit.ui.print.BrotherLabelsDlg;
 import com.actelion.research.spiritcore.business.location.Location;

@@ -50,72 +50,72 @@ import com.actelion.research.util.CompareUtils;
 
 /**
  * Container class used when the biosample has a containerType or it contains more than 1 biosample or when containerId<>biosampleId
- * 
+ *
  * The containerType gives some information about printing labels.
- * The biosamples shows the content of this container (all should share the same location) 
+ * The biosamples shows the content of this container (all should share the same location)
  */
 @Embeddable
 public class Container implements Cloneable, Comparable<Container>, Serializable {
 
 	public static final char BLOC_SEPARATOR = '-';
-		
-	
+
+
 	/**ContainerId */
 	@Column(length=25,name="containerid")
 	private String containerId;
 
-	
+
 	/**ContainerType, must be equal to the container's containerType if container!=null*/
 	@Enumerated(EnumType.STRING)
 	@Column(name="containertype")
 	private ContainerType containerType;
-	
-	
-	private transient Biosample createdFor; 
-	
+
+
+	private transient Biosample createdFor;
+
 	/**Biosamples in this container*/
 	private transient Set<Biosample> biosamples = null;
-	
-	
+
+
 	public Container() {
 	}
-	
+
 	protected void setCreatedFor(Biosample createdFor) {
 		this.createdFor = createdFor;
 	}
-	
+
 	public Container(ContainerType type) {
 		this(type, null);
 	}
-	
+
 	public Container(String containerId) {
 		this(ContainerType.UNKNOWN, null);
 	}
-	
+
 	public Container(ContainerType type, String containerId) {
 		this.containerType = type;
 		this.containerId = containerId;
 	}
-		
+
 	/**
 	 * The Container is formatter like: {prefix}{ID}[-BlocNo][-Suffix]
-	 * 
+	 *
 	 * @return
 	 */
 	public Integer getBlocNo() {
 		return getBlocNo(null, containerId);
 	}
-	
-	public static Integer getBlocNo(ContainerType containerType, String containerId) {		
+
+	public static Integer getBlocNo(ContainerType containerType, String containerId) {
 		if(containerId==null) return null;
 		if(containerType!=null && containerType.getBlocNoPrefix()==null) return null;
-		
+
 		int ind1 = containerId.indexOf(Container.BLOC_SEPARATOR, 4);
 		if(ind1<0) return null;
 
 		int ind2 = containerId.indexOf(Container.BLOC_SEPARATOR, ind1+1);
 		if(ind2<0) ind2 = containerId.length();
-		
+
 		String blocNo = containerId.substring(ind1+1, ind2);
 
 		try {
@@ -124,11 +124,11 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 			return null;
 		}
 	}
-	
-	
+
+
 	public int getPos() {
 		for(Biosample b: getBiosamples()) {
-			return b.getPos();			
+			return b.getPos();
 		}
 		return -1;
 	}
@@ -138,12 +138,12 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 			b.setPos(pos);
 		}
 	}
-	
+
 	public Location getLocation() {
 		Biosample b = getFirstBiosample();
-		return b==null? null: b.getLocation();	
+		return b==null? null: b.getLocation();
 	}
-	
+
 	public void setLocation(Location location) {
 		if(this.getLocation()!=null) {
 			this.getLocation().getBiosamples().removeAll(getBiosamples());
@@ -155,31 +155,31 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 			this.getLocation().getBiosamples().addAll(getBiosamples());
 		}
 	}
-	
-	
+
+
 	public String getContainerId() {
 		return containerId;
 	}
-	
+
 	public String getContainerOrBiosampleId() {
 		if(getContainerId()!=null && getContainerId().length()>0) return getContainerId();
 		if(getBiosamples().size()==0) return "";
 		Biosample b = getBiosamples().iterator().next();
 		if(b==null || b.getBiotype()==null || b.getBiotype().isHideSampleId()) return "";
-		return b.getSampleId();
+		return b.getSampleId()==null?"": b.getSampleId();
 	}
-	
+
 	public void setContainerId(String containerId) {
 		this.containerId = containerId;
 	}
-	
+
 	public ContainerType getContainerType() {
 		return containerType;
 	}
 	public void setContainerType(ContainerType containerType) {
 		this.containerType = containerType;
 	}
-	
+
 
 	public Set<Biosample> getBiosamples() {
 		if(biosamples==null) {
@@ -192,15 +192,15 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 				}
 			});
 			if(containerId!=null && containerId.length()>0 && (containerType==null || containerType.isMultiple())) {
-				biosamples.addAll(JPAUtil.getManager().createQuery("from Biosample b where b.container.containerId = ?1").setParameter(1, containerId).getResultList());				
-			} 
+				biosamples.addAll(JPAUtil.getManager().createQuery("from Biosample b where b.container.containerId = ?1").setParameter(1, containerId).getResultList());
+			}
 			if(createdFor!=null) {
 				biosamples.add(createdFor);
 			}
 		}
 		return biosamples;
 	}
-	
+
 	public void removeBiosample(Biosample b) {
 		if(biosamples==null) return;
 		biosamples.remove(b);
@@ -209,7 +209,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		if(biosamples==null) return;
 		biosamples.add(b);
 	}
-	
+
 	public Biosample getFirstBiosample() {
 		return getBiosamples().size()>0? getBiosamples().iterator().next(): null;
 	}
@@ -221,27 +221,27 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 			e.printStackTrace();
 			return null;
 		}
-	} 
-	
+	}
+
 
 	@Override
 	public int hashCode() {
 		return (containerId==null?0:containerId.hashCode());
 	}
-	
-	
+
+
 	@Override
 	public int compareTo(Container c) {
-		if(c==null) return -1; 
+		if(c==null) return -1;
 		int cmp = CompareUtils.compare(getContainerType(), c.getContainerType());
-		if(cmp!=0) return cmp;	
-		
+		if(cmp!=0) return cmp;
+
 		cmp = CompareUtils.compare(getContainerId(), c.getContainerId());
-		if(cmp!=0) return cmp;	
-		
+		if(cmp!=0) return cmp;
+
 		cmp = CompareUtils.compare(getFirstBiosample(), c.getFirstBiosample());
-		return cmp;	
-				
+		return cmp;
+
 	}
 
 	@Override
@@ -252,7 +252,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		if(getContainerId()!=null && getContainerId().length()>0) {
 			return getContainerId().equals(c2.getContainerId());
 		}
-		
+
 		return false;
 	}
 
@@ -260,32 +260,32 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 	public String toString() {
 		return "[Container:" + containerType + " " + containerId + "]";
 	}
-	
-	public String getType() {		
+
+	public String getType() {
 		Container c = this;
-		
-		Set<String> types = Biosample.getTypes(c.getBiosamples());		
+
+		Set<String> types = Biosample.getTypes(c.getBiosamples());
 		if(types.size()==1) return types.iterator().next();
 		return MiscUtils.extractCommonPrefix(types);
 	}
-	
+
 	public String getBlocDescription() {
 		Container c = this;
 		StringBuilder sb = new StringBuilder();
-		
-		sb.append(c.getContainerType().getBlocNoPrefix()==null?"": c.getContainerType().getBlocNoPrefix() + c.getBlocNo() + "\n"); 
-		
+
+		sb.append(c.getContainerType().getBlocNoPrefix()==null?"": c.getContainerType().getBlocNoPrefix() + c.getBlocNo() + "\n");
+
 		int count=0;
 		for (Biosample b : c.getBiosamples()) {
 			if(count++>7 && c.getBiosamples().size()>7) {
 				sb.append("("+c.getBiosamples().size()+" samples)");
 				break;
 			}
-			sb.append(b.getInfos(EnumSet.of(InfoFormat.SAMPLENAME, InfoFormat.TYPE, InfoFormat.METATADATA, InfoFormat.COMMENTS), InfoSize.ONELINE)+"\n");
+			sb.append(b.getInfos(EnumSet.of(InfoFormat.SAMPLENAME, InfoFormat.BIOTYPE, InfoFormat.METATADATA, InfoFormat.COMMENTS), InfoSize.ONELINE)+"\n");
 		}
 		return sb.toString();
 	}
-		
+
 	/**
 	 * Return a generic print Label (used in SpiritWeb)
 	 * If the study is blinded, the group is shown as blinded
@@ -294,8 +294,8 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 	public String getPrintLabel() {
 		return getPrintStudyLabel(null) + "\n" + getPrintMetadataLabel();
 	}
-	
-		
+
+
 	public String getPrintStudyLabel(String user) {
 		StringBuilder sb = new StringBuilder();
 		Study study = Biosample.getStudy(getBiosamples());
@@ -304,25 +304,29 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 			sb.append(study.getStudyId() + "\n");
 
 			//Add the group
-			Group g = Biosample.getGroup(getBiosamples());
-			if(user==null || study.getBlindAllUsers().contains(user)) {
+			if(user==null || study.isBlind()) {
 				sb.append("");
-			} else if(g!=null) {
-				sb.append("Gr." + g.getShortName());
+			} else {
+				Group g = Biosample.getGroup(getBiosamples());
+				if(g!=null) {
+					sb.append("Gr." + g.getShortName());
+					//Add the phase
+					Phase phase = Biosample.getPhase(getBiosamples());
+					if(phase!=null) {
+						sb.append(" / " +phase.getShortName());
+					}
+					sb.append("\n");
+				}
 			}
-			//Add the phase		
-			Phase phase = Biosample.getPhase(getBiosamples());
-			if(phase!=null) {	
-				sb.append(" / " +phase.getShortName());
-			}
-			sb.append("\n");
+
 		}
-			
+
 		return sb.toString();
 	}
 
 	public String getPrintMetadataLabel() {
-		return getPrintMetadataLabel(InfoSize.COMPACT);
+		Study study = Biosample.getStudy(getBiosamples());
+		return getPrintMetadataLabel(study==null? InfoSize.EXPANDED: InfoSize.COMPACT);
 	}
 	/**
 	 * Infos how they will be printed on the label (without the study)
@@ -334,44 +338,44 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		if(containerType==ContainerType.BOTTLE) {
 			//Bottle
 			res = Biosample.getInfos(getBiosamples(), EnumSet.of(
-					InfoFormat.TOPIDNAMES), infoSize)+"\n";			
+					InfoFormat.TOPIDNAMES), infoSize)+"\n";
 			Integer blocNo = getBlocNo();
 			if(blocNo!=null && containerType.getBlocNoPrefix()!=null) res += containerType.getBlocNoPrefix() + blocNo;
 		} else if(containerType==ContainerType.CAGE) {
 			//Cage
 			res = Biosample.getInfos(getBiosamples(), EnumSet.of(
-					InfoFormat.SAMPLEID, 
-					InfoFormat.SAMPLENAME), infoSize)+"\n";			
+					InfoFormat.SAMPLEID,
+					InfoFormat.SAMPLENAME), infoSize)+"\n";
 		} else if(containerType!=null && containerType.isMultiple()) {
 			//Slide, Cassette
 			res = Biosample.getInfos(getBiosamples(), EnumSet.of(
 					InfoFormat.TOPIDNAMES), infoSize)+"\n";
-			
+
 			String info = Biosample.getInfos(getBiosamples(), EnumSet.of(
-					InfoFormat.SAMPLENAME, 
+					InfoFormat.SAMPLENAME,
 					InfoFormat.PARENT_SAMPLENAME), infoSize);
 			if(info.length()>0) {
 				res+= info + "\n";
 			}
-			
+
 			Integer blocNo = getBlocNo();
 			if(blocNo!=null && containerType.getBlocNoPrefix()!=null) {
-				res += containerType.getBlocNoPrefix() + blocNo + "\n"; 
+				res += containerType.getBlocNoPrefix() + blocNo + "\n";
 			}
 
 		} else {
 			//Default Label
 			res = Biosample.getInfos(getBiosamples(), EnumSet.of(
-					InfoFormat.TOPIDNAMES, 
-					InfoFormat.SAMPLENAME, 
-					InfoFormat.METATADATA, 
-					InfoFormat.PARENT_METATADATA, 
-					InfoFormat.PARENT_SAMPLENAME, 
-					InfoFormat.COMMENTS, 
+					InfoFormat.TOPIDNAMES,
+					InfoFormat.SAMPLENAME,
+					InfoFormat.METATADATA,
+					InfoFormat.PARENT_METATADATA,
+					InfoFormat.PARENT_SAMPLENAME,
+					InfoFormat.COMMENTS,
 					InfoFormat.AMOUNT), infoSize);
 		}
 		return res;
-	}	
+	}
 
 	/**
 	 * Returns the groups of the contained biosamples
@@ -380,26 +384,23 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 	public Set<Group> getGroups() {
 		return Biosample.getGroups(getBiosamples());
 	}
-		
+
 	/**
-	 * Returns the first non-null group (if any)
+	 * Returns the group (if all samples share the same group) or null
 	 * @return
 	 */
-	public Group getFirstGroup() {
-		for(Biosample b: getBiosamples()) {
-			if(b.getInheritedGroup()!=null) return b.getInheritedGroup();
-		}
-		return null;
+	public Group getGroup() {
+		return Biosample.getGroup(getBiosamples());
 	}
-		
+
 	public Phase getPhase() {
 		return Biosample.getPhase(getBiosamples());
 	}
-	
+
 	public Study getStudy() {
 		return Biosample.getStudy(getBiosamples());
 	}
-	
+
 	public String getTopParents() {
 		StringBuilder sb = new StringBuilder();
 		Set<Biosample> tops = Biosample.getTopParentsInSameStudy(getBiosamples());
@@ -409,18 +410,18 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		}
 		return sb.toString();
 	}
-	
+
 	public Biosample getTopParent() {
 		return Biosample.getTopParentInSameStudy(getBiosamples());
 	}
-	
+
 	public String getContainerPrefix() {
 		int index = containerId.lastIndexOf('-');
 		if(index>5) return containerId.substring(0, index);
 		else return containerId;
 	}
-	
-	
+
+
 	public static Set<Location> getLocations(Collection<Container> containers) {
 		if(containers==null) return null;
 		Set<Location> res = new java.util.HashSet<Location>();
@@ -429,7 +430,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		}
 		return res;
 	}
-	
+
 	public static Set<Integer> getPoses(Collection<Container> containers) {
 		if(containers==null) return null;
 		Set<Integer> res = new java.util.HashSet<Integer>();
@@ -438,29 +439,38 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		}
 		return res;
 	}
-	
+
 	public static Set<String> getScannedPoses(Collection<Container> containers) {
 		if(containers==null) return null;
-		Set<String> res = new java.util.HashSet<String>();
+		Set<String> res = new java.util.HashSet<>();
 		for (Container c : containers) {
 			if(c.getScannedPosition()!=null) res.add(c.getScannedPosition());
 		}
 		return res;
 	}
-	
+
 	public static Set<String> getContainerIds(Collection<Container> containers) {
 		if(containers==null) return null;
-		Set<String> res = new java.util.HashSet<String>();
+		Set<String> res = new java.util.HashSet<>();
 		for (Container c : containers) {
 			res.add(c.getContainerId());
 		}
 		return res;
 	}
-	
+
+	public static Set<ContainerType> getContainerTypes(Collection<Container> containers) {
+		if(containers==null) return null;
+		Set<ContainerType> res = new java.util.HashSet<>();
+		for (Container c : containers) {
+			res.add(c.getContainerType());
+		}
+		return res;
+	}
+
 	public static List<Biosample> getBiosamples(Collection<Container> containers) {
 		return getBiosamples(containers, false);
 	}
-	
+
 	public static List<Biosample> getBiosamples(Collection<Container> containers, boolean createFakeBiosamplesForEmptyContainer) {
 		if(containers==null) return null;
 		List<Biosample> res = new ArrayList<Biosample>();
@@ -471,15 +481,15 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 					Biosample b = new Biosample();
 					b.setContainer(c);
 					res.add(b);
-				}	
+				}
 			} else {
 				res.addAll(c.getBiosamples());
 			}
 		}
 		return res;
 	}
-	
-	
+
+
 	public static String suggestNameForCage(Study s, int cageNo) {
 		if(s==null) return "S##-"+cageNo;
 
@@ -494,22 +504,22 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		res+="-";
 		if(cageNo<10) res+="0";
 		res+=cageNo;
-		
+
 		return res;
-		
+
 	}
-	
+
 	public Amount getAmount() {
 		Biosample b = getFirstBiosample();
 		return b==null? null: b.getAmountAndUnit();
 	}
-	
+
 	public void setAmount(Double volume) {
 		for (Biosample b : getBiosamples()) {
 			b.setAmount(volume);
-		}					
+		}
 	}
-	
+
 	public static Map<String, Container> mapContainerId(Collection<Container> containers){
 		Map<String, Container> res = new HashMap<String, Container>();
 
@@ -518,8 +528,8 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		}
 		return res;
 	}
-	
-	public static boolean isAllWithScannedPositions(Collection<Container> containers) {		
+
+	public static boolean isAllWithScannedPositions(Collection<Container> containers) {
 		for (Container c : containers) {
 			if(c.getScannedPosition()==null) return false;
 		}
@@ -535,8 +545,8 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		if(res.size()==1) return res.iterator().next();
 		return "";
 	}
-	
-	
+
+
 
 	public boolean isEmpty() {
 		for (Biosample b : getBiosamples()) {
@@ -544,22 +554,22 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		}
 		return true;
 	}
-	
+
 
 	public int getRow() {
-		if(getLocation()==null) return 0; 
+		if(getLocation()==null) return 0;
 		return getLocation().getLabeling().getRow(getLocation(), getPos());
 	}
-	
+
 	public int getCol() {
-		if(getLocation()==null) return 0; 
+		if(getLocation()==null) return 0;
 		return getLocation().getLabeling().getCol(getLocation(), getPos());
 	}
-	
+
 	public String getScannedPosition() {
 		Biosample b = getFirstBiosample();
-		return b==null? null: b.getScannedPosition();	
+		return b==null? null: b.getScannedPosition();
 	}
-	
-	
+
+
 }

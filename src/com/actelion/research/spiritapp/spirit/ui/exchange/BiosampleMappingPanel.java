@@ -42,7 +42,7 @@ import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleList;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleMetadataPanel;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;

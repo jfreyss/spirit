@@ -22,8 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.admin.user;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Collections;
 
 import javax.swing.BorderFactory;
@@ -33,8 +31,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.lf.EmployeeGroupComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.EmployeeGroupComboBox;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
@@ -49,39 +47,36 @@ public class EmployeeGroupEditDlg extends JSpiritEscapeDialog {
 	private JCustomTextField nameField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 25);
 	private EmployeeGroupComboBox parentComboBox = new EmployeeGroupComboBox(true);
 	private EmployeeGroup group;
-	
+
 	public EmployeeGroupEditDlg(EmployeeGroup myGroup) {
 		super(UIUtils.getMainFrame(), "Add/Edit Group", EmployeeGroupEditDlg.class.getName());
-		
+
 		group = JPAUtil.reattach(myGroup);
 		nameField.setText(group.getName());
 		parentComboBox.setSelection(group.getParent());
-		
+
 		JPanel centerPane = UIUtils.createTable(
 				new JLabel("GroupName: "), nameField,
 				new JLabel("Parent: "), parentComboBox);
 		centerPane.setBorder(BorderFactory.createEtchedBorder());
-		
+
 		JButton saveButton = new JIconButton(IconType.SAVE, group.getId()<=0? "Add Group": "Update");
-		saveButton.addActionListener(new ActionListener() {		
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				try {
-					group.setName(nameField.getText());
-					group.setParent(parentComboBox.getSelection());
-					
-					DAOEmployee.persistEmployeeGroups(Collections.singleton(group), SpiritFrame.getUser());
-					dispose();
-				} catch (Exception e) {
-					JExceptionDialog.showError(e);
-				}
+		saveButton.addActionListener(ev-> {
+			try {
+				group.setName(nameField.getText());
+				group.setParent(parentComboBox.getSelection());
+
+				DAOEmployee.persistEmployeeGroups(Collections.singleton(group), SpiritFrame.getUser());
+				dispose();
+			} catch (Exception e) {
+				JExceptionDialog.showError(e);
 			}
 		});
-		
+
 		JPanel contentPane = new JPanel(new BorderLayout());
 		contentPane.add(BorderLayout.CENTER, centerPane);
 		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), saveButton));
-		
+
 		setContentPane(contentPane);
 		pack();
 		setLocationRelativeTo(UIUtils.getMainFrame());

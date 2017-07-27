@@ -53,7 +53,7 @@ public class DataWarriorExporter {
 	private PivotTemplate tpl;
 	private PivotDataTable pivotTable;
 	private final boolean generateAllGraphs;
-	
+
 	/**
 	 * Exports ala Excel
 	 * @param pivotTable
@@ -61,33 +61,31 @@ public class DataWarriorExporter {
 	 * @throws Exception
 	 */
 	private DataWarriorExporter(PivotDataTable pivotTable, DataWarriorConfig config) throws Exception {
-		
 		this.config = config;
 		this.tpl = pivotTable.getTemplate();
 		this.pivotTable = pivotTable;
 		this.generateAllGraphs = false;
 	}
-	
+
 	private DataWarriorExporter(List<Result> results, DataWarriorConfig config, SpiritUser user) throws Exception {
 		this.config = config;
-		
-		if(config.getCustomTemplate()==null) {		
+
+		if(config.getCustomTemplate()==null) {
 			// Smart template: everything is by column to start with
 			//
-			this.tpl = new ExpandedPivotTemplate();			
+			this.tpl = new ExpandedPivotTemplate();
 			((ExpandedPivotTemplate)tpl).init(results, config, user);
-
 		} else {
 			this.tpl = config.getCustomTemplate();
 		}
-		
+
 		this.pivotTable = new PivotDataTable(results, tpl);
 		this.generateAllGraphs = true;
 	}
-	
+
 	/**
-	 * Simple exportation to DW without templates or graphs (ala Excel) 
-	 * 
+	 * Simple export to DW without templates or graphs (like Excel)
+	 *
 	 * @param pivotTable
 	 * @return
 	 * @throws Exception
@@ -100,10 +98,10 @@ public class DataWarriorExporter {
 				for(PivotRow r : pivotTable.getPivotRows()) {
 					PivotCell cc = r.getPivotCell(c);
 					if(cc.getNestedKeys().size()>1) {
-						throw new Exception("You cannot export to DW if your data contains nested tables. Please redefine your data");						
-					}					
+						throw new Exception("You cannot export to DW if your data contains nested tables. Please redefine your data");
+					}
 				}
-			}			
+			}
 		}
 		//Export with a default DW Config: automatic
 		DataWarriorExporter exporter = new DataWarriorExporter(pivotTable, new DataWarriorConfig());
@@ -111,27 +109,27 @@ public class DataWarriorExporter {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param pivotTable
 	 * @param model
 	 * @return
 	 */
-	public static StringBuilder getDwar(List<Result> results, DataWarriorConfig model, SpiritUser user) throws Exception {		
+	public static StringBuilder getDwar(List<Result> results, DataWarriorConfig model, SpiritUser user) throws Exception {
 		DataWarriorExporter exporter = new DataWarriorExporter(results, model, user);
 		return exporter.buildDataWarrior();
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param pivotTable
 	 * @param model
 	 * @return
 	 */
-	public static List<String> getViewNames(List<Result> results, DataWarriorConfig model, SpiritUser user) throws Exception {		
+	public static List<String> getViewNames(List<Result> results, DataWarriorConfig model, SpiritUser user) throws Exception {
 		DataWarriorExporter exporter = new DataWarriorExporter(results, model, user);
 		return exporter.getViewNames();
 	}
-	
+
 	private List<String> getViewNames() {
 		List<String> res = new ArrayList<>();
 		if(pivotTable.getPivotColumns().size()==0) {
@@ -145,15 +143,15 @@ public class DataWarriorExporter {
 		}
 		return res;
 	}
-	
+
 	/***************************
 	 * Build the DW content
 	 * @return
 	 */
-	private StringBuilder buildDataWarrior() {	
-		
+	private StringBuilder buildDataWarrior() {
+
 		List<String> views;
-		
+
 		if(config.getViewNames()==null) {
 			views = getViewNames();
 			if(views.size()>MAX_VIEWS) views = views.subList(0, MAX_VIEWS);
@@ -162,7 +160,7 @@ public class DataWarriorExporter {
 		}
 
 		// Orbit? if in Actelion domain
-//		ListHashMap<Integer, RawDataFile> bid2raw = null;
+		//		ListHashMap<Integer, RawDataFile> bid2raw = null;
 		/*
 		//TODO Fix confusion Container.id, Biosample.id in Orbit
 		if (SpiritAdapter.getInstance().isInActelionDomain() && tpl.getWhere(PivotItem.BIOSAMPLE_TOPID) == Where.ASROW) {
@@ -187,22 +185,22 @@ public class DataWarriorExporter {
 			}
 		}
 		 */
-		
+
 		// DW header
 		StringBuilder sb = new StringBuilder();
 		sb.append("<datawarrior-fileinfo>\n");
 		sb.append("<version=\"3.1\">\n");
 		sb.append("<rowcount=\"" + pivotTable.getPivotRows().size() + "\">\n");
 		sb.append("</datawarrior-fileinfo>\n");
-//		if (bid2raw != null) {
-//			sb.append("<column properties>\n");
-//			sb.append("<columnName=\"" + PivotItem.BIOSAMPLE_TOPID.getName() + "\">\n");
-//			sb.append("<columnProperty=\"detailSource0	orbit/preview\">\n");
-//			sb.append("<columnProperty=\"detailName0	Orbit Preview\">\n");
-//			sb.append("<columnProperty=\"detailType0	image/jpeg\">\n");
-//			sb.append("<columnProperty=\"detailCount	1\">\n");
-//			sb.append("</column properties>\n");
-//		}
+		//		if (bid2raw != null) {
+		//			sb.append("<column properties>\n");
+		//			sb.append("<columnName=\"" + PivotItem.BIOSAMPLE_TOPID.getName() + "\">\n");
+		//			sb.append("<columnProperty=\"detailSource0	orbit/preview\">\n");
+		//			sb.append("<columnProperty=\"detailName0	Orbit Preview\">\n");
+		//			sb.append("<columnProperty=\"detailType0	image/jpeg\">\n");
+		//			sb.append("<columnProperty=\"detailCount	1\">\n");
+		//			sb.append("</column properties>\n");
+		//		}
 
 		int rows = pivotTable.getPivotRows().size();
 		int columns = tpl.getPivotItems(Where.ASROW).size()
@@ -242,36 +240,36 @@ public class DataWarriorExporter {
 				table[r + 1][c] = cn;
 
 				if (item == PivotItemFactory.BIOSAMPLE_TOPID) {
-//					if (bid2raw != null) {
-//						// Orbit attachment?
-//						// Find topIds
-//						List<Integer> ids = new ArrayList<Integer>();
-//						for (Biosample b : pivotRow.getBiosamples())
-//							ids.add((int) b.getTopParent().getId());
-//						for (Integer id : ids) {
-//							List<RawDataFile> raws = bid2raw.get(id);
-//							if (raws != null) {
-//								for (RawDataFile rawDataFile : raws) {
-//									table[r + 1][c] += "|#|0:" + rawDataFile.getRawDataFileId();
-//								}
-//							}
-//						}
-//					}
+					//					if (bid2raw != null) {
+					//						// Orbit attachment?
+					//						// Find topIds
+					//						List<Integer> ids = new ArrayList<Integer>();
+					//						for (Biosample b : pivotRow.getBiosamples())
+					//							ids.add((int) b.getTopParent().getId());
+					//						for (Integer id : ids) {
+					//							List<RawDataFile> raws = bid2raw.get(id);
+					//							if (raws != null) {
+					//								for (RawDataFile rawDataFile : raws) {
+					//									table[r + 1][c] += "|#|0:" + rawDataFile.getRawDataFileId();
+					//								}
+					//							}
+					//						}
+					//					}
 				}
 				c++;
 
 			}
 
 			for (int col = 0; col < pivotTable.getPivotColumns().size(); col++) {
-				PivotColumn pivotColumn = pivotTable.getPivotColumns().get(col);			
+				PivotColumn pivotColumn = pivotTable.getPivotColumns().get(col);
 				if(!config.isExportAll() && !views.contains(pivotColumn.getTitle())) continue;
 
-				
-				PivotCell pivotCell = pivotRow.getPivotCell(pivotColumn);				
+
+				PivotCell pivotCell = pivotRow.getPivotCell(pivotColumn);
 				Object val = pivotCell.getValue();
 				String cn = val==null? "": MiscUtils.removeHtmlAndNewLines(val.toString());
-				
-				
+
+
 				if (c < table[r + 1].length)
 					table[r + 1][c++] = cn;
 
@@ -302,10 +300,10 @@ public class DataWarriorExporter {
 			StringBuilder sb2 = new StringBuilder();
 			for (int i = 0; i < views.size(); i++) {
 				sb2.append((i>0?"\t":"") + MiscUtils.removeHtmlAndNewLines(views.get(i)));
-			}			
+			}
 			sb.append("<logarithmicView=\"" + sb2 + "\">\n");
 		}
-		
+
 		// Custom Order
 		sb.append("<customOrderCount=\"" + n + "\">\n");
 		for (int i = 0; i < n; i++) {
@@ -323,14 +321,8 @@ public class DataWarriorExporter {
 			} else {
 				Collections.sort(ordered, CompareUtils.STRING_COMPARATOR);
 			}
-
-			StringBuilder sb2 = new StringBuilder();
-			for (String string : ordered) {
-				if (string == null)
-					continue;
-				sb2.append((sb2.length() > 0 ? "\t" : "") + string);
-			}
-			sb.append("<customOrder_" + i + "=\"" + table[0][i] + "\t" + sb2 + "\">\n");
+			System.out.println("DataWarriorExporter.buildDataWarrior() "+i+" "+MiscUtils.flatten(ordered, "\t"));
+			sb.append("<customOrder_" + i + "=\"" + table[0][i] + "\t" + MiscUtils.flatten(ordered, "\t") + "\">\n");
 		}
 
 		int viewNo = 0;
@@ -347,9 +339,8 @@ public class DataWarriorExporter {
 			String viewName = MiscUtils.removeHtmlAndNewLines(views.get(i));
 
 			//X Axis
-			System.out.println("DataWarriorExporter.buildDataWarrior() "+viewName+" "+config.getXAxis());
 			if(config.getXAxis()==null) {
-				//Auto (boxplot per group or by phase)				
+				//Auto (boxplot per group or by phase)
 				PivotColumn pivotColumn = pivotTable.getPivotColumn(viewName);
 				boolean byPhase = /*pivotColumn==null? false:*/ Result.isPhaseDependant(pivotColumn.getResults());
 				if(byPhase) {
@@ -361,15 +352,15 @@ public class DataWarriorExporter {
 						sb.append("<caseSeparationColumn_" + viewName + "=\"" + separate + "\">\n");
 						sb.append("<caseSeparationValue_" + viewName + "=\"0.5\">\n");
 					}
-					
+
 				} else if(Biosample.getGroups(Result.getBiosamples(pivotColumn.getResults())).size()>1) {
 					String xAxis = MiscUtils.removeHtmlAndNewLines(PivotDataType.GROUP.getColumnName(pivotTable));
-					sb.append("<axisColumn_" + viewName + "_0=\"" + xAxis + "\">\n");					
+					sb.append("<axisColumn_" + viewName + "_0=\"" + xAxis + "\">\n");
 				} else {
 					String xAxis = MiscUtils.removeHtmlAndNewLines(PivotDataType.TOPSAMPLE.getColumnName(pivotTable));
-					sb.append("<axisColumn_" + viewName + "_0=\"" + xAxis + "\">\n");					
+					sb.append("<axisColumn_" + viewName + "_0=\"" + xAxis + "\">\n");
 				}
-				
+
 			} else {
 				//XAxis
 				String xAxis = MiscUtils.removeHtmlAndNewLines(config.getXAxis().getColumnName(pivotTable));
@@ -379,7 +370,7 @@ public class DataWarriorExporter {
 				if (config.getXAxis() == PivotDataType.PHASE) {
 					sb.append("<connectionColumn_" + viewName + "=\"<connectCases>\">\n");
 				}
-				
+
 				//Separate
 				if (config.getSeparate() != null) {
 					String separate = MiscUtils.removeHtmlAndNewLines(config.getSeparate().getColumnName(pivotTable));
@@ -389,16 +380,16 @@ public class DataWarriorExporter {
 					}
 				}
 			}
-			
+
 			//Y Axis
-			String yAxis = MiscUtils.removeHtmlAndNewLines(views.get(i));					
+			String yAxis = MiscUtils.removeHtmlAndNewLines(views.get(i));
 			if (yAxis != null) {
 				if(tpl.getComputed()!=null && tpl.getComputed()!=Computed.NONE) {
-					 yAxis+= " (" + tpl.getComputed() + ")";
+					yAxis+= " (" + tpl.getComputed() + ")";
 				}
 				sb.append("<axisColumn_" + viewName + "_1=\"" + yAxis + "\">\n");
 			}
-			
+			//			sb.append("<colorColumnBackground__TableGroupName=\"GroupName\">\n");
 			sb.append("<markersize_" + viewName + "=\"" + 0.5 + "\">\n");
 			sb.append("<sizeAdaption_" + viewName + "=\"false\">\n");
 			sb.append("<chartType_" + viewName + "=\"" + config.getType() + "\">\n");
@@ -408,12 +399,13 @@ public class DataWarriorExporter {
 
 			int count = 0;
 			List<Group> allGroups = new ArrayList<>(Biosample.getGroups(Result.getBiosamples(pivotTable.getResults())));
-			Collections.sort(allGroups, CompareUtils.OBJECT_COMPARATOR);
+			Collections.sort(allGroups, CompareUtils.STRING_COMPARATOR);
 			sb.append("<colorCount_" + viewName + "=\"" + allGroups.size() + "\">\n");
 			sb.append("<colorListMode_" + viewName + "=\"Categories\">\n");
 			for (Group g : allGroups) {
 				int rgb = g != null && g.getColorRgb() != null? g.getColorRgb().intValue(): Color.LIGHT_GRAY.getRGB();
 				sb.append("<color_" + viewName + "_" + (count++) + "=\"" + rgb + "\">\n");
+				System.out.println("DataWarriorExporter.buildDataWarrior() "+count+" >"+g+">"+rgb);
 			}
 
 			if (config.getSplit() != null) {
@@ -429,26 +421,23 @@ public class DataWarriorExporter {
 			sb.append("<mainViewType" + viewNo + "=\"2Dview\">\n");
 		}
 		sb.append("</datawarrior properties>\n");
+
+		System.out.println("DataWarriorExporter.buildDataWarrior() "+sb);
 		return sb;
 	}
 
 	/**
 	 * Comparator for strings, comparing blocks separately so that the order becomes SLIDE-1, SLIDE-2, SLIDE-10, SLIDE-10-1, ...
 	 */
-	public static final Comparator<String> PHASE_COMPARATOR = new Comparator<String>() {
-		@Override
-		public int compare(String o1, String o2) {
-			return comparePhases(o1, o2);
-		}
-	};
+	public static final Comparator<String> PHASE_COMPARATOR = (o1, o2) -> comparePhases(o1, o2);
 
 	public static int comparePhases(String s1, String s2) {
-		if(s1==null && s2==null) return 0; 
+		if(s1==null && s2==null) return 0;
 		if(s1==null) return 1; //Null at the end
 		if(s2==null) return -1;
 		return convertPhaseIntoMinutes(s1) - convertPhaseIntoMinutes(s2);
 	}
-	
+
 	private static int convertPhaseIntoMinutes(String dateString) {
 		if(dateString==null || !dateString.startsWith("d")) return -1;
 		int index = dateString.indexOf("_");
@@ -468,12 +457,11 @@ public class DataWarriorExporter {
 			try {
 				days = Integer.parseInt(dateString.substring(1, index));
 				hours = Integer.parseInt(dateString.substring(index+1, index2));
-				minutes = dateString.length()<=index2+1?0: Integer.parseInt(dateString.substring(index2+1));				
+				minutes = dateString.length()<=index2+1?0: Integer.parseInt(dateString.substring(index2+1));
 			} catch (Exception e) {
 				return -1;
-			}					
+			}
 		}
 		return (days*24+hours)*60+minutes;
 	}
-	
 }

@@ -22,6 +22,7 @@
 package com.actelion.research.spiritapp.spirit.ui.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -52,26 +53,25 @@ public class SpiritChangeListener {
 		SpiritChangeListener.fireModelChanged(action, what, Collections.singletonList(detail));
 	}
 
-	public final static<T extends IObject> void fireModelChanged(final SpiritChangeType action, final Class<T> what, final List<T> details) {
+	public final static<T extends IObject> void fireModelChanged(final SpiritChangeType action, final Class<T> what, final Collection<T> details) {
 
-		if(action==SpiritChangeType.LOGIN || (action!=null && details.size()>0)) {
-			try {
+		try {
 
-				//Clearing cache
-				SpiritFrame.clear();
+			//Clearing cache
+			SpiritFrame.clearAll();
 
-				//Firing Events on the non editable context
-				for(int i=0; i<50 && JPAUtil.isEditableContext(); i++) {
-					System.out.println("SpiritChangeListener.fireModelChanged() WAIT UNTIL CONTEXT IS NON EDITABLE "+i);
-					try {Thread.sleep(50);} catch(Exception e) {break;}
-				}
-				for (ISpiritChangeObserver listener : new ArrayList<ISpiritChangeObserver>(observers)) {
-					listener.actionModelChanged(action, what, details);
-				}
-			} catch(Exception e) {
-				e.printStackTrace();
+			//Firing Events on the non editable context
+			for(int i=0; i<50 && JPAUtil.isEditableContext(); i++) {
+				System.out.println("SpiritChangeListener.fireModelChanged() WAIT UNTIL CONTEXT IS NON EDITABLE "+i);
+				try {Thread.sleep(50);} catch(Exception e) {break;}
 			}
+			for (ISpiritChangeObserver listener : new ArrayList<ISpiritChangeObserver>(observers)) {
+				listener.actionModelChanged(action, what, details);
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
+		//		}
 	}
 
 }

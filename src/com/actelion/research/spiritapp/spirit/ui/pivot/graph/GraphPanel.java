@@ -92,8 +92,6 @@ public class GraphPanel extends JScrollPane {
 		listPane.setListSelectionListener(listener);
 	}
 
-
-
 	/**
 	 * Analyzes the results based on a standard analyzer.
 	 * Can be slow. Returns a worker

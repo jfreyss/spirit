@@ -31,8 +31,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -109,11 +107,8 @@ public abstract class BiosampleFinder extends JEscapeDialog {
 
 		searchTree = new BiosampleSearchTree(null, null, true);
 		searchTree.setQuery(query);
-		searchTree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				search();
-			}
+		searchTree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, evt-> {
+			search();
 		});
 
 		final JButton searchButton = new JIconButton(IconType.SEARCH, "Search");
@@ -135,7 +130,7 @@ public abstract class BiosampleFinder extends JEscapeDialog {
 					List<Biosample> list = new ArrayList<Biosample>();
 					list.add(toCreate);
 					try {
-						EditBiosampleDlg dlg = EditBiosampleDlg.createDialogForEditInTransactionMode(null, list);
+						EditBiosampleDlg dlg = EditBiosampleDlg.createDialogForEditInTransactionMode(list);
 						dlg.setVisible(true);
 						list = dlg.getSaved();
 						if (list.size() == 1) {

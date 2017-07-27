@@ -24,9 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui.study;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
-import java.awt.event.ComponentAdapter;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,7 +35,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
@@ -48,7 +44,6 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTableModel.Mode;
 import com.actelion.research.spiritapp.spirit.ui.pivot.graph.GraphPanel;
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.StudyDepictor;
-import com.actelion.research.spiritapp.spirit.ui.study.sampling.NamedSamplingEditorPane;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -79,17 +74,17 @@ public class StudyDetailPanel extends JPanel {
 	 * If the tab is forRevision, the study is never refreshed
 	 */
 	private boolean forRevision;
+	private final JTabbedPane infoTabbedPane = new JCustomTabbedPane();
 
 	private final StudyDepictor studyDepictor = new StudyDepictor();
-
-	private final JTabbedPane infoTabbedPane = new JCustomTabbedPane();
 	private final StudyEditorPane editorPane = new StudyEditorPane();
+	private final StudyQuickViewPane quickViewPane = new StudyQuickViewPane();
 	private final BiosampleTable animalTable = new BiosampleTable();
 	private final GraphPanel graphPanel = new GraphPanel();
-	private final NamedSamplingEditorPane samplingsEditorPane = new NamedSamplingEditorPane();
+	//	private final NamedSamplingEditorPane samplingsEditorPane = new NamedSamplingEditorPane();
 
 	private JSplitPane attachedSamplesSplitPane;
-	private final JSplitPane studySsplitPane;
+	private final JSplitPane studySplitPane;
 
 	private CardLayout cardLayout = new CardLayout();
 	private JPanel infoCardTabbedPane = new JPanel(cardLayout);
@@ -104,71 +99,51 @@ public class StudyDetailPanel extends JPanel {
 	public StudyDetailPanel(final int orientation) {
 
 		//init depictor
-		studyDepictor.addPropertyChangeListener(new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				StudyDetailPanel.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
-			}
+		studyDepictor.addPropertyChangeListener(evt -> {
+			StudyDetailPanel.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
 		});
 
 		final BiosampleTabbedPane biosamplePane = new BiosampleTabbedPane();
 		biosamplePane.setSelectedTab(BiosampleTabbedPane.HISTORY_TITLE);
-		ListSelectionListener l = new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if(e.getValueIsAdjusting()) return;
-				biosamplePane.setBiosamples(animalTable.getSelection().size()==1? animalTable.getSelection(): null);
-			}
+		ListSelectionListener l = e-> {
+			if(e.getValueIsAdjusting()) return;
+			biosamplePane.setBiosamples(animalTable.getSelection().size()==1? animalTable.getSelection(): null);
 		};
 		animalTable.getSelectionModel().addListSelectionListener(l);
 		animalTable.getColumnModel().getSelectionModel().addListSelectionListener(l);
 		animalTable.getModel().setMode(Mode.COMPACT);
 
 		attachedSamplesSplitPane = new JSplitPane(orientation==SwingUtilities.HORIZONTAL? JSplitPane.HORIZONTAL_SPLIT: JSplitPane.VERTICAL_SPLIT, new JBGScrollPane(animalTable, 3), biosamplePane);
-		//		if(orientation==SwingUtilities.HORIZONTAL) {
-		//
-		//			((JSplitPane)animalTab).setDividerLocation(600);
-		//
-		//		} else if(orientation==SwingUtilities.VERTICAL) {
-		//
-		//			animalTab = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JBGScrollPane(animalTable, 3), biosamplePane);
-		//
-		//		}
-		attachedSamplesSplitPane.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentShown(java.awt.event.ComponentEvent e) {
-				attachedSamplesSplitPane.setDividerLocation(.5);
-			};
-		});
+		attachedSamplesSplitPane.setDividerLocation(150);
 
-		JSplitPane infoSplitPane = new JSplitPane(orientation==SwingUtilities.HORIZONTAL? JSplitPane.HORIZONTAL_SPLIT: JSplitPane.VERTICAL_SPLIT, new JScrollPane(editorPane), graphPanel);
-		infoSplitPane.setOneTouchExpandable(true);
+		JSplitPane quickViewSplitPane = new JSplitPane(orientation==SwingUtilities.HORIZONTAL? JSplitPane.HORIZONTAL_SPLIT: JSplitPane.VERTICAL_SPLIT, new JScrollPane(quickViewPane), graphPanel);
+		quickViewSplitPane.setOneTouchExpandable(true);
 
 		infoTabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
-		infoTabbedPane.add("Samples", attachedSamplesSplitPane);
-		infoTabbedPane.add("Samplings", new JScrollPane(samplingsEditorPane));
-		infoTabbedPane.add("Infos", infoSplitPane);
-		infoTabbedPane.setSelectedIndex(1);
+		infoTabbedPane.add("Infos", new JScrollPane(editorPane));
+		infoTabbedPane.add("Participants", attachedSamplesSplitPane);
+		infoTabbedPane.add("QuickView", quickViewSplitPane);
+		//		infoTabbedPane.add("Samplings", new JScrollPane(samplingsEditorPane));
 
 		infoCardTabbedPane.add("read", infoTabbedPane);
 		infoCardTabbedPane.add("view", UIUtils.createVerticalBox(infoLabel, Box.createVerticalGlue()));
 		cardLayout.show(infoCardTabbedPane, "read");
 
-		studySsplitPane = new JSplitPane(orientation, new JScrollPane(studyDepictor), infoCardTabbedPane);
-		studySsplitPane.setOneTouchExpandable(true);
+		studySplitPane = new JSplitPane(orientation, new JScrollPane(studyDepictor), infoCardTabbedPane);
+		studySplitPane.setOneTouchExpandable(true);
 		SwingUtilities.invokeLater(() -> {
 			if(orientation==JSplitPane.HORIZONTAL_SPLIT) {
 				attachedSamplesSplitPane.setDividerLocation(.6);
-				studySsplitPane.setDividerLocation(.7);
+				studySplitPane.setDividerLocation(.7);
 			} else {
 				attachedSamplesSplitPane.setDividerLocation(.5);
-				studySsplitPane.setDividerLocation(.5);
+				studySplitPane.setDividerLocation(.5);
 			}
-			infoSplitPane.setDividerLocation(.5);
+			quickViewSplitPane.setDividerLocation(.5);
 		});
 
 		setLayout(new BorderLayout());
-		add(BorderLayout.CENTER, studySsplitPane);
+		add(BorderLayout.CENTER, studySplitPane);
 		setOpaque(true);
 		setPreferredSize(new Dimension(orientation==JSplitPane.HORIZONTAL_SPLIT? 800: 320, orientation==JSplitPane.HORIZONTAL_SPLIT? 350: 700));
 
@@ -192,8 +167,8 @@ public class StudyDetailPanel extends JPanel {
 	}
 
 	public void setForRevision(boolean forRevision) {
-		editorPane.setForRevision(forRevision);
 		this.forRevision = forRevision;
+		studyDepictor.setForRevision(forRevision);
 	}
 
 	public StudyDepictor getStudyDepictor() {
@@ -247,8 +222,8 @@ public class StudyDetailPanel extends JPanel {
 
 	private void refreshTabbedPane() {
 		if(study==null) return;
-		if(infoTabbedPane.getSelectedIndex()==0) {
-			new SwingWorkerExtended("Loading Samples", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
+		if(infoTabbedPane.getSelectedIndex()==1) {
+			new SwingWorkerExtended("Loading Paricipants", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 				private List<Biosample> attached = null;
 				@Override
 				protected void doInBackground() throws Exception {
@@ -262,19 +237,27 @@ public class StudyDetailPanel extends JPanel {
 					cardLayout.show(infoCardTabbedPane, "read");
 				}
 			};
-		} else if(infoTabbedPane.getSelectedIndex()==1) {
-			new SwingWorkerExtended("Loading Samplings", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
+			//		} else if(infoTabbedPane.getSelectedIndex()==1) {
+			//			new SwingWorkerExtended("Loading Samplings", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
+			//				@Override
+			//				protected void done() {
+			//					samplingsEditorPane.setStudy(study);
+			//					cardLayout.show(infoCardTabbedPane, "read");
+			//				}
+			//			};
+		} else if(infoTabbedPane.getSelectedIndex()==0) {
+			new SwingWorkerExtended("Loading Details", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 				@Override
 				protected void done() {
-					samplingsEditorPane.setStudy(JPAUtil.reattach(study));
+					editorPane.setStudy(study);
 					cardLayout.show(infoCardTabbedPane, "read");
 				}
 			};
 		} else if(infoTabbedPane.getSelectedIndex()==2) {
-			new SwingWorkerExtended("Loading Details", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
+			new SwingWorkerExtended("Loading Infos", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 				@Override
 				protected void done() {
-					editorPane.setStudy(JPAUtil.reattach(study));
+					quickViewPane.setStudy(study);
 					cardLayout.show(infoCardTabbedPane, "read");
 				}
 			}.afterDone(() -> {
@@ -302,14 +285,14 @@ public class StudyDetailPanel extends JPanel {
 		}
 	}
 
-	public void showAttached() {
+	public void showInfos() {
 		infoTabbedPane.setSelectedIndex(0);
-		refresh();
+		//		refresh();
 	}
 
-	public void showInfos() {
-		infoTabbedPane.setSelectedIndex(2);
-		refresh();
+	public void showParticipants() {
+		infoTabbedPane.setSelectedIndex(1);
+		//		refresh();
 	}
 
 

@@ -25,7 +25,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
+import java.util.Collection;
 import java.util.Set;
 
 import javax.swing.AbstractAction;
@@ -60,58 +60,58 @@ import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 /**
  * Customized tab for AnimalCare
- * 
+ *
  * @author Joel Freyss
  *
  */
 public class AnimalCareTab extends SpiritTab implements IStudyTab {
 
-	private final StudyEditorPane studyEditorPane = new StudyEditorPane(); 
+	private final StudyEditorPane studyEditorPane = new StudyEditorPane();
 	private final JButton editInfosButton = new JIconButton(IconType.EDIT, "Edit Infos");
 	private final JButton editDesignButton = new JIconButton(IconType.STUDY, "Edit Design");
-	
+
 	private final StudyDetailPanel studyDetailPanel = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT);
 
-	private final JButton groupAssignButton;	
+	private final JButton groupAssignButton;
 	private final JButton cageButton = new JIconButton(IconType.PRINT, "", "Print cage labels");
-	
+
 	private final JButton weighingButton = new JBigButton(new StudyActions.Action_AnimalMonitoring(null));
 	private final JButton markDeadButton = new JBigButton(new BiosampleActions.Action_SetLivingStatus((Study)null));
 
 	private final JButton manageButton = new JBigButton(new StudyActions.Action_ManageSamples(null));
 	private final JButton measurementButton = new JBigButton(new StudyActions.Action_MeasurementSamples(null));
-		
+
 	private final JButton reportButton = new JBigButton(new StudyActions.Action_Report(null));
-	
-	
+
+
 	public AnimalCareTab(SpiritFrame frame) {
 		super(frame, "AnimalCare", IconType.STUDY.getIcon());
-		groupAssignButton = new JBigButton(new Action_GroupAssignmentSelecter());	
-		studyDetailPanel.showAttached();
-		
+		groupAssignButton = new JBigButton(new Action_GroupAssignmentSelecter());
+		studyDetailPanel.showParticipants();
+
 		StudyActions.attachPopup(studyDetailPanel);
-		
-		//Tooltip		
+
+		//Tooltip
 		groupAssignButton.setToolTipText("Assign the groups through the Group Assignment Wizard");
-		
+
 		//Button Menu
 		JPanel buttonPanel = UIUtils.createTitleBox("", UIUtils.createVerticalBox(
-					UIUtils.createBox(groupAssignButton, null, null, null, cageButton),
-					Box.createVerticalStrut(10),
-					weighingButton,
-					markDeadButton,
-					Box.createVerticalStrut(10),
-					manageButton,
-					measurementButton,
-					Box.createVerticalStrut(10),
-					reportButton
+				UIUtils.createBox(groupAssignButton, null, null, null, cageButton),
+				Box.createVerticalStrut(10),
+				weighingButton,
+				markDeadButton,
+				Box.createVerticalStrut(10),
+				manageButton,
+				measurementButton,
+				Box.createVerticalStrut(10),
+				reportButton
 				));
-		
+
 		JPanel westPanel = UIUtils.createBox(
-				UIUtils.createBox(BorderFactory.createEtchedBorder(), new JScrollPane(studyEditorPane), null, UIUtils.createHorizontalBox(editInfosButton, editDesignButton, Box.createHorizontalGlue())), 
+				UIUtils.createBox(BorderFactory.createEtchedBorder(), new JScrollPane(studyEditorPane), null, UIUtils.createHorizontalBox(editInfosButton, editDesignButton, Box.createHorizontalGlue())),
 				buttonPanel);
 
-		editInfosButton.addActionListener(new ActionListener() {			
+		editInfosButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -123,8 +123,8 @@ public class AnimalCareTab extends SpiritTab implements IStudyTab {
 				}
 			}
 		});
-		
-		editDesignButton.addActionListener(new ActionListener() {			
+
+		editDesignButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -136,27 +136,27 @@ public class AnimalCareTab extends SpiritTab implements IStudyTab {
 				}
 			}
 		});
-		
+
 		westPanel.setPreferredSize(new Dimension(250, 300));
 		setLayout(new BorderLayout());
-		add(BorderLayout.WEST, westPanel);		
+		add(BorderLayout.WEST, westPanel);
 		add(BorderLayout.CENTER, studyDetailPanel);
 
-		cageButton.addActionListener(new ActionListener() {			
+		cageButton.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e) {				
+			public void actionPerformed(ActionEvent e) {
 				try {
 					Study study = getStudy();
 					if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
 					new PrintingDlg(study.getTopAttachedBiosamples());
 				} catch (Exception ex) {
 					JExceptionDialog.showError(ex);
-				} 
-				
+				}
+
 			}
 		});
-		
-		weighingButton.addActionListener(new ActionListener() {			
+
+		weighingButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -168,8 +168,8 @@ public class AnimalCareTab extends SpiritTab implements IStudyTab {
 				}
 			}
 		});
-		
-		manageButton.addActionListener(new ActionListener() {			
+
+		manageButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -181,8 +181,8 @@ public class AnimalCareTab extends SpiritTab implements IStudyTab {
 				}
 			}
 		});
-		
-		measurementButton.addActionListener(new ActionListener() {			
+
+		measurementButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -191,11 +191,11 @@ public class AnimalCareTab extends SpiritTab implements IStudyTab {
 					new StudyActions.Action_MeasurementSamples(study).actionPerformed(e);
 				} catch (Exception ex) {
 					JExceptionDialog.showError(AnimalCareTab.this, ex);
-				}				
+				}
 			}
 		});
-		
-		reportButton.addActionListener(new ActionListener() {			
+
+		reportButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -207,8 +207,8 @@ public class AnimalCareTab extends SpiritTab implements IStudyTab {
 				}
 			}
 		});
-		
-		markDeadButton.addActionListener(new ActionListener() {		
+
+		markDeadButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -218,46 +218,46 @@ public class AnimalCareTab extends SpiritTab implements IStudyTab {
 				} catch (Exception ex) {
 					JExceptionDialog.showError(AnimalCareTab.this, ex);
 				}
-			}			
+			}
 		});
 
 	}
-	
-	
+
+
 
 	public class Action_GroupAssignmentSelecter extends AbstractAction {
-		
-		public Action_GroupAssignmentSelecter() {			
+
+		public Action_GroupAssignmentSelecter() {
 			super("Group Assignment");
 			putValue(AbstractAction.SMALL_ICON, IconType.LINK.getIcon());
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			Study study = getStudy();
 			if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) return;
-			
+
 			Phase phase;
 			Set<Phase> phases = study.getPhasesWithGroupAssignments();
 			PhaseComboBox phaseComboBox = new PhaseComboBox(phases);
-			
+
 			if(phases.size()==1) {
 				phase = phases.iterator().next();
-			} else {					
+			} else {
 				int res = JOptionPane.showOptionDialog(null, UIUtils.createVerticalBox(
 						UIUtils.createHorizontalBox(new JLabel("Please select a phase for the group assignment: "), Box.createHorizontalGlue()),
 						UIUtils.createHorizontalBox(new JLabel("Phase: "), phaseComboBox, Box.createHorizontalGlue())), "Group Assignment", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, null, null);
-				
-				if(res!=JOptionPane.YES_OPTION || phaseComboBox.getSelection()==null) return;					
+
+				if(res!=JOptionPane.YES_OPTION || phaseComboBox.getSelection()==null) return;
 				phase = phaseComboBox.getSelection();
 			}
-			
+
 			new RandomizationDlg(phase);
-			
+
 		}
 	}
-	
-	
+
+
 	@Override
 	public void setStudy(Study study) {
 		studyDetailPanel.setStudy(study);
@@ -274,16 +274,16 @@ public class AnimalCareTab extends SpiritTab implements IStudyTab {
 	@Override
 	public void onTabSelect() {
 	}
-	
+
 	@Override
 	public void onStudySelect() {
 		Study study = getFrame().getStudy();
 		if(!SpiritRights.canBlind(study, SpiritFrame.getUser())) return;
-		studyDetailPanel.setStudy(study);			
+		studyDetailPanel.setStudy(study);
 
 		boolean canBlind = study!=null && SpiritRights.canBlind(study, SpiritFrame.getUser());
 		boolean canRead = study!=null && SpiritRights.canExpert(study, SpiritFrame.getUser());
-		
+
 		int nAnimals = study==null? 0: study.getTopAttachedBiosamples().size();
 
 		groupAssignButton.setEnabled(canBlind && !SpiritRights.isBlindAll(study, SpiritFrame.getUser()));
@@ -293,7 +293,7 @@ public class AnimalCareTab extends SpiritTab implements IStudyTab {
 		manageButton.setEnabled(canBlind && nAnimals>0);
 		measurementButton.setEnabled(canBlind && nAnimals>0);
 		cageButton.setEnabled(canBlind && nAnimals>0);
-			
+
 		studyEditorPane.setStudy(study);
 		editInfosButton.setEnabled(study!=null);
 		editDesignButton.setEnabled(study!=null);
@@ -301,7 +301,7 @@ public class AnimalCareTab extends SpiritTab implements IStudyTab {
 
 
 	@Override
-	public <T> void fireModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
+	public <T> void fireModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
 		onStudySelect();
 	}
 

@@ -24,8 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui.biosample;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -38,7 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
@@ -55,8 +53,8 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleTab
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.AbstractLinkerColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.LinkerColumnFactory;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.SampleIdColumn;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
-import com.actelion.research.spiritapp.spirit.ui.lf.SpiritExtendTable;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritExtendTable;
 import com.actelion.research.spiritcore.business.biosample.BarcodeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
@@ -80,27 +78,27 @@ import com.actelion.research.util.ui.exceltable.FastHeaderRenderer;
  *
  */
 public class BiosampleTable extends SpiritExtendTable<Biosample> {
-	
+
 
 	/**
 	 * smartColumns allow the reinitialization of the columns after each call to setRows.
 	 * If not set, columns have to be set programatically
 	 */
 	private boolean smartColumns = true;
-	
-	
+
+
 	public BiosampleTable() {
 		this(new BiosampleTableModel());
 	}
-	
+
 	public BiosampleTable(BiosampleTableModel model) {
 		super(model);
-		
+
 		setBorderStrategy(BorderStrategy.WHEN_DIFFERENT_VALUE);
-		setCellSelectionEnabled(true);		
+		setCellSelectionEnabled(true);
 		setFillsViewportHeight(false);
 		setHeaderClickingPolicy(HeaderClickingPolicy.POPUP);
-		
+
 		getTableHeader().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -117,24 +115,24 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 				}
 			}
 		});
-		
+
 	}
 
 	@Override
 	protected void populateHeaderPopup(JPopupMenu popupMenu, Column<Biosample, ?> column) {
 		BiosampleTable.populateExpandPopup(this, popupMenu);
 	}
-	
+
 	@Override
 	public BiosampleTableModel getModel() {
-		return (BiosampleTableModel) super.getModel();		
+		return (BiosampleTableModel) super.getModel();
 	}
-	
+
 	/**
-	 * Sets the rows, init the columns (if smartColumns==true) and reset the column widths 
+	 * Sets the rows, init the columns (if smartColumns==true) and reset the column widths
 	 */
 	@Override
-	public void setRows(final List<Biosample> data) {	
+	public void setRows(final List<Biosample> data) {
 		if(data!=null && !data.isEmpty()) {
 			getModel().setRows(new ArrayList<>(data));
 		} else {
@@ -147,7 +145,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		getModel().fireTableDataChanged();
 		resetPreferredColumnWidth();
 	}
-	
+
 	/**
 	 * Inits columns based on the data.
 	 * - Container is only shown if one column has a container
@@ -161,15 +159,15 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		for(int i=0; i<getModel().getColumns().size(); i++) {
 			formerColumnOrder.put(getModel().getColumn(convertColumnIndexToModel(i)), i);
 		}
-		
+
 		getModel().initColumns();
 
 		//Reorganize columns as it was previously (bubble sort)
 		List<Column<Biosample, ?>> columns = new ArrayList<>(this.getModel().getColumns());
-		boolean wasChanged = false; 
-		boolean swapped; 
+		boolean wasChanged = false;
+		boolean swapped;
 		do {
-			swapped = false; 
+			swapped = false;
 			for (int i = 1; i < formerColumnOrder.size() && i < columns.size(); i++) {
 				Integer index1 = formerColumnOrder.get(columns.get(convertColumnIndexToModel(i-1)));
 				Integer index2 = formerColumnOrder.get(columns.get(convertColumnIndexToModel(i)));
@@ -183,13 +181,13 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		if(wasChanged) {
 			getModel().setColumns(columns);
 		}
-		
+
 	}
-	
+
 	public boolean isSmartColumns() {
 		return smartColumns;
 	}
-	
+
 	/**
 	 * By defaults, the columns are set as smart, ie columns adapt themselvers to the data
 	 * If this property is set to false, the columns have to be set manually always (or through a call to getModel().initColumns() after a call to setRows(...))
@@ -199,12 +197,12 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		this.smartColumns = smartColumns;
 	}
 
-	
-	
+
+
 	public Collection<Biosample> getHighlightedSamples() {
 		int[] selRows = getSelectedRows();
 		int[] selCols = getSelectedColumns();
-		
+
 		Set<Biosample> res = new LinkedHashSet<>();
 		for (int c = 0; c < selCols.length; c++) {
 			for (int r = 0; r < selRows.length; r++) {
@@ -227,12 +225,12 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 					} else if(!linker.isLinked()) {
 						res.add(row);
 					}
-				}				
+				}
 			}
 		}
 		return res;
 	}
-	
+
 	/**
 	 * Override this method to adjust the columns after expanding
 	 * @param obj
@@ -244,7 +242,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 	protected void expandRow(Biosample obj, boolean expand, int maxDepth, boolean fireEvents) {
 		final int[] sRows = getSelectedRows();
 		final int[] sCols = getSelectedColumns();
-		
+
 		super.expandRow(obj, expand, maxDepth, false);
 		if(fireEvents) {
 			if(smartColumns) {
@@ -252,33 +250,33 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 			}
 			getModel().fireTableDataChanged();
 			resetPreferredColumnWidth();
-			
+
 			if(sCols.length>0 && sCols[0]<getColumnCount()) setColumnSelectionInterval(sCols[0], sCols[0]);
 			if(sRows.length>0 && sRows[0]<getRowCount()) setRowSelectionInterval(sRows[0], sRows[0]);
 		}
-		
+
 	}
 
-	
+
 	public static void expandContainerLocation(AbstractExtendTable<Biosample> table, boolean expand) {
 		//Initialize variables
 		final ExtendTableModel<Biosample> model = table.getModel();
 		final Biotype biotype = (model instanceof EditBiosampleTableModel)? ((EditBiosampleTableModel) model).getBiotype():  ((BiosampleTableModel) model).getBiotype();
 		final Set<BiosampleLinker> linkers = getPresentLinkers(table);
-		
+
 		if(biotype!=null && biotype.isHideContainer()) return;
-		
+
 		final List<Biosample> toExplore = table.getRows().subList(0, Math.min(model.getMaxRowsToExplore(), table.getRows().size()));
-		
+
 		if(expand) {
 			List<Column<Biosample, ?>> toAdd = new ArrayList<Column<Biosample, ?>>();
 			if(table.isEditable()) {
 				//Always add those 4 editable columns
-				
+
 				if(biotype==null || biotype.getContainerType()==null) toAdd.add(new ContainerTypeColumn());
 				if(biotype==null || biotype.getContainerType()==null || biotype.getContainerType().getBarcodeType()!=BarcodeType.NOBARCODE) toAdd.add(new ContainerIdColumn());
 				toAdd.add(new ContainerLocationPosColumn());
-				if(biotype==null || biotype.getAmountUnit()!=null) toAdd.add(new ContainerAmountColumn(biotype));								
+				if(biotype==null || biotype.getAmountUnit()!=null) toAdd.add(new ContainerAmountColumn(biotype));
 			} else {
 				//Add columns depending of context (may not be editable)
 				for(Biosample b: toExplore) if(linkers==null || b.getContainerType()!=null) {toAdd.add(new ContainerTypeColumn()); break;}
@@ -289,9 +287,9 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 
 			List<Column<Biosample, ?>> toRemove = new ArrayList<Column<Biosample, ?>>();
 			for (Column<Biosample,?> col : model.getColumns()) {
-				if(col instanceof ContainerFullColumn) {					
+				if(col instanceof ContainerFullColumn) {
 					toRemove.add(col);
-				}			
+				}
 			}
 
 			table.getModel().removeColumns(toRemove);
@@ -300,20 +298,20 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		} else {
 			List<Column<Biosample, ?>> toAdd = new ArrayList<Column<Biosample, ?>>();
 			List<Column<Biosample, ?>> toRemove = new ArrayList<Column<Biosample, ?>>();
-			
+
 			for (Column<Biosample,?> col : model.getColumns()) {
-				if("Container".equals(col.getCategory())) {					
+				if("Container".equals(col.getCategory())) {
 					toRemove.add(col);
-				}			
+				}
 			}
 			toAdd.add(new ContainerFullColumn());
-			
+
 			table.getModel().removeColumns(toRemove);
 			table.getModel().addColumns(toAdd, true);
 			table.resetPreferredColumnWidth();
 		}
 	}
-	
+
 	public static void expandBiotype(AbstractExtendTable<Biosample> table, String biotype, Boolean expand) {
 		final ListHashMap<String, BiosampleLinker> keys = getBiotypeToLinkerKeys(table);
 		if(keys.get(biotype)==null) {
@@ -324,10 +322,10 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		if(expand==null) {
 			if(table.getModel() instanceof BiosampleTableModel) {
 				int notPresent = 0;
-				for(BiosampleLinker linker: keys.get(biotype)) {		
+				for(BiosampleLinker linker: keys.get(biotype)) {
 					if(linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().isSecundary()) continue;
 					if(!((BiosampleTableModel) table.getModel()).getLinkers().contains(linker)) {
-						notPresent++; 
+						notPresent++;
 					}
 				}
 				expand = notPresent>0;
@@ -335,7 +333,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 				expand = true;
 			}
 		}
-		
+
 		if(expand) {
 			List<Column<Biosample, ?>> toAdd = new ArrayList<Column<Biosample, ?>>();
 			for(BiosampleLinker linker: keys.get(biotype)) {
@@ -343,8 +341,8 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 				if(column instanceof SampleIdColumn) continue;
 				toAdd.add(column);
 			}
-			
-			
+
+
 			table.getModel().addColumns(toAdd, true);
 		} else {
 			List<Column<Biosample, ?>> toRemove = new ArrayList<Column<Biosample, ?>>();
@@ -355,7 +353,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 			}
 			table.getModel().removeColumns(toRemove);
 		}
-		
+
 		for(Column<Biosample, ?> col: table.getModel().getColumns()) {
 			if((col instanceof SampleIdColumn) && ((SampleIdColumn)col).getBiotype()!=null && biotype.equals(((SampleIdColumn)col).getBiotype().getName())) {
 				((SampleIdColumn)col).setDisplayName(!expand);
@@ -364,7 +362,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		table.resetPreferredColumnWidth();
 
 	}
-	
+
 	public static ListHashMap<String, BiosampleLinker> getBiotypeToLinkerKeys(final AbstractExtendTable<Biosample> table) {
 		//Initialize variables
 		final ExtendTableModel<Biosample> model = table.getModel();
@@ -374,48 +372,48 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		} else if(model instanceof BiosampleTableModel) {
 			Biotype biotype = ((BiosampleTableModel) model).getBiotype();
 			if(biotype==null) {
-				linkers = ((BiosampleTableModel) model).getLinkers();				
-			} else {				
-				linkers = ((BiosampleTableModel) model).getLinkers(); //was null				
+				linkers = ((BiosampleTableModel) model).getLinkers();
+			} else {
+				linkers = ((BiosampleTableModel) model).getLinkers(); //was null
 			}
 		} else {
 			throw new IllegalArgumentException("Invalid model: "+model);
 		}
-				
-		
+
+
 		//Go through each linkers and check what are the available fields that could be proposed to expand/collapse
 		//Create a map of bioTypeString->list of linkers
 		final ListHashMap<String, BiosampleLinker> keys = new ListHashMap<String, BiosampleLinker>();
 		final Set<String> toExpand = new HashSet<String>();
 		if(linkers!=null) {
-			
+
 			//Get a list of all Linkers
 			final List<Biosample> toExplore = table.getRows().subList(0, Math.min(model.getMaxRowsToExplore(), table.getRows().size()));
-			final Set<BiosampleLinker> allLinkers = new TreeSet<BiosampleLinker>(); 
+			final Set<BiosampleLinker> allLinkers = new TreeSet<BiosampleLinker>();
 			allLinkers.addAll(BiosampleLinker.getLinkers(toExplore, LinkerMethod.INDIRECT_LINKS));
 			allLinkers.addAll(BiosampleLinker.getLinkers(toExplore, LinkerMethod.DIRECT_LINKS));
 
 			for(BiosampleLinker linker: allLinkers) {
-		
+
 				if(!linker.isLinked() && (linker.getType()!=LinkerType.SAMPLENAME)) continue;
 				if(linker.getType()==LinkerType.SAMPLEID) continue;
-				
-				String key = linker.getHierarchyBiotype()!=null? linker.getHierarchyBiotype().getName(): 
+
+				String key = linker.getHierarchyBiotype()!=null? linker.getHierarchyBiotype().getName():
 					linker.getAggregatedMetadata()!=null? linker.getAggregatedMetadata().getName():
-					linker.getBiotypeForLabel()!=null? linker.getBiotypeForLabel().getName():
-					null;
-				if(key==null) continue;
-				
-				
-				keys.add(key, linker);
-				if(!linkers.contains(linker)) {
-					toExpand.add(key);
-				}
+						linker.getBiotypeForLabel()!=null? linker.getBiotypeForLabel().getName():
+							null;
+						if(key==null) continue;
+
+
+						keys.add(key, linker);
+						if(!linkers.contains(linker)) {
+							toExpand.add(key);
+						}
 			}
 		}
 		return keys;
 	}
-	
+
 	private static Set<BiosampleLinker> getPresentLinkers(final AbstractExtendTable<Biosample> table){
 		final Set<BiosampleLinker> presentLinkers;
 		final ExtendTableModel<Biosample> model = table.getModel();
@@ -430,11 +428,11 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 			throw new IllegalArgumentException("Invalid model: "+model);
 		}
 		return presentLinkers;
-		
+
 	}
 	/**
 	 * Create an Expand / Collapse Menu
-	 * 
+	 *
 	 * Parent Biotype -> Expand / Collapse
 	 * Biotype -> Expand / Collapse
 	 */
@@ -445,7 +443,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		final Biotype biotype = (model instanceof EditBiosampleTableModel)? ((EditBiosampleTableModel) model).getBiotype():  ((BiosampleTableModel) model).getBiotype();
 		final Set<BiosampleLinker> presentLinkers = getPresentLinkers(table);
 
-		
+
 		//Check presence of container columns
 		boolean hasContainer = false;
 		boolean hasFullContainer = false;
@@ -454,81 +452,70 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 				hasContainer = true;
 				hasFullContainer = true;
 				break;
-			} else if("Container".equals(col.getCategory())) {					
+			} else if("Container".equals(col.getCategory())) {
 				hasContainer = true;
-			}			
+			}
 		}
-		
+
 
 		//Go through each linkers and check what are the available fields that could be proposed to expand/collapse
 		//Create a map of bioTypeString->list of linkers
-		
-		final ListHashMap<String, BiosampleLinker> keys = new ListHashMap<>();
+
+		final ListHashMap<String, BiosampleLinker> biotypeName2linkers = new ListHashMap<>();
 		final Set<String> toExpand = new HashSet<>();
 		if(presentLinkers!=null) {
-			
+
 			//Get a list of all Linkers
 			final List<Biosample> toExplore = MiscUtils.subList(table.getRows(), model.getMaxRowsToExplore());
-			final Set<BiosampleLinker> allLinkers = new TreeSet<>(); 
-			allLinkers.addAll(BiosampleLinker.getLinkers(toExplore, LinkerMethod.INDIRECT_LINKS));
-			allLinkers.addAll(BiosampleLinker.getLinkers(toExplore, LinkerMethod.DIRECT_LINKS));
-			for(BiosampleLinker linker: allLinkers) {
-		
-				if(/*!linker.isLinked() &&*/ linker.getType()!=LinkerType.SAMPLENAME) continue;
-				
-				String key = linker.getHierarchyBiotype()!=null? linker.getHierarchyBiotype().getName(): 
+			for(BiosampleLinker linker: BiosampleLinker.getLinkers(toExplore, LinkerMethod.ALL_LINKS)) {
+
+				String biotypeName = linker.getHierarchyBiotype()!=null? linker.getHierarchyBiotype().getName():
 					linker.getAggregatedMetadata()!=null? linker.getAggregatedMetadata().getName():
-					linker.getBiotypeForLabel()!=null? linker.getBiotypeForLabel().getName():
-					null;
-					
-				if(key==null) continue;
-				
-				
-				keys.add(key, linker);
-				if(!presentLinkers.contains(linker)) {
-					toExpand.add(key);
-				}
+						linker.getBiotypeForLabel()!=null? linker.getBiotypeForLabel().getName():
+							null;
+						System.out.println("BiosampleTable.populateExpandPopup() "+biotypeName+" "+linker.getAggregatedMetadata());
+						if(biotypeName==null) continue;
+
+
+						biotypeName2linkers.add(biotypeName, linker);
+						if(!presentLinkers.contains(linker)) {
+							toExpand.add(biotypeName);
+						}
 			}
 		}
-		
+
 		////////////////////////////////////////
-		//Expand
-		if(keys.size()>0 || (hasContainer && (biotype==null || !biotype.isHideContainer()))) {
+		//Show Expand menu if there is one linker or if there is a container column
+		if(biotypeName2linkers.size()>0 || (hasContainer && (biotype==null || !biotype.isHideContainer()))) {
 			menu.add(new JSeparator());
-			menu.add(new JCustomLabel("Expanded Columns", Font.BOLD));
-			
+			menu.add(new JCustomLabel("Expand Columns", Font.BOLD));
+
 			//Expand-Location menu
 			if(hasContainer && (biotype==null || !biotype.isHideContainer())) {
-				final JCheckBoxMenuItem m = new JCheckBoxMenuItem("Container", !hasFullContainer);
-				m.addActionListener(new ActionListener() {					
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						expandContainerLocation(table, m.isSelected());
-					}
+				final JCheckBox m = new JCheckBox("Container", !hasFullContainer);
+				m.addActionListener(e-> {
+					expandContainerLocation(table, m.isSelected());
 				});
 				menu.add(m);
 			}
-			
-			
+
+
 			//Expand-Biotype menu
-			for (final String key : keys.keySet()) {
-				final JCheckBoxMenuItem m = new JCheckBoxMenuItem(key, !toExpand.contains(key));
-				m.addActionListener(new ActionListener() {					
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						expandBiotype(table, key, m.isSelected());
-					}
+			for (final String key : biotypeName2linkers.keySet()) {
+				final JCheckBox m = new JCheckBox(key, !toExpand.contains(key));
+				m.addActionListener(e-> {
+					expandBiotype(table, key, m.isSelected());
 				});
-				menu.add(m);				
+				menu.add(m);
 			}
-		}		
-	
+		}
+
 	}
 
-	
+
 	private final FastHeaderRenderer<PivotRow> renderer = new FastHeaderRenderer<PivotRow>() {
 		private Color color = UIManager.getColor("Panel.background");
-		
+
 		@SuppressWarnings("unchecked")
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -540,15 +527,15 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 				comp.setBackground(color);
 			} else if(col<getModel().getColumns().size() && !(getModel().getColumns().get(col) instanceof SampleIdColumn) && getModel().getColumns().get(col) instanceof AbstractLinkerColumn && ((AbstractLinkerColumn<Biosample>)getModel().getColumns().get(col)).getLinker().isLinked()) {
 				comp.setFont(FastFont.REGULAR);
-				comp.setBackground(UIUtils.getDilutedColor(color, LF.BGCOLOR_LINKED));			
+				comp.setBackground(UIUtils.getDilutedColor(color, LF.BGCOLOR_LINKED));
 			} else {
 				comp.setFont(FastFont.REGULAR);
-				comp.setBackground(color);			
-			}		
+				comp.setBackground(color);
+			}
 			return comp;
 		}
 	};
-	
+
 	@Override
 	protected void setHeaderRenderers() {
 		for (int col = 0; col < getColumnModel().getColumnCount(); col++) {
@@ -556,13 +543,13 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 			if(column.getHeaderRenderer()!=renderer) {
 				column.setHeaderRenderer(renderer);
 			}
-		}			
+		}
 	}
-	
+
 	@Override
 	protected boolean shouldMerge(int viewCol, int row1, int row2) {
-		
-		
+
+
 		return super.shouldMerge(viewCol, row1, row2);
 	}
 }

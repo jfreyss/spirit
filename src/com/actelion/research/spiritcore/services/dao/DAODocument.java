@@ -25,9 +25,13 @@ import javax.persistence.EntityManager;
 
 import com.actelion.research.spiritcore.business.Document;
 
-public class DAODocument {
+/**
+ * DAO functions linked to documents
+ *
+ * @author Joel Freyss
+ */
 
-	
+public class DAODocument {
 	public static Document getDocument(int docId) {
 		EntityManager em = JPAUtil.getManager();
 		return em.find(Document.class, docId);

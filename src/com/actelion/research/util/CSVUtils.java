@@ -34,7 +34,7 @@ import java.util.StringTokenizer;
 
 /**
  * Util class to import/export CSV files to/from String[][]
- * 
+ *
  * @author Joel Freyss
  */
 public class CSVUtils {
@@ -42,7 +42,7 @@ public class CSVUtils {
 	public static String flatten(String[][] table) {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < table.length; i++) {
-			if(i>0) sb.append("\n");			
+			if(i>0) sb.append("\n");
 			for (int j = 0; j < table[i].length; j++) {
 				String s = table[i][j];
 				if(s==null) s="";
@@ -57,7 +57,7 @@ public class CSVUtils {
 		}
 		return sb.toString();
 	}
-	
+
 	public static List<String> toFlatList(String[][] table) {
 		List<String> res = new ArrayList<>();
 		for (int i = 0; i < table.length; i++) {
@@ -68,41 +68,52 @@ public class CSVUtils {
 			}
 		}
 		return res;
-	}	
-	
-	public static void exportToCsv(String[][] table, File file) throws Exception {	
+	}
+
+	public static void exportToCsv(String[][] table, File file) throws Exception {
+		if(file==null) {
+			exportToCsv(table);
+			return;
+		}
 		System.out.println("Export csv to "+file);
 		StringBuilder sb = new StringBuilder();
 		for (String[] line : table) {
+			boolean first = false;
 			for (String item : line) {
+				if(first) first = false; else sb.append(",");
 				item = item==null?"": item.replaceAll("[\r\n]+", " ");
 				if(item.contains(",") || item.contains("\"") || item.contains("\r") || item.contains("\n") || item.contains("\t")) {
 					sb.append("\"" + item.replace("\"", "\"\"") + "\"");
+				} else if(item.startsWith("0")) {
+					//Avoid skipping trailing 0 in Excel
+					sb.append("=\"" + item + "\"");
 				} else {
 					sb.append(item);
 				}
-				sb.append(",");
+
 			}
 			sb.append("\r\n");
 		}
-		
 		try(FileWriter writer = new FileWriter(file)) {
-			writer.append(sb.toString());			
+			//Add the separator ',' to avoid excel using ';' as default
+			writer.append("sep=,\r\n");
+			//Add CSV content
+			writer.append(sb.toString());
 		}
 	}
 
-	public static void exportToCsv(String[][] table) throws Exception {	
+	public static void exportToCsv(String[][] table) throws Exception {
 		File reportFile = File.createTempFile("xls_", ".csv");
 		exportToCsv(table, reportFile);
 		Desktop.getDesktop().open(reportFile);
 	}
-	
+
 	/**
-	 * Convert the csv into an array of String[]. The dimension of each row can vary depending of the size of the splits 
+	 * Convert the csv into an array of String[]. The dimension of each row can vary depending of the size of the splits
 	 * Example:
 	 * <pre>
 	 * File example
-	 * 
+	 *
 	 * H1, H2, H3
 	 * D1, "D1,Dd", D3
 	 * <pre>
@@ -110,7 +121,7 @@ public class CSVUtils {
 	 * <pre>
 	 * [[File Example], [H1, H2, H3], [D1, 'D1,dd', D3]]
 	 * </pre>
-	 * 
+	 *
 	 * @param file
 	 * @return
 	 * @throws Exception
@@ -130,8 +141,7 @@ public class CSVUtils {
 		}
 		return lines.toArray(new String[lines.size()][]);
 	}
-	
-	
+
 	public static String[] split(String s, String separators) {
 		if(s==null) return new String[0];
 		StringTokenizer st = new StringTokenizer(s, "\"" + separators, true);
@@ -142,21 +152,22 @@ public class CSVUtils {
 			String token = st.nextToken();
 			if(token.equals("\"")) {
 				if(inQuote) {
-					if(sb.toString().trim().length()>0) res.add(sb.toString().trim());
-					sb.setLength(0);
+					//					if(sb.toString().trim().length()>0) res.add(sb.toString().trim());
+					//					sb.setLength(0);
 					inQuote = false;
 				} else {
 					inQuote = true;
 				}
 			} else if(!inQuote && separators.indexOf(token)>=0) {
 				res.add(sb.toString().trim());
-				sb.setLength(0);    			
+				sb.setLength(0);
 			} else {
 				sb.append(token);
-			}    				
+			}
 		}
 		res.add(sb.toString().trim());
-		
+
 		return res.toArray(new String[res.size()]);
 	}
+
 }

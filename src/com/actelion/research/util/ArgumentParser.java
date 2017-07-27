@@ -21,21 +21,27 @@
 
 package com.actelion.research.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 /**
- * Argument parsers parses the arguments sent in the main() method and returns a 
+ * Argument parsers parses the arguments sent in the main() method and returns a
  * map<String,String> of argument to value.
  * <br>
  * The aguments have to be entered such as -NAME VALUE or -NAME "LONG VALUE"
- * 
+ *
  */
 public class ArgumentParser {
-	
+
 	private final Map<String, String> map = new HashMap<>();
 	private final String arguments;
-	
-	
+
+
 	public ArgumentParser(String[] args) {
 		//Concatenate arguments
 		StringBuilder sb = new StringBuilder();
@@ -45,15 +51,15 @@ public class ArgumentParser {
 		}
 		this.arguments = sb.toString();
 		init();
-		
+
 	}
-	
+
 	public ArgumentParser(String args) {
 		this.arguments = args;
 		init();
 	}
-	
-	private void init() {		
+
+	private void init() {
 		//Tokenize arguments
 		List<String> newArgs = new ArrayList<>();
 		StringTokenizer st = new StringTokenizer(arguments, " \"", true);
@@ -77,11 +83,11 @@ public class ArgumentParser {
 			}
 		}
 		if(buf.length()>0) newArgs.add(buf);
-		
-		
+
+
 		String name = null;
 		String oldName = null;
-		for (String s : newArgs) {			
+		for (String s : newArgs) {
 			//Is it an argument Name i.e. "-name" (-5 is not an argument name)
 			boolean isArgumentName;
 			if(s.startsWith("-")) {
@@ -89,25 +95,25 @@ public class ArgumentParser {
 					Double.parseDouble(s.substring(1));
 					isArgumentName = false;
 				} catch (NumberFormatException e) {
-					isArgumentName = true;					
+					isArgumentName = true;
 				}
 			} else {
 				isArgumentName = false;
 			}
-			
+
 			//Process the token
 			if(isArgumentName) {
 				if(name!=null) {
-					System.err.println("Invalid argument: "+name);
+					System.err.println("Invalid argument: -"+name);
 				} else {
 					name = s.substring(1).toLowerCase();
 					if(map.containsKey(s)) {
-						System.err.println("Duplicated argument: "+s);
+						System.err.println("Duplicated argument: -"+s);
 					}
 				}
 			} else {
 				if(name==null) {
-					if(oldName==null) System.err.println("No argument for: "+s);
+					if(oldName==null) System.err.println("No argument for: -"+s);
 					else map.put(oldName, map.get(oldName)+" "+s);
 				} else {
 					//System.out.println(name + "->"+s);
@@ -118,26 +124,26 @@ public class ArgumentParser {
 			}
 		}
 	}
-	
+
 	/**
-	 * Checks that all the arguments are contained in the list of allowed arguments 
+	 * Checks that all the arguments are contained in the list of allowed arguments
 	 * @param allowedParametersCommaSeparated
 	 * @throws Exception, if an argument is invalid
 	 */
-	public void validate(String allowedParametersCommaSeparated) throws Exception {		
+	public void validate(String allowedParametersCommaSeparated) throws Exception {
 		Set<String> parameters = new TreeSet<>();
 		for (String s : allowedParametersCommaSeparated.split(",")) {
 			parameters.add(s.toLowerCase().trim());
 		}
-		
+
 		for (String key : map.keySet()) {
 			if(!parameters.contains(key)) {
 				throw new Exception("Invalid parameter: "+key);
 			}
 		}
 	}
-	
-	
+
+
 	public String getArgument(String name) {
 		return map.get(name.toLowerCase());
 	}
@@ -148,7 +154,7 @@ public class ArgumentParser {
 			return def;
 		}
 	}
-	
+
 	/**
 	 * @return the arguments
 	 */
@@ -160,9 +166,9 @@ public class ArgumentParser {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		for (String key : map.keySet()) {
-			sb.append(key + " -> " + map.get(key) + "\r\n");			
+			sb.append(key + " -> " + map.get(key) + "\r\n");
 		}
 		return sb.toString();
 	}
-	
+
 }

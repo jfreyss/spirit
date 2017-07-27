@@ -104,7 +104,7 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 			//Create aggregated links from this biosample
 			for(BiotypeMetadata m1: biosample.getBiotype().getMetadata()) {
 				Biosample b = m1.getDataType()==DataType.BIOSAMPLE? biosample.getMetadataBiosample(m1): null;
-				if(b!=null) {
+				if(b!=null && b.getBiotype()!=null) {
 					res.add(new BiosampleLinker(m1, LinkerType.SAMPLEID, b.getBiotype()));
 
 					if(b.getBiotype().getSampleNameLabel()!=null && (b.getSampleName()!=null  && b.getSampleName().length()>0) && !b.getBiotype().isHideSampleId()) {
@@ -127,7 +127,7 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 			Biosample b2 = biosample.getParent();
 			int count = 0;
 			while(b2!=null && count++<5) {
-				if(!b2.getBiotype().equals(biosample.getBiotype())) {
+				if(b2.getBiotype()!=null && !b2.getBiotype().equals(biosample.getBiotype())) {
 					if(!b2.getBiotype().isHideSampleId()) {
 						res.add(new BiosampleLinker(b2.getBiotype(), LinkerType.SAMPLEID));
 					}
@@ -252,6 +252,14 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 	}
 
 	/**
+	 * Create a linker to a non metadata attribute (ex cell.comments).
+	 * Only to be used within queries
+	 */
+	public BiosampleLinker(LinkerType type) {
+		this(type, null);
+	}
+
+	/**
 	 * Create a linker to a non metadata attribute (ex cell.comments)
 	 * The biotypeForLabel should be given to display the header correctly.
 	 */
@@ -293,7 +301,7 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 	}
 
 	/**
-	 * Never null, the expected biotype linked to this display.
+	 * returns the expected biotype linked to this display.
 	 */
 	public Biotype getBiotypeForLabel() {
 		return biotypeForLabel;
@@ -339,7 +347,7 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		switch(type) {
 		case SAMPLEID: return b.getSampleId();
 		case SAMPLENAME: return b.getSampleName();
-		case METADATA: return !b.getBiotype().equals(biotypeMetadata.getBiotype())? null: b.getMetadataValue(biotypeMetadata);
+		case METADATA: return b.getBiotype()==null || biotypeMetadata==null || !b.getBiotype().equals(biotypeMetadata.getBiotype())? null: b.getMetadataValue(biotypeMetadata);
 		case COMMENTS: return b.getComments();
 		default: return "??"+type;
 		}
@@ -472,13 +480,15 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		}
 		return label;
 	}
+
 	public String getLabelShort() {
+		String prefix = aggregatedMetadata==null || aggregatedMetadata.getName()==null?"": aggregatedMetadata.getName() + ".";
 		switch(type) {
-		case SAMPLEID: return  "SampleId";
-		case SAMPLENAME: return  biotypeForLabel==null? "SampleName" :biotypeForLabel.getSampleNameLabel();
-		case COMMENTS: return "Comments";
+		case SAMPLEID: return   prefix + "SampleId";
+		case SAMPLENAME: return  prefix + (biotypeForLabel==null? "SampleName" :biotypeForLabel.getSampleNameLabel());
+		case COMMENTS: return prefix + "Comments";
 		default:
-			if(biotypeMetadata!=null) return biotypeMetadata.getName();
+			if(biotypeMetadata!=null) return prefix + biotypeMetadata.getName();
 			return "??";
 		}
 	}

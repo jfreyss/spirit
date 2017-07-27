@@ -24,7 +24,7 @@ package com.actelion.research.spiritapp.spirit.ui.biosample.linker;
 
 import javax.swing.JComponent;
 
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.biosample.Biotype;

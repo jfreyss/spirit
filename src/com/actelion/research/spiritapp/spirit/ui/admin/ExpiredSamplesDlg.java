@@ -23,6 +23,7 @@ package com.actelion.research.spiritapp.spirit.ui.admin;
 
 import java.awt.BorderLayout;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -47,25 +48,25 @@ import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 
 public class ExpiredSamplesDlg extends JEscapeDialog implements ISpiritChangeObserver {
-	
+
 	private BiosampleTable expiredTable = new BiosampleTable();
 	private BiosampleTable goingToExpireTable = new BiosampleTable();
 	private final JSplitPane centerPane;
-	
+
 	public ExpiredSamplesDlg() {
 		super(UIUtils.getMainFrame(), "Expired & Going to Expire Samples");
-		
+
 		SpiritChangeListener.register(this);
 		expiredTable.getModel().setCanExpand(false);
 		expiredTable.getModel().setMode(Mode.COMPACT);
-		
+
 		goingToExpireTable.getModel().setCanExpand(false);
 		goingToExpireTable.getModel().setMode(Mode.COMPACT);
 
 		centerPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
 				UIUtils.createTitleBox("Expired Biosamples", new JScrollPane(expiredTable)),
-				UIUtils.createTitleBox("Biosamples going to expire in the next 90 days", new JScrollPane(goingToExpireTable)));		
-		
+				UIUtils.createTitleBox("Biosamples going to expire in the next 90 days", new JScrollPane(goingToExpireTable)));
+
 		JPanel contentPane = new JPanel(new BorderLayout());
 		contentPane.add(BorderLayout.CENTER, centerPane);
 		setContentPane(centerPane);
@@ -73,45 +74,45 @@ public class ExpiredSamplesDlg extends JEscapeDialog implements ISpiritChangeObs
 		BiosampleActions.attachPopup(expiredTable);
 		BiosampleActions.attachPopup(goingToExpireTable);
 		refresh();
-		
+
 		centerPane.setDividerLocation(.5);
 		setVisible(true);
 
 	}
-	
+
 	public void refresh() {
-		new SwingWorkerExtended(getContentPane(), SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {			
+		new SwingWorkerExtended(getContentPane(), SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			List<Biosample> alreadyExpired;
 			List<Biosample> goingtoExpire;
-			
+
 			@Override
 			protected void doInBackground() throws Exception {
 				Date now = JPAUtil.getCurrentDateFromDatabase();
-				
+
 				Calendar cal = GregorianCalendar.getInstance();
 				cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH) + 90);
 				Date in3Months = cal.getTime();
-				
+
 				BiosampleQuery alreadyExpiredQuery = new BiosampleQuery();
 				alreadyExpiredQuery.setExpiryDateMax(now);
 				alreadyExpiredQuery.setFilterTrashed(true);
-				
+
 				BiosampleQuery goingtoExpireQuery = new BiosampleQuery();
 				goingtoExpireQuery.setExpiryDateMin(now);
 				goingtoExpireQuery.setExpiryDateMax(in3Months);
 				goingtoExpireQuery.setFilterTrashed(true);
 
-				
+
 				alreadyExpired = DAOBiosample.queryBiosamples(alreadyExpiredQuery, SpiritFrame.getUser());
 				goingtoExpire = DAOBiosample.queryBiosamples(goingtoExpireQuery, SpiritFrame.getUser());
 			}
-			
+
 			@Override
 			protected void done() {
 				centerPane.setDividerLocation(
 						alreadyExpired.size()==0 && goingtoExpire.size()==0? .5:
-						alreadyExpired.size()>0 && goingtoExpire.size()>0? .5:
-						alreadyExpired.size()>0? .75: .25);
+							alreadyExpired.size()>0 && goingtoExpire.size()>0? .5:
+								alreadyExpired.size()>0? .75: .25);
 				expiredTable.setRows(alreadyExpired);
 				goingToExpireTable.setRows(goingtoExpire);
 			}
@@ -119,7 +120,7 @@ public class ExpiredSamplesDlg extends JEscapeDialog implements ISpiritChangeObs
 	}
 
 	@Override
-	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
+	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
 		refresh();
 	}
 

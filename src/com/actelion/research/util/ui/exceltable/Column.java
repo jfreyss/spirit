@@ -38,12 +38,12 @@ import com.actelion.research.util.ui.JCustomLabel;
 
 
 public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
-	
+
 	private static int staticCounter = 0;
 
 	private String category;
 	private String name;
-	private Class<VALUE> columnClass;	
+	private Class<VALUE> columnClass;
 	private int minWidth;
 	private int maxWidth;
 	private boolean hideable;
@@ -51,12 +51,12 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 
 	protected final JLabelNoRepaint lbl = new JLabelNoRepaint();
 	private AbstractExtendTable<ROW> table;
-			
+
 	public Column(String name, Class<VALUE> columnClass) {
 		this(name, columnClass, 15, 400);
 	}
 	public Column(String name, Class<VALUE> columnClass, int minWidth) {
-		this(name, columnClass, minWidth, minWidth*3);		
+		this(name, columnClass, minWidth, minWidth*3);
 	}
 	/**
 	 * Creates a column
@@ -70,26 +70,29 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 		this.maxWidth = FastFont.getAdaptedSize(maxWidth);
 		setName(name);
 	}
-	
+
 	/**
 	 * Set the name. Use "." or "\n" for multiline
 	 * @param name
 	 */
 	protected void setName(String name) {
+		//Set Name
 		this.name = name;
-		int index2 = name.indexOf('.');
-		int index3 = name.indexOf('\n');		
-		int index = name.length()-1;
-		if(index2>=0 && index2<index)  index = index2;
-		if(index3>=0 && index3<index)  index = index3;
-		
-		String[] split = name.split("\n");
-		this.category = split.length>=4? split[0]+"."+split[1]:
-						split.length>=2? split[0]: 
-						name;
-		
+
+		//Extract Category
+		if(name.indexOf('\n')>=0) {
+			String[] split = name.split("\n");
+			this.category = split.length>=4? split[0]+"."+split[1]:
+				split.length>=2? split[0]:
+					name;
+		} else if(name.indexOf('.')>0 && name.indexOf('.')<name.length()-1) {
+			this.category = name.substring(0, name.indexOf('.'));
+		} else {
+			this.category = "";
+		}
+
 	}
-	
+
 	/**
 	 * Returns the name with ".", "\n" separators (multiline)
 	 * @return
@@ -98,7 +101,7 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 		return name;
 	}
 
-	
+
 	/**
 	 * Returns the last part of the name without ".", "\n" (one line)
 	 * @return
@@ -107,25 +110,25 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 		String cut = name.trim().replaceAll("<.>", "");
 		if(cut.length()<2) return cut;
 		int index2 = cut.lastIndexOf('.', cut.length()-2);
-		int index3 = cut.lastIndexOf('\n', cut.length()-2);		
+		int index3 = cut.lastIndexOf('\n', cut.length()-2);
 		int index = -1;
 		if(index2>=0 && index2>index)  index = index2;
 		if(index3>=0 && index3>index)  index = index3;
-		
+
 		return cut.substring(index+1);
 	}
-	
+
 	/**
 	 * Returns the category: normally the first part of the name before ".", "\n" (one line) or empty
 	 * @return
 	 */
 	public String getCategory() {
 		return category;
-		
+
 	}
-	
+
 	public final Class<VALUE> getColumnClass() {
-		return (Class<VALUE>) columnClass;
+		return columnClass;
 	}
 	public int getMinWidth() {
 		return minWidth;
@@ -133,24 +136,24 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 	public int getMaxWidth() {
 		return maxWidth;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof Column) || getName()==null) return false;
 		return this==obj || getName().equals(((Column<?,?>)obj).getName());
 	}
-	
-	VALUE getValue(ROW row, int rowNo) {
+
+	protected VALUE getValue(ROW row, int rowNo) {
 		try {
 			return getValue(row);
 		} catch(Throwable e) {
 			return null;
 		}
 	}
-	
+
 	public abstract VALUE getValue(ROW row);
-	
-	
+
+
 	/**
 	 * Copy from an non editable value, will return this value (no tab allowed)
 	 * @param row
@@ -209,8 +212,8 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 	 */
 	public void setValue(ROW row, VALUE value) {throw new IllegalArgumentException("setValue(" + (row==null? null: row.getClass()) + ", " + (value==null?null:value.getClass())+"): Not implemented in "+this.getClass());}
 	public void validate(ROW row) throws Exception {}
-	
-	
+
+
 	/**
 	 * Called by {@link ExtendTableCellRenderer}
 	 * Can be overriden to define a custom cell renderer for this column
@@ -222,18 +225,17 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 			lbl.setText(com.actelion.research.util.FormatterUtils.formatDate(((Date) value)));
 			lbl.setToolTipText(com.actelion.research.util.FormatterUtils.formatDateTime(((Date) value)));
 			lbl.setHorizontalAlignment(SwingConstants.RIGHT);
-		} else if(value instanceof Number) {	
+		} else if(value instanceof Number) {
 			lbl.setText(value.toString());
 			lbl.setHorizontalAlignment(SwingConstants.RIGHT);
-		} else {	
+		} else {
 			lbl.setText(value.toString());
 			lbl.setHorizontalAlignment(SwingConstants.LEFT);
 		}
-		
-		
+
+
 		return lbl;
 	}
-	
 
 	/**
 	 * Can be overriden to define a custom cell editor
@@ -243,12 +245,13 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 	public TableCellEditor getCellEditor(AbstractExtendTable<ROW> table) {
 		return null;
 	}
+
 	/**
 	 * Called by {@link ExtendTableCellRenderer}
 	 * @param comp
 	 */
 	public void postProcess(AbstractExtendTable<ROW> table, ROW row, int rowNo, Object value, JComponent comp) {}
-	
+
 	/**
 	 * Can be used to define custom sorting or more display columns.
 	 * This is done directly after the "Column ..."
@@ -263,9 +266,9 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 				table.sortBy(Column.this);
 			}
 		});
-		
+
 	}
-	
+
 	/**
 	 * Returns the toolTipText for the cells
 	 * @return
@@ -280,7 +283,7 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 	public String getToolTipText() {
 		return name;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return name==null? 0: name.hashCode();
@@ -290,12 +293,12 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 	public String toString() {
 		return name;
 	}
-	
-	
+
+
 	public float getSortingKey() {
 		return internalCounter;
 	}
-	
+
 	/**
 	 * Only for default renderer, set to true if the column can wrap on several lines (and then columns will reajust)
 	 * Default is false
@@ -304,16 +307,16 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 	public boolean isAutoWrap() {
 		return false;
 	}
-	
+
 	/**
-	 * Set to true (default=false) if the height of this component can be set higher than the default row value 
+	 * Set to true (default=false) if the height of this component can be set higher than the default row value
 	 * Default is false
 	 * @return
 	 */
 	public boolean isMultiline() {
 		return false;
 	}
-	
+
 	/**
 	 * Should we merge the 2 given rows (ie no border)
 	 * Default is true if the value is the same
@@ -322,17 +325,17 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 	public boolean shouldMerge(ROW r1, ROW r2) {
 		VALUE o1 = getValue(r1);
 		VALUE o2 = getValue(r2);
-		
+
 		if(o1==null && o2==null) return true;
-		String s1 = o1==null? "": o1.toString(); 
+		String s1 = o1==null? "": o1.toString();
 		String s2 = o2==null? "": o2.toString();
 		if(s1.length()==0 && s2.length()==0) return true;
 		return s1.equals(s2);
 	}
-	
+
 	/**
 	 * Called when a cell is double-clicked.
-	 * 
+	 *
 	 * @param table
 	 * @param row
 	 * @param rowNo
@@ -342,7 +345,7 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 	public boolean mouseDoubleClicked(AbstractExtendTable<ROW> table, ROW row, int rowNo, Object value) {
 		return false;
 	}
-	
+
 	public boolean isHideable() {
 		return hideable;
 	}
@@ -350,9 +353,9 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 		this.hideable = hideable;
 		return this;
 	}
-	
+
 	@Override
-	public int compareTo(Column<?, ?> o) {		
+	public int compareTo(Column<?, ?> o) {
 		return Float.compare(getSortingKey(), o.getSortingKey());
 	}
 	public AbstractExtendTable<ROW> getTable() {

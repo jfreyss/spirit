@@ -39,6 +39,8 @@ import com.actelion.research.spiritcore.business.pivot.PivotDataTable;
 import com.actelion.research.spiritcore.business.pivot.PivotRow;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultValue;
+import com.actelion.research.spiritcore.business.study.Group;
+import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
@@ -56,6 +58,7 @@ public class Analyzer {
 	private Map<PivotColumn, ColumnAnalyser> columnAnalysis;
 	private PivotDataTable table;
 	private Sort sort = Sort.KW;
+	private SpiritUser user;
 
 	/**
 	 * Analyze the data for a better display.
@@ -64,6 +67,7 @@ public class Analyzer {
 	 * @param user
 	 */
 	public Analyzer(List<Result> results, SpiritUser user) {
+		this.user = user;
 		LoggerFactory.getLogger(Analyzer.class).debug("Init analyzer");
 		PerInputPivotTemplate template = new PerInputPivotTemplate();
 		template.init(results);
@@ -109,7 +113,8 @@ public class Analyzer {
 					PivotCell subCell = cell.getNested(key);
 					for(ResultValue rv: subCell.getValues()) {
 						if(rv.getValue()!=null && rv.getValue().length()>0) {
-							groupValues.add(new SimpleResult(rv.getResult().getBiosample().getInheritedGroup(),
+							Group g = !SpiritRights.isBlind(rv.getResult().getStudy(), user)? rv.getResult().getBiosample().getInheritedGroup(): null;
+							groupValues.add(new SimpleResult(g,
 									byPhase? rv.getResult().getInheritedPhase(): null,
 											rv.getResult().getBiosample(),
 											rv.getDoubleValue(), rv.getValue()));

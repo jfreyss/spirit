@@ -27,12 +27,12 @@ import java.util.List;
 /**
  * Class used to configure the different plates, which can be scanned.
  * Each configuration contains a name, the XTR/FluidX registry's name, the last scanned position, and if the tubes can contain biosample and/or biosamples
- * 
+ *
  * @author freyssj
  *
  */
 public enum ScannerConfiguration {
-	
+
 	SCANNER_CONFIGURATION_MATRIX_PP("8x12 Matrix 0.5PP", "Custom 2", "H12", "Matrix 0.5PP", true, true),
 	SCANNER_CONFIGURATION_MATRIX_1_0PP("8x12 Matrix 1.0PP", "Custom 2", "H12", "Matrix 1.0PP", true, true),
 	SCANNER_CONFIGURATION_MATRIX_GLASS("8x12 Matrix Glass", "Custom 4", "H12", null, true, false),
@@ -41,17 +41,17 @@ public enum ScannerConfiguration {
 	SCANNER_CONFIGURATION_CRYO_120("12x10 Cryotube", "Cryotube 120", "L10", "Cryotube", false, true),
 	SCANNER_CONFIGURATION_CRYO_24("6x4 Cryotube", "Custom 5", "D06", "Cryotube", false, true),
 	SCANNER_CONFIGURATION_RACK24("4x6 Rack 24", "Custom 3", "D06", null, true, false),
-	
+
 	SCANNER_CONFIGURATION_OPENFILE("Paste From a list", null, null, null, false, false);
-	
-	
+
+
 	public final String name;
 	public final String regEditConfig;
 	public final String last;
 	public final String defaultTubeType;
 	private final boolean allowCompounds;
 	private final boolean allowBiosamples;
-	
+
 	private ScannerConfiguration(String name, String regEditConfig, String last, String defaultTubeType, boolean allowCompounds, boolean allowBiosamples) {
 		this.name = name;
 		this.regEditConfig = regEditConfig;
@@ -59,8 +59,8 @@ public enum ScannerConfiguration {
 		this.defaultTubeType = defaultTubeType;
 		this.allowCompounds = allowCompounds;
 		this.allowBiosamples = allowBiosamples;
-	}		
-	
+	}
+
 	public static ScannerConfiguration[] valuesForBiosamples() {
 		List<ScannerConfiguration> res = new ArrayList<ScannerConfiguration>();
 		for(ScannerConfiguration config: values()) {
@@ -68,7 +68,7 @@ public enum ScannerConfiguration {
 		}
 		return res.toArray(new ScannerConfiguration[res.size()]);
 	}
-	
+
 	public static ScannerConfiguration[] valuesForCompounds() {
 		List<ScannerConfiguration> res = new ArrayList<ScannerConfiguration>();
 		for(ScannerConfiguration config: values()) {
@@ -76,34 +76,38 @@ public enum ScannerConfiguration {
 		}
 		return res.toArray(new ScannerConfiguration[res.size()]);
 	}
-	
+
 	public String getDefaultTubeType() {
 		return defaultTubeType;
 	}
-	
+
+	public String getName() {
+		return name;
+	}
+
 	@Override
 	public String toString() {
 		return name;
 	}
-	
+
 	public int getRows() {
 		try {
 			return last.charAt(0) - 'A' + 1;
 		} catch(Exception e) {
 			System.err.println("getRows on ScannerConfiguration."+this+" returned "+e);
 			return 8;
-		}			
+		}
 	}
-	
+
 	public int getCols() {
 		try {
 			return Integer.parseInt(last.substring(1));
 		} catch(Exception e) {
 			System.err.println("getCols on ScannerConfiguration."+this+" returned "+e);
 			return 12;
-		}			
+		}
 	}
-	
+
 	public boolean isAllowBiosamples() {
 		return allowBiosamples;
 	}
@@ -111,6 +115,6 @@ public enum ScannerConfiguration {
 		return allowCompounds;
 	}
 
-	
-	
+
+
 }

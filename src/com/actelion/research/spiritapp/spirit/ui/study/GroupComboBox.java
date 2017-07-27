@@ -31,43 +31,40 @@ import javax.swing.JLabel;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.services.SpiritRights;
-import com.actelion.research.util.ui.JGenericComboBox;
+import com.actelion.research.util.ui.JObjectComboBox;
 
-public class GroupComboBox extends JGenericComboBox<Group> {
+public class GroupComboBox extends JObjectComboBox<Group> {
 
 	private final GroupLabel groupLabel;
 
 	public GroupComboBox() {
 		groupLabel = new GroupLabel();
-		setTextWhenEmpty("");
-	}	
-	
+		setTextWhenEmpty("Group...");
+	}
+
 	public GroupComboBox(Collection<Group> groups) {
 		this();
 		setValues(groups);
 	}
-	
+
 	@Override
-	public void setValues(Collection<Group> values, String textWhenEmpty) {
+	public void setValues(Collection<Group> values) {
 		if(values!=null) {
-			List<Group> res = new ArrayList<Group>();
-			
+			List<Group> res = new ArrayList<>();
 			for (Group group : values) {
 				if(!SpiritRights.isBlindAll(group.getStudy(), SpiritFrame.getUser())) {
-					res.add(group);		
+					res.add(group);
 				}
 			}
-			super.setValues(res, textWhenEmpty);
-			
-		} else {
-			super.setValues(null, textWhenEmpty);
+			values = res;
 		}
-		
+		super.setValues(values);
+
 	}
 
-	
 	@Override
-	public Component processCellRenderer(JLabel comp, Group group, int index) {
+	public Component processCellRenderer(JLabel comp, String object, int index) {
+		Group group = getMap().get(object);
 		if(group==null) {
 			return comp;
 		} else {
@@ -78,5 +75,10 @@ public class GroupComboBox extends JGenericComboBox<Group> {
 			return groupLabel;
 		}
 	}
-	
+
+	@Override
+	public String convertObjectToString(Group obj) {
+		return obj==null?"": obj.getName();
+	}
+
 }

@@ -39,21 +39,17 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
-import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleComboBox;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTabbedPane;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
-import com.actelion.research.spiritapp.spirit.ui.biosample.column.NamedSamplingColumn;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerTypeComboBox;
-import com.actelion.research.spiritapp.spirit.ui.helper.CreateSamplesHelper;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
+import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudySamplingColumn;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerTypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.sampling.NamedSamplingComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritChangeObserver;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -68,6 +64,7 @@ import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
+import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
 
 public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObserver {
@@ -76,7 +73,7 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 	private List<Biosample> animals;
 	private Set<Biosample> allSamples;
 	private BiosampleTable biosampleTable = new BiosampleTable();
-	private BiosampleComboBox biosampleFilter = new BiosampleComboBox();
+	//	private BiosampleComboBox biosampleFilter = new BiosampleComboBox();
 	private GroupComboBox groupFilter = new GroupComboBox();
 	private PhaseComboBox phaseFilter = new PhaseComboBox();
 	private BiotypeComboBox biotypeFilter = new BiotypeComboBox();
@@ -85,7 +82,7 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 	private JCheckBox hideWithoutContainersCheckbox = new JCheckBox("Hide without container", false);
 	private JCheckBox hideDeadCheckBox = new JCheckBox("Hide dead/used up", false);
 	private JLabel selectedLabel = new JLabel();
-	private NamedSamplingComboBox namedSamplingComboBox = new NamedSamplingComboBox(new ArrayList<>(), true);
+	private NamedSamplingComboBox namedSamplingComboBox = new NamedSamplingComboBox();
 
 	private BiosampleTabbedPane detailPane = new BiosampleTabbedPane();
 	private int push = 0;
@@ -95,7 +92,7 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 	}
 
 	public ManageSamplesDlg(Study s, Collection<Biosample> animals) {
-		super(UIUtils.getMainFrame(), "Manage " + s + " Samples");
+		super(UIUtils.getMainFrame(), "Manage Samples: " + s.getStudyId());
 
 		try {
 			if(s.isSynchronizeSamples()) {
@@ -127,42 +124,29 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 				}
 			});
 
-			//			JButton extraSamplingButton = new JButton(new StudyActions.Action_ExtraSampling(study));
-			//			extraSamplingButton.setEnabled(false);
-			//			boolean hasSamplings = false;
-			//			for(NamedSampling ns: study.getNamedSamplings()) {
-			//				if(ns.getAllSamplings().size()>0) {
-			//					hasSamplings = true;
-			//				}
-			//			}
-			//			if(hasSamplings) {
-			//				extraSamplingButton.setEnabled(true);
-			//			}
-
-			biosampleTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-				@Override
-				public void valueChanged(ListSelectionEvent e) {
-					detailPane.setBiosamples(biosampleTable.getSelection());
-					refreshSelectedLabel();
-				}
+			biosampleTable.getSelectionModel().addListSelectionListener(e -> {
+				detailPane.setBiosamples(biosampleTable.getSelection());
+				refreshSelectedLabel();
 			});
-			biosampleTable.getModel().showHideable(new NamedSamplingColumn(), true);
+			biosampleTable.getModel().showHideable(new StudySamplingColumn(), true);
 
 			BiosampleActions.attachPopup(biosampleTable);
+
+			//			JButton filterButton = new JIconButton(IconType.SEARCH, "Filter");
 
 			//ContentPane
 			JPanel centerPane = new JPanel(new BorderLayout());
 			centerPane.add(BorderLayout.NORTH,
 					UIUtils.createTitleBox("Filters",
 							UIUtils.createHorizontalBox(
-									UIUtils.createVerticalBox(new JLabel("ContainerType:"), containerTypeFilter), Box.createHorizontalStrut(20),
-									UIUtils.createVerticalBox(new JLabel("Group:"), groupFilter), Box.createHorizontalStrut(20),
-									UIUtils.createVerticalBox(new JLabel("Phase:"), phaseFilter), Box.createHorizontalStrut(20),
-									UIUtils.createVerticalBox(new JLabel("TopId:"), biosampleFilter), Box.createHorizontalStrut(20),
-									UIUtils.createVerticalBox(new JLabel("Biotype:"), biotypeFilter), Box.createHorizontalStrut(20),
-									UIUtils.createVerticalBox(new JLabel("Keywords:"), biosearchTextField), Box.createHorizontalStrut(20),
-									UIUtils.createVerticalBox(new JLabel("Sampling:"), namedSamplingComboBox), Box.createHorizontalStrut(20),
+									UIUtils.createVerticalBox(new JLabel("ContainerType:"), containerTypeFilter), Box.createHorizontalStrut(10),
+									UIUtils.createVerticalBox(new JLabel("Group:"), groupFilter), Box.createHorizontalStrut(10),
+									UIUtils.createVerticalBox(new JLabel("Phase:"), phaseFilter), Box.createHorizontalStrut(10),
+									UIUtils.createVerticalBox(new JLabel("Biotype:"), biotypeFilter), Box.createHorizontalStrut(10),
+									UIUtils.createVerticalBox(new JLabel("Keywords:"), biosearchTextField), Box.createHorizontalStrut(10),
+									UIUtils.createVerticalBox(new JLabel("Sampling:"), namedSamplingComboBox), Box.createHorizontalStrut(10),
 									UIUtils.createVerticalBox(hideWithoutContainersCheckbox, hideDeadCheckBox),
+									//									UIUtils.createVerticalBox(new JLabel(""), filterButton),
 									Box.createHorizontalGlue())));
 			JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(biosampleTable), detailPane);
 
@@ -171,33 +155,28 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 					new JLabel("Select some biosamples and select an action: "),
 					selectedLabel,
 					Box.createHorizontalGlue(),
-					//					extraSamplingButton,
 					assignButton,
 					printButton));
 
 
 			//Add events
-			ActionListener queryActionListener = e-> {
+			ActionListener al = e-> {
+				query(false);
+			};
+			TextChangeListener tl = e-> {
 				query(false);
 			};
 
-			containerTypeFilter.setTextWhenEmpty("Container...");
-			biosampleFilter.setTextWhenEmpty("TopSample...");
-			groupFilter.setTextWhenEmpty("Group...");
-			phaseFilter.setTextWhenEmpty("Phase...");
-			biotypeFilter.setTextWhenEmpty("Biotype...");
-
-			biosampleFilter.addActionListener(queryActionListener);
-			containerTypeFilter.addActionListener(queryActionListener);
-			groupFilter.addActionListener(queryActionListener);
-			phaseFilter.addActionListener(queryActionListener);
-			biotypeFilter.addActionListener(queryActionListener);
-			biosearchTextField.addActionListener(queryActionListener);
-			hideWithoutContainersCheckbox.addActionListener(queryActionListener);
-			hideDeadCheckBox.addActionListener(queryActionListener);
-			biosearchTextField.addActionListener(queryActionListener);
-			namedSamplingComboBox.addActionListener(queryActionListener);
-
+			containerTypeFilter.addTextChangeListener(tl);
+			groupFilter.addTextChangeListener(tl);
+			phaseFilter.addTextChangeListener(tl);
+			biotypeFilter.addTextChangeListener(tl);
+			biosearchTextField.addTextChangeListener(tl);
+			hideWithoutContainersCheckbox.addActionListener(al);
+			hideDeadCheckBox.addActionListener(al);
+			biosearchTextField.addTextChangeListener(tl);
+			namedSamplingComboBox.addTextChangeListener(tl);
+			//			filterButton.addActionListener(queryActionListener);
 
 			//Preload all samples
 			query(true);
@@ -257,7 +236,7 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 
 						biotypeFilter.setValues(myBiotypes);
 						containerTypeFilter.setValues(myContainers);
-						biosampleFilter.setValues(tops);
+						//						biosampleFilter.setValues(tops);
 						groupFilter.setValues(myGroups);
 						phaseFilter.setValues(myPhases);
 						namedSamplingComboBox.setValues(mySamplings);
@@ -270,7 +249,7 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 					for (Biosample b : allSamples) {
 						if(biotypeFilter.getSelection()!=null && !biotypeFilter.getSelection().equals(b.getBiotype())) continue;
 						if(containerTypeFilter.getSelection()!=null && !containerTypeFilter.getSelection().equals(b.getContainerType())) continue;
-						if(biosampleFilter.getSelection()!=null && !biosampleFilter.getSelection().equals(b.getTopParentInSameStudy())) continue;
+						//						if(biosampleFilter.getSelection()!=null && !biosampleFilter.getSelection().equals(b.getTopParentInSameStudy())) continue;
 						if(groupFilter.getSelection()!=null && !groupFilter.getSelection().equals(b.getInheritedGroup())) continue;
 						if(phaseFilter.getSelection()!=null && !phaseFilter.getSelection().equals(b.getInheritedPhase())) continue;
 						if(namedSamplingComboBox.getSelection()!=null && (b.getAttachedSampling()==null ||!namedSamplingComboBox.getSelection().equals(b.getAttachedSampling().getNamedSampling()))) continue;
@@ -287,7 +266,6 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 			@Override
 			protected void done() {
 				tmp = JPAUtil.reattach(tmp);
-				biosampleTable.getModel().getExtraColumns().clear();
 				biosampleTable.setRows(tmp);
 				refreshSelectedLabel();
 			}
@@ -300,7 +278,7 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 	}
 
 	@Override
-	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
+	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
 		query(true);
 	}
 

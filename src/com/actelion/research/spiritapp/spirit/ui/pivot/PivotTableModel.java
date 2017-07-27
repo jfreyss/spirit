@@ -48,15 +48,15 @@ public class PivotTableModel extends ExtendTableModel<PivotRow> {
 			Result b = row.getRepresentative().getResult();
 			return b==null? null: b.getGroup();
 		}
-		
+
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<PivotRow> table, PivotRow row, int rowNo, Object value) {
 			groupLabel.setVerticalAlignment(SwingUtilities.TOP);
 			groupLabel.setGroup((Group) value);
 			return groupLabel;
-		}		
+		}
 	};
-	
+
 	public static final Column<PivotRow, String> COLUMN_SUBGROUP = new Column<PivotRow, String>("St.", String.class, 15, 15) {
 		@Override
 		public String getCategory() {
@@ -67,12 +67,12 @@ public class PivotTableModel extends ExtendTableModel<PivotRow> {
 			Result r = row.getRepresentative().getResult();
 			Biosample b = r.getBiosample();
 			if(b==null || b.getInheritedStudy()==null) return null;
-			
+
 			Group group = b.getInheritedGroup();
 			String val = group==null? null: group.getNSubgroups()>1? ""+(b.getInheritedSubGroup()+1): null;
 			return val;
 		}
-		
+
 		private GroupLabel groupLabel = new GroupLabel();
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<PivotRow> table, PivotRow row, int rowNo, Object value) {
@@ -81,10 +81,10 @@ public class PivotTableModel extends ExtendTableModel<PivotRow> {
 			groupLabel.setText((String)value, r==null || r.getBiosample()==null? null: r.getBiosample().getInheritedGroup());
 			return groupLabel;
 		}
-		
+
 	};
 
-	public static final Column<PivotRow, Biosample> COLUMN_TOPID = new Column<PivotRow, Biosample>("TopId", Biosample.class) {		
+	public static final Column<PivotRow, Biosample> COLUMN_TOPID = new Column<PivotRow, Biosample>("ParticipantId", Biosample.class) {
 		private SampleIdLabel sampleIdLabel = new SampleIdLabel(false, false);
 
 		@Override
@@ -96,18 +96,18 @@ public class PivotTableModel extends ExtendTableModel<PivotRow> {
 			Biosample b = row.getRepresentative().getResult().getBiosample();
 			return b==null? null: b.getTopParent();
 		}
-		
+
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<PivotRow> table, PivotRow row, int rowNo, Object value) {
 			sampleIdLabel.setBiosample((Biosample) value);
 			return sampleIdLabel;
 		}
 	};
-	
-	
+
+
 	public PivotTableModel() {
 	}
-	
+
 	@Override
 	public void clear() {
 		allColumns.clear();
@@ -115,5 +115,5 @@ public class PivotTableModel extends ExtendTableModel<PivotRow> {
 		rows.clear();
 		fireTableDataChanged();
 	}
-	
+
 }

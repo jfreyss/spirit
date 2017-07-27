@@ -21,14 +21,12 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.editor;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.AbstractCellEditor;
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JList;
+import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 
@@ -40,33 +38,30 @@ import com.actelion.research.util.ui.JTextComboBox;
 
 public abstract class GroupCellEditor extends AbstractCellEditor implements TableCellEditor {
 
-	private final List<Group> groups = new ArrayList<Group>();
-	private final JTextComboBox cb = new JTextComboBox();
+	private boolean allowTyping;
+	private Study study;
+	private final List<Group> groups = new ArrayList<>();
+	private final JTextComboBox cb = new JTextComboBox() {
+		GroupLabel gl = new GroupLabel();
+		@Override
+		public Component processCellRenderer(JLabel comp, String value, int index) {
+			gl.setText(value, index>=1 && index-1<groups.size()? groups.get(index-1): null);
+			return gl;
+		}
+	};
 
-	public GroupCellEditor() {
-		init();
+
+	public GroupCellEditor(boolean allowTyping) {
+		this.allowTyping = allowTyping;
+		cb.setAllowTyping(allowTyping);
 	}
-
-	private void init() {
-		cb.setAllowTyping(false);
-		cb.setRenderer(new DefaultListCellRenderer() {
-			GroupLabel gl = new GroupLabel();
-			@Override
-			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-				gl.setText((String) value, index>=1 && index-1<groups.size()? groups.get(index-1): null);
-				if(isSelected) gl.setForeground(Color.BLUE);
-				return gl;
-			}
-		});
-	}
-
 
 
 	public abstract Study getStudy(int row);
 
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-		Study study = getStudy(row);
+		this.study = getStudy(row);
 		groups.clear();
 		List<String> choices = new ArrayList<>();
 		if(study!=null) {
@@ -82,8 +77,19 @@ public abstract class GroupCellEditor extends AbstractCellEditor implements Tabl
 
 	@Override
 	public Group getCellEditorValue() {
+		if(cb.getText().length()==0) return null;
+
 		for (Group group : groups) {
-			if(group.getBlindedName(SpiritFrame.getUsername()).equals(cb.getText())) return group;
+			if(group.getName().equals(cb.getText())) {
+				System.out.println("GroupCellEditor.getCellEditorValue() > "+group + " "+group.getId());
+				return group;
+			}
+		}
+		if(allowTyping) {
+			Group group = new Group(cb.getText());
+			group.setStudy(study);
+			System.out.println("GroupCellEditor.getCellEditorValue() > "+group + " "+group.getId());
+			return group;
 		}
 		return null;
 	}

@@ -37,9 +37,9 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 public class StudyGroupColumn extends Column<Biosample, Group> {
 
-	private GroupLabel groupLabel = new GroupLabel();	
+	private GroupLabel groupLabel = new GroupLabel();
 	private EditBiosampleTableModel model;
-	
+
 	/**
 	 * Create a column to display the study group.
 	 * If getStudy is not overriden, the group will not be editable
@@ -47,7 +47,7 @@ public class StudyGroupColumn extends Column<Biosample, Group> {
 	public StudyGroupColumn() {
 		super("Study\nGroup", Group.class, 60, 140);
 	}
-	
+
 	/**
 	 * Create a column to display/edit the study group.
 	 */
@@ -55,61 +55,61 @@ public class StudyGroupColumn extends Column<Biosample, Group> {
 		this();
 		this.model = editTableModel;
 	}
-	
+
 	@Override
 	public float getSortingKey() {return 3.2f;}
-	
+
 	@Override
 	public Group getValue(Biosample row) {
 		if(SpiritRights.isBlindAll(row.getInheritedStudy(), SpiritFrame.getUser())) return null;
 		return row.getInheritedGroup();
 	}
-	
-	
+
+
 	@Override
 	public String getToolTipText() {return "Study Group";}
-	
+
 	@Override
 	public void setValue(Biosample row, Group value) {
 		row.setAttached(row.getInheritedStudy(), value, row.getInheritedSubGroup());
 	}
-	
+
 	@Override
 	public void paste(Biosample row, String value) throws Exception {
-		
+
 		if(value==null || value.length()==0) {
 			setValue(row, null);
 			return;
 		}
 		Study study = row.getInheritedStudy();
 		if(study==null) throw new Exception("You must select a study to enter a group");
-		
+
 		Group group = study.getGroup(value);
-		if( group==null) throw new Exception("The phase " + study.getStudyId() + " / " +  value + " is invalid");				
-		setValue(row, group);			
+		if( group==null) throw new Exception("The phase " + study.getStudyId() + " / " +  value + " is invalid");
+		setValue(row, group);
 	}
-	
+
 	@Override
 	public boolean isEditable(Biosample row) {
 		return row!=null && row.getAttachedStudy()!=null;
 	}
-	
-	
+
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
 		groupLabel.setGroup((Group)value);
 		return groupLabel;
 	}
-	
+
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {
-		return new GroupCellEditor() {
+		return new GroupCellEditor(true) {
 			@Override
 			public Study getStudy(int row) {
 				return model!=null && model.getRow(row)!=null? model.getRow(row).getInheritedStudy(): null;
 			}
 		};
 	}
-	
-	
+
+
 }

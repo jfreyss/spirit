@@ -52,12 +52,12 @@ public class WeighingPerPhaseReport extends AbstractReport {
 
 	public WeighingPerPhaseReport() {
 		super(ReportCategory.TOP, "Bodyweights (one sheet per phase)", MiscUtils.convert2Html(
-				"Group\tContainerId\tTopId\tNo\tWeight\tIncrease\tTreatment\tFormulation\tDate\n"
-				+ "1. \tCage1\tTopId1\t1\t20\t+1%\tVehicle\n"
-				+ "1. \tCage1\tTopId2\t2\t18\t+2%\tVehicle\n"
-				+ "Phase1 | Phase2 | Phase 3 | Summary | Increase"));
+				"Group\tContainerId\tParticipantId\tNo\tWeight\tIncrease\tTreatment\tFormulation\tDate\n"
+						+ "1. \tCage1\tParticipantId1\t1\t20\t+1%\tVehicle\n"
+						+ "1. \tCage1\tParticipantId2\t2\t18\t+2%\tVehicle\n"
+						+ "Phase1 | Phase2 | Phase 3 | Summary | Increase"));
 	}
-	
+
 	public static ActionTreatment getTreatment(Biosample h) {
 		if(h==null) return null;
 		if(h.getLastAction() instanceof ActionTreatment) {
@@ -65,20 +65,20 @@ public class WeighingPerPhaseReport extends AbstractReport {
 		}
 		return null;
 	}
-	
+
 	@Override
 	protected void populateWorkBook() throws Exception {
 
 		List<Biosample> animals = study.getTopAttachedBiosamples();
 		Map<Biosample, Map<String, Biosample>> bio2history = new HashMap<>();
 		Set<Phase> phases = new TreeSet<>();
-		
+
 		//Load Weighings
 		Test weightingTest = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
 		if(weightingTest==null) throw new Exception("Error test "+DAOTest.WEIGHING_TESTNAME+" not found");
 		DAOResult.attachOrCreateStudyResultsToTops(study, animals, null, null);
 
-		
+
 		for(Biosample b: animals) {
 			bio2history.put(b, new HashMap<String, Biosample>());
 			List<Biosample> history = DAORevision.getHistory(b);
@@ -96,8 +96,8 @@ public class WeighingPerPhaseReport extends AbstractReport {
 				phases.add(r.getInheritedPhase());
 			}
 		}
-		
-		for (Phase phase : phases) {				
+
+		for (Phase phase : phases) {
 			//Check if we need to display a compound
 			boolean hasCompound2 = false;
 			for (Biosample animal : animals) {
@@ -106,8 +106,8 @@ public class WeighingPerPhaseReport extends AbstractReport {
 				if(t!=null && t.getEff2().length()>0) {
 					hasCompound2 = true;
 				}
-			}			
-			
+			}
+
 			//Print headers
 			Phase after = phase.getNextPhase();
 			Sheet sheet = createSheet(wb, "BW "+phase.getShortName());
@@ -117,26 +117,26 @@ public class WeighingPerPhaseReport extends AbstractReport {
 			//Create Header for Weighing & Doses
 			int line = 3;
 			int col = 0;
-			
+
 			set(sheet, line, col++, "Group", Style.S_TH_CENTER);
 			set(sheet, line, col++, "ContainerId", Style.S_TH_CENTER);
-			set(sheet, line, col++, "TopId", Style.S_TH_CENTER);
+			set(sheet, line, col++, "ParticipantId", Style.S_TH_CENTER);
 			set(sheet, line, col++, "No", Style.S_TH_CENTER);
-			
+
 			set(sheet, line, col++, "Weight [g]", Style.S_TH_CENTER);
 			set(sheet, line, col++, "Increase [%]", Style.S_TH_CENTER);
 
 			set(sheet, line, col++, "Treatment", Style.S_TH_CENTER);
-			
+
 			set(sheet, line, col++, "Eff1.", Style.S_TH_CENTER);
 			if(hasCompound2) {
 				set(sheet, line, col++, "Eff2.", Style.S_TH_CENTER);
 			}
-			
-			
+
+
 			set(sheet, line, col++, "Formulation", Style.S_TH_CENTER);
 			set(sheet, line, col++, "Comments", Style.S_TH_CENTER);
-			
+
 			set(sheet, line, col++, "Date", Style.S_TH_CENTER);
 			int maxCol = col-1;
 			line++;
@@ -148,55 +148,55 @@ public class WeighingPerPhaseReport extends AbstractReport {
 				//Gets Weight + Increase
 				Result weighResult = animal.getAuxResult(weightingTest, phase);
 				Result prevWeighResult = weighResult==null?null: Result.getPrevious(weighResult, animal.getAuxResults(DAOTest.WEIGHING_TESTNAME, null));
-				
-				
+
+
 				Double weight = weighResult==null?null: weighResult.getOutputResultValues().get(0).getDoubleValue();
 				Double increase = null;
 				if(weight!=null && prevWeighResult!=null && prevWeighResult.getOutputResultValues().get(0).getDoubleValue()!=null && prevWeighResult.getOutputResultValues().get(0).getDoubleValue()>0) {
 					Double prev = prevWeighResult.getOutputResultValues().get(0).getDoubleValue();
 					increase = 100*(weight - prev)/prev;
 				}
-				
+
 				//Memorize line to compute averages
 				group2Lines.add(animal.getInheritedGroup(), line);
-				
+
 				//Display data
 				Biosample h = bio2history.get(animal).get(phase.getShortName());
 				ActionTreatment t = getTreatment(h);
-				
-				col = 0;
-				set(sheet, line, col++, animal==null? null: animal.getInheritedGroupString(SpiritFrame.getUsername()), Style.S_TD_LEFT);				
-				set(sheet, line, col++, animal==null? null: animal.getContainerId(), Style.S_TD_CENTER);				
-				set(sheet, line, col++, animal==null? null: animal.getTopParent().getSampleId(), Style.S_TD_CENTER);				
-				set(sheet, line, col++, animal==null? null: animal.getSampleName(), Style.S_TD_CENTER);	
 
-				set(sheet, line, col++, weight, Style.S_TD_DOUBLE1_BLUE);						
-				set(sheet, line, col++, increase , Style.S_TD_DOUBLE1);									
-				
+				col = 0;
+				set(sheet, line, col++, animal==null? null: animal.getInheritedGroupString(SpiritFrame.getUsername()), Style.S_TD_LEFT);
+				set(sheet, line, col++, animal==null? null: animal.getContainerId(), Style.S_TD_CENTER);
+				set(sheet, line, col++, animal==null? null: animal.getTopParent().getSampleId(), Style.S_TD_CENTER);
+				set(sheet, line, col++, animal==null? null: animal.getSampleName(), Style.S_TD_CENTER);
+
+				set(sheet, line, col++, weight, Style.S_TD_DOUBLE1_BLUE);
+				set(sheet, line, col++, increase , Style.S_TD_DOUBLE1);
+
 				set(sheet, line, col++, t==null? null: t.getTreatmentName(), Style.S_TD_LEFT);
 
 				set(sheet, line, col++, t==null? null: t.getEff1(), Style.S_TD_DOUBLE1);
-				
+
 				if(hasCompound2) {
 					set(sheet, line, col++, t==null? null: t.getEff2(), Style.S_TD_DOUBLE1);
 				}
-				
-				set(sheet, line, col++, t==null? null: t.getFormulation(), Style.S_TD_LEFT);				
-				set(sheet, line, col++, t==null? null: t.getComments(), Style.S_TD_LEFT);				
-				
+
+				set(sheet, line, col++, t==null? null: t.getFormulation(), Style.S_TD_LEFT);
+				set(sheet, line, col++, t==null? null: t.getComments(), Style.S_TD_LEFT);
+
 				set(sheet, line, col++, weighResult==null? (h==null? null: h.getUpdDate()): weighResult.getUpdDate(), Style.S_TD_DATE);
-				
-				
+
+
 				//Separator if we change group
 				Group group = animal.getInheritedGroup();
 				if(lastGroup!=null && !lastGroup.equals(group)) {
-					drawLineAbove(sheet, line, 0, maxCol, (short) 1);						
+					drawLineAbove(sheet, line, 0, maxCol, (short) 1);
 				}
 				lastGroup = animal.getInheritedGroup();
-								
+
 				line++;
 			}
-			
+
 			//Add weighing averages
 			col = 4;
 			line+=2;
@@ -205,7 +205,7 @@ public class WeighingPerPhaseReport extends AbstractReport {
 			line++;
 			for(Group group: study.getGroups()) {
 				if(study.getTopAttachedBiosamples(group).size()==0) continue;
-				
+
 				List<Integer> lines = group2Lines.get(group);
 				col = 0;
 				set(sheet, line, col++, group.getBlindedName(SpiritFrame.getUsername()), Style.S_TD_LEFT);
@@ -218,19 +218,19 @@ public class WeighingPerPhaseReport extends AbstractReport {
 				}
 				line++;
 			}
-			
+
 			wb.setSelectedTab(wb.getSheetIndex(sheet));
 			wb.setActiveSheet(wb.getSheetIndex(sheet));
 			POIUtils.autoSizeColumns(sheet);
-		}		
-		
+		}
+
 		/////////////////////////////////////////////////////////////////////////////////
 		//Add a sheet for the summary weighing (i==0 --> "Weighing", i==1 --> "Increase")
-		for (int i = 0; i < 2; i++) {			
+		for (int i = 0; i < 2; i++) {
 			Sheet sheet = createSheet(wb, WorkbookUtil.createSafeSheetName((i==0? "BW Summary": "BW Increase")));
 			createHeadersWithTitleSubtitle(sheet, study, "Summary", "Weighing " + (i==0? "Summary [g]": "Increase [%]"));
-			int line = 3;	
-			
+			int line = 3;
+
 			int col=0;
 			set(sheet, line, col++, "Group", Style.S_TH_CENTER);
 			set(sheet, line, col++, "Cage", Style.S_TH_CENTER);
@@ -238,56 +238,56 @@ public class WeighingPerPhaseReport extends AbstractReport {
 			set(sheet, line, col++, "No", Style.S_TH_CENTER);
 			for (Phase phase : phases) {
 				set(sheet, line, col++, "      " + phase.getShortName() + "      ", Style.S_TH_CENTER);
-			}			
+			}
 			int maxCol = col - 1;
 			line++;
-			
+
 			Group lastGroup = null;
 			ListHashMap<Group, Integer> group2Lines = new ListHashMap<>();
 			for (Biosample biosample : animals) {
 
 				//Memorize line to compute averages
-				group2Lines.add(biosample.getInheritedGroup(), line);				
-				
+				group2Lines.add(biosample.getInheritedGroup(), line);
+
 				//Display data
 				col = 0;
 				set(sheet, line, col++, biosample.getInheritedGroupString(SpiritFrame.getUsername()), Style.S_TD_LEFT);
-				set(sheet, line, col++, biosample.getContainerId(), Style.S_TD_CENTER);				
+				set(sheet, line, col++, biosample.getContainerId(), Style.S_TD_CENTER);
 				set(sheet, line, col++, biosample.getTopParent().getSampleId(), Style.S_TD_CENTER);
 				set(sheet, line, col++, biosample.getSampleName(), Style.S_TD_CENTER);
 				for (Phase phase : phases) {
 					String cell = "\'" + WorkbookUtil.createSafeSheetName("BW " +phase.getShortName()) +"\'" + "!"+convertToCell(line, 4+i);
 					String formula = "IF(LEN("+cell+")>0, "+cell+", \"\")";
-					try {						
+					try {
 						setFormula(sheet, line, col, formula, Style.S_TD_DOUBLE1);
 					} catch (Exception e) {
 						e.printStackTrace();
 						set(sheet, line, col, formula, Style.S_TD_DOUBLE1);
-					} 
+					}
 					col++;
 				}
-				
+
 				Group group = biosample.getInheritedGroup();
 				if(lastGroup!=null && !lastGroup.equals(group)) {
 					drawLineAbove(sheet, line, 0, maxCol, (short) 1);
 				}
 				lastGroup = biosample.getInheritedGroup();
-				
 
-				
+
+
 				line++;
-			
+
 			}
-			
+
 			//Group Summary averages
 
 			line++;
 			for(Group group: study.getGroups()) {
-				
+
 				List<Integer> linesForGroup = group2Lines.get(group);
 				col = 0;
-				set(sheet, line, col++, group.getName() , Style.S_TD_LEFT);				
-				set(sheet, line, col++, "" , Style.S_TD_CENTER);				
+				set(sheet, line, col++, group.getName() , Style.S_TD_LEFT);
+				set(sheet, line, col++, "" , Style.S_TD_CENTER);
 				set(sheet, line, col++, "" , Style.S_TD_CENTER);
 				set(sheet, line, col++, "" , Style.S_TD_CENTER);
 				if(linesForGroup!=null && linesForGroup.size()>0) {
@@ -309,9 +309,9 @@ public class WeighingPerPhaseReport extends AbstractReport {
 			wb.setActiveSheet(wb.getSheetIndex(sheet));
 			POIUtils.autoSizeColumns(sheet);
 		}
-		
+
 	}
-	
+
 	public static void main(String[] args)  {
 		try {
 			SpiritFrame.setUser(DAOSpiritUser.loadUser("freyssj"));
@@ -323,7 +323,7 @@ public class WeighingPerPhaseReport extends AbstractReport {
 		}
 		System.exit(1);
 	}
-		
+
 }
 
 

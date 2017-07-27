@@ -34,9 +34,9 @@ import javax.swing.JScrollPane;
 import javax.swing.event.HyperlinkEvent.EventType;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.ui.JEscapeDialog;

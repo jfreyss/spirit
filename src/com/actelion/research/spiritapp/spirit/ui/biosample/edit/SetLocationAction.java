@@ -25,7 +25,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
-import com.actelion.research.spiritapp.spirit.ui.container.CheckinDlg;
+import com.actelion.research.spiritapp.spirit.ui.location.CheckinDlg;
 import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class SetLocationAction extends AbstractAction {

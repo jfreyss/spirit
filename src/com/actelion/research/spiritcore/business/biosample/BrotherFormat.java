@@ -23,74 +23,41 @@ package com.actelion.research.spiritcore.business.biosample;
 
 public enum BrotherFormat {
 
-	_12x33(new String[] {"12mmx33_1"}, 8, false),
-	_12x33N(new String[] {"12mmx33_1"}, 0, false),
-	
-	_12x42(new String[] {"12mmx42_1"}, 8, false),
-	
-	_12x49(new String[] {"12mmx49_1"}, 10, false),
-//	_12x49N(new String[] {"12mmx49_1"}, 0, false),
-	
-	_12x62(new String[] {"12mmx62_1"}, 10, false),
-	_12x62N(new String[] {"12mmx62_1"}, 0, false),
-	
-	_18x24(new String[] {"18mmx24_1"}, 0, true);
-	
-	private final String[] medias;
+	_9x24("9mmx24_1", 0),
+
+	_12x33("12mmx33_1", 8),
+	_12x33N("12mmx33_1", 0),
+	_12x42("12mmx42_1", 8),
+
+	_12x49("12mmx49_1", 10),
+	_12x62("12mmx62_1", 10)
+	,
+	_12x62N("12mmx62_1", 0),
+
+	_18x24("18mmx24_1", 0),
+
+	;
+
+	private final String media;
 	private final float lineOffset;
-	private final boolean barcodeOnRight;
-	
+
 	/**
-	 * 
+	 *
 	 * @param medias
 	 * @param lineOffset - distance of line from the left border in mm
-	 * @param barcodeOnRight 
+	 * @param barcodeOnRight
 	 */
-	private BrotherFormat(String[] medias,  float lineOffset, boolean barcodeOnRight){
-		this.medias = medias;
+	private BrotherFormat(String media,  float lineOffset) {
+		this.media = media;
 		this.lineOffset = lineOffset;
-		this.barcodeOnRight = barcodeOnRight;		
 	}
-	
-	public String[] getMedias() {
-		return medias;
+
+	public String getMedia() {
+		return media;
 	}
-	
+
 	public float getLineOffset() {
 		return lineOffset;
 	}
-	
-	public boolean isBarcodeOnRight() {
-		return barcodeOnRight;
-	}
-//
-//	MarginConfig config;
-//	switch(c.getContainerType()) {
-//		case CRYOTUBE:
-//		case TUBE_0_5PP:
-//		case TUBE_1PP:
-//		case TUBE_E0_5:
-//		case TUBE_E1_5:
-//		case TUBE_E2_0:
-//		case TUBE_1_4PP:
-//			config = new MarginConfig(8 * (leftHanded?-1: 1), 22);		
-//			break;
-//		case UNKNOWN:
-//		case DNA_WHATMAN:
-//			config = new MarginConfig(0, 22);		
-//			break;
-//		case TUBE_5:
-//		case TUBE_9:
-//		case TUBE_FA15:
-//		case TUBE_FA50:
-//		case TUBE_FX20:
-//		case BOTTLE:
-//			config = new MarginConfig(10 * (leftHanded?-1: 1), 27);
-//			break;
-//		case SLIDE:
-//			config = new MarginConfig(0, 2.8f);
-//			break;
-//		default:
-//			config = new MarginConfig(8 * (leftHanded?-1: 1), 22);
-//	}
+
 }

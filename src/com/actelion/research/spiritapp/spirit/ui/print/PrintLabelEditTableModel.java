@@ -26,10 +26,10 @@ import java.util.List;
 
 import com.actelion.research.spiritapp.spirit.services.print.PrintLabel;
 import com.actelion.research.util.ui.exceltable.Column;
-import com.actelion.research.util.ui.exceltable.ExcelTableModel;
+import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
-public class PrintLabelEditTableModel extends ExcelTableModel<PrintLabel> {
-	
+public class PrintLabelEditTableModel extends ExtendTableModel<PrintLabel> {
+
 	public static final Column<PrintLabel,String> COLUMN_BARCODE = new Column<PrintLabel, String>("Barcode", String.class) {
 		@Override
 		public String getValue(PrintLabel row) {
@@ -63,7 +63,7 @@ public class PrintLabelEditTableModel extends ExcelTableModel<PrintLabel> {
 			return true;
 		}
 	};
-	
+
 	public PrintLabelEditTableModel() {
 		List<Column<PrintLabel,?>> columns = new ArrayList<Column<PrintLabel,?>>();
 		columns.add(COLUMN_ROWNO);
@@ -71,7 +71,7 @@ public class PrintLabelEditTableModel extends ExcelTableModel<PrintLabel> {
 		columns.add(COLUMN_LABEL);
 		setColumns(columns);
 	}
-	
+
 	@Override
 	public PrintLabel createRecord() {
 		return new PrintLabel();

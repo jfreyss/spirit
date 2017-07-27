@@ -42,7 +42,7 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.MetadataComponentFact
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdGenerateField;
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdScanField;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleTable;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;

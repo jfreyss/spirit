@@ -46,12 +46,12 @@ import javax.swing.text.JTextComponent;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.MetadataComponent;
 import com.actelion.research.spiritapp.spirit.ui.biosample.MetadataComponentFactory;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerTypeComboBox;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerTypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.ExtraMeasurementDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.correction.Correction;
 import com.actelion.research.spiritapp.spirit.ui.util.correction.CorrectionDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.correction.CorrectionMap;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;

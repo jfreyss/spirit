@@ -36,8 +36,13 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.QueryTokenizer;
 
+/**
+ * DAO functions linked to sampling templates
+ *
+ * @author Joel Freyss
+ */
 public class DAONamedSampling {
-	
+
 	/**
 	 * Gets the NamedSamplings, either
 	 * - created by the given user
@@ -49,75 +54,75 @@ public class DAONamedSampling {
 	@SuppressWarnings("unchecked")
 	public static List<NamedSampling> getNamedSamplings(SpiritUser user, Study orStudy) {
 		assert user!=null;
-		
+
 		List<Integer> sids;
 		if(orStudy==null) {
 			sids = JPAUtil.getIds(DAOStudy.getRecentStudies(user, RightLevel.READ));
 		} else {
 			sids = Collections.singletonList(orStudy.getId());
 		}
-		
+
 		EntityManager session = JPAUtil.getManager();
-		Query query = session.createQuery("SELECT ns FROM NamedSampling ns " + 
+		Query query = session.createQuery("SELECT ns FROM NamedSampling ns " +
 				" WHERE SIZE(ns.samplings)>0 and (" +
 				" (ns.creUser = ?1 and ns.study is null) " +
 				" or ( " + QueryTokenizer.expandForIn("ns.study.id", sids) + "))")
 				.setParameter(1, user.getUsername());
-		
-		
-		List<NamedSampling> res = (List<NamedSampling>) query.getResultList();
+
+
+		List<NamedSampling> res = query.getResultList();
 		Collections.sort(res);
 		Collections.reverse(res);
 		return res;
 	}
-	
-	public static void deleteNamedSampling(NamedSampling ns, SpiritUser user) throws Exception {		
+
+	public static void deleteNamedSampling(NamedSampling ns, SpiritUser user) throws Exception {
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {
-			
+
 			//Check rights
 			if(user!=null && !SpiritRights.canEdit(ns, user)) throw new Exception("You are not allowed to delete this sampling");
-			
-			
+
+
 			txn = session.getTransaction();
 			txn.begin();
-			
+
 			ns = session.merge(ns);
 			ns.remove();
 			session.remove(ns);
-			
-			txn.commit();			
+
+			txn.commit();
 			txn = null;
 		} finally {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
-		}				
+		}
 	}
 	public static NamedSampling persistNamedSampling(NamedSampling ns, SpiritUser user) throws Exception {
 		if(user==null) throw new Exception("the user must be authenticated");
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {
-			
+
 			txn = session.getTransaction();
 			txn.begin();
 			Date now = JPAUtil.getCurrentDateFromDatabase();
-			
+
 			if(ns.getStudy()!=null) {
 				//There is a study
 				if(ns.getStudy().getId()<=0) throw new Exception("The study must be already saved. Contact IT");
-				
+
 				//Make sure the study-name combination is unique
 				for (NamedSampling n : ns.getStudy().getNamedSamplings()) {
 					if(!n.equals(ns) && n.getName().equals(ns.getName())) {
 						throw new Exception("The sampling template's name must be unique per study");
 					}
 				}
-				
+
 			} else {
-				
+
 				//Make sure the creUser-name combination is unique
-				int count = session.createQuery("SELECT ns FROM NamedSampling ns " + 
+				int count = session.createQuery("SELECT ns FROM NamedSampling ns " +
 						" WHERE " +
 						" ns.creUser = ?1 and ns.study = ?2 and ns.id<>?3")
 						.setParameter(1, user.getUsername())
@@ -125,14 +130,14 @@ public class DAONamedSampling {
 						.setParameter(3, ns.getId()).getResultList().size();
 				if(count>0) {
 					throw new Exception("The sampling template's name must be unique for each user");
-				}				
+				}
 			}
-			
-			
-			
-//			ns.setUpdUser(user.getUsername());
-//			ns.setUpdDate(now);
-			if(ns.getId()>0) {				
+
+
+
+			//			ns.setUpdUser(user.getUsername());
+			//			ns.setUpdDate(now);
+			if(ns.getId()>0) {
 				if(!session.contains(ns)) ns = session.merge(ns);
 			} else {
 				ns.setCreUser(user.getUsername());
@@ -142,16 +147,16 @@ public class DAONamedSampling {
 
 			txn.commit();
 			txn = null;
-			
+
 			if(ns.getStudy()!=null) ns.getStudy().getNamedSamplings().add(ns);
 
-			
+
 			return ns;
 		} catch (Exception e) {
 			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {}
 			throw e;
-		}	
+		}
 	}
-	
-	
+
+
 }

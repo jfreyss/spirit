@@ -25,10 +25,6 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
@@ -43,6 +39,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
@@ -169,8 +166,8 @@ public abstract class AbstractNode<T>  {
 	}
 
 	protected boolean isFilledRec() {
-		if(isFilled()) return true;
 		for (AbstractNode c : getChildren()) {
+			if(c.isFilled()) return true;
 			if(c.isFilledRec()) return true;
 		}
 		return false;
@@ -237,6 +234,7 @@ public abstract class AbstractNode<T>  {
 	}
 
 	protected final Component getView() {
+		boolean addExpandButton = depth>0 && canExpand && (getChildren().size()>0 || expandStrategy!=null);
 
 		if(panel==null) {
 
@@ -245,38 +243,32 @@ public abstract class AbstractNode<T>  {
 
 			button.addFocusListener(new FocusAdapter() {
 				@Override
-				public void focusLost(FocusEvent e) {
-				}
+				public void focusLost(FocusEvent e) {}
 				@Override
 				public void focusGained(FocusEvent e) {
 					tree.setLastComponent((Component)e.getSource());
 				}
 			});
-			button.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					tree.expand(AbstractNode.this);
-				}
+			button.addActionListener(e-> {
+				tree.expand(AbstractNode.this);
 			});
 
 			//Add component
 			JComponent component = getComponent();
-
-			panel = new JPanel(new GridBagLayout());
-			GridBagConstraints c = new GridBagConstraints();
-			c.gridy = 0;
-			c.weighty = 0;
-			c.gridx = 0; c.weightx = 0; panel.add(UIUtils.createHorizontalBox(Box.createHorizontalStrut(2 + Math.max(0, n) * 12), button), c);
-			c.gridx = 1; c.weightx = 1; panel.add(component, c);
-			c.gridx = 2; c.weightx = 0; panel.add(Box.createHorizontalGlue(), c);
-
+			int marginPerLevel = 12;
+			int marginLeft = 1 + Math.max(0, n) * marginPerLevel - (addExpandButton? button.getPreferredSize().width-marginPerLevel:0);
+			panel = UIUtils.createHorizontalBox(
+					BorderFactory.createEmptyBorder(row>1 && depth<=1 && (getChildren().size()>0 || expandStrategy!=null)? 5:0, marginLeft, 0, 0),
+					UIUtils.createCenterPanel(button, SwingConstants.CENTER),
+					component,
+					Box.createHorizontalGlue());
 			panel.setOpaque(false);
+			//			panel.setMaximumSize(new Dimension(200, 100));
+			Dimension dim = new Dimension(200 /*- marginLeft*/, component.getPreferredSize().height);
+			getComponent().setPreferredSize(dim);
 		}
-		panel.setBorder(BorderFactory.createEmptyBorder(row>1 && depth<=1 && (getChildren().size()>0 || expandStrategy!=null)? 5:0, 0, 0, 0));
 
-		boolean addExpandButton = depth>0 && canExpand && (getChildren().size()>0 || expandStrategy!=null);
 		button.setVisible(addExpandButton);
-
 		button.setSelected(isExpanded());
 		if(isExpanded()) {
 			button.setIcon(UIManager.getIcon("FormTree.expanded"));

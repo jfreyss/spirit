@@ -37,7 +37,7 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.column.ContainerFullC
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.ContainerLocationPosColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.CreationColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.ExpiryDateColumn;
-import com.actelion.research.spiritapp.spirit.ui.biosample.column.NamedSamplingColumn;
+import com.actelion.research.spiritapp.spirit.ui.biosample.column.LastChangeColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.ParentBiosampleColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.ResultColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.ScannedPosColumn;
@@ -45,13 +45,14 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.column.StatusColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyGroupColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyPhaseColumn;
+import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudySamplingColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudySubGroupColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyTopSampleIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyTreatmentColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.AbstractLinkerColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.LinkerColumnFactory;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.SampleIdColumn;
-import com.actelion.research.spiritapp.spirit.ui.lf.SpiritExtendTableModel;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritExtendTableModel;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
@@ -95,7 +96,6 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 
 	private boolean filterTrashed = false;
 
-	private List<Column<Biosample, ?>> extraColumns = new ArrayList<>();
 	private Set<BiosampleLinker> linkers;
 
 	public BiosampleTableModel() {
@@ -248,7 +248,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		}
 
 		//Sampling
-		columns.add(new NamedSamplingColumn());
+		columns.add(new StudySamplingColumn());
 
 		// children
 		if (type!=null && someAbstractComponent) {
@@ -262,14 +262,20 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 			columns.add(col);
 		}
 
-		if(extraColumns!=null) {
-			columns.addAll(extraColumns);
-		}
-
 		// owner
 		CreationColumn col = new CreationColumn(true);
 		col.setHideable(mode!=Mode.FULL);
 		columns.add(col);
+
+
+		//Optional columns
+		columns.add(new LastChangeColumn());
+		columns.add(new StudyTreatmentColumn());
+		columns.add(new BioQualityColumn());
+		columns.add(new StatusColumn());
+		columns.add(new ChildrenColumn());
+		columns.add(new ResultColumn());
+		columns.add(new CreationColumn(false));
 
 		columns = removeEmptyColumns(columns);
 		sortColumns(columns);
@@ -278,29 +284,18 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		setColumns(columns);
 	}
 
-	public List<Column<Biosample, ?>> getExtraColumns() {
-		return extraColumns;
-	}
-	public void setExtraColumns(List<Column<Biosample, ?>> extraColumns) {
-		this.extraColumns = extraColumns;
-	}
-	public void addExtraColumn(Column<Biosample, ?> c) {
-		this.extraColumns.add(c);
-	}
-
-
-	@Override
-	public List<Column<Biosample, ?>> getPossibleColumns() {
-		List<Column<Biosample, ?>> res = new ArrayList<>();
-		res.add(new StudyTreatmentColumn());
-		res.add(null);
-		res.add(new BioQualityColumn());
-		res.add(new StatusColumn());
-		res.add(new ChildrenColumn());
-		res.add(new ResultColumn());
-		res.add(new CreationColumn(false));
-		return res;
-	}
+	//	@Override
+	//	public List<Column<Biosample, ?>> getPossibleColumns() {
+	//		List<Column<Biosample, ?>> res = new ArrayList<>();
+	//		res.add(new StudyTreatmentColumn());
+	//		res.add(new BioQualityColumn());
+	//		res.add(new StatusColumn());
+	//		res.add(new ChildrenColumn());
+	//		res.add(new ResultColumn());
+	//		res.add(new LastChangeColumn());
+	//		res.add(new CreationColumn(false));
+	//		return res;
+	//	}
 
 	@Override
 	public Biosample getTreeParent(Biosample row) {

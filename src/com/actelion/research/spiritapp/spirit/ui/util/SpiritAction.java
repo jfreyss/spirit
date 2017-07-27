@@ -39,13 +39,12 @@ import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.SpiritTab;
 import com.actelion.research.spiritapp.spirit.ui.admin.ChangePasswordDlg;
+import com.actelion.research.spiritapp.spirit.ui.admin.config.ConfigDlg;
 import com.actelion.research.spiritapp.spirit.ui.admin.database.DatabaseSettingsDlg;
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleDlg;
-import com.actelion.research.spiritapp.spirit.ui.config.ConfigDlg;
-import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
-import com.actelion.research.spiritapp.spirit.ui.lf.PreferencesDlg;
 import com.actelion.research.spiritapp.spirit.ui.print.BrotherLabelsDlg;
-import com.actelion.research.spiritapp.spirit.ui.scanner.SpiritScanner;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.PreferencesDlg;
+import com.actelion.research.spiritapp.spirit.ui.util.scanner.SpiritScanner;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.location.Location;
@@ -59,17 +58,17 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 public class SpiritAction {
 
 	public static class Action_Refresh extends AbstractAction {
-		private AbstractAction nextAction; 
-		public Action_Refresh(final SpiritFrame spirit) {			
-			this(new AbstractAction() {				
+		private AbstractAction nextAction;
+		public Action_Refresh(final SpiritFrame spirit) {
+			this(new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					if(spirit!=null) spirit.recreateUI();
 				}
 			});
 		}
-		
-		public Action_Refresh(AbstractAction nextAction) {			
+
+		public Action_Refresh(AbstractAction nextAction) {
 			super("Refresh");
 			this.nextAction = nextAction;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
@@ -79,7 +78,7 @@ public class SpiritAction {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			try {				
+			try {
 				JPAUtil.closeFactory();
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
@@ -87,9 +86,9 @@ public class SpiritAction {
 			if(nextAction!=null) nextAction.actionPerformed(e);
 		}
 	}
-	
+
 	public static class Action_Preferences extends AbstractAction {
-		public Action_Preferences() {			
+		public Action_Preferences() {
 			super("Preferences");
 			putValue(AbstractAction.SMALL_ICON, IconType.SETUP.getIcon());
 		}
@@ -99,39 +98,39 @@ public class SpiritAction {
 			new PreferencesDlg();
 		}
 	}
-	
+
 	public static class Action_Exit extends AbstractAction {
 		public Action_Exit() {
 			super("Exit");
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			System.exit(0);
 		}
 	}
-	
+
 
 	public static class Action_Relogin extends AbstractAction {
 		private Frame top;
 		private String app;
 		private String msg;
-		
-		public Action_Relogin(Frame top, String app) {			
+
+		public Action_Relogin(Frame top, String app) {
 			super("Logout");
 			this.top = top;
 			this.app = app;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('o'));
 		}
-		
-		public Action_Relogin(Frame top, String app, String msg) {			
+
+		public Action_Relogin(Frame top, String app, String msg) {
 			super("Logout");
 			this.top = top;
 			this.app = app;
 			this.msg = msg;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('o'));
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			//Open dialog
@@ -144,12 +143,12 @@ public class SpiritAction {
 			if(user==null) {
 				System.exit(1);
 			} else {
-				SpiritContextListener.setStatus(SpiritFrame.getUser().getUsername() +" logged");								
-				SpiritContextListener.setUser(user.getUsername() + " ("+ (user.getMainGroup()==null?"NoDept":user.getMainGroup().getName())+ ") " + (user.getRolesString().length()>0? " - " + user.getRolesString():""));								
-			}			
+				SpiritContextListener.setStatus(SpiritFrame.getUser().getUsername() +" logged");
+				SpiritContextListener.setUser(user.getUsername() + " ("+ (user.getMainGroup()==null?"NoDept":user.getMainGroup().getName())+ ") " + (user.getRolesString().length()>0? " - " + user.getRolesString():""));
+			}
 		}
 	}
-	
+
 	public static void logUsage(final String app) {
 		String version = Spirit.class.getPackage().getImplementationVersion();
 		if(DBAdapter.getAdapter().isInActelionDomain()) {
@@ -158,20 +157,21 @@ public class SpiritAction {
 			UsageLog.logUsage("Spirit", SpiritFrame.getUsername(), null, UsageLog.ACTION_LOGON, "app=" + app + ";v="+version);
 		} else if(!"false".equalsIgnoreCase(System.getProperty("jnlp.logusage"))) {
 			new Thread() {
+				@Override
 				public void run() {
 					try {
 						//Record usage
 						new URL("http://c.statcounter.com/11069822/0/f9288463/1/").getContent();
 					} catch(Exception e) {
 						e.printStackTrace();
-					}					
+					}
 				};
 			}.start();
 		}
-		
-		
+
+
 	}
-	
+
 	public static class Action_ChangePassword extends AbstractAction {
 		public Action_ChangePassword() {
 			super("Change Password");
@@ -182,7 +182,7 @@ public class SpiritAction {
 			new ChangePasswordDlg();
 		}
 	}
-	
+
 	public static class Action_Config extends AbstractAction {
 		public Action_Config() {
 			super("Config (Balances,...)");
@@ -191,9 +191,9 @@ public class SpiritAction {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			new ConfigDlg();
-		}		
+		}
 	}
-	
+
 	public static class Action_Help extends AbstractAction {
 		public Action_Help() {
 			super("Help");
@@ -204,9 +204,9 @@ public class SpiritAction {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			HelpBinder.showHelp("");
-		}		
+		}
 	}
-	
+
 	public static class Action_PrintLabels extends AbstractAction {
 		public Action_PrintLabels() {
 			super("Print Raw P-Touch Labels");
@@ -218,7 +218,7 @@ public class SpiritAction {
 			new BrotherLabelsDlg();
 		}
 	}
-	
+
 	/*
 	public static class Action_OpenSpirit extends AbstractAction {
 		public Action_OpenSpirit() {
@@ -230,7 +230,7 @@ public class SpiritAction {
 			Spirit.open();
 		}
 	}
-	
+
 	public static class Action_OpenAnimalCare extends AbstractAction {
 		public Action_OpenAnimalCare() {
 			super("Open AnimalCare");
@@ -241,7 +241,7 @@ public class SpiritAction {
 			AnimalCare.open();
 		}
 	}
-	
+
 	public static class Action_OpenSlideCare extends AbstractAction {
 		public Action_OpenSlideCare() {
 			super("Open SlideCare");
@@ -252,7 +252,7 @@ public class SpiritAction {
 			SlideCare.open();
 		}
 	}
-	
+
 	public static class Action_OpenStockCare extends AbstractAction {
 		public Action_OpenStockCare() {
 			super("Open StockCare");
@@ -263,7 +263,7 @@ public class SpiritAction {
 			StockCare.open();
 		}
 	}
-	
+
 	public static class Action_OpenBioViewer extends AbstractAction {
 		public Action_OpenBioViewer() {
 			super("Open BioViewer");
@@ -274,12 +274,12 @@ public class SpiritAction {
 			BioViewer.open();
 		}
 	}
-	*/
-	
+	 */
+
 	public static class Action_Perspective extends AbstractAction {
-		
+
 		private Class<? extends SpiritTab> tabClass;
-		
+
 		public Action_Perspective(String name, Class<? extends SpiritTab> tabClass, boolean def) {
 			super("Show "+name);
 			this.tabClass = tabClass;
@@ -292,7 +292,7 @@ public class SpiritAction {
 			SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
 		}
 	}
-	
+
 	public static class Action_DatabaseSettings extends AbstractAction {
 		public Action_DatabaseSettings() {
 			super("Database settings");
@@ -313,39 +313,39 @@ public class SpiritAction {
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
 			putValue(Action.SMALL_ICON, IconType.SCANNER.getIcon());
 		}
-	
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				SpiritScanner scanner = new SpiritScanner();				
+				SpiritScanner scanner = new SpiritScanner();
 				Location rack = scanner.scan(null, false);
 				if(rack==null) return;
-				
-				SpiritContextListener.setRack(rack);	
-				
+
+				SpiritContextListener.setRack(rack);
+
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
-			}	
+			}
 		}
 	}
-	
+
 	public static class Action_ScanAndSetLocation extends AbstractAction {
 		public Action_ScanAndSetLocation() {
 			super("Scan & Set Location");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
 			putValue(Action.SMALL_ICON, IconType.SCANNER.getIcon());
 		}
-	
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				SpiritScanner scanner = new SpiritScanner();				
+				SpiritScanner scanner = new SpiritScanner();
 				Location rack = scanner.scan(null, true);
 				if(rack==null) return;
-				
+
 				if(rack.getName()==null || rack.getName().length()==0) {
 					//Simple Scan
-					SpiritContextListener.setRack(rack);	
+					SpiritContextListener.setRack(rack);
 				} else {
 					//Scan and save
 					List<Biosample> biosamples = new ArrayList<>(rack.getBiosamples());
@@ -356,17 +356,17 @@ public class SpiritAction {
 					}
 					try {
 						JPAUtil.pushEditableContext(SpiritFrame.getUser());
-						EditBiosampleDlg.createDialogForEditSameTransaction("Save Rack", biosamples).setVisible(true);
+						EditBiosampleDlg.createDialogForEditSameTransaction(biosamples).setVisible(true);
 					} finally {
 						JPAUtil.popEditableContext();
 					}
 					SpiritContextListener.setRack(rack);
 				}
-				
-				
+
+
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
-			}	
+			}
 		}
 	}
 
@@ -376,7 +376,7 @@ public class SpiritAction {
 			putValue(Action.SMALL_ICON, IconType.SCANNER.getIcon());
 			putValue(AbstractAction.SHORT_DESCRIPTION, "Scan Tubes in order to assign existing biosamples to containerIds");
 		}
-	
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			new BatchAssignDlg().setVisible(true);
@@ -389,11 +389,11 @@ public class SpiritAction {
 			putValue(Action.SMALL_ICON, IconType.SCANNER.getIcon());
 			putValue(AbstractAction.SHORT_DESCRIPTION, "Scan Tubes in order to create aliquots and assign them to containerIds");
 		}
-	
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			new BatchAliquotDlg().setVisible(true);
 		}
 	}
-	
+
 }

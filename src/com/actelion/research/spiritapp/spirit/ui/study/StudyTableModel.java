@@ -38,7 +38,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.lf.CreationLabel;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.CreationLabel;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
@@ -86,11 +86,11 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 	public final Column<Study, String> COLUMN_IVV = new Column<Study, String>("InternalId", String.class, 50, 80) {
 		@Override
 		public String getValue(Study row) {
-			return row.getIvv();
+			return row.getLocalId();
 		}
 	};
 
-	public final Column<Study, String> COLUMN_TITLE = new Column<Study, String>("Title", String.class, 60, 600) {
+	public final Column<Study, String> COLUMN_TITLE = new Column<Study, String>("Title", String.class, 100, 1000) {
 		@Override
 		public String getValue(Study row) {
 			return row.getTitle();
@@ -110,6 +110,10 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 			return row.getMetadata().get(metaKey);
 		}
 
+		@Override
+		public boolean isHideable() {
+			return true;
+		}
 	}
 
 	public final Column<Study, String> COLUMN_RESPONSIBLES = new Column<Study, String>("Responsibles", String.class, 40, 120) {
@@ -133,7 +137,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 
 	};
 
-	public final Column<Study, Date> COLUMN_STARTING_DATE = new Column<Study, Date>("Start", Date.class) {
+	public final Column<Study, Date> COLUMN_STARTING_DATE = new Column<Study, Date>("Start", Date.class, 40) {
 		@Override
 		public Date getValue(Study row) {
 			return row.getFirstDate();
@@ -187,7 +191,9 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		public boolean isHideable() {return true;}
 	};
 
-	public final Column<Study, String> COLUMN_BIOSAMPLES = new Column<Study, String>("Biosamples", String.class) {
+	public final Column<Study, String> COLUMN_BIOSAMPLES = new Column<Study, String>("Linked\nBiosamples", String.class) {
+		@Override
+		public float getSortingKey() {return 10.1f;}
 		@Override
 		public String getValue(Study study) {
 			StringBuilder sb = new StringBuilder();
@@ -215,7 +221,9 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 	};
 
 
-	public final Column<Study, String> COLUMN_RESULTS = new Column<Study, String>("Results", String.class) {
+	public final Column<Study, String> COLUMN_RESULTS = new Column<Study, String>("Linked\nResults", String.class) {
+		@Override
+		public float getSortingKey() {return 10.2f;}
 		@Override
 		public String getValue(Study study) {
 			StringBuilder sb = new StringBuilder();

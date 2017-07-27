@@ -44,7 +44,6 @@ import javax.swing.JScrollPane;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.services.report.StudyGroupAssignmentReport;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.helper.AttachBiosamplesHelper;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachedBiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachedBiosampleTableModel;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;

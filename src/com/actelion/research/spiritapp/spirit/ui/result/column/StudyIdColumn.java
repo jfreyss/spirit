@@ -25,23 +25,22 @@ import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class StudyIdColumn extends Column<Result, String> {
-	
+
 	public StudyIdColumn() {
 		super("StudyId", String.class);
-		setHideable(true);
 	}
-	
+
 	@Override
 	public float getSortingKey() {
 		return 2.0f;
 	}
-	
+
 	@Override
 	public String getValue(Result row) {
 		return row.getBiosample()==null || row.getBiosample().getInheritedStudy()==null? null: row.getBiosample().getInheritedStudy().getStudyId();
 	}
 	@Override
 	public boolean isEditable(Result row) {return false;}
-	
-	
+
+
 }

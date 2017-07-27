@@ -51,13 +51,13 @@ import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 
 /**
- * Describes the metadata of a Biosample 
+ * Describes the metadata of a Biosample
  *
  */
 @Entity
 @Audited
 @BatchSize(size=100)
-@Table(name="biotype_metadata", indexes = {		
+@Table(name="biotype_metadata", indexes = {
 		@Index(name="biotypemetatada_type_index", columnList = "biotype_id")
 })
 @SequenceGenerator(name="biotype_metadata_sequence", sequenceName="biotype_metadata_sequence", allocationSize=1)
@@ -65,39 +65,39 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 
 	public static final String STAINING = "Staining";
 	public static final String SECTIONNO = "SectionNo";
-	
+
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="biotype_metadata_sequence")
 	@Column(name="id")
 	private int id = 0;
-	
+
 	@Column(name="name", nullable=false)
 	private String name = "";
-	
+
 	@ManyToOne( fetch=FetchType.LAZY, cascade={}, optional=false)
 	@JoinColumn(name="biotype_id")
 	@Audited(targetAuditMode=RelationTargetAuditMode.NOT_AUDITED)
 	private Biotype biotype = null;
-	
+
 	@Column(name="datatype", nullable=false)
 	@Enumerated(EnumType.STRING)
 	private DataType dataType = DataType.ALPHA;
-	
+
 	@Column(name="required", nullable=false)
-	private boolean required = false;		
-	
+	private boolean required = false;
+
 	@Column(name="hideFromDisplay")
 	private Boolean secundary = false;
-	
+
 	@Column(name="parameters", length=4000)
 	private String parameters;
-	
+
 	@Column(name="idx", nullable=false)
 	private int index = 0;
-	
-	public BiotypeMetadata() {		
+
+	public BiotypeMetadata() {
 	}
-	
+
 	public BiotypeMetadata(int id) {
 		this.id = id;
 	}
@@ -115,11 +115,11 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setId(int id) {
 		this.id = id;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -127,44 +127,44 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 	public Biotype getBiotype() {
 		return biotype;
 	}
-	
+
 	public DataType getDataType() {
 		return dataType;
 	}
-	
+
 	public boolean isRequired() {
 		return required;
 	}
-	
+
 	public void setSecundary(boolean secundary) {
 		this.secundary = secundary;
 	}
-	
+
 	public boolean isSecundary() {
 		return secundary==Boolean.TRUE;
 	}
-	
+
 	public void setBiotype(Biotype biotype) {
 		this.biotype = biotype;
 	}
-	
+
 	public void setDataType(DataType dataType) {
 		this.dataType = dataType;
 	}
-	
+
 	public String getParameters() {
 		return parameters;
 	}
-	
+
 	public void setParameters(String parameters) {
 		this.parameters = parameters;
 	}
-	
+
 	public String[] getParametersArray() {
 		if(this.parameters==null) return new String[0];
 		return MiscUtils.split(this.parameters);
 	}
-	
+
 	public void setParametersArray(String[] parameters) {
 		this.parameters = MiscUtils.unsplit(parameters);
 	}
@@ -186,7 +186,7 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 	public int hashCode() {
 		return id;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof BiotypeMetadata)) return false;
@@ -195,19 +195,19 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 		if(getId()>0) return (getId() == mt2.getId());
 		else {
 			if(getBiotype()!=null && mt2.getBiotype()!=null && !getBiotype().equals(mt2.getBiotype())) return false;
-			return getName().equals(((BiotypeMetadata)obj).getName());  
+			return getName().equals(((BiotypeMetadata)obj).getName());
 		}
 	}
-	
+
 	@Override
 	public int compareTo(BiotypeMetadata o) {
 		int c = CompareUtils.compare(getBiotype(), o.getBiotype());
 		if(c!=0) return c;
 		c = getIndex() - o.getIndex();
 		if(c!=0) return c;
-		return getName().compareTo(o.getName());
+		return (getName()==null?"":getName()).compareTo((o.getName()==null?"":o.getName()));
 	}
-	
+
 	@Override
 	public String toString() {
 		return name;
@@ -216,34 +216,35 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 	public List<String> extractChoices(){
 		return splitChoices(parameters);
 	}
-	
+
 	public String extractUnit() {
 		int index = getName().indexOf("[");
 		int index2 = getName().indexOf("]");
-		
+
 		if(index>0 && index<index2) {
 			return getName().substring(index+1, index2);
 		} else {
 			return "";
 		}
-		
+
 	}
-	
-	public static List<String> splitChoices(String csvChoices){		
+
+	public static List<String> splitChoices(String csvChoices){
 		List<String> res = new ArrayList<String>();
 		if(csvChoices==null) return res;
 		StringTokenizer st = new StringTokenizer(csvChoices, ",");
 		while (st.hasMoreElements()) {
 			String s = st.nextToken().trim();
-			if(s.length()>0 && !res.contains(s)) res.add(s);				
+			if(s.length()>0 && !res.contains(s)) res.add(s);
 		}
 		return res;
 	}
-	
+
 	/**
-	 * Clone this biotypemetadata. Careful, you will get 2 identical objects with a different reference, 
-	 * so it is important to change the id/name/biotype after calling this function 
+	 * Clone this biotypemetadata. Careful, you will get 2 identical objects with a different reference,
+	 * so it is important to change the id/name/biotype after calling this function
 	 */
+	@Override
 	public BiotypeMetadata clone() {
 		BiotypeMetadata m2 = new BiotypeMetadata();
 		m2.setId(getId());
@@ -261,14 +262,14 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 		Map<BiotypeMetadata, String> res = new HashMap<>();
 		for (int id : map.keySet()) {
 			assert id>0;
-			
+
 			if(id>0 && biotype.getMetadata(id)!=null) {
 				res.put(biotype.getMetadata(id), map.get(id));
 			}
 		}
 		return res;
 	}
-	
+
 	public static String serialize(Map<BiotypeMetadata, String> metadata) {
 		Map<Integer,String> map = new HashMap<>();
 		for (Map.Entry<BiotypeMetadata, String> e : metadata.entrySet()) {
@@ -278,5 +279,5 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 		}
 		return MiscUtils.serializeIntegerMap(map);
 	}
-	
+
 }

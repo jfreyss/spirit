@@ -28,9 +28,9 @@ import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.LocationCellEditor;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel;
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerLabel.ContainerDisplayMode;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerLabel;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerLabel.ContainerDisplayMode;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.LocationFormat;
 import com.actelion.research.spiritcore.business.location.Location;

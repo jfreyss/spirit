@@ -45,17 +45,16 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import com.actelion.research.spiritapp.animalcare.ui.monitor.MonitoringHelper.MonitoringStats;
-import com.actelion.research.spiritapp.spirit.ui.help.HelpBinder;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.pivot.graph.GraphPanelWithResults;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyActions;
+import com.actelion.research.spiritapp.spirit.ui.util.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.util.ISpiritChangeObserver;
-import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.FoodWater;
 import com.actelion.research.spiritcore.business.pivot.MonitorPivotTemplate;
-import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Phase;
@@ -77,15 +76,13 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 	private final JPanel contentPanel = new JPanel(new BorderLayout());
 
 	public MonitoringOverviewDlg(Study s) throws Exception {
-		super(UIUtils.getMainFrame(), "Live Monitoring");
+		super(UIUtils.getMainFrame(), "Live Monitoring - " +(s==null?"": s.getStudyId()) );
 		if (s == null) throw new Exception("You must select a study");
 		this.s = s;
 
-		SpiritChangeListener.register(this);
+		//		SpiritChangeListener.register(this);
 		setContentPane(contentPanel);
 		UIUtils.adaptSize(this, 1500, 1200);
-		setLocationRelativeTo(UIUtils.getMainFrame());
-
 		recreateUIInThread();
 		setVisible(true);
 	}
@@ -100,8 +97,9 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 	}
 
 	private void recreateUIInThread()  {
+		System.out.println("MonitoringOverviewDlg.recreateUIInThread()");
 
-		new SwingWorkerExtended("Loading", contentPanel) {
+		new SwingWorkerExtended("Loading", contentPanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 
 			private List<Biosample> animals;
 			private List<Result> results;
@@ -113,8 +111,9 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 
 			@Override
 			protected void doInBackground() throws Exception {
-				study = JPAUtil.reattach(s);
+				System.out.println("MonitoringOverviewDlg.recreateUIInThread().new SwingWorkerExtended() {...}.doInBackground()");
 				// Load animals
+				study = JPAUtil.reattach(s);
 				animals = study.getTopAttachedBiosamples();
 
 				//Load Results (except foodwater which is loaded separately)
@@ -164,10 +163,11 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 
 						liveButton.setIcon(MonitoringStats.getIconType(allStats).getIcon());
 						liveButton.setHorizontalAlignment(SwingConstants.LEFT);
-						//						liveButton.setPreferredSize(new Dimension(92, 44));
+						liveButton.setPreferredSize(new Dimension(92, 44));
 						liveButton.addActionListener(e-> {
 							new MonitoringDlg(phase);
-							SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, phase.getStudy());
+							Spirit.clearAll();
+							recreateUIInThread();
 						});
 
 						StringBuilder statsBuilder = new StringBuilder();
@@ -195,24 +195,19 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 						comps.add(new JLabel("<html><div style='font-size:90%'>"+statsBuilder));
 					}
 
-					JPanel displayPane = UIUtils.createTable(4, 2, 0, comps);
-
-
 					// ContentPane
+					JPanel displayPane = UIUtils.createTable(4, 2, 0, comps);
 					final JScrollPane displaySp = new JScrollPane(displayPane);
 					displaySp.setPreferredSize(new Dimension(400, 500));
 
-
-					final PivotTemplate tpl2 = new MonitorPivotTemplate();
-
 					GraphPanelWithResults graphPanel = new GraphPanelWithResults();
-					graphPanel.setPivotTemplate(tpl2);
+					graphPanel.setPivotTemplate(new MonitorPivotTemplate());
 
 					JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, displaySp, graphPanel);
 					splitPane.setDividerLocation(380);
+					contentPanel.removeAll();
 					contentPanel.add(BorderLayout.CENTER, splitPane);
 					contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue(), new JButton(new CloseAction())));
-
 					contentPanel.validate();
 					contentPanel.repaint();
 
@@ -224,24 +219,17 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 							displaySp.getVerticalScrollBar().setValue(pt.y-displaySp.getHeight()/2);
 						}
 						graphPanel.setResults(results);
-
 					});
-
-
-
-
 				} catch(Exception e) {
 					JExceptionDialog.showError(e);
 				}
 			}
 
 		};
-
-
 	}
 
 	@Override
-	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, List<T> details) {
+	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
 		if(!isVisible()) return;
 		recreateUIInThread();
 	}

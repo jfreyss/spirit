@@ -30,35 +30,41 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 public class StudyTreatmentColumn extends Column<Biosample, String> {
 
-	private static GroupLabel groupLabel = new GroupLabel();	
-	
+	private static GroupLabel groupLabel = new GroupLabel();
+
 	/**
 	 * Create a column to display the study group.
 	 * If getStudy is not overriden, the group will not be editable
 	 */
 	public StudyTreatmentColumn() {
-		super("\nTreatment", String.class, 60, 140);
-	}	
-	
+		super("Study\nTreatment", String.class, 60, 140);
+	}
+
 	@Override
 	public float getSortingKey() {return 3.35f;}
-	
+
 	@Override
 	public String getValue(Biosample row) {
+		if(row.getInheritedStudy()==null) return null;
+		if(row.getInheritedStudy().isBlind()) return null;
 		return row.getInheritedGroup().getTreatmentDescription(row.getInheritedSubGroup());
 	}
-	
-	
+
+
 	@Override
 	public boolean isEditable(Biosample row) {
 		return false;
 	}
-	
-	
+
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
 		groupLabel.setText((String) value, row.getInheritedGroup());
 		return groupLabel;
 	}
-	
+
+	@Override
+	public boolean isHideable() {
+		return true;
+	}
 }

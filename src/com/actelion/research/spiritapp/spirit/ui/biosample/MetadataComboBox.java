@@ -30,7 +30,7 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
 import javax.swing.JList;
 
-import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
+import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
 import com.actelion.research.util.ui.JComboBoxBigPopup;
 
 public class MetadataComboBox extends JComboBoxBigPopup<String> {

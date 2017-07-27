@@ -112,14 +112,38 @@ public class SpiritUser {
 	public String getRolesString() {
 		return MiscUtils.flatten(roles, ", ");
 	}
-
+	//
+	/**
+	 * Returns true if the user is member of the given group, <strikethrough> or any of the super group. </strikethrough>
+	 * <pre>
+	 * 			GroupA        <- User1
+	 *        /       \
+	 *       /         \
+	 *   GroupB       GroupC  <- User2
+	 *
+	 *
+	 *  User1 and User2 are both member of GroupA
+	 *
+	 * </pre>
+	 * @param gr
+	 * @return
+	 */
 	public boolean isMember(EmployeeGroup gr) {
-		return groups.contains(gr);
+		return getGroups().contains(gr);
+
+		//		EmployeeGroup g = gr;
+		//		int testCycles = 0;
+		//		while(g!=null && testCycles++<10) {
+		//			if(getGroups().contains(g)) return true;
+		//			g = g.getParent();
+		//		}
+		//		return false;
 	}
 
 	public boolean isReadall() {
 		return isSuperAdmin() || isRole(ROLE_READALL);
 	}
+
 	public boolean isSuperAdmin() {
 		return isRole(ROLE_ADMIN);
 	}
@@ -129,6 +153,18 @@ public class SpiritUser {
 		return username;
 	}
 
+	/**
+	 * Returns all the groups of this user
+	 * @return
+	 */
+	public Set<EmployeeGroup> getGroups() {
+		return groups;
+	}
+
+	/**
+	 * Returns the logged in group
+	 * @return
+	 */
 	public EmployeeGroup getMainGroup() {
 		return mainGroup;
 	}

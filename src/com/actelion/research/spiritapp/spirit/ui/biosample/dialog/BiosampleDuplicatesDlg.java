@@ -31,9 +31,9 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.lf.BiotypeComboBox;
-import com.actelion.research.spiritapp.spirit.ui.lf.StudyComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.StudyComboBox;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.study.Study;

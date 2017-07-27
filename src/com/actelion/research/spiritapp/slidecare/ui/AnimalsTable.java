@@ -32,8 +32,8 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyTopSample
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.LinkerColumnFactory;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
-import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
+import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class AnimalsTable extends BiosampleTable {
@@ -41,8 +41,8 @@ public class AnimalsTable extends BiosampleTable {
 	public AnimalsTable() {
 		super();
 	}
-	
-	
+
+
 	@Override
 	public void setRows(List<Biosample> biosamples) {
 		//If the data is empty, set an empty table (to avoid too many useless events)
@@ -51,39 +51,39 @@ public class AnimalsTable extends BiosampleTable {
 			getModel().fireTableStructureChanged();
 			return;
 		}
-		
-		
+
+
 		Collection<Biotype> biotypes = Biosample.getBiotypes(biosamples);
 		Biotype biotype = biotypes.size()==1? biotypes.iterator().next(): null;
 
-				
+
 		boolean hasAnimal = false;
 		boolean hasSubgroup = false;
-		
+
 		for (Biosample biosample : biosamples) {
 			Biosample top = biosample.getTopParentInSameStudy();
 			if(top!=biosample && !biosample.getSampleId().startsWith(top.getSampleId())) hasAnimal = true;
 			if(biosample.getInheritedSubGroup()>0) hasSubgroup = true;
 		}
-		
-		
-		List<Column<Biosample, ?>> columns = new ArrayList<Column<Biosample,?>>();
+
+
+		List<Column<Biosample, ?>> columns = new ArrayList<>();
 		columns.add(getModel().COLUMN_ROWNO);
 		columns.add(new StudyGroupColumn(null));
 		if(hasSubgroup) columns.add(new StudySubGroupColumn());
-		
+
 		if(hasAnimal) columns.add(new StudyTopSampleIdColumn());
-		
-		
+
+
 		Column<Biosample, ?> sampleIdColumn = LinkerColumnFactory.create(new BiosampleLinker(LinkerType.SAMPLEID, biotype));
 		columns.add(sampleIdColumn);
 		getModel().setColumns(columns);
 		getModel().setTreeColumn(sampleIdColumn);
-		
-		
+
+
 		getModel().setRows(biosamples);
-		
+
 		resetPreferredColumnWidth();
 	}
-	
+
 }

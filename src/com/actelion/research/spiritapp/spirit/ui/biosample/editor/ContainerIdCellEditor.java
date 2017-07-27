@@ -28,9 +28,9 @@ import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
-import com.actelion.research.spiritapp.spirit.ui.container.ContainerTextField;
+import com.actelion.research.spiritapp.spirit.ui.location.ContainerTextField;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.util.ui.exceltable.ExcelTableModel;
+import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
 public class ContainerIdCellEditor extends AbstractCellEditor implements TableCellEditor {
 
@@ -44,7 +44,7 @@ public class ContainerIdCellEditor extends AbstractCellEditor implements TableCe
 	@SuppressWarnings("unchecked")
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-		ExcelTableModel<Biosample> model = (ExcelTableModel<Biosample>) table.getModel();
+		ExtendTableModel<Biosample> model = (ExtendTableModel<Biosample>) table.getModel();
 		Biosample b = row<model.getRows().size()? model.getRows().get(row): null;
 		containerTextField.setContainerType(b==null?null: b.getContainerType());
 		containerTextField.setText(b==null?null: b.getContainerId());

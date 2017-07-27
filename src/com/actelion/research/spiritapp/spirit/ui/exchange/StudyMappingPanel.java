@@ -81,7 +81,7 @@ public class StudyMappingPanel extends JPanel implements IMappingPanel {
 			setOpaque(false);
 			
 		} else {
-			commentLabel.setText("This study matches the existing study: " + mappedStudy.getStudyId() + (mappedStudy.getIvv()==null?"": " ("+mappedStudy.getIvv()+") "));
+			commentLabel.setText("This study matches the existing study: " + mappedStudy.getStudyId() + (mappedStudy.getLocalId()==null?"": " ("+mappedStudy.getLocalId()+") "));
 			commentLabel.setForeground(Color.RED); 
 			r1.setText("Keep the existing design: "+mappedStudy.getStudyId());
 			r3.setText("Create a copy");

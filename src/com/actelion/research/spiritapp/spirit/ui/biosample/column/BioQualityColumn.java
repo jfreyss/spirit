@@ -28,7 +28,6 @@ import javax.swing.table.TableCellEditor;
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.QualityCellEditor;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
@@ -36,7 +35,6 @@ public class BioQualityColumn extends Column<Biosample, Quality> {
 
 	public BioQualityColumn() {
 		super("Quality", Quality.class, 40);
-		lbl.setFont(FastFont.SMALL);
 	}
 	@Override
 	public float getSortingKey() {
@@ -45,17 +43,17 @@ public class BioQualityColumn extends Column<Biosample, Quality> {
 	@Override
 	public Quality getValue(Biosample row) {
 		return row.getQuality();
-	}		
+	}
 	@Override
 	public boolean isEditable(Biosample row) {
 		return true;
 	}
-	
+
 	@Override
 	public void setValue(Biosample row, Quality value) {
 		row.setQuality(value);
 	}
-	
+
 	@Override
 	public void paste(Biosample row, String value) throws Exception {
 		for(Quality q: Quality.values()) {
@@ -66,25 +64,29 @@ public class BioQualityColumn extends Column<Biosample, Quality> {
 		}
 		throw new Exception(value+" is not a valid quality");
 	}
-	
+
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		super.postProcess(table, row, rowNo, value, comp);
-		
+
 		Quality status = (Quality) value;
 		if(status!=null && status.getBackground()!=null) {
-			lbl.setBackground(status.getBackground());			
+			lbl.setBackground(status.getBackground());
 		}
 	}
-	
+
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {
 		return new QualityCellEditor();
 	}
-	
+
 	@Override
 	public boolean shouldMerge(Biosample r1, Biosample r2) {return false;}
-	
 
-	
+	@Override
+	public boolean isHideable() {
+		return true;
+	}
+
+
 }

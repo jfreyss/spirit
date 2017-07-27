@@ -65,6 +65,7 @@ public class ObjectComboBoxNode<T> extends AbstractNode<T> {
 			if(strategy!=null) strategy.onChange();
 		});
 		this.comboBox.addActionListener(e-> {
+			getTree().firePropertyChange(FormTree.PROPERTY_SUBMIT_PERFORMED, false, true);
 			if(strategy!=null) strategy.onAction();
 		});
 

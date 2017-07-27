@@ -32,14 +32,15 @@ import java.awt.event.MouseEvent;
 import java.util.EnumSet;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.icons.ImageFactory;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.services.SpiritRights;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.exceltable.JComponentNoRepaint;
@@ -149,12 +150,14 @@ public class SampleIdLabel extends JComponentNoRepaint {
 
 	@Override
 	public String getToolTipText(MouseEvent event) {
-		return biosample==null? null: biosample.getInfos(EnumSet.allOf(InfoFormat.class), InfoSize.EXPANDED);
+		return biosample==null? null: "<html>"+MiscUtils.convert2Html(biosample.getInfos(EnumSet.allOf(InfoFormat.class), InfoSize.EXPANDED));
 	}
+
 	@Override
 	public String getToolTipText() {
-		return biosample==null? null: biosample.getInfos(EnumSet.allOf(InfoFormat.class), InfoSize.EXPANDED);
+		return getToolTipText(null);
 	}
+
 	@Override
 	protected void paintComponent(Graphics graphics) {
 
@@ -220,7 +223,7 @@ public class SampleIdLabel extends JComponentNoRepaint {
 			if(extraSameLine) {
 				g.drawString((biosample.getSampleName()!=null? " | ": "") + extraDisplayValue, x2, y);
 			} else {
-				g.drawString(extraDisplayValue, iconW, y + sizeIncrement);
+				g.drawString(extraDisplayValue, iconW, y + FastFont.REGULAR.getSize() + sizeIncrement);
 			}
 		}
 

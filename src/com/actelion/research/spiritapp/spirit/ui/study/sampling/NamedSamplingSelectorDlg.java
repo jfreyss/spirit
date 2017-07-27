@@ -31,7 +31,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.lf.LF;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.services.dao.DAONamedSampling;
 import com.actelion.research.spiritcore.util.MiscUtils;
@@ -39,27 +39,27 @@ import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.UIUtils;
 
 public class NamedSamplingSelectorDlg extends JEscapeDialog {
-	
+
 	private NamedSamplingComboBox namedSamplingComboBox = new NamedSamplingComboBox();
 	JButton reuseTemplateButton = new JButton("Import");
 	JButton newTemplateButton = new JButton("New Template");
 
 	private NamedSampling namedSampling;
 	private boolean success = false;
-	
+
 	public NamedSamplingSelectorDlg() {
 		super(UIUtils.getMainFrame(), "Import sampling");
-	
+
 		//CenterPane
-		namedSamplingComboBox.setValues(DAONamedSampling.getNamedSamplings(SpiritFrame.getUser(), null), true);
-		
+		namedSamplingComboBox.setValues(DAONamedSampling.getNamedSamplings(SpiritFrame.getUser(), null));
+
 		final JEditorPane editorPane = new JEditorPane("text/html", "");
 		LF.initComp(editorPane);
 		editorPane.setEditable(false);
-		
+
 		final JScrollPane scrollPane = new JScrollPane(editorPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		scrollPane.setPreferredSize(new Dimension(300, 300));		
-		
+		scrollPane.setPreferredSize(new Dimension(300, 300));
+
 		//Actions
 		namedSamplingComboBox.addActionListener(e-> {
 			namedSampling = namedSamplingComboBox.getSelection();
@@ -72,29 +72,29 @@ public class NamedSamplingSelectorDlg extends JEscapeDialog {
 			}
 		});
 		reuseTemplateButton.setEnabled(false);
-		
-		reuseTemplateButton.addActionListener(e-> {			
+
+		reuseTemplateButton.addActionListener(e-> {
 			if(namedSamplingComboBox.getSelection()==null) return;
 			success = true;
-			namedSampling = namedSamplingComboBox.getSelection().duplicate();				
+			namedSampling = namedSamplingComboBox.getSelection().duplicate();
 			dispose();
 		});
-		
+
 		newTemplateButton.addActionListener(e->{
 			success = true;
 			namedSampling = new NamedSampling("");
 			dispose();
 		});
-		
-		
+
+
 		//ContentPane
 		JPanel contentPane = new JPanel(new BorderLayout());
-		contentPane.add(BorderLayout.CENTER, 
+		contentPane.add(BorderLayout.CENTER,
 				UIUtils.createGrid(
-						UIUtils.createTitleBox("Import an existing Template", 
+						UIUtils.createTitleBox("Import an existing Template",
 								UIUtils.createBox(scrollPane, UIUtils.createHorizontalBox(namedSamplingComboBox, reuseTemplateButton, Box.createHorizontalGlue()))),
-						UIUtils.createTitleBox("New Template", 
-								UIUtils.createCenterPanel(newTemplateButton, false))));
+						UIUtils.createTitleBox("New Template",
+								UIUtils.createCenterPanel(newTemplateButton))));
 
 		setContentPane(contentPane);
 		pack();
@@ -102,11 +102,11 @@ public class NamedSamplingSelectorDlg extends JEscapeDialog {
 		setVisible(true);
 	}
 
-	
+
 	public boolean isSuccess() {
 		return success;
 	}
-	
+
 	public NamedSampling getNamedSampling() {
 		return namedSampling;
 	}
