@@ -21,6 +21,8 @@
 
 package com.actelion.research.spiritapp.spirit.ui.admin;
 
+import java.util.Collection;
+
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
@@ -30,6 +32,7 @@ import javax.swing.event.HyperlinkEvent.EventType;
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.result.TestComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.ISpiritChangeObserver;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.result.Test;
@@ -42,16 +45,17 @@ import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
-public class TestOverviewDlg extends JEscapeDialog {
+public class TestOverviewDlg extends JEscapeDialog implements ISpiritChangeObserver {
 
-	private TestComboBox testChoice = new TestComboBox();
+	private TestComboBox testChoice = new TestComboBox(true);
+	private TestDocumentPane testPane = new TestDocumentPane(DAOTest.getTests(true));
 
 	public TestOverviewDlg() {
 		super(UIUtils.getMainFrame(), "Admin - Tests", true);
+		SpiritChangeListener.register(this);
 		SpiritUser user = SpiritFrame.getUser();
 		if(user==null || !SpiritRights.isSuperAdmin(user)) return;
-
-		TestDocumentPane testPane = new TestDocumentPane();
+		testChoice.setSelection(null);
 		testPane.addHyperlinkListener(e-> {
 			if(e.getEventType()!=EventType.ACTIVATED) return;
 			if(e.getDescription().startsWith("test:")) {
@@ -63,22 +67,14 @@ public class TestOverviewDlg extends JEscapeDialog {
 		});
 
 		final JButton renameInputButton = new JButton("Rename Values");
-		//		final JButton moveButton = new JButton("Move Values");
 		final JButton newTestButton = new JIconButton(IconType.NEW, "New Test");
 		final JButton duplicateButton = new JIconButton(IconType.DUPLICATE, "Duplicate");
 		final JButton editButton = new JIconButton(IconType.EDIT, "Edit");
 		final JButton deleteButton = new JIconButton(IconType.DELETE, "Delete");
 
-
-
 		renameInputButton.addActionListener(e-> {
 			new TestRenameAttDlg(testChoice.getSelection());
 		});
-
-		//		moveButton.addActionListener(e-> {
-		//			new TestMoveDlg(testChoice.getSelection());
-		//		});
-
 		newTestButton.addActionListener(e-> {
 			Test t = new Test();
 			t.setCategory(testChoice.getSelection()==null?null:testChoice.getSelection().getCategory());
@@ -89,7 +85,6 @@ public class TestOverviewDlg extends JEscapeDialog {
 			Test t = testChoice.getSelection();
 			if(t!=null) {
 				new TestEditDlg(t);
-				testChoice.reset();
 			}
 		});
 		deleteButton.addActionListener(e-> {
@@ -109,37 +104,44 @@ public class TestOverviewDlg extends JEscapeDialog {
 			Test t = testChoice.getSelection();
 			if(t!=null) {
 				new TestEditDlg(t.duplicate());
-				testChoice.reset();
 			}
 		});
+
 		testChoice.addTextChangeListener(e-> {
 			testPane.setSelection(testChoice.getSelection());
 			renameInputButton.setEnabled(testChoice.getSelection()!=null);
 			editButton.setEnabled(testChoice.getSelection()!=null);
-			//			moveButton.setEnabled(testChoice.getSelection()!=null);
 			duplicateButton.setEnabled(testChoice.getSelection()!=null);
 			deleteButton.setEnabled(testChoice.getSelection()!=null);
 		});
 
 		renameInputButton.setEnabled(testChoice.getSelection()!=null);
 		editButton.setEnabled(testChoice.getSelection()!=null);
-		//		moveButton.setEnabled(testChoice.getSelection()!=null);
 		duplicateButton.setEnabled(testChoice.getSelection()!=null);
 		deleteButton.setEnabled(testChoice.getSelection()!=null);
 
-		setContentPane(UIUtils.createBox(UIUtils.createTitleBox("Test Details", new JScrollPane(testPane)),
-				UIUtils.createTitleBox("",
+		setContentPane(UIUtils.createBox(UIUtils.createTitleBox(new JScrollPane(testPane)),
+				UIUtils.createTitleBox(
 						UIUtils.createVerticalBox(
 								UIUtils.createHorizontalBox(testChoice, editButton, renameInputButton, duplicateButton, deleteButton, Box.createHorizontalGlue()),
 								UIUtils.createHorizontalBox(newTestButton, Box.createHorizontalGlue())
-								//								UIUtils.createHorizontalBox(renameInputButton, moveButton, Box.createHorizontalGlue()))
 								)),
 				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), new JButton(new CloseAction()))));
 
 		testPane.setSelection(testChoice.getSelection());
 
-		UIUtils.adaptSize(this, 950, 700);
+		UIUtils.adaptSize(this, 1150, 700);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
+	}
+
+	@Override
+	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
+		testPane.setTests(DAOTest.getTests(true));
+		if(what==Test.class && details.size()==1) {
+			Test t = (Test)details.iterator().next();
+			testChoice.setSelection(t);
+			testPane.setSelection(t);
+		}
 	}
 }

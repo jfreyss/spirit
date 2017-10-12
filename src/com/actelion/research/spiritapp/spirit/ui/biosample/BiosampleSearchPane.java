@@ -39,13 +39,12 @@ import javax.swing.JScrollPane;
 
 import org.slf4j.LoggerFactory;
 
-import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.MetadataColumn;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
+import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
@@ -54,6 +53,7 @@ import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
@@ -82,7 +82,7 @@ public class BiosampleSearchPane extends JPanel {
 
 
 		add(BorderLayout.CENTER, new JScrollPane(tree));
-		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(new JButton(new Action_ViewMine()), Box.createHorizontalGlue(), resetButton, searchButton));
+		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(/*new JButton(new Action_ViewMine()),*/ Box.createHorizontalGlue(), resetButton, searchButton));
 
 		setPreferredSize(new Dimension(200, 200));
 		tree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, evt-> {
@@ -104,14 +104,14 @@ public class BiosampleSearchPane extends JPanel {
 		}
 
 		try {
-			final SpiritUser user = Spirit.askForAuthentication();
+			final SpiritUser user = JPAUtil.getSpiritUser();
 			new SwingWorkerExtended("Querying Biosamples", tab) {
 				private List<Biosample> biosamples;
 				private long s = System.currentTimeMillis();
 
 				@Override
 				protected void doInBackground() throws Exception {
-					if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && query.isEmpty()) throw new Exception("You must enter more search criteria");
+					if(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER && query.isEmpty()) throw new Exception("You must enter more search criteria");
 
 					//Query samples
 					biosamples = DAOBiosample.queryBiosamples(query, user);
@@ -180,7 +180,7 @@ public class BiosampleSearchPane extends JPanel {
 
 	public void reset() {
 		BiosampleQuery q = new BiosampleQuery();
-		q.setStudyIds(tab.getFrame()==null?null: tab.getFrame().getStudyId());
+		q.setStudyIds("");
 		tree.setQuery(q);
 		tree.expandAll(false);
 		tab.getBiosampleOrRackTab().clear();
@@ -188,16 +188,35 @@ public class BiosampleSearchPane extends JPanel {
 
 	}
 
-	public class Action_ViewMine extends AbstractAction {
-		public Action_ViewMine() {
-			super("MySamples");
-			setToolTipText("Query and display the biosamples of my department" + (forcedBiotypes==null || forcedBiotypes.length==0? "(Last 6 momths)":""));
+
+	public void queryMySamples() {
+		if(SpiritFrame.getUser()==null) return;
+		BiosampleQuery q;
+		if(forcedBiotypes!=null && forcedBiotypes.length==1  && forcedBiotypes[0].getCategory()==BiotypeCategory.LIBRARY) {
+			q = BiosampleQuery.createQueryForBiotype(forcedBiotypes[0]);
+		} else {
+			q = new BiosampleQuery();
+			if(SpiritFrame.getUser().getMainGroup()==null) {
+				q.setCreUser(SpiritFrame.getUser().getUsername());
+			} else {
+				q.setDepartment(SpiritFrame.getUser().getMainGroup());
+			}
+			q.setBiotypes(forcedBiotypes);
+			if(forcedBiotypes==null || forcedBiotypes.length==0) q.setCreDays(186);
 		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			queryMySamples();
-		}
+		query(q);
 	}
+
+	//	public class Action_ViewMine extends AbstractAction {
+	//		public Action_ViewMine() {
+	//			super("MySamples");
+	//			setToolTipText("Query and display the biosamples of my department" + (forcedBiotypes==null || forcedBiotypes.length==0? "(Last 6 momths)":""));
+	//		}
+	//		@Override
+	//		public void actionPerformed(ActionEvent e) {
+	//			queryMySamples();
+	//		}
+	//	}
 
 	public class Action_Search extends AbstractAction {
 		public Action_Search() {
@@ -224,25 +243,6 @@ public class BiosampleSearchPane extends JPanel {
 			reset();
 		}
 	}
-
-	public void queryMySamples() {
-		if(SpiritFrame.getUser()==null) return;
-		BiosampleQuery q;
-		if(forcedBiotypes!=null && forcedBiotypes.length==1  && forcedBiotypes[0].getCategory()==BiotypeCategory.LIBRARY) {
-			q = BiosampleQuery.createQueryForBiotype(forcedBiotypes[0]);
-		} else {
-			q = new BiosampleQuery();
-			if(SpiritFrame.getUser().getMainGroup()==null) {
-				q.setCreUser(SpiritFrame.getUser().getUsername());
-			} else {
-				q.setDepartment(SpiritFrame.getUser().getMainGroup());
-			}
-			q.setBiotypes(forcedBiotypes);
-			if(forcedBiotypes==null || forcedBiotypes.length==0) q.setCreDays(186);
-		}
-		query(q);
-	}
-
 
 	public BiosampleSearchTree getSearchTree() {
 		return tree;

@@ -28,7 +28,7 @@ import java.util.List;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyGroupColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudySubGroupColumn;
-import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyTopSampleIdColumn;
+import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyParticipantIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.LinkerColumnFactory;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
@@ -72,7 +72,7 @@ public class AnimalsTable extends BiosampleTable {
 		columns.add(new StudyGroupColumn(null));
 		if(hasSubgroup) columns.add(new StudySubGroupColumn());
 
-		if(hasAnimal) columns.add(new StudyTopSampleIdColumn());
+		if(hasAnimal) columns.add(new StudyParticipantIdColumn());
 
 
 		Column<Biosample, ?> sampleIdColumn = LinkerColumnFactory.create(new BiosampleLinker(LinkerType.SAMPLEID, biotype));

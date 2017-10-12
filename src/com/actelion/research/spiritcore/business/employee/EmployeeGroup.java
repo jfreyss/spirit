@@ -115,11 +115,11 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 	}
 
 	public String getNameShort() {
-		final int newLength = 20;
+		final int newLength = 15;
 		if(name==null || name.length()<newLength) return name;
 		StringBuilder sb = new StringBuilder();
 		String[] split = name.split(" ");
-		int toBeCompressed = name.length()-20-split.length;
+		int toBeCompressed = name.length()-newLength-split.length;
 		for (int i = 0; i < split.length; i++) {
 			String n = split[i];
 			if(sb.length()>0) sb.append(" ");
@@ -178,15 +178,16 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 	@Override
 	public int compareTo(EmployeeGroup o) {
 		if(o==null) return -1;
-		return CompareUtils.compare(getName(), o.getName());
+		int c = CompareUtils.compare(getName(), o.getName());
+		if(c!=0) return c;
+		return id-o.id;
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if(this==o) return true;
 		if(!(o instanceof EmployeeGroup)) return false;
-		if(id>0 && id==((EmployeeGroup)o).getId()) return true;
-		return false;
+		return id>0 && id==((EmployeeGroup)o).getId();
 	}
 
 	public int getDepth() {

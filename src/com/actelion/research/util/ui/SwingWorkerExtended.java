@@ -110,7 +110,7 @@ public class SwingWorkerExtended  {
 	public SwingWorkerExtended(final String title, final Component myComp, final int delayInMs) {
 		final long started = System.currentTimeMillis();
 		this.name = (instances++) + "-" + (title==null?"SwingWorker":title);
-		final Component comp = (myComp!=null && myComp.getWidth()==0) && UIUtils.getMainFrame()!=null? ((JFrame)UIUtils.getMainFrame()).getContentPane(): (myComp instanceof JFrame)? ((JFrame)myComp).getContentPane(): (myComp instanceof JDialog)? ((JDialog)myComp).getContentPane(): myComp;
+		final Component comp = (myComp instanceof JFrame)? ((JFrame)myComp).getContentPane(): (myComp instanceof JDialog)? ((JDialog)myComp).getContentPane(): myComp;
 
 		String last = "";
 		if(DEBUG) {
@@ -140,7 +140,7 @@ public class SwingWorkerExtended  {
 			}
 		};
 
-		if(delayInMs==0) {
+		if(delayInMs<0) {
 			//SYNCHRONOUS MODE: call doBackground in the same thread
 			try {
 				if(DEBUG) System.out.println("SwingWorkerExtended " + name + " -BG- " + (System.currentTimeMillis()-started) + "ms - " + callingThread);
@@ -188,11 +188,11 @@ public class SwingWorkerExtended  {
 								if(DEBUG) System.out.println("SwingWorkerExtended " + name + " -BG- " + (System.currentTimeMillis()-started) + "ms - " + callingThread);
 								SwingWorkerExtended.this.doInBackground();
 							} catch (final Throwable thrown) {
+								thrown.printStackTrace();
 								if(!isCancelled() && !isInterrupted() && !sw.isInterrupted() && currentThreads.get(comp).containsValue(sw)) {
-									if(SHOW_EXCEPTION && thrown.getClass()==Exception.class) {
+									if(SHOW_EXCEPTION && (thrown.getClass().getName().startsWith("com") || (thrown.getCause()!=null && thrown.getCause().getClass().getName().startsWith("java")) || thrown.getClass()==Exception.class)) {
 										JExceptionDialog.showError(comp, thrown);
 									} else {
-										thrown.printStackTrace();
 										if(thrown.getClass()==Exception.class) throw new RuntimeException(thrown);
 									}
 									if(DEBUG) System.out.println("SwingWorkerExtended " + name + " -DONE- " + (System.currentTimeMillis()-started) + "ms - " + callingThread);
@@ -254,12 +254,8 @@ public class SwingWorkerExtended  {
 	 * @param cancellable
 	 */
 	private void startBgProcess(final String title, final Component comp) {
-		if(comp==null || !comp.isShowing() || longTaskDone.get()) {
-			return;
-		}
 
-		if(!(comp instanceof JComponent)) {
-			System.err.println("SwingWorkerExtended: component not a JComponent: " + comp.getClass());
+		if(comp==null || !(comp instanceof JComponent)) {
 			return;
 		}
 

@@ -86,18 +86,6 @@ public class RevisionTableModel extends ExtendTableModel<Revision> {
 			} else {
 				comp.setForeground(new Color(150, 100, 0));
 			}
-
-			//			if(rev.getStudies().size()>0) {
-			//				((JLabel) comp).setIcon(IconType.STUDY.getIcon());
-			//			} else if(rev.getBiosamples().size()>0) {
-			//				((JLabel) comp).setIcon(IconType.BIOSAMPLE.getIcon());
-			//			} else if(rev.getResults().size()>0) {
-			//				((JLabel) comp).setIcon(IconType.RESULT.getIcon());
-			//			} else if(rev.getLocations().size()>0) {
-			//				((JLabel) comp).setIcon(IconType.LOCATION.getIcon());
-			//			} else {
-			//				((JLabel) comp).setIcon(IconType.ADMIN.getIcon());
-			//			}
 		}
 	};
 
@@ -108,9 +96,9 @@ public class RevisionTableModel extends ExtendTableModel<Revision> {
 		@Override
 		public String getValue(Revision row) {
 			if(changeMap!=null && changeMap.size()>0 && changeMap.get(row)!=null) {
-				return changeMap.get(row).replace("; ", "\n");
+				return changeMap.get(row);
 			} else {
-				return null;
+				return "";
 			}
 		}
 		@Override
@@ -135,21 +123,18 @@ public class RevisionTableModel extends ExtendTableModel<Revision> {
 		if(addWhatColumn) {
 			allColumns.add(whatColumn);
 		}
-		if(changeMap!=null) {
-			allColumns.add(changeColumn);
-		}
+		allColumns.add(changeColumn);
 		setColumns(allColumns);
+		showAllHideable(true);
 	}
 
 	@Override
 	public void setRows(List<Revision> rows) {
 		super.setRows(rows);
-		initColumns();
 	}
 
 	public void setChangeMap(Map<Revision, String> changeMap) {
 		this.changeMap = changeMap;
-		initColumns();
 	}
 
 	public Map<Revision, String> getChangeMap() {

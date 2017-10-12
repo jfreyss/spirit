@@ -63,42 +63,6 @@ public class DAOTest {
 	public static final String FOODWATER_TESTNAME = "FoodWater";
 	public static final String OBSERVATION_TESTNAME =  "Observation";
 
-	/**
-	 * Return the union tests that were done in all given studies
-	 * @param study
-	 * @return
-	 */
-	public static Set<Test> getTestsFromStudies(Collection<Study> studies) {
-		return getTestsFromStudies(studies, null);
-	}
-
-	/**
-	 * Return the union tests that were done in all given studies
-	 * @param study
-	 * @param outIntersection (if not null, returns the intersection)
-	 * @return
-	 */
-	private static Set<Test> getTestsFromStudies(Collection<Study> studies, Set<Test> outIntersection) {
-		EntityManager session = JPAUtil.getManager();
-		boolean first = true;
-		Set<Test> res = new TreeSet<>();
-
-		for(Study study: studies) {
-			List<Test> list = session.createQuery(
-					"select r.test FROM Result r where r.biosample.inheritedStudy = ?1").setParameter(1, study).getResultList();
-			if(first) {
-				res.addAll(list);
-				if(outIntersection!=null) outIntersection.addAll(list);
-				first=false;
-			} else {
-				res.addAll(list);
-				if(outIntersection!=null) outIntersection.retainAll(list);
-			}
-		}
-
-		return res;
-	}
-
 	public static List<Test> getTestsFromElbs(String elbs) {
 		try {
 			EntityManager session = JPAUtil.getManager();
@@ -148,14 +112,21 @@ public class DAOTest {
 		return null;
 	}
 
-
 	public static List<Test> getTests() {
+		return getTests(false);
+	}
+
+	public static List<Test> getTests(boolean showHidden) {
 		Map<Integer, Test> id2Test = getId2TestMap();
-		List<Test> tests = new ArrayList<>(id2Test.values());
+		List<Test> tests = new ArrayList<>();
+		for (Test test : id2Test.values()) {
+			if(!showHidden && test.isHidden()) continue;
+			tests.add(test);
+		}
+
 		Collections.sort(tests);
 		return tests;
 	}
-
 
 	public static void persistTests(Collection<Test> tests, SpiritUser user) throws Exception {
 		if(tests==null || tests.size()==0) return;
@@ -171,6 +142,7 @@ public class DAOTest {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
 		}
 	}
+
 	public static void persistTests(EntityManager session, Collection<Test> tests, SpiritUser user) throws Exception {
 		logger.info("Persist "+tests.size()+" tests");
 		if(!SpiritRights.isSuperAdmin(user)) throw new Exception("You must be an admin to edit a test");

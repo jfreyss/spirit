@@ -29,9 +29,9 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 /**
- * Utility class to display an error and its causes, in a JOptionPane
- * @author freyssj
+ * Utility class to display info, warning, errors, or exception in a JOptionPane
  *
+ * @author freyssj
  */
 public class JExceptionDialog {
 
@@ -39,13 +39,13 @@ public class JExceptionDialog {
 
 	public static void showError(Throwable e) {
 		Frame parent = Frame.getFrames().length > 0 ? Frame.getFrames()[Frame.getFrames().length - 1] : null;
-		if(parent instanceof SplashScreen2) parent = null;
+		if(parent instanceof SplashScreen) parent = null;
 		showError(parent, e);
 	}
 
 	public static void showError(String s) {
 		Frame parent = Frame.getFrames().length > 0 ? Frame.getFrames()[Frame.getFrames().length - 1] : null;
-		if(parent instanceof SplashScreen2) parent = null;
+		if(parent instanceof SplashScreen) parent = null;
 		showError(parent, s);
 	}
 
@@ -54,8 +54,10 @@ public class JExceptionDialog {
 		System.err.println("Unexpected Error");
 		ApplicationErrorLog.logException(e);
 		StringBuilder sb = new StringBuilder();
-		while(e!=null) {
-			sb.append(e.getMessage() + "\n");
+		while(e!=null && e.getMessage()!=null) {
+			String msg = e.getMessage();
+			if(msg.length()>60) msg = msg.substring(0, 60) + "...";
+			sb.append(msg + "\n");
 			e = e.getCause();
 		}
 		showError(parent, sb.toString());

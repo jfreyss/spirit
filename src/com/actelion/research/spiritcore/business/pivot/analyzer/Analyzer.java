@@ -135,7 +135,7 @@ public class Analyzer {
 		this.sort = sort;
 	}
 
-	public List<PivotColumn> getSortedColumns(Sort sort) {
+	public List<PivotColumn> getSortedColumns(final Sort sort) {
 		if(columnAnalysis==null) compute();
 		List<PivotColumn> cols = new ArrayList<>(columnAnalysis.keySet());
 		if(sort!=null && sort!=Sort.NAME) {

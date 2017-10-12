@@ -81,7 +81,7 @@ import com.actelion.research.util.WikiNewsFeed;
  * @author freyssj
  *
  */
-public class SplashScreen2 extends JFrame {
+public class SplashScreen extends JFrame {
 	
 	private int minimumTimeSeconds = 5;
 	
@@ -147,19 +147,19 @@ public class SplashScreen2 extends JFrame {
 	
 	private static class AboutAction extends AbstractAction {	
 		private SplashConfig config;
-		private SplashScreen2 splashScreen;
+		private SplashScreen splashScreen;
 		public AboutAction(SplashConfig config) {
 			super("About");
 			this.config = config;
 		}
-		public AboutAction(SplashScreen2 splashScreen) {
+		public AboutAction(SplashScreen splashScreen) {
 			super("About");
 			this.splashScreen = splashScreen;
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if(config!=null) {
-				SplashScreen2.showAbout(config);
+				SplashScreen.showAbout(config);
 			} else {
 				splashScreen.setAbout(true);
 				splashScreen.setVisible(true);
@@ -188,7 +188,7 @@ public class SplashScreen2 extends JFrame {
 	
 	
 	@Deprecated
-	public static AbstractAction createAboutAction(SplashScreen2 splashScreen) {
+	public static AbstractAction createAboutAction(SplashScreen splashScreen) {
 		return new AboutAction(splashScreen);
 	}
 
@@ -197,16 +197,16 @@ public class SplashScreen2 extends JFrame {
 	}
 	
 	@Deprecated
-	public SplashScreen2(URL urlImage, String title, String signature) {
+	public SplashScreen(URL urlImage, String title, String signature) {
 		this(urlImage, title, signature, null);
 	}
 	
 	@Deprecated
-	public SplashScreen2(URL urlImage, String title, String signature, String wikiNewsFeed) {
+	public SplashScreen(URL urlImage, String title, String signature, String wikiNewsFeed) {
 		this(new SplashConfig(urlImage, title, signature, wikiNewsFeed));
 	}
 	
-	public SplashScreen2(SplashConfig config) {		
+	public SplashScreen(SplashConfig config) {		
 		super("SplashScreen");
 		assert config!=null;
 		
@@ -359,14 +359,14 @@ public class SplashScreen2 extends JFrame {
 	 */
 	public static void show(final SplashConfig config) {
 		if(SwingUtilities.isEventDispatchThread()) {
-			SplashScreen2 splash = new SplashScreen2(config);
+			SplashScreen splash = new SplashScreen(config);
 			splash.setVisible(true);			
 		} else {
 			try {
 				SwingUtilities.invokeAndWait(new Runnable() {
 					@Override
 					public void run() {
-						SplashScreen2 splash = new SplashScreen2(config);
+						SplashScreen splash = new SplashScreen(config);
 						splash.setVisible(true);
 					}
 				});			
@@ -380,7 +380,7 @@ public class SplashScreen2 extends JFrame {
 		SwingUtilities.invokeLater(new Runnable() {			
 			@Override
 			public void run() {
-				SplashScreen2 splash = new SplashScreen2(config);
+				SplashScreen splash = new SplashScreen(config);
 				splash.setAbout(true);
 				splash.setVisible(true);
 			}
@@ -509,7 +509,7 @@ public class SplashScreen2 extends JFrame {
 
 			@Override
 			protected void done() {
-				SplashScreen2.super.setVisible(false);
+				SplashScreen.super.setVisible(false);
 			}
 			
 		};
@@ -529,7 +529,7 @@ public class SplashScreen2 extends JFrame {
 	public static void main(String[] args) throws Exception {
 	
 		SplashConfig config = new SplashConfig(new URL("http://www.vbforfree.com/images/splashScreenArticle.jpg"), "\\\\actelch02\\PGM\\ActelionResearch\\Spirit\\bin\\Spirit.exe", "J.Freyss (Ext: 926334)", "Documentation.Test.News");
-		SplashScreen2.show(config);
+		SplashScreen.show(config);
 		
 	}
 

@@ -87,7 +87,7 @@ public class ContainerLabel extends JComponentNoRepaint {
 		this.location = container==null? null: container.getLocation();
 
 		if(container!=null && container.getLocation()!=null && container.getFirstBiosample()!=null ) {
-			fullLocation = container.getFirstBiosample().getLocationString(LocationFormat.MEDIUM_POS, SpiritFrame.getUser());
+			fullLocation = container.getFirstBiosample().getLocationString(LocationFormat.FULL_POS, SpiritFrame.getUser());
 		} else {
 			fullLocation = null;
 		}
@@ -101,7 +101,7 @@ public class ContainerLabel extends JComponentNoRepaint {
 		this.location = biosample==null? null: biosample.getLocation();
 
 		if(biosample!=null && biosample.getLocation()!=null) {
-			fullLocation = biosample.getLocationString(LocationFormat.MEDIUM_POS, SpiritFrame.getUser());
+			fullLocation = biosample.getLocationString(LocationFormat.FULL_POS, SpiritFrame.getUser());
 		} else {
 			fullLocation = null;
 		}
@@ -120,7 +120,7 @@ public class ContainerLabel extends JComponentNoRepaint {
 			if(containerType!=null) {
 				g.setFont(FastFont.SMALL);
 				g.setColor(CONTAINERID_COLOR);
-				String s = (containerType!=ContainerType.UNKNOWN && !containerType.isMultiple()? containerType.getShortName() + " ":"") + (containerId==null?"":containerId);
+				String s = containerId==null || containerId.length()==0? containerType.getShortName() :containerId;
 				g.drawString(s, 2, g.getFont().getSize()+1);
 			}
 
@@ -147,7 +147,12 @@ public class ContainerLabel extends JComponentNoRepaint {
 					g.setColor(LF.FGCOLOR_READ);
 				}
 				g.setFont(FastFont.REGULAR);
-				g.drawString(fullLocation, 2, FastFont.REGULAR.getSize() + FastFont.SMALL.getSize());
+				int w = g.getFontMetrics().stringWidth(fullLocation);
+				if(w>getWidth()-4) {
+					g.drawString(fullLocation, getWidth() - 2 - w, FastFont.REGULAR.getSize() + FastFont.SMALL.getSize());
+				} else {
+					g.drawString(fullLocation, 2, FastFont.REGULAR.getSize() + FastFont.SMALL.getSize());
+				}
 			}
 
 
@@ -166,7 +171,12 @@ public class ContainerLabel extends JComponentNoRepaint {
 				}
 
 				g.setFont(FastFont.REGULAR);
-				g.drawString(fullLocation, 2, FastFont.REGULAR.getSize()+4);
+				int w = g.getFontMetrics().stringWidth(fullLocation);
+				if(w>getWidth()-4) {
+					g.drawString(fullLocation, getWidth() - 2 - w, FastFont.REGULAR.getSize() + 4);
+				} else {
+					g.drawString(fullLocation, 2, FastFont.REGULAR.getSize() + 4);
+				}
 			}
 		} else if(displayMode==ContainerDisplayMode.NAME_POS) {
 			//Paint Location
@@ -185,7 +195,12 @@ public class ContainerLabel extends JComponentNoRepaint {
 				}
 
 				g.setFont(FastFont.REGULAR);
-				g.drawString(fullLocation, 2, FastFont.REGULAR.getSize()+4);
+				int w = g.getFontMetrics().stringWidth(fullLocation);
+				if(w>getWidth()-4) {
+					g.drawString(fullLocation, getWidth() - 2 - w, FastFont.REGULAR.getSize() + 4);
+				} else {
+					g.drawString(fullLocation, 2, FastFont.REGULAR.getSize() + 4);
+				}
 			}
 		} else {
 			//display image

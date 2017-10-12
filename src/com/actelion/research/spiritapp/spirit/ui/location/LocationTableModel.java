@@ -25,7 +25,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
+import com.actelion.research.spiritapp.spirit.ui.location.LocationTable.LocationTableMode;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationDescriptionColumn;
+import com.actelion.research.spiritapp.spirit.ui.location.column.LocationFlagColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationFreeColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationNameColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationOccupiedColumn;
@@ -34,6 +36,7 @@ import com.actelion.research.spiritapp.spirit.ui.location.column.LocationSizeCol
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationStudyColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationTypeColumn;
 import com.actelion.research.spiritcore.business.location.Location;
+import com.actelion.research.spiritcore.business.location.LocationType.LocationCategory;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.exceltable.Column;
@@ -41,12 +44,16 @@ import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
 public class LocationTableModel extends ExtendTableModel<Location> {
 
+	private final LocationTableMode mode;
 
-	public LocationTableModel() {
-		List<Column<Location, ?>> columns = new ArrayList<Column<Location, ?>>();
+	public LocationTableModel(LocationTableMode mode) {
+		this.mode = mode;
+
+		List<Column<Location, ?>> columns = new ArrayList<>();
 		Column<Location, ?> nameColumn = new LocationNameColumn();
-		columns.add(nameColumn);
 
+		columns.add(new LocationFlagColumn());
+		columns.add(nameColumn);
 		columns.add(new LocationTypeColumn());
 		columns.add(new LocationDescriptionColumn());
 		columns.add(new LocationOccupiedColumn());
@@ -78,26 +85,35 @@ public class LocationTableModel extends ExtendTableModel<Location> {
 
 	@Override
 	public List<Location> getTreeChildren(Location row) {
+		List<Location> res = new ArrayList<>();
 		try {
-			List<Location> res = new ArrayList<>();
 			for (Location loc: row.getChildren()) {
 				if(!SpiritRights.canRead(loc, SpiritFrame.getUser())) continue;
 				res.add(loc);
 			}
-			return res;
 		} catch(Exception e) {
 			try {
-				List<Location> res = new ArrayList<>();
+				res = new ArrayList<>();
 				for (Location loc: row.getChildren()) {
 					if(!SpiritRights.canRead(loc, SpiritFrame.getUser())) continue;
 					res.add(loc);
 				}
-				return res;
 			} catch(Exception e2) {
 				System.err.println("Lazy loading error: "+e2);
-				return new ArrayList<Location>();
 			}
 		}
+
+		//Filter unwanted items
+		if(mode==LocationTableMode.ADMIN_LOCATION) {
+			List<Location> filtered = new ArrayList<>();
+			for (Location location : res) {
+				if(location.getLocationType().getCategory()==LocationCategory.MOVEABLE) continue;
+				filtered.add(location);
+			}
+			res = filtered;
+		}
+
+		return res;
 	}
 
 

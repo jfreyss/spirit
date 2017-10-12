@@ -317,7 +317,7 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 
 		if(aggregatedMetadata!=null) {
 			//Aggregation
-			if(b2.getBiotype().equals(aggregatedMetadata.getBiotype())) {
+			if(b2.getBiotype()!=null && b2.getBiotype().equals(aggregatedMetadata.getBiotype())) {
 				return b2.getMetadataBiosample(aggregatedMetadata);
 			}
 		} else if(hierarchyBiotype!=null) {

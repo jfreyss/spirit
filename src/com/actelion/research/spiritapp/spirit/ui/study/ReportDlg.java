@@ -23,8 +23,6 @@ package com.actelion.research.spiritapp.spirit.ui.study;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Vector;
 
 import javax.swing.Box;
@@ -49,23 +47,24 @@ import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class ReportDlg extends JEscapeDialog {
-	
+
 	private final Study s;
 	private final ReportFactory reportFactory = ReportFactory.getInstance();
 	private JList<AbstractReport> reportList;
 	private final JPanel detailPanel = new JPanel(new BorderLayout());
 	private final JButton createReportsButton = new JIconButton(IconType.EXCEL, "Create Report");
 
-	public ReportDlg(Study s) {		
-		super(UIUtils.getMainFrame(), "Reports - " + (s==null?"":s.getStudyId()), true);
+	public ReportDlg(Study s) {
+		super(UIUtils.getMainFrame(), "Study Reports - " + (s==null?"":s.getStudyId()), true);
 		if(s==null) throw new IllegalArgumentException("The study cannot be null");
 		s = DAOStudy.getStudy(s.getId());
 		this.s = s;
-		
+
 		if(!SpiritRights.canExpert(s, SpiritFrame.getUser())) {
 			JExceptionDialog.showError("You must have read rights on the study to view the reports");
 			return;
@@ -77,23 +76,20 @@ public class ReportDlg extends JEscapeDialog {
 
 		//mixedReportsButton
 		createReportsButton.setEnabled(false);
-		createReportsButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					createReports();
-				} catch(Exception ex) {
-					JExceptionDialog.showError(ReportDlg.this, ex);
-				}
+		createReportsButton.addActionListener(e-> {
+			try {
+				createReports();
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ReportDlg.this, ex);
 			}
 		});
-		
-		
+
+
 		//Layout
 		reportList = new JList<>(new Vector<AbstractReport>(reportFactory.getReports()));
 		reportList.setCellRenderer(new DefaultListCellRenderer() {
 			@Override
-			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {				
+			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 				AbstractReport rep = (AbstractReport) value;
 				setText((index+1)+". "+rep.getCategory().getName() + " - " + rep.getName());
@@ -101,7 +97,7 @@ public class ReportDlg extends JEscapeDialog {
 			}
 		});
 		reportList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		reportList.addListSelectionListener(new ListSelectionListener() {			
+		reportList.addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				createReportsButton.setEnabled(reportList.getSelectedValuesList().size()>0);
@@ -109,23 +105,23 @@ public class ReportDlg extends JEscapeDialog {
 			}
 		});
 		refresh();
-		
+
 		JPanel contentPane = new JPanel(new BorderLayout());
-		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, 
-				UIUtils.createTitleBox("Reports", UIUtils.createBox(
+		JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT,
+				UIUtils.createTitleBox(UIUtils.createBox(
 						new JScrollPane(reportList),
-						new JInfoLabel("<html>Please select one or several reports from the list.<br>(Reports are configurable)"))),
+						new JInfoLabel("<html>Please select one or several reports from the list."))),
 				detailPanel);
 		splitPane.setDividerLocation(300);
-		contentPane.add(BorderLayout.CENTER, splitPane);		
+		contentPane.add(BorderLayout.CENTER, splitPane);
 		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), createReportsButton));
 		setContentPane(contentPane);
-		
+
 		setSize(900, 700);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
 	}
-	
+
 	private void refresh() {
 		detailPanel.removeAll();
 		if(reportList.getSelectedValuesList().size()==1) {
@@ -134,13 +130,13 @@ public class ReportDlg extends JEscapeDialog {
 		} else {
 		}
 		detailPanel.validate();
-		
+
 	}
 
-	private void createReports() throws Exception {		
+	private void createReports() throws Exception {
 		MixedReport rep = new MixedReport(reportList.getSelectedValuesList());
 		rep.populateReport(s);
 		rep.export(null);
 	}
-	
+
 }

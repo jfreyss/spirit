@@ -23,8 +23,6 @@ package com.actelion.research.spiritapp.spirit.ui.study.wizard.group;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
@@ -44,7 +42,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 
-import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyWizardDlg;
+import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyDesignDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.HelpBinder;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
@@ -60,12 +58,13 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable.BorderStrate
 import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.ExtendTable;
 import com.actelion.research.util.ui.exceltable.ExtendTableModel;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class StudyGroupDlg extends JEscapeDialog {
 
-	private final StudyWizardDlg dlg;
+	private final StudyDesignDlg dlg;
 	private final Study study;
 	private int push = 0;
 
@@ -96,7 +95,7 @@ public class StudyGroupDlg extends JEscapeDialog {
 
 	private EditGroupPanel editGroupPanel;
 
-	public StudyGroupDlg(final StudyWizardDlg dlg, final Study s) {
+	public StudyGroupDlg(final StudyDesignDlg dlg, final Study s) {
 		super(dlg, "Study Wizard - Groups");
 		this.dlg  = dlg;
 		this.study = s;
@@ -105,7 +104,7 @@ public class StudyGroupDlg extends JEscapeDialog {
 		groupTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
 		editGroupPanel = new EditGroupPanel(this);
-		//
+
 		JButton newGroupButton = new JIconButton(IconType.NEW, "New Group");
 		newGroupButton.addActionListener(e-> {
 			try {
@@ -138,15 +137,9 @@ public class StudyGroupDlg extends JEscapeDialog {
 		groupTable.setRowSelectionAllowed(true);
 		groupTable.getSelectionModel().addListSelectionListener(e-> {
 			if(e.getValueIsAdjusting()) return;
-			if(push>0) return;
+			refreshButtons();
 			List<Group> selection = groupTable.getSelection();
-
-			deleteButton.setEnabled(selection.size()>0);
-			duplicateButton.setEnabled(selection.size()>0);
-			mergeButton.setEnabled(selection.size()>1);
-			splitButton.setEnabled(selection.size()==1 && selection.get(0).getNSubgroups()>1);
-
-
+			if(push>0) return;
 			try {
 				push++;
 				if(editGroupPanel.getGroup()!=null) {
@@ -181,269 +174,262 @@ public class StudyGroupDlg extends JEscapeDialog {
 
 
 		//Duplicate Button
-		duplicateButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					editGroupPanel.updateModel();
-					editGroupPanel.setGroup(null);
+		duplicateButton.addActionListener(e-> {
+			try {
+				editGroupPanel.updateModel();
+				editGroupPanel.setGroup(null);
 
-					List<Group> selection = groupTable.getSelection();
+				List<Group> selection = groupTable.getSelection();
 
-					int res = JOptionPane.showConfirmDialog(dlg, "Are you sure you want to duplicate " + (selection.size()==1?"this group": "these " + selection.size() + " groups") + "?", "Duplicate", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-					if(res!=JOptionPane.OK_OPTION) return;
+				int res = JOptionPane.showConfirmDialog(dlg, "Are you sure you want to duplicate " + (selection.size()==1?"this group": "these " + selection.size() + " groups") + "?", "Duplicate", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+				if(res!=JOptionPane.OK_OPTION) return;
 
-					Map<Group, Group> createdGroups = new HashMap<>();
-					for (Group group : selection) {
-						Group newGroup = new Group();
-						newGroup.setColorRgb(Group.generateColor(newGroup.getShortName()).getRGB());
-						newGroup.copyFrom(group);
+				Map<Group, Group> createdGroups = new HashMap<>();
+				for (Group group : selection) {
+					Group newGroup = new Group();
+					newGroup.setColorRgb(Group.generateColor(newGroup.getShortName()).getRGB());
+					newGroup.copyFrom(group);
 
-						createdGroups.put(group, newGroup);
+					createdGroups.put(group, newGroup);
 
-					}
-					for (Group group : createdGroups.keySet()) {
-						Group newGroup = createdGroups.get(group);
-						newGroup.setName(suggestAbbreviation(study, newGroup) + " " + newGroup.getNameWithoutShortName(), "");
-						newGroup.setStudy(study);
-						newGroup.setFromGroup(group.getFromGroup()==null? null: createdGroups.get(group.getFromGroup())==null? group.getFromGroup(): createdGroups.get(group.getFromGroup()));
-
-						//Copy actions
-						List<StudyAction> actions = new ArrayList<>();
-						for(StudyAction a: study.getStudyActions(group)) {
-							StudyAction a2 = a.clone();
-							a2.setGroup(newGroup);
-							a2.setId(0);
-							actions.add(a2);
-						}
-						study.addStudyActions(actions);
-
-					}
-
-
-					refreshGroups();
-				} catch(Exception ex) {
-					JExceptionDialog.showError(dlg, ex);
-					return;
 				}
+				for (Group group : createdGroups.keySet()) {
+					Group newGroup = createdGroups.get(group);
+					newGroup.setName(suggestAbbreviation(study, newGroup) + " " + newGroup.getNameWithoutShortName(), "");
+					newGroup.setStudy(study);
+					newGroup.setFromGroup(group.getFromGroup()==null? null: createdGroups.get(group.getFromGroup())==null? group.getFromGroup(): createdGroups.get(group.getFromGroup()));
+
+					//Copy actions
+					List<StudyAction> actions = new ArrayList<>();
+					for(StudyAction a: study.getStudyActions(group)) {
+						StudyAction a2 = a.clone();
+						a2.setGroup(newGroup);
+						a2.setId(0);
+						actions.add(a2);
+					}
+					study.addStudyActions(actions);
+
+				}
+
+
+				refreshGroups();
+			} catch(Exception ex) {
+				JExceptionDialog.showError(dlg, ex);
+				return;
 			}
 		});
 
 		//Merge Button
 		mergeButton.setToolTipText("Merge the selected group into 1 group with several subgroups");
-		mergeButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		mergeButton.addActionListener(e-> {
 
-				try {
-					//Update Model
-					editGroupPanel.updateModel();
-					editGroupPanel.setGroup(null);
+			try {
+				//Update Model
+				editGroupPanel.updateModel();
+				editGroupPanel.setGroup(null);
 
-					List<Group> selection = groupTable.getSelection();
-					if(selection.size()<2) throw new Exception("You must select 2 groups or more");
+				List<Group> selection = groupTable.getSelection();
+				if(selection.size()<2) throw new Exception("You must select 2 groups or more");
 
-					//Ask the user for the merged group
-					int res = JOptionPane.showConfirmDialog(dlg,
-							"<html>Merge into " + selection.get(0).getName() + "<br><br>" +
-									"<i>(All selected groups will be converted to subgroups of " + selection.get(0).getName() + " and all attached samples will be moved there)</i><br>",
-									"Merge",
-									JOptionPane.OK_CANCEL_OPTION,
-									JOptionPane.QUESTION_MESSAGE);
-					if(res!=JOptionPane.OK_OPTION) return;
+				//Ask the user for the merged group
+				int res = JOptionPane.showConfirmDialog(dlg,
+						"<html>Merge into " + selection.get(0).getName() + "<br><br>" +
+								"<i>(All selected groups will be converted to subgroups of " + selection.get(0).getName() + " and all attached samples will be moved there)</i><br>",
+								"Merge",
+								JOptionPane.OK_CANCEL_OPTION,
+								JOptionPane.QUESTION_MESSAGE);
+				if(res!=JOptionPane.OK_OPTION) return;
 
-					//Check if the merge can be done
-					Group mergeIntoGroup = selection.get(0);
-					for (int i = 1; i < selection.size(); i++) {
-						Group group = selection.get(i);
-						if(!CompareUtils.equals(mergeIntoGroup.getFromGroup(), group.getFromGroup())) throw new Exception("You cannot merge 2 groups coming from different origins");
-						if(!CompareUtils.equals(mergeIntoGroup.getFromPhase(), group.getFromPhase())) throw new Exception("You cannot merge 2 groups if the group assignment is made at a different time");
-						if(!CompareUtils.equals(mergeIntoGroup.getToGroups(), group.getToGroups())) throw new Exception("You cannot merge 2 groups, which are then split differently");
-						if(!CompareUtils.equals(mergeIntoGroup.getDividingSampling(), group.getDividingSampling())) throw new Exception("You cannot merge 2 groups with a dividing sampling");
-						if(!CompareUtils.equals(mergeIntoGroup.getDividingGroups(), group.getDividingGroups())) throw new Exception("You cannot merge 2 groups with a dividing sampling");
-						if(!CompareUtils.equals(mergeIntoGroup.getDescription(-1), group.getDescription(-1))) {
-							res = JOptionPane.showConfirmDialog(dlg, mergeIntoGroup+" and "+group+" don't seem to be completely comparable. Are you sure you want to continue?", "Merge", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-							if(res!=JOptionPane.YES_OPTION) return;
-						}
-
+				//Check if the merge can be done
+				Group mergeIntoGroup = selection.get(0);
+				for (int i = 1; i < selection.size(); i++) {
+					Group group = selection.get(i);
+					if(!CompareUtils.equals(mergeIntoGroup.getFromGroup(), group.getFromGroup())) throw new Exception("You cannot merge 2 groups coming from different origins");
+					if(!CompareUtils.equals(mergeIntoGroup.getFromPhase(), group.getFromPhase())) throw new Exception("You cannot merge 2 groups if the group assignment is made at a different time");
+					if(!CompareUtils.equals(mergeIntoGroup.getToGroups(), group.getToGroups())) throw new Exception("You cannot merge 2 groups, which are then split differently");
+					//					if(!CompareUtils.equals(mergeIntoGroup.getDividingSampling(), group.getDividingSampling())) throw new Exception("You cannot merge 2 groups with a dividing sampling");
+					//					if(!CompareUtils.equals(mergeIntoGroup.getDividingGroups(), group.getDividingGroups())) throw new Exception("You cannot merge 2 groups with a dividing sampling");
+					if(!CompareUtils.equals(mergeIntoGroup.getDescription(-1), group.getDescription(-1))) {
+						res = JOptionPane.showConfirmDialog(dlg, mergeIntoGroup+" and "+group+" don't seem to be completely comparable. Are you sure you want to continue?", "Merge", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+						if(res!=JOptionPane.YES_OPTION) return;
 					}
 
-					for (int j = 1; j < selection.size(); j++) {
-						Group group = selection.get(j);
-						//Set the sizes of the merged subgroups
-						int[] mergeIntoSizes = mergeIntoGroup.getSubgroupSizes();
-						int[] groupSizes = group.getSubgroupSizes();
-						int[] newSubgroupsSizes = new int[mergeIntoSizes.length+groupSizes.length];
-						for (int i = 0; i < newSubgroupsSizes.length; i++) {
-							newSubgroupsSizes[i] = i<mergeIntoSizes.length? mergeIntoSizes[i]: groupSizes[i-mergeIntoSizes.length];
-						}
-						mergeIntoGroup.setSubgroupSizes(newSubgroupsSizes);
-
-						//Move the actions
-						for(StudyAction action: study.getStudyActions(group)) {
-							action.setGroup(mergeIntoGroup);
-							action.setSubGroup(action.getSubGroup()+mergeIntoSizes.length);
-						}
-
-						//Move the biosamples
-						for(Biosample top: study.getTopAttachedBiosamples(group)) {
-							for(Biosample b: top.getHierarchy(HierarchyMode.ATTACHED_SAMPLES)) {
-								b.setInheritedGroup(mergeIntoGroup);
-								b.setInheritedSubGroup(b.getInheritedSubGroup()+mergeIntoSizes.length);
-							}
-						}
-
-						//Remove the group
-						group.remove();
-						study.getGroups().remove(group);
-						group = null;
-					}
-					refreshGroups();
-					groupTable.setSelection(Collections.singleton(mergeIntoGroup));
-
-
-				} catch(Exception ex) {
-					JExceptionDialog.showError(dlg, ex);
 				}
 
-			}
-		});
+				for (int j = 1; j < selection.size(); j++) {
+					Group group = selection.get(j);
+					//Set the sizes of the merged subgroups
+					int[] mergeIntoSizes = mergeIntoGroup.getSubgroupSizes();
+					int[] groupSizes = group.getSubgroupSizes();
+					int[] newSubgroupsSizes = new int[mergeIntoSizes.length+groupSizes.length];
+					for (int i = 0; i < newSubgroupsSizes.length; i++) {
+						newSubgroupsSizes[i] = i<mergeIntoSizes.length? mergeIntoSizes[i]: groupSizes[i-mergeIntoSizes.length];
+					}
+					mergeIntoGroup.setSubgroupSizes(newSubgroupsSizes);
 
-		splitButton.setToolTipText("Split the subgroups of the selected group into the own groups");
-		splitButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+					//Move the actions
+					for(StudyAction action: study.getStudyActions(group)) {
+						action.setGroup(mergeIntoGroup);
+						action.setSubGroup(action.getSubGroup()+mergeIntoSizes.length);
+					}
 
-				try {
-					//Update Model
-					editGroupPanel.updateModel();
-					editGroupPanel.setGroup(null);
-
-					//Check if the merge can be done
-					List<Group> selection = groupTable.getSelection();
-					if(selection.size()!=1) throw new Exception("You must select 1 group");
-					Group group = selection.get(0);
-
-					if(group.getNSubgroups()<=1) throw new Exception("The selected group does not have subgroup and therefore cannot be splitted");
-
-					//Ask the user for the merged group
-					int res = JOptionPane.showOptionDialog(dlg,
-							UIUtils.createVerticalBox(
-									new JLabel("<html>This function will split this group into new ones.<br>"
-											+ "As a consequence, the subgroups will be converted as new groups<br>"
-											+ "and all attached samples will be moved there.<br><br>")),
-							"Split into an other group",
-							JOptionPane.OK_CANCEL_OPTION,
-							JOptionPane.PLAIN_MESSAGE,
-							null, null, null);
-					if(res!=JOptionPane.YES_OPTION) return;
-
-
-					//Create the new groups
-					for(int subgroup=0; subgroup<group.getNSubgroups(); subgroup++) {
-						Group g = new Group();
-						g.setName(group.getShortName() + (char) ('A'+subgroup), group.getNameWithoutShortName());
-						g.copyFrom(group);
-						g.setSubgroupSizes(new int[] {group.getSubgroupSize(subgroup)});
-						g.setStudy(study);
-						//Move the actions
-						for(StudyAction action: study.getStudyActions(group, subgroup)) {
-							action.setGroup(g);
-							action.setSubGroup(0);
-						}
-
-						//Move the biosamples
-						for(Biosample top: study.getTopAttachedBiosamples(group, subgroup)) {
-							for(Biosample b: top.getHierarchy(HierarchyMode.ATTACHED_SAMPLES)) {
-								b.setInheritedGroup(g);
-								b.setInheritedSubGroup(0);
-							}
+					//Move the biosamples
+					for(Biosample top: study.getTopParticipants(group)) {
+						for(Biosample b: top.getHierarchy(HierarchyMode.ATTACHED_SAMPLES)) {
+							b.setInheritedGroup(mergeIntoGroup);
+							b.setInheritedSubGroup(b.getInheritedSubGroup()+mergeIntoSizes.length);
 						}
 					}
 
 					//Remove the group
-					study.getGroups().remove(group);
 					group.remove();
+					study.getGroups().remove(group);
 					group = null;
-
-					study.resetCache();
-					refreshGroups();
-
-
-				} catch(Exception ex) {
-					JExceptionDialog.showError(dlg, ex);
 				}
+				refreshGroups();
+				groupTable.setSelection(Collections.singleton(mergeIntoGroup));
+
+
+			} catch(Exception ex) {
+				JExceptionDialog.showError(dlg, ex);
+			}
+		});
+
+		splitButton.setToolTipText("Split the subgroups of the selected group into the own groups");
+		splitButton.addActionListener(e-> {
+
+			try {
+				//Update Model
+				editGroupPanel.updateModel();
+				editGroupPanel.setGroup(null);
+
+				//Check if the merge can be done
+				List<Group> selection = groupTable.getSelection();
+				if(selection.size()!=1) throw new Exception("You must select 1 group");
+				Group group = selection.get(0);
+
+				if(group.getNSubgroups()<=1) throw new Exception("The selected group does not have subgroup and therefore cannot be splitted");
+
+				//Ask the user for the merged group
+				int res = JOptionPane.showOptionDialog(dlg,
+						UIUtils.createVerticalBox(
+								new JLabel("<html>This function will split this group into new ones.<br>"
+										+ "As a consequence, the subgroups will be converted as new groups<br>"
+										+ "and all attached samples will be moved there.<br><br>")),
+						"Split into an other group",
+						JOptionPane.OK_CANCEL_OPTION,
+						JOptionPane.PLAIN_MESSAGE,
+						null, null, null);
+				if(res!=JOptionPane.YES_OPTION) return;
+
+
+				//Create the new groups
+				for(int subgroup=0; subgroup<group.getNSubgroups(); subgroup++) {
+					Group g = new Group();
+					g.setName(group.getShortName() + (char) ('A'+subgroup), group.getNameWithoutShortName());
+					g.copyFrom(group);
+					g.setSubgroupSizes(new int[] {group.getSubgroupSize(subgroup)});
+					g.setStudy(study);
+					//Move the actions
+					for(StudyAction action: study.getStudyActions(group, subgroup)) {
+						action.setGroup(g);
+						action.setSubGroup(0);
+					}
+
+					//Move the biosamples
+					for(Biosample top: study.getTopParticipants(group, subgroup)) {
+						for(Biosample b: top.getHierarchy(HierarchyMode.ATTACHED_SAMPLES)) {
+							b.setInheritedGroup(g);
+							b.setInheritedSubGroup(0);
+						}
+					}
+				}
+
+				//Remove the group
+				study.getGroups().remove(group);
+				group.remove();
+				group = null;
+
+				study.resetCache();
+				refreshGroups();
+
+
+			} catch(Exception ex) {
+				JExceptionDialog.showError(dlg, ex);
 			}
 		});
 
 
 		//Delete Button
 		deleteButton.setToolTipText("Delete the selected groups");
-		deleteButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				try {
-					editGroupPanel.setGroup(null);
+		deleteButton.addActionListener(ev-> {
+			try {
+				editGroupPanel.setGroup(null);
 
-					List<Group> selection = groupTable.getSelection();
-					if(selection.size()<1) throw new Exception("You must select 1 group or more");
+				List<Group> selection = groupTable.getSelection();
+				if(selection.size()<1) throw new Exception("You must select 1 group or more");
 
-					for (Group group: selection) {
-						if(!study.getTopAttachedBiosamples(group).isEmpty()) throw new Exception("You cannot delete a group if there are samples attached to it");
-					}
-
-					int res = JOptionPane.showConfirmDialog(dlg, "Are you sure you want to delete " + (selection.size()==1?"this group": "these " + selection.size() + " groups") + "?", "Delete", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-					if(res!=JOptionPane.OK_OPTION) return;
-
-					for (Group group: selection) {
-						group.remove();
-						study.getGroups().remove(group);
-						group = null;
-					}
-
-					refreshGroups();
-				} catch (Exception e) {
-					e.printStackTrace();
-					JOptionPane.showMessageDialog(dlg, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				for (Group group: selection) {
+					if(!study.getTopParticipants(group).isEmpty()) throw new Exception("You cannot delete a group if there are samples attached to it");
 				}
 
+				int res = JOptionPane.showConfirmDialog(dlg, "Are you sure you want to delete " + (selection.size()==1?"this group": "these " + selection.size() + " groups") + "?", "Delete", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+				if(res!=JOptionPane.OK_OPTION) return;
+
+				for (Group group: selection) {
+					group.remove();
+					study.getGroups().remove(group);
+					group = null;
+				}
+
+				refreshGroups();
+			} catch (Exception e) {
+				e.printStackTrace();
+				JOptionPane.showMessageDialog(dlg, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
+
 		});
 
 
 		JButton closeButton = new JButton("Close");
-		closeButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					editGroupPanel.updateModel();
-				} catch(Exception ex) {
-					JExceptionDialog.showError(ex);
-					return;
-				}
-
-				dispose();
+		closeButton.addActionListener(e-> {
+			try {
+				editGroupPanel.updateModel();
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ex);
+				return;
 			}
+
+			dispose();
 		});
 
 		//layout
-		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+		JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT,
 				UIUtils.createTitleBox("Groups",
 						UIUtils.createBox(
 								new JScrollPane(groupTable),
-								UIUtils.createHorizontalBox(newGroupButton, Box.createHorizontalGlue()),
+								null,
 								UIUtils.createVerticalBox(
-										UIUtils.createHorizontalBox(duplicateButton, Box.createHorizontalGlue()),
+										UIUtils.createHorizontalBox(newGroupButton, duplicateButton, Box.createHorizontalGlue()),
 										UIUtils.createHorizontalBox(splitButton, mergeButton, Box.createHorizontalGlue()),
 										UIUtils.createHorizontalBox(deleteButton, Box.createHorizontalGlue())))),
 				editGroupPanel);
-		splitPane.setDividerLocation(220);
+		splitPane.setDividerLocation(235);
 		add(BorderLayout.CENTER, splitPane);
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue(), closeButton) );
 		UIUtils.adaptSize(this, 840, 800);
 		refreshGroups();
+		refreshButtons();
 		setLocationRelativeTo(dlg);
 		setVisible(true);
+	}
+
+	private void refreshButtons() {
+		List<Group> selection = groupTable.getSelection();
+		deleteButton.setEnabled(selection.size()>0);
+		duplicateButton.setEnabled(selection.size()>0);
+		mergeButton.setEnabled(selection.size()>1);
+		splitButton.setEnabled(selection.size()==1 && selection.get(0).getNSubgroups()>1);
 	}
 
 	public Study getStudy() {
@@ -451,13 +437,13 @@ public class StudyGroupDlg extends JEscapeDialog {
 	}
 
 	public List<Group> getGroups() {
-		return study.getGroupsHierarchical();
+		return new ArrayList<>(study.getGroupsHierarchical());
 	}
 
 	public void refreshGroups() {
 		push++;
 		try {
-			groupTable.setRows(study.getGroupsHierarchical());
+			groupTable.setRows(new ArrayList<>(study.getGroups()));
 			dlg.refresh();
 		} finally {
 			push--;

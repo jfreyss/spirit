@@ -23,13 +23,11 @@ package com.actelion.research.spiritapp.spirit.ui.study;
 
 import java.util.List;
 
-import javax.swing.event.ListSelectionListener;
-
 import com.actelion.research.spiritapp.spirit.ui.util.lf.SpiritExtendTable;
 import com.actelion.research.spiritcore.business.study.Study;
 
-public class StudyTable extends SpiritExtendTable<Study> implements ListSelectionListener {
-	
+public class StudyTable extends SpiritExtendTable<Study> {
+
 	public StudyTable() {
 		super(new StudyTableModel());
 		setBorderStrategy(BorderStrategy.ALL_BORDER);
@@ -42,7 +40,7 @@ public class StudyTable extends SpiritExtendTable<Study> implements ListSelectio
 		getModel().removeEmptyColumns();
 		resetPreferredColumnWidth();
 	}
-	
+
 	@Override
 	public StudyTableModel getModel() {
 		return (StudyTableModel) super.getModel();

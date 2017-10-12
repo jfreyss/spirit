@@ -190,11 +190,8 @@ public abstract class AbstractNode<T>  {
 		MouseAdapter ma = new PopupAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						if(getFocusable()!=null) getFocusable().requestFocusInWindow();
-					}
+				SwingUtilities.invokeLater(()-> {
+					if(getFocusable()!=null) getFocusable().requestFocusInWindow();
 				});
 			}
 			@Override
@@ -255,17 +252,15 @@ public abstract class AbstractNode<T>  {
 
 			//Add component
 			JComponent component = getComponent();
-			int marginPerLevel = 12;
-			int marginLeft = 1 + Math.max(0, n) * marginPerLevel - (addExpandButton? button.getPreferredSize().width-marginPerLevel:0);
-			panel = UIUtils.createHorizontalBox(
-					BorderFactory.createEmptyBorder(row>1 && depth<=1 && (getChildren().size()>0 || expandStrategy!=null)? 5:0, marginLeft, 0, 0),
-					UIUtils.createCenterPanel(button, SwingConstants.CENTER),
+			int marginPerLevel = button.getPreferredSize().width;
+			int marginLeft = 1 + n * marginPerLevel /*- (addExpandButton? button.getPreferredSize().width-marginPerLevel:0)*/;
+			JPanel buttonPanel = UIUtils.createCenterPanel(button, SwingConstants.CENTER);
+			panel = UIUtils.createHorizontalBox(BorderFactory.createEmptyBorder(row>1 && depth<=1 && (getChildren().size()>0 || expandStrategy!=null)? 6:0, marginLeft, 0, 0),
+					buttonPanel,
 					component,
 					Box.createHorizontalGlue());
 			panel.setOpaque(false);
-			//			panel.setMaximumSize(new Dimension(200, 100));
-			Dimension dim = new Dimension(200 /*- marginLeft*/, component.getPreferredSize().height);
-			getComponent().setPreferredSize(dim);
+			//			getComponent().setPreferredSize(new Dimension(200, component.getPreferredSize().height));
 		}
 
 		button.setVisible(addExpandButton);

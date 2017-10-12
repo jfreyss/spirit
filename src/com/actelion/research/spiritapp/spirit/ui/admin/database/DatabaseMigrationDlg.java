@@ -23,8 +23,6 @@ package com.actelion.research.spiritapp.spirit.ui.admin.database;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -40,14 +38,13 @@ import javax.swing.text.StyleConstants;
 
 import org.slf4j.LoggerFactory;
 
+import com.actelion.research.spiritapp.spirit.ui.util.component.JHeaderLabel;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.migration.MigrationScript;
 import com.actelion.research.spiritcore.services.migration.MigrationScript.ILogger;
-import com.actelion.research.util.ui.FastFont;
-import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
@@ -78,28 +75,21 @@ public class DatabaseMigrationDlg extends JDialog {
 		sp2.setPreferredSize(new Dimension(750, 400));
 
 		JButton cancelButton = new JButton("Cancel");
-		cancelButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				dispose();
-			}
+		cancelButton.addActionListener(e-> {
+			dispose();
 		});
 
-		JButton updateButton = new JButton("Update DB");
-		updateButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				updateDB();
-			}
+		JButton updateButton = new JButton("Let SPIRIT update the BD");
+		updateButton.addActionListener(e-> {
+			updateDB();
 		});
 		getRootPane().setDefaultButton(updateButton);
 
 		//Init script
 		try {
-			String script = MigrationScript.getSql(DBAdapter.getAdapter().getVendor());
+			String script = MigrationScript.getSql(DBAdapter.getInstance().getVendor());
 			if(script.length()==0) {
 				//Assume this is correct and update the version
-
 			}
 			sqlPane.setText(script);
 		} catch(Exception e) {
@@ -112,12 +102,13 @@ public class DatabaseMigrationDlg extends JDialog {
 			version = null;
 		}
 
-		add(
-				UIUtils.createBox(UIUtils.createBox(sp2, sp1),
-
-						UIUtils.createVerticalBox(new JCustomLabel("Your database is not up to date (currently: " + (version==null?"NA":version) + ")", FastFont.BOLD, Color.RED),
-								new JLabel("You must update the DB to version " + MigrationScript.getExpectedDBVersion() + " to continue. Do you accept the update?")),
-						UIUtils.createHorizontalBox(Box.createHorizontalGlue(), cancelButton, updateButton)));
+		add(UIUtils.createBox(UIUtils.createBox(sp2, sp1),
+				UIUtils.createVerticalBox(
+						new JHeaderLabel("Your database is not up to date"),
+						new JLabel("<html><div style='font-size:105%;color:red;padding:10px'>You must update the DB schema from version " + (version==null?"NA":version) + " to " + MigrationScript.getExpectedDBVersion() + ".<br>"
+								+ "To continue you must commit the following code on the DB.<br>"
+								+ "You can either do it manually or let SPIRIT do it for you.</div> ")),
+				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), cancelButton, updateButton)));
 		pack();
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -174,13 +165,13 @@ public class DatabaseMigrationDlg extends JDialog {
 			@Override
 			protected void doInBackground() throws Exception {
 				errorPane.setText("<html><div style='white-space:nowrap'>");
-				MigrationScript.updateDB(DBAdapter.getAdapter().getVendor(), logger);
+				MigrationScript.updateDB(DBAdapter.getInstance().getVendor(), logger);
 			}
 
 			@Override
 			protected void done() {
 				try {
-					boolean ok = testSchema(DBAdapter.getAdapter());
+					boolean ok = testSchema(DBAdapter.getInstance());
 					if(ok) {
 						if(hasErrors) {
 							JExceptionDialog.showWarning(DatabaseMigrationDlg.this, "The Spirit database was successfully migrated.\n There were however some migration errors, please check what went wrong.");
@@ -222,14 +213,18 @@ public class DatabaseMigrationDlg extends JDialog {
 			if(res==JOptionPane.YES_OPTION) {
 				JPAUtil.initFactory(adapter, "update");
 				ok = true;
+
+				if(adapter==DBAdapter.getInstance() && MigrationScript.getExpectedDBVersion().compareTo(MigrationScript.getDBVersion())!=0) {
+					LoggerFactory.getLogger(DatabaseMigrationDlg.class).debug("Test Schema: set version to "+MigrationScript.getExpectedDBVersion());
+					SpiritProperties.getInstance().setDBVersion(MigrationScript.getExpectedDBVersion());
+					SpiritProperties.getInstance().saveValues();
+				}
+
 			} else {
 				ok = false;
 			}
 		}
-		if(adapter==DBAdapter.getAdapter() && MigrationScript.getExpectedDBVersion().compareTo(MigrationScript.getDBVersion())!=0) {
-			SpiritProperties.getInstance().setDBVersion(MigrationScript.getExpectedDBVersion());
-			SpiritProperties.getInstance().saveValues();
-		}
+
 		return ok;
 	}
 

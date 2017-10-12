@@ -143,7 +143,7 @@ public class DashboardTab extends SpiritTab implements IHomeTab {
 						if(Phase.isSameDay(p.getAbsoluteDate(), dashDate)) {
 							String d = p.getDescription();
 							if(d.length()>0) {
-								desc += "<br><b>" + p.getShortName() + ":</b><br><span style='font-size:90%'>" + d.replace(" + ", "+") + "</span>";
+								desc += "<br><b>" + p.getShortName() + ":</b>";//<br><span style='font-size:90%'>" + d.replace(" + ", "+") + "</span>";
 							}
 						} else if(p.getAbsoluteDate().after(dashDate)) {
 							if(nextPhase==null || nextPhase.getAbsoluteDate()==null || nextPhase.getAbsoluteDate().after(p.getAbsoluteDate())) {

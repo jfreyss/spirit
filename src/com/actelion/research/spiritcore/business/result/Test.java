@@ -52,14 +52,17 @@ import javax.persistence.TemporalType;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
-import com.actelion.research.spiritcore.business.IEntity;
+import com.actelion.research.spiritcore.business.IAuditable;
+import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
+import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.CompareUtils;
 
 @Entity
 @Table(name="assay")
 @SequenceGenerator(name="sequence", sequenceName="assay_seq", allocationSize=1)
 @Audited
-public class Test implements Comparable<Test>, IEntity {
+public class Test implements Comparable<Test>, IObject, IAuditable {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="sequence")
@@ -91,6 +94,12 @@ public class Test implements Comparable<Test>, IEntity {
 	@OrderBy(value="index")
 	private Set<TestAttribute> attributes = new LinkedHashSet<>();
 
+	/**
+	 * A hidden biotype can only be seen by an admin
+	 */
+	@Column(name="disabled")
+	private Boolean isHidden = false;
+
 	public Test() {
 	}
 
@@ -102,6 +111,13 @@ public class Test implements Comparable<Test>, IEntity {
 		setName(name);
 	}
 
+	public void setHidden(boolean isHidden) {
+		this.isHidden = isHidden;
+	}
+
+	public boolean isHidden() {
+		return isHidden==Boolean.TRUE;
+	}
 
 	@PrePersist @PreUpdate
 	private void preUpdate() throws Exception {
@@ -150,23 +166,6 @@ public class Test implements Comparable<Test>, IEntity {
 		this.name = name;
 	}
 
-	//	public String getProjectName() {
-	//		return projectName;
-	//	}
-	//
-	//	public void setProjectName(String projectName) {
-	//		this.projectName = projectName;
-	//	}
-	//
-	//	public String getDescription() {
-	//		return description;
-	//	}
-	//
-	//	public void setDescription(String comments) {
-	//		this.description = comments;
-	//	}
-
-	@Override
 	public String getUpdUser() {
 		return updUser;
 	}
@@ -175,7 +174,6 @@ public class Test implements Comparable<Test>, IEntity {
 		this.updUser = updUser;
 	}
 
-	@Override
 	public Date getUpdDate() {
 		return updDate;
 	}
@@ -352,6 +350,35 @@ public class Test implements Comparable<Test>, IEntity {
 			res.add(t.getCategory());
 		}
 		return res;
+	}
+
+	@Override
+	public String getDifference(IAuditable t) {
+		if(!(t instanceof Test)) return "";
+		return MiscUtils.flatten(getDifferenceMap((Test)t));
+	}
+
+	/**
+	 * Returns a map containing the differences between 2 biotypes (usually 2 different versions).
+	 * The result is an empty string if there are no differences or if b is null
+	 * @param b
+	 * @return
+	 */
+	public Map<String, String> getDifferenceMap(Test b) {
+		Map<String, String> map = new LinkedHashMap<>();
+		if(b==null) return map;
+		if(!CompareUtils.equals(getName(), b.getName())) {
+			map.put("Name", getName()==null?"NA":getName());
+		}
+		if(!CompareUtils.equals(getCategory(), b.getCategory())) {
+			map.put("Category", getCategory()==null?"NA":getCategory());
+		}
+
+		//Compare attributes
+		String metadataCompare = MiscUtils.diffCollectionsSummary(getAttributes(), b.getAttributes(), TestAttribute.EXACT_COMPARATOR);
+		if(metadataCompare!=null) map.put("Attributes", metadataCompare);
+
+		return map;
 	}
 
 }

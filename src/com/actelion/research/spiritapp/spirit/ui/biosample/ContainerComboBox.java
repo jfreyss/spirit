@@ -29,26 +29,32 @@ import javax.swing.JLabel;
 
 import com.actelion.research.spiritapp.spirit.ui.location.ContainerLabel;
 import com.actelion.research.spiritcore.business.biosample.Container;
-import com.actelion.research.util.ui.JGenericComboBox;
+import com.actelion.research.util.ui.JObjectComboBox;
 
-public class ContainerComboBox extends JGenericComboBox<Container> {
+public class ContainerComboBox extends JObjectComboBox<Container> {
 
 	private ContainerLabel lbl = new ContainerLabel();
 
 	public ContainerComboBox() {
 		super();
 		setMinimumSize(new Dimension(200, 20));
+		setTextWhenEmpty("Container...");
 	}
 
 	@Override
-	public Component processCellRenderer(JLabel comp, Container container, int index) {
+	public Component processCellRenderer(JLabel comp, String name, int index) {
+		Container container = getMap().get(name);
 		lbl.setBackground(Color.WHITE);
 		lbl.setForeground(Color.BLACK);
 		lbl.setContainer(container);
-		super.processCellRenderer(comp, container, index);
 		return lbl;
 	}
 
+
+	@Override
+	public String convertObjectToString(Container obj) {
+		return obj==null?"": obj.getContainerId();
+	}
 
 
 

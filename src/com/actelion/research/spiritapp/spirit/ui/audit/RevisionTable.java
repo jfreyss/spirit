@@ -34,6 +34,7 @@ public class RevisionTable extends ExtendTable<Revision> {
 
 	public RevisionTable(boolean addWhatColumn) {
 		super(new RevisionTableModel(addWhatColumn));
+		setBorderStrategy(BorderStrategy.WHEN_DIFFERENT_VALUE);
 	}
 
 	@Override
@@ -47,6 +48,11 @@ public class RevisionTable extends ExtendTable<Revision> {
 
 	public Map<Revision, String> getChangeMap() {
 		return changeMap;
+	}
+
+	@Override
+	public void setRows(List<Revision> data) {
+		super.setRows(data);
 	}
 
 	public void setRows(List<Revision> data, Map<Revision, String> changeMap) {

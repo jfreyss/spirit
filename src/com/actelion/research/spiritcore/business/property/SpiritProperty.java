@@ -28,28 +28,31 @@ import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 
+import com.actelion.research.spiritcore.business.IAuditable;
+import com.actelion.research.util.CompareUtils;
+
 /**
  * Property saved in the DB used to customize Spirit. All those properties are optional, but are used by the system to add extra functionalities.
- * 
- * Those properties are designed to be extensible and to be evolved more often than the rest of the DB. 
- * 
+ *
+ * Those properties are designed to be extensible and to be evolved more often than the rest of the DB.
+ *
  * @author freyssj
  *
  */
 @Entity
 @Audited
 @Table(name="spirit_property")
-public class SpiritProperty {
-		
+public class SpiritProperty implements Comparable<SpiritProperty>, IAuditable {
+
 	@Id
 	@Column(name="id", length=128)
 	private String key;
-	
-	@Column(name="value", length=256)
+
+	@Column(name="value", length=512)
 	private String value;
-	
+
 	public SpiritProperty() {}
-	
+
 	public SpiritProperty(String key, String value) {
 		this.key = key;
 		this.value = value;
@@ -67,14 +70,33 @@ public class SpiritProperty {
 	public void setValue(String value) {
 		this.value = value;
 	}
-	
+
+	@Override
 	public int hashCode() {
 		return key.hashCode();
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		return (obj instanceof SpiritProperty) && key.equals(((SpiritProperty) obj).getKey());
 	}
-	
+
+	@Override
+	public int compareTo(SpiritProperty o) {
+		return key==null? (o.key==null?0: -1): key.compareTo(o.key);
+	}
+
+	@Override
+	public String toString() {
+		return key + "=" + value;
+	}
+
+	@Override
+	public String getDifference(IAuditable b) {
+		if(!(b instanceof SpiritProperty)) return "Class";
+		SpiritProperty p = (SpiritProperty) b;
+		if(!CompareUtils.equals(value, p.value)) return key+"="+value;
+		return null;
+	}
+
 }

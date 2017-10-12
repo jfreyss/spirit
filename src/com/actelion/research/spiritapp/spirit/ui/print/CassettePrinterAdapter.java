@@ -22,7 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.print;
 
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -86,7 +85,6 @@ public class CassettePrinterAdapter extends PrintAdapter {
 		buttonGroup.add(multipleAnimalsRadioButton);
 		buttonGroup.add(oneAnimalRadioButton);
 
-
 		//Ptouch
 		PrintService[] services = SpiritPrinter.getPrintServices();
 		printerComboBox = new JGenericComboBox<PrintService>(services, true);
@@ -97,20 +95,11 @@ public class CassettePrinterAdapter extends PrintAdapter {
 			}
 		}
 
-
 		JPanel ptouchPanel = UIUtils.createTable(
 				new JLabel("Brother Printer: "), printerComboBox,
-				new JLabel("Media: "), mediaComboBox
-				);
+				new JLabel("Media: "), mediaComboBox);
 
-
-
-		ActionListener refreshActionListener = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				fireConfigChanged();
-			}
-		};
+		ActionListener refreshActionListener = e-> fireConfigChanged();
 		ptouchRadioButton.addActionListener(refreshActionListener);
 		cassetteMateRadioButton.addActionListener(refreshActionListener);
 		defaultRadioButton.addActionListener(refreshActionListener);
@@ -149,27 +138,19 @@ public class CassettePrinterAdapter extends PrintAdapter {
 
 		ptouchRadioButton.setSelected(Spirit.getConfig().getProperty("printer.cassette.type", "").equals("ptouch")) ;
 
-		printerComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				List<Media> media = SpiritPrinter.loadMedias(printerComboBox.getSelection(), containerType.getName());
-				mediaComboBox.setValues(media, false);
+		printerComboBox.addActionListener(ev-> {
+			List<Media> media = SpiritPrinter.loadMedias(printerComboBox.getSelection(), containerType.getName());
+			mediaComboBox.setValues(media, false);
 
-				for (Media m : media) {
-					if(m.toString().equalsIgnoreCase(containerType.getName())) {
-						mediaComboBox.setSelection(m);
-						break;
-					}
+			for (Media m : media) {
+				if(m.toString().equalsIgnoreCase(containerType.getName())) {
+					mediaComboBox.setSelection(m);
+					break;
 				}
-				fireConfigChanged();
 			}
+			fireConfigChanged();
 		});
-		mediaComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				fireConfigChanged();
-			}
-		});
+		mediaComboBox.addActionListener(ev->fireConfigChanged());
 
 		if(services.length>0) {
 			printerComboBox.getActionListeners()[0].actionPerformed(null);
@@ -184,7 +165,6 @@ public class CassettePrinterAdapter extends PrintAdapter {
 
 	@Override
 	public JComponent getPreviewPanelForList(List<Container> containers) {
-
 		if(cassetteMateRadioButton.isSelected()) {
 			JTextArea textarea = new JTextArea();
 			textarea.setText(getPrint(containers));
@@ -213,7 +193,6 @@ public class CassettePrinterAdapter extends PrintAdapter {
 		return tpl;
 	}
 
-
 	private String getPrint(List<Container> containers) {
 		if(containers==null) return "";
 		StringBuilder sb = new StringBuilder();
@@ -226,11 +205,8 @@ public class CassettePrinterAdapter extends PrintAdapter {
 				tops.add(b.getTopParent());
 			}
 
-
-
 			Study study = Biosample.getStudy(biosamples);
 			String studyId = study==null? " ": !printStudyIdCheckBox.isSelected()? study.getLocalId(): study.getStudyIdAndInternalId();
-
 
 			//7 items
 			boolean multipleMode;
@@ -271,6 +247,7 @@ public class CassettePrinterAdapter extends PrintAdapter {
 		}
 		return sb.toString();
 	}
+
 	@Override
 	public void print(List<Container> containers) throws Exception {
 		if(containers==null || containers.size()==0) throw new Exception("No containers");

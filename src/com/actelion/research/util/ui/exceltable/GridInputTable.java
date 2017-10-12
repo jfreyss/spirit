@@ -65,14 +65,14 @@ public class GridInputTable extends JTable {
 	private int lastEditingRow = -1;
 	private int lastEditingCol = -1;
 
-	
+
 	private final class MyKeyListener extends KeyAdapter {
 		private JComponent source;
-		
+
 		public MyKeyListener(JComponent source) {
 			this.source = source;
 		}
-		
+
 		@Override
 		public void keyPressed(KeyEvent e) {
 			if(e.getKeyCode()==86 && (e.getModifiersEx()&KeyEvent.CTRL_DOWN_MASK)>0) {
@@ -109,42 +109,42 @@ public class GridInputTable extends JTable {
 			}
 		}
 	}
-		
+
 	public static class GridInputTableModel extends AbstractTableModel {
 		private GridUndoManager undoManager = null;
 		private List<String[]> data = new ArrayList<String[]>();
-		
-		
+
+
 		public GridUndoManager getUndoManager() {
 			return undoManager;
 		}
 		public void setUndoManager(GridUndoManager undoManager) {
 			this.undoManager = undoManager;
 		}
-		
-		
+
+
 		@Override
 		public String getValueAt(int rowIndex, int columnIndex) {
 			return data.get(rowIndex)[columnIndex];
 		}
-		
+
 		@Override
 		public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
 			String oldVal = data.get(rowIndex)[columnIndex];
 			String newVal = (String) aValue;
-			data.get(rowIndex)[columnIndex] = newVal; 
+			data.get(rowIndex)[columnIndex] = newVal;
 			if(undoManager!=null) undoManager.addEdit(undoManager.new OneChangeEdit(rowIndex, columnIndex, oldVal, newVal));
 		}
 		@Override
 		public boolean isCellEditable(int rowIndex, int columnIndex) {
 			return true;
 		}
-		
+
 		@Override
 		public int getColumnCount() {
 			return data.size()>0? data.get(0).length: 0;
-		}		
-		
+		}
+
 		@Override
 		public int getRowCount() {
 			return data.size();
@@ -154,10 +154,10 @@ public class GridInputTable extends JTable {
 		}
 		public void setData(List<String[]> data) {
 			this.data = data;
-			fireTableDataChanged();			
+			fireTableDataChanged();
 		}
-		
-		
+
+
 		public void addColumn() {
 			setColumns(getColumnCount()+1);
 		}
@@ -166,10 +166,10 @@ public class GridInputTable extends JTable {
 			newTable.add(new String[getColumnCount()]);
 			setData(newTable);
 		}
-		
+
 		public void setColumns(int cols) {
 			List<String[]> newTable = new ArrayList<String[]>();
-			
+
 			List<String[]> data = getData();
 			for (String[] row : data) {
 				String[] newRow = new String[cols];
@@ -177,13 +177,13 @@ public class GridInputTable extends JTable {
 					newRow[i] = i<row.length? row[i]: "";
 				}
 				newTable.add(newRow);
-			}		
-			
+			}
+
 			setData(newTable);
 		}
-		
+
 	}
-	
+
 	public GridInputTable() {
 		super(new GridInputTableModel());
 		getModel().setUndoManager(new GridUndoManager(GridInputTable.this));
@@ -205,7 +205,7 @@ public class GridInputTable extends JTable {
 		setShowGrid(true);
 
 		setDefaultEditor(Object.class, new AlphaNumericalCellEditor());
-		
+
 		setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
 			JLabelNoRepaint lbl = new JLabelNoRepaint();
 			@Override
@@ -220,7 +220,7 @@ public class GridInputTable extends JTable {
 				return lbl;
 			}
 		});
-		
+
 		getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke('Z', InputEvent.CTRL_DOWN_MASK), "undo");
 		getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke('Y', InputEvent.CTRL_DOWN_MASK), "redo");
 		getActionMap().put("undo", new AbstractAction() {
@@ -235,8 +235,8 @@ public class GridInputTable extends JTable {
 				getModel().getUndoManager().redo();
 			}
 		});
-		
-		
+
+
 		getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "delete");
 		getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke('C', InputEvent.CTRL_DOWN_MASK), "copy");
 		getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke('V', InputEvent.CTRL_DOWN_MASK), "paste");
@@ -274,27 +274,27 @@ public class GridInputTable extends JTable {
 				deleteSelection();
 			}
 		});
-	
+
 		getModel().addTableModelListener(new TableModelListener() {
-			
+
 			@Override
 			public void tableChanged(TableModelEvent e) {
 				fitTable();
 			}
 		});
-		
-		
+
+
 		//MouseClick should select the cell but not start editing
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				int row = rowAtPoint(e.getPoint());
 				int col = columnAtPoint(e.getPoint());
-				if(col>=0) {					
+				if(col>=0) {
 					col = convertColumnIndexToModel(col);
 					row = convertRowIndexToModel(row);
 					//The user must double-click to edit a cell (Excel-like) except if it is a Boolean (checkbox)
-					
+
 					if((row!=lastEditingRow || col!=lastEditingCol)) {
 						editingStopped(null);
 						requestFocusInWindow();
@@ -304,9 +304,9 @@ public class GridInputTable extends JTable {
 				lastEditingCol = col;
 			}
 		});
-		
+
 		//MousePopup to insert rows
-		addMouseListener(new PopupAdapter(this) {			
+		addMouseListener(new PopupAdapter(this) {
 			@Override
 			protected void showPopup(MouseEvent e) {
 				JPopupMenu popupMenu = new JPopupMenu();
@@ -315,19 +315,19 @@ public class GridInputTable extends JTable {
 				popupMenu.add(new JSeparator());
 				popupMenu.add(new UndoAction());
 				popupMenu.add(new RedoAction());
-				
-				
+
+
 				popupMenu.show(GridInputTable.this, e.getX(), e.getY());
-			}			
+			}
 		});
-		
+
 		addKeyListener(new MyKeyListener(this));
 	}
-	
+
 	protected void resetPreferredColumnWidth() {
-		
+
 		GridInputTableModel model = getModel();
-		
+
 		for (int col = 0; col < model.getColumnCount(); col++) {
 			int colMaxWidth = 30;
 
@@ -343,16 +343,16 @@ public class GridInputTable extends JTable {
 			TableColumn column = getColumnModel().getColumn(col);
 			column.setPreferredWidth(colMaxWidth);
 		}
-		
-		
-		
+
+
+
 	}
-	
+
 	@Override
 	public GridInputTableModel getModel() {
 		return (GridInputTableModel) super.getModel();
 	}
-	
+
 
 	public void setTable(String[][] table) {
 		List<String[]> rows = new ArrayList<String[]>();
@@ -361,25 +361,25 @@ public class GridInputTable extends JTable {
 		for(String[] row: table) {
 			cols = Math.max(cols, row.length);
 		}
-		
+
 		//Update the table
-		for(String[] row: table) {	
+		for(String[] row: table) {
 			String[] stringArray = new String[cols];
 			for (int i = 0; i < stringArray.length; i++) {
 				stringArray[i] = i<row.length && row[i]!=null? row[i]: "";
 			}
 			rows.add(stringArray);
 		}
-		
+
 		getModel().setData(rows);
 		fitTable();
 		getModel().fireTableStructureChanged();
-		
+
 		resetPreferredColumnWidth();
-		
+
 
 	}
-	
+
 	/**
 	 * Add an extra row/column if needed
 	 */
@@ -405,21 +405,21 @@ public class GridInputTable extends JTable {
 			}
 		}
 		if(addColumn) {
-			getModel().addColumn();		
+			getModel().addColumn();
 		}
-		
+
 		if(addRow || addColumn) {
 			getModel().fireTableStructureChanged();
 			resetPreferredColumnWidth();
 		}
-		
+
 	}
-	
-	
-	
+
+
+
 	public String[][] getTable() {
 		String[][] table = getModel().getData().toArray(new String[][] {});
-		
+
 		//Clean data by emptying last columns/rows
 		int maxCols = 0;
 		int maxRows = 0;
@@ -431,34 +431,34 @@ public class GridInputTable extends JTable {
 				}
 			}
 		}
-		
+
 		String[][] res = new String[maxRows+1][maxCols+1];
 		for (int i = 0; i < res.length; i++) {
 			for (int j = 0; j < res[i].length; j++) {
-				res[i][j] = table[i][j]==null?"": table[i][j].trim();				
+				res[i][j] = table[i][j]==null?"": table[i][j].trim();
 			}
 		}
 		return res;
 	}
-	
+
 	public static void main(String[] args) {
-		
+
 		try {
-			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");			
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
 			UIManager.put("nimbusSelectionBackground", new Color(173,207,231));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		
+
 		JPanel panel = new JPanel(new BorderLayout());
 		panel.add(BorderLayout.CENTER, new JScrollPane(new GridInputTable()));
 		panel.add(BorderLayout.NORTH, new JLabel("GridTable"));
 		panel.setPreferredSize(new Dimension(400, 300));
-		
+
 		JOptionPane.showOptionDialog(null, panel, "Test", JOptionPane.YES_NO_OPTION, 0, null, null, null);
 	}
-	
+
 	private void copySelection() {
 		StringBuilder sb = new StringBuilder();
 		int[] rows = getSelectedRows();
@@ -469,13 +469,13 @@ public class GridInputTable extends JTable {
 				if(c>0) sb.append("\t");
 				Object o = getValueAt(rows[r], cols[c]);
 				sb.append(o==null? "": o);
-			}					
+			}
 		}
-		
+
 		EasyClipboard.setClipboard(sb.toString());
 	}
-	
-	
+
+
 	private GridUndoManager getUndoManager() {
 		return getModel().getUndoManager();
 	}
@@ -494,34 +494,34 @@ public class GridInputTable extends JTable {
 				} catch (Exception ex) {
 					System.err.println(ex);
 				}
-			}					
+			}
 		}
 		getUndoManager().setTransaction(false);
 		getModel().fireTableDataChanged();
 		select(rows, cols);
 	}
-	
+
 	/**
 	 * Paste data
 	 */
 	protected void pasteSelection() throws Exception {
 		int[] selRows = getSelectedRows();
 		int[] selCols = getSelectedColumns();
-		
+
 		if(selRows.length==0 || selCols.length==0) return;
-		
+
 		String paste = EasyClipboard.getClipboard();
 		if(paste==null) return;
 		String[] lines = paste.split("(\r\n|\r|\n|\n\r)");
 		if(lines.length==0) return;
 		String[] tokensFor1Line = null;
 		tokensFor1Line = lines[0].split("\t");
-		
+
 		if(cellEditor!=null) cellEditor.stopCellEditing();
 		int selRow = getSelectedRow();
 		int selCol = getSelectedColumn();
-		
-		//Apply the Paste, line by line 
+
+		//Apply the Paste, line by line
 		StringBuilder errors = new StringBuilder();
 		getUndoManager().setTransaction(true);
 		if(lines.length>1 || selRows.length==1 || tokensFor1Line.length!=selCols.length) {
@@ -533,11 +533,11 @@ public class GridInputTable extends JTable {
 				for (String token : tokens) {
 					if(convertRowIndexToModel(row)>=getModel().getRowCount()) {
 						getModel().addRow();
-					} 	
+					}
 					if(col>=getModel().getColumnCount()) {
 						getModel().addColumn();
 					}
-					try {						
+					try {
 						getModel().setValueAt(token.trim(), row, col);
 					} catch (ArrayIndexOutOfBoundsException ex) {
 						errors.append("Table too small (" + token.trim() +")\n");
@@ -551,15 +551,15 @@ public class GridInputTable extends JTable {
 		} else {
 			//The user selected several lines -> copy the data n times
 			for(int row: selRows) {
-				for(int i=0; i<selCols.length; i++) {					
+				for(int i=0; i<selCols.length; i++) {
 					try {
-						getModel().setValueAt(tokensFor1Line[i].trim(), row, selCols[i]);					
+						getModel().setValueAt(tokensFor1Line[i].trim(), row, selCols[i]);
 					} catch (Exception ex) {
 						errors.append("Paste:"+ex.getMessage() + " (" + tokensFor1Line[i].trim().trim() + ")\n");
 					}
 				}
 			}
-			
+
 		}
 		getUndoManager().setTransaction(false);
 		if(errors.length()>0) {
@@ -570,7 +570,7 @@ public class GridInputTable extends JTable {
 		resetPreferredColumnWidth();
 		select(selRows, selCols);
 	}
-	
+
 	private void select(int[] rows, int[] cols) {
 		clearSelection();
 		for (int c : cols) {
@@ -580,11 +580,10 @@ public class GridInputTable extends JTable {
 			addRowSelectionInterval(r, r);
 		}
 	}
-	
-	
+
 
 	public class Paste_Action extends AbstractAction {
-		public Paste_Action() {			
+		public Paste_Action() {
 			putValue(AbstractAction.NAME, "Paste");
 		}
 		@Override
@@ -596,9 +595,9 @@ public class GridInputTable extends JTable {
 			}
 		}
 	}
-	
+
 	public class Copy_Action extends AbstractAction {
-		public Copy_Action() {			
+		public Copy_Action() {
 			putValue(AbstractAction.NAME, "Copy");
 		}
 		@Override
@@ -606,17 +605,17 @@ public class GridInputTable extends JTable {
 			copySelection();
 		}
 	}
-	
+
 	protected class UndoAction extends AbstractAction {
 		public UndoAction() {
 			putValue(Action.NAME, "Undo");
 			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke('Z', InputEvent.CTRL_DOWN_MASK));
 			setEnabled(getModel().getUndoManager().canUndo());
-			
+
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			getModel().getUndoManager().undo();			
+			getModel().getUndoManager().undo();
 		}
 	}
 	protected class RedoAction extends AbstractAction {
@@ -624,14 +623,14 @@ public class GridInputTable extends JTable {
 			putValue(Action.NAME, "Redo");
 			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke('Y', InputEvent.CTRL_DOWN_MASK));
 			setEnabled(getModel().getUndoManager().canRedo());
-			
+
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			getModel().getUndoManager().redo();			
+			getModel().getUndoManager().redo();
 		}
 	}
-	
+
 	public void goRight() {
 		editingStopped(new ChangeEvent(this));
 		int row = getSelectedRow();
@@ -643,10 +642,8 @@ public class GridInputTable extends JTable {
 			getModel().fireTableStructureChanged();
 			resetPreferredColumnWidth();
 		}
-//		if(col<getColumnCount()-1) {
-			setRowSelectionInterval(row, row);
-			setColumnSelectionInterval(col+1, col+1);
-//		}		
+		setRowSelectionInterval(row, row);
+		setColumnSelectionInterval(col+1, col+1);
 	}
 
 	public void goLeft() {
@@ -659,7 +656,7 @@ public class GridInputTable extends JTable {
 			setColumnSelectionInterval(col-1, col-1);
 		}
 	}
-	
+
 	public void goUp() {
 		editingStopped(new ChangeEvent(this));
 		int row = getSelectedRow();
@@ -686,4 +683,6 @@ public class GridInputTable extends JTable {
 			setRowSelectionInterval(row+1, row+1);
 		}
 	}
+
+
 }

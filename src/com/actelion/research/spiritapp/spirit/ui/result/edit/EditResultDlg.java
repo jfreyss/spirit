@@ -72,6 +72,7 @@ import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
@@ -83,7 +84,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 	private final JClosableTabbedPane tabbedPane = new JClosableTabbedPane();
 	private final List<EditResultTab> resultsTabs = new ArrayList<>();
 
-	private JTextField elbTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 15);
+	private JTextField elbTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 15);
 
 	private boolean newExperiment;
 	private final boolean editWholeExperiment;
@@ -623,30 +624,35 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 
 		//Check unicity of results
 		Map<String, List<Result>> input2Results = new HashMap<>();
+		Map<String, List<Result>> input2NewResults = new HashMap<>();
 		List<Result> duplicated = new ArrayList<>();
 		for(Result r: toSave) {
 			String key = r.getTest().getId()+"_"+(r.getPhase()==null?"":r.getPhase().getId())+"_"+(r.getBiosample()==null?"":r.getBiosample().getSampleId())+"_"+r.getInputResultValuesAsString();
 			List<Result> list = input2Results.get(key);
-			if(list==null) {
-				list = new ArrayList<>();
-				input2Results.put(key, list);
-			} else {
-				duplicated.add(r);
-			}
+			if(list==null) input2Results.put(key, list = new ArrayList<>());
 			list.add(r);
+			if(r.getId()<=0) {
+				List<Result> listNew = input2NewResults.get(key);
+				if(listNew==null) input2NewResults.put(key, listNew = new ArrayList<>());
+				listNew.add(r);
+			}
 		}
 		StringBuilder sb = new StringBuilder();
-		String s = null;
-		for (List<Result> list  : input2Results.values()) {
-			if(list.size()>1) {
-				Result r = list.get(0);
-				String ns = "<b><u>" + r.getTest().getFullName() + " " + (r.getPhase()==null?"": r.getPhase().getStudy().getLocalId()+" - "+ r.getPhase().getLabel()) + "</u></b><br>";
-				if(!ns.equals(s)) {
-					s = ns;
-					sb.append(s);
+		for (String input : input2Results.keySet()) {
+			List<Result> all = input2Results.get(input);
+			List<Result> allNew = input2NewResults.get(input);
+			if(all.size()>1 && allNew!=null && allNew.size()>0) {
+				//There are new duplicated results for this input
+				if(all.size()==allNew.size()) {
+					allNew.remove(0);
 				}
+				duplicated.addAll(allNew);
+
+				//Prepare the message
+				Result r = all.get(0);
+				sb.append("<b><u>" + r.getTest().getFullName() + " " + (r.getPhase()==null?"": r.getPhase().getStudy().getLocalId()+" - "+ r.getPhase().getLabel()) + "</u></b><br>");
 				sb.append("<table border=0>");
-				for (Result r2 : list) {
+				for (Result r2 : allNew) {
 					sb.append("<tr>");
 					sb.append("<td><b>" + (r.getBiosample()==null?"": " " + r.getBiosample().getSampleId()) + "</b></td>");
 					sb.append("<td>" + r.getInputResultValuesAsString() + "</td>");
@@ -657,13 +663,13 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 				sb.append("</table>");
 			}
 		}
-		if(sb.length()>0) {
+		if(duplicated.size()>0) {
 
 			int res = showConfirmDialog(this,
 					"Some results are duplicated. What do you want to do?",
 					"<html>"+sb.toString()+"</html>",
 					"Duplicated results?",
-					new String[] {"Keep duplicates", "Keep one result", "Cancel"});
+					new String[] {"Keep duplicates", "Remove duplicate", "Cancel"});
 			if(res==0) {
 				//OK
 			} else if(res==1) {

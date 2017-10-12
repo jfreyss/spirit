@@ -26,14 +26,5 @@ import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
 public class SpiritExtendTableModel<T extends IObject> extends ExtendTableModel<T> {
 
-	@Override
-	public T getRow(int rowIndex) {
-		return super.getRow(rowIndex);
-	}
-	
-	@Override
-	protected void reorderTree() {
-//		rows = JPAUtil.reattach(rows);
-		super.reorderTree();
-	}
+
 }

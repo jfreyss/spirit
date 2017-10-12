@@ -62,8 +62,7 @@ public enum ContainerType {
 	BOTTLE("Bottle",					"Bottle", 	"bottle", 		BrotherFormat._12x33N,		BarcodeType.GENERATE, 99, "B."),
 	SLIDE("Slide",						"Slide", 	"slide", 		BrotherFormat._18x24,		BarcodeType.GENERATE, 8, "Bl."),
 	CAGE("Cage",						"Cage", 	"cage", 		null,						BarcodeType.GENERATE, 8, null),
-	UNKNOWN("Other",					"?", 		"unknown", 		BrotherFormat._12x33,		BarcodeType.NOBARCODE),
-	;
+	UNKNOWN("Other",					"Other",	"unknown", 		BrotherFormat._12x33,		BarcodeType.NOBARCODE);
 
 
 	private final String name;

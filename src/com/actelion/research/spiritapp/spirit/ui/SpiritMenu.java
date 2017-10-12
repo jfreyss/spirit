@@ -29,25 +29,27 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.result.ResultActions;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritAction;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
-import com.actelion.research.util.ui.SplashScreen2;
-import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
+import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
+import com.actelion.research.util.ui.SplashScreen;
+import com.actelion.research.util.ui.SplashScreen.SplashConfig;
 import com.actelion.research.util.ui.UIUtils;
 
 public class SpiritMenu {
-	
+
 	public static void addEditMenuItems(JMenu editMenu, SpiritFrame spirit) {
 		editMenu.add(new SpiritAction.Action_Preferences());
 		editMenu.add(new JSeparator());
-		if(DBAdapter.getAdapter().getUserManagedMode()==UserAdministrationMode.READ_WRITE) {
-			editMenu.add(new SpiritAction.Action_ChangePassword());				
+		if(DBAdapter.getInstance().getUserManagedMode()==UserManagedMode.WRITE_PWD) {
+			editMenu.add(new SpiritAction.Action_ChangePassword());
 			editMenu.add(new JSeparator());
 		}
 		editMenu.add(new SpiritAction.Action_Refresh(spirit));
 		editMenu.add(new SpiritAction.Action_Relogin(UIUtils.getMainFrame(), "Spirit"));
 		editMenu.add(new SpiritAction.Action_Exit());
 	}
-	
+
 	public static JMenu getDevicesMenu() {
 		JMenu devicesMenu = new JMenu("Devices");
 		devicesMenu.setMnemonic('d');
@@ -56,30 +58,14 @@ public class SpiritMenu {
 		devicesMenu.add(new SpiritAction.Action_ScanAndAssign());
 		devicesMenu.add(new SpiritAction.Action_ScanAndAliquot());
 		devicesMenu.add(new JSeparator());
-		devicesMenu.add(new SpiritAction.Action_Config());		
+		devicesMenu.add(new SpiritAction.Action_Config());
 		devicesMenu.add(new JSeparator());
 		devicesMenu.add(new SpiritAction.Action_PrintLabels());
 		return devicesMenu;
 	}
-	
-//	public static JMenu getPerspectivesMenu() {
-//		JMenu perspectiveMenu = new JMenu("Perspective");
-//		perspectiveMenu.setMnemonic('p');
-//		
-//		
-////		perspectiveMenu.add(new SpiritAction.Action_OpenSpirit());
-//		perspectiveMenu.add(new JCheckBoxMenuItem(new SpiritAction.Action_Perspective("Home", HomeTab.class, true)));
-//		perspectiveMenu.add(new JSeparator());
-//		perspectiveMenu.add(new JCheckBoxMenuItem(new SpiritAction.Action_Perspective("AnimalCare", AnimalCareTab.class, false)));
-//		perspectiveMenu.add(new JCheckBoxMenuItem(new SpiritAction.Action_Perspective("BioViewer", BioViewerTab.class, false)));
-////		perspectiveMenu.add(new SpiritAction.Action_OpenSlideCare()));
-////		perspectiveMenu.add(new SpiritAction.Action_OpenStockCare());
-//		return perspectiveMenu;
-//	}
-	
 
 	public static JMenu getToolsMenu() {
-		JMenu toolsMenu = new JMenu("Tools");		
+		JMenu toolsMenu = new JMenu("Tools");
 		toolsMenu.setMnemonic('t');
 		toolsMenu.add(new BiosampleActions.Action_Find_Duplicate_Biosamples());
 		toolsMenu.add(new ResultActions.Action_Find_Duplicate_Results());
@@ -87,7 +73,7 @@ public class SpiritMenu {
 		toolsMenu.add(new AdminActions.Action_Revisions(SpiritFrame.getUser()==null?"": SpiritFrame.getUser().getUsername()));
 		return toolsMenu;
 	}
-	
+
 	public static JMenu getAdminMenu() {
 		JMenu adminMenu = new JMenu("Admin");
 		if( SpiritFrame.getUser()==null || SpiritFrame.getUser().isSuperAdmin()) {
@@ -96,26 +82,28 @@ public class SpiritMenu {
 			adminMenu.add(new JSeparator());
 
 			adminMenu.add(new AdminActions.Action_AdminBiotypes());
-			adminMenu.add(new AdminActions.Action_AdminTests());
+			if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+				adminMenu.add(new AdminActions.Action_AdminTests());
+			}
 			adminMenu.add(new JSeparator());
-			
-			adminMenu.add(new AdminActions.Action_Revisions(null));		
+
+			adminMenu.add(new AdminActions.Action_Revisions(null));
 			adminMenu.add(new AdminActions.Action_LastLogins());
-	
-			adminMenu.add(new JSeparator());						
+
+			adminMenu.add(new JSeparator());
 			adminMenu.add(new AdminActions.Action_RenameElb());
 
-			
+
 		} else {
 			adminMenu.setEnabled(false);
 		}
 		return adminMenu;
 	}
 	public static JMenu getHelpMenu(SplashConfig splashConfig) {
-		JMenu helpMenu = new JMenu("Help");		
+		JMenu helpMenu = new JMenu("Help");
 		helpMenu.setMnemonic('h');
-		helpMenu.add(new SpiritAction.Action_Help());		
-		helpMenu.add(SplashScreen2.createAboutAction(splashConfig));
+		helpMenu.add(new SpiritAction.Action_Help());
+		helpMenu.add(SplashScreen.createAboutAction(splashConfig));
 		return helpMenu;
 	}
 

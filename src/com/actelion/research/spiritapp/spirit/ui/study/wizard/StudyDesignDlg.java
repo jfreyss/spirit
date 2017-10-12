@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritapp.spirit.ui.study.wizard;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -56,7 +55,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
 
 import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
@@ -75,16 +73,17 @@ import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.Document.DocumentType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.NamedTreatment;
-import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.IOUtils;
 import com.actelion.research.util.StringUtils;
@@ -97,7 +96,7 @@ import com.actelion.research.util.ui.iconbutton.JIconButton;
  *
  * @author freyssj
  */
-public class StudyWizardDlg extends JSpiritEscapeDialog {
+public class StudyDesignDlg extends JSpiritEscapeDialog {
 
 	private Study study;
 	private StudyDesignerPanel studyDesigner = new StudyDesignerPanel(this);
@@ -121,16 +120,16 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 	private Set<Biosample> toDelete = new HashSet<>();
 	private Set<Biosample> toUpdate = new HashSet<>();
 
-	public static StudyWizardDlg duplicateStudy(Study s) {
-		return new StudyWizardDlg(s, true);
+	public static StudyDesignDlg duplicateStudy(Study s) {
+		return new StudyDesignDlg(s, true);
 	}
 
-	public static StudyWizardDlg editStudy(Study s) {
-		return new StudyWizardDlg(s, false);
+	public static StudyDesignDlg editStudy(Study s) {
+		return new StudyDesignDlg(s, false);
 	}
 
-	public StudyWizardDlg(Study myStudy, boolean duplicateMode) {
-		super(UIUtils.getMainFrame(), "Study - Study Design", StudyWizardDlg.class.getName());
+	public StudyDesignDlg(Study myStudy, boolean duplicateMode) {
+		super(UIUtils.getMainFrame(), "Study - Study Design", StudyDesignDlg.class.getName());
 		study = JPAUtil.reattach(myStudy);
 		LF.initComp(documentEditorPane);
 
@@ -153,26 +152,6 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 			return;
 		}
 
-		//Make sure to have some phases and some groups
-		if(study.getPhases().size()==0) {
-			for (int i = 0; i < 3; i++) {
-				Phase p = new Phase("d"+i);
-				p.setStudy(study);
-			}
-		}
-		if(study.getGroups().size()==0) {
-			Phase first = study.getPhases().iterator().next();
-			Group g1 = new Group("1. Vehicle");
-			g1.setStudy(study);
-			g1.setFromPhase(first);
-			g1.setColorRgb(Color.CYAN.getRGB());
-
-			Group g2 = new Group("2. Treated");
-			g2.setStudy(study);
-			g2.setFromPhase(first);
-			g2.setColorRgb(Color.PINK.getRGB());
-		}
-
 		studyEditorPane.setSimplified(true);
 
 		if(!SpiritRights.canAdmin(study, SpiritFrame.getUser())) {
@@ -188,83 +167,72 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 
 		//Document panels
 		documentEditorPane.setEditable(false);
-		documentEditorPane.addHyperlinkListener(new HyperlinkListener() {
-			@Override
-			public void hyperlinkUpdate(HyperlinkEvent e) {
-				if(e.getEventType()!=HyperlinkEvent.EventType.ACTIVATED) return;
-				try {
-					if(e.getDescription().startsWith("add:")) {
-						DocumentType docType = DocumentType.valueOf(e.getDescription().substring(4));
-						JFileChooser chooser = new JFileChooser();
-						chooser.setCurrentDirectory(new File(Spirit.getConfig().getProperty("study.wizard.path", System.getProperty("user.home"))));
-						chooser.setDialogTitle("Add a "+docType);
-						chooser.setPreferredSize(new Dimension(800, 600));
-						int res = chooser.showOpenDialog(StudyWizardDlg.this);
-						if(res!=JFileChooser.APPROVE_OPTION) return;
+		documentEditorPane.addHyperlinkListener(e-> {
+			if(e.getEventType()!=HyperlinkEvent.EventType.ACTIVATED) return;
+			try {
+				if(e.getDescription().startsWith("add:")) {
+					DocumentType docType = DocumentType.valueOf(e.getDescription().substring(4));
+					JFileChooser chooser = new JFileChooser();
+					chooser.setCurrentDirectory(new File(Spirit.getConfig().getProperty("study.wizard.path", System.getProperty("user.home"))));
+					chooser.setDialogTitle("Add a "+docType);
+					chooser.setPreferredSize(new Dimension(800, 600));
+					int res = chooser.showOpenDialog(StudyDesignDlg.this);
+					if(res!=JFileChooser.APPROVE_OPTION) return;
 
-						File f = chooser.getSelectedFile();
-						Spirit.getConfig().setProperty("study.wizard.path", f.getParent());
+					File f = chooser.getSelectedFile();
+					Spirit.getConfig().setProperty("study.wizard.path", f.getParent());
 
-						if(f.length()>10*1024*1024L) throw new Exception("The file cannot be larger than 10Mo");
+					if(f.length()>10*1024*1024L) throw new Exception("The file cannot be larger than 10Mo");
 
-						Document document = new Document(f);
-						document.setType(docType);
-						document.setCreUser(SpiritFrame.getUser().getUsername());
-						study.getDocuments().add(document);
+					Document document = new Document(f);
+					document.setType(docType);
+					document.setCreUser(SpiritFrame.getUser().getUsername());
+					study.getDocuments().add(document);
 
-						refresh();
-						setMustAskForExit(true);
+					refresh();
+					setMustAskForExit(true);
 
-					} else if(e.getDescription().startsWith("view:")) {
-						String filename =  StringUtils.unconvertForUrl(e.getDescription().substring(5));
-						Document doc = Document.mapFilenames(study.getDocuments()).get(filename);
-						if(doc==null) return;
+				} else if(e.getDescription().startsWith("view:")) {
+					String filename =  StringUtils.unconvertForUrl(e.getDescription().substring(5));
+					Document doc = Document.mapFilenames(study.getDocuments()).get(filename);
+					if(doc==null) return;
 
-						//Save the doc in tmp dir
-						File f = new File(System.getProperty("java.io.tmpdir"), doc.getFileName());
-						f.deleteOnExit();
-						IOUtils.bytesToFile(doc.getBytes(), f);
-						//Execute on windows platform
-						Desktop.getDesktop().open(f);
+					//Save the doc in tmp dir
+					File f = new File(System.getProperty("java.io.tmpdir"), doc.getFileName());
+					f.deleteOnExit();
+					IOUtils.bytesToFile(doc.getBytes(), f);
+					//Execute on windows platform
+					Desktop.getDesktop().open(f);
 
-					} else if(e.getDescription().startsWith("del:")) {
-						String filename =  StringUtils.unconvertForUrl(e.getDescription().substring(4));
-						Document doc = Document.mapFilenames(study.getDocuments()).get(filename);
-						if(doc==null) return;
+				} else if(e.getDescription().startsWith("del:")) {
+					String filename =  StringUtils.unconvertForUrl(e.getDescription().substring(4));
+					Document doc = Document.mapFilenames(study.getDocuments()).get(filename);
+					if(doc==null) return;
 
-						int res = JOptionPane.showConfirmDialog(StudyWizardDlg.this, "Are you sure you want to delete " + doc + "?", "Delete Document", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-						if(res!=JOptionPane.YES_OPTION) return;
+					int res = JOptionPane.showConfirmDialog(StudyDesignDlg.this, "Are you sure you want to delete " + doc + "?", "Delete Document", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+					if(res!=JOptionPane.YES_OPTION) return;
 
-						study.getDocuments().remove(doc);
-						refresh();
-						setMustAskForExit(true);
-
-
-
-					}
-				} catch (Exception e2) {
-					JExceptionDialog.showError(e2);
+					study.getDocuments().remove(doc);
+					refresh();
+					setMustAskForExit(true);
 				}
-
+			} catch (Exception e2) {
+				JExceptionDialog.showError(e2);
 			}
 		});
 
-		JPanel documentPanel = UIUtils.createTitleBox("2. Documents",
-				new JScrollPane(documentEditorPane));
+		JPanel documentPanel = UIUtils.createTitleBox("2. Documents", new JScrollPane(documentEditorPane));
 		documentPanel.setMinimumSize(new Dimension(200, 130));
 
 		//PhasePanel
-		JPanel phasePanel = UIUtils.createTitleBox("3. Phases",
-				UIUtils.createBox(
-						UIUtils.createVerticalBox(phaseLabel,Box.createVerticalGlue()),
-						UIUtils.createVerticalBox(UIUtils.createHorizontalBox(new JButton(new Action_EditPhase()), Box.createHorizontalGlue()))));
+		JPanel phasePanel = UIUtils.createTitleBox("3. Phases", UIUtils.createBox(
+				UIUtils.createVerticalBox(phaseLabel,Box.createVerticalGlue()),
+				UIUtils.createVerticalBox(UIUtils.createHorizontalBox(new JButton(new Action_EditPhase()), Box.createHorizontalGlue()))));
 
 		//GroupPanel
-		JPanel groupPanel = UIUtils.createTitleBox("4. Groups",
-				UIUtils.createBox(
-						Box.createVerticalGlue(),
-						UIUtils.createHorizontalBox(new JButton(new Action_EditGroup()), Box.createHorizontalGlue())));
-
+		JPanel groupPanel = UIUtils.createTitleBox("4. Groups", UIUtils.createBox(
+				Box.createVerticalGlue(),
+				UIUtils.createHorizontalBox(new JButton(new Action_EditGroup()), Box.createHorizontalGlue())));
 
 		//TreatmentPanel
 		final JButton editTreatmentButton = new JButton(new Action_EditNamedTreatment(false));
@@ -323,7 +291,7 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(e.getClickCount()==2) {
-					new NamedSamplingDlg(study, samplingList.getSelectedValue(), StudyWizardDlg.this);
+					new NamedSamplingDlg(study, samplingList.getSelectedValue(), StudyDesignDlg.this);
 					refresh();
 				}
 				treatmentList.clearSelection();
@@ -347,8 +315,10 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 		c.weightx=0;   c.gridx=1; c.gridy=0; topPanel.add(documentPanel, c);
 		c.weightx=0;   c.gridx=2; c.gridy=0; topPanel.add(phasePanel, c);
 		c.weightx=0;   c.gridx=3; c.gridy=0; topPanel.add(groupPanel, c);
-		c.weightx=0.5; c.gridx=4; c.gridy=0; topPanel.add(treatmentPanel, c);
-		c.weightx=0.5; c.gridx=5; c.gridy=0; topPanel.add(samplingPanel, c);
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)) {
+			c.weightx=0.5; c.gridx=4; c.gridy=0; topPanel.add(treatmentPanel, c);
+			c.weightx=0.5; c.gridx=5; c.gridy=0; topPanel.add(samplingPanel, c);
+		}
 
 		SwingUtilities.invokeLater(()-> refresh());
 
@@ -393,7 +363,7 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 				SpiritChangeListener.fireModelChanged(add? SpiritChangeType.MODEL_ADDED: SpiritChangeType.MODEL_UPDATED, Study.class, study);
 
 			} catch (Exception e) {
-				JExceptionDialog.showError(StudyWizardDlg.this, e);
+				JExceptionDialog.showError(StudyDesignDlg.this, e);
 			}
 		});
 		getRootPane().setDefaultButton(okButton);
@@ -404,9 +374,9 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 		topPanel.setPreferredSize(new Dimension(500, 250));
 
 		setContentPane(UIUtils.createBox(
-				UIUtils.createTitleBox("7. Set Actions", studyDesigner),
+				UIUtils.createTitleBox(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)? "7. Set Actions": "", studyDesigner),
 				topPanel,
-				UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue()/*, stopButton*/, imageButton, okButton)));
+				UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue(), imageButton, okButton)));
 
 		SwingUtilities.invokeLater(()-> refresh());
 
@@ -511,11 +481,11 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if(add) {
-				new NamedSamplingDlg(study, null, StudyWizardDlg.this);
+				new NamedSamplingDlg(study, null, StudyDesignDlg.this);
 			} else {
 				NamedSampling ns = samplingList.getSelectedValue();
 				if(ns==null) return;
-				new NamedSamplingDlg(study, ns, StudyWizardDlg.this);
+				new NamedSamplingDlg(study, ns, StudyDesignDlg.this);
 
 			}
 			refresh();
@@ -550,7 +520,7 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
-			new StudyGroupDlg(StudyWizardDlg.this, study);
+			new StudyGroupDlg(StudyDesignDlg.this, study);
 
 			refresh();
 			setMustAskForExit(true);
@@ -564,7 +534,7 @@ public class StudyWizardDlg extends JSpiritEscapeDialog {
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			new PhaseDlg(StudyWizardDlg.this, study);
+			new PhaseDlg(StudyDesignDlg.this, study);
 			setMustAskForExit(true);
 		}
 	}

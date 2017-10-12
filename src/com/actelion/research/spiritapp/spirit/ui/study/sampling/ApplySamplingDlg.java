@@ -88,7 +88,7 @@ public class ApplySamplingDlg extends JEscapeDialog {
 		study = JPAUtil.reattach(study);
 		this.study = study;
 
-		biosampleList.setBiosamples(study.getTopAttachedBiosamples());
+		biosampleList.setBiosamples(study.getTopParticipants());
 
 		phaseComboBox.setTextWhenEmpty("All Phases...");
 
@@ -187,7 +187,7 @@ public class ApplySamplingDlg extends JEscapeDialog {
 
 			//Filter Animals
 			List<Biosample> biosamples = new ArrayList<Biosample>();
-			for(Biosample b : study.getTopAttachedBiosamples()) {
+			for(Biosample b : study.getTopParticipants()) {
 				if(!showDeadCheckBox.isSelected() && ((phaseComboBox.getSelection()!=null && b.isDeadAt(phaseComboBox.getSelection())) || (phaseComboBox.getSelection()==null && !b.getStatus().isAvailable()))) continue;
 				biosamples.add(b);
 			}

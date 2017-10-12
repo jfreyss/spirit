@@ -134,7 +134,7 @@ public class MiscUtils {
 
 
 	public static String removeHtml(String s) {
-		if(s==null) return null;
+		if(s==null) s = "";
 		return s.replaceAll("<br>", "\n")
 				.replaceAll("&nbsp;"," ")
 				.replaceAll("\\<([^=>]*(=\\'.*?\\')?(=\\\".*?\\\")?)+>","")
@@ -167,6 +167,12 @@ public class MiscUtils {
 		return s;
 	}
 
+	/**
+	 * Extract the first group of subsequent digits in the input string
+	 * (Ex 124B45 will return 124)
+	 * @param s
+	 * @return
+	 */
 	public static String extractStartDigits(String s) {
 		if(s==null) return null;
 		Matcher m = Pattern.compile("^[0-9]*").matcher(s);
@@ -207,7 +213,6 @@ public class MiscUtils {
 		return sb.toString();
 	}
 
-
 	public static String[] cutText(String text, int maxLength) {
 		if(text==null) return new String[0];
 
@@ -233,6 +238,7 @@ public class MiscUtils {
 	public static String unsplit(String[] strings) {
 		return unsplit(strings, ", ");
 	}
+
 	public static String unsplit(String[] strings, String separator) {
 		if(strings==null) return "";
 		StringBuilder sb = new StringBuilder();
@@ -639,6 +645,7 @@ public class MiscUtils {
 	 * Returns true if obj is contained within array
 	 */
 	public static<T> boolean contains(T[] array, T obj) {
+		if(obj==null) return false;
 		for (T t : array) {
 			if(obj.equals(t)) return true;
 		}
@@ -650,6 +657,7 @@ public class MiscUtils {
 	 */
 	public static<T> boolean contains(T[] array, Collection<T> objects) {
 		for(T obj: objects) {
+			if(obj==null) return false;
 			for (T t : array) {
 				if(obj.equals(t)) return true;
 			}
@@ -842,12 +850,14 @@ public class MiscUtils {
 	 * @return
 	 */
 	public static<T> Set<T>[] diffCollections(Collection<T> c1, Collection<T> c2, Comparator<T> customComparator) {
+		//The first set contains all elements of c1 not in c2
 		Set<T> s0 = new LinkedHashSet<>(c1);
 		s0.removeAll(c2);
 
+		//The second set contains all elements of c1 present in c2, but different from the customComparator comparison
 		Set<T> s1 = new LinkedHashSet<>();
 		if(customComparator!=null) {
-			for (T t1 : c2) {
+			for (T t1 : c1) {
 				for (T t2 : c2) {
 					if(t1.equals(t2) && customComparator.compare(t1, t2)!=0) {
 						s1.add(t1);
@@ -857,10 +867,49 @@ public class MiscUtils {
 			}
 		}
 
+		//The third set contains all elements of c2 not in c1
 		Set<T> s2 = new LinkedHashSet<>(c2);
 		s2.removeAll(c1);
 
 		return new Set[]{s0, s1, s2};
 	}
 
+
+	/**
+	 * Returns the longest common substring
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static String lcs(String a, String b) {
+		int[][] lengths = new int[a.length()+1][b.length()+1];
+
+		// row 0 and column 0 are initialized to 0 already
+
+		for (int i = 0; i < a.length(); i++)
+			for (int j = 0; j < b.length(); j++)
+				if (a.charAt(i) == b.charAt(j))
+					lengths[i+1][j+1] = lengths[i][j] + 1;
+				else
+					lengths[i+1][j+1] =
+					Math.max(lengths[i+1][j], lengths[i][j+1]);
+
+		// read the substring out from the matrix
+		StringBuffer sb = new StringBuffer();
+		for (int x = a.length(), y = b.length();
+				x != 0 && y != 0; ) {
+			if (lengths[x][y] == lengths[x-1][y])
+				x--;
+			else if (lengths[x][y] == lengths[x][y-1])
+				y--;
+			else {
+				assert a.charAt(x-1) == b.charAt(y-1);
+				sb.append(a.charAt(x-1));
+				x--;
+				y--;
+			}
+		}
+
+		return sb.reverse().toString();
+	}
 }

@@ -49,7 +49,7 @@ public class CreationColumn extends Column<Biosample, String> {
 	private CreationLabel ownerLabel = new CreationLabel();
 
 	public CreationColumn(boolean creation) {
-		super(creation?"\nOwner": "\nLastUpdate", String.class, 45);
+		super(creation?"Sample\nOwner": "Sample\nLastUpdate", String.class, 45);
 		this.creation = creation;
 	}
 	@Override

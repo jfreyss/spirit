@@ -22,8 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.biosample;
 
 import java.awt.BorderLayout;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,7 +30,6 @@ import java.util.List;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
-import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.ui.IBiosampleTab;
@@ -44,7 +41,6 @@ import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
-import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.pivot.InventoryPivotTemplate;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -52,6 +48,7 @@ import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.SwingWorkerExtended;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class BiosampleTab extends SpiritTab implements IBiosampleTab {
@@ -91,47 +88,35 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 		//TableTab
 		tableOrRackTab = new BiosampleOrRackTab();
 		tableOrRackTab.linkBiosamplePane(biosampleDetailPanel);
-		tableOrRackTab.addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if(e.getValueIsAdjusting()) return;
-				if(!biosampleDetailPanel.isVisible()) return;
-				Collection<Biosample> sel = tableOrRackTab.getSelection(Biosample.class);
-				if(sel.size()>0) {
-					if(westPane.getDividerLocation()>westPane.getHeight()-20) westPane.setDividerLocation(500);
-				} else {
-					westPane.setDividerLocation(westPane.getHeight());
-				}
-
+		tableOrRackTab.addListSelectionListener(e-> {
+			if(e.getValueIsAdjusting()) return;
+			if(!biosampleDetailPanel.isVisible()) return;
+			Collection<Biosample> sel = tableOrRackTab.getSelection(Biosample.class);
+			if(sel.size()>0) {
+				if(westPane.getDividerLocation()>westPane.getHeight()-20) westPane.setDividerLocation(500);
+			} else {
+				westPane.setDividerLocation(westPane.getHeight());
 			}
 		});
 
 		//PivotTab
 		pivotCardPanel = new PivotPanel(tableOrRackTab, biosampleDetailPanel);
-		pivotCardPanel.addPropertyChangeListener(PivotPanel.PROPERTY_PIVOT_CHANGED, new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				pivotBiosamples(pivotCardPanel.isPivotMode());
-			}
+		pivotCardPanel.addPropertyChangeListener(PivotPanel.PROPERTY_PIVOT_CHANGED, e-> {
+			pivotBiosamples(pivotCardPanel.isPivotMode());
 		});
 		BiosampleActions.attachPopup(pivotCardPanel.getPivotTable());
 
 		//pivotTable Listeners
-		ListSelectionListener listener = new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if(e.getValueIsAdjusting()) return;
-				if(!biosampleDetailPanel.isVisible()) return;
+		ListSelectionListener listener = e-> {
+			if(e.getValueIsAdjusting()) return;
+			if(!biosampleDetailPanel.isVisible()) return;
 
-				Collection<Biosample> sel = pivotCardPanel.getPivotTable().getSelectedBiosamples();
-				if(sel.size()==1) {
-					if(westPane.getDividerLocation()>westPane.getHeight()-20) westPane.setDividerLocation(500);
-					biosampleDetailPanel.setBiosamples(sel);
-				} else {
-					westPane.setDividerLocation(westPane.getHeight());
-				}
-
-
+			Collection<Biosample> sel = pivotCardPanel.getPivotTable().getSelectedBiosamples();
+			if(sel.size()==1) {
+				if(westPane.getDividerLocation()>westPane.getHeight()-20) westPane.setDividerLocation(500);
+				biosampleDetailPanel.setBiosamples(sel);
+			} else {
+				westPane.setDividerLocation(westPane.getHeight());
 			}
 		};
 		pivotCardPanel.getPivotTable().getSelectionModel().addListSelectionListener(listener);
@@ -147,20 +132,14 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 		JPanel buttonsPanel = createButtonsPanel();
 		if(buttonsPanel!=null) eastPanel.add(BorderLayout.SOUTH, buttonsPanel);
 
-		westPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, searchPane, biosampleDetailPanel);
-		contentPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, westPane, eastPanel);
-
-		contentPane.setDividerLocation(300);
-		contentPane.setOneTouchExpandable(true);
+		westPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, searchPane, biosampleDetailPanel);
 		westPane.setDividerLocation(1500);
-		westPane.setOneTouchExpandable(true);
+		contentPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, westPane, eastPanel);
+		contentPane.setDividerLocation(300);
 
 
-		searchPane.addPropertyChangeListener(new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				BiosampleTab.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
-			}
+		searchPane.addPropertyChangeListener(evt-> {
+			BiosampleTab.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
 		});
 
 		setLayout(new BorderLayout());
@@ -230,14 +209,7 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 	 * @return
 	 */
 	protected void sortBiosamples(List<Biosample> biosamples) {
-		Biotype biotype = Biosample.getBiotype(biosamples);
-		if(biotype!=null && biotype.getCategory()==BiotypeCategory.LIBRARY) {
-			Collections.sort(biosamples, Biosample.COMPARATOR_NAME);
-		} else if(biotype!=null && biotype.getCategory()==BiotypeCategory.PURIFIED) {
-			Collections.sort(biosamples, Biosample.COMPARATOR_CREDATE);
-		} else {
-			Collections.sort(biosamples);
-		}
+		Collections.sort(biosamples);
 	}
 
 	public void query(BiosampleQuery q) {
@@ -267,7 +239,6 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 		first = false;
 		tableOrRackTab.setRack(rack);
 	}
-
 
 	public void pivotBiosamples(boolean enablePivot) {
 		pivotCardPanel.clear();

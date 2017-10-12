@@ -21,14 +21,17 @@
 
 package com.actelion.research.spiritapp.spirit.ui.location.column;
 
+import java.awt.Color;
+
 import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationLabel;
-import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.location.Location;
+import com.actelion.research.spiritcore.business.location.LocationType;
+import com.actelion.research.spiritcore.business.location.LocationType.LocationCategory;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomTextField;
@@ -37,21 +40,28 @@ import com.actelion.research.util.ui.exceltable.AlphaNumericalCellEditor;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class LocationNameColumn extends Column<Location, String> {
-	
-	private LocationLabel label = new LocationLabel(false);	
+
+	private LocationLabel label = new LocationLabel(false);
 
 	public LocationNameColumn() {
 		super("Name", String.class, 140);
 	}
-	
+
 	public void setDiplayIcon(boolean displayIcon) {
 		label.setDisplayIcon(displayIcon);
 	}
+
+	@Override
+	public String getToolTipText(Location row) {
+		if(row.getLocationType()==null) return null;
+		return row.getLocationType().getName() + ": " + row.getName();
+	}
+
 	@Override
 	public String getValue(Location row) {
 		return row.getHierarchyFull();
 	}
-	
+
 	@Override
 	public void setValue(Location row, String value) {
 		if(value==null) {
@@ -61,9 +71,7 @@ public class LocationNameColumn extends Column<Location, String> {
 			row.setName(index<0? value: value.substring(index+1));
 		}
 	}
-	
-	
-	
+
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Location> table) {
 		return new AlphaNumericalCellEditor() {
@@ -81,18 +89,22 @@ public class LocationNameColumn extends Column<Location, String> {
 			}
 		};
 	}
-	
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Location> table, Location row, int rowNo, Object value) {
 		label.setLocation(row);
-		label.setBackground(LF.BGCOLOR_REQUIRED);
+		label.setForeground(row==null || row.getPrivacy()==null? Color.BLACK: row.getPrivacy().getFgColor());
+		label.setFont(row==null || row.getLocationType().getCategory()==LocationCategory.MOVEABLE? FastFont.REGULAR:
+			row.getLocationType()==LocationType.BUILDING? FastFont.BIG:
+				FastFont.BOLD);
 		return label;
 	}
-	
-	public void setBold(boolean bold) {
-		label.setFont(bold? FastFont.BOLD: FastFont.REGULAR);
+
+	@Override
+	public void postProcess(AbstractExtendTable<Location> table, Location row, int rowNo, Object value, JComponent comp) {
+		comp.setForeground(row==null || row.getPrivacy()==null? Color.BLACK: row.getPrivacy().getFgColor());
 	}
-	
+
 	@Override
 	public boolean isEditable(Location row) {
 		return SpiritRights.canEdit(row, SpiritFrame.getUser());

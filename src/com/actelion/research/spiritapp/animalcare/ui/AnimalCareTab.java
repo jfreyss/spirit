@@ -24,7 +24,6 @@ package com.actelion.research.spiritapp.animalcare.ui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Collection;
 import java.util.Set;
 
@@ -32,6 +31,7 @@ import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -48,11 +48,11 @@ import com.actelion.research.spiritapp.spirit.ui.print.PrintingDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.PhaseComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyActions;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyDetailPanel;
-import com.actelion.research.spiritapp.spirit.ui.study.StudyEditorPane;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
@@ -66,7 +66,7 @@ import com.actelion.research.util.ui.iconbutton.JIconButton;
  */
 public class AnimalCareTab extends SpiritTab implements IStudyTab {
 
-	private final StudyEditorPane studyEditorPane = new StudyEditorPane();
+	private final JEditorPane studyEditorPane = new JEditorPane();
 	private final JButton editInfosButton = new JIconButton(IconType.EDIT, "Edit Infos");
 	private final JButton editDesignButton = new JIconButton(IconType.STUDY, "Edit Design");
 
@@ -111,29 +111,23 @@ public class AnimalCareTab extends SpiritTab implements IStudyTab {
 				UIUtils.createBox(BorderFactory.createEtchedBorder(), new JScrollPane(studyEditorPane), null, UIUtils.createHorizontalBox(editInfosButton, editDesignButton, Box.createHorizontalGlue())),
 				buttonPanel);
 
-		editInfosButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					Study study = getStudy();
-					if(!SpiritRights.canAdmin(study, SpiritFrame.getUser())) throw new Exception("You must be an admin to edit");
-					new StudyActions.Action_EditInfos(study).actionPerformed(null);
-				} catch (Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
+		editInfosButton.addActionListener(e-> {
+			try {
+				Study study = getStudy();
+				if(!SpiritRights.canAdmin(study, SpiritFrame.getUser())) throw new Exception("You must be an admin to edit");
+				new StudyActions.Action_EditInfos(study).actionPerformed(null);
+			} catch (Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});
 
-		editDesignButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					Study study = getStudy();
-					if(!SpiritRights.canAdmin(study, SpiritFrame.getUser())) throw new Exception("You must be an admin to edit");
-					new StudyActions.Action_EditDesign(study).actionPerformed(null);
-				} catch (Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
+		editDesignButton.addActionListener(e-> {
+			try {
+				Study study = getStudy();
+				if(!SpiritRights.canAdmin(study, SpiritFrame.getUser())) throw new Exception("You must be an admin to edit");
+				new StudyActions.Action_EditDesign(study).actionPerformed(null);
+			} catch (Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});
 
@@ -142,82 +136,63 @@ public class AnimalCareTab extends SpiritTab implements IStudyTab {
 		add(BorderLayout.WEST, westPanel);
 		add(BorderLayout.CENTER, studyDetailPanel);
 
-		cageButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					Study study = getStudy();
-					if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
-					new PrintingDlg(study.getTopAttachedBiosamples());
-				} catch (Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
-
+		cageButton.addActionListener(e-> {
+			try {
+				Study study = getStudy();
+				if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
+				new PrintingDlg(study.getTopParticipants());
+			} catch (Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});
 
-		weighingButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					Study study = getStudy();
-					if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
-					new MonitoringOverviewDlg(study);
-				} catch (Exception ex) {
-					JExceptionDialog.showError(AnimalCareTab.this, ex);
-				}
+		weighingButton.addActionListener(e-> {
+			try {
+				Study study = getStudy();
+				if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
+				new MonitoringOverviewDlg(study);
+			} catch (Exception ex) {
+				JExceptionDialog.showError(AnimalCareTab.this, ex);
 			}
 		});
 
-		manageButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					Study study = getStudy();
-					if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
-					new StudyActions.Action_ManageSamples(study).actionPerformed(e);
-				} catch (Exception ex) {
-					JExceptionDialog.showError(AnimalCareTab.this, ex);
-				}
+		manageButton.addActionListener(e-> {
+			try {
+				Study study = getStudy();
+				if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
+				new StudyActions.Action_ManageSamples(study).actionPerformed(e);
+			} catch (Exception ex) {
+				JExceptionDialog.showError(AnimalCareTab.this, ex);
 			}
 		});
 
-		measurementButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					Study study = getStudy();
-					if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
-					new StudyActions.Action_MeasurementSamples(study).actionPerformed(e);
-				} catch (Exception ex) {
-					JExceptionDialog.showError(AnimalCareTab.this, ex);
-				}
+		measurementButton.addActionListener(e-> {
+			try {
+				Study study = getStudy();
+				if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
+				new StudyActions.Action_MeasurementSamples(study).actionPerformed(e);
+			} catch (Exception ex) {
+				JExceptionDialog.showError(AnimalCareTab.this, ex);
 			}
 		});
 
-		reportButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					Study study = getStudy();
-					if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
-					new StudyActions.Action_Report(study).actionPerformed(e);
-				} catch (Exception ex) {
-					JExceptionDialog.showError(AnimalCareTab.this, ex);
-				}
+		reportButton.addActionListener(e-> {
+			try {
+				Study study = getStudy();
+				if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
+				new StudyActions.Action_Report(study).actionPerformed(e);
+			} catch (Exception ex) {
+				JExceptionDialog.showError(AnimalCareTab.this, ex);
 			}
 		});
 
-		markDeadButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					Study study = getStudy();
-					if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
-					new BiosampleActions.Action_SetLivingStatus(study).actionPerformed(e);
-				} catch (Exception ex) {
-					JExceptionDialog.showError(AnimalCareTab.this, ex);
-				}
+		markDeadButton.addActionListener(e-> {
+			try {
+				Study study = getStudy();
+				if(study==null || !SpiritRights.canBlind(study, SpiritFrame.getUser())) throw new Exception("You must select a study");
+				new BiosampleActions.Action_SetLivingStatus(study).actionPerformed(e);
+			} catch (Exception ex) {
+				JExceptionDialog.showError(AnimalCareTab.this, ex);
 			}
 		});
 
@@ -284,7 +259,7 @@ public class AnimalCareTab extends SpiritTab implements IStudyTab {
 		boolean canBlind = study!=null && SpiritRights.canBlind(study, SpiritFrame.getUser());
 		boolean canRead = study!=null && SpiritRights.canExpert(study, SpiritFrame.getUser());
 
-		int nAnimals = study==null? 0: study.getTopAttachedBiosamples().size();
+		int nAnimals = study==null? 0: study.getTopParticipants().size();
 
 		groupAssignButton.setEnabled(canBlind && !SpiritRights.isBlindAll(study, SpiritFrame.getUser()));
 		reportButton.setEnabled(canRead && nAnimals>0);
@@ -294,7 +269,7 @@ public class AnimalCareTab extends SpiritTab implements IStudyTab {
 		measurementButton.setEnabled(canBlind && nAnimals>0);
 		cageButton.setEnabled(canBlind && nAnimals>0);
 
-		studyEditorPane.setStudy(study);
+		studyEditorPane.setText(MiscUtils.convert2Html(study.getNotes()));
 		editInfosButton.setEnabled(study!=null);
 		editDesignButton.setEnabled(study!=null);
 	}

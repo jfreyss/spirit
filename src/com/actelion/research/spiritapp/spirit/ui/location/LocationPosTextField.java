@@ -51,7 +51,7 @@ public class LocationPosTextField extends JCustomTextField {
 	}
 
 	public LocationPosTextField() {
-		super(JCustomTextField.ALPHANUMERIC, 22);
+		super(CustomFieldType.ALPHANUMERIC, 22);
 
 		setFont(FastFont.REGULAR);
 		setLayout(null);

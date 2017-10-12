@@ -46,46 +46,46 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
-import com.actelion.research.spiritcore.business.IEntity;
+import com.actelion.research.spiritcore.business.IObject;
 
 
 /**
- * 
+ *
  *
  */
 @Entity
 @Audited
 @Table(name="bioorder")
 @SequenceGenerator(name="bioorder_sequence", sequenceName="bioorder_sequence", allocationSize=1)
-public class Order implements IEntity, Comparable<Order>, Serializable {
+public class Order implements IObject, Comparable<Order>, Serializable {
 
-	
+
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="bioorder_sequence")
 	@Audited(targetAuditMode = RelationTargetAuditMode.AUDITED)
 	private int id = -1;
-	
+
 	@Enumerated(EnumType.STRING)
 	private OrderStatus status = OrderStatus.PLANNED;
-		
-	
+
+
 	@OneToMany(fetch=FetchType.LAZY, cascade=CascadeType.ALL, mappedBy="order", orphanRemoval=true)
 	@MapKey(name="containerId")
 	@BatchSize(size=100)
 	@Audited(targetAuditMode = RelationTargetAuditMode.AUDITED)
 	private Map<String, OrderContainer> containerMap = new HashMap<String, OrderContainer>();
-	
+
 
 	@Audited(targetAuditMode = RelationTargetAuditMode.AUDITED)
 	private String updUser;
-	
+
 	@Temporal(TemporalType.TIMESTAMP)
 	@Audited(targetAuditMode = RelationTargetAuditMode.AUDITED)
 	private Date updDate;
-	
+
 	@Audited(targetAuditMode = RelationTargetAuditMode.AUDITED)
 	private String creUser;
-	
+
 	@Temporal(TemporalType.TIMESTAMP)
 	@Audited(targetAuditMode = RelationTargetAuditMode.AUDITED)
 	private Date creDate;
@@ -95,12 +95,13 @@ public class Order implements IEntity, Comparable<Order>, Serializable {
 		return id;
 	}
 
+	@Override
 	public void setId(int id) {
 		this.id = id;
 	}
 
 	/**
-	 * RackNo starting at 1 
+	 * RackNo starting at 1
 	 * @param containerId
 	 * @return
 	 */
@@ -159,7 +160,7 @@ public class Order implements IEntity, Comparable<Order>, Serializable {
 	public OrderStatus getStatus() {
 		return status;
 	}
-	
+
 	public void setStatus(OrderStatus status) {
 		this.status = status;
 	}
@@ -169,33 +170,33 @@ public class Order implements IEntity, Comparable<Order>, Serializable {
 		if(obj==this) return true;
 		return (obj instanceof Order) && ((Order)obj).getId()==getId();
 	}
-	
-	
+
+
 	@Override
 	public int hashCode() {
-		return (int)(getId()%Integer.MAX_VALUE);
+		return getId()%Integer.MAX_VALUE;
 	}
-	
+
 	@Override
 	public int compareTo(Order o) {
 		int c = -creDate.compareTo(o.getCreDate());
 		if(c!=0) return c;
-		
-		return (int) -(getId()-o.getId());
+
+		return -(getId()-o.getId());
 	}
-	
+
 	@Override
 	public String toString() {
 		return "#Order-"+id;
 	}
-	
+
 	public boolean hasPositions() {
 		for (OrderContainer oc : containerMap.values()) {
 			if(oc.getRackNo()>0 || oc.getPosition()!=null) return true;
 		}
 		return false;
 	}
-	
+
 	public Map<String, OrderContainer> getContainerMap() {
 		return containerMap;
 	}
@@ -203,7 +204,7 @@ public class Order implements IEntity, Comparable<Order>, Serializable {
 	public void setContainerMap(Map<String, OrderContainer> containerMap) {
 		this.containerMap = containerMap;
 	}
-	
+
 	public Set<String> getContainerIds() {
 		return containerMap.keySet();
 	}

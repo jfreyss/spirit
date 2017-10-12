@@ -49,19 +49,19 @@ public class StudyDiscardDlg {
 
 
 	public static void createDialogForDelete(Study s) throws Exception {
-		
-		final SpiritUser user = Spirit.askForAuthentication();		
-		final Study study = JPAUtil.reattach(s);			
-		
+
+		final SpiritUser user = Spirit.askForAuthentication();
+		final Study study = JPAUtil.reattach(s);
+
 		final List<Biosample> biosamples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForStudyIds(s.getStudyIdAndInternalId()), user);
 		final List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForStudyIds(s.getStudyIdAndInternalId()), user);
 
 		int res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(), "Are you sure you want to 'DEFINITELY' delete " + study + "\b (" + biosamples.size() + " samples, " + results.size() + " results)", "DELETE Study", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new String[] {"Delete", "Cancel"}, "Cancel");
 		if(res!=0) return;
-		
 
 
-		new LongTaskDlg("Deleting Study") {				
+
+		new LongTaskDlg("Deleting Study") {
 			@Override
 			public void longTask() throws Exception {
 				JPAUtil.pushEditableContext(SpiritFrame.getUser());
@@ -71,21 +71,19 @@ public class StudyDiscardDlg {
 					txn = session.getTransaction();
 					txn.begin();
 
-//					DAOResult.deleteResults(session, results, user);
-//					DAOBiosample.deleteBiosamples(session, biosamples, user);
 					DAOStudy.deleteStudies(session, Collections.singleton(study), true, user);
-					
-					txn.commit();					
+
+					txn.commit();
 					SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_DELETED, Study.class, study);
 				} catch(Exception e) {
 					e.printStackTrace();
 					if(txn!=null) try {txn.rollback();} catch (Exception e2) {}
 					throw e;
 				} finally {
-					JPAUtil.popEditableContext();			
+					JPAUtil.popEditableContext();
 				}
 			}
 		};
 	}
-	
+
 }

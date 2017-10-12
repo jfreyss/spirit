@@ -124,7 +124,7 @@ public class BiotypeMappingPanel extends JPanel implements IMappingPanel {
 
 		//Preselection
 		biotypeMappingPanel.setMappingAction(mapping.getBiotype2action().get(biotype.getName()));
-		biotypeComboBox.setSelectionString(mapping.getBiotype2mappedBiotype().get(biotype.getName())==null?"":mapping.getBiotype2mappedBiotype().get(biotype.getName()).getName());
+		biotypeComboBox.setText(mapping.getBiotype2mappedBiotype().get(biotype.getName())==null?"":mapping.getBiotype2mappedBiotype().get(biotype.getName()).getName());
 		if(biotypeComboBox.getSelectedText().length()>0) {
 			biotypeMappingPanel.setMappingAction(EntityAction.MAP_REPLACE);
 			biotypeMappingPanel.setCreationEnabled(false);

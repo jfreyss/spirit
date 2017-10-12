@@ -165,7 +165,8 @@ public class Randomization {
 				rndSamplesList.remove(rndSamplesList.size()-1);
 			}
 		} else if(n>rndSamplesList.size()) {
-			List<Integer> availableNos = new LinkedList<Integer>();
+			//Find nos that are not used
+			List<Integer> availableNos = new LinkedList<>();
 			for (int i = 1; i <= n; i++) availableNos.add(i);
 			for(AttachedBiosample s: rndSamplesList) {
 				availableNos.remove((Integer) s.getNo());

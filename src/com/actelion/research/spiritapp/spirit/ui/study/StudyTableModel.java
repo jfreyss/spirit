@@ -48,6 +48,7 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Triple;
 import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.FormatterUtils;
@@ -63,7 +64,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 
 	private static final Date now = JPAUtil.getCurrentDateFromDatabase();
 
-	public final Column<Study, String> COLUMN_STUDYID = new Column<Study, String>("StudyId", String.class, 50, 80) {
+	public final Column<Study, String> COLUMN_STUDYID = new Column<Study, String>("Study\nId", String.class, 50, 80) {
 		@Override
 		public String getValue(Study row) {
 			return row.getStudyId();
@@ -75,7 +76,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		}
 	};
 
-	public final Column<Study, String> COLUMN_STATUS = new Column<Study, String>("Status", String.class, 50, 80) {
+	public final Column<Study, String> COLUMN_STATUS = new Column<Study, String>("Study\nState", String.class, 50, 80) {
 		@Override
 		public String getValue(Study row) {
 			return row.getState();
@@ -83,14 +84,21 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 
 	};
 
-	public final Column<Study, String> COLUMN_IVV = new Column<Study, String>("InternalId", String.class, 50, 80) {
+	public final Column<Study, String> COLUMN_IVV = new Column<Study, String>("Study\nInternalId", String.class, 50, 80) {
 		@Override
 		public String getValue(Study row) {
 			return row.getLocalId();
 		}
 	};
 
-	public final Column<Study, String> COLUMN_TITLE = new Column<Study, String>("Title", String.class, 100, 1000) {
+	public final Column<Study, String> COLUMN_TYPE = new Column<Study, String>("Study\nType", String.class, 50, 80) {
+		@Override
+		public String getValue(Study row) {
+			return row.getType();
+		}
+	};
+
+	public final Column<Study, String> COLUMN_TITLE = new Column<Study, String>("Study\nTitle", String.class, 100, 1000) {
 		@Override
 		public String getValue(Study row) {
 			return row.getTitle();
@@ -102,21 +110,24 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 	public final class MetadataColumn extends Column<Study, String> {
 		private String metaKey;
 		public MetadataColumn(String metaKey) {
-			super(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metaKey), String.class, 40, 100);
+			super("Metadata\n" + SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metaKey), String.class, 40, 100);
 			this.metaKey = metaKey;
 		}
 		@Override
 		public String getValue(Study row) {
-			return row.getMetadata().get(metaKey);
+			if(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_TYPES).length>0 && !MiscUtils.contains(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_TYPES), row.getType())) {
+				return null;
+			}
+			return row.getMetadataMap().get(metaKey);
 		}
 
-		@Override
-		public boolean isHideable() {
-			return true;
-		}
+		//		@Override
+		//		public boolean isHideable() {
+		//			return true;
+		//		}
 	}
 
-	public final Column<Study, String> COLUMN_RESPONSIBLES = new Column<Study, String>("Responsibles", String.class, 40, 120) {
+	public final Column<Study, String> COLUMN_RESPONSIBLES = new Column<Study, String>("Study\nAdmins", String.class, 40, 120) {
 		@Override
 		public String getValue(Study row) {
 			Set<String> resps = row.getAdminUsersAsSet();
@@ -137,7 +148,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 
 	};
 
-	public final Column<Study, Date> COLUMN_STARTING_DATE = new Column<Study, Date>("Start", Date.class, 40) {
+	public final Column<Study, Date> COLUMN_STARTING_DATE = new Column<Study, Date>("Study\nStart", Date.class, 40) {
 		@Override
 		public Date getValue(Study row) {
 			return row.getFirstDate();
@@ -157,9 +168,11 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 				comp.setForeground(new Color(0x0, 0x88, 0));
 			}
 		}
+		@Override
+		public boolean isHideable() {return true;}
 	};
 
-	public static final Column<Study, Date> COLUMN_END_DATE = new Column<Study, Date>("End", Date.class, 40) {
+	public static final Column<Study, Date> COLUMN_END_DATE = new Column<Study, Date>("Study\nEnd", Date.class, 40) {
 		@Override
 		public Date getValue(Study row) {
 			return row.getLastDate();
@@ -182,7 +195,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		public boolean isHideable() {return true;}
 	};
 
-	public final Column<Study, String> COLUMN_DEPT = new Column<Study, String>("Group", String.class) {
+	public final Column<Study, String> COLUMN_DEPT = new Column<Study, String>("Study\nGroup", String.class) {
 		@Override
 		public String getValue(Study row) {
 			return row.getEmployeeGroupsAsString();
@@ -191,7 +204,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		public boolean isHideable() {return true;}
 	};
 
-	public final Column<Study, String> COLUMN_BIOSAMPLES = new Column<Study, String>("Linked\nBiosamples", String.class) {
+	public final Column<Study, String> COLUMN_BIOSAMPLES = new Column<Study, String>("Data\nBiosamples", String.class) {
 		@Override
 		public float getSortingKey() {return 10.1f;}
 		@Override
@@ -221,7 +234,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 	};
 
 
-	public final Column<Study, String> COLUMN_RESULTS = new Column<Study, String>("Linked\nResults", String.class) {
+	public final Column<Study, String> COLUMN_RESULTS = new Column<Study, String>("Data\nResults", String.class) {
 		@Override
 		public float getSortingKey() {return 10.2f;}
 		@Override
@@ -255,7 +268,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		private final boolean creation;
 
 		public StudyCreationColumn(boolean creation) {
-			super(creation?"Owner": "LastUpdate", String.class);
+			super(creation?"Study\nOwner": "Study\nLastUpdate", String.class);
 			this.creation = creation;
 		}
 
@@ -330,20 +343,31 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		List<Column<Study, ?>> defaultColumns = new ArrayList<>();
 		defaultColumns.add(COLUMN_ROWNO);
 		defaultColumns.add(COLUMN_STATUS);
-		defaultColumns.add(COLUMN_IVV);
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_AUTOGENERATEID)) {
+			defaultColumns.add(COLUMN_IVV);
+		}
 		defaultColumns.add(COLUMN_STUDYID);
+		if(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_TYPES).length>0) {
+			defaultColumns.add(COLUMN_TYPE);
+		}
 		defaultColumns.add(COLUMN_TITLE);
 
-		for (String metaKey : SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA)) {
-			defaultColumns.add(new MetadataColumn(metaKey));
-		}
 
 		defaultColumns.add(COLUMN_RESPONSIBLES);
 		defaultColumns.add(COLUMN_DEPT);
-		defaultColumns.add(COLUMN_STARTING_DATE);
-		defaultColumns.add(COLUMN_END_DATE);
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)) {
+			defaultColumns.add(COLUMN_STARTING_DATE);
+			defaultColumns.add(COLUMN_END_DATE);
+		}
+		for (String metaKey : SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA)) {
+			MetadataColumn column = new MetadataColumn(metaKey);
+			//			showHideable(column, SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_METADATA_REQUIRED, metaKey));
+			defaultColumns.add(column);
+		}
 		defaultColumns.add(COLUMN_BIOSAMPLES);
-		defaultColumns.add(COLUMN_RESULTS);
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+			defaultColumns.add(COLUMN_RESULTS);
+		}
 		defaultColumns.add(new StudyCreationColumn(true));
 		defaultColumns.add(new StudyCreationColumn(false));
 		setColumns(defaultColumns);

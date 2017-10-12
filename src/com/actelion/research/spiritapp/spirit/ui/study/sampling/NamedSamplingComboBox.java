@@ -66,9 +66,8 @@ public class NamedSamplingComboBox extends JObjectComboBox<NamedSampling> {
 		return comp;
 	}
 
-
 	@Override
 	public String convertObjectToString(NamedSampling obj) {
-		return obj==null?"": obj.getName();
+		return obj==null?"": obj.toString();
 	}
 }

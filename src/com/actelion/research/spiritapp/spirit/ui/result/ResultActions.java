@@ -56,8 +56,6 @@ import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
-import com.actelion.research.spiritcore.services.dao.DAORevision;
-import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomLabel;
@@ -280,17 +278,16 @@ public class ResultActions {
 	public static class Action_History extends AbstractAction {
 		private final Result result;
 		public Action_History(Result result) {
-			super("View Change History");
+			super("Audit Trail");
 			this.result = result;
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('h'));
+			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
 			putValue(Action.SMALL_ICON, IconType.HISTORY.getIcon());
 			setEnabled(result!=null);
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				List<Revision> revisions = DAORevision.getRevisions(result);
-				new ResultHistoryDlg(revisions);
+				new ResultHistoryDlg(result);
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
@@ -366,14 +363,13 @@ public class ResultActions {
 
 			menu.add(new JSeparator());
 
+			menu.add(new Action_History(results.size()==1? results.get(0): null));
 			JMenu systemMenu = new JMenu("Advanced");
 			systemMenu.setIcon(IconType.ADMIN.getIcon());
-
 			systemMenu.add(new Action_Delete_Results(results));
 			systemMenu.add(new JSeparator());
 			systemMenu.add(new Action_AssignTo(results));
 			systemMenu.add(new JSeparator());
-			systemMenu.add(new Action_History(results.size()==1? results.get(0): null));
 			menu.add(systemMenu);
 
 		}

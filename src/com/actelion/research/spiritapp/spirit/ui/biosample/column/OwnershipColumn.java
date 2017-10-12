@@ -31,35 +31,35 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 @Deprecated
 public class OwnershipColumn extends Column<Biosample, String> {
-	
+
 	public OwnershipColumn() {
-		super("Ownership change", String.class, 100);
+		super("Sample\nOwnership change", String.class, 100);
 	}
-	
+
 	@Override
 	public float getSortingKey() {return 10.2f;}
-	
-	
+
+
 	@Override
 	public String getValue(Biosample row) {
 		//For faster Load, load a bunch of data from the model and assign to the aux values.
-//		List<ActionOwnership> list =  row.getActions(ActionOwnership.class);
-//		ActionOwnership a = list.size()>0? list.get(0): null;
-//
-//		if(a==null) return ""; //don't return null to avoid filtering empty column
-//		return "to " + a.getComments() + " [" + FormatterUtils.formatDateOrTime(a.getUpdDate()) + "]";
+		//		List<ActionOwnership> list =  row.getActions(ActionOwnership.class);
+		//		ActionOwnership a = list.size()>0? list.get(0): null;
+		//
+		//		if(a==null) return ""; //don't return null to avoid filtering empty column
+		//		return "to " + a.getComments() + " [" + FormatterUtils.formatDateOrTime(a.getUpdDate()) + "]";
 		return "To be reimplemented";
 	}
-	
+
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		comp.setForeground(Color.PINK);
 	}
-	
-	
+
+
 	@Override
 	public boolean isMultiline() {
 		return false;
 	}
-	
+
 }

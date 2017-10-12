@@ -43,6 +43,7 @@ import com.actelion.research.spiritcore.business.study.NamedTreatment.TreatmentU
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
@@ -55,15 +56,15 @@ public class StudyTreatmentDlg extends JEscapeDialog {
 	private Study study;
 	private NamedTreatment namedTreatment;
 	private JColorChooserButton colorChooser = new JColorChooserButton(false);
-	private JCustomTextField nameTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 18);
+	private JCustomTextField nameTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 18);
 
 	private JCustomTextField compoundTextField1 = new JCustomTextField(15, "", "");
-	private JCustomTextField doseTextField1 = new JCustomTextField(JCustomTextField.DOUBLE, "", 5);
+	private JCustomTextField doseTextField1 = new JCustomTextField(CustomFieldType.DOUBLE, "", 5);
 	private JGenericComboBox<TreatmentUnit> unitComboBox1 = new JGenericComboBox<>(TreatmentUnit.values(), "Unit");
 	private JGenericComboBox<String> applicationComboBox1 = new JGenericComboBox<>(new String[] {"ip", "ic", "id", "it", "iv", "po", "sc", "food admix", "orthotopic"}, "Administration");
 
 	private JCustomTextField compoundTextField2 = new JCustomTextField(15, "", "");
-	private JCustomTextField doseTextField2 = new JCustomTextField(JCustomTextField.DOUBLE, "", 5);
+	private JCustomTextField doseTextField2 = new JCustomTextField(CustomFieldType.DOUBLE, "", 5);
 	private JGenericComboBox<TreatmentUnit> unitComboBox2 = new JGenericComboBox<>(TreatmentUnit.values(), "Unit");
 	private JGenericComboBox<String> applicationComboBox2 = new JGenericComboBox<>(new String[] {"ip", "ic", "id", "it", "iv", "po", "sc", "food admix", "orthotopic"}, "Administration");
 

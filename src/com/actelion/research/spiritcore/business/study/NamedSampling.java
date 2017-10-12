@@ -308,8 +308,10 @@ public class NamedSampling implements Comparable<NamedSampling>, IObject {
 		}
 	}
 
-	public NamedSampling duplicate() {
+	@Override
+	public NamedSampling clone() {
 		NamedSampling res = new NamedSampling();
+		res.setId(id);
 		res.setName(getName());
 		res.setNecropsy(isNecropsy());
 		Map<Sampling, Sampling> old2new = new IdentityHashMap<>();

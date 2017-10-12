@@ -27,8 +27,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.actelion.research.spiritapp.spirit.ui.biosample.column.BioQualityColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.BiosampleElbColumn;
+import com.actelion.research.spiritapp.spirit.ui.biosample.column.BiosampleQualityColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.BiotypeColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.ChildrenColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.CombinedColumn;
@@ -44,10 +44,10 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.column.ScannedPosColu
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StatusColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyGroupColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyIdColumn;
+import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyParticipantIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyPhaseColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudySamplingColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudySubGroupColumn;
-import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyTopSampleIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyTreatmentColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.AbstractLinkerColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.LinkerColumnFactory;
@@ -92,6 +92,10 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 	 * (type==null)
 	 */
 	private Biotype type;
+
+	//For the lastChange column, here is the max revId to be used.
+	private int revId;
+
 	private Mode mode = Mode.FULL;
 
 	private boolean filterTrashed = false;
@@ -182,7 +186,9 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 
 		// Top
 		if (hasDifferentTop) {
-			if (topBiotypes.size() == 1) {
+			if(studies.size()>0) {
+				columns.add(new StudyParticipantIdColumn());
+			} else if (topBiotypes.size() == 1) {
 				Biotype topBiotype = topBiotypes.iterator().next();
 				boolean topDifferentLinker = false;
 				BiosampleLinker linker = new BiosampleLinker(topBiotype, LinkerType.SAMPLEID);
@@ -193,12 +199,12 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 					}
 				}
 				if(topDifferentLinker) {
-					columns.add(new StudyTopSampleIdColumn());
+					columns.add(new StudyParticipantIdColumn());
 				} else {
 					columns.add(LinkerColumnFactory.create(linker));
 				}
 			} else {
-				columns.add(new StudyTopSampleIdColumn());
+				columns.add(new StudyParticipantIdColumn());
 			}
 		}
 
@@ -269,9 +275,9 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 
 
 		//Optional columns
-		columns.add(new LastChangeColumn());
+		columns.add(new LastChangeColumn(revId));
 		columns.add(new StudyTreatmentColumn());
-		columns.add(new BioQualityColumn());
+		columns.add(new BiosampleQualityColumn());
 		columns.add(new StatusColumn());
 		columns.add(new ChildrenColumn());
 		columns.add(new ResultColumn());
@@ -283,19 +289,6 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		setTreeColumn(sampleIdColumn);
 		setColumns(columns);
 	}
-
-	//	@Override
-	//	public List<Column<Biosample, ?>> getPossibleColumns() {
-	//		List<Column<Biosample, ?>> res = new ArrayList<>();
-	//		res.add(new StudyTreatmentColumn());
-	//		res.add(new BioQualityColumn());
-	//		res.add(new StatusColumn());
-	//		res.add(new ChildrenColumn());
-	//		res.add(new ResultColumn());
-	//		res.add(new LastChangeColumn());
-	//		res.add(new CreationColumn(false));
-	//		return res;
-	//	}
 
 	@Override
 	public Biosample getTreeParent(Biosample row) {
@@ -347,6 +340,14 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 				}
 			}
 		}
+	}
+
+	public int getRevId() {
+		return revId;
+	}
+
+	public void setRevId(int revId) {
+		this.revId = revId;
 	}
 
 	@Override

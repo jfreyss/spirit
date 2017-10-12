@@ -295,7 +295,7 @@ public class ExchangeMapping {
 
 		//Study
 		Set<String> ids = Study.getLocalIdOrStudyIds(exchange.getStudies());
-		Map<String, List<Study>> id2existingStudy = Study.mapIvvAndStudyId(DAOStudy.getStudyByLocalIdOrStudyId(MiscUtils.flatten(ids, " ")));
+		Map<String, List<Study>> id2existingStudy = Study.mapIvvAndStudyId(DAOStudy.getStudyByLocalIdOrStudyIds(MiscUtils.flatten(ids, " ")));
 		for (Study s : exchange.getStudies()) {
 			List<Study> l = id2existingStudy.get(s.getLocalId());
 			if(l==null || l.size()!=1 || l.get(0).getGroups().size()!=s.getGroups().size() || l.get(0).getPhases().size()!=s.getPhases().size()) {
@@ -494,9 +494,6 @@ public class ExchangeMapping {
 			inputStudy.setId(0);
 			for (Group g : inputStudy.getGroups()) {
 				g.setId(0);
-				if(g.getDividingSampling()!=null) {
-					g.getDividingSampling().setId(0);
-				}
 			}
 			for (Phase p : inputStudy.getPhases()) {
 				p.setId(0);
@@ -698,7 +695,7 @@ public class ExchangeMapping {
 					inputBiosample.setInheritedPhase(mappedPhase);
 				}
 				if(inputBiosample.getAttachedSampling()!=null) {
-					//Find the mapped sampling (there should be max on sample by sampling/parent/phase)
+					//Find the mapped sampling. Since there should be max on sample by sampling/parent/phase, we must add an index
 					List<Sampling>  mappedSamplings = mappedStudy.getSamplings(inputBiosample.getAttachedSampling().getNamedSampling().getName(), inputBiosample.getAttachedSampling().getDetailsLong());
 					Sampling mappedSampling = null;
 					for (int i = 0; i < mappedSamplings.size(); i++) {
@@ -708,11 +705,13 @@ public class ExchangeMapping {
 								+ "_" + (inputBiosample.getInheritedPhase()==null?"":inputBiosample.getInheritedPhase().getName())
 								+ "_" + i;
 						if(seenSamplingParentPhase.contains(key)) continue;
+						System.out.println("ExchangeMapping.computeMappedBiosamples() OK for "+inputBiosample+">"+key);
 						mappedSampling = s;
 						seenSamplingParentPhase.add(key);
 						break;
 					}
-					assert mappedSampling!=null;
+
+					assert mappedSampling!=null: "Could not find sampling for "+inputBiosample+": "+inputBiosample.getAttachedSampling()+" among "+mappedSamplings;
 
 					//if the mappedSampling is null, we continue without setting it, no need to throw an exception
 					inputBiosample.setAttachedSampling(mappedSampling);

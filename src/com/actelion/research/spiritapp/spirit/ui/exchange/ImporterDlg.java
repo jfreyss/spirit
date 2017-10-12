@@ -63,6 +63,7 @@ import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 
 public class ImporterDlg extends JEscapeDialog {
 
@@ -174,7 +175,7 @@ public class ImporterDlg extends JEscapeDialog {
 				biosampleMappingPanels.add(biosampleMappingPanel);
 
 				//Layout the BiotypePanel
-				JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, biotypeMappingPanel, biosampleMappingPanel);
+				JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, biotypeMappingPanel, biosampleMappingPanel);
 				splitPane.setDividerLocation(560);
 				biotypePanels.add(UIUtils.createTitleBox("Biotype: " + biotype.getName(), splitPane));
 			}
@@ -203,7 +204,7 @@ public class ImporterDlg extends JEscapeDialog {
 				resultMappingPanels.add(resultMappingPanel);
 
 				//Layout the BiotypePanel
-				JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, testMappingPanel, resultMappingPanel);
+				JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, testMappingPanel, resultMappingPanel);
 				splitPane.setDividerLocation(560);
 				testsPanels.add(UIUtils.createTitleBox("Test: " + test.getFullName(), splitPane));
 			}

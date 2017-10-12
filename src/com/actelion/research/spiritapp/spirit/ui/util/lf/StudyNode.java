@@ -24,8 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui.util.lf;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -69,9 +67,7 @@ public class StudyNode extends TextComboBoxNode {
 					String title = (study.getTitle()==null?"":study.getTitle());
 					int maxLength = 100 - (study.getLocalId()==null?0: study.getLocalId().length()+2);
 					if(title.length()>maxLength) title = title.substring(0,maxLength-2) + "...";
-					boolean resp = study.isMentioned(user);
-
-
+					boolean resp = study.isMember(user);
 					setText("<html><div style='white-space:nowrap'>" +
 							(study.getStudyId()!=null? "<b style='font-size:10px'>" + study.getStudyId() + "</b>:&nbsp;&nbsp;": "") +
 							(study.getLocalId()!=null? "<span style='font-size:10px'>"+study.getLocalId()+"</span>&nbsp;&nbsp;": "") +
@@ -85,12 +81,7 @@ public class StudyNode extends TextComboBoxNode {
 			}
 		});
 
-		getComponent().addPropertyChangeListener(JTextComboBox.PROPERTY_TEXTCHANGED, new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				cleanValue();
-			}
-		});
+		getComponent().addPropertyChangeListener(JTextComboBox.PROPERTY_TEXTCHANGED, e-> cleanValue());
 	}
 
 	private void cleanValue() {
@@ -99,13 +90,12 @@ public class StudyNode extends TextComboBoxNode {
 		if(!getSelection().equals(newVal)) {
 			setSelection(newVal);
 		}
-
 	}
 
 	public void loadStudies() {
 		if(quickCache==null && SpiritFrame.getUser()!=null) {
-			quickCache = new LinkedHashMap<String, Study>();
-			List<String> l = new ArrayList<String>();
+			quickCache = new LinkedHashMap<>();
+			List<String> l = new ArrayList<>();
 			for (Study s : DAOStudy.getRecentStudies(SpiritFrame.getUser(), level)) {
 				l.add(s.getStudyId());
 				quickCache.put(s.getStudyId(), s);
@@ -120,8 +110,6 @@ public class StudyNode extends TextComboBoxNode {
 
 		return quickCache.keySet() ;
 	}
-
-
 
 	public void setSelection(String studyId) {
 		getComponent().setText(studyId);

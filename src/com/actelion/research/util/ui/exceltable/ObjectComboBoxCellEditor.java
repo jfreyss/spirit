@@ -21,12 +21,11 @@
 
 package com.actelion.research.util.ui.exceltable;
 
-import java.awt.Color;
 import java.awt.Component;
 
 import javax.swing.AbstractCellEditor;
-import javax.swing.BorderFactory;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.util.ui.JObjectComboBox;
@@ -41,7 +40,7 @@ public class ObjectComboBoxCellEditor<T> extends AbstractCellEditor implements T
 
 	public ObjectComboBoxCellEditor(final JObjectComboBox<T> cb) {
 		this.cb = cb;
-		cb.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
+		cb.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
 
 	@SuppressWarnings("unchecked")

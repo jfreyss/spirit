@@ -48,6 +48,7 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JTextComboBox;
 import com.actelion.research.util.ui.UIUtils;
@@ -56,10 +57,9 @@ public class MetadataFullDlg extends JEscapeDialog {
 
 	private final Biosample biosample;
 	private final BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
-	private final SampleIdGenerateField<Biosample> sampleIdField = new SampleIdGenerateField<Biosample>();
+	private final SampleIdGenerateField<Biosample> sampleIdField = new SampleIdGenerateField<>();
 	private final SampleIdScanField parentField = new SampleIdScanField();
 	private JTextComponent  nameTextField;
-	//	private final JCustomTextField  amountTextField = new JCustomTextField(JCustomTextField.DOUBLE);
 
 	private final JPanel contentPane = new JPanel(new BorderLayout());
 	private final JPanel content = new JPanel(new GridBagLayout());
@@ -116,7 +116,7 @@ public class MetadataFullDlg extends JEscapeDialog {
 
 		comps.clear();
 		content.removeAll();
-		JCustomTextField lbl = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 10);
+		JCustomTextField lbl = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 10);
 		lbl.setText(biosample.getSampleId());
 		lbl.setEnabled(false);
 
@@ -164,7 +164,7 @@ public class MetadataFullDlg extends JEscapeDialog {
 					};
 
 				} else {
-					nameTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 20);
+					nameTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 20);
 				}
 				nameTextField.setText(biosample.getSampleName());
 
@@ -217,18 +217,10 @@ public class MetadataFullDlg extends JEscapeDialog {
 
 
 			biosample.setSampleName(nameTextField.getText());
-			//			if(type.getAmountUnit()!=null) {
-			//				biosample.setAmount(amountTextField.getTextDouble());
-			//			}
 			int i = 0;
 			for (BiotypeMetadata m : type.getMetadata()) {
 				if(i>=comps.size()) break;
-
-				//				String data = ((MetadataComponent) comps.get(i)).getData();
-				//				biosample.setMetadata(m, data);
-
 				((MetadataComponent) comps.get(i)).updateModel(biosample, m);
-
 				i++;
 			}
 		}

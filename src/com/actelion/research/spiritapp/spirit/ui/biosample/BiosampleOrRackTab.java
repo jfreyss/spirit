@@ -43,7 +43,7 @@ import com.actelion.research.spiritapp.spirit.ui.location.LocationActions;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.RackDepictor;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.RackDepictorListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
-import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.JBGScrollPane;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.location.Location;
@@ -53,30 +53,30 @@ import com.actelion.research.util.ui.exceltable.IExportable;
 public class BiosampleOrRackTab extends JPanel implements IExportable {
 
 	public static final String PROPERTY_SELECTION = "selection";
-	
+
 	private final JTabbedPane tabbedPane = new JCustomTabbedPane();
 	private final BiosampleTable biosampleTable = new BiosampleTable();
 	private final RackDepictor rackDepictor = new RackDepictor();
 	private int push = 0;
 	private int currentTab = -1;
-	
+
 	private final JScrollPane biosampleScrollPane = new JBGScrollPane(biosampleTable, 3);
 
-	public BiosampleOrRackTab() {		
+	public BiosampleOrRackTab() {
 		super(new GridLayout(1, 1));
-		
-		
+
+
 		setTabPaneVisible(false);
-		
-		
-		tabbedPane.addChangeListener(new ChangeListener() {			
+
+
+		tabbedPane.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				int oldTab = currentTab;
 				currentTab = tabbedPane.getSelectedIndex();
-				
+
 				if(oldTab<0 || oldTab==currentTab) return;
-				
+
 				if(tabbedPane.getSelectedIndex()==0) {
 					biosampleTable.setSelection(Container.getBiosamples(rackDepictor.getSelectedContainers()));
 				} else if(tabbedPane.getSelectedIndex()==1) {
@@ -84,34 +84,34 @@ public class BiosampleOrRackTab extends JPanel implements IExportable {
 				}
 			}
 		});
-		
+
 		//hide or show the selected biosamples if a selection is made
-		rackDepictor.addRackDepictorListener(new RackDepictorListener() {			
+		rackDepictor.addRackDepictorListener(new RackDepictorListener() {
 			@Override
-			public void onSelect(Collection<Integer> pos, Container lastSelect, boolean dblClick) {		
+			public void onSelect(Collection<Integer> pos, Container lastSelect, boolean dblClick) {
 				biosampleTable.setSelection(Container.getBiosamples(rackDepictor.getSelectedContainers()));
 			}
 			@Override
 			public void locationSelected(final Location location) {
-				
-			}				
+
+			}
 			@Override
 			public void onPopup(Collection<Integer> pos, Container lastSelect, Component comp, Point point) {
 				Set<Container> containers = rackDepictor.getSelectedContainers();
-				if(pos.size()>0) {					
+				if(pos.size()>0) {
 					ContainerActions.createPopup(containers).show(comp, point.x, point.y);
-				}				
+				}
 			}
 			@Override
 			public void locationPopup(Location location, Component comp, Point point) {
 				LocationActions.createPopup(location).show(comp, point.x, point.y);
 			}
 		});
-		
+
 		BiosampleActions.attachPopup(biosampleTable);
 		BiosampleActions.attachPopup(biosampleScrollPane);
 
-			
+
 		ListSelectionListener listener = new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
@@ -127,22 +127,22 @@ public class BiosampleOrRackTab extends JPanel implements IExportable {
 
 		biosampleTable.getSelectionModel().addListSelectionListener(listener);
 		biosampleTable.getColumnModel().getSelectionModel().addListSelectionListener(listener);
-		
+
 		tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
-		
+
 	}
-	
+
 	public void setTabPaneVisible(boolean rackViewVisible) {
 		removeAll();
 		try {
 			push++;
 			if(rackViewVisible) {
-			
+
 				tabbedPane.removeAll();
 				tabbedPane.add("Biosamples", biosampleScrollPane);
 				tabbedPane.add("Rack", rackDepictor);
 				add(tabbedPane);
-			
+
 			} else {
 				add(biosampleScrollPane);
 			}
@@ -150,10 +150,10 @@ public class BiosampleOrRackTab extends JPanel implements IExportable {
 			push--;
 		}
 		validate();
-		
-		
+
+
 	}
-	
+
 	public boolean isTabbedPaneVisible() {
 		return tabbedPane.getParent()==this;
 	}
@@ -164,55 +164,51 @@ public class BiosampleOrRackTab extends JPanel implements IExportable {
 	public boolean isRackTabVisible() {
 		return tabbedPane.getTabCount()>=2;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public<T> List<T> getSelection(Class<T> claz) {
 		List<Biosample> res = biosampleTable.getSelection();
 		if(claz==Biosample.class) return (List<T>) res;
 		else if(claz==Container.class) return (List<T>) Biosample.getContainers(res, true);
-		else throw new IllegalArgumentException("Invalid class");			
+		else throw new IllegalArgumentException("Invalid class");
 	}
-	
+
 	public void setRack(Location rack) {
-		
+
 		if(rack==null) {
 			clear();
 			rackDepictor.setBiolocation(null);
 			return;
-		} 
+		}
 		List<Biosample> biosamples = new ArrayList<Biosample>(rack.getBiosamples());
 		Collections.sort(biosamples, Biosample.COMPARATOR_POS);
-		biosampleTable.setRows(biosamples);		
+		biosampleTable.setRows(biosamples);
 		rackDepictor.setBiolocation(rack);
-		
+
 		//Make location visible
 		setTabPaneVisible(true);
 		tabbedPane.setEnabledAt(1, true);
-		tabbedPane.setSelectedIndex(1);		
+		tabbedPane.setSelectedIndex(1);
 	}
-	
+
 	public Location getRack() {
 		return rackDepictor.getBioLocation();
 	}
-		
+
 	public void setBiosamples(List<Biosample> biosamples) {
 		setTabPaneVisible(false);
 		biosampleTable.setRows(biosamples);
 		rackDepictor.setBiolocation(null);
 	}
-		
+
 	public List<Biosample> getBiosamples() {
 		return biosampleTable.getRows();
 	}
 
-	public void reload() {
-		biosampleTable.reload();
-	}	
-	
 	public BiosampleTable getBiosampleTable() {
 		return biosampleTable;
 	}
-	
+
 	public RackDepictor getRackDepictor() {
 		return rackDepictor;
 	}
@@ -224,7 +220,7 @@ public class BiosampleOrRackTab extends JPanel implements IExportable {
 			try {
 				push++;
 				List<Biosample> sel = getSelection(Biosample.class);
-				SpiritContextListener.setStatus(sel.size()+"/"+getBiosampleTable().getRowCount()+" Biosamples");				
+				SpiritContextListener.setStatus(sel.size()+"/"+getBiosampleTable().getRowCount()+" Biosamples");
 				biosampleDetailPanel.setBiosamples(sel);
 			} finally {
 				push--;
@@ -232,25 +228,25 @@ public class BiosampleOrRackTab extends JPanel implements IExportable {
 		};
 		addListSelectionListener(listener);
 	}
-	
+
 	public void addListSelectionListener(final ListSelectionListener listener) {
 		biosampleTable.getSelectionModel().addListSelectionListener(listener);
 		biosampleTable.getColumnModel().getSelectionModel().addListSelectionListener(listener);
-		
+
 	}
-	
+
 	public void clear() {
 		setBiosamples(new ArrayList<Biosample>());
 		biosampleTable.getModel().showAllHideable(false);
 	}
-	
+
 	public void setSelectedBiosamples(Collection<Biosample> rows) {
 		biosampleTable.setSelection(rows);
 	}
 
-//	public void setSelectedRackPos(Collection<RackPos> rows) {
-//		rackDepictor.setSelection(rows);
-//	}
+	//	public void setSelectedRackPos(Collection<RackPos> rows) {
+	//		rackDepictor.setSelection(rows);
+	//	}
 
 
 	@Override
@@ -258,5 +254,5 @@ public class BiosampleOrRackTab extends JPanel implements IExportable {
 		return biosampleTable.getTabDelimitedTable();
 	}
 
-	
+
 }

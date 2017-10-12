@@ -50,7 +50,12 @@ public class SpiritProperties {
 	private Boolean hasWorkflow;
 
 	private SpiritProperties() {
-		properties = getProperties();
+		try {
+			properties = getProperties();
+		} catch (Exception e) {
+			e.printStackTrace();
+			properties = new HashMap<>();
+		}
 	}
 
 	public static SpiritProperties getInstance() {
@@ -64,7 +69,7 @@ public class SpiritProperties {
 		return instance;
 	}
 
-	public static void clear() {
+	public static void reset() {
 		instance = null;
 	}
 
@@ -74,6 +79,7 @@ public class SpiritProperties {
 	 * @return
 	 */
 	public String getValue(PropertyKey p) {
+		assert p.getParentProperty()==null;
 		String v = properties.get(p.getKey());
 		if(v==null) v = p.getDefaultValue();
 		return v;
@@ -273,7 +279,11 @@ public class SpiritProperties {
 	}
 
 	public boolean isOpen() {
-		return "open".equals(getValue(PropertyKey.RIGHTS_MODE));
+		try {
+			return "open".equals(getValue(PropertyKey.USER_OPEN));
+		} catch (Exception e) {
+			return "true".equals(PropertyKey.USER_OPEN.getDefaultValue());
+		}
 	}
 
 	/**

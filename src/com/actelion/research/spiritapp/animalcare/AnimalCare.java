@@ -38,8 +38,8 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritAction;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JExceptionDialog;
-import com.actelion.research.util.ui.SplashScreen2;
-import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
+import com.actelion.research.util.ui.SplashScreen;
+import com.actelion.research.util.ui.SplashScreen.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 
 public class AnimalCare extends SpiritFrame {
@@ -63,53 +63,10 @@ public class AnimalCare extends SpiritFrame {
 		return tabs;
 	}
 
-	//	@Override
-	//	public <T> void actionModelChanged(final SpiritChangeType action, final Class<T> w, final List<T> details) {
-	//		new SwingWorkerExtended("Refreshing", this,  SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
-	//			@Override
-	//			protected void done() {
-	//				if(action==SpiritChangeType.LOGIN) {
-	////					recreateUI();
-	//				} else if(w==Biotype.class || w==Test.class) {
-	//					//Refresh all tabs to refresh filters
-	////					refreshTabs();
-	//				} else {
-	//
-	//					//Switch to appropriate tab
-	//					if(w==Study.class) {
-	//						tabbedPane.setSelectedComponent(studyTab);
-	//					} else if(w==Biosample.class) {
-	//						tabbedPane.setSelectedComponent(biosampleTab);
-	//					} else if(w==Location.class) {
-	//						tabbedPane.setSelectedComponent(locationTab);
-	//					} else if(w==Result.class) {
-	//						tabbedPane.setSelectedComponent(resultTab);
-	//					}
-	//
-	//					//Fire event
-	//					Component c = tabbedPane.getSelectedComponent();
-	//					if(c instanceof SpiritTab) {
-	//						((SpiritTab) c).fireModelChanged(action, w, details);
-	//					}
-	//				}
-	//			}
-	//		};
-	//	}
-
-	//	public void eventUserChanged() {
-	//		if(SpiritFrame.getUser()!=null) {
-	//			statusBar.setUser("Logged in as " + SpiritFrame.getUser().getUsername() + " - " + (SpiritFrame.getUser().getMainGroup()!=null? SpiritFrame.getUser().getMainGroup().getName():""));
-	//		}
-	//		dashboardTab.refresh();
-	//		studyTab.refresh();
-	//	}
-
-
-
 	public static void main(String[] args) {
 
 
-		SplashScreen2.show(splashConfig);
+		SplashScreen.show(splashConfig);
 
 		new SwingWorkerExtended() {
 			@Override

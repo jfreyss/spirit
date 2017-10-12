@@ -54,37 +54,37 @@ import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 import com.actelion.research.util.ui.exceltable.LargeTextCellEditor;
 
 public class MetadataColumn extends AbstractLinkerColumn<String> {
-	
+
 	protected MetadataColumn(final BiosampleLinker linker) {
 		super(linker, String.class, 30, 600);
 	}
-	
+
 	@Override
 	public String getValue(Biosample row) {
 		row = linker.getLinked(row);
 		if(row==null || row.getBiotype()==null || !row.getBiotype().equals(getType().getBiotype()) || row.getMetadataValue(getType())==null) return null;
 		String v = row.getMetadataValue(getType());
 		if(v==null || v.length()==0) return null;
-		return v;			
+		return v;
 	}
-	
+
 	@Override
 	public void setValue(Biosample row, String value) {
 		row.setMetadataValue(getType(), value);
 	}
-	
+
 	@Override
 	public boolean isEditable(Biosample row) {
 		return getType().getDataType()!=DataType.FORMULA;
 	}
-	
+
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {
 		BiotypeMetadata mt = getType();
 		DataType datatype = mt.getDataType();
 		switch (datatype) {
 		case ALPHA:
-			return new AlphaNumericalCellEditor();	
+			return new AlphaNumericalCellEditor();
 		case NUMBER:
 			return new AlphaNumericalCellEditor();
 		case AUTO:
@@ -98,12 +98,12 @@ public class MetadataColumn extends AbstractLinkerColumn<String> {
 		case DATE:
 			return new DateStringCellEditor();
 		case LARGE:
-			return new LargeTextCellEditor();	
+			return new LargeTextCellEditor();
 		default:
 			throw new IllegalArgumentException("Invalid datatype, no editor for: "+datatype);
 		}
 	}
-	
+
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value1, JComponent comp) {
 		super.postProcess(table, row, rowNo, value1, comp);
@@ -119,43 +119,43 @@ public class MetadataColumn extends AbstractLinkerColumn<String> {
 			comp.setBackground(ExtendTableModel.COLOR_NONEDIT);
 			return;
 		}
-		
-		String value = (String) value1;		
+
+		String value = (String) value1;
 		DataType datatype = mt.getDataType();
 		boolean warning = false;
 		boolean error = false;
 		if(datatype==DataType.AUTO) {
 			if(value!=null && value.length()>0) {
 				warning = !DAOBiotype.getAutoCompletionFields(mt, null).contains(value);
-			} else {	
+			} else {
 				warning = false;
-			}											
+			}
 		} else if(datatype==DataType.LIST) {
 			if(value!=null && value.length()>0) {
 				error = !mt.extractChoices().contains(value);
 			} else {
 				error = false;
-			}											
+			}
 		} else if(datatype==DataType.NUMBER) {
 			warning = value!=null && !ResultValue.isValidDouble(value);
 		} else if(datatype==DataType.DATE) {
-			warning = value!=null && !value.equals(FormatterUtils.cleanDateTime(value));
+			warning = value!=null && value.length()>0 && FormatterUtils.parseDateTime(value)==null;
 		} else if(datatype==DataType.FORMULA) {
 			comp.setForeground(Color.BLUE);
 		} else if(datatype==DataType.FORMULA) {
 			comp.setForeground(Color.BLUE);
 		}
 		if(warning) {
-			comp.setForeground(LF.COLOR_WARNING_FOREGROUND);						
+			comp.setForeground(LF.COLOR_WARNING_FOREGROUND);
 		} else if(error) {
-			comp.setForeground(LF.COLOR_ERROR_FOREGROUND);												
-		}		
-		
+			comp.setForeground(LF.COLOR_ERROR_FOREGROUND);
+		}
+
 		if(!linker.isLinked() && getType()!=null && getType().isRequired()) {
 			comp.setBackground(LF.BGCOLOR_REQUIRED);
 		}
 	}
-	
+
 	@Override
 	public boolean isAutoWrap() {
 		return true;
@@ -171,11 +171,11 @@ public class MetadataColumn extends AbstractLinkerColumn<String> {
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
-			
+
 		}
 		return false;
 	}
-	
+
 	@Override
 	public void populateHeaderPopup(final AbstractExtendTable<Biosample> table, JPopupMenu popupMenu) {
 		popupMenu.add(new JSeparator());
@@ -203,6 +203,6 @@ public class MetadataColumn extends AbstractLinkerColumn<String> {
 			}
 		});
 	}
-	
+
 
 }

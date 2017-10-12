@@ -34,6 +34,9 @@ import com.actelion.research.spiritcore.business.LogEntry;
 import com.actelion.research.spiritcore.business.LogEntry.Action;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.services.dao.DAOLog;
+import com.actelion.research.spiritcore.services.dao.DAORevision;
+import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
+import com.actelion.research.spiritcore.services.dao.DAORevision.RevisionQuery;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
@@ -49,19 +52,21 @@ public class DatabaseTest extends AbstractSpiritTest {
 
 	@Test
 	public void validateDB() throws Exception {
-		DBAdapter.getAdapter().preInit();
-		JPAUtil.initFactory(DBAdapter.getAdapter(), "validate");
+		DBAdapter.getInstance().preInit();
+		JPAUtil.initFactory(DBAdapter.getInstance(), "validate");
 	}
 
 	@Test
 	public void testProperties() throws Exception {
+		//Test we can retrieve study properties
 		for(PropertyKey key: PropertyKey.getPropertyKeys(PropertyKey.Tab.STUDY)) {
 			SpiritProperties.getInstance().getValue(key);
 		}
 
-		for(String metadata: SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA_NAME)) {
+		//Test we can retrieve study metadata and default values
+		for(String metadata: SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA)) {
 			String name = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metadata);
-			Assert.assertNotNull(DataType.valueOf(name));
+			Assert.assertNotNull(name);
 
 			String type = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_DATATYPE, metadata);
 			Assert.assertNotNull(DataType.valueOf(type));
@@ -71,18 +76,30 @@ public class DatabaseTest extends AbstractSpiritTest {
 			}
 		}
 
+		//Test we can retrieve the version
 		String version = SpiritProperties.getInstance().getValue(PropertyKey.DB_VERSION);
 		Assert.assertNotNull(version);
 
-		String value = SpiritProperties.getInstance().getValue(PropertyKey.RIGHTS_MODE);
-		Assert.assertEquals(PropertyKey.RIGHTS_MODE.getDefaultValue(), value);
+		//Test we can retrieve the rights
+		String value = SpiritProperties.getInstance().getValue(PropertyKey.USER_OPEN);
+		Assert.assertEquals(PropertyKey.USER_OPEN.getDefaultValue(), value);
 
-		SpiritProperties.clear();
-		SpiritProperties.getInstance().setValue(PropertyKey.RIGHTS_MODE, "test");
+		//Test we can save
+		SpiritProperties.reset();
+		SpiritProperties.getInstance().setValue(PropertyKey.USER_OPEN, "test");
 		SpiritProperties.getInstance().saveValues();
 
-		SpiritProperties.clear();
-		Assert.assertEquals("test", SpiritProperties.getInstance().getValue(PropertyKey.RIGHTS_MODE));
+		SpiritProperties.reset();
+		Assert.assertEquals("test", SpiritProperties.getInstance().getValue(PropertyKey.USER_OPEN));
+
+		//Test versioning
+		RevisionQuery q = new RevisionQuery(null, null, null, null, false, false, false, false, true);
+		Revision rev = DAORevision.queryRevisions(q).get(0);
+		Assert.assertEquals(1, rev.getSpiritProperties().size());
+		Assert.assertEquals("rights.mode", rev.getSpiritProperties().get(0).getKey());
+		Assert.assertEquals("test", rev.getSpiritProperties().get(0).getValue());
+		Assert.assertEquals("FAKE", rev.getUser());
+		System.out.println("DatabaseTest.testProperties() "+rev.getSpiritProperties());
 
 	}
 
@@ -120,11 +137,13 @@ public class DatabaseTest extends AbstractSpiritTest {
 			MigrationScript.assertLatestVersion();
 			throw new AssertionError("Version should be wrong");
 		} catch(Exception e) {
-			MigrationScript.updateDB(DBAdapter.getAdapter().getVendor(), null);
+			System.out.println("DatabaseTest.testMigration() Update DB");
+			MigrationScript.updateDB(DBAdapter.getInstance().getVendor(), null);
+			System.out.println("DatabaseTest.testMigration() Updated DB");
 		}
 
 		//Validate
-		DBAdapter.getAdapter().validate();
+		DBAdapter.getInstance().validate();
 		SpiritProperties.getInstance().setDBVersion(MigrationScript.getExpectedDBVersion());
 		SpiritProperties.getInstance().saveValues();
 		MigrationScript.assertLatestVersion();

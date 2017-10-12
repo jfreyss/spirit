@@ -40,7 +40,7 @@ import com.actelion.research.spiritapp.spirit.ui.location.ContainerActions;
 import com.actelion.research.spiritapp.spirit.ui.location.ContainerTable;
 import com.actelion.research.spiritapp.spirit.ui.location.ContainerTableModel.ContainerTableModelType;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
-import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.JBGScrollPane;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Container;
@@ -118,7 +118,7 @@ public abstract class InventoryPanel extends JPanel {
 				Map<String, Integer> content2count;
 				@Override
 				protected void doInBackground() throws Exception {
-					animals = study.getTopAttachedBiosamples();
+					animals = study.getTopParticipants();
 
 					BiosampleQuery q = new BiosampleQuery();
 					q.setStudyIds(study.getStudyId());

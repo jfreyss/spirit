@@ -25,21 +25,23 @@ import java.awt.Component;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.util.component.DocumentTextField;
 import com.actelion.research.spiritcore.business.Document;
 
 public class DocumentCellEditor extends AbstractCellEditor implements TableCellEditor {
-	
+
 	private DocumentTextField documentTextField = new DocumentTextField();
-	
+
 	public DocumentCellEditor() {
+		documentTextField.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
 
 	@Override
 	public Document getCellEditorValue() {
-		Document doc = (Document) documentTextField.getSelectedDocument();
+		Document doc = documentTextField.getSelectedDocument();
 		return doc;
 	}
 

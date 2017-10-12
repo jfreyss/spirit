@@ -29,19 +29,20 @@ import java.util.Calendar;
 import java.util.Date;
 
 /**
- * Formatter Utilidy class to format numbers and date/time 
+ * Formatter Utilidy class to format numbers and date/time
  * @author freyssj
  */
 public class FormatterUtils {
 
-	public static enum LocaleFormat {
+	public static enum DateTimeFormat {
 		AMERICAN("MM/dd/yy", "HH:mm"),
 		EUROPEAN("dd/MM/yy", "HH:mm"),
 		SWISS("dd.MM.yy", "HH:mm"),
 		INTL("yy-mm-dd", "HH:mm");
+
 		private String localeDateFormat;
 		private String localeTimeFormat;
-		private LocaleFormat(String localeDateFormat, String localeTimeFormat) {
+		private DateTimeFormat(String localeDateFormat, String localeTimeFormat) {
 			this.localeDateFormat = localeDateFormat;
 			this.localeTimeFormat = localeTimeFormat;
 		}
@@ -55,16 +56,16 @@ public class FormatterUtils {
 		public String toString() {
 			return name() + " (" + localeDateFormat+" "+localeTimeFormat+")";
 		}
-		public static LocaleFormat get(String name) {
-			for (LocaleFormat lf : values()) {
+		public static DateTimeFormat get(String name) {
+			for (DateTimeFormat lf : values()) {
 				if(name.toLowerCase().startsWith(lf.name().toLowerCase())) return lf;
 			}
 			return null;
 		}
 	}
-	
-	private LocaleFormat localeFormat = LocaleFormat.SWISS;
-	
+
+	private static DateTimeFormat localeFormat = DateTimeFormat.SWISS;
+
 	private static DateFormat yyyyFormat = new SimpleDateFormat("yyyyMMdd");
 
 	private static DateFormat dateFormat;
@@ -72,7 +73,16 @@ public class FormatterUtils {
 	private static DateFormat timeFormat;
 	public static final DateFormat dateFormatFull = new SimpleDateFormat("MMM dd, yyyy");
 
+	/**
+	 * List of datetime parsers:
+	 */
 	private static DateFormat[] dateTimeParsers;
+	/**
+	 * List of datetime formatters:
+	 * - with seconds
+	 * - with hours/minutes
+	 * - with days
+	 */
 	private static DateFormat[] dateTimeFormatters;
 
 
@@ -89,7 +99,7 @@ public class FormatterUtils {
 
 	static {
 		//Set default format
-		setLocaleFormat(LocaleFormat.SWISS);
+		setLocaleFormat(DateTimeFormat.SWISS);
 
 		//Decimal Format should round like Excel, i.e half up
 		df0.setRoundingMode(RoundingMode.HALF_UP);
@@ -102,33 +112,56 @@ public class FormatterUtils {
 		df8.setRoundingMode(RoundingMode.HALF_UP);
 		dfE.setRoundingMode(RoundingMode.HALF_UP);
 	}
-	
-	
 
-	public LocaleFormat getLocaleFormat() {
-		return localeFormat;
+
+
+	public static DateTimeFormat getLocaleFormat() {
+		return FormatterUtils.localeFormat;
 	}
-	
-	public static void setLocaleFormat(LocaleFormat localeFormat) {
+
+	public static void setLocaleFormat(DateTimeFormat localeFormat) {
 		assert localeFormat!=null;
+		FormatterUtils.localeFormat = localeFormat;
 		dateFormat = new SimpleDateFormat(localeFormat.getLocaleDateFormat());
-		dateFormatYYYY = new SimpleDateFormat(localeFormat.getLocaleDateFormat()+"yy");
 		timeFormat = new SimpleDateFormat(localeFormat.getLocaleTimeFormat());
 
-		dateTimeParsers = new SimpleDateFormat[] {		
-			new SimpleDateFormat(localeFormat.getLocaleDateFormat() + " " + localeFormat.getLocaleTimeFormat() + ":ss"),
-			new SimpleDateFormat(localeFormat.getLocaleDateFormat() + " " + localeFormat.getLocaleTimeFormat()),
-			new SimpleDateFormat(localeFormat.getLocaleDateFormat()),
-			new SimpleDateFormat("MM.yy"),
-			new SimpleDateFormat("yy")};
-		dateTimeFormatters = new SimpleDateFormat[] {		
-			new SimpleDateFormat(localeFormat.getLocaleDateFormat() + "yy " + localeFormat.getLocaleTimeFormat() + ":ss"),
-			new SimpleDateFormat(localeFormat.getLocaleDateFormat() + "yy " + localeFormat.getLocaleTimeFormat()),
-			new SimpleDateFormat(localeFormat.getLocaleDateFormat() + "yy"),
-			new SimpleDateFormat("MM.yyyy"),
-			new SimpleDateFormat("yyyy")};
+		String format = localeFormat.getLocaleDateFormat();
+		String alternateFormat = localeFormat.getLocaleDateFormat().indexOf('/')>=0? localeFormat.getLocaleDateFormat().replace("/", "."): localeFormat.getLocaleDateFormat().replace(".", "/");
+		if(localeFormat==DateTimeFormat.INTL) {
+			dateFormatYYYY = new SimpleDateFormat("yyyy-MM-dd");
+			dateTimeParsers = new SimpleDateFormat[] {
+					new SimpleDateFormat("yy-MM-dd HH:mm:ss"),
+					new SimpleDateFormat("yy-MM-dd HH:mm"),
+					new SimpleDateFormat("yy-MM-dd"),
+					new SimpleDateFormat("yy-MM"),
+					new SimpleDateFormat("yy")};
+			dateTimeFormatters = new SimpleDateFormat[] {
+					new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
+					new SimpleDateFormat("yyyy-MM-dd HH:mm"),
+					new SimpleDateFormat("yyyy-MM-dd")};
+		} else {
+			dateFormatYYYY = new SimpleDateFormat(format+"yy");
+			dateTimeParsers = new SimpleDateFormat[] {
+					new SimpleDateFormat(format + " " + localeFormat.getLocaleTimeFormat() + ":ss"),
+					new SimpleDateFormat(format + " " + localeFormat.getLocaleTimeFormat()),
+					new SimpleDateFormat(format),
+					new SimpleDateFormat(alternateFormat + " " + localeFormat.getLocaleTimeFormat() + ":ss"),
+					new SimpleDateFormat(alternateFormat + " " + localeFormat.getLocaleTimeFormat()),
+					new SimpleDateFormat(alternateFormat),
+					new SimpleDateFormat("MM.yy"),
+					new SimpleDateFormat("MM/yy"),
+					new SimpleDateFormat("yy")};
+			dateTimeFormatters = new SimpleDateFormat[] {
+					new SimpleDateFormat(format + "yy " + localeFormat.getLocaleTimeFormat() + ":ss"),
+					new SimpleDateFormat(format + "yy " + localeFormat.getLocaleTimeFormat()),
+					new SimpleDateFormat(format + "yy")};
+		}
+
+		for (DateFormat df : dateTimeParsers) {
+			df.setLenient(false);
+		}
 	}
-	
+
 	public static final String format0(Double d) {
 		if(d==null) return "";
 		return df0.format(d);
@@ -158,7 +191,7 @@ public class FormatterUtils {
 		if(d==null) return "";
 		return dfmax3.format(d);
 	}
-	
+
 	public static final String format4(Double d) {
 		if(d==null) return "";
 		return df4.format(d);
@@ -168,7 +201,7 @@ public class FormatterUtils {
 		if(d==null) return "";
 		return df8.format(d);
 	}
-	
+
 	public static final String formatE(Double d) {
 		if(d==null) return "";
 		return dfE.format(d);
@@ -211,11 +244,9 @@ public class FormatterUtils {
 		cal.setTime(d);
 		if(cal.get(Calendar.SECOND)!=0) return dateTimeFormatters[0].format(d);
 		if(cal.get(Calendar.HOUR_OF_DAY)!=0 || cal.get(Calendar.MINUTE)!=0) return dateTimeFormatters[1].format(d);
-		if(cal.get(Calendar.DAY_OF_MONTH)!=1) return dateTimeFormatters[2].format(d);
-		if(cal.get(Calendar.MONTH)!=0) return dateTimeFormatters[3].format(d);
-		return dateTimeFormatters[4].format(d);
+		return dateTimeFormatters[2].format(d);
 	}
-	
+
 	public static final String formatDateOrTime(Date d) {
 		if(d==null) return "";
 		Calendar cal = Calendar.getInstance();
@@ -228,59 +259,68 @@ public class FormatterUtils {
 			return s;
 		}
 	}
-	
+
 	public static final String formatDateTimeShort(Date d) {
 		if(d==null) return "";
 		return dateTimeParsers[1].format(d);
 	}
 
-	public static final Date parseDate(String s) {
-		if(s==null || s.length()==0) return null;
-		
-		s = s.replace('/', '.');
-		for (DateFormat dateFormat : dateTimeParsers) {
-			try {			
-				return dateFormat.parse(s);
-			} catch (Exception e) {
-			}			
-		}
-		return null;
-	}
-	
 	public static final Date parseDateTime(String s) {
 		if(s==null || s.length()==0) return null;
-		
-		s = s.replace('/', '.');
+
+
+
+
 		for (DateFormat dateFormat : dateTimeParsers) {
-			try {			
-				return dateFormat.parse(s);
+			try {
+				System.out.println("FormatterUtils.parseDateTime() "+s+">");
+				Date res = dateFormat.parse(s);
+				return res;
 			} catch (Exception e) {
-			}			
+			}
 		}
 		return null;
 	}
 
+
+	/**
+	 * Cleans the date in the proper localeFormat
+	 * If the date is not valid returns null
+	 * @param s
+	 * @return
+	 */
 	public static final String cleanDate(String s) {
-		if(s==null || s.length()==0) return s;
+		if(s==null || s.length()==0) return "";
+
+		for (int i = 0; i < s.length(); i++) {
+			if(Character.isDigit(s.charAt(i))) continue;
+			if(localeFormat==DateTimeFormat.INTL && s.charAt(i)=='-') continue;
+			if(localeFormat!=DateTimeFormat.INTL && (s.charAt(i)=='.' || s.charAt(i)=='/')) continue;
+			return null;
+		}
+
 		try {
-			return formatDate(parseDate(s));
+			return formatDateYyyy(parseDateTime(s));
 		} catch (Exception e) {
 			return null;
 		}
-			
+
 	}
-	
+
 	public static final String cleanDateTime(String s) {
 		if(s==null || s.length()==0) return s;
 		Date d = parseDateTime(s);
 		if(d==null) return "";
 		return formatDateTime(d);
 	}
-	
-	public static final String formatYYYYMMDD() {		
+
+	public static final String formatYYYYMMDD(Date date) {
+		return yyyyFormat.format(date);
+	}
+	public static final String formatYYYYMMDD() {
 		return yyyyFormat.format(new Date());
 	}
-	
+
 	public static void main(String[] args) {
 		System.out.println(parseDateTime("10.10.2013 12:23:20"));
 		System.out.println(parseDateTime("10.10.2013 12:23"));
@@ -288,12 +328,12 @@ public class FormatterUtils {
 		System.out.println(parseDateTime("10.2013"));
 		System.out.println(parseDateTime("2013"));
 		System.out.println();
-		
+
 		System.out.println(formatDateTime(parseDateTime("10.10.2013 12:23:20")));
 		System.out.println(formatDateTime(parseDateTime("10.10.2013 12:23")));
 		System.out.println(formatDateTime(parseDateTime("10.10.2013")));
 		System.out.println();
-		
+
 		System.out.println(cleanDateTime("10.10.2013 12:23:20"));
 		System.out.println(cleanDateTime("31.12.2013 23:60"));
 		System.out.println(cleanDateTime("10.12.2013"));

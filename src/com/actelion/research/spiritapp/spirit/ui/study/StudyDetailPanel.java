@@ -22,14 +22,11 @@
 package com.actelion.research.spiritapp.spirit.ui.study;
 
 import java.awt.BorderLayout;
-import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.swing.Box;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -45,8 +42,8 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTableModel.M
 import com.actelion.research.spiritapp.spirit.ui.pivot.graph.GraphPanel;
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.StudyDepictor;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
-import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -54,10 +51,10 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.SwingWorkerExtended;
-import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 
 /**
  * Panel with the studydepictor and the animals
@@ -78,17 +75,14 @@ public class StudyDetailPanel extends JPanel {
 
 	private final StudyDepictor studyDepictor = new StudyDepictor();
 	private final StudyEditorPane editorPane = new StudyEditorPane();
-	private final StudyQuickViewPane quickViewPane = new StudyQuickViewPane();
-	private final BiosampleTable animalTable = new BiosampleTable();
+	private final StudyQuickLinksPane quickLinkPanel = new StudyQuickLinksPane();
+	private final BiosampleTable participantTable = new BiosampleTable();
 	private final GraphPanel graphPanel = new GraphPanel();
-	//	private final NamedSamplingEditorPane samplingsEditorPane = new NamedSamplingEditorPane();
-
-	private JSplitPane attachedSamplesSplitPane;
 	private final JSplitPane studySplitPane;
 
-	private CardLayout cardLayout = new CardLayout();
-	private JPanel infoCardTabbedPane = new JPanel(cardLayout);
-	private JLabel infoLabel = new JLabel();
+	//	private CardLayout cardLayout = new CardLayout();
+	//	private JPanel infoCardTabbedPane = new JPanel(cardLayout);
+	//	private JLabel infoLabel = new JLabel();
 
 	/**
 	 * Creates a StudyDetailPanel with an orientation:
@@ -107,39 +101,29 @@ public class StudyDetailPanel extends JPanel {
 		biosamplePane.setSelectedTab(BiosampleTabbedPane.HISTORY_TITLE);
 		ListSelectionListener l = e-> {
 			if(e.getValueIsAdjusting()) return;
-			biosamplePane.setBiosamples(animalTable.getSelection().size()==1? animalTable.getSelection(): null);
+			biosamplePane.setBiosamples(participantTable.getSelection().size()==1? participantTable.getSelection(): null);
 		};
-		animalTable.getSelectionModel().addListSelectionListener(l);
-		animalTable.getColumnModel().getSelectionModel().addListSelectionListener(l);
-		animalTable.getModel().setMode(Mode.COMPACT);
+		participantTable.getSelectionModel().addListSelectionListener(l);
+		participantTable.getColumnModel().getSelectionModel().addListSelectionListener(l);
+		participantTable.getModel().setMode(Mode.COMPACT);
 
-		attachedSamplesSplitPane = new JSplitPane(orientation==SwingUtilities.HORIZONTAL? JSplitPane.HORIZONTAL_SPLIT: JSplitPane.VERTICAL_SPLIT, new JBGScrollPane(animalTable, 3), biosamplePane);
-		attachedSamplesSplitPane.setDividerLocation(150);
-
-		JSplitPane quickViewSplitPane = new JSplitPane(orientation==SwingUtilities.HORIZONTAL? JSplitPane.HORIZONTAL_SPLIT: JSplitPane.VERTICAL_SPLIT, new JScrollPane(quickViewPane), graphPanel);
-		quickViewSplitPane.setOneTouchExpandable(true);
+		JSplitPane quickViewSplitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, new JScrollPane(quickLinkPanel), graphPanel);
 
 		infoTabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
 		infoTabbedPane.add("Infos", new JScrollPane(editorPane));
-		infoTabbedPane.add("Participants", attachedSamplesSplitPane);
-		infoTabbedPane.add("QuickView", quickViewSplitPane);
-		//		infoTabbedPane.add("Samplings", new JScrollPane(samplingsEditorPane));
+		infoTabbedPane.add("Participants", new JScrollPane(participantTable));
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+			infoTabbedPane.add("Data", quickViewSplitPane);
+		}
 
-		infoCardTabbedPane.add("read", infoTabbedPane);
-		infoCardTabbedPane.add("view", UIUtils.createVerticalBox(infoLabel, Box.createVerticalGlue()));
-		cardLayout.show(infoCardTabbedPane, "read");
-
-		studySplitPane = new JSplitPane(orientation, new JScrollPane(studyDepictor), infoCardTabbedPane);
-		studySplitPane.setOneTouchExpandable(true);
+		studySplitPane = new JSplitPaneWithZeroSizeDivider(orientation, new JScrollPane(studyDepictor), infoTabbedPane);
 		SwingUtilities.invokeLater(() -> {
 			if(orientation==JSplitPane.HORIZONTAL_SPLIT) {
-				attachedSamplesSplitPane.setDividerLocation(.6);
 				studySplitPane.setDividerLocation(.7);
+				quickViewSplitPane.setDividerLocation(200);
 			} else {
-				attachedSamplesSplitPane.setDividerLocation(.5);
-				studySplitPane.setDividerLocation(.5);
+				studySplitPane.setDividerLocation(400);
 			}
-			quickViewSplitPane.setDividerLocation(.5);
 		});
 
 		setLayout(new BorderLayout());
@@ -157,11 +141,11 @@ public class StudyDetailPanel extends JPanel {
 		});
 
 		if(forRevision) {
-			BiosampleActions.attachRevisionPopup(animalTable);
+			BiosampleActions.attachRevisionPopup(participantTable);
 		} else {
 			StudyActions.attachPopup(studyDepictor);
 			StudyActions.attachPopup(editorPane);
-			BiosampleActions.attachPopup(animalTable);
+			BiosampleActions.attachPopup(participantTable);
 		}
 
 	}
@@ -169,6 +153,7 @@ public class StudyDetailPanel extends JPanel {
 	public void setForRevision(boolean forRevision) {
 		this.forRevision = forRevision;
 		studyDepictor.setForRevision(forRevision);
+		if(infoTabbedPane.getTabCount()>2) infoTabbedPane.setEnabledAt(2, !forRevision);
 	}
 
 	public StudyDepictor getStudyDepictor() {
@@ -189,11 +174,10 @@ public class StudyDetailPanel extends JPanel {
 	 * Refresh the tabbedPane in a worker.
 	 */
 	private void refresh() {
-		if(study==null) {
-			cardLayout.show(infoCardTabbedPane, "view");
-			infoLabel.setText("");
-			studyDepictor.setStudy(null);
-		} else if(SpiritRights.canRead(study, SpiritFrame.getUser())) {
+		studyDepictor.setStudy(null);
+		editorPane.setStudy(null);
+		graphPanel.setResults(new ArrayList<>());
+		if(SpiritRights.canRead(study, SpiritFrame.getUser())) {
 			studyDepictor.setStudy(null);
 			editorPane.setStudy(null);
 			graphPanel.setResults(new ArrayList<>());
@@ -212,56 +196,40 @@ public class StudyDetailPanel extends JPanel {
 			}.afterDone(() -> {
 				refreshTabbedPane();
 			});
-
-		} else {
-			cardLayout.show(infoCardTabbedPane, "view");
-			infoLabel.setText("<html><div style='color:red'>You don't have sufficient right on this study.<br> You may request permission to one of the responsibles:</b><br><ul><li> "+MiscUtils.flatten(study.getAdminUsersAsSet(), "<li>") + "</ul>");
-			studyDepictor.setStudy(null);
 		}
 	}
 
 	private void refreshTabbedPane() {
 		if(study==null) return;
-		if(infoTabbedPane.getSelectedIndex()==1) {
-			new SwingWorkerExtended("Loading Paricipants", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
+		if(infoTabbedPane.getSelectedIndex()==0) {
+			new SwingWorkerExtended("Loading Details", editorPane, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
+				@Override
+				protected void done() {
+					editorPane.setStudy(JPAUtil.reattach(study));
+				}
+			};
+		} else if(infoTabbedPane.getSelectedIndex()==1) {
+			new SwingWorkerExtended("Loading Participants", participantTable, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 				private List<Biosample> attached = null;
 				@Override
 				protected void doInBackground() throws Exception {
-					attached = study==null?new ArrayList<Biosample>(): new ArrayList<>(study.getAttachedBiosamples());
+					attached = study==null?new ArrayList<Biosample>(): new ArrayList<>(JPAUtil.reattach(study).getParticipants());
 					Collections.sort(attached);
 				}
 
 				@Override
 				protected void done() {
-					animalTable.setRows(attached);
-					cardLayout.show(infoCardTabbedPane, "read");
-				}
-			};
-			//		} else if(infoTabbedPane.getSelectedIndex()==1) {
-			//			new SwingWorkerExtended("Loading Samplings", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
-			//				@Override
-			//				protected void done() {
-			//					samplingsEditorPane.setStudy(study);
-			//					cardLayout.show(infoCardTabbedPane, "read");
-			//				}
-			//			};
-		} else if(infoTabbedPane.getSelectedIndex()==0) {
-			new SwingWorkerExtended("Loading Details", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
-				@Override
-				protected void done() {
-					editorPane.setStudy(study);
-					cardLayout.show(infoCardTabbedPane, "read");
+					participantTable.setRows(attached);
 				}
 			};
 		} else if(infoTabbedPane.getSelectedIndex()==2) {
-			new SwingWorkerExtended("Loading Infos", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
+			new SwingWorkerExtended("Loading Infos", quickLinkPanel, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 				@Override
 				protected void done() {
-					quickViewPane.setStudy(study);
-					cardLayout.show(infoCardTabbedPane, "read");
+					quickLinkPanel.setStudy(study);
 				}
 			}.afterDone(() -> {
-				new SwingWorkerExtended("Loading Results", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
+				new SwingWorkerExtended("Loading Results", graphPanel, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 					private List<Result> results = null;
 					private int maxResults = 4000;
 					@Override
@@ -287,12 +255,10 @@ public class StudyDetailPanel extends JPanel {
 
 	public void showInfos() {
 		infoTabbedPane.setSelectedIndex(0);
-		//		refresh();
 	}
 
 	public void showParticipants() {
 		infoTabbedPane.setSelectedIndex(1);
-		//		refresh();
 	}
 
 

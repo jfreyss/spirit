@@ -40,6 +40,7 @@ import com.actelion.research.spiritapp.spirit.ui.study.StudyTab;
 import com.actelion.research.spiritapp.spirit.ui.util.LoginDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritAction;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
@@ -48,10 +49,11 @@ import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.migration.MigrationScript.FatalException;
 import com.actelion.research.util.ArgumentParser;
 import com.actelion.research.util.ui.JExceptionDialog;
-import com.actelion.research.util.ui.SplashScreen2;
+import com.actelion.research.util.ui.SplashScreen;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 
@@ -76,7 +78,9 @@ public class Spirit extends SpiritFrame {
 		tabs.add(new StudyTab(this));
 		tabs.add(new BiosampleTab(this));
 		tabs.add(new LocationTab(this));
-		tabs.add(new ResultTab(this));
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+			tabs.add(new ResultTab(this));
+		}
 		return tabs;
 	}
 
@@ -131,7 +135,7 @@ public class Spirit extends SpiritFrame {
 
 	public static void main(final String[] args) throws Exception {
 
-		SplashScreen2.show(splashConfig);
+		SplashScreen.show(splashConfig);
 
 		final ArgumentParser argumentParser = new ArgumentParser(args);
 		try {

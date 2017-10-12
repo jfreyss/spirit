@@ -149,7 +149,7 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 	}
 
 	public Column<ROW, ?> getColumn(int index) {
-		return index<0 || index>displayed.size()? null: displayed.get(index);
+		return index<0 || index>=displayed.size()? null: displayed.get(index);
 	}
 
 
@@ -201,10 +201,6 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 
 	public void setColumns(List<Column<ROW, ?>> allColumns) {
 		this.allColumns = new ArrayList<>(allColumns);
-		if(isEditable) {
-			notHidden.addAll(allColumns);
-		}
-
 		initDisplayed();
 		fireTableStructureChanged();
 	}
@@ -238,12 +234,22 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 		}
 	}
 
+	/**
+	 * Add a column to the end of the model (without sorting)
+	 * This function calls addColumn(singleton(column), false)
+	 * @param column
+	 */
 	public void addColumn(Column<ROW, ?> column) {
 		List<Column<ROW, ?>> l = new ArrayList<Column<ROW,?>>();
 		l.add(column);
 		addColumns(l, false);
 	}
 
+	/**
+	 * Ads the columns to the model
+	 * @param columns
+	 * @param sort
+	 */
 	public void addColumns(Collection<Column<ROW, ?>> columns, boolean sort) {
 		boolean modified = false;
 		for (Column<ROW, ?> column : columns) {
@@ -267,6 +273,22 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 		Collections.sort(columns);
 	}
 
+
+	/**
+	 * Removes the column
+	 * This functions calls removeColumn(singleton(column)
+	 * @param column
+	 */
+	public void removeColumn(Column<ROW, ?> column) {
+		List<Column<ROW, ?>> l = new ArrayList<>();
+		l.add(column);
+		removeColumns(l);
+	}
+
+	/**
+	 * Removes the columns and fire an event if the model is modified
+	 * @param columns
+	 */
 	public void removeColumns(Collection<Column<ROW, ?>> columns) {
 		boolean modified = false;
 		for (Column<ROW, ?> column : columns) {
@@ -277,12 +299,6 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 			initDisplayed();
 			fireTableStructureChanged();
 		}
-	}
-
-	public void removeColumn(Column<ROW, ?> column) {
-		List<Column<ROW, ?>> l = new ArrayList<>();
-		l.add(column);
-		removeColumns(l);
 	}
 
 	/**
@@ -361,7 +377,7 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 	 * @return
 	 */
 	public Collection<ROW> getTreeChildren(ROW row) {
-		throw new IllegalArgumentException("getTreeChildren must be implemented if treeColumn!=null");
+		throw new IllegalArgumentException("getTreeParent or getTreeChildren must be implemented if treeColumn!=null");
 	}
 
 	/**
@@ -379,7 +395,7 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 	}
 
 	public ROW getTreeParent(ROW row) {
-		throw new IllegalArgumentException("getTreeParent should be implemented if treeColumn!=null");
+		throw new IllegalArgumentException("getTreeParent or getTreeChildren should be implemented if treeColumn!=null");
 	}
 
 
@@ -419,11 +435,23 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 		//There are 2 ways of doing so. Either we use the parent, or the children.
 		//Creating the hierarchy from the parent is always the fastest option
 		boolean useParent;
+		boolean useChildren;
 		try {
 			getTreeParent(null);
 			useParent = true;
-		} catch(Exception e) {
+		} catch(IllegalArgumentException e) {
 			useParent = false;
+		} catch(Exception e) {
+			useParent = true;
+		}
+		try {
+			getTreeChildren(null);
+			useChildren = true;
+		} catch(IllegalArgumentException e) {
+			e.printStackTrace();
+			useChildren = false;
+		} catch(Exception e) {
+			useChildren = true;
 		}
 
 		if(useParent) {
@@ -437,11 +465,11 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 					res.remove(childNode);
 					parentNode.children.add(childNode);
 					parentNode.leaf = false;
-					parentNode.expanded = true;
+					parentNode.expanded = useChildren? rows.containsAll(getTreeChildren(parent)): true;
+					System.out.println("ExtendTableModel.computeTreeRoots() "+parent+" > "+useChildren+"/"+rows.containsAll(getTreeChildren(parent)));
 				}
 			}
-
-		} else {
+		} else if(useChildren) {
 			for (ROW parent : rows) {
 				Node parentNode = row2node.get(parent);
 				assert parentNode!=null;
@@ -460,7 +488,7 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 				}
 
 				parentNode.leaf = nChildren==0;
-				parentNode.expanded = nPresent>0;// && nPresent==nChildren;
+				parentNode.expanded = nPresent==nChildren;
 			}
 		}
 
@@ -524,11 +552,9 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 	}
 
 	public void showHideable(Column<ROW, ?> column, boolean display) {
-		System.out.println("ExtendTableModel.showHideable() "+column+" "+display);
 		//Extract the column of the model (if the argument is not exactly equal)
 		for (Column<ROW, ?> column2 : allColumns) {
 			if(column2.equals(column)) {
-				System.err.println("FOUND "+column);
 				column = column2;
 				break;
 			}

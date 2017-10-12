@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritcore.business.result.Result;
@@ -40,13 +41,14 @@ import com.actelion.research.util.ui.JTextComboBox;
  *
  */
 public class PhaseCellEditor extends AbstractCellEditor implements TableCellEditor {
-	
+
 	private JTextComboBox cb = new JTextComboBox(false);
 	private Study study;
-	
+
 	public PhaseCellEditor() {
+		cb.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
-	
+
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 		Result r = ((EditResultTable) table).getRows().get(row);
@@ -58,7 +60,7 @@ public class PhaseCellEditor extends AbstractCellEditor implements TableCellEdit
 			}
 		}
 		cb.setChoices(choices);
-		
+
 		//cb.getEditor().setItem(value);
 		cb.setText(value==null? "": value.toString());
 		return cb;
@@ -67,5 +69,5 @@ public class PhaseCellEditor extends AbstractCellEditor implements TableCellEdit
 	@Override
 	public Object getCellEditorValue() {
 		return study==null? null: study.getPhase(cb.getText());
-	}				
+	}
 }

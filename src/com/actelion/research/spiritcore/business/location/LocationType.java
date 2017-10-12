@@ -79,6 +79,7 @@ public enum LocationType {
 		case BUILDING: return LocationType.LAB;
 		case LAB: return LocationType.FREEZER;
 		case FREEZER: return LocationType.DRAWER;
+		case DRAWER: return LocationType.BOX;
 		case SHELF: return LocationType.DRAWER;
 		case TANK: return LocationType.TOWER;
 		case TOWER: return LocationType.BOX;

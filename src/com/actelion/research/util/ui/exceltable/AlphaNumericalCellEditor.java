@@ -23,9 +23,11 @@ package com.actelion.research.util.ui.exceltable;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 
 /**
  * AlphaNumericalCellEditor
@@ -33,11 +35,12 @@ import com.actelion.research.util.ui.JCustomTextField;
  *
  */
 public class AlphaNumericalCellEditor extends AbstractCellEditor implements TableCellEditor {
-	private JCustomTextField alphaTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC);
+	private JCustomTextField alphaTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC);
 
 	public AlphaNumericalCellEditor() {
 		alphaTextField.setMargin(null);
-		alphaTextField.setBorder(null);
+		alphaTextField.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
+
 	}
 
 	@Override

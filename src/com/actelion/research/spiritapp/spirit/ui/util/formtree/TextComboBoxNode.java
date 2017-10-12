@@ -27,14 +27,24 @@ import javax.swing.JComponent;
 
 import com.actelion.research.util.ui.JTextComboBox;
 
-public abstract class TextComboBoxNode extends AbstractNode<String> {
+public class TextComboBoxNode extends AbstractNode<String> {
 
 	private final JTextComboBox comboBox;
+	private Collection<String> choices;
 
 	public TextComboBoxNode(final FormTree tree, String label, final Strategy<String> accessor) {
 		this(tree, label, false, accessor);
 	}
+
+	public TextComboBoxNode(final FormTree tree, String label, Collection<String> choices, final Strategy<String> accessor) {
+		this(tree, label, false, choices, accessor);
+	}
+
 	public TextComboBoxNode(final FormTree tree, String label, boolean multiple, final Strategy<String> accessor) {
+		this(tree, label, multiple, null, accessor);
+	}
+
+	public TextComboBoxNode(final FormTree tree, String label, boolean multiple, Collection<String> choices, final Strategy<String> accessor) {
 		super(tree, label, accessor);
 
 		this.comboBox = new JTextComboBox() {
@@ -43,6 +53,8 @@ public abstract class TextComboBoxNode extends AbstractNode<String> {
 				return TextComboBoxNode.this.getChoices();
 			}
 		};
+
+		this.choices = choices;
 
 		comboBox.setMultipleChoices(multiple);
 
@@ -58,11 +70,19 @@ public abstract class TextComboBoxNode extends AbstractNode<String> {
 		comboBox.setTextWhenEmpty(label);
 	}
 
+
+
 	/**
 	 * To be overriden
 	 * @return
 	 */
-	public abstract Collection<String> getChoices();
+	public Collection<String> getChoices() {
+		return choices;
+	}
+
+	public void setChoices(Collection<String> choices) {
+		this.choices = choices;
+	}
 
 	@Override
 	public JTextComboBox getComponent() {

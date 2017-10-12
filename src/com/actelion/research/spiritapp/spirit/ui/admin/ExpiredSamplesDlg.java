@@ -46,6 +46,7 @@ import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 
 public class ExpiredSamplesDlg extends JEscapeDialog implements ISpiritChangeObserver {
 
@@ -63,7 +64,7 @@ public class ExpiredSamplesDlg extends JEscapeDialog implements ISpiritChangeObs
 		goingToExpireTable.getModel().setCanExpand(false);
 		goingToExpireTable.getModel().setMode(Mode.COMPACT);
 
-		centerPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+		centerPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT,
 				UIUtils.createTitleBox("Expired Biosamples", new JScrollPane(expiredTable)),
 				UIUtils.createTitleBox("Biosamples going to expire in the next 90 days", new JScrollPane(goingToExpireTable)));
 

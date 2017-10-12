@@ -35,21 +35,21 @@ public class MonitorTextField extends JCustomTextField {
 	private TestAttribute ta;
 	private final int outputNo;
 	private boolean required;
-	
+
 	public MonitorTextField(Result result, int outputNo, boolean required) {
 		super();
 		this.ta = result==null || result.getTest()==null || outputNo<0 || outputNo>=result.getTest().getOutputAttributes().size()? null: result.getTest().getOutputAttributes().get(outputNo);
 		this.result = result;
 		this.outputNo = outputNo;
 
-		setType(ta==null || ta.getDataType()==DataType.NUMBER || ta.getDataType()==DataType.FORMULA? JCustomTextField.DOUBLE:  JCustomTextField.ALPHANUMERIC);
+		setType(ta==null || ta.getDataType()==DataType.NUMBER || ta.getDataType()==DataType.FORMULA? CustomFieldType.DOUBLE:  CustomFieldType.ALPHANUMERIC);
 		setVisible(ta!=null);
 		setRequired(required);
-		
+
 		//Be sure to refresh the text before setting the textchangelistener
 		refreshText();
 
-		
+
 		if(ta!=null && ta.getDataType()==DataType.FORMULA) setForeground(Color.BLUE);
 		setBorderColor(Color.GRAY);
 		boolean hasSample = result!=null && result.getBiosample()!=null;
@@ -60,28 +60,28 @@ public class MonitorTextField extends JCustomTextField {
 		addFocusListener(new AutoScrollFocusListener());
 
 	}
-	
+
 	public void refreshText() {
 
 		if(result!=null && result.getBiosample()!=null && ta!=null && result.getResultValue(ta)!=null) {
-			setText(result.getResultValue(ta).getValue());			
+			setText(result.getResultValue(ta).getValue());
 			String tooltip = "<html><b>"+result.getBiosample().getTopParentInSameStudy().getSampleIdName() + "</b>:<br>" +
-					(ta==null? "": ta.getName()) + 
-					(result.getPhase()==null? "": " " + result.getPhase().toString()) + 
-					(ta!=null && ta.getDataType()==DataType.FORMULA? "<br>=" + ta.getParameters(): ""); 
-			
+					(ta==null? "": ta.getName()) +
+					(result.getPhase()==null? "": " " + result.getPhase().toString()) +
+					(ta!=null && ta.getDataType()==DataType.FORMULA? "<br>=" + ta.getParameters(): "");
+
 			if(result.getId()>0) {
 				tooltip += "<br>Last value: "+ MonitoringCagePanel.formatTooltipText(result.getOutputResultValues().get(outputNo).getValue(), result.getUpdUser(), result.getUpdDate());
-			} 
+			}
 			setToolTipText(tooltip);
-		}				
+		}
 	}
-	
+
 
 	public boolean isRequired() {
 		return required;
 	}
-	
+
 	public void setRequired(boolean required) {
 		this.required = required;
 		setBackground(this.required? LF.BGCOLOR_REQUIRED: null);

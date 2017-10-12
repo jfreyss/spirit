@@ -89,7 +89,7 @@ public class JComboCheckBox extends JCustomTextField {
 	 * If the choices are labeled like 'key - value', we use the key to populate the textfield
 	 */
 	public JComboCheckBox(List<String> choices) {
-		super(JCustomTextField.ALPHANUMERIC);
+		super(CustomFieldType.ALPHANUMERIC);
 		this.choices = choices;
 		init();
 	}

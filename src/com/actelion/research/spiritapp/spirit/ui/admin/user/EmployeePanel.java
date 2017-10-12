@@ -22,12 +22,8 @@
 package com.actelion.research.spiritapp.spirit.ui.admin.user;
 
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -43,10 +39,13 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
+import com.actelion.research.spiritcore.adapter.DBAdapter;
+import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
@@ -55,7 +54,7 @@ import com.actelion.research.util.ui.iconbutton.JIconButton;
 public class EmployeePanel extends JPanel {
 
 	private JCheckBox activeCheckbox = new JCheckBox("Hide disabled users", true);
-	private JCustomTextField filterField = new JCustomTextField(JCustomTextField.ALPHANUMERIC);
+	private JCustomTextField filterField = new JCustomTextField(CustomFieldType.ALPHANUMERIC);
 	private EmployeeTable employeeTable = new EmployeeTable();
 
 	public EmployeePanel() {
@@ -63,6 +62,11 @@ public class EmployeePanel extends JPanel {
 		final JButton deleteUserButton = new JIconButton(IconType.DELETE, "Delete User");
 		final JButton editUserButton = new JIconButton(IconType.EDIT, "Edit User");
 		final JButton createUserButton = new JIconButton(IconType.NEW, "Create User");
+
+		boolean editable = DBAdapter.getInstance().getUserManagedMode()==UserManagedMode.WRITE_NOPWD || DBAdapter.getInstance().getUserManagedMode()==UserManagedMode.WRITE_PWD;
+		deleteUserButton.setVisible(editable);
+		editUserButton.setVisible(editable);
+		createUserButton.setVisible(editable);
 
 		deleteUserButton.addActionListener(ev-> {
 			List<Employee> sel = employeeTable.getSelection();
@@ -88,22 +92,21 @@ public class EmployeePanel extends JPanel {
 				employeeTable.setSelection(sel);
 			}
 		});
-		createUserButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				createUser("");
-			}
+		createUserButton.addActionListener(ev-> {
+			createUser("");
 		});
 
 		employeeTable.getModel().setTreeViewActive(false);
-		employeeTable.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(e.getClickCount()>=2) {
-					editUserButton.getActionListeners()[0].actionPerformed(null);
-				}
-			}
-		});
+		//		if(editable) {
+		//			employeeTable.addMouseListener(new MouseAdapter() {
+		//				@Override
+		//				public void mouseClicked(MouseEvent e) {
+		//					if(e.getClickCount()>=2) {
+		//						editUserButton.getActionListeners()[0].actionPerformed(null);
+		//					}
+		//				}
+		//			});
+		//		}
 
 		activeCheckbox.addChangeListener(new ChangeListener() {
 			@Override
@@ -132,7 +135,7 @@ public class EmployeePanel extends JPanel {
 	}
 
 	public void refresh() {
-		List<Employee> res = new ArrayList<Employee>();
+		List<Employee> res = new ArrayList<>();
 		for(Employee emp: DAOEmployee.getEmployees()) {
 			if(activeCheckbox.isSelected() && emp.isDisabled()) continue;
 			if(filterField.getText().length()>0) {

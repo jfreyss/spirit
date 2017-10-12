@@ -65,7 +65,7 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyGroupColu
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyPhaseColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudySubGroupColumn;
-import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyTopSampleIdColumn;
+import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyParticipantIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.LinkerColumnFactory;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.SampleIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.DirectionCombobox;
@@ -94,6 +94,7 @@ import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.itextpdf.text.Font;
@@ -350,7 +351,7 @@ public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChange
 		}
 
 		//ContentPanel
-		JSplitPane contentPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+		JSplitPane contentPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT,
 				UIUtils.createBox(tableScrollPane, queryPanel),
 				UIUtils.createBox(new JScrollPane(centerPanel),
 						UIUtils.createHorizontalBox(new JLabel("Direction: "), directionComboBox, Box.createHorizontalGlue()),
@@ -379,7 +380,7 @@ public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChange
 		columns.add(new StudyGroupColumn());
 		columns.add(new StudySubGroupColumn());
 		columns.add(new StudyPhaseColumn());
-		columns.add(new StudyTopSampleIdColumn());
+		columns.add(new StudyParticipantIdColumn());
 		columns.add(new SampleIdColumn());
 		columns.add(new CombinedColumn());
 		columns.add(LinkerColumnFactory.create(new BiosampleLinker(LinkerType.COMMENTS, null)));

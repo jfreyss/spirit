@@ -22,25 +22,24 @@
 package com.actelion.research.spiritcore.adapter;
 
 /**
- * The MemoryAdapter is only for testing
- *  
- * @author freyssj
+ * The HSQLMemoryAdapter is only for testing
  *
+ * @author Joel Freyss
  */
-public class HSQLMemoryAdapter extends HSQLFileAdapter { 
-	
+public class HSQLMemoryAdapter extends HSQLFileAdapter {  // NO_UCD (test only)
+
 	public HSQLMemoryAdapter() {
 
 	}
-	
+
 	@Override
 	public String getDBConnectionURL() {
 		return "jdbc:hsqldb:mem:spirit";
 	}
-	
+
 	@Override
-	public UserAdministrationMode getUserManagedMode() {
-		return UserAdministrationMode.READ_WRITE;
+	public UserManagedMode getUserManagedMode() {
+		return UserManagedMode.WRITE_PWD;
 	}
-		
+
 }

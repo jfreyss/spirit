@@ -45,9 +45,11 @@ public class DefaultRackDepictorRenderer implements RackDepictorRenderer {
 	public Color getWellBackground(Location location, int pos, Container c) {
 		Color bgColor;
 		if(c==null) {
-			bgColor = EMPTY_COLOR;		
+			bgColor = EMPTY_COLOR;
 		} else {
-			if(c.getStudy()!=null) {
+			if(c.getStatus()!=null && !c.getStatus().isAvailable()) {
+				bgColor = UIUtils.getDilutedColor(Color.WHITE, c.getStatus().getBackground(), .7);
+			}  else if(c.getStudy()!=null) {
 				Group gr = c.getGroup();
 				bgColor = gr==null? Color.WHITE: UIUtils.getDilutedColor(gr.getBlindedColor(SpiritFrame.getUsername()), Color.WHITE, .2);
 			} else {
@@ -63,20 +65,20 @@ public class DefaultRackDepictorRenderer implements RackDepictorRenderer {
 					}
 				}
 			}
-		} 
+		}
 		return bgColor;
 	}
-	
+
 	@Override
 	public void paintWellPre(RackDepictor depictor, Graphics2D g, Location location, int pos, Container c, Rectangle r) {
-		
+
 	}
-	
+
 	@Override
 	public void paintWellPost(RackDepictor depictor, Graphics2D g, Location location, int pos, Container c, Rectangle r) {
-		
-	}	
-	
+
+	}
+
 	@Override
 	public void paintWell(RackDepictor depictor, Graphics2D g, Location location, int pos, Container c, Rectangle r) {
 
@@ -94,7 +96,7 @@ public class DefaultRackDepictorRenderer implements RackDepictorRenderer {
 					g.drawImage(c.getContainerType().getImage(FastFont.getDefaultFontSize()*2), r.x, r.y, depictor);
 				}
 			}
-			
+
 			//Draw biosample or containerid
 			g.setColor(Color.DARK_GRAY);
 			g.setFont(FastFont.MEDIUM);
@@ -112,11 +114,11 @@ public class DefaultRackDepictorRenderer implements RackDepictorRenderer {
 				g.setFont(FastFont.SMALL);
 				for (String line: info.split("\n")) {
 					g.drawString(line, x, y);
-					y+=g.getFont().getSize(); 
+					y+=g.getFont().getSize();
 				}
 			}
-			
-			
+
+
 			//Print Metadata info from container
 			String infos = c.getPrintMetadataLabel(InfoSize.EXPANDED);
 			int index = (infos+'\n').indexOf('\n');

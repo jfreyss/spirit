@@ -33,39 +33,29 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
 import com.actelion.research.spiritapp.spirit.ui.study.GroupComboBox;
-import com.actelion.research.spiritapp.spirit.ui.study.GroupLabel;
 import com.actelion.research.spiritapp.spirit.ui.study.PhaseComboBox;
-import com.actelion.research.spiritapp.spirit.ui.study.sampling.SamplingDlg;
-import com.actelion.research.spiritapp.spirit.ui.study.sampling.SamplingLabel;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JColorChooserButton;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
-import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
-import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JExceptionDialog;
-import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.UIUtils;
-import com.actelion.research.util.ui.iconbutton.IconType;
-import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class EditGroupPanel extends JPanel {
 
@@ -75,22 +65,22 @@ public class EditGroupPanel extends JPanel {
 
 
 	private final JPanel groupPanel;
-	private final JCustomTextField shortField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 4);
-	private final JCustomTextField nameField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 14);
-	private final GroupLabel groupLabel = new GroupLabel();
+	private final JCustomTextField shortField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 4);
+	private final JCustomTextField nameField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 14);
+	//	private final GroupLabel groupLabel = new GroupLabel();
 	private final JColorChooserButton colorChooser = new JColorChooserButton(true);
-	private final JGenericComboBox<String> model1ComboBox = new JGenericComboBox<>(new String[] {Group.DISEASE_NAIVE, Group.DISEASE_SHAM, Group.DISEASE_DISEASED}, true);
-	private final JGenericComboBox<String> model2ComboBox = new JGenericComboBox<>(new String[] {Group.TREATMENT_NONTREATED, Group.TREATMENT_VEHICLE, Group.TREATMENT_COMPOUND}, true);
+	//	private final JGenericComboBox<String> model1ComboBox = new JGenericComboBox<>(new String[] {Group.DISEASE_NAIVE, Group.DISEASE_SHAM, Group.DISEASE_DISEASED}, true);
+	//	private final JGenericComboBox<String> model2ComboBox = new JGenericComboBox<>(new String[] {Group.TREATMENT_NONTREATED, Group.TREATMENT_VEHICLE, Group.TREATMENT_COMPOUND}, true);
 
-	private final JRadioButton splitRadioButton = new JRadioButton("Normal group assignement");
+	//	private final JRadioButton splitRadioButton = new JRadioButton("Normal group assignement");
 	private final PhaseComboBox splitPhaseComboBox;
 	private final GroupComboBox splitGroupComboBox;
 
-	private final JRadioButton divideRadioButton = new JRadioButton("The initial samples are divided into subsamples (ex: animal -> epithelial cells)");
-	private final PhaseComboBox dividePhaseComboBox;
-	private final GroupComboBox divideGroupComboBox;
-	private final SamplingLabel divideSampleLabel = new SamplingLabel();
-	private final JIconButton divideSampleButton = new JIconButton(IconType.EDIT);
+	//	private final JRadioButton divideRadioButton = new JRadioButton("The initial samples are divided into subsamples (ex: animal -> epithelial cells)");
+	//	private final PhaseComboBox dividePhaseComboBox;
+	//	private final GroupComboBox divideGroupComboBox;
+	//	private final SamplingLabel divideSampleLabel = new SamplingLabel();
+	//	private final JIconButton divideSampleButton = new JIconButton(IconType.EDIT);
 
 
 	private final JPanel subgroupPanel = new JPanel();
@@ -124,34 +114,32 @@ public class EditGroupPanel extends JPanel {
 
 		//init phase/group comboboxes
 		splitPhaseComboBox = new PhaseComboBox(study.getPhases());
-		splitGroupComboBox = new GroupComboBox(dlg.getGroups());
+		splitGroupComboBox = new GroupComboBox(study.getGroupsHierarchical());
 
-		dividePhaseComboBox = new PhaseComboBox(study.getPhases(), "Phase");
-		divideGroupComboBox = new GroupComboBox(dlg.getGroups());
+		//		dividePhaseComboBox = new PhaseComboBox(study.getPhases(), "Phase");
+		//		divideGroupComboBox = new GroupComboBox(study.getGroupsHierarchical());
+		//
+		//		//init radio buttons
+		//		ButtonGroup buttonGroup = new ButtonGroup();
+		//		buttonGroup.add(splitRadioButton);
+		//		buttonGroup.add(divideRadioButton);
+		//		splitRadioButton.setFont(FastFont.BOLD);
+		//		divideRadioButton.setFont(FastFont.BOLD);
 
-		//init radio buttons
-		ButtonGroup buttonGroup = new ButtonGroup();
-		buttonGroup.add(splitRadioButton);
-		buttonGroup.add(divideRadioButton);
-		splitRadioButton.setFont(FastFont.BOLD);
-		divideRadioButton.setFont(FastFont.BOLD);
-
-		ActionListener al = e-> refreshGroupAssignment();
-
-		//		initialRadioButton.addActionListener(al);
-		splitRadioButton.addActionListener(al);
-		divideRadioButton.addActionListener(al);
-
-		divideSampleButton.setOpaque(false);
-		divideSampleButton.addActionListener(e-> {
-			Sampling sampling = group.getDividingSampling();
-			if(sampling==null) sampling = new Sampling();
-			SamplingDlg dlg2 = new SamplingDlg(null, study, sampling, false);
-			if(dlg2.isSuccess()) {
-				divideSampleLabel.setSampling(sampling);
-				repaint();
-			}
-		});
+		//		ActionListener al = e-> refreshGroupAssignment();
+		//		splitRadioButton.addActionListener(al);
+		//		divideRadioButton.addActionListener(al);
+		//
+		//		divideSampleButton.setOpaque(false);
+		//		divideSampleButton.addActionListener(e-> {
+		//			Sampling sampling = group.getDividingSampling();
+		//			if(sampling==null) sampling = new Sampling();
+		//			SamplingDlg dlg2 = new SamplingDlg(null, study, sampling, false);
+		//			if(dlg2.isSuccess()) {
+		//				divideSampleLabel.setSampling(sampling);
+		//				repaint();
+		//			}
+		//		});
 
 
 
@@ -162,7 +150,7 @@ public class EditGroupPanel extends JPanel {
 		c.insets = new Insets(1, 1, 1, 1);
 
 
-		model1ComboBox.addActionListener(e->refreshLabel());
+		//		model1ComboBox.addActionListener(e->refreshLabel());
 
 		//namePanel
 		JPanel namePanel = UIUtils.createTable(3,
@@ -175,16 +163,16 @@ public class EditGroupPanel extends JPanel {
 
 		//groupAssignementPanel
 		JPanel groupAssignementPanel = UIUtils.createVerticalBox(
-				UIUtils.createHorizontalBox(splitRadioButton, Box.createHorizontalGlue()),
+				//				UIUtils.createHorizontalBox(splitRadioButton, Box.createHorizontalGlue()),
 				UIUtils.createHorizontalBox(Box.createHorizontalStrut(20), UIUtils.createTable(3,
 						new JLabel("When (phase): "), splitPhaseComboBox, new JInfoLabel("optional, only for the auto-randomization or for group-splitting"),
 						new JLabel("From (group): "), splitGroupComboBox, new JInfoLabel("optional, if the group is splitted"))),
-				Box.createVerticalStrut(5),
-				UIUtils.createHorizontalBox(divideRadioButton, Box.createHorizontalGlue()),
-				UIUtils.createHorizontalBox(Box.createHorizontalStrut(20), UIUtils.createTable(3,
-						new JLabel("From (group): "), divideGroupComboBox, new JInfoLabel("required"),
-						new JLabel("When (phase): "), dividePhaseComboBox, new JInfoLabel("required"),
-						new JLabel("Sample: "),UIUtils.createBox(divideSampleLabel, null, null, divideSampleButton, null), new JInfoLabel("required")), Box.createHorizontalGlue()),
+				//				Box.createVerticalStrut(5),
+				//				UIUtils.createHorizontalBox(divideRadioButton, Box.createHorizontalGlue()),
+				//				UIUtils.createHorizontalBox(Box.createHorizontalStrut(20), UIUtils.createTable(3,
+				//						new JLabel("From (group): "), divideGroupComboBox, new JInfoLabel("required"),
+				//						new JLabel("When (phase): "), dividePhaseComboBox, new JInfoLabel("required"),
+				//						new JLabel("Sample: "),UIUtils.createBox(divideSampleLabel, null, null, divideSampleButton, null), new JInfoLabel("required")), Box.createHorizontalGlue()),
 				Box.createVerticalStrut(5));
 
 		groupPanel = UIUtils.createBox(
@@ -193,7 +181,7 @@ public class EditGroupPanel extends JPanel {
 						new JInfoLabel("<html>Subgroups are used to represents samples, which should be analyzed together  (ex. stratification) <br>"
 								+ "<i>(optional)</i></html>"))),
 				UIUtils.createVerticalBox(
-						UIUtils.createTitleBox("Group Definition", UIUtils.createBox(namePanel, UIUtils.createBox(BorderFactory.createEtchedBorder(), groupLabel))),
+						UIUtils.createTitleBox("Group Definition", namePanel),
 						UIUtils.createTitleBox("Group Assignment", groupAssignementPanel)
 						));
 
@@ -227,40 +215,39 @@ public class EditGroupPanel extends JPanel {
 		shortField.setText(group.getShortName());
 		nameField.setText(group.getNameWithoutShortName());
 		colorChooser.setColorRgb(group.getColorRgb());
-		model1ComboBox.setSelection(group.getDiseaseModel());
-		model2ComboBox.setSelection(group.getTreatmentModel());
+		//		model1ComboBox.setSelection(group.getDiseaseModel());
+		//		model2ComboBox.setSelection(group.getTreatmentModel());
 
 
-		if(group.getDividingSampling()==null) {
-			splitRadioButton.setSelected(true);
-			splitPhaseComboBox.setSelection(group.getFromPhase());
-			splitGroupComboBox.setSelection(group.getFromGroup());
-		} else {
-			divideRadioButton.setSelected(true);
-			dividePhaseComboBox.setSelection(group.getFromPhase());
-			divideGroupComboBox.setSelection(group.getFromGroup());
-			divideSampleLabel.setSampling(group.getDividingSampling());
-		}
+		//		if(group.getDividingSampling()==null) {
+		//			splitRadioButton.setSelected(true);
+		splitPhaseComboBox.setSelection(group.getFromPhase());
+		splitGroupComboBox.setSelection(group.getFromGroup());
+		//		} else {
+		//			divideRadioButton.setSelected(true);
+		//			dividePhaseComboBox.setSelection(group.getFromPhase());
+		//			divideGroupComboBox.setSelection(group.getFromGroup());
+		//			divideSampleLabel.setSampling(group.getDividingSampling());
+		//		}
 
 
 
 		//Refresh
-		refreshGroupAssignment();
+		//		refreshGroupAssignment();
 		updateSubGroupPanel();
 		refreshLabel();
 
 	}
 
-	private void refreshGroupAssignment() {
-		splitPhaseComboBox.setEnabled(splitRadioButton.isSelected());
-		splitGroupComboBox.setEnabled(splitRadioButton.isSelected());
+	//	private void refreshGroupAssignment() {
+	//		splitPhaseComboBox.setEnabled(splitRadioButton.isSelected());
+	//		splitGroupComboBox.setEnabled(splitRadioButton.isSelected());
+	//
+	//		divideSampleButton.setEnabled(divideRadioButton.isSelected());
+	//		dividePhaseComboBox.setEnabled(divideRadioButton.isSelected());
+	//		divideGroupComboBox.setEnabled(divideRadioButton.isSelected());
+	//	}
 
-		divideSampleButton.setEnabled(divideRadioButton.isSelected());
-		dividePhaseComboBox.setEnabled(divideRadioButton.isSelected());
-		divideGroupComboBox.setEnabled(divideRadioButton.isSelected());
-
-
-	}
 	private void updateSubGroupPanel() {
 		if(push>0) return;
 		push++;
@@ -283,7 +270,7 @@ public class EditGroupPanel extends JPanel {
 				subGroupSizeSpinners.add(cb);
 
 				JButton deleteSubgroupButton = new JButton("Delete");
-				deleteSubgroupButton.setEnabled(nSubGroups>0 && study.getTopAttachedBiosamples(group, subgroup).size()==0);
+				deleteSubgroupButton.setEnabled(nSubGroups>0 && study.getTopParticipants(group, subgroup).size()==0);
 				final int index = subgroup;
 				deleteSubgroupButton.addActionListener(new ActionListener() {
 					@Override
@@ -319,7 +306,7 @@ public class EditGroupPanel extends JPanel {
 
 				components.add(new JLabel("SubGroup "+(subgroup+1)+": "));
 				components.add(UIUtils.createHorizontalBox(Box.createHorizontalStrut(5), new JLabel("N="), subGroupSizeSpinners.get(subgroup), deleteSubgroupButton, moveUpButton));
-				components.add(new JInfoLabel(study.getTopAttachedBiosamples(group, subgroup).size()+" attached samples"));
+				components.add(new JInfoLabel(study.getTopParticipants(group, subgroup).size()+" attached samples"));
 
 			}
 			components.add(null);
@@ -359,17 +346,17 @@ public class EditGroupPanel extends JPanel {
 		Group group = new Group();
 		group.setColorRgb(colorChooser.getColorRgb());
 		group.setName(shortField.getText(), nameField.getText());
-		groupLabel.setOpaque(true);
-		groupLabel.setGroup(group);
-		groupLabel.getParent().validate();
-		groupLabel.repaint();
+		//		groupLabel.setOpaque(true);
+		//		groupLabel.setGroup(group);
+		//		groupLabel.getParent().validate();
+		//		groupLabel.repaint();
 
-		if(model1ComboBox.getSelection()!=null && !model1ComboBox.getSelection().equals("Naive")) {
-			model2ComboBox.setEnabled(true);
-		} else {
-			model2ComboBox.setSelection(null);
-			model2ComboBox.setEnabled(false);
-		}
+		//		if(model1ComboBox.getSelection()!=null && !model1ComboBox.getSelection().equals("Naive")) {
+		//			model2ComboBox.setEnabled(true);
+		//		} else {
+		//			model2ComboBox.setSelection(null);
+		//			model2ComboBox.setEnabled(false);
+		//		}
 
 	}
 
@@ -385,39 +372,39 @@ public class EditGroupPanel extends JPanel {
 		group.setName(shortGroup, nameField.getText());
 		group.setStudy(study);
 		group.setColorRgb(colorChooser.getColorRgb());
-		group.setDiseaseModel(model1ComboBox.getSelection());
-		group.setTreatmentModel(model2ComboBox.getSelection());
+		//		group.setDiseaseModel(model1ComboBox.getSelection());
+		//		group.setTreatmentModel(model2ComboBox.getSelection());
 
 		//subgroup sizes
-		int total = 0;
+		//		int total = 0;
 		int[] subGroupSizes = null;
 		subGroupSizes = new int[group.getNSubgroups()];
 		for (int i = 0; i < subGroupSizes.length; i++) {
 			Integer n = (Integer) subGroupSizeSpinners.get(i).getValue();
 			if(n==null) n = 0;
-			total += n;
+			//			total += n;
 			subGroupSizes[i] = n;
 		}
 
-		if(splitRadioButton.isSelected()) {
-			if(splitPhaseComboBox.getSelection()==null && splitGroupComboBox.getSelection()!=null) throw new Exception("The phase is required in case of a group splitting");
-			if(group.equals(splitGroupComboBox.getSelection())) throw new Exception("The from (group) must be different");
-			group.setFromPhase(splitPhaseComboBox.getSelection());
-			group.setFromGroup(splitGroupComboBox.getSelection());
-			group.setDividingSampling(null);
-		} else if(divideRadioButton.isSelected()) {
-			if(dividePhaseComboBox.getSelection()==null) throw new Exception("The phase is required");
-			if(divideGroupComboBox.getSelection()==null) throw new Exception("The group is required");
-			if(group.equals(divideGroupComboBox.getSelection())) throw new Exception("The group should be different");
-			if(divideSampleLabel.getSampling()==null || divideSampleLabel.getSampling().getBiotype()==null) throw new Exception("The sample is required");
-			if( total!=divideGroupComboBox.getSelection().getNAnimals()) throw new Exception("The total number of animals should be equals to: "+divideGroupComboBox.getSelection().getNAnimals());
-			group.setFromPhase(dividePhaseComboBox.getSelection());
-			group.setFromGroup(divideGroupComboBox.getSelection());
-			group.setDividingSampling(divideSampleLabel.getSampling());
-
-		} else {
-			throw new Exception("No option selected???");
-		}
+		//		if(splitRadioButton.isSelected()) {
+		if(splitPhaseComboBox.getSelection()==null && splitGroupComboBox.getSelection()!=null) throw new Exception("The phase is required in case of a group splitting");
+		if(group.equals(splitGroupComboBox.getSelection())) throw new Exception("The from (group) must be different");
+		group.setFromPhase(splitPhaseComboBox.getSelection());
+		group.setFromGroup(splitGroupComboBox.getSelection());
+		//			group.setDividingSampling(null);
+		//		} else if(divideRadioButton.isSelected()) {
+		//			if(dividePhaseComboBox.getSelection()==null) throw new Exception("The phase is required");
+		//			if(divideGroupComboBox.getSelection()==null) throw new Exception("The group is required");
+		//			if(group.equals(divideGroupComboBox.getSelection())) throw new Exception("The group should be different");
+		//			if(divideSampleLabel.getSampling()==null || divideSampleLabel.getSampling().getBiotype()==null) throw new Exception("The sample is required");
+		//			if( total!=divideGroupComboBox.getSelection().getNAnimals()) throw new Exception("The total number of animals should be equals to: "+divideGroupComboBox.getSelection().getNAnimals());
+		//			group.setFromPhase(dividePhaseComboBox.getSelection());
+		//			group.setFromGroup(divideGroupComboBox.getSelection());
+		//			group.setDividingSampling(divideSampleLabel.getSampling());
+		//
+		//		} else {
+		//			throw new Exception("No option selected???");
+		//		}
 
 
 		//Stratification?
@@ -434,7 +421,7 @@ public class EditGroupPanel extends JPanel {
 
 		//Update invalid subgroups
 		boolean hasSampleMoved = false;
-		for (Biosample b : study.getTopAttachedBiosamples(group)) {
+		for (Biosample b : study.getTopParticipants(group)) {
 			if(b.getInheritedSubGroup()<0 || b.getInheritedSubGroup()>=group.getNSubgroups()) {
 				b.setAttached(study, group, 0);
 				hasSampleMoved = true;

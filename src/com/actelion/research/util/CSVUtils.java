@@ -28,6 +28,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.LineNumberReader;
 import java.io.Reader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -75,10 +76,9 @@ public class CSVUtils {
 			exportToCsv(table);
 			return;
 		}
-		System.out.println("Export csv to "+file);
 		StringBuilder sb = new StringBuilder();
 		for (String[] line : table) {
-			boolean first = false;
+			boolean first = true;
 			for (String item : line) {
 				if(first) first = false; else sb.append(",");
 				item = item==null?"": item.replaceAll("[\r\n]+", " ");
@@ -107,6 +107,26 @@ public class CSVUtils {
 		exportToCsv(table, reportFile);
 		Desktop.getDesktop().open(reportFile);
 	}
+
+	public static void exportToTsv(String[][] table, Writer writer) throws Exception {
+		StringBuilder sb = new StringBuilder();
+		for (int row = 0; row < table.length; row++) {
+			String[] line = table[row];
+
+			if(row>0) sb.append("\r\n");
+			boolean first = true;
+			for (String item : line) {
+				if(first) first = false; else sb.append("\t");
+				item = item==null?"": item.replaceAll("[\r\n\t]+", " ");
+				sb.append(item);
+			}
+		}
+
+		//Add CSV content
+		writer.append(sb.toString());
+		writer.flush();
+	}
+
 
 	/**
 	 * Convert the csv into an array of String[]. The dimension of each row can vary depending of the size of the splits

@@ -22,49 +22,47 @@
 package com.actelion.research.spiritapp.spirit.ui.admin;
 
 import java.awt.Dimension;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
-import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.FormatterUtils;
 
 public class TestDocumentPane extends ImageEditorPane {
+
+	private List<Test> tests = new ArrayList<>();
 	private Test selection = null;
 
-	public TestDocumentPane() {
+	public TestDocumentPane(List<Test> tests) {
 		super();
 		setEditable(false);
+		setTests(tests);
 	}
-
 
 	@Override
 	public Dimension getMinimumSize() {
 		return new Dimension(700, 400);
 	}
 
-
 	public void setSelection(Test t) {
 		this.selection = t;
-		setText(getHelp().toString());
-		setCaretPosition(0);
+		updateText();
 	}
 
-	private String color(OutputType ta) {
-		switch (ta) {
-		case INPUT: return "#0000AA";
-		case OUTPUT: return "#330000";
-		case INFO: return "#330066";
-		default: return "";
-		}
+	public void setTests(List<Test> tests) {
+		this.tests = tests;
+		updateText();
 	}
-	private StringBuilder getHelp() {
 
+	private void updateText() {
+		int caret = getCaretPosition();
 		StringBuilder sb = new StringBuilder();
 		sb.append("<html><body>");
-		sb.append("<table style='white-space:nowrap'><tr style='padding:3px;background:#CCCCCC'>");
+		sb.append("<table style='padding:0px;white-space:nowrap'><tr style='padding:4px;background:#CCCCCC'>");
 		sb.append("<td><b>Category</b></td>");
 		sb.append("<td><b>Name</b></td>");
 		sb.append("<td><b>Input</b></td>");
@@ -73,8 +71,8 @@ public class TestDocumentPane extends ImageEditorPane {
 		sb.append("<td><b>Creation</b></td>");
 		sb.append("<td><b>Update</b></td>");
 		Test previous = null;
-		for(Test test: DAOTest.getTests()) {
-			sb.append("<tr style='background:" + (test.equals(selection)?"yellow": "white") + ";" + (previous==null || (previous.getCategory()!=null && !previous.getCategory().equals(test.getCategory()))?"border-top:solid 1px black":"") + "'>");
+		for(Test test: tests) {
+			sb.append("<tr style='color:" + (test.isHidden()?"#CCCCCC":"black") + ";background:" + (test.equals(selection)?"yellow": "white") + ";" + (previous==null || (previous.getCategory()!=null && !previous.getCategory().equals(test.getCategory()))?"border-top:solid 1px black":"") + "'>");
 			previous = test;
 
 			//Category
@@ -114,11 +112,19 @@ public class TestDocumentPane extends ImageEditorPane {
 
 			sb.append("</tr>");
 		}
-
-		return sb;
+		setText(sb.toString());
+		if(caret>=0 && caret<getText().length()) {
+			setCaretPosition(caret);
+		}
 	}
 
-
-
+	private String color(OutputType ta) {
+		switch (ta) {
+		case INPUT: return "#0000AA";
+		case OUTPUT: return "#330000";
+		case INFO: return "#330066";
+		default: return "";
+		}
+	}
 }
 

@@ -23,8 +23,6 @@ package com.actelion.research.util.ui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.util.Date;
 
 import javax.swing.BorderFactory;
@@ -45,53 +43,41 @@ public class DateTextField extends JCustomTextField {
 
 	private JButton button = new JButton("Today");
 
-	
 	public DateTextField(boolean showToday) {
-		super(JCustomTextField.DATE);
+		super(CustomFieldType.DATE);
 		setColumns(8);
 		setTextWhenEmpty("dd.MM.yyyy");
-		setToolTipText("Date: yyyy or MM.yyyy or dd.MM.yyyy or Time: dd.MM.yyyy HH:mm:ss");
+		setToolTipText("Date: yyyy, MM.yyyy, dd.MM.yyyy or Time: dd.MM.yyyy HH:mm:ss");
 		setLayout(null);
-		
+
 		button.setFont(FastFont.SMALLER);
 		button.setBorder(null);
 		button.setToolTipText("Find Sample");
 		button.setVisible(showToday);
 		add(button);
-		
-		button.addActionListener(new ActionListener() {			
+
+		button.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				setText(FormatterUtils.cleanDateTime(FormatterUtils.formatDate(new Date())));
 			}
 		});
-		
-		addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				cleanDate();
-			}
-		});
+
 	}
-	
-	private void cleanDate() {
-		String s = FormatterUtils.cleanDateTime(super.getText());
-		if(s!=null) super.setText(s);
-	}
-	
+
 	@Override
 	public void doLayout() {
 		if(button.isVisible()) button.setBounds(getWidth()-29, 2, 28, getHeight()-4);
 	}
-	
-	
-	
+
+
+
 	@Override
 	public void setBorder(Border border) {
 		if(border==null) return;
-		super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 8)));			
+		super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 8)));
 	}
-	
+
 	@Override
 	public void setEnabled(boolean enabled) {
 		button.setEnabled(enabled);
@@ -99,5 +85,5 @@ public class DateTextField extends JCustomTextField {
 	}
 
 
-	
+
 }

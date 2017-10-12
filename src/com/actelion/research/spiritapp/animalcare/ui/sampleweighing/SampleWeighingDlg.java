@@ -31,7 +31,7 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -101,7 +101,7 @@ public class SampleWeighingDlg extends JEscapeDialog {
 	private Test obsTest = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);
 
 	private List<JComponent> requiredComponents = new ArrayList<>();
-	private Map<Biosample, List<Biosample>> animal2Samples = new HashMap<>();
+	private Map<Biosample, List<Biosample>> animal2Samples = new LinkedHashMap<>();
 
 	//	private int push = 0;
 	private final String elb;
@@ -133,15 +133,14 @@ public class SampleWeighingDlg extends JEscapeDialog {
 		phaseComboBox.setValues(study.getPhases());
 		groupComboBox.setValues(study.getGroups());
 
-		List<Biosample> animals = study.getTopAttachedBiosamples();
+		List<Biosample> animals = study.getTopParticipants();
 		animalList.setBiosamples(animals);
 
 
 		List<Container> cages = Biosample.getContainers(animals);
 		Collections.sort(cages);
 		cages.add(new Container("NoCage"));
-		cageComboBox.setValues(cages, true);
-		cageComboBox.setEnabled(cages.size()>1);
+		cageComboBox.setValues(cages);
 
 		ActionListener al = e-> {
 			animalList.clearSelection();
@@ -153,7 +152,7 @@ public class SampleWeighingDlg extends JEscapeDialog {
 		};
 		phaseComboBox.addTextChangeListener(tl);
 		groupComboBox.addTextChangeListener(tl);
-		cageComboBox.addActionListener(al);
+		cageComboBox.addTextChangeListener(tl);
 		onlyRequired.addActionListener(al);
 		onlyAlive.addActionListener(al);
 
@@ -189,66 +188,59 @@ public class SampleWeighingDlg extends JEscapeDialog {
 
 		//buttons
 		JButton batchButton = new JIconButton(IconType.EDIT.getIcon(), "Edit In Batch Mode");
-		batchButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					List<Result> results = new ArrayList<>();
-					Phase phase = phaseComboBox.getSelection();
-					for (Biosample topSample : animal2Samples.keySet()) {
-						List<Biosample> samples = animal2Samples.get(topSample);
-						//Find required results
-						boolean hasRequiredWeight = false;
-						boolean hasRequiredLength = false;
-						for (Biosample sample : samples) {
-							if(sample.getAttachedSampling()==null) {
-								if(sample.getStudyAction(phase)!=null && sample.getStudyAction(phase).isMeasureWeight()) {
-									hasRequiredWeight = true;
-								}
-							} else {
-								if(sample.getAttachedSampling().isWeighingRequired()) {
-									hasRequiredWeight = true;
-								}
-								if(sample.getAttachedSampling().isLengthRequired()) {
-									hasRequiredLength = true;
-								}
+		batchButton.addActionListener(e-> {
+			try {
+				List<Result> results = new ArrayList<>();
+				Phase phase = phaseComboBox.getSelection();
+				for (Biosample topSample : animal2Samples.keySet()) {
+					List<Biosample> samples = animal2Samples.get(topSample);
+					//Find required results
+					boolean hasRequiredWeight = false;
+					boolean hasRequiredLength = false;
+					for (Biosample sample : samples) {
+						if(sample.getAttachedSampling()==null) {
+							if(sample.getStudyAction(phase)!=null && sample.getStudyAction(phase).isMeasureWeight()) {
+								hasRequiredWeight = true;
 							}
-						}
-						for (Biosample sample : samples) {
-
-							Result r1 = sample.getAuxResult(weighTest, phase);
-							Result r2 = sample.getAuxResult(lengthTest, phase);
-							Result r3 = sample.getAuxResult(obsTest, phase);
-
-							if(r1!=null && hasRequiredWeight) results.add(r1);
-							if(r2!=null && hasRequiredLength) results.add(r2);
-							if(r3!=null) results.add(r3);
-
-							//Find extra measurements
-							if(sample.getAttachedSampling()!=null) {
-								for(Measurement m: study.getAllMeasurementsFromSamplings()) {
-									assert m.getTest()!=null;
-									final Result result = sample.getAuxResult(m.getTest(), phase, m.getParameters());
-									if(result!=null) results.add(result);
-								}
+						} else {
+							if(sample.getAttachedSampling().isWeighingRequired()) {
+								hasRequiredWeight = true;
+							}
+							if(sample.getAttachedSampling().isLengthRequired()) {
+								hasRequiredLength = true;
 							}
 						}
 					}
-					new EditResultDlg(results);
-					initViewInBackground();
-				} catch(Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
+					for (Biosample sample : samples) {
 
+						Result r1 = sample.getAuxResult(weighTest, phase);
+						Result r2 = sample.getAuxResult(lengthTest, phase);
+						Result r3 = sample.getAuxResult(obsTest, phase);
+
+						if(r1!=null && hasRequiredWeight) results.add(r1);
+						if(r2!=null && hasRequiredLength) results.add(r2);
+						if(r3!=null) results.add(r3);
+
+						//Find extra measurements
+						if(sample.getAttachedSampling()!=null) {
+							for(Measurement m: study.getAllMeasurementsFromSamplings()) {
+								assert m.getTest()!=null;
+								final Result result = sample.getAuxResult(m.getTest(), phase, m.getParameters());
+								if(result!=null) results.add(result);
+							}
+						}
+					}
+				}
+				new EditResultDlg(results);
+				initViewInBackground();
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});
 
 		JButton okButton = new JButton("Close");
-		okButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				dispose();
-			}
+		okButton.addActionListener(e-> {
+			dispose();
 		});
 
 
@@ -287,7 +279,7 @@ public class SampleWeighingDlg extends JEscapeDialog {
 				//Apply filters
 				study = JPAUtil.reattach(study);
 				List<Biosample> filtered = new ArrayList<>();
-				for(Biosample a: study.getTopAttachedBiosamples()) {
+				for(Biosample a: study.getTopParticipants()) {
 
 					//Filter by animals
 					if(onlyAlive.isSelected() && a.getStatus()!=Status.INLAB && a.getStatus()!=Status.NECROPSY) continue;

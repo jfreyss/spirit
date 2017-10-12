@@ -39,6 +39,7 @@ import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleFinder;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
@@ -129,7 +130,7 @@ public class BiosampleFormPanel extends JPanel {
 
 		changeButton.addActionListener(e-> {
 			Biotype biotype = biosample==null? null: biosample.getBiotype();
-			BiosampleFinder finder = new BiosampleFinder(dlg, "Select a parent biosample", null, biotype, null, biosample, false) {
+			BiosampleFinder finder = new BiosampleFinder(dlg, "Select a parent biosample", null, BiosampleQuery.createQueryForBiotype(biotype), null, biosample, false) {
 				@Override
 				public void onSelect(Biosample sel) {
 					dispose();

@@ -21,10 +21,13 @@
 
 package com.actelion.research.spiritapp.spirit.ui.study.edit;
 
+import java.awt.Color;
 import java.awt.Component;
 
 import javax.swing.AbstractCellEditor;
+import javax.swing.BorderFactory;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdGenerateField;
@@ -39,33 +42,35 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
  *
  */
 public class AttachedBiosampleIdCellEditor extends AbstractCellEditor implements TableCellEditor {
-	
+
 	private AttachedBiosampleTableModel model;
 	private SampleIdGenerateField<AttachedBiosample> scanTextField;
-	
+
 	public AttachedBiosampleIdCellEditor(AttachedBiosampleTableModel model) {
 		scanTextField = new SampleIdGenerateField<AttachedBiosample>();
+		scanTextField.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 		this.model = model;
 	}
-	
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 		AttachedBiosample b = row<table.getRowCount()? (AttachedBiosample) ((AbstractExtendTable<AttachedBiosample>) table).getRows().get(row): null;
 		Biotype biotype = model==null? null: model.getBiotype();
-		scanTextField.putCachedSampleId(b, 
+		scanTextField.putCachedSampleId(b,
 				b==null || b.getBiosample()==null || b.getBiosample().getBiotype()==null? (biotype==null? null: biotype.getPrefix()): b.getBiosample().getBiotype().getPrefix(),
-				b==null || b.getBiosample()==null || b.getBiosample().getId()<=0? null: b.getBiosample().getSampleId());
+						b==null || b.getBiosample()==null || b.getBiosample().getId()<=0? null: b.getBiosample().getSampleId());
 		scanTextField.setText(value==null?"": value.toString());
 		scanTextField.selectAll();
+		scanTextField.setBorder(BorderFactory.createLineBorder(Color.BLUE));
 		return scanTextField;
 	}
 
 	@Override
 	public Object getCellEditorValue() {
 		return scanTextField.getSampleId();
-	}		
+	}
 	public String generateSampleIdFor(AttachedBiosample row) {
 		return scanTextField.generateSampleIdFor(row, row.getBiosample()==null || row.getBiosample().getBiotype()==null? "INT": row.getBiosample().getBiotype().getPrefix());
-	}	
+	}
 }

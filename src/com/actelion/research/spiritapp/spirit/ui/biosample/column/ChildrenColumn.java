@@ -42,7 +42,7 @@ import com.actelion.research.util.ui.exceltable.Column;
 public class ChildrenColumn extends Column<Biosample, String> {
 
 	public ChildrenColumn() {
-		super("Linked\nChildren", String.class, 80);
+		super("Data\nChildren", String.class, 80);
 	}
 	@Override
 	public float getSortingKey() {return 20.1f;}

@@ -36,22 +36,22 @@ public class QualityColumn extends Column<Result, Quality> {
 	public QualityColumn() {
 		super("Quality", Quality.class);
 	}
-	
+
 	@Override
 	public float getSortingKey() {
 		return 9f;
 	}
-	
+
 	@Override
 	public Quality getValue(Result row) {
 		return row.getQuality();
 	}
-	
+
 	@Override
 	public void setValue(Result row, Quality value) {
 		row.setQuality(value);
 	}
-	
+
 	@Override
 	public void paste(Result row, String value) throws Exception {
 		for(Quality q: Quality.values()) {
@@ -62,12 +62,12 @@ public class QualityColumn extends Column<Result, Quality> {
 		}
 		throw new Exception(value+" is not a valid quality");
 	}
-	
+
 	@Override
-	public boolean isEditable(Result row) {return true;}		
-	
+	public boolean isEditable(Result row) {return true;}
+
 	private JLabelNoRepaint lbl = new JLabelNoRepaint();
-	
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
 		lbl.setText(value==null?null: ((Quality)value).getName());
@@ -77,16 +77,16 @@ public class QualityColumn extends Column<Result, Quality> {
 	public void postProcess(AbstractExtendTable<Result> table, Result row, int rowNo, Object value, JComponent comp) {
 		comp.setBackground(value==null?null:((Quality)value).getBackground());
 	}
-	
+
 	@Override
-	public TableCellEditor getCellEditor(AbstractExtendTable<Result> table) {		
+	public TableCellEditor getCellEditor(AbstractExtendTable<Result> table) {
 		return new QualityCellEditor();
 	}
-	
-	
+
+
 	@Override
 	public boolean isHideable() {
 		return true;
 	}
-	
+
 }

@@ -50,6 +50,7 @@ import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.JTextComboBox;
@@ -57,20 +58,20 @@ import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
 
 public class TestRenameAttDlg extends JSpiritEscapeDialog {
-	
-	
-	private JGenericComboBox<TestAttribute> attComboBox = new JGenericComboBox<TestAttribute>();
+
+
+	private JGenericComboBox<TestAttribute> attComboBox = new JGenericComboBox<>();
 	private JTextComboBox valuesComboBox = new JTextComboBox();
-	private JTextField newValueTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 10); 
+	private JTextField newValueTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 10);
 	private JButton renameButton = new JButton(new Action_Rename());
 	private JLabel infoLabel = new JLabel();
-	
+
 	public TestRenameAttDlg(Test myTest) {
 		super(UIUtils.getMainFrame(), "Admin - Tests - Rename Attribute", TestRenameAttDlg.class.getName());
 
 		Test test = JPAUtil.reattach(myTest);
 		if(test==null) throw new IllegalArgumentException("Please select a test");
-		
+
 		String text = "<html><table>";
 		List<TestAttribute> atts = new ArrayList<>();
 		for (TestAttribute att : test.getAttributes()) {
@@ -81,9 +82,9 @@ public class TestRenameAttDlg extends JSpiritEscapeDialog {
 		}
 		text += "</table></html>";
 		JLabel testLabel = new JLabel(text);
-		
+
 		attComboBox = new JGenericComboBox<TestAttribute>(atts, true);
-		
+
 		Box line1 = Box.createHorizontalBox();
 		line1.add(new JLabel("Attribute: "));
 		line1.add(attComboBox);
@@ -91,7 +92,7 @@ public class TestRenameAttDlg extends JSpiritEscapeDialog {
 		line1.add(infoLabel);
 		infoLabel.setForeground(Color.GRAY);
 		line1.add(Box.createHorizontalGlue());
-		
+
 		Box line2 = Box.createHorizontalBox();
 		line2.add(new JLabel(" "));
 		line2.add(testLabel);
@@ -103,52 +104,53 @@ public class TestRenameAttDlg extends JSpiritEscapeDialog {
 		line3.add(newValueTextField);
 		line3.add(renameButton);
 		line3.add(Box.createHorizontalGlue());
-		
+
 		Box centerPane = Box.createVerticalBox();
 		centerPane.setBorder(BorderFactory.createEtchedBorder());
 		centerPane.add(line1);
 		centerPane.add(line2);
 		centerPane.add(Box.createVerticalGlue());
 		centerPane.add(line3);
-		
-		attComboBox.addItemListener(new ItemListener() {			
+
+		attComboBox.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
 				if(e.getStateChange()!=ItemEvent.SELECTED) return;
-				repopulateValues();	
-				
+				repopulateValues();
+
 			}
 		});
 		valuesComboBox.addTextChangeListener(new TextChangeListener() {
+			@Override
 			public void textChanged(javax.swing.JComponent src) {
 				String value = valuesComboBox.getText();
 				newValueTextField.setText(value);
 				renameButton.setEnabled(value!=null);
 			}
 		});
-		
+
 		JPanel contentPane = new JPanel(new BorderLayout());
 		contentPane.add(BorderLayout.CENTER, centerPane);
 		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), new JButton(new Action_Close())));
 		setContentPane(contentPane);
 		setSize(600, 195);
 		setLocationRelativeTo(UIUtils.getMainFrame());
-		setVisible(true);				
+		setVisible(true);
 	}
-	
+
 	private void repopulateValues() {
 		TestAttribute att = attComboBox.getSelection();
 		Set<String> values;
 		if(att==null) {
-			values = new HashSet<String>();
+			values = new HashSet<>();
 			infoLabel.setText("");
 		} else {
 			values = DAOTest.getAutoCompletionFields(att);
 			infoLabel.setText("id:"+att.getId());
 		}
-		valuesComboBox.setChoices(values);		
+		valuesComboBox.setChoices(values);
 	}
-	
+
 	private class Action_Rename extends AbstractAction {
 		public Action_Rename() {
 			super("Rename");
@@ -166,7 +168,7 @@ public class TestRenameAttDlg extends JSpiritEscapeDialog {
 				JOptionPane.showMessageDialog(UIUtils.getMainFrame(), res + " values renamed", "Success", JOptionPane.INFORMATION_MESSAGE);
 				repopulateValues();
 				valuesComboBox.setText(newValue);
-				
+
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
 			}

@@ -40,10 +40,10 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import javax.swing.AbstractAction;
 import javax.swing.JCheckBox;
@@ -90,6 +90,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 			e2.printStackTrace();
 		}
 	}
+
 	public static enum BorderStrategy {
 		NO_BORDER,
 		ALL_BORDER,
@@ -105,7 +106,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 
 	private boolean DEBUG = System.getProperty("debug", "false").equals("true");
 	private boolean highlightSimilarCells = false;
-	private boolean highlightRows = false;
+	private Collection<ROW> highlightRows = null;
 	private BorderStrategy borderStrategy = BorderStrategy.ALL_BORDER;
 	private Integer currentSortColumn = null;
 	private int sortKey = 0;
@@ -117,6 +118,9 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 	private HeaderClickingPolicy headerClickingPolicy = HeaderClickingPolicy.POPUP;
 	private final FastHeaderRenderer<ROW> renderer = new FastHeaderRenderer<>();
 	private SwingWorkerExtended popupShowWorker = null;
+	private boolean canSort = true;
+
+	protected final Map<Integer, Object> valuesCacheMap = new HashMap<>();
 
 	private class MyTableModelListener implements TableModelListener {
 		@Override
@@ -195,9 +199,6 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 		});
 		setHeaderRenderers();
 
-
-
-
 		getTableHeader().addMouseListener(new PopupAdapter() {
 
 			@Override
@@ -266,7 +267,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 
 				///////////////////////////
 				//Popup: Add possible columns
-				Set<Column<ROW, ?>> addableColumns = new TreeSet<>();
+				Set<Column<ROW, ?>> addableColumns = new LinkedHashSet<>();
 				for (Column<ROW, ?> c : model.getAllColumns()) {
 					if(c.isHideable()) {
 						addableColumns.add(c);
@@ -290,16 +291,25 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 				if(cat2columns.size()>0) {
 					popupMenu.add(new JSeparator());
 					popupMenu.add(new JCustomLabel("Extra Columns", Font.BOLD));
-					for(Map.Entry<String, List<Column<ROW, ?>>> entry: cat2columns.entrySet()) {
-						if(cat2columns.size()<=1) {
-							for (Column<ROW, ?> c : entry.getValue()) {
+					if(cat2columns.size()<=1) {
+						//If there is one category, checkboxes are at the top
+						for (Column<ROW, ?> c : cat2columns.values().iterator().next()) {
+							popupMenu.add(new ColumnCheckbox(c));
+						}
+					} else {
+						//If there are several category, checkboxes with no category are at the top, others are classified by category
+						if(cat2columns.get("")!=null) {
+							for (Column<ROW, ?> c : cat2columns.get("")) {
 								popupMenu.add(new ColumnCheckbox(c));
 							}
-						} else {
-							JComponent subMenu = new JMenu(entry.getKey()==null || entry.getKey().length()==0? "Generic": entry.getKey());
+						}
+						for(Map.Entry<String, List<Column<ROW, ?>>> entry: cat2columns.entrySet()) {
+							String key = entry.getKey();
+							if(key.length()==0) continue;
+							JComponent subMenu = new JMenu(entry.getKey());
 							popupMenu.add(subMenu);
 							for (Column<ROW, ?> c : entry.getValue()) {
-								subMenu.add(new ColumnCheckbox(c));
+								subMenu.add(new ColumnCheckbox(c.getShortName(), c));
 							}
 						}
 					}
@@ -704,13 +714,17 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 	protected class ColumnCheckbox extends JCheckBox {
 
 		public ColumnCheckbox(final Column<ROW, ?> column) {
+			this(column.getName(), column);
+		}
+
+		public ColumnCheckbox(String name, final Column<ROW, ?> column) {
 			assert column!=null;
-			setName(column.getName());
+			setName(name);
 			List<Column<ROW, ?>> list = new ArrayList<>();
 			list.add(column);
 			setColumns(list);
-
 		}
+
 		public ColumnCheckbox(String name, final List<Column<ROW, ?>> columns) {
 			super("");
 			setName(name);
@@ -723,6 +737,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 			name = name.replace('\n', '.').replaceAll("^\\.+", "");
 			setText(name);
 		}
+
 		public void setColumns(final List<Column<ROW, ?>> columns) {
 			if(columns.size()>1) {
 				setFont(getFont().deriveFont(Font.ITALIC));
@@ -753,6 +768,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 							}
 						}
 					}
+
 					resetPreferredColumnWidth();
 				}
 			});
@@ -865,8 +881,6 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 	}
 
 
-	protected final Map<Integer, Object> valuesCacheMap = new HashMap<Integer, Object>();
-
 	@Override
 	public Object getValueAt(int row, int column) {
 
@@ -887,12 +901,15 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 		}
 	}
 	/**
+	 * If a cell is selected, should we highlights cells with the same value
 	 * @param highlightSimilarCells the highlightSimilarCells to set
 	 */
 	public void setHighlightSimilarCells(boolean highlightSimilarCells) {
 		this.highlightSimilarCells = highlightSimilarCells;
 	}
+
 	/**
+	 * If a cell is selected, should we highlights cells with the same value
 	 * @return the highlightSimilarCells
 	 */
 	public boolean isHighlightSimilarCells() {
@@ -900,9 +917,19 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 	}
 
 
+	/**
+	 * Returns how cells should be separated. By default, cells have borders all around.
+	 * @return
+	 */
 	public BorderStrategy getBorderStrategy() {
 		return borderStrategy;
 	}
+
+	/**
+	 * Sets how cells should be separated. By default, cells have borders all around.
+	 * Possible values are: ALL_BORDER, NO_BORDER, WHEN_DIFFERENT_VALUE
+	 * @param borderStrategy
+	 */
 	public void setBorderStrategy(BorderStrategy borderStrategy) {
 		this.borderStrategy = borderStrategy;
 	}
@@ -910,14 +937,11 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 	/**
 	 * @param highlightRows the highlightRows to set
 	 */
-	public void setHighlightRows(boolean highlightRows) {
+	public void setHighlightRows(Collection<ROW> highlightRows) {
 		this.highlightRows = highlightRows;
 	}
 
-	/**
-	 * @return the highlightRows
-	 */
-	public boolean isHighlightRows() {
+	public Collection<ROW> getHighlightRows() {
 		return highlightRows;
 	}
 
@@ -1173,6 +1197,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 	protected void expandRow(final ROW obj, final boolean expand, final int maxDepth, final boolean fireEvents) {
 		final int[] sRows = getSelectedRows();
 
+		System.out.println("AbstractExtendTable.expandRow() "+expand+" "+obj);
 
 		int[] minMax = null;
 		if(maxDepth<=0) {
@@ -1213,16 +1238,17 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 			}
 			int minIndex = getModel().getRows().indexOf(obj);
 
-			List<ROW> children = new ArrayList<>(getModel().getTreeChildren(obj));
-			if(children.size()>0) {
-				Collections.sort(children, CompareUtils.OBJECT_COMPARATOR);
-				for (ROW elt : children) {
+			Collection<ROW> children = getModel().getTreeChildren(obj);
+			if(children!=null && children.size()>0) {
+				List<ROW> childrenList = new ArrayList<>(children);
+				Collections.sort(childrenList, CompareUtils.OBJECT_COMPARATOR);
+				for (ROW elt : childrenList) {
 					//Add or move the children to the end
 					getModel().getRows().remove(elt);
 					getModel().getRows().add(elt);
 					expandRow(elt, expand, maxDepth-1, false);
 				}
-				minMax = new int[]{minIndex, minIndex+children.size()};
+				minMax = new int[]{minIndex, minIndex+childrenList.size()};
 			}
 		}
 
@@ -1251,6 +1277,20 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 
 	}
 
+	/**
+	 * @param canSort the canSort to set
+	 */
+	public void setCanSort(boolean canSort) {
+		this.canSort = canSort;
+	}
+
+
+	/**
+	 * @return the canSort
+	 */
+	public boolean isCanSort() {
+		return canSort;
+	}
 
 }
 

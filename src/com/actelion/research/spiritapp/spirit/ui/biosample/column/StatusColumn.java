@@ -32,7 +32,7 @@ import com.actelion.research.util.ui.exceltable.Column;
 public class StatusColumn extends Column<Biosample, Status> {
 
 	public StatusColumn() {
-		super("Status", Status.class, 50, 100);
+		super("Sample\nStatus", Status.class, 50, 100);
 	}
 
 	@Override

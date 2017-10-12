@@ -48,6 +48,7 @@ import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
@@ -55,15 +56,15 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class ELBRenameDlg extends JEscapeDialog {
-	
-	private JCustomTextField oldElbTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC,10);
-	private JCustomTextField newElbTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC,10);
+
+	private JCustomTextField oldElbTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC,10);
+	private JCustomTextField newElbTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC,10);
 	private JCustomLabel infoLabel = new JCustomLabel(" ", Font.ITALIC, Color.RED);
-	
+
 	public ELBRenameDlg() {
 		super(UIUtils.getMainFrame(), "Admin - Rename ELB");
-		
-	
+
+
 		oldElbTextField.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
@@ -71,17 +72,17 @@ public class ELBRenameDlg extends JEscapeDialog {
 					newElbTextField.setText(oldElbTextField.getText());
 					newElbTextField.selectAll();
 				}
-				
+
 				try {
 					List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForElb(oldElbTextField.getText()), null);
-	
+
 					String studyId = "";
 					for (Result result : results) {
 						if(result.getBiosample()!=null && result.getBiosample().getInheritedStudy()!=null) {
 							if(!studyId.contains(result.getBiosample().getInheritedStudy().getId()+" ")) {
 								studyId += result.getBiosample().getInheritedStudy().getStudyId()+" ";
 							}
-						} 
+						}
 					}
 					infoLabel.setText(results.size()+" results (study="+(studyId.length()==0?"N/A": studyId.trim())+")");
 				} catch(Exception ex) {
@@ -90,31 +91,31 @@ public class ELBRenameDlg extends JEscapeDialog {
 				}
 			}
 		});
-		
+
 		JButton renameButton = new JIconButton(IconType.SAVE, "Rename");
-		renameButton.addActionListener(new ActionListener() {			
+		renameButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				eventOk();
 			}
 		});
-				
+
 		JPanel contentPanel = new JPanel(new BorderLayout());
-		contentPanel.add(BorderLayout.CENTER, UIUtils.createTable(2, 
+		contentPanel.add(BorderLayout.CENTER, UIUtils.createTable(2,
 				new JLabel("Old ELB: "), oldElbTextField,
 				null, infoLabel,
 				new JLabel("New ELB: "), newElbTextField));
 		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), renameButton));
-		
+
 		setContentPane(contentPanel);
 		setSize(300, 160);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
-		
-		
+
+
 	}
-	
-	
+
+
 	private void eventOk() {
 		if(!SpiritFrame.getUser().isSuperAdmin()) {
 			JExceptionDialog.showError(ELBRenameDlg.this, "Only an admin can rename an ELB");
@@ -128,7 +129,7 @@ public class ELBRenameDlg extends JEscapeDialog {
 			try {
 				List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForElb(newElbTextField.getText()), null);
 				if(results.size()>0) throw new Exception("The elb "+newElbTextField.getText()+" contains already "+results.size()+" results");
-				
+
 				results = DAOResult.queryResults(ResultQuery.createQueryForElb(oldElbTextField.getText()), null);
 				Date now = JPAUtil.getCurrentDateFromDatabase();
 				txn = em.getTransaction();
@@ -142,13 +143,13 @@ public class ELBRenameDlg extends JEscapeDialog {
 				txn = null;
 				JOptionPane.showMessageDialog(ELBRenameDlg.this, results.size() +" results updated to " + newElbTextField.getText());
 				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Result.class, results);
-				oldElbTextField.setText("");			
+				oldElbTextField.setText("");
 				oldElbTextField.requestFocusInWindow();
 			} catch (Exception e) {
 				if(txn!=null) {txn.rollback();}
 				txn = null;
-				JExceptionDialog.showError(e);			
-			} 
+				JExceptionDialog.showError(e);
+			}
 		} finally {
 			JPAUtil.popEditableContext();
 		}

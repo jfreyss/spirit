@@ -58,14 +58,18 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
-import com.actelion.research.spiritcore.business.IEntity;
+import com.actelion.research.spiritcore.business.IAuditable;
+import com.actelion.research.spiritcore.business.IObject;
+import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.CompareUtils;
 
 @Entity
 @Table(name="biotype", uniqueConstraints = {@UniqueConstraint(name="biotype_name_index", columnNames = "name")})
 @Audited
-public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IEntity {
+public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IObject, IAuditable {
 
 	public static final String ANIMAL = "Animal";
+	public static final String HUMAN = "Human";
 	public static final String DATEOFDEATH = "DateOfDeath";
 	public static final String STAINING = "Staining";
 
@@ -139,6 +143,7 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 	/**
 	 * A hidden biotype can only be seen by an admin
 	 */
+	@Column(name="isHidden")
 	private boolean isHidden = false;
 
 	private String updUser;
@@ -371,23 +376,6 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 		this.containerType = containerType;
 	}
 
-	//	public boolean isAliquotType() {
-	//		return aliquotType;
-	//	}
-	//	public void setAliquotType(boolean aliquotType) {
-	//		this.aliquotType = aliquotType;
-	//	}
-
-	//	@Override
-	//	public Biotype clone() {
-	//		try {
-	//			return (Biotype) super.clone();
-	//		} catch (Exception e) {
-	//			e.printStackTrace();
-	//			return null;
-	//		}
-	//	}
-
 	/**
 	 * The label is the name given to the main attribute, used to define the sample.
 	 * If null, then the sample has no specific label
@@ -447,7 +435,6 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 		return nameRequired == Boolean.TRUE;
 	}
 
-	@Override
 	public String getUpdUser() {
 		return updUser;
 	}
@@ -472,7 +459,6 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 		this.creDate = creDate;
 	}
 
-	@Override
 	public Date getUpdDate() {
 		return updDate;
 	}
@@ -562,5 +548,93 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IE
 		return res;
 	}
 
+	@Override
+	public Biotype clone() {
+		try {
+			Biotype res = (Biotype) super.clone();
+			res.metadata =  new LinkedHashSet<>();
+			for (BiotypeMetadata bm : getMetadata()) {
+				res.metadata.add(bm.clone());
+			}
+			return res;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
+	@Override
+	public String getDifference(IAuditable b) {
+		if(!(b instanceof Biotype)) return "";
+		return MiscUtils.flatten(getDifferenceMap((Biotype)b));
+	}
+
+	/**
+	 * Returns a map containing the differences between 2 biotypes (usually 2 different versions).
+	 * The result is an empty string if there are no differences or if b is null
+	 * @param b
+	 * @return
+	 */
+	public Map<String, String> getDifferenceMap(Biotype b) {
+
+		Map<String, String> map = new LinkedHashMap<>();
+		if(b==null) return map;
+
+		if(!CompareUtils.equals(getName(), b.getName())) {
+			map.put("Name", getName());
+		}
+
+		if(!CompareUtils.equals(getPrefix(), b.getPrefix())) {
+			map.put("Prefix", getPrefix());
+		}
+
+		if(!CompareUtils.equals(isAbstract(), b.isAbstract())) {
+			map.put("Abstract", Boolean.toString(isAbstract()));
+		}
+
+		if(!CompareUtils.equals(isHideContainer(), b.isHideContainer())) {
+			map.put("HideContainer", Boolean.toString(isHideContainer()));
+		}
+
+		if(!CompareUtils.equals(isHideSampleId(), b.isHideSampleId())) {
+			map.put("HideSampleId", Boolean.toString(isHideSampleId()));
+		}
+
+		if(!CompareUtils.equals(isNameAutocomplete(), b.isNameAutocomplete())) {
+			map.put("NameAutocomplete", Boolean.toString(isNameAutocomplete()));
+		}
+
+		if(!CompareUtils.equals(isNameRequired(), b.isNameRequired())) {
+			map.put("NameRequired", Boolean.toString(isNameRequired()));
+		}
+
+		if(!CompareUtils.equals(isNameAutocomplete(), b.isNameAutocomplete())) {
+			map.put("NameAutocomplete", Boolean.toString(isNameAutocomplete()));
+		}
+
+		if(!CompareUtils.equals(getAmountUnit(), b.getAmountUnit())) {
+			map.put("Amount", getAmountUnit()==null?"NA": getAmountUnit().toString());
+		}
+
+		if(!CompareUtils.equals(getCategory(), b.getCategory())) {
+			map.put("Category", getCategory()==null?"NA": getCategory().getName());
+		}
+
+		if(!CompareUtils.equals(getContainerType(), b.getContainerType())) {
+			map.put("ContainerType", getContainerType()==null?"NA":getContainerType().getName());
+		}
+
+		if(!CompareUtils.equals(getParent(), b.getParent())) {
+			map.put("Parent", getParent()==null?"": getParent().getName());
+		}
+
+		if(!CompareUtils.equals(getSampleNameLabel(), b.getSampleNameLabel())) {
+			map.put("SampleName", getName());
+		}
+
+		//Compare metadata
+		String metadataCompare = MiscUtils.diffCollectionsSummary(getMetadata(), b.getMetadata(), BiotypeMetadata.EXACT_COMPARATOR);
+		if(metadataCompare!=null) map.put("Metadata", metadataCompare);
+
+		return map;
+	}
 }

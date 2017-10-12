@@ -27,7 +27,6 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
@@ -53,26 +52,23 @@ public class EditResultSelectElbDlg extends JEscapeDialog {
 		comboBox.addActionListener(e-> ok());
 		JButton okButton = new JButton("Continue");
 
-		okButton.addActionListener(ev-> {
-			ok();
-		});
+		okButton.addActionListener(ev-> ok());
 
 		JLabel header = new JLabel(
 				"<html><body><b>Enter a new ELB (electronic lab journal) or <br>" +
 				" select an existing one to edit/appends results.</b></body></html>");
 		header.setBorder(BorderFactory.createEmptyBorder(7,7,7,7));
 
-		JPanel contentPanel = UIUtils.createBox(
+		setContentPane(UIUtils.createBox(
 				UIUtils.createTitleBox(UIUtils.createBox(
 						UIUtils.createHorizontalBox(comboBox, Box.createHorizontalGlue()),
 						header)),
 				null,
-				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
-		setContentPane(contentPanel);
+				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton)));
 		pack();
 		setLocationRelativeTo(UIUtils.getMainFrame());
 
-		if(DBAdapter.getAdapter().isInActelionDomain()) {
+		if(DBAdapter.getInstance().isInActelionDomain()) {
 			comboBox.setText("ELB9999-9999");
 		} else {
 			comboBox.setText(DAOResult.suggestElb(SpiritFrame.getUsername()));
@@ -96,7 +92,7 @@ public class EditResultSelectElbDlg extends JEscapeDialog {
 		String res = comboBox.getText();
 		try {
 
-			if(DBAdapter.getAdapter().isInActelionDomain() && res.startsWith("ELB") && !recentElbs.contains(res)) {
+			if(DBAdapter.getInstance().isInActelionDomain() && res.startsWith("ELB") && !recentElbs.contains(res)) {
 				if(res.length()<12) throw new Exception("The ELB is not well formatted");
 			}
 
@@ -109,12 +105,7 @@ public class EditResultSelectElbDlg extends JEscapeDialog {
 			JExceptionDialog.showError(EditResultSelectElbDlg.this, e);
 			if(res.startsWith("ELB")) {
 				comboBox.selectAll();
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						comboBox.requestFocus();
-					}
-				});
+				SwingUtilities.invokeLater(() -> comboBox.requestFocus());
 			}
 		}
 	}

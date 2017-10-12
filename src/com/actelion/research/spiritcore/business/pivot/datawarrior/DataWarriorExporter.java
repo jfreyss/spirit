@@ -429,7 +429,12 @@ public class DataWarriorExporter {
 	/**
 	 * Comparator for strings, comparing blocks separately so that the order becomes SLIDE-1, SLIDE-2, SLIDE-10, SLIDE-10-1, ...
 	 */
-	public static final Comparator<String> PHASE_COMPARATOR = (o1, o2) -> comparePhases(o1, o2);
+	public static final Comparator<String> PHASE_COMPARATOR = new Comparator<String>() {
+		@Override
+		public int compare(String o1, String o2) {
+			return comparePhases(o1, o2);
+		};
+	};
 
 	public static int comparePhases(String s1, String s2) {
 		if(s1==null && s2==null) return 0;

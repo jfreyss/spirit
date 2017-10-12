@@ -69,7 +69,7 @@ public abstract class AbstractReport {
 
 	public static enum ReportCategory {
 		STUDY,
-		TOP,
+		PARTICIPANTS,
 		SAMPLES,
 		ADMIN;
 		public String getName() {

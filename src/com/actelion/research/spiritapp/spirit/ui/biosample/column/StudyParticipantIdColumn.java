@@ -32,26 +32,19 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdLabel;
-import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
-public class StudyTopSampleIdColumn extends Column<Biosample, Biosample> {
+public class StudyParticipantIdColumn extends Column<Biosample, Biosample> {
 
-	private static SampleIdLabel sampleIdLabel = new SampleIdLabel();
+	private static SampleIdLabel sampleIdLabel = new SampleIdLabel(false, false);
 
-	public StudyTopSampleIdColumn() {
-		super("\nParticipant", Biosample.class, 90, 200);
+	public StudyParticipantIdColumn() {
+		super("Study\nParticipantId", Biosample.class, 80, 200);
 	}
-
-	@Override
-	public String getCategory() {
-		return "Participant";
-	}
-
 
 	@Override
 	public float getSortingKey() {return 3.9f;}
@@ -59,7 +52,7 @@ public class StudyTopSampleIdColumn extends Column<Biosample, Biosample> {
 	@Override
 	public Biosample getValue(Biosample row) {
 		if(row==null) return null;
-		return row.getTopParent();
+		return row.getTopParentInSameStudy();
 	}
 
 	@Override
@@ -103,9 +96,4 @@ public class StudyTopSampleIdColumn extends Column<Biosample, Biosample> {
 		return sampleIdLabel;
 	}
 
-	@Override
-	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
-		comp.setBackground(LF.BGCOLOR_LINKED);
-		comp.setForeground(LF.FGCOLOR_LINKED);
-	}
 }

@@ -163,21 +163,29 @@ public class StudyEditorPane extends ImageEditorPane {
 			/////////////////////////////////////
 			//Study Infos
 
-			sb.append("<span style='font-size:120%;font-weight:bold'>" + study.getStudyId() + "</span> ");
-			if(study.getLocalId()!=null) sb.append(" / " + MiscUtils.removeHtml(study.getLocalId()) + "");
+			sb.append("<span style='font-size:125%;font-weight:bold'>" + study.getStudyId() + "</span> ");
+			if(study.getLocalId()!=null && study.getLocalId().length()>0) sb.append(" / " + MiscUtils.removeHtml(study.getLocalId()) + "");
 			sb.append("<br>");
 			if(study.getTitle()!=null) {
 				sb.append("<span style='font-size:95%'>" + MiscUtils.removeHtml(study.getTitle()) + "</span><br>");
 			}
-			sb.append("<table style='width:100%;font-size:95%;border-top:solid 1px gray;border-bottom:solid 1px gray'><tr><td valign=top>");
+
+			sb.append("<table style='width:100%;border-top:solid 1px gray;border-bottom:solid 1px gray'><tr><td valign=top>");
 			{
 				//Display metadata
 				sb.append("<table>");
-				for(Entry<String, String> entry: study.getMetadata().entrySet()) {
+				if(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES).length>0) {
+					sb.append("<tr><td>State:</td><td style='white-space:nowrap'>" + (study.getState()==null?"": MiscUtils.removeHtml(study.getState())) + "</td></tr>");
+				}
+				if(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_TYPES).length>0) {
+					sb.append("<tr><td>Type:</td><td style='white-space:nowrap'><b>" + MiscUtils.removeHtml(study.getType()==null || study.getType().length()==0?"NA": study.getType()) + "</b></td></tr>");
+				}
+				for(Entry<String, String> entry: study.getMetadataMap().entrySet()) {
 					String name = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, entry.getKey());
-					if(name!=null && name.length()>0 && entry.getValue().length()>0) {
-						sb.append("<tr><td style='white-space:nowrap'>" + MiscUtils.removeHtml(name) + ":</td><td>" + MiscUtils.removeHtml(entry.getValue()) + "</td></tr>");
+					if(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_TYPES).length>0 && !MiscUtils.contains(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_TYPES), study.getType())) {
+						continue;
 					}
+					sb.append("<tr><td style='white-space:nowrap'>" + MiscUtils.removeHtml(name) + ":</td><td style='white-space:nowrap'>" + MiscUtils.removeHtml(entry.getValue()) + "</td></tr>");
 				}
 				sb.append("</table>");
 			}
@@ -185,9 +193,8 @@ public class StudyEditorPane extends ImageEditorPane {
 			{
 				//Display state/rights
 				sb.append("<table>");
-				sb.append("<tr><td>State:</td><td>" + (study.getState()==null?"": MiscUtils.removeHtml(study.getState())) + "</td></tr>");
 
-				if(!SpiritProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY)) {
+				if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
 					Set<String> adminSet = new LinkedHashSet<>();
 					adminSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, study.getState())));
 					adminSet.addAll(study.getAdminUsersAsSet());
@@ -204,12 +211,11 @@ public class StudyEditorPane extends ImageEditorPane {
 					Set<String> viewSet = new LinkedHashSet<>();
 					viewSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState())));
 					if(viewSet.size()>0) {
-						sb.append("<tr><td>View:</td><td>" + (viewSet.size()==0? "-": MiscUtils.flatten(viewSet, ", ")) + "</td></tr>");
+						sb.append("<tr><td>Read:</td><td>" + (viewSet.size()==0? "-": MiscUtils.flatten(viewSet, ", ")) + "</td></tr>");
 					}
 
 					if(study.getBlindDetailsUsersAsSet().size()>0) sb.append("<tr><td>Blind-Names:</td><td>" + MiscUtils.flatten(study.getBlindDetailsUsersAsSet(), ", ") + "</td></tr>");
 					if(study.getBlindAllUsersAsSet().size()>0) sb.append("<tr><td>Blind-All:</td><td>" + MiscUtils.flatten(study.getBlindAllUsersAsSet(), ", ") + "</td></tr>");
-					sb.append("<tr><td>Samples:</td><td>" + (study.isSynchronizeSamples()? "Automatic creation": "Manal creation") + "</td></tr>");
 
 				}
 				sb.append("</table>");
@@ -222,28 +228,30 @@ public class StudyEditorPane extends ImageEditorPane {
 			}
 
 			if(!simplified) {
-				//Add the treatment info
-				if(study.getNamedTreatments().size()>0) {
-					sb.append("<h2 style='font-size:12px; color:#990000'>Treatments</h2>");
-					sb.append("<table>");
-					for (NamedTreatment nt : study.getNamedTreatments()) {
-						sb.append("<tr><td style='color:" + UIUtils.getHtmlColor(nt.getColor()) + "'>" + nt.getName() + "</td><td>" + nt.getCompoundAndUnits() + "</td></tr>");
+				if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)) {
+					//Add the treatment info
+					if(study.getNamedTreatments().size()>0) {
+						sb.append("<h2 style='font-size:12px; color:#990000'>Treatments</h2>");
+						sb.append("<table style='white-space:nowrap>");
+						for (NamedTreatment nt : study.getNamedTreatments()) {
+							sb.append("<tr><td style='color:" + UIUtils.getHtmlColor(nt.getColor()) + "'>" + nt.getName() + "</td><td>" + nt.getCompoundAndUnits() + "</td></tr>");
+						}
+						sb.append("</table>");
 					}
-					sb.append("</table>");
-				}
 
-				//Add the sampling info
-				if(study.getNamedSamplings().size()>0) {
-					sb.append("<h2 style='font-size:12px; color:#990000'>Samplings</h2>");
-					sb.append("<table>");
-					for (NamedSampling ns : study.getNamedSamplings()) {
-						sb.append("<tr><td valign=top style='white-space:nowrap;margin:1px'>");
-						if(ns.getName()!=null) sb.append("<b style='font-size:11px'><u>" + ns.getName() + "</u></b><br>");
+					//Add the sampling info
+					if(study.getNamedSamplings().size()>0) {
+						sb.append("<h2 style='font-size:12px; color:#990000'>Samplings</h2>");
+						sb.append("<table>");
+						for (NamedSampling ns : study.getNamedSamplings()) {
+							sb.append("<tr><td valign=top style='white-space:nowrap;margin:1px'>");
+							if(ns.getName()!=null) sb.append("<b style='font-size:11px'><u>" + ns.getName() + "</u></b><br>");
 
-						sb.append(ns.getHtmlBySampling());
-						sb.append("</td></td>");
+							sb.append(ns.getHtmlBySampling());
+							sb.append("</td></td>");
+						}
+						sb.append("</tr></table>");
 					}
-					sb.append("</tr></table>");
 				}
 				//Display Documents
 				Map<DocumentType, List<Document>> docs = Document.mapDocumentTypes(study.getDocuments());
@@ -259,30 +267,7 @@ public class StudyEditorPane extends ImageEditorPane {
 					}
 				}
 
-				/*
-			if(displayResults && !forRevision) {
-
-
-				try {
-					sb.append("<table style='white-space:nowrap;width:100%;padding-top:5px;padding-bottom:5px;font-size:98%;border-bottom:solid 1px gray'><tr><td valign=top>");
-					//Count Biosamples
-					Map<Study, Map<Biotype, Triple<Integer, String, Date>>> countBio = DAOStudy.countSamplesByStudyBiotype(Collections.singletonList(study));
-					formatNumberBiosamples(sb, study, countBio.get(study));
-
-					sb.append("</td><td>&nbsp;&nbsp;</td><td style='border-left:solid 1px lightgray'>&nbsp;</td><td valign=top>");
-
-					//Count Results
-					Map<Study, Map<Test, Triple<Integer, String, Date>>> countRes = DAOStudy.countResultsByStudyTest(Collections.singletonList(study));
-					formatNumberResults(sb, study, countRes.get(study));
-					sb.append("</td></tr></table>");
-				} catch(Exception e) {
-					e.printStackTrace();
-					sb.append(e.getMessage());
-				}
-	}
-				 */
-
-				if(DBAdapter.getAdapter().isInActelionDomain()) {
+				if(DBAdapter.getInstance().isInActelionDomain()) {
 					//Find related ELBs
 					List<ElbLink> elbs = DAOResult.getNiobeLinksForStudy(study);
 					if(elbs.size()>0) {

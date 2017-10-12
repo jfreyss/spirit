@@ -53,6 +53,7 @@ import java.util.TreeSet;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.Icon;
@@ -69,10 +70,16 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
+import javax.swing.table.TableCellEditor;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
+import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
+import com.actelion.research.util.ui.exceltable.Column;
+import com.actelion.research.util.ui.exceltable.ExcelTable;
+import com.actelion.research.util.ui.exceltable.ExtendTableModel;
+import com.actelion.research.util.ui.exceltable.StringColumn;
 import com.actelion.research.util.ui.iconbutton.IconType;
 
 /**
@@ -87,6 +94,8 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 @SuppressWarnings("rawtypes")
 public class JTextComboBox extends JCustomTextField {
 
+	private static final String DEFAULT_SEPARATORS = ",; ";
+
 	private List<String> choices = new ArrayList<>();
 
 	private JDialog popup;
@@ -94,15 +103,25 @@ public class JTextComboBox extends JCustomTextField {
 	private final JList<String> list = new JList<>(model);
 	private Icon comboIcon;
 
+	private boolean allowTyping = true;
+	private boolean progressiveFiltering = true;
+	private int push = 0;
+
+	private boolean multiChoices = false;
+	private String separators = DEFAULT_SEPARATORS;
 
 	private ListCellRenderer renderer = new DefaultListCellRenderer() {
+		private JLabel emptyLabel = new JLabel();
 		@Override
 		public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 			Component res = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 			if(res instanceof JLabel) ((JLabel) res).setIcon(comboIcon);
 			if (value == null || value.toString().length() == 0) {
-				setText(" ");
-				return res;
+				emptyLabel.setBorder(getBorder());
+				emptyLabel.setIcon(getIcon());
+				emptyLabel.setText(getTextWhenEmpty());
+				emptyLabel.setForeground(isEnabled()? LABEL_COLOR: LABEL_COLOR_DISABLED);
+				return emptyLabel;
 			} else {
 				Color bg = res.getBackground();
 				Color fg = res.getForeground();
@@ -118,13 +137,7 @@ public class JTextComboBox extends JCustomTextField {
 			}
 		}
 	};
-	private boolean allowTyping = true;
-	private boolean progressiveFiltering = true;
-	private int push = 0;
 
-	private boolean multiChoices = false;
-	private static final String DEFAULT_SEPARATORS = ",; ";
-	private String separators = DEFAULT_SEPARATORS;
 
 	public JTextComboBox() {
 		this(true);
@@ -135,8 +148,18 @@ public class JTextComboBox extends JCustomTextField {
 		setChoices(choices);
 	}
 
+	public JTextComboBox(List<String> choices, boolean allowTyping) {
+		this(allowTyping);
+		setChoices(choices);
+	}
+
+	public JTextComboBox(String[] choices, boolean allowTyping) {
+		this(allowTyping);
+		setChoices(Arrays.asList(choices));
+	}
+
 	public JTextComboBox(boolean allowTyping) {
-		super(JCustomTextField.ALPHANUMERIC);
+		super(CustomFieldType.ALPHANUMERIC);
 		setAllowTyping(allowTyping);
 
 		list.addMouseListener(new MouseAdapter() {
@@ -156,7 +179,6 @@ public class JTextComboBox extends JCustomTextField {
 		});
 		list.setAutoscrolls(true);
 
-
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -170,7 +192,6 @@ public class JTextComboBox extends JCustomTextField {
 		addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
-				//If this component is inside a JTable, the keylistener is called before the focuslistener. So ignore this and do this in the editor
 				if(getParent() instanceof JTable) return;
 				selectAll();
 			}
@@ -209,6 +230,7 @@ public class JTextComboBox extends JCustomTextField {
 						selectWithPrefix(offs, prefix);
 					}
 				}
+				applyRenderer();
 			}
 
 			/**
@@ -229,6 +251,7 @@ public class JTextComboBox extends JCustomTextField {
 							selectedChoice = s;
 						}
 					}
+					System.out.println("JTextComboBox.JTextComboBox(...).new MyCustomDocument() {...}.selectWithPrefix() "+selectedChoice);
 					if (selectedChoice != null) {
 						// Found a match
 						super.remove(0, super.getLength());
@@ -244,6 +267,7 @@ public class JTextComboBox extends JCustomTextField {
 					super.remove(0, super.getLength());
 					super.insertString(0, prefix, null);
 					setCaretPosition(getLength());
+					hidePopup();
 				} else if (olderSel != null) {
 					// No match, reset
 					super.remove(0, super.getLength());
@@ -260,6 +284,7 @@ public class JTextComboBox extends JCustomTextField {
 					// show popup because the initial string does not match anything
 					showPopup();
 				}
+
 			}
 		};
 		setDocument(doc);
@@ -312,26 +337,25 @@ public class JTextComboBox extends JCustomTextField {
 						hidePopup();
 						e.consume();
 					}
-				} else if (e.getKeyChar() == 8 || e.getKeyChar() == 127) {// delete
-					int caret = Math.min(getSelectionStart(), getCaretPosition()) - 1;
-					if (caret >= 0) {
-						setText(getText().substring(0, caret));
-						setCaretPosition(getText().length());
-						moveCaretPosition(caret);
-					}
+				} else if (!isAllowTyping() && e.getKeyChar() == 127) {// delete
 					e.consume();
+				} else if (!isAllowTyping() && (e.getKeyChar() == 8 || e.getKeyChar() == 127)) {// delete
+					int caret = Math.min(getSelectionStart(), getCaretPosition()) - (e.getKeyChar()==127?0: 1);
+					if(caret>=0) {
+						try {
+							getDocument().insertString(0, getText().substring(0, caret), null);
+							setCaretPosition(caret);
+							moveCaretPosition(getText().length());
+						} catch (Exception ex) {
+							ex.printStackTrace();
+						}
+						e.consume();
+					}
+				} else if (isAllowTyping() && (e.getKeyChar() == 8 || e.getKeyChar() == 127)) {// delete
+					hidePopup();
 				}
 			}
 
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.getKeyChar() == 8  || e.getKeyChar() == 127 || Character.isAlphabetic(e.getKeyChar())) {
-					applyRenderer();
-					showPopup();
-					selectAndScroll();
-					e.consume();
-				}
-			}
 		});
 
 		addAncestorListener(new AncestorListener() {
@@ -392,7 +416,6 @@ public class JTextComboBox extends JCustomTextField {
 	private void init() {
 		list.setCellRenderer(getRenderer());
 		list.setSelectionMode(multiChoices && separators.length() > 0 ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
-
 	}
 
 	public void setMultipleChoices(boolean multipleMode) {
@@ -420,7 +443,14 @@ public class JTextComboBox extends JCustomTextField {
 	@SuppressWarnings("unchecked")
 	private void applyRenderer() {
 		if (getRenderer() != null) {
-			Component comp = getRenderer().getListCellRendererComponent(list, getText(), list.getSelectedIndex(), false, false);
+			int sel=0;
+			for(int i=0; i< model.getSize();i++) {
+				if(getText().equals(model.get(i))) {
+					sel = i; break;
+				}
+			}
+
+			Component comp = getRenderer().getListCellRendererComponent(list, getText(), sel, false, false);
 			if (comp instanceof JLabel) {
 				JLabel res = (JLabel) comp;
 				super.setForeground(res.getForeground());
@@ -560,7 +590,9 @@ public class JTextComboBox extends JCustomTextField {
 			model.addElement("");
 			boolean showAll = getCaretPosition() == 0 || last == null || choices.contains(last);
 			for (String s : choices) {
-				if (showAll || s.toLowerCase().startsWith(last.toLowerCase())) {
+				if(s==null || (s.length()==0 && allowTyping)) {
+					//Skip null and empty strings when the field is already editable
+				} else if(showAll || s.toLowerCase().startsWith(last.toLowerCase())) {
 					toAdd.add(s);
 				}
 			}
@@ -581,8 +613,9 @@ public class JTextComboBox extends JCustomTextField {
 	 */
 	private void selectAndScroll() {
 
-		if (popup == null || !popup.isVisible())
-			return;
+		//		if (popup == null || !popup.isVisible()) {
+		//			return;
+		//		}
 
 		try {
 			push++;
@@ -905,7 +938,7 @@ public class JTextComboBox extends JCustomTextField {
 			@Override
 			public Component processCellRenderer(JLabel comp, String value, int index) {
 				comp.setFont(FastFont.REGULAR.deriveSize(12 + index%10));
-				comp.setText(getText()+" "+index);
+				comp.setText(value+" "+index);
 				return comp;
 			}
 
@@ -920,6 +953,7 @@ public class JTextComboBox extends JCustomTextField {
 
 		cb1.setIcon(IconType.CSV.getIcon());
 		cb1.setChoices(choices);
+		cb1.setTextWhenEmpty("Single with same icon");
 		cb2.setIcon(IconType.CSV.getIcon());
 		cb2.setChoices(choices2);
 		cb3.setChoices(choices3);
@@ -928,7 +962,9 @@ public class JTextComboBox extends JCustomTextField {
 		cb5.setChoices(choices2);
 		cb6.setChoices(choices3);
 		cb7.setChoices(choices);
+		cb7.setTextWhenEmpty("Different icons");
 		cb8.setChoices(choices3);
+		cb8.setTextWhenEmpty("Different sizes");
 		cb9.setChoices(choices);
 
 		JFrame testFrame = new JFrame();
@@ -940,13 +976,45 @@ public class JTextComboBox extends JCustomTextField {
 		cb5.setMultipleChoices(true);
 		cb6.setMultipleChoices(true);
 		cb9.setAllowTyping(true);
+		cb9.setTextWhenEmpty("Typing allowed");
+
+		@SuppressWarnings("unchecked")
+		ExcelTable<String[]> table = new ExcelTable<>(new ExtendTableModel<>(new Column[]{new StringColumn<String[]>("Test") {
+			@Override
+			public String getValue(String row[]) {return row[0];}
+			@Override
+			public boolean isEditable(String[] row) {return true;}
+
+			@Override
+			public void setValue(String[] row, String value) {
+				row[0] = value;
+			}
+
+			@Override
+			public TableCellEditor getCellEditor(AbstractExtendTable<String[]> table) {
+				JTextComboBox editor = new JTextComboBox(Arrays.asList(new String[]{"A","AB","AC","B"}));
+				editor.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
+				DefaultCellEditor ed = new DefaultCellEditor(editor) {
+					@Override
+					public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+						Component c = super.getTableCellEditorComponent(table, value, isSelected, row, column);
+						//Don't forget to selectAll
+						((JTextComboBox)c).selectAll();
+						return c;
+					}
+				};
+
+				return ed;
+			}
+		}}));
+		table.setRows(Arrays.asList(new String[][]{{"A"},{"A"},{""},{""}}));
 
 		testFrame.setContentPane(
-				UIUtils.createVerticalBox(
-						UIUtils.createTitleBox("Simple", UIUtils.createTable(3, cb1,cb2,cb3)),
-						UIUtils.createTitleBox("Multiple", UIUtils.createTable(3, cb4,cb5,cb6)),
-						UIUtils.createTitleBox("Custom", UIUtils.createTable(3, cb7, cb9, Box.createHorizontalGlue())),
-						UIUtils.createHorizontalBox(cb8, Box.createHorizontalGlue())));
+				UIUtils.createBox(new JScrollPane(table),
+						UIUtils.createVerticalBox(
+								UIUtils.createTitleBox("Simple", UIUtils.createTable(3, cb1,cb2,cb3)),
+								UIUtils.createTitleBox("Multiple", UIUtils.createTable(3, cb4,cb5,cb6)),
+								UIUtils.createTitleBox("Custom", UIUtils.createTable(3, cb7, cb8, cb9, Box.createHorizontalGlue())))));
 		testFrame.pack();
 		testFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		testFrame.setVisible(true);
@@ -962,9 +1030,9 @@ public class JTextComboBox extends JCustomTextField {
 	 * @return
 	 */
 	public Component processCellRenderer(JLabel comp, String value, int index) {
-		if (value == null || value.length() == 0) {
-			comp.setText(" ");
-		}
+		//		if (value == null || value.length() == 0) {
+		//			comp.setText(" ");
+		//		}
 		return comp;
 	}
 

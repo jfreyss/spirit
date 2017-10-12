@@ -22,27 +22,24 @@
 package com.actelion.research.spiritapp.spirit.ui.study;
 
 import java.awt.BorderLayout;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.spirit.ui.IStudyTab;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.SpiritTab;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
-import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.JBGScrollPane;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.SwingWorkerExtended;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class StudyTab extends SpiritTab implements IStudyTab {
@@ -60,24 +57,20 @@ public class StudyTab extends SpiritTab implements IStudyTab {
 		final JScrollPane studyScrollPane = new JBGScrollPane(studyTable, 3);
 
 
-		JSplitPane northPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, searchPane, studyScrollPane);
+		JSplitPane northPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, searchPane, studyScrollPane);
 		northPane.setDividerLocation(250);
 
-		JSplitPane contentPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, northPane, studyDetailPanel);
+		JSplitPane contentPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, northPane, studyDetailPanel);
 		contentPane.setDividerLocation(250);
-		contentPane.setOneTouchExpandable(true);
 
 		studyDetailPanel.showInfos();
 
-		studyTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if(e.getValueIsAdjusting()) return;
-				final List<Study> sel = studyTable.getSelection();
-				studyDetailPanel.setStudy(sel.size()==1? sel.get(0): null);
+		studyTable.getSelectionModel().addListSelectionListener(e-> {
+			if(e.getValueIsAdjusting()) return;
+			final List<Study> sel = studyTable.getSelection();
+			studyDetailPanel.setStudy(sel.size()==1? sel.get(0): null);
 
-				frame.setStudyId(MiscUtils.flatten(Study.getStudyIds(sel)));
-			}
+			frame.setStudyId(MiscUtils.flatten(Study.getStudyIds(sel)));
 		});
 
 
@@ -85,11 +78,8 @@ public class StudyTab extends SpiritTab implements IStudyTab {
 		StudyActions.attachPopup(studyScrollPane);
 		StudyActions.attachPopup(studyDetailPanel);
 
-		searchPane.addPropertyChangeListener(new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				StudyTab.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
-			}
+		searchPane.addPropertyChangeListener(evt-> {
+			StudyTab.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
 		});
 
 		setLayout(new BorderLayout());

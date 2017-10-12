@@ -72,6 +72,7 @@ import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.ui.JComboBoxBigPopup;
 import com.actelion.research.util.ui.JCustomTextArea;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.JInfoLabel;
@@ -97,7 +98,7 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 			JButton addButton = new JButton("+");
 			JButton delButton = new JButton("-");
 
-			JCustomTextField nameTextField = new JCustomTextField(10, "");
+			JCustomTextField nameTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 10);
 			JButton paramButton = new JButton("View/Edit");
 			JGenericComboBox<DataType> dataTypeComboBox = new JGenericComboBox<>(DataType.values(), false);
 			JCheckBox requiredCheckBox = new JCheckBox("Req.");
@@ -665,10 +666,10 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 	private void editParametersBiotype(BiotypeMetadata model) {
 		//Biosample -> select biotype
 		BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
-		biotypeComboBox.setSelectionString(model.getParameters());
+		biotypeComboBox.setText(model.getParameters());
 		int res = JOptionPane.showOptionDialog(BiotypeEditDlg.this, biotypeComboBox, "Select Linked Biotype", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
 		if(res==JOptionPane.YES_OPTION) {
-			model.setParameters(biotypeComboBox.getSelectionString());
+			model.setParameters(biotypeComboBox.getText());
 		}
 	}
 

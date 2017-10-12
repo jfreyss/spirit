@@ -22,15 +22,17 @@
 package com.actelion.research.spiritapp.spirit.ui.biosample;
 
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.border.Border;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.PlainDocument;
 
 import com.actelion.research.spiritcore.business.biosample.BarcodeSequence.Category;
 import com.actelion.research.spiritcore.services.dao.DAOBarcode;
@@ -40,18 +42,18 @@ import com.actelion.research.util.ui.JCustomTextField;
 /**
  * TextField for Ids.
  * This textfield can automatically generate sampleIds based on the given prefix.
- * 
+ *
  * The generate button will react like:
  * - If the initialized underlying object (Biosample for example) was not initialized with a sampleId, this will create a new unique id (through DAOBarcode) based on the prefix
  * - If the initialized underlying object was initialized with a sampleId, this will return the same given sampleId (not avoid creating a new one)
- * 
+ *
  * The function scanTextField.initUnderlyingObject must always be called before use
  * <pre>
  * scanTextField = new SampleIdGenerateField<Biosample>();
  * scanTextField.initUnderlyingObject(biosample, biotype.getPrefix(), biosample.getSampleId());
  * </pre>
- * 
- * 
+ *
+ *
  * @author freyssj
  *
  * @param <UNDERLYING>
@@ -59,23 +61,20 @@ import com.actelion.research.util.ui.JCustomTextField;
 public class SampleIdGenerateField<UNDERLYING> extends JCustomTextField {
 
 	private String currentPrefix;
-	private JButton generateButton = new JButton("Gen");			
-	
+	private JButton generateButton = new JButton("Gen");
+
 	/**HashMap used to map the prefix to the map of biosample to the next sampleid */
 	private Map<String, IdentityHashMap<UNDERLYING, String>> prefix2map = new HashMap<>();
 	private UNDERLYING currentObject;
 
 	public SampleIdGenerateField() {
 		super(10, "", "SampleId");
-		
+
 		generateButton.setBorder(BorderFactory.createEmptyBorder());
-		generateButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ev) {
-				if(!SampleIdGenerateField.this.isEnabled()) return;
-				String id = generateSampleIdFor(currentObject, currentPrefix);
-				setText(id);
-			}
+		generateButton.addActionListener(e-> {
+			if(!SampleIdGenerateField.this.isEnabled()) return;
+			String id = generateSampleIdFor(currentObject, currentPrefix);
+			setText(id);
 		});
 
 		setLayout(null);
@@ -84,14 +83,47 @@ public class SampleIdGenerateField<UNDERLYING> extends JCustomTextField {
 		generateButton.setFont(FastFont.SMALLER);
 		generateButton.setToolTipText("Generate a new sampleId");
 		add(generateButton);
+
+		setDocument(new PlainDocument() {
+			@Override
+			public void insertString(int offs, String str, AttributeSet a) throws BadLocationException {
+				super.insertString(offs, str, a);
+				addSuffix();
+			}
+
+			private void addSuffix() {
+				try {
+					String prefix = getText(0, getCaretPosition());
+					if(prefix.length()<2) return;
+					for (int i = 0; i < prefix.length(); i++) {
+						if(Character.isDigit(prefix.charAt(i))) return;
+					}
+
+					//Find the suffix
+					String suffix = DAOBarcode.getNextId(Category.BIOSAMPLE, prefix, false);
+					if(suffix.length()<prefix.length()) return;
+					suffix = suffix.substring(prefix.length());
+
+					//Insert the suffix
+					int caret = getCaretPosition();
+					super.insertString(caret, suffix, null);
+
+					//select the suffix
+					setCaretPosition(getLength());
+					moveCaretPosition(caret);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
 	}
-	
+
 	@Override
 	public Dimension getPreferredSize() {
 		Dimension dim = super.getPreferredSize();
 		return new Dimension(dim.width+25, dim.height);
 	}
-	
+
 	/**
 	 * Utility class used to generate sampleIds without setting the underlying object and sampleId
 	 * @param object
@@ -99,7 +131,7 @@ public class SampleIdGenerateField<UNDERLYING> extends JCustomTextField {
 	 * @return
 	 */
 	public String generateSampleIdFor(UNDERLYING object, String prefix) {
-		
+
 		if(object==null) return null;
 		if(prefix==null) return null;
 
@@ -108,11 +140,10 @@ public class SampleIdGenerateField<UNDERLYING> extends JCustomTextField {
 		if(object2sampleId==null) {
 			prefix2map.put(prefix, object2sampleId = new IdentityHashMap<>());
 		}
-		
+
 		String memo = object2sampleId.get(object);
 		if(memo!=null) return memo;
-//		if(currentSampleId!=null && currentSampleId.length()>0) return currentSampleId;
-		
+
 		//Generate a new barcode
 		try {
 			String id = DAOBarcode.getNextId(Category.BIOSAMPLE, prefix);
@@ -121,24 +152,24 @@ public class SampleIdGenerateField<UNDERLYING> extends JCustomTextField {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
-		}						
+		}
 	}
-	
+
 	/**
 	 * Memorizes the nextId, and set the biotype
 	 * @param object
 	 * @param prefix (null or empty will desactivate the generate button)
-	 * @param cachedId (null, to set the prefix to be generated) 
+	 * @param cachedId (null, to set the prefix to be generated)
 	 */
 	public void putCachedSampleId(UNDERLYING object, String prefix, String cachedId) {
 		generateButton.setEnabled(isEnabled() && prefix!=null && prefix.length()>0);
 		if(object==null) return;
-		
+
 		IdentityHashMap<UNDERLYING, String> object2sampleId = prefix2map.get(prefix);
 		if(object2sampleId==null) {
 			prefix2map.put(prefix, object2sampleId = new IdentityHashMap<>());
 		}
-		
+
 		//Memorizes the previously generated sampleId
 		if(object!=null && cachedId!=null && cachedId.length()>0 && object2sampleId.get(object)==null) {
 			object2sampleId.put(object, cachedId);
@@ -147,30 +178,36 @@ public class SampleIdGenerateField<UNDERLYING> extends JCustomTextField {
 		this.currentPrefix = prefix;
 		this.currentObject = object;
 	}
-	
+
 	@Override
 	public void doLayout() {
 		generateButton.setBounds(getWidth()-23, 1, 23, getHeight()-2);
 	}
-	
+
 	public String getSampleId() {
 		String t = getText();
 		return t;
 	}
-	
+
 	@Override
 	public void setEnabled(boolean enabled) {
 		generateButton.setEnabled(enabled && currentPrefix!=null && currentPrefix.length()>0);
-		super.setEnabled(enabled);		
+		super.setEnabled(enabled);
 	}
-	
-	
+
+
 	@Override
 	public void setBorder(Border border) {
 		if(border==null) return;
-		super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 12)));			
-
+		super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 12)));
 	}
-	
-	
-}	
+
+	public static void main(String[] args) {
+		JFrame f = new JFrame("");
+		f.setContentPane(new SampleIdGenerateField<>());
+		f.pack();
+		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		f.setVisible(true);
+	}
+
+}

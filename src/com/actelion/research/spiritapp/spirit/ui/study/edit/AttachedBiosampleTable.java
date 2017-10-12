@@ -50,6 +50,7 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableColumn;
 
@@ -148,6 +149,7 @@ public class AttachedBiosampleTable extends SpiritExcelTable<AttachedBiosample> 
 				cageNames.add(Container.suggestNameForCage(study, i+1));
 			}
 			cageComboBox = new JTextComboBox(cageNames);
+			cageComboBox.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 		}
 
 		@Override

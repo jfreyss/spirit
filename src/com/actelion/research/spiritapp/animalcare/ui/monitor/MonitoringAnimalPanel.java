@@ -27,7 +27,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -43,9 +42,9 @@ import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.text.JTextComponent;
 
@@ -74,6 +73,8 @@ import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
+import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 
@@ -95,8 +96,8 @@ public class MonitoringAnimalPanel extends JPanel {
 	private final MonitorTextComboBox obsTextField;
 	private final MonitorTextField weighTextField;
 	private final JLabel formulationCommentsLabel = new JCustomLabel("", Color.BLUE);
-	private final JCustomTextField foodTextField = new JCustomTextField(JCustomTextField.DOUBLE);
-	private final JCustomTextField waterTextField = new JCustomTextField(JCustomTextField.DOUBLE);
+	private final JCustomTextField foodTextField = new JCustomTextField(CustomFieldType.DOUBLE);
+	private final JCustomTextField waterTextField = new JCustomTextField(CustomFieldType.DOUBLE);
 	private final List<JTextComponent> requiredComponents = new ArrayList<>();
 
 	public MonitoringAnimalPanel(final MonitoringDlg dlg, int no, final Biosample animal, final Phase phase, boolean onlyShowRequired) {
@@ -126,11 +127,14 @@ public class MonitoringAnimalPanel extends JPanel {
 			weighTextField = new MonitorTextField(weighResult, 0, required);
 			if(required) requiredComponents.add(weighTextField);
 
-			weighTextField.addActionListener(new ActionListener() {
+			weighTextField.addActionListener(e-> {
+				if(nt==null && weighTextField.getText().length()==0) return;
+				openTreatmentDialog();
+			});
+			weighTextField.addFocusListener(new FocusAdapter() {
 				@Override
-				public void actionPerformed(ActionEvent e) {
-					if(nt==null && weighTextField.getText().length()==0) return;
-					openTreatmentDialog();
+				public void focusLost(FocusEvent e) {
+					updateTreatmentPanel();
 				}
 			});
 			try {
@@ -146,7 +150,7 @@ public class MonitoringAnimalPanel extends JPanel {
 		JCustomLabel lastObsLabel = new JCustomLabel(FastFont.SMALL);
 		{
 			obsResult = animal.getAuxResult(DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME), phase);
-			assert obsResult!=null;
+			assert obsResult!=null: "No aux result for "+animal+" at "+phase+" "+animal.getAuxResults();
 
 			//Find previousObservation
 			Result prevObsResult = SpiritRights.isBlind(phase.getStudy(), SpiritFrame.getUser())? null: Result.getPrevious(obsResult, dlg.getAllPreviousResults());
@@ -167,15 +171,11 @@ public class MonitoringAnimalPanel extends JPanel {
 		for (Measurement em : phase.getStudy().getAllMeasurementsFromActions()) {
 			assert em.getTest()!=null;
 			final Result result = animal.getAuxResult(em.getTest(), phase, em.getParameters());
-			//			assert result!=null;
-
 
 			List<TestAttribute> tas = em.getTest().getOutputAttributes();
 			for (int i = 0; i < tas.size(); i++) {
 				TestAttribute ta = tas.get(i);
 				boolean required = a!=null && a.getMeasurements().contains(em);
-
-
 
 				if(ta.getDataType()==DataType.NUMBER || ta.getDataType()==DataType.ALPHA || ta.getDataType()==DataType.AUTO || ta.getDataType()==DataType.FORMULA) {
 					//Find previousValue
@@ -230,6 +230,7 @@ public class MonitoringAnimalPanel extends JPanel {
 		String valWater = fwResult==null? "": fwResult.getOutputResultValues().get(1).getValue();
 		foodTextField.setText(valFood);
 		waterTextField.setText(valWater);
+
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//Treatment
 		JCustomLabel treatmentLabel = new JCustomLabel(nt!=null?nt.getName(): "NoTreatment", FastFont.BOLD, nt==null?Color.BLACK: nt.getColor());
@@ -239,8 +240,8 @@ public class MonitoringAnimalPanel extends JPanel {
 
 			commentsPanel = UIUtils.createHorizontalBox(formulationCommentsLabel);
 			compoundsPanel = UIUtils.createHorizontalBox(
-					nt.getDose1()!=null? UIUtils.createHorizontalBox(new JCustomLabel(nt.getCompoundAndUnit1()+" ", FastFont.BOLD), calculated1Label):new JLabel(),
-							nt.getDose2()!=null? UIUtils.createHorizontalBox(new JCustomLabel(nt.getCompoundAndUnit2()+" ", FastFont.BOLD), calculated2Label) :new JLabel());
+					(nt.getDose1()!=null? UIUtils.createHorizontalBox(new JCustomLabel(nt.getCompoundAndUnit1()+" ", FastFont.BOLD), calculated1Label): null),
+					(nt.getDose2()!=null? UIUtils.createHorizontalBox(new JCustomLabel(nt.getCompoundAndUnit2()+" ", FastFont.BOLD), calculated2Label): null));
 		}
 		treatmentPanel = UIUtils.createVerticalBox(
 				UIUtils.createHorizontalBox(treatmentLabel, Box.createHorizontalStrut(15), commentsPanel, Box.createHorizontalGlue()),
@@ -290,7 +291,7 @@ public class MonitoringAnimalPanel extends JPanel {
 				Box.createHorizontalGlue()));
 	}
 
-	private final Map<Biosample, Map<String, ActionTreatment>> bio2history;
+	private Map<Biosample, Map<String, ActionTreatment>> bio2history;
 
 
 	public static Map<Biosample, Map<String, ActionTreatment>> mapTreatments(Collection<Biosample> animals) {
@@ -319,6 +320,7 @@ public class MonitoringAnimalPanel extends JPanel {
 		StudyAction a = phase.getStudy().getStudyAction(phase, animal);
 		if(a==null) return null;
 		NamedTreatment nt = a.getNamedTreatment();
+		bio2history = mapTreatments(Collections.singleton(animal));
 		ActionTreatment treatment = bio2history.get(animal)==null? null: bio2history.get(animal).get(phase.getShortName() + "_" + (nt==null?"":nt.getName()));
 		return treatment;
 	}
@@ -366,7 +368,7 @@ public class MonitoringAnimalPanel extends JPanel {
 		ActionTreatment action = getTreatment(animal, phase);
 		Result weighResult = animal.getAuxResult(DAOTest.getTest(DAOTest.WEIGHING_TESTNAME), phase);
 		Result prevWeighResult = SpiritRights.isBlind(phase.getStudy(), SpiritFrame.getUser())? null: Result.getPrevious(weighResult, dlg.getAllPreviousResults());
-		Double weight = weighResult.getFirstAsDouble();
+		Double weight = weighResult==null? null: weighResult.getFirstAsDouble();
 
 
 		if(nt==null) {
@@ -459,22 +461,17 @@ public class MonitoringAnimalPanel extends JPanel {
 
 			String presetFormulation = actionTreatment==null || actionTreatment.getFormulation()==null? dlg.getFormulation(nt): actionTreatment.getFormulation();
 			String presetComments = actionTreatment==null? "": actionTreatment.getComments();
-			final JCustomTextField popFormulationTextField = new JCustomTextField(14, presetFormulation);
-			final JCustomTextField popCommentsTextField = new JCustomTextField(14, presetComments);
+			final JCustomTextField popFormulationTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, presetFormulation, 14);
+			final JCustomTextField popCommentsTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, presetComments, 14);
 
 			if(popFormulationTextField.getText().length()==0) {
 				popFormulationTextField.setBackground(LF.BGCOLOR_REQUIRED);
 			}
 
-			final JCustomTextField effDose1TextField = new JCustomTextField(JCustomTextField.DOUBLE, 8);
+			final JCustomTextField effDose1TextField = new JCustomTextField(CustomFieldType.DOUBLE, 8);
 			effDose1TextField.setWarningWhenEdited(true);
-			final JCustomTextField effDose2TextField = new JCustomTextField(JCustomTextField.DOUBLE, 8);
+			final JCustomTextField effDose2TextField = new JCustomTextField(CustomFieldType.DOUBLE, 8);
 			effDose2TextField.setWarningWhenEdited(true);
-
-			if(actionTreatment!=null) {
-				effDose1TextField.setText(actionTreatment.getEff1());
-				effDose2TextField.setText(actionTreatment.getEff2());
-			}
 
 			//Get previous weights
 			Double weight = weighTextField.getTextDouble();
@@ -501,27 +498,12 @@ public class MonitoringAnimalPanel extends JPanel {
 			Double d1 = nt==null? null: nt.getCalculatedDose1(weight);
 			Double d2 = nt==null? null: nt.getCalculatedDose2(weight);
 
-			SampleIdLabel sampleIdLabel = new SampleIdLabel(animal, true, true);
-			sampleIdLabel.setOpaque(false);
-			sampleIdLabel.setHighlight(true);
-			JPanel box = UIUtils.createVerticalBox(
-					UIUtils.createTitleBox(UIUtils.createVerticalBox(
-							UIUtils.createHorizontalBox(sampleIdLabel, Box.createHorizontalStrut(20), new ContainerLabel(ContainerDisplayMode.CONTAINERID, animal.getContainer()),  Box.createHorizontalGlue()),
-							UIUtils.createHorizontalBox(new JCustomLabel(weight==null?"NA": weight+"g", FastFont.BOLD), Box.createHorizontalStrut(15), weightIncreaseLabelFromPrevious, Box.createHorizontalStrut(15), weightIncreaseLabelFromStart, Box.createHorizontalGlue()))),
-					nt==null? new JLabel(): UIUtils.createTitleBox(UIUtils.createVerticalBox(
-							UIUtils.createHorizontalBox(new JCustomLabel(nt.getName(), FastFont.BOLD, nt.getColor()), Box.createHorizontalGlue()),
-							UIUtils.createTable(2, 5, 0,
-									new JLabel("Formulation: "), popFormulationTextField,
-									new JLabel("Comments:   "), popCommentsTextField),
-							UIUtils.createTable(3, 5, 0,
-									new JCustomLabel(nt.getCompoundAndUnit1()), nt.getDose1()==null? new JLabel(): new JCustomLabel(d1==null?"NA":""+d1+(nt.getUnit1()==null?"": nt.getUnit1().getNumerator()), Color.BLUE), nt.getDose1()==null? new JLabel(): UIUtils.createHorizontalBox(new JLabel("Effective: "), effDose1TextField),
-											new JCustomLabel(nt.getCompoundAndUnit2()), nt.getDose2()==null? new JLabel(): new JCustomLabel(d2==null?"NA":""+d2+(nt.getUnit2()==null?"": nt.getUnit2().getNumerator()), Color.BLUE)), nt.getDose2()==null? new JLabel(): UIUtils.createHorizontalBox(new JLabel("Effective: "), effDose2TextField))
-							)
-					);
+			effDose1TextField.setText(actionTreatment!=null? actionTreatment.getEff1(): d1!=null? FormatterUtils.format2(d1): "");
+			effDose2TextField.setText(actionTreatment!=null? actionTreatment.getEff2(): d2!=null? FormatterUtils.format2(d2): "");
 
 
-			JOptionPane.showMessageDialog(MonitoringAnimalPanel.this, box, "Treatment", JOptionPane.PLAIN_MESSAGE);
-			{
+			JEscapeDialog dlg2 = new JEscapeDialog(dlg, "Treatment");
+			ActionListener al = ev-> {
 				JPAUtil.pushEditableContext(SpiritFrame.getUser());
 				try {
 					//Persist the treatment action
@@ -534,13 +516,48 @@ public class MonitoringAnimalPanel extends JPanel {
 					updateTreatmentPanel();
 					updateFormulationLabel(at);
 					dlg.setFormulation(nt, popFormulationTextField.getText());
+					dlg2.dispose();
 				} catch(Exception e) {
 					treatmentPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.RED), BorderFactory.createEmptyBorder(2, 2, 2, 2)));
 					JExceptionDialog.showError(e);
 				} finally {
 					JPAUtil.popEditableContext();
 				}
-			}
+			};
+
+
+			popFormulationTextField.addActionListener(al);
+			popCommentsTextField.addActionListener(al);
+			effDose1TextField.addActionListener(al);
+			effDose2TextField.addActionListener(al);
+
+			SampleIdLabel sampleIdLabel = new SampleIdLabel(animal, true, true);
+			sampleIdLabel.setOpaque(false);
+			sampleIdLabel.setHighlight(true);
+			JButton okButton = new JButton("Ok");
+			dlg2.getRootPane().setDefaultButton(okButton);
+			okButton.addActionListener(al);
+
+			JPanel box = UIUtils.createBox(
+					(nt==null? null: UIUtils.createTitleBox(UIUtils.createVerticalBox(
+							UIUtils.createHorizontalBox(new JCustomLabel(nt.getName(), FastFont.BOLD, nt.getColor()), Box.createHorizontalGlue()),
+							UIUtils.createTable(2, 5, 0,
+									new JLabel("Formulation: "), popFormulationTextField,
+									new JLabel("Comments:   "), popCommentsTextField),
+							UIUtils.createTable(2, 5, 0,
+									(nt.getDose1()==null? null: new JCustomLabel(" - " + nt.getCompoundAndUnit1())), (nt.getDose1()==null? null: new JCustomLabel(d1==null?"NA":""+d1+(nt.getUnit1()==null?"": nt.getUnit1().getNumerator()), Color.BLUE)),
+									null, (nt.getDose1()==null? null: UIUtils.createHorizontalBox(new JLabel("Effective: "), effDose1TextField)),
+									(nt.getDose2()==null? null: new JCustomLabel(" - " + nt.getCompoundAndUnit2())), (nt.getDose2()==null? null: new JCustomLabel(d2==null?"NA":""+d2+(nt.getUnit2()==null?"": nt.getUnit2().getNumerator()), Color.BLUE)),
+									null, (nt.getDose2()==null? null: UIUtils.createHorizontalBox(new JLabel("Effective: "), effDose2TextField)))))),
+					UIUtils.createTitleBox(UIUtils.createVerticalBox(
+							UIUtils.createHorizontalBox(sampleIdLabel, Box.createHorizontalStrut(20), new ContainerLabel(ContainerDisplayMode.CONTAINERID, animal.getContainer()),  Box.createHorizontalGlue()),
+							UIUtils.createHorizontalBox(new JCustomLabel(weight==null?"NA": weight+"g", FastFont.BOLD), Box.createHorizontalStrut(15), weightIncreaseLabelFromPrevious, Box.createHorizontalStrut(15), weightIncreaseLabelFromStart, Box.createHorizontalGlue()))),
+					UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
+
+			dlg2.setContentPane(box);
+			UIUtils.adaptSize(dlg2, 0, 0);
+			dlg2.setVisible(true);
+
 
 		} catch(Exception e) {
 			JExceptionDialog.showError(e);

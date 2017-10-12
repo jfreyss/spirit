@@ -66,23 +66,26 @@ import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMo
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.location.Location;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
+import com.actelion.research.spiritcore.services.dao.Cache;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.Config;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.ApplicationErrorLog;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JStatusBar;
-import com.actelion.research.util.ui.SplashScreen2;
-import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
+import com.actelion.research.util.ui.SplashScreen;
+import com.actelion.research.util.ui.SplashScreen.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
@@ -95,12 +98,11 @@ import com.actelion.research.util.ui.iconbutton.IconType;
  */
 public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserver, ISpiritContextObserver {
 
-	protected static SplashConfig splashConfig = new SplashScreen2.SplashConfig(Spirit.class.getResource("spirit.jpg"), "Spirit", "Spirit v." + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Actelion - J.Freyss");
+	protected static SplashConfig splashConfig = new SplashScreen.SplashConfig(Spirit.class.getResource("spirit.jpg"), "Spirit", "Spirit v." + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Actelion - J.Freyss");
 	protected String copyright;
 	private SpiritTabbedPane tabbedPane;
 
 	private JStatusBar statusBar;
-	private static SpiritUser user;
 	private Runnable afterLoginAction = null;
 	private RightLevel studyLevel = RightLevel.READ;
 	private boolean multipleChoices = true;
@@ -182,7 +184,7 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		try {
 			tabbedPane = new SpiritTabbedPane();
 
-			if(user!=null) {
+			if(getUser()!=null) {
 				//Add the tabs
 				tabbedPane.setFont(FastFont.BIGGER);
 				for (SpiritTab tab : getTabs()) {
@@ -191,7 +193,7 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 				}
 
 				//Apply actions after login
-				if(afterLoginAction!=null && user!=null) {
+				if(afterLoginAction!=null && getUser()!=null) {
 					new SwingWorkerExtended(tabbedPane, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 						@Override
 						protected void doInBackground() throws Exception {
@@ -225,7 +227,9 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		editMenu.add(new StudyActions.Action_New());
 		editMenu.add(new BiosampleActions.Action_NewBatch());
 		editMenu.add(new LocationActions.Action_New());
-		editMenu.add(new ResultActions.Action_New());
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+			editMenu.add(new ResultActions.Action_New());
+		}
 		editMenu.add(new JSeparator());
 		editMenu.add(new ExchangeActions.Action_ExportExchange(this));
 		editMenu.add(new ExchangeActions.Action_ImportExchange());
@@ -237,8 +241,6 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 
 
 		menuBar.add(SpiritMenu.getToolsMenu());
-
-		//		menuBar.add(SpiritMenu.getPerspectivesMenu());
 
 		menuBar.add(SpiritMenu.getAdminMenu());
 
@@ -257,13 +259,12 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 
 		//Error log for Actelion
 		ApplicationErrorLog.setApplication("Spirit v" + Spirit.class.getPackage().getImplementationVersion());
-		ApplicationErrorLog.setActivated(DBAdapter.getAdapter().isInActelionDomain());
+		ApplicationErrorLog.setActivated(DBAdapter.getInstance().isInActelionDomain());
 
 		//Add a UncaughtExceptionHandler
 		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 			@Override
 			public void uncaughtException(final Thread t, final Throwable e) {
-				System.out.println("SpiritFrame.uncaughtException()");
 				e.printStackTrace();
 				JExceptionDialog.showError(UIUtils.getMainFrame(), e);
 			}
@@ -274,9 +275,11 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 
 		try {
 			UIManager.setLookAndFeel(new NimbusLookAndFeel());
+			FastFont.setDefaultFontSize(Spirit.getConfig().getProperty("preferences.fontSize", 12));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
 		SwingUtilities.invokeLater(() -> {
 			ImageFactory.clearCache();
 			IconType.clearCache();
@@ -450,17 +453,18 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 						}
 					}
 				} else {
+					SpiritTab tab = getSelectedTab();
 					//Switch to appropriate tab
-					SpiritTab tab = null;
-					if(w==Study.class) {
-						tab = tabbedPane.getTab(IStudyTab.class);
-					} else if(w==Biosample.class) {
-						tab = tabbedPane.getTab(IBiosampleTab.class);
-					} else if(w==Location.class) {
-						tab = tabbedPane.getTab(LocationTab.class);
-					} else if(w==Result.class) {
-						tab = tabbedPane.getTab(ResultTab.class);
-					}
+					//					SpiritTab tab = null;
+					//					if(w==Study.class) {
+					//						tab = tabbedPane.getTab(IStudyTab.class);
+					//					} else if(w==Biosample.class) {
+					//						tab = tabbedPane.getTab(IBiosampleTab.class);
+					//					} else if(w==Location.class) {
+					//						tab = tabbedPane.getTab(LocationTab.class);
+					//					} else if(w==Result.class) {
+					//						tab = tabbedPane.getTab(ResultTab.class);
+					//					}
 
 					if(tab!=null) {
 						//Prevent the event onStudyTab to be fired
@@ -492,10 +496,10 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 
 				try {
 					BiosampleQuery q = BiosampleQuery.createQueryForStudyIds(MiscUtils.flatten(Study.mapStudyId(studies).keySet(), " "));
-					exchange.addBiosamples(DAOBiosample.queryBiosamples(q, SpiritFrame.getUser()));
+					exchange.addBiosamples(DAOBiosample.queryBiosamples(q, getUser()));
 
 					ResultQuery q2 = ResultQuery.createQueryForStudyIds(MiscUtils.flatten(Study.mapStudyId(studies).keySet(), " "));
-					exchange.addResults(DAOResult.queryResults(q2, user));
+					exchange.addResults(DAOResult.queryResults(q2, getUser()));
 				} catch(Exception e) {
 					//Should not happen
 					throw new RuntimeException(e);
@@ -515,12 +519,12 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 
 
 	public static String getUsername() {
-		return user==null? null: user.getUsername();
+		return getUser()==null? null: getUser().getUsername();
 	}
 
 
 	public static SpiritUser getUser() {
-		return user;
+		return JPAUtil.getSpiritUser();
 	}
 
 
@@ -530,7 +534,7 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 	 * @param user
 	 */
 	public static void setUser(SpiritUser user) {
-		SpiritFrame.user = user;
+		JPAUtil.setSpiritUser(user);
 	}
 
 	public void setStudyId(String studyId) {
@@ -552,6 +556,7 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 	public static void clearAll() {
 		SwingWorkerExtended.awaitTermination();
 		JPAUtil.clearAll();
+		Cache.getInstance().clear();
 	}
 
 

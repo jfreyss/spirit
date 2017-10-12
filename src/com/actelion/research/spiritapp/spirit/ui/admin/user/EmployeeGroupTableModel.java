@@ -30,29 +30,43 @@ import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
 public class EmployeeGroupTableModel extends ExtendTableModel<EmployeeGroup> {
 
-	public static final Column<EmployeeGroup, String> COLUMN_NAME = new Column<EmployeeGroup, String>("GroupName", String.class, 100) {		
+	public static final Column<EmployeeGroup, String> COLUMN_NAME = new Column<EmployeeGroup, String>("GroupName", String.class, 100) {
 		@Override
 		public String getValue(EmployeeGroup row) {
 			return row.getName();
 		}
 	};
-	
+
 	@Override
 	public Column<EmployeeGroup,?> getTreeColumn() {
 		return COLUMN_NAME;
 	}
-	
+
 	@Override
 	public List<EmployeeGroup> getTreeChildren(EmployeeGroup row) {
-		return new ArrayList<EmployeeGroup>(row.getChildren());
+		return row==null? new ArrayList<EmployeeGroup>(): new ArrayList<EmployeeGroup>(row.getChildren());
 	}
 
-	
+	@Override
+	public EmployeeGroup getTreeParent(EmployeeGroup row) {
+		return row==null? null: row.getParent();
+	}
+
+
 	public EmployeeGroupTableModel() {
 		List<Column<EmployeeGroup,?>> columns = new ArrayList<>();
 		columns.add(COLUMN_ROWNO);
-		columns.add(COLUMN_NAME);		
+		columns.add(COLUMN_NAME);
 		setColumns(columns);
 	}
-	
+	@Override
+	public void setRows(List<EmployeeGroup> rows) {
+		super.setRows(rows);
+		System.out.println("EmployeeGroupTableModel.setRows() "+rows);
+
+		for (EmployeeGroup r : rows) {
+			System.out.println("EmployeeGroupTableModel.setRows() "+r+" --> "+r.getChildren()+">"+rows.containsAll(r.getChildren()));
+		}
+	}
+
 }

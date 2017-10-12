@@ -58,7 +58,7 @@ public class StockCareItem {
 			synchronized (StockCareItem.class) {
 				if(items==null) {
 					items = new ArrayList<StockCareItem>();
-					if(DBAdapter.getAdapter().isInActelionDomain()) {
+					if(DBAdapter.getInstance().isInActelionDomain()) {
 						//Items configured by Actelion
 						add("Cells", "Cell Aliquot", null);
 						add("Antibodies", "Antibody", new AbstractAction[] {new AntibodySelectAction()});

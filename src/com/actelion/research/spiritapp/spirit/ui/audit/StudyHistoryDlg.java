@@ -22,25 +22,26 @@
 package com.actelion.research.spiritapp.spirit.ui.audit;
 
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.Box;
+import javax.swing.JCheckBox;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
 import com.actelion.research.spiritapp.spirit.ui.admin.AdminActions;
-import com.actelion.research.spiritapp.spirit.ui.study.StudyDetailPanel;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
+import com.actelion.research.spiritcore.services.dao.DAORevision.RevisionQuery;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 
 /**
  * Dialog to show the audit history of a study.
@@ -50,47 +51,74 @@ import com.actelion.research.util.ui.UIUtils;
  */
 public class StudyHistoryDlg extends JEscapeDialog {
 
-	final RevisionTable revisionList = new RevisionTable(false);
+
+	private Study study;
+	private RevisionTable revisionTable = new RevisionTable(true);
+	private JCheckBox studyCheckbox = new JCheckBox("Study", true);
+	private JCheckBox samplesCheckbox = new JCheckBox("Biosamples", true);
+	private JCheckBox resultsCheckbox = new JCheckBox("Results");
 
 	public StudyHistoryDlg(Study study) {
 		super(UIUtils.getMainFrame(), "Study - History");
+		this.study = study;
 
 		//dialog events
-		final StudyDetailPanel detailPanel = new StudyDetailPanel(JSplitPane.VERTICAL_SPLIT);
-		detailPanel.setForRevision(true);
+		final RevisionDetailPanel detailPanel = new RevisionDetailPanel();
 
-		revisionList.getSelectionModel().addListSelectionListener(e-> {
+		revisionTable.getSelectionModel().addListSelectionListener(e-> {
 			if(e.getValueIsAdjusting()) return;
-			List<Revision> s = revisionList.getSelection();
-			detailPanel.setStudy(s.size()==1 && s.get(0).getStudies().size()>0? s.get(0).getStudies().get(0): null);
+			List<Revision> s = revisionTable.getSelection();
+			detailPanel.setRevision(s.size()!=1? null: s.get(0));
 		});
-		revisionList.addMouseListener(new PopupAdapter() {
+		revisionTable.addMouseListener(new PopupAdapter() {
 			@Override
 			protected void showPopup(MouseEvent e) {
-				List<Revision> s = revisionList.getSelection();
+				List<Revision> s = revisionTable.getSelection();
 				if(s.size()==1 && s.get(0).getStudies().size()==1) {
 					JPopupMenu menu = new JPopupMenu();
 					menu.add(new AdminActions.Action_Restore(s.get(0).getStudies()));
-					menu.show(revisionList, e.getX(), e.getY());
+					menu.show(revisionTable, e.getX(), e.getY());
 				}
 			}
 		});
 
+		studyCheckbox.addActionListener(e->refreshInThread());
+		samplesCheckbox.addActionListener(e->refreshInThread());
+		resultsCheckbox.addActionListener(e->refreshInThread());
+
 		//Create layout
-		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-				UIUtils.createTitleBox("Revisions", new JScrollPane(revisionList)),
+		JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT,
+				UIUtils.createBox(
+						UIUtils.createTitleBox("Revisions", new JScrollPane(revisionTable)),
+						UIUtils.createTitleBox("Show changes related to",  UIUtils.createHorizontalBox(studyCheckbox, samplesCheckbox, resultsCheckbox, Box.createHorizontalGlue()))),
 				UIUtils.createTitleBox("Study Revision", detailPanel));
-		splitPane.setDividerLocation(400);
+		splitPane.setDividerLocation(700);
 		setContentPane(splitPane);
 
 		//Load revisions in background
-		new SwingWorkerExtended(revisionList, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+		refreshInThread();
+
+		//show dialog
+		UIUtils.adaptSize(this, 1500, 800);
+		setVisible(true);
+
+	}
+
+	private void refreshInThread() {
+		revisionTable.clear();
+		new SwingWorkerExtended(getContentPane(), SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			private List<Revision> revisions;
 			private Map<Revision, String> changeMap;
 			@Override
 			protected void doInBackground() throws Exception {
-				revisions = DAORevision.getRevisions(study);
-				changeMap = getChangeMap(revisions);
+
+				RevisionQuery query = new RevisionQuery();
+				query.setSidFilter(study.getId());
+				query.setStudies(studyCheckbox.isSelected());
+				query.setSamples(samplesCheckbox.isSelected());
+				query.setResults(resultsCheckbox.isSelected());
+				revisions = DAORevision.queryRevisions(query);
+				changeMap = DAORevision.getLastChanges(revisions);
 			}
 
 			@Override
@@ -98,39 +126,10 @@ public class StudyHistoryDlg extends JEscapeDialog {
 				if(revisions.size()==0) {
 					JExceptionDialog.showError("There are no revisions saved");
 				}
-				revisionList.setRows(revisions, changeMap);
+				revisionTable.setRows(revisions, changeMap);
 			}
 		};
-
-
-
-		//show dialog
-		UIUtils.adaptSize(this, 1124, 800);
-		setVisible(true);
-
 	}
 
-
-	private Map<Revision, String> getChangeMap(List<Revision> revisions ) {
-		Map<Revision, String> changeMap = new HashMap<>();
-		List<Revision> revs = new ArrayList<>();
-		for (int i = 0; i < revisions.size(); i++) {
-			Study b1 = revisions.get(i).getStudies().get(0);
-			String diff;
-			if(i+1<revisions.size()) {
-				Study b2 = revisions.get(i+1).getStudies().get(0);
-				diff = b1.getDifference(b2);
-			} else {
-				Study b2 = revisions.get(0).getStudies().get(0);
-				diff = b1.getDifference(b2);
-				if(diff.length()==0) diff = "First version";
-			}
-
-			revs.add(revisions.get(i));
-			changeMap.put(revisions.get(i), diff);
-		}
-		return changeMap;
-
-	}
 
 }

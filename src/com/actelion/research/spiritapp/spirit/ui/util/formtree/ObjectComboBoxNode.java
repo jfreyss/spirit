@@ -92,6 +92,7 @@ public class ObjectComboBoxNode<T> extends AbstractNode<T> {
 	protected void updateView() {
 		comboBox.setSelection(strategy.getModel());
 	}
+
 	@Override
 	protected boolean isFilled() {
 		return getSelection()!=null;
@@ -112,7 +113,6 @@ public class ObjectComboBoxNode<T> extends AbstractNode<T> {
 	public Collection<T> getValues() {
 		return comboBox.getValues();
 	}
-
 
 	@Override
 	public JComponent getFocusable() {

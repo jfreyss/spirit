@@ -32,6 +32,7 @@ import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAODocument;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
+import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.IOUtils;
 import com.actelion.research.spiritcore.util.MiscUtils;
@@ -499,8 +500,11 @@ public class BiosampleTest extends AbstractSpiritTest {
 
 	}
 
+	/**
+	 * Compare the differences between 2 samples
+	 */
 	@Test
-	public void testDifferences() {
+	public void testDifferencesBiosample() {
 		Biosample b1 = new Biosample(DAOBiotype.getBiotype("Human"));
 		b1.setContainerType(null);
 		b1.setSampleId("Hum1");
@@ -514,7 +518,7 @@ public class BiosampleTest extends AbstractSpiritTest {
 		Assert.assertEquals(2, map.size());
 		Assert.assertNotNull(map.get("Container"));
 		Assert.assertNotNull(map.get("Biotype"));
-		Assert.assertEquals("", b1.getDifference(null));
+		Assert.assertEquals("SampleId=Hum1; Biotype=Human", b1.getDifference(null));
 		Assert.assertEquals("Container=NA; Biotype=Human", b1.getDifference(b2));
 
 
@@ -532,10 +536,68 @@ public class BiosampleTest extends AbstractSpiritTest {
 		b2.setSampleName("No2");
 		b2.setMetadataValue("Type", "Mice");
 		b2.setMetadataValue("Sex", "M");
-		b2.setComments("Animal1");
+		b2.setComments("Animal2");
 
-		Assert.assertEquals("No=No1; Type=Rat", b1.getDifference(b2));
-		Assert.assertEquals("No=No2; Type=Mice", b2.getDifference(b1));
+		Assert.assertEquals("No=No1; Type=Rat; Comments=Animal1", b1.getDifference(b2));
+		Assert.assertEquals("No=No2; Type=Mice; Comments=Animal2", b2.getDifference(b1));
+
+		b1 = new Biosample(DAOBiotype.getBiotype("Animal"), "ANL1");
+		b2 = new Biosample("ANL2");
+		Assert.assertEquals("SampleId=ANL1; Biotype=Animal", b1.getDifference(b2));
+		Assert.assertEquals("SampleId=ANL2; Biotype=", b2.getDifference(b1));
 	}
+
+
+	/**
+	 * Compare the differences between 2 samples
+	 */
+	@Test
+	public void testDifferencesBiotypes() {
+		Biotype b1 = new Biotype("B1");
+		b1.setSampleNameLabel("Main");
+		b1.getMetadata().add(new BiotypeMetadata("M1", DataType.ALPHA));
+
+		Biotype b2 = b1.clone();
+		b2.setSampleNameLabel("Main2");
+		b2.setContainerType(ContainerType.BOTTLE);
+		b2.getMetadata().add(new BiotypeMetadata("M2", DataType.ALPHA));
+
+
+		Assert.assertEquals("ContainerType=Bottle; SampleName=B1; Metadata=added M2", b2.getDifference(b1));
+	}
+
+	/**
+	 * Compare the sorting: samples should be sorted by
+	 * - study desc, groups, sampleNames
+	 * - samplesnames should be sorted in a numerical orders
+	 */
+	@Test
+	public void testCompareBiosample1() {
+		Biosample b1 = new Biosample(DAOBiotype.getBiotype("Animal"));
+		Biosample b2 = new Biosample(DAOBiotype.getBiotype("Animal"));
+		Biosample b3 = new Biosample(DAOBiotype.getBiotype("Animal"));
+		Biosample b4 = new Biosample(DAOBiotype.getBiotype("Animal"));
+
+		b1.setInheritedStudy(DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-2").get(0));
+		b2.setInheritedStudy(DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0));
+		b3.setInheritedStudy(DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0));
+		b4.setInheritedStudy(DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0));
+
+		b2.setInheritedGroup(DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0).getGroups().iterator().next());
+		b3.setInheritedGroup(DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0).getGroups().iterator().next());
+		b4.setInheritedGroup(null);
+
+		b1.setSampleName("99");
+		b2.setSampleName("8");
+		b3.setSampleName("10");
+		b4.setSampleName("0");
+
+		Assert.assertTrue(b1.compareTo(b2)<0);
+		Assert.assertTrue(b2.compareTo(b3)<0);
+		Assert.assertTrue(b3.compareTo(b4)<0);
+
+	}
+
+
 
 }

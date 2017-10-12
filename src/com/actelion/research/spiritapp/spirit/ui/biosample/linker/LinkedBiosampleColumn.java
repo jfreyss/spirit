@@ -53,6 +53,7 @@ public class LinkedBiosampleColumn extends AbstractLinkerColumn<Biosample> {
 		}
 		return res;
 	}
+
 	@Override
 	public void setValue(Biosample row, Biosample value) {
 		row.setMetadataBiosample(getType(), value);

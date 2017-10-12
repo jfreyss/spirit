@@ -34,7 +34,6 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.business.biosample.Status;
-import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Sampling;
@@ -43,89 +42,89 @@ import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.dao.DAOBarcode;
 
 public class BiosampleCreationHelper {
-
-	/**
-	 * Return a list of samples that should be created to be consistent with the study design.
-	 * In parallel, populates the list of samples to remove
-	 * @param study
-	 * @return
-	 * @throws Exception
-	 */
-	public static List<Biosample> processDividingSamples(Study study, List<Biosample> dividingBiosamplesToRemove) throws Exception {
-
-		List<Biosample> toSave = new ArrayList<>();
-
-		///////////////////////////////////////////////
-		//Create or update dividing samples
-		List<Biosample> dividingBiosamplesToAdd = new ArrayList<>();
-		List<Biosample> dividingBiosamplesToUpdate = new ArrayList<>();
-		if(dividingBiosamplesToRemove==null) dividingBiosamplesToRemove = new ArrayList<>();
-
-		Map<Group, int[]> group2left = new HashMap<Group, int[]>();
-		for(Group g: study.getGroups()) {
-			if(g.getDividingSampling()==null) continue;
-			int[] left = new int[g.getNSubgroups()];
-			for (int i = 0; i < left.length; i++) {
-				left[i] = g.getSubgroupSize(i);
-			}
-			group2left.put(g, left);
-		}
-
-		for (Biosample b : study.getTopAttachedBiosamples()) {
-			if(b.getInheritedGroup()==null || b.getInheritedGroup().getDividingGroups()==null) continue;
-			for(Group dividingGroup: b.getInheritedGroup().getDividingGroups()) {
-				Sampling sampling = dividingGroup.getDividingSampling();
-				int[] left = group2left.get(dividingGroup);
-				int subgroup = 0;
-				while(subgroup<left.length && left[subgroup]==0) subgroup++;
-				if(subgroup>=left.length) subgroup = 0;
-
-				if(subgroup<left.length) left[subgroup]--;
-
-
-				//find compatible one?
-				Biosample found = null;
-				for(Biosample c: b.getChildren()) {
-					if(!study.equals(c.getAttachedStudy()) || !dividingGroup.equals(c.getInheritedGroup())) continue;
-
-					if(sampling.getMatchingScore(c)==1) {
-						found = c;
-						break;
-					} else if(sampling.getMatchingScore(c)>.8) {
-						found = c;
-					}
-				}
-
-				if(found!=null) {
-					//we update the found biosample
-					if(found.getInheritedSubGroup()!=subgroup) {
-						found.setInheritedSubGroup(subgroup);
-						dividingBiosamplesToUpdate.add(found);
-					}
-
-					//we remove all extra compatible (should always be empty, but we never know if they are created by hand)
-					for(Biosample c: b.getChildren()) {
-						if(!study.equals(c.getAttachedStudy()) || !dividingGroup.equals(c.getInheritedGroup())) continue;
-						if(!c.equals(found)) dividingBiosamplesToRemove.add(c);
-					}
-				} else {
-					//we add the missing biosample
-					Biosample child = sampling.createCompatibleBiosample();
-					child.setParent(b);
-					child.setInheritedStudy(study);
-					child.setAttachedStudy(study);
-					child.setAttached(study, dividingGroup, subgroup);
-					child.setSampleId(DAOBarcode.getNextId(child.getBiotype()));
-					dividingBiosamplesToAdd.add(child);
-				}
-			}
-		}
-
-		toSave.addAll(dividingBiosamplesToAdd);
-		toSave.addAll(dividingBiosamplesToUpdate);
-
-		return toSave;
-	}
+	//
+	//	/**
+	//	 * Return a list of samples that should be created to be consistent with the study design.
+	//	 * In parallel, populates the list of samples to remove
+	//	 * @param study
+	//	 * @return
+	//	 * @throws Exception
+	//	 */
+	//	public static List<Biosample> processDividingSamples(Study study, List<Biosample> dividingBiosamplesToRemove) throws Exception {
+	//
+	//		List<Biosample> toSave = new ArrayList<>();
+	//
+	//		///////////////////////////////////////////////
+	//		//Create or update dividing samples
+	//		List<Biosample> dividingBiosamplesToAdd = new ArrayList<>();
+	//		List<Biosample> dividingBiosamplesToUpdate = new ArrayList<>();
+	//		if(dividingBiosamplesToRemove==null) dividingBiosamplesToRemove = new ArrayList<>();
+	//
+	//		Map<Group, int[]> group2left = new HashMap<Group, int[]>();
+	//		for(Group g: study.getGroups()) {
+	//			if(g.getDividingSampling()==null) continue;
+	//			int[] left = new int[g.getNSubgroups()];
+	//			for (int i = 0; i < left.length; i++) {
+	//				left[i] = g.getSubgroupSize(i);
+	//			}
+	//			group2left.put(g, left);
+	//		}
+	//
+	//		for (Biosample b : study.getTopAttachedBiosamples()) {
+	//			if(b.getInheritedGroup()==null || b.getInheritedGroup().getDividingGroups()==null) continue;
+	//			for(Group dividingGroup: b.getInheritedGroup().getDividingGroups()) {
+	//				Sampling sampling = dividingGroup.getDividingSampling();
+	//				int[] left = group2left.get(dividingGroup);
+	//				int subgroup = 0;
+	//				while(subgroup<left.length && left[subgroup]==0) subgroup++;
+	//				if(subgroup>=left.length) subgroup = 0;
+	//
+	//				if(subgroup<left.length) left[subgroup]--;
+	//
+	//
+	//				//find compatible one?
+	//				Biosample found = null;
+	//				for(Biosample c: b.getChildren()) {
+	//					if(!study.equals(c.getAttachedStudy()) || !dividingGroup.equals(c.getInheritedGroup())) continue;
+	//
+	//					if(sampling.getMatchingScore(c)==1) {
+	//						found = c;
+	//						break;
+	//					} else if(sampling.getMatchingScore(c)>.8) {
+	//						found = c;
+	//					}
+	//				}
+	//
+	//				if(found!=null) {
+	//					//we update the found biosample
+	//					if(found.getInheritedSubGroup()!=subgroup) {
+	//						found.setInheritedSubGroup(subgroup);
+	//						dividingBiosamplesToUpdate.add(found);
+	//					}
+	//
+	//					//we remove all extra compatible (should always be empty, but we never know if they are created by hand)
+	//					for(Biosample c: b.getChildren()) {
+	//						if(!study.equals(c.getAttachedStudy()) || !dividingGroup.equals(c.getInheritedGroup())) continue;
+	//						if(!c.equals(found)) dividingBiosamplesToRemove.add(c);
+	//					}
+	//				} else {
+	//					//we add the missing biosample
+	//					Biosample child = sampling.createCompatibleBiosample();
+	//					child.setParent(b);
+	//					child.setInheritedStudy(study);
+	//					child.setAttachedStudy(study);
+	//					child.setAttached(study, dividingGroup, subgroup);
+	//					child.setSampleId(DAOBarcode.getNextId(child.getBiotype()));
+	//					dividingBiosamplesToAdd.add(child);
+	//				}
+	//			}
+	//		}
+	//
+	//		toSave.addAll(dividingBiosamplesToAdd);
+	//		toSave.addAll(dividingBiosamplesToUpdate);
+	//
+	//		return toSave;
+	//	}
 
 	/**
 	 * Retrieve or create biosamples matching the given criteria
@@ -149,9 +148,9 @@ public class BiosampleCreationHelper {
 		List<Biosample> biosamples = new ArrayList<>();
 		if(phases==null) phases = new ArrayList<>(study.getPhases());
 
-		LoggerFactory.getLogger(BiosampleCreationHelper.class).debug("processTemplateInStudy for "+study+" n="+study.getAttachedBiosamples().size());
+		LoggerFactory.getLogger(BiosampleCreationHelper.class).debug("processTemplateInStudy for "+study+" n="+study.getParticipants().size());
 
-		for(Biosample animal: study.getAttachedBiosamples()) {
+		for(Biosample animal: study.getParticipants()) {
 			//filter by animals?
 			if(animalFilters!=null && !animalFilters.contains(animal)) continue;
 

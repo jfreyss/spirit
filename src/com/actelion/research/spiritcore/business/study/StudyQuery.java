@@ -21,20 +21,25 @@
 
 package com.actelion.research.spiritcore.business.study;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class StudyQuery {
 	private String studyIds = "";
 	private String localIds = "";
 	private String keywords = "";
 	private String state = "";
+	private String type = "";
+	private Map<String, String> metadataMap = new HashMap<>();
 	private String user = "";
 	private String updDays = "";
 	private String creDays = "";
-	
+
 	private int recentStartDays = -1;
 
 	public StudyQuery() {
-		
 	}
+
 	public static StudyQuery createForStudyIds(String studyIds) {
 		StudyQuery q = new StudyQuery();
 		q.setStudyIds(studyIds);
@@ -50,7 +55,7 @@ public class StudyQuery {
 		q.setState(state);
 		return q;
 	}
-		
+
 	public String getStudyIds() {
 		return studyIds;
 	}
@@ -74,63 +79,70 @@ public class StudyQuery {
 	}
 	public void setUser(String user) {
 		this.user = user;
-	}	
+	}
 	public String getState() {
 		return state;
 	}
 	public void setState(String state) {
 		this.state = state;
 	}
-	
+	public String getType() {
+		return type;
+	}
+	public void setType(String type) {
+		this.type = type;
+	}
+	public Map<String, String> getMetadataMap() {
+		return metadataMap;
+	}
+	public String getMetadata(String metadata) {
+		return metadataMap.get(metadata);
+	}
+	public void setMetadata(String metadata, String value) {
+		metadataMap.put(metadata, value);
+	}
+
 	public void copyFrom(StudyQuery query) {
 		this.studyIds = query.studyIds;
 		this.keywords = query.keywords;
 		this.user = query.user;
 		this.state = query.state;
+		this.type = query.type;
 		this.updDays = query.updDays;
 		this.creDays = query.creDays;
-		this.recentStartDays = query.recentStartDays;			
+		this.recentStartDays = query.recentStartDays;
+		this.metadataMap = new HashMap<>(query.metadataMap);
 	}
-	
 
-//	public boolean isEmpty() {
-//		return (getStudyIds()==null || getStudyIds().length()==0) && 
-//				(getKeywords()==null || getKeywords().length()==0) &&
-//				(getUpdDays()==null || getUpdDays().length()==0) &&
-//				(getCreDays()==null || getCreDays().length()==0) &&
-//				(getUser()==null || getUser().length()==0) && 
-//				(getClinicalStatus()==null);
-//	}
-	
 	public String getUpdDays() {
 		return updDays;
 	}
 	public void setUpdDays(String updDays) {
 		this.updDays = updDays;
 	}
-	
+
 	public String getCreDays() {
 		return creDays;
 	}
 	public void setCreDays(String creDays) {
 		this.creDays = creDays;
 	}
-	
+
 	public void setCreDays(int days) {
 		setCreDays(days<=0? null: days+" days");
 	}
-	
+
 	public void setUpdDays(int days) {
 		setUpdDays(days<=0? null: days+" days");
 	}
-	
-	
+
+
 	public int getRecentStartDays() {
 		return recentStartDays;
 	}
 	public void setRecentStartDays(int recentStartDays) {
 		this.recentStartDays = recentStartDays;
 	}
-	
-	
+
+
 }

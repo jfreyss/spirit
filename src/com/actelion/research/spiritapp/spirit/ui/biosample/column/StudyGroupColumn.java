@@ -85,13 +85,16 @@ public class StudyGroupColumn extends Column<Biosample, Group> {
 		if(study==null) throw new Exception("You must select a study to enter a group");
 
 		Group group = study.getGroup(value);
-		if( group==null) throw new Exception("The phase " + study.getStudyId() + " / " +  value + " is invalid");
+		if( group==null) {
+			group = new Group(value);
+			group.setStudy(study);
+		}
 		setValue(row, group);
 	}
 
 	@Override
 	public boolean isEditable(Biosample row) {
-		return row!=null && row.getAttachedStudy()!=null;
+		return row!=null && row.getAttachedStudy()!=null && (row.getParent()==null || row.getParent().getInheritedStudy()==null);
 	}
 
 
@@ -103,12 +106,13 @@ public class StudyGroupColumn extends Column<Biosample, Group> {
 
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {
-		return new GroupCellEditor(true) {
+		GroupCellEditor res = new GroupCellEditor(true) {
 			@Override
 			public Study getStudy(int row) {
 				return model!=null && model.getRow(row)!=null? model.getRow(row).getInheritedStudy(): null;
 			}
 		};
+		return res;
 	}
 
 

@@ -317,7 +317,7 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 
 	@Override
 	public String toString() {
-		return "[Action:"+id+" "+getGroup().getShortName()+"'"+getSubGroup()+"/"+getPhase()+(namedTreatment==null?"":" "+namedTreatment)+(namedSampling1==null?"":" "+namedSampling1)+(namedSampling2==null?"":" "+namedSampling2) + "]";
+		return "[Action:"+getGroup().getShortName()+"'"+getSubGroup()+"/"+getPhase()+"]";
 	}
 	public boolean isMeasureWeight() {
 		return measureWeight == Boolean.TRUE;
@@ -380,7 +380,7 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 			sb.append("F");
 		}
 		if (isMeasureWater()) {
-			sb.append("W");
+			sb.append("O");
 		}
 		if (isMeasureWeight()) {
 			sb.append("w");

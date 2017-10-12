@@ -72,6 +72,7 @@ import com.actelion.research.util.ui.EasyClipboard;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class BioViewerTab extends SpiritTab implements IBiosampleTab {
@@ -171,7 +172,7 @@ public class BioViewerTab extends SpiritTab implements IBiosampleTab {
 		biosampleDetailPane.setSelectedTab(BiosampleTabbedPane.HISTORY_TITLE);
 
 		JPanel detailPanel = new JPanel(new BorderLayout());
-		JSplitPane detailPanes = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(biosampleEditorPane), biosampleDetailPane);
+		JSplitPane detailPanes = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(biosampleEditorPane), biosampleDetailPane);
 		detailPanes.setDividerLocation(360);
 
 		// Listeners
@@ -190,7 +191,7 @@ public class BioViewerTab extends SpiritTab implements IBiosampleTab {
 		detailPanel.add(BorderLayout.CENTER, detailPanes);
 
 		// CenterPanel
-		JSplitPane mainSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, listPanel, detailPanel);
+		JSplitPane mainSplitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, listPanel, detailPanel);
 		mainSplitPane.setDividerLocation(340);
 
 		add(BorderLayout.NORTH, north);

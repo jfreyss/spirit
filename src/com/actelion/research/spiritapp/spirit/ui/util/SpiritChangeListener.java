@@ -54,9 +54,7 @@ public class SpiritChangeListener {
 	}
 
 	public final static<T extends IObject> void fireModelChanged(final SpiritChangeType action, final Class<T> what, final Collection<T> details) {
-
 		try {
-
 			//Clearing cache
 			SpiritFrame.clearAll();
 
@@ -71,7 +69,6 @@ public class SpiritChangeListener {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-		//		}
 	}
 
 }

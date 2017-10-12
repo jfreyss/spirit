@@ -171,10 +171,8 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 			// Select media one with same media name
 			if (sel == null) {
 				media: for (Media m : medias) {
-					System.out.println("BrotherPrinterAdapter.BrotherPrinterAdapter() " + m + " " + containerType.getMedia());
 					if (m.toString().equalsIgnoreCase(containerType.getMedia())) {
 						sel = m.toString();
-						System.out.println("BrotherPrinterAdapter.BrotherPrinterAdapter() SELECT0 " + sel);
 						break media;
 					}
 				}
@@ -185,7 +183,6 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 				media: for (Media m : medias) {
 					if (m.toString().equalsIgnoreCase(containerType.getName()) || m.toString().equalsIgnoreCase(containerType.getShortName())) {
 						sel = m.toString();
-						System.out.println("BrotherPrinterAdapter.BrotherPrinterAdapter() SELECT1 " + sel);
 						break media;
 					}
 				}
@@ -197,13 +194,11 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 				media: for (Media m : medias) {
 					if (m.toString().startsWith(pref)) {
 						sel = m.toString();
-						System.out.println("BrotherPrinterAdapter.BrotherPrinterAdapter() SELECT2 " + sel);
 						break media;
 					}
 				}
 			}
 
-			System.out.println("BrotherPrinterAdapter.BrotherPrinterAdapter() >>>" + sel);
 			mediaComboBox.setSelectionString(sel);
 		});
 		mediaComboBox.addActionListener(e -> {
@@ -231,7 +226,6 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 
 	private void reloadPreferencesForMedia() {
 		String mediaName = mediaComboBox.getSelection() == null ? "" : mediaComboBox.getSelection().toString();
-		System.out.println("BrotherPrinterAdapter.reloadPreferencesForMedia() =" + Spirit.getConfig().getProperty("print.brother.overlap_" + mediaName, -1));
 		if (Spirit.getConfig().getProperty("print.brother.overlap_" + mediaName, 99) == 0) {
 			overlapNoCheckBox.setSelected(true);
 		} else if (Spirit.getConfig().getProperty("print.brother.overlap_" + mediaName, 99) == 1) {
@@ -240,14 +234,14 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 			overlapRightCheckBox.setSelected(true);
 		} else {
 			try {
-				System.out.println("BrotherPrinterAdapter.reloadPreferencesForMedia() " + mediaName);
 				int width = Integer.parseInt(mediaName.substring(mediaName.indexOf('x') + 1, mediaName.indexOf('_')));
-				System.out.println("BrotherPrinterAdapter.reloadPreferencesForMedia() >" + width);
-				if (width < 30)
+				if (width < 30) {
 					overlapNoCheckBox.setSelected(true);
-				else
+				} else {
 					overlapLeftCheckBox.setSelected(true);
+				}
 			} catch (Exception e) {
+				//ok
 			}
 		}
 		showParentCheckbox.setSelected(Spirit.getConfig().getProperty("print.brother.parent_" + mediaName, true));
@@ -406,7 +400,7 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 			}
 		}
 
-		
+
 		Printable printable;
 		if(model.isPerLine()){
 			List<String[]> items = new ArrayList<>();
@@ -421,7 +415,7 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 			printable = p;
 
 		}
-		
+
 		DirectPrinter printer = new DirectPrinter();
 		printer.print(ps, media, printable);
 

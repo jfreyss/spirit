@@ -37,21 +37,21 @@ import javax.swing.JPanel;
  *
  */
 public abstract class LongTaskDlg extends JDialog {
-	
-	
+
+
 	public LongTaskDlg(String title) {
-		
+
 
 		//Open Dialog
 		super(UIUtils.getMainFrame(), title, true);
-		
+
 		JPanel centerPane = new JPanel();
-		Component spacer = Box.createRigidArea(new Dimension(120, 120));
+		Component spacer = Box.createRigidArea(new Dimension(140, 140));
 		centerPane.add(spacer);
 		centerPane.setBorder(BorderFactory.createRaisedBevelBorder());
 		setContentPane(centerPane);
 		setUndecorated(true);
-		
+
 		pack();
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -69,9 +69,9 @@ public abstract class LongTaskDlg extends JDialog {
 
 	}
 	public abstract void longTask() throws Exception;
-	
+
 	public static void main(String[] args) throws Exception {
-		
+
 		new LongTaskDlg("LONG WAIT") {
 			@Override
 			public void longTask() throws Exception {
@@ -80,5 +80,5 @@ public abstract class LongTaskDlg extends JDialog {
 		};
 	}
 
-	
+
 }

@@ -41,13 +41,13 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class ContainerLocationPosColumn extends Column<Biosample, String> {
-	
+
 	private static ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.NAME_POS);
-	
+
 	public ContainerLocationPosColumn() {
 		super("Container\nLocation", String.class, 50);
 	}
-		
+
 	@Override
 	public float getSortingKey() {
 		return 2.31f;
@@ -57,7 +57,7 @@ public class ContainerLocationPosColumn extends Column<Biosample, String> {
 		if(row==null || row.getLocation()==null) return null;
 		return row.getLocationString(LocationFormat.FULL_POS, SpiritFrame.getUser());
 	}
-	
+
 	@Override
 	public void setValue(Biosample row, String value) {
 		try {
@@ -65,8 +65,8 @@ public class ContainerLocationPosColumn extends Column<Biosample, String> {
 		} catch (Exception e) {
 			JExceptionDialog.showError(e);
 		}
-	}		
-	
+	}
+
 	@Override
 	public boolean isEditable(Biosample row) {
 		if(row==null) return false;
@@ -78,37 +78,36 @@ public class ContainerLocationPosColumn extends Column<Biosample, String> {
 
 	@Override
 	public void paste(Biosample row, String value) throws Exception {
-		DAOLocation.updateLocation(row, value, SpiritFrame.getUser());						
+		DAOLocation.updateLocation(row, value, SpiritFrame.getUser());
 	}
-	
-	
+
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample b, int rowNo, Object value) {
 		containerLabel.setBiosample(b);
 		return containerLabel;
 	}
-	
-	
+
+
 	@Override
 	public void populateHeaderPopup(final AbstractExtendTable<Biosample> table, JPopupMenu popupMenu) {
-//		super.populateHeaderPopup(table, popupMenu);		
 		ContainerFullColumn.populateLocationHeaderPopupStatic(this, table, popupMenu);
 	}
-	
+
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {
 		return new LocationCellEditor();
 	}
-	
+
 	@Override
 	public boolean isAutoWrap() {
 		return false;
 	}
-	
+
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		comp.setBackground(LF.BGCOLOR_LOCATION);
 	}
 
-	
+
 }

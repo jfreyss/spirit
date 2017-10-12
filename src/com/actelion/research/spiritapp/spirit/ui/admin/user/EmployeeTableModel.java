@@ -27,6 +27,8 @@ import java.util.List;
 import javax.swing.JComponent;
 
 import com.actelion.research.spiritcore.business.employee.Employee;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
@@ -35,13 +37,13 @@ import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
 public class EmployeeTableModel extends ExtendTableModel<Employee> {
 
-	public static final Column<Employee, String> COLUMN_ACTIVE = new Column<Employee, String>("Status", String.class, 40) {		
+	public static final Column<Employee, String> COLUMN_ACTIVE = new Column<Employee, String>("Status", String.class, 40) {
 		@Override
 		public String getValue(Employee row) {
 			return row.isDisabled()?"Disabled": null;
 		}
 	};
-	public static final Column<Employee, String> COLUMN_NAME = new Column<Employee, String>("Username", String.class, 110) {		
+	public static final Column<Employee, String> COLUMN_NAME = new Column<Employee, String>("Username", String.class, 110) {
 		@Override
 		public String getValue(Employee row) {
 			return row.getUserName();
@@ -51,19 +53,19 @@ public class EmployeeTableModel extends ExtendTableModel<Employee> {
 			comp.setFont(FastFont.BOLD);
 		}
 	};
-	public static final Column<Employee, String> COLUMN_MANAGER = new Column<Employee, String>("Manager", String.class, 60) {		
+	public static final Column<Employee, String> COLUMN_MANAGER = new Column<Employee, String>("Manager", String.class, 60) {
 		@Override
 		public String getValue(Employee row) {
 			return row.getManager()==null?null: row.getManager().getUserName();
 		}
 	};
-	public static final Column<Employee, String> COLUMN_ROLES = new Column<Employee, String>("Roles", String.class, 120) {		
+	public static final Column<Employee, String> COLUMN_ROLES = new Column<Employee, String>("Roles", String.class, 120) {
 		@Override
 		public String getValue(Employee row) {
 			return MiscUtils.flatten(row.getRoles(), " ");
 		}
 	};
-	public static final Column<Employee, String> COLUMN_GROUPS = new Column<Employee, String>("Group", String.class, 120) {		
+	public static final Column<Employee, String> COLUMN_GROUPS = new Column<Employee, String>("Group", String.class, 120) {
 		@Override
 		public String getValue(Employee row) {
 			if(row.getEmployeeGroups().isEmpty()) return null;
@@ -71,21 +73,25 @@ public class EmployeeTableModel extends ExtendTableModel<Employee> {
 			return s;
 		}
 	};
-	
+
 	@Override
 	public Column<Employee,?> getTreeColumn() {
 		return COLUMN_NAME;
 	}
-	
+
 	@Override
 	public List<Employee> getTreeChildren(Employee row) {
-		return new ArrayList<Employee>(row.getChildren());
+		return row==null? new ArrayList<>(): new ArrayList<Employee>(row.getChildren());
 	}
-	
+	@Override
+	public Employee getTreeParent(Employee row) {
+		return row==null? null: row.getManager();
+	}
+
 	public EmployeeTableModel() {
-		
+
 	}
-	
+
 	@Override
 	public void setRows(List<Employee> rows) {
 		List<Column<Employee,?>> columns = new ArrayList<>();
@@ -94,10 +100,12 @@ public class EmployeeTableModel extends ExtendTableModel<Employee> {
 		columns.add(COLUMN_MANAGER);
 		columns.add(COLUMN_NAME);
 		columns.add(COLUMN_ROLES);
-		columns.add(COLUMN_GROUPS);
-		
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+			columns.add(COLUMN_GROUPS);
+		}
+
 		setColumns(columns);
 		super.setRows(rows);
 	}
-	
+
 }

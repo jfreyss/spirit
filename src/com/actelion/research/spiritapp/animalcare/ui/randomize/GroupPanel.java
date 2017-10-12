@@ -54,6 +54,7 @@ import com.actelion.research.spiritcore.business.study.Randomization;
 import com.actelion.research.spiritcore.util.StatUtils;
 import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
@@ -65,43 +66,43 @@ public class GroupPanel extends JPanel {
 	private JLabel infoLabel = new JLabel();
 	private JLabel nLabel = new JLabel();
 	private final Group group;
-	
-	
+
+
 
 	public GroupPanel(RandomizationDlg dlg, final Group gp, boolean forCages, boolean hideFrom) {
-		
-		String title = gp==null?"NoGroup": 
+
+		String title = gp==null?"NoGroup":
 			gp.getBlindedName(SpiritFrame.getUser().getUsername()) + (hideFrom || gp.getFromGroup()==null?"": " (from "+gp.getFromGroup().getBlindedName(SpiritFrame.getUser().getUsername())+")");
 
 		this.group = gp;
 		this.forCages = forCages;
 
-		
+
 		//Create table
 		table = new AttachedBiosampleTable(new AttachedBiosampleTableModel(forCages? Mode.RND_SETCAGES: Mode.RND_SETGROUPS, dlg.getStudy(),  group, dlg.getPhase()), true);
 		table.setCanSort(true);
-		table.getModel().addTableModelListener(new TableModelListener() {			
+		table.getModel().addTableModelListener(new TableModelListener() {
 			@Override
 			public void tableChanged(TableModelEvent e) {
-				refreshStats();				
+				refreshStats();
 			}
 		});
 		table.createDefaultColumnsFromModel();
-		
-		
+
+
 		if(!forCages) {
-			table.addMouseListener(new PopupAdapter() {				
+			table.addMouseListener(new PopupAdapter() {
 				@Override
 				protected void showPopup(MouseEvent e) {
 					boolean skipRando = false;
 					for(AttachedBiosample r: table.getSelection()) {
 						if(r.isSkipRando()) skipRando = true;
 					}
-					
+
 					final JRadioButtonMenuItem button = new JRadioButtonMenuItem("Fix group (ignore automatic rando)");
 					button.setSelected(skipRando);
 					button.addActionListener(new ActionListener() {
-						
+
 						@Override
 						public void actionPerformed(ActionEvent e) {
 							for(AttachedBiosample r: table.getSelection()) {
@@ -112,34 +113,34 @@ public class GroupPanel extends JPanel {
 					JPopupMenu menu = new JPopupMenu();
 					menu.add(button);
 					menu.show(table, e.getX(), e.getY());
-					
+
 				}
-			});			
+			});
 		}
-		
+
 		//Create Panel
-//		final JPanel contentPanel = new JPanel(new GridBagLayout());
+		//		final JPanel contentPanel = new JPanel(new GridBagLayout());
 		setBackground(group==null? Color.LIGHT_GRAY: group.getColor());
-//		setTitleFont(new Font(Font.DIALOG, Font.BOLD, 13));
-//		setTitlePainter(new Painter() {			
-//			@Override
-//			public void paint(Graphics2D g, Object object, int width, int height) {
-//				g.setPaint(new GradientPaint(0, 0, Color.LIGHT_GRAY, 0, height, contentPanel.getBackground()));
-//				g.fillRect(0, 0, width, height);
-//				
-//			}
-//		});
-		
+		//		setTitleFont(new Font(Font.DIALOG, Font.BOLD, 13));
+		//		setTitlePainter(new Painter() {
+		//			@Override
+		//			public void paint(Graphics2D g, Object object, int width, int height) {
+		//				g.setPaint(new GradientPaint(0, 0, Color.LIGHT_GRAY, 0, height, contentPanel.getBackground()));
+		//				g.fillRect(0, 0, width, height);
+		//
+		//			}
+		//		});
+
 		setBorder(BorderFactory.createRaisedBevelBorder());
-		
-		
+
+
 		int n = gp==null? 0: gp.getNAnimals(dlg.getPhase());
-		final JCustomTextField nTextField = new JCustomTextField(JCustomTextField.INTEGER);
+		final JCustomTextField nTextField = new JCustomTextField(CustomFieldType.INTEGER);
 		if(gp==null) {
-			
+
 		} else {
 			nTextField.setTextInteger(n<=0? null: n);
-			nTextField.addTextChangeListener(new TextChangeListener() {	
+			nTextField.addTextChangeListener(new TextChangeListener() {
 				@Override
 				public void textChanged(JComponent src) {
 					if(nTextField.getTextInt()==null || nTextField.getTextInt()<=0) return;
@@ -160,18 +161,18 @@ public class GroupPanel extends JPanel {
 					}
 					System.out.println(Arrays.toString(subGroupSizes));
 					gp.setSubgroupSizes(subGroupSizes);
-					
+
 				}
 			});
 		}
 		//Create ui
 		GridBagConstraints c = new GridBagConstraints();
-		c.fill = GridBagConstraints.HORIZONTAL;		
-		c.fill = GridBagConstraints.BOTH;		
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.fill = GridBagConstraints.BOTH;
 		c.insets = new Insets(1, 2, 1, 2);
-		
+
 		infoLabel.setOpaque(false);
-		
+
 		setLayout(new BorderLayout());
 		GroupLabel groupLabel = new GroupLabel(title, group);
 		groupLabel.setOpaque(group!=null);
@@ -180,15 +181,15 @@ public class GroupPanel extends JPanel {
 		if(!forCages) {
 			add(BorderLayout.SOUTH, infoLabel);
 		}
-		
+
 		prefHeight = Math.min(320,  (n>0? n: 6) * 26 + 60 + (forCages?0:50)) ;
 	}
-	
-	
-	
-	
+
+
+
+
 	private int prefHeight;
-	
+
 	@Override
 	public Dimension getPreferredSize() {
 		return new Dimension(forCages?CageTab.PANEL_WIDTH: GroupTab.PANEL_WIDTH, prefHeight);
@@ -201,48 +202,48 @@ public class GroupPanel extends JPanel {
 	public Dimension getMaximumSize() {
 		return super.getPreferredSize();
 	}
-	
+
 	public AttachedBiosampleTable getRndTable() {
 		return table;
 	}
-	
+
 	public void setRows(Randomization rnd, final List<AttachedBiosample> rows) {
 		table.getModel().setNData(rnd.getNData());
 		table.setRows(rows);
-		
+
 	}
-		
+
 	public void refreshStats() {
 		nLabel.setText(""+table.getRowCount());
-		if(forCages) {		
+		if(forCages) {
 		} else {
 			List<Double> weights = table.getDoubles(-1);
-			
+
 			StringBuilder sb = new StringBuilder();
-			
+
 			Double mean;
 			for(int i=0; i<=10; i++) {
 				List<Double> datas = table.getDoubles(i);
 				mean = StatUtils.getMean(datas);
 				if(mean!=null) sb.append("D"+(i+1)+"=<b>"+FormatterUtils.format3(mean) + "</b> (std=" + FormatterUtils.format1(StatUtils.getStandardDeviation(datas, mean))+")<br>");
 			}
-			
+
 			mean = StatUtils.getMean(weights);
 			if(mean!=null) sb.append("Weight=<b>"+FormatterUtils.format2(mean) + "</b> (std=" + FormatterUtils.format1(StatUtils.getStandardDeviation(weights, mean))+")<br>");
-			
+
 
 			infoLabel.setText("<html>" + sb + "</html>");
-		
+
 		}
 	}
-	
+
 	public Group getGroup() {
 		return group;
 	}
-	
+
 	public AttachedBiosampleTable getTable() {
 		return table;
 	}
-	
-	
+
+
 }

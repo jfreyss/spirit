@@ -44,6 +44,33 @@ public class CompareUtils {
 	}
 
 
+	public static final int compare(String s1, String s2) {
+		if(s1==null && s2==null) return 0;
+		if(s1==null) return 1;
+		if(s2==null) return -1;
+
+		boolean allDigits1 = true;
+		boolean allDigits2 = true;
+		for(int j=0; allDigits1 && j<s1.length();j++) {
+			if(!Character.isDigit(s1.charAt(j))) allDigits1 = false;
+		}
+		for(int j=0; allDigits2 && j<s2.length();j++) {
+			if(!Character.isDigit(s2.charAt(j))) allDigits2 = false;
+		}
+		if(allDigits1 && allDigits2) {
+			long l1 = fastLongValueOf(s1);
+			long l2 = fastLongValueOf(s2);
+			return l1>l2?1: l1==l2? 0: -1;
+		} else if(allDigits1 && !allDigits2) {
+			return -1;
+		} else if(!allDigits1 && allDigits2) {
+			return 1;
+		} else {
+			//Compare by string first case insensitive
+			return s1.compareToIgnoreCase(s2);
+		}
+	}
+
 	/**
 	 * Compare 2 strings by splitting the chains into blocks and comparing each blocks individually.
 	 * Each Block is then compared as integer or string.
@@ -60,7 +87,7 @@ public class CompareUtils {
 	 * @param o2
 	 * @return
 	 */
-	public static final int compare(String o1, String o2) {
+	public static final int compareSpecial(String o1, String o2) {
 		if(o1==null && o2==null) return 0;
 		if(o1==null) return 1;
 		if(o2==null) return -1;

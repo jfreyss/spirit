@@ -59,7 +59,7 @@ import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.spiritcore.util.SQLConverter;
 import com.actelion.research.spiritcore.util.SQLConverter.SQLVendor;
 import com.actelion.research.util.FormatterUtils;
-import com.actelion.research.util.FormatterUtils.LocaleFormat;
+import com.actelion.research.util.FormatterUtils.DateTimeFormat;
 
 /**
  * The adapter is responsible for the specific requirements concerning the DB: connection, user authentification, user tables, ...
@@ -69,46 +69,52 @@ import com.actelion.research.util.FormatterUtils.LocaleFormat;
  */
 public abstract class DBAdapter {
 
-	public static enum UserAdministrationMode {
-		READ_ONLY, 
-		READ_WRITE, 
-		UNIQUE_USER}
-	
-	
+	public static enum UserManagedMode {
+		/**No user rights. Just one single user with admin rights */
+		UNIQUE_USER,
+		/**Read queries on spirit.employee and spirit.employee_groups (DB views or managed programatically by an other app)*/
+		READ_ONLY,
+		/**Read/write queries on spirit.employee and spirit.employee_groups (DB views or managed programatically by an other app). The password column is ignored*/
+		WRITE_NOPWD,
+		/**Read/write queries on spirit.employee and spirit.employee_groups (DB views or managed programatically by an other app). The password column is encrypted*/
+		WRITE_PWD
+	}
+
+
 	public static final String KEY = new String("adjlkdada8d0uah9d9j238jsad0a");
 
 	public static PropertyDescriptor ADAPTER_PROPERTY = new PropertyDescriptor(
-			"jnlp.adapter", "DB Adapter", 
+			"jnlp.adapter", "DB Adapter",
 			new Pair[] {
-				new Pair<String,String>(HSQLFileAdapter.class.getName(), "HSQL Local Database for 1 user (no DB installation)"),
-				new Pair<String,String>(HSQLServerAdapter.class.getName(), "HSQL Server Database (no DB installation)"),
-				new Pair<String,String>(CustomAdapter.class.getName(), "Production Database (MySQL, Oracle)")});
+					new Pair<String,String>(HSQLFileAdapter.class.getName(), "HSQL Local Database for 1 user (no DB installation)"),
+					new Pair<String,String>(HSQLServerAdapter.class.getName(), "HSQL Server Database (no DB installation)"),
+					new Pair<String,String>(CustomAdapter.class.getName(), "Production Database (MySQL, Oracle)")});
 
 	private static final File configFile = new File(System.getProperty("user.home"), ".spirit/spirit.config");
 
-	
+
 	/**Config File is db was not available at start*/
-	private static DBAdapter instance;	
+	private static DBAdapter instance;
 	private static boolean isConfigurable;
-	
+
 	private static Map<String, String> properties = new HashMap<>();
-	
+
 
 	/**
 	 * Gets the DBAdapter based on the configuration (Singleton pattern).
 	 * - The configuration is first looked upon the -Djnlp.adapter= properties
 	 * - If not available, the configuration is loaded through the config file in "home/.spirit/spirit.config"
 	 * - If not available, Spirit starts with a default HSQL DB
-	 * 
+	 *
 	 */
-	public static DBAdapter getAdapter() {
+	public static DBAdapter getInstance() {
 		if(instance==null) {
 			synchronized (DBAdapter.class) {
 				if(instance==null) {
 					loadDBProperties();
-					
+
 					//Find the adapter and the config
-					String className = System.getProperty(ADAPTER_PROPERTY.getPropertyName());					
+					String className = System.getProperty(ADAPTER_PROPERTY.getPropertyName());
 					if(className==null || className.length()==0) {
 						isConfigurable = true;
 						className = properties.get(ADAPTER_PROPERTY.getPropertyName());
@@ -118,8 +124,8 @@ public abstract class DBAdapter {
 					} else {
 						isConfigurable = false;
 					}
-					
-					
+
+
 					try {
 						instance = getAdapter(className);
 					} catch (Exception ex) {
@@ -131,15 +137,15 @@ public abstract class DBAdapter {
 		}
 		return instance;
 	}
-	
+
 	/**
-	 * Sets the instance 
+	 * Sets the instance
 	 * @param myInstance
 	 */
 	public static void setAdapter(DBAdapter myInstance) {
 		instance = myInstance;
 	}
-	
+
 	public static void loadDBProperties() {
 		properties = new LinkedHashMap<>();
 		Properties prop = new Properties();
@@ -149,13 +155,13 @@ public abstract class DBAdapter {
 			} catch(IOException ex) {
 				throw new RuntimeException("Could not read "+configFile, ex);
 			}
-			
+
 		}
 		for (Object key : prop.keySet()) {
 			properties.put((String) key, prop.getProperty((String)key));
 		}
 	}
-	
+
 	public final static void saveDBProperties() throws Exception {
 		Properties prop = new Properties();
 		for (Entry<String, String> e : properties.entrySet()) {
@@ -166,17 +172,17 @@ public abstract class DBAdapter {
 		}
 		LoggerFactory.getLogger(DBAdapter.class).info("Saved "+configFile);
 	}
-	
+
 	public static DBAdapter getAdapter(String className) throws Exception {
 		Class<?> claz = Class.forName(className);
 		DBAdapter adapter = (DBAdapter) claz.newInstance();
 		return adapter;
 	}
-	
+
 	public PropertyDescriptor[] getSpecificProperties() {
 		return new PropertyDescriptor[]{};
 	}
-	
+
 	/**
 	 * Set the properties, without saving
 	 * @param properties
@@ -184,122 +190,114 @@ public abstract class DBAdapter {
 	public final static void setDBProperty(Map<String, String> p) {
 		properties = p;
 	}
-	
+
 	/**
-	 * Retrieved the value of a property, 
+	 * Retrieved the value of a property,
 	 * - first from the System.getProperty (-D option)
 	 * - then, from the local config file
-	 * - otherwise return the default option 
+	 * - otherwise return the default option
 	 * @param conf
 	 * @return
 	 */
 	public final String getDBProperty(PropertyDescriptor conf) {
-		
-		
+
+
 		String v = System.getProperty(conf.getPropertyName());
 		if(v==null || v.length()==0) {
 			v = properties.get(conf.getPropertyName());
 		}
 		if(v==null || v.length()==0) {
-			v = conf.getDefaultOptionKey();		
+			v = conf.getDefaultOptionKey();
 		}
 		return v;
 	}
-		
-	public abstract String getDBUsername();
-	
-	public abstract String getDBPassword();
-	
-	public abstract String getDBConnectionURL();
-	
-	public abstract String getHibernateDialect();
-	
-	public abstract String getDriverClass();	
 
-	public String getHelp() {return "";} 	
-		
+	public abstract String getDBUsername();
+
+	public abstract String getDBPassword();
+
+	public abstract String getDBConnectionURL();
+
+	public abstract String getHibernateDialect();
+
+	public abstract String getDriverClass();
+
+	public String getHelp() {return "";}
+
 	public void authenticateUser(String user, char[] password) throws Exception {
-    	Employee emp = DAOEmployee.getEmployee(user);
-    	
-    	if(emp==null) throw new Exception("Invalid Username");   
-    	if(emp.getPassword()!=null && emp.getPassword().length()>0 && 
-    			!new StringEncrypter(KEY).encrypt(password).equals(emp.getPassword()) &&
-    			!new StringEncrypter(KEY, false).encrypt(password).equals(emp.getPassword())) {
-        	throw new Exception("Check your user name and password.");    
-    	} else if((emp.getPassword()==null || emp.getPassword().length()==0) && password.length!=0) {
-        	throw new Exception("Check your user name and password.");
-    	}
-    	if(emp.isDisabled()) throw new Exception("User is disabled");
-    	
+		Employee emp = DAOEmployee.getEmployee(user);
+
+		if(emp==null) throw new Exception("Invalid Username");
+		if(emp.getPassword()!=null && emp.getPassword().length()>0 &&
+				!new StringEncrypter(KEY).encrypt(password).equals(emp.getPassword()) &&
+				!new StringEncrypter(KEY, false).encrypt(password).equals(emp.getPassword())) {
+			throw new Exception("Check your user name and password.");
+		} else if((emp.getPassword()==null || emp.getPassword().length()==0) && password.length!=0) {
+			throw new Exception("Check your user name and password.");
+		}
+		if(emp.isDisabled()) throw new Exception("User is disabled");
+
 	}
-	
+
 	public String encryptPassword(char[] password) {
 		return new StringEncrypter(KEY).encrypt(password);
 	}
-	
+
 	public SpiritUser loadUser(String username) throws Exception {
-    	Employee emp = DAOEmployee.getEmployee(username);
-    	if(emp==null) return null;
-    	SpiritUser user = new SpiritUser(emp);    	
-    	return user;
+		Employee emp = DAOEmployee.getEmployee(username);
+		if(emp==null) return null;
+		SpiritUser user = new SpiritUser(emp);
+		return user;
 	}
-	
-	public boolean isInActelionDomain() {		
+
+	public boolean isInActelionDomain() {
 		return false;
 	}
-	
-	public abstract UserAdministrationMode getUserManagedMode();
-	
+
+	public abstract UserManagedMode getUserManagedMode();
+
 	public Map<Location, URL> getAutomaticStores(){
 		return null;
 	}
-	
+
 	public SQLConverter.SQLVendor getVendor() {
 		if(getDriverClass().contains("Oracle")) {
 			return SQLVendor.ORACLE;
 		} else if(getDriverClass().contains("hsqldb")) {
 			return SQLVendor.HSQL;
 		} else if(getDriverClass().contains("mysql")) {
-			return SQLVendor.MYSQL;	
+			return SQLVendor.MYSQL;
 		} else {
 			throw new RuntimeException("Unknown driver: "+getDriverClass());
 		}
 	}
-	
+
 	public String getTestQuery() {
-		if(getDriverClass().contains("Oracle")) {
-			return "select sysdate from dual";
-		} else if(getDriverClass().contains("hsqldb")) {
-			return "select current_timestamp from (VALUES(0))";
-		} else if(getDriverClass().contains("mysql")) {
-			return "select current_timestamp()";			
-		} else {
-			throw new RuntimeException("Unknown driver for getCurrentDateQuery: "+getDriverClass());
-		}
+		return getCurrentDateQuery();
 	}
-	
+
 	public String getCurrentDateQuery() {
 		if(getDriverClass().contains("Oracle")) {
 			return "select sysdate from dual";
 		} else if(getDriverClass().contains("hsqldb")) {
 			return "select current_timestamp from (VALUES(0))";
 		} else if(getDriverClass().contains("mysql")) {
-			return "select current_timestamp()";			
+			return "select current_timestamp()";
 		} else {
 			throw new RuntimeException("Unknown driver for getCurrentDateQuery: "+getDriverClass());
 		}
 	}
-	
+
 	public List<EmployeeGroup> getEmployeeGroups() {
 		return DAOEmployee.getEmployeeGroups();
 	}
-	
-	
+
+
 	public List<Employee> getEmployees() {
 		return DAOEmployee.getEmployees();
 	}
-	
-	
+
+
 	public void checkValid(Collection<String> usernames) throws Exception {
 		Set<String> allUsernames = new HashSet<String>();
 		for (Employee emp : getEmployees()) {
@@ -309,33 +307,33 @@ public abstract class DBAdapter {
 			if(!allUsernames.contains(u)) throw new Exception("The user "+u+" is not valid");
 		}
 	}
-	
+
 	/**
 	 * Called before initializing the JPA Factory.
 	 * This function can be called to starts a DB server (HSQL per example)
 	 */
-	public void preInit() throws Exception {		
+	public void preInit() throws Exception {
 	}
-	
+
 
 	/**
 	 * Called after initializing JPA, can be used to populate tables or set properties
 	 * @throws Exception
 	 */
 	public void postInit() throws Exception {
-		String format = SpiritProperties.getInstance().getValue(PropertyKey.DATE_MODE);
+		String format = SpiritProperties.getInstance().getValue(PropertyKey.SYSTEM_DATEFORMAT);
 		if(format.length()>0) {
-			LocaleFormat localeFormat = LocaleFormat.get(format);
+			DateTimeFormat localeFormat = DateTimeFormat.get(format);
 			if(localeFormat==null) {
-				System.err.println("Invalid LocaleFormat in spirit_property: " + PropertyKey.DATE_MODE + " = " + format);
-				FormatterUtils.setLocaleFormat(LocaleFormat.INTL);
+				System.err.println("Invalid LocaleFormat in spirit_property: " + PropertyKey.SYSTEM_DATEFORMAT + " = " + format);
+				FormatterUtils.setLocaleFormat(DateTimeFormat.INTL);
 			} else {
 				FormatterUtils.setLocaleFormat(localeFormat);
 			}
 		}
 	}
 
-	
+
 	/**
 	 * Validates the schema
 	 * @throws Exception
@@ -343,26 +341,26 @@ public abstract class DBAdapter {
 	public void validate() throws Exception {
 		JPAUtil.initFactory(this, "validate");
 	}
-	
-	
+
+
 	public static boolean isConfigurable() {
 		return isConfigurable;
 	}
-	
+
 	protected void executeScripts(String scripts, boolean failOnError) throws Exception {
-		Connection conn = null;		
+		Connection conn = null;
 		try {
 			conn = getConnection();
 			//Convert the script to the appropriate DB
 			scripts = SQLConverter.convertScript(scripts, getVendor());
-			
+
 			//Execute the script in batch mode
 			Statement stmt =  conn.createStatement();
 			for (String script : scripts.split(";")) {
 				script = script.replaceAll("[\r\n]", "").trim();
 				if(script.trim().length()==0) continue;
 				LoggerFactory.getLogger(DBAdapter.class).debug("Execute script on "+getDBConnectionURL()+": "+script);
-				stmt.addBatch(script);					
+				stmt.addBatch(script);
 			}
 			stmt.executeBatch();
 			stmt.close();
@@ -373,18 +371,18 @@ public abstract class DBAdapter {
 			if(failOnError) throw e;
 		} finally {
 			if(conn!=null) conn.close();
-		}			
+		}
 	}
-		
+
 	public void testConnection() throws Exception {
-		Connection conn = null; 
+		Connection conn = null;
 		try {
 			conn = getConnection();
 		} finally {
 			if(conn!=null) conn.close();
 		}
 	}
-	
+
 	/**
 	 * Gets a native connection to the database. Be sure to close it afterwards
 	 * @return
@@ -393,7 +391,7 @@ public abstract class DBAdapter {
 	public Connection getConnection() throws SQLException {
 		return getConnection(getDBUsername(), new String(new StringEncrypter("program from joel").decrypt(getDBPassword())));
 	}
-	
+
 	public Connection getConnection(String username, String password) throws SQLException {
 		LoggerFactory.getLogger(getClass()).debug("Connect to " + username + "@" + getDBConnectionURL());
 		Connection conn = DriverManager.getConnection(getDBConnectionURL(), username, password);
@@ -401,13 +399,12 @@ public abstract class DBAdapter {
 		return conn;
 	}
 
-	
+
 	public Set<Location> getAutomatedStoreLocation() {
 		if(getAutomaticStores()==null) return new HashSet<Location>();
 		return getAutomaticStores().keySet();
-		
 	}
-	
+
 	/**
 	 * If a biosample is in this location, gives a option to order the sample through a web interface
 	 * @param loc
@@ -417,7 +414,7 @@ public abstract class DBAdapter {
 		return loc!=null && getAutomatedStoreLocation().contains(loc);
 	}
 
-	
+
 	/**
 	 * Can be overiddent by sublasses to prepopulate the biosample with the data from an external DB.
 	 * This function is called from the UI when a new sample has to be created
@@ -427,6 +424,14 @@ public abstract class DBAdapter {
 	public boolean populateFromExternalDB(Biosample sample) throws Exception {
 		return false;
 	}
-	
-	
+
+	/**
+	 * Return the custom reports (elements of the list must override AbstractReport)
+	 * @return
+	 */
+	public List<? extends Object> getReports() {
+		return null;
+	}
+
+
 }

@@ -39,42 +39,43 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class ConfigTab extends WizardPanel {
 	private final RandomizationDlg dlg;
-	
 
-	private JCustomTextField licenseNoTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 12);
-	private JCustomTextField experimenterTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 12);
+
+	private JCustomTextField licenseNoTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 12);
+	private JCustomTextField experimenterTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 12);
 	private JLabel groupsLabel = new JLabel();
 	private BiotypeComboBox biotypeComboBox;
 	private JButton resetButton = new JIconButton(IconType.CLEAR, "Reset and restart this randomization");
-	
+
 	public ConfigTab(final RandomizationDlg dlg) {
 		super(new BorderLayout());
 		this.dlg = dlg;
 
-		biotypeComboBox = new BiotypeComboBox(Biotype.removeAbstract(DAOBiotype.getBiotypes()), "Biotype");
-		
-		
+		biotypeComboBox = new BiotypeComboBox(Biotype.removeAbstract(DAOBiotype.getBiotypes()));
+		biotypeComboBox.setText(Biotype.ANIMAL);
+
 		//RandomizePanel
 		experimenterTextField.setText(SpiritFrame.getUser()==null?"":SpiritFrame.getUser().getUsername());
-		
+
 		//GroupPanel
 		refreshGroupPanel();
-		JPanel groupsPanel = UIUtils.createTitleBox("Groups to be assigned", 
-				UIUtils.createBox(groupsLabel, null, UIUtils.createHorizontalBox(resetButton, Box.createHorizontalGlue())));		
-		
+		JPanel groupsPanel = UIUtils.createTitleBox("Groups to be assigned",
+				UIUtils.createBox(groupsLabel, null, UIUtils.createHorizontalBox(resetButton, Box.createHorizontalGlue())));
+
 		//GeneralInfoPanel
 		JPanel generalPanel = UIUtils.createTitleBox("General Info", UIUtils.createTable(
 				new JLabel("Biotype: "), biotypeComboBox,
 				new JLabel("Licence: "), licenseNoTextField,
-				new JLabel("Experimenter: "), experimenterTextField));		
-		
-		resetButton.addActionListener(new ActionListener() {			
+				new JLabel("Experimenter: "), experimenterTextField));
+
+		resetButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				int res = JOptionPane.showConfirmDialog(UIUtils.getMainFrame(), "Are you sure you want to reset this randomization?", "Reset", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -82,24 +83,24 @@ public class ConfigTab extends WizardPanel {
 				dlg.getPhase().resetRandomization();
 			}
 		});
-				
+
 		add(BorderLayout.CENTER, UIUtils.createVerticalBox(
 				groupsPanel,
 				generalPanel,
 				Box.createVerticalGlue()));
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), getNextButton()));
-		
+
 		updateView();
 	}
-	
+
 	private void refreshGroupPanel() {
 		StringBuilder sb = new StringBuilder();
 		Set<Group> seen = new HashSet<Group>();
 		String user = SpiritFrame.getUsername();
 		for (Group group : dlg.getGroups()) {
-			
+
 			if(!dlg.getPhase().equals(group.getFromPhase())) continue;
-			
+
 			if(group.getFromGroup()!=null) {
 				if(!seen.contains(group.getFromGroup())) {
 					int n = group.getFromGroup().getNAnimals(dlg.getPhase());
@@ -117,45 +118,45 @@ public class ConfigTab extends WizardPanel {
 				}
 			} else {
 				if(!seen.contains(group)) {
-					int n = group.getNAnimals(dlg.getPhase());					
+					int n = group.getNAnimals(dlg.getPhase());
 					sb.append("<li><b style='background:" + UIUtils.getHtmlColor(group.getBlindedColor(user)) + "'>" + group.getBlindedName(user) + "</b>"
 							+ (n>0? " <i>(n=" + n + ")</i>":"")
 							+ "<br>");
 					seen.add(group);
 				}
 			}
-									
+
 		}
-		
+
 		groupsLabel.setText("<html>"+sb+"</html>");
-		
+
 	}
-	
+
 	@Override
 	public void updateModel(boolean allowDialogs) throws Exception {
 		if(dlg.getStudy()!=null) {
-			dlg.getStudy().getMetadata().put("LICENSENO", licenseNoTextField.getText());
-			dlg.getStudy().getMetadata().put("EXPERIMENTER", experimenterTextField.getText());
+			dlg.getStudy().getMetadataMap().put("LICENSENO", licenseNoTextField.getText());
+			dlg.getStudy().getMetadataMap().put("EXPERIMENTER", experimenterTextField.getText());
 		}
 		dlg.setBiotype(biotypeComboBox.getSelection());
 	}
-	
+
 	@Override
 	public void updateView() {
 		resetButton.setEnabled(dlg.getPhase().getRandomization().getSamples().size()>0);
-		
+
 		if(dlg.getStudy()!=null) {
-			String experimenter = dlg.getStudy().getMetadata().get("EXPERIMENTER");
+			String experimenter = dlg.getStudy().getMetadataMap().get("EXPERIMENTER");
 			if(experimenter==null || experimenter.length()==0) experimenter = SpiritFrame.getUsername();
 			experimenterTextField.setText(experimenter);
-			licenseNoTextField.setText(dlg.getStudy().getMetadata().get("LICENSENO"));
+			licenseNoTextField.setText(dlg.getStudy().getMetadataMap().get("LICENSENO"));
 		}
-		
-		
+
+
 		biotypeComboBox.setSelection(dlg.getBiotype());
 		biotypeComboBox.setEnabled(dlg.canChooseBiotype());
-		
+
 	}
-	
-	
+
+
 }

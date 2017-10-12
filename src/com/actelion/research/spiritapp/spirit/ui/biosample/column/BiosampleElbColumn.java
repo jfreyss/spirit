@@ -26,21 +26,21 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 public class BiosampleElbColumn extends Column<Biosample, String> {
 	public BiosampleElbColumn() {
-		super("ELB", String.class, 50);
+		super("Sample\nELB", String.class, 50);
 	}
 	@Override
 	public float getSortingKey() {return 1.5f;}
-	
+
 	@Override
 	public String getValue(Biosample row) {
 		return row.getElb();
 	}
 	@Override
 	public void setValue(Biosample row, String value) {
-		row.setElb((String) value);
+		row.setElb(value);
 	}
-	@Override		
+	@Override
 	public String getToolTipText() {return "Electronic Lab Journal";}
-	
+
 
 }

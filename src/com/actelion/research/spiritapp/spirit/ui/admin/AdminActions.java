@@ -35,7 +35,7 @@ import com.actelion.research.spiritapp.spirit.ui.audit.RecentChancesDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
+import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
 import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -164,7 +164,7 @@ public class AdminActions {
 			super("Recent Connections (Admin)");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('c'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
-			setEnabled(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && (SpiritFrame.getUser()==null || SpiritRights.isSuperAdmin(SpiritFrame.getUser())));
+			setEnabled(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER && (SpiritFrame.getUser()==null || SpiritRights.isSuperAdmin(SpiritFrame.getUser())));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -177,7 +177,7 @@ public class AdminActions {
 			super("Edit Users/Groups (Admin)");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
-			setEnabled(DBAdapter.getAdapter().getUserManagedMode()==UserAdministrationMode.READ_WRITE && (SpiritFrame.getUser()==null || SpiritRights.isSuperAdmin(SpiritFrame.getUser())));
+			setEnabled(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER  && (SpiritFrame.getUser()==null || SpiritRights.isSuperAdmin(SpiritFrame.getUser())));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {

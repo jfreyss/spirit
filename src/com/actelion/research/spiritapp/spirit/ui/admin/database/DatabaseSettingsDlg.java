@@ -68,9 +68,10 @@ import com.actelion.research.util.ui.JComboCheckBox;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JExceptionDialog;
+import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.SwingWorkerExtended;
-import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
@@ -92,6 +93,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 
 	private final Map<PropertyDescriptor, JComponent> dbproperty2comp = new HashMap<>();
 	private final JLabel label = new JLabel();
+	private JPanel systemPanel = new JPanel(new GridLayout());
 	private JPanel userPanel = new JPanel(new GridLayout());
 	private JPanel studyPanel = new JPanel(new GridLayout());
 
@@ -101,9 +103,13 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 		super(UIUtils.getMainFrame(), "Database Settings", DatabaseSettingsDlg.class.getName());
 
 		//Initialize with current adapter
-		adapter = DBAdapter.getAdapter();
+		adapter = DBAdapter.getInstance();
 		initialAdapter = adapter;
-		propertyMap = new HashMap<>(SpiritProperties.getInstance().getValues());
+		try {
+			propertyMap = new HashMap<>(SpiritProperties.getInstance().getValues());
+		} catch (Exception e) {
+			propertyMap = new HashMap<>();
+		}
 
 		//Buttons
 		JButton okButton = new JIconButton(IconType.SAVE, "Save");
@@ -203,9 +209,11 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 				}
 			});
 		} else {
-			comps.add(new JLabel(DBAdapter.ADAPTER_PROPERTY.getDisplayName()+": "));
+			comps.add(new JLabel(DBAdapter.ADAPTER_PROPERTY.getDisplayName() + ": "));
 			comps.add(new JCustomLabel(initialAdapter==null?"":initialAdapter.getClass().getSimpleName(), Font.BOLD));
 		}
+		comps.add(new JLabel(PropertyKey.DB_VERSION.getLabel() + ": "));
+		comps.add(new JCustomLabel(SpiritProperties.getInstance().getDBVersion(), Font.BOLD));
 
 		//specificConfigPane
 		specificConfigPane.setPreferredSize(new Dimension(450, 340));
@@ -223,11 +231,12 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 				UIUtils.createTitleBox("DB Connection",specificConfigPane),
 				UIUtils.createTitleBox("DB Type", UIUtils.createTable(comps)),
 				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), testConnectionButton, testSchemaButton, examplesButton)));
+		tabbedPane.add("System Settings", new JScrollPane(systemPanel));
 		tabbedPane.add("User Settings", new JScrollPane(userPanel));
 		tabbedPane.add("Study Settings", new JScrollPane(studyPanel));
 
 		//contentpane
-		setContentPane(UIUtils.createBox(tabbedPane, null, UIUtils.createHorizontalBox(label, Box.createHorizontalGlue(), okButton)));
+		setContentPane(UIUtils.createBox(tabbedPane, UIUtils.createTitleBox(new JInfoLabel("<html>The configuration settings have no impact on the user's data (samples. results).<br>IE. If you remove one study's metadata, it will actually only be removed from the display and not from the DB. You can always go back.")), UIUtils.createHorizontalBox(label, Box.createHorizontalGlue(), okButton)));
 		UIUtils.adaptSize(this, 840, 750);
 		setVisible(true);
 
@@ -241,40 +250,33 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 	}
 
 	private void refreshConfigPanels() {
-		createPropertyPanel(userPanel, "", "", PropertyKey.getPropertyKeys(Tab.SYSTEM), new String[0]);
+		createPropertyPanel(systemPanel, "", "", PropertyKey.getPropertyKeys(Tab.SYSTEM), new String[0]);
+		createPropertyPanel(userPanel, "", "", PropertyKey.getPropertyKeys(Tab.USER), new String[0]);
 		createPropertyPanel(studyPanel, "", "", PropertyKey.getPropertyKeys(Tab.STUDY), new String[0]);
 	}
 
-	private Map<PropertyKey, JComponent> prop2comp = new HashMap<>();
+	private Map<PropertyKey, JComponent> prop2editor = new HashMap<>();
 	private void createPropertyPanel(final JPanel panel, final String propertyPrefix, final String labelPrefix, final List<PropertyKey> properties, final String[] nestedValues) {
 		List<JComponent> tableComps = new ArrayList<>();
 		List<Component> panels = new ArrayList<>();
+		JTabbedPane nestedPanes = new JCustomTabbedPane(JTabbedPane.LEFT);
+
+		//Loop through properties
 		for (final PropertyKey p : properties) {
 
-			//PropertyEditor
-			List<PropertyKey> toPropertyKeys = p.getNestedProperties();
+			//Create editor for the property
 			String val = propertyMap.get(propertyPrefix + p.getKey())==null? p.getDefaultValue(nestedValues): propertyMap.get(propertyPrefix + p.getKey());
-			final JComponent parentComp;
-			if("true,false".equals(p.getOptions())) {
+			final JComponent editorComp;
+			if("true,false".equals(p.getOptions()) || "true, false".equals(p.getOptions())) {
 				final JCheckBox c = new JCheckBox();
-				parentComp = c;
+				editorComp = c;
 				c.setSelected("true".equals(val));
-				c.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						propertyMap.put(propertyPrefix + p.getKey(), c.isSelected()?"true":"false");
-					}
-				});
+				c.addActionListener(e -> propertyMap.put(propertyPrefix + p.getKey(), c.isSelected()?"true":"false"));
 			} else if(p.getOptions()!=null) {
 				final JComboBox<String> c = new JComboBox<>(p.getChoices());
-				parentComp = c;
+				editorComp = c;
 				c.setSelectedItem(val);
-				c.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						propertyMap.put(propertyPrefix + p.getKey(), (String) c.getSelectedItem());
-					}
-				});
+				c.addActionListener(e-> propertyMap.put(propertyPrefix + p.getKey(), (String) c.getSelectedItem()));
 			} else if(p.getLinkedOptions()!=null) {
 				String parentVal = propertyMap.get(p.getLinkedOptions().getKey());
 				if(parentVal==null) parentVal = p.getLinkedOptions().getDefaultValue(nestedValues);
@@ -282,66 +284,61 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 				final JComboCheckBox c = new JComboCheckBox(p.getChoices(parentVal));
 				c.setEditable(false);
 				c.setSeparator(", ");
-				parentComp = c;
+				editorComp = c;
 				c.setText(val);
-				c.addTextChangeListener(new TextChangeListener() {
-					@Override
-					public void textChanged(JComponent src) {
-						propertyMap.put(propertyPrefix + p.getKey(), c.getText());
-					}
-				});
+				c.addTextChangeListener(comp -> propertyMap.put(propertyPrefix + p.getKey(), c.getText()));
 			} else {
-				final JCustomTextField c = new JCustomTextField(JCustomTextField.ALPHANUMERIC, toPropertyKeys.size()>0? 38: 16);
-				parentComp = c;
+				final JCustomTextField c = new JCustomTextField(CustomFieldType.ALPHANUMERIC, p.getNestedProperties().size()>0? 38: 16);
+				editorComp = c;
 				c.setText(val);
-				c.addTextChangeListener(new TextChangeListener() {
-					@Override
-					public void textChanged(JComponent src) {
-						propertyMap.put(propertyPrefix + p.getKey(), c.getText());
-					}
-				});
+				c.addTextChangeListener(comp -> propertyMap.put(propertyPrefix + p.getKey(), c.getText()));
 			}
-			prop2comp.put(p, parentComp);
+			prop2editor.put(p, editorComp);
 
-			if(p.getLinkedOptions()!=null && prop2comp.get(p.getLinkedOptions())!=null) {
-				prop2comp.get(p.getLinkedOptions()).addFocusListener(new FocusAdapter() {
+			if(p.getLinkedOptions()!=null && prop2editor.get(p.getLinkedOptions())!=null) {
+				prop2editor.get(p.getLinkedOptions()).addFocusListener(new FocusAdapter() {
 					private String t;
 					@Override
 					public void focusLost(FocusEvent e) {
-						if(!t.equals(getValue(prop2comp.get(p.getLinkedOptions())))) {
+						if(!t.equals(getValue(prop2editor.get(p.getLinkedOptions())))) {
 							refreshConfigPanels();
 						}
 					}
 					@Override
 					public void focusGained(FocusEvent e) {
-						t = getValue(prop2comp.get(p.getLinkedOptions()));
+						t = getValue(prop2editor.get(p.getLinkedOptions()));
 					}
 				});
 			}
-			//components
+
+			//Add a label and a tooltip
 			JLabel labelComp = new JLabel(" " + p.getLabel() + ": ");
 			JLabel tooltipComp = p.getTooltip()==null? new JLabel(): new JLabel(IconType.HELP.getIcon());
 			labelComp.setToolTipText(p.getTooltip()==null? null: "<html>" + p.getTooltip());
-			parentComp.setToolTipText(p.getTooltip()==null? null: "<html>" + p.getTooltip());
+			editorComp.setToolTipText(p.getTooltip()==null? null: "<html>" + p.getTooltip());
 			tooltipComp.setToolTipText(p.getTooltip()==null? null: "<html>" + p.getTooltip());
 
-			//Are there derived properties?
-			if(toPropertyKeys.size()>0) {
-				parentComp.addFocusListener(new FocusAdapter() {
+			tableComps.add(tooltipComp);
+			tableComps.add(labelComp);
+			tableComps.add(editorComp);
+
+			if(p.getNestedProperties().size()>0) {
+				//If there ares nested properties, add them to a nested panel
+				editorComp.addFocusListener(new FocusAdapter() {
 					private String t;
 					@Override
 					public void focusLost(FocusEvent e) {
-						if(!t.equals(getValue(parentComp))) {
+						if(!t.equals(getValue(editorComp))) {
 							createPropertyPanel(panel, propertyPrefix, labelPrefix, properties, nestedValues);
 						}
 					}
 					@Override
 					public void focusGained(FocusEvent e) {
-						t = getValue(parentComp);
+						t = getValue(editorComp);
 					}
 				});
-				List<JPanel> nestedPanels = new ArrayList<>();
-				for(String token: MiscUtils.split(getValue(parentComp), ",")) {
+				List<Component> nestedPanels = new ArrayList<>();
+				for(String token: MiscUtils.split(getValue(editorComp), ",")) {
 					//Add the nested value to our stack
 					final String[] nestedValues2 = new String[nestedValues.length+1];
 					System.arraycopy(nestedValues, 0, nestedValues2, 0, nestedValues.length);
@@ -350,21 +347,14 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 					//create a nested panel
 					JPanel nestedPanel = new JPanel();
 					nestedPanel.setOpaque(false);
-					createPropertyPanel(nestedPanel, propertyPrefix + p.getKey() + "." + token +".", token, toPropertyKeys, nestedValues2);
+					createPropertyPanel(nestedPanel, propertyPrefix + p.getKey() + "." + token +".", token, p.getNestedProperties(), nestedValues2);
 					nestedPanels.add(nestedPanel);
 				}
-
-				panels.add(UIUtils.createTitleBox(p.getLabel(),
-						UIUtils.createBox(UIUtils.createHorizontalBox(labelComp, parentComp, tooltipComp, Box.createHorizontalGlue()),
-								null, UIUtils.createVerticalBox(nestedPanels))));
-			} else {
-
-				//Standard components: add them to the table
-				tableComps.add(tooltipComp);
-				tableComps.add(labelComp);
-				tableComps.add(parentComp);
+				nestedPanels.add(Box.createVerticalGlue());
+				nestedPanes.add(p.getLabel(), UIUtils.createTitleBox(p.getLabel(), UIUtils.createVerticalBox(nestedPanels)));
 			}
 		}
+
 		if(tableComps.size()>0) {
 			if(labelPrefix.length()>0) {
 				//Nested panel
@@ -384,6 +374,9 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 				//Main Panel
 				panels.add(UIUtils.createTitleBox(UIUtils.createTable(3, 5, 3, tableComps)));
 			}
+		}
+		if(nestedPanes.getTabCount()>0) {
+			panels.add(nestedPanes);
 		}
 		panels.add(Box.createVerticalGlue());
 
@@ -430,7 +423,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 			return comp;
 		} else if(property.getDisplayName().contains("Password")) {
 			//Add a password field
-			final JCustomTextField comp = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 22);
+			final JCustomTextField comp = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 22);
 			comp.setTextWhenEmpty("Encrypted password");
 			JButton encryptButton = new JButton("...");
 			encryptButton.addActionListener(new ActionListener() {
@@ -450,7 +443,7 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 			comp.setText(adapter.getDBProperty(property));
 			return comp;
 		} else {
-			JCustomTextField comp = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 25);
+			JCustomTextField comp = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 25);
 			comp.setText(adapter.getDBProperty(property));
 			comp.setEnabled(DBAdapter.isConfigurable());
 			dbproperty2comp.put(property, comp);
@@ -529,11 +522,11 @@ public class DatabaseSettingsDlg extends JSpiritEscapeDialog {
 	private void save() throws Exception {
 		if(adapter==null) throw new Exception("You must select an adapter");
 
-		//Update properties
-		updateDBProperties();
-
 		//Simply test the connection, or forbids saving
 		adapter.testConnection();
+
+		//Update properties
+		updateDBProperties();
 
 		//Success->Save
 		//DBProperties in config file (if configurable)

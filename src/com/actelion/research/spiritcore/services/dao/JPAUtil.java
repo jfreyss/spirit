@@ -35,6 +35,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.FlushModeType;
 import javax.persistence.Persistence;
 
+import org.hibernate.Version;
 import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritcore.adapter.DBAdapter;
@@ -116,7 +117,7 @@ public class JPAUtil {
 			boolean connected = false;
 			if(em!=null && em.isOpen()) {
 				try {
-					String testQuery =  DBAdapter.getAdapter().getTestQuery() ;
+					String testQuery =  DBAdapter.getInstance().getTestQuery() ;
 					if(testQuery!=null && testQuery.length()>0 && System.currentTimeMillis()-lastTestQuery>5000) {
 						em.createNativeQuery(testQuery).getSingleResult();
 						lastTestQuery = System.currentTimeMillis();
@@ -192,6 +193,7 @@ public class JPAUtil {
 	public static void clear() {
 		getManager().clear();
 	}
+
 	/**
 	 * Clear all entity manager and Spirit Cache.
 	 * Not Thread safe
@@ -237,7 +239,7 @@ public class JPAUtil {
 			factory = null;
 		}
 		Cache.removeAll();
-		SpiritProperties.clear();
+		SpiritProperties.reset();
 	}
 
 	public static void closeRequest() {
@@ -275,7 +277,7 @@ public class JPAUtil {
 			EntityManager em = null;
 			try {
 				em = createManager();
-				DBAdapter adapter = DBAdapter.getAdapter();
+				DBAdapter adapter = DBAdapter.getInstance();
 
 				assert em!=null;
 				assert adapter!=null;
@@ -350,7 +352,7 @@ public class JPAUtil {
 	 * @throws Exception
 	 */
 	protected static void initFactory() throws Exception {
-		DBAdapter adapter = DBAdapter.getAdapter();
+		DBAdapter adapter = DBAdapter.getInstance();
 		if(factory!=null) closeFactory();
 		adapter.preInit();
 		initFactory(adapter, "");
@@ -392,7 +394,8 @@ public class JPAUtil {
 	}
 
 	private static void initialize() {
-		LoggerFactory.getLogger(JPAUtil.class).debug("JPA Factory Initialized");
+		LoggerFactory.getLogger(JPAUtil.class).debug("JPA Factory Initialized. version: "+Version.getVersionString());
+
 		assert factory == null;
 		try {
 			initFactory();

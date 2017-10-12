@@ -25,7 +25,6 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
@@ -43,8 +42,6 @@ import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import com.actelion.research.spiritapp.slidecare.ui.ContainerCreatorDlg;
 import com.actelion.research.spiritapp.slidecare.ui.InventoryPanel;
@@ -76,8 +73,8 @@ import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JStatusBar;
-import com.actelion.research.util.ui.SplashScreen2;
-import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
+import com.actelion.research.util.ui.SplashScreen;
+import com.actelion.research.util.ui.SplashScreen.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
@@ -106,6 +103,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	};
 	private JStatusBar statusBar = new JStatusBar();
 
+	private InventoryPanel lastSelectedInventoryPanel;
 
 	public SlideCare() {
 		super("SlideCare");
@@ -135,12 +133,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		tabbedPane.setIconAt(1, new ImageIcon(ContainerType.K7.getImage(22)));
 		tabbedPane.add("Sectioning", slidePanel);
 		tabbedPane.setIconAt(2, new ImageIcon(ContainerType.SLIDE.getImage(22)));
-		tabbedPane.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				eventTabChanged();
-			}
-		});
+		tabbedPane.addChangeListener(e-> eventTabChanged());
 
 
 		//StatusBar
@@ -164,12 +157,9 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 
-		studyComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if(studyComboBox.getText()!=null)  Spirit.getConfig().setProperty("slideCare.study", studyComboBox.getText());
-				eventTabChanged();
-			}
+		studyComboBox.addActionListener(e-> {
+			if(studyComboBox.getText()!=null)  Spirit.getConfig().setProperty("slideCare.study", studyComboBox.getText());
+			eventTabChanged();
 		});
 
 
@@ -182,12 +172,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 				final SpiritUser user = DAOSpiritUser.loadUser("freyssj");
 				if(user==null) throw new Exception("Could not load user birkood1");
 				SpiritFrame.setUser(user);
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						eventUserChanged();
-					}
-				});
+				SwingUtilities.invokeLater(()->eventUserChanged());
 			} catch (Exception e) {
 				System.err.println(e);
 			}
@@ -207,11 +192,13 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 		setPreferredSize(new Dimension(300, 200));
 
 	}
+
 	private void eventUserChanged() {
 		studyComboBox.setText(Spirit.getConfig().getProperty("slideCare.study", ""));
 		eventTabChanged();
 		updateStatus();
 	}
+
 	public void updateStatus() {
 
 		String userStatus;
@@ -224,9 +211,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 
 	}
 
-	private InventoryPanel lastSelectedInventoryPanel;
 	private void eventTabChanged() {
-
 		statusBar.setInfos("");
 		Study study = DAOStudy.getStudyByStudyId(studyComboBox.getText());
 		if(tabbedPane.getSelectedIndex()==0) {
@@ -301,7 +286,7 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	public static void main(String[] args) {
 
 		Spirit.initUI();
-		SplashScreen2.show(splashConfig);
+		SplashScreen.show(splashConfig);
 
 
 		new SwingWorkerExtended() {
@@ -358,7 +343,6 @@ public class SlideCare extends JFrame implements ISpiritChangeObserver, ISpiritC
 	public void setUser(String status) {
 		statusBar.setUser(status);
 	}
-
 	public static void open() {
 		SlideCare app = new SlideCare();
 		app.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

@@ -92,7 +92,7 @@ public class AttachBiosamplesHelper {
 		/////////////////////////////
 		//Load the former animals from the groups needing randomization
 		List<Biosample> formerAnimals = new ArrayList<>();
-		for(Biosample b: study.getTopAttachedBiosamples()) {
+		for(Biosample b: study.getTopParticipants()) {
 			if(phase!=null) {
 				if(b.getInheritedGroup()==null) continue; //always keep the reserve when we assign from a a rando on a specified phase
 				if(!phase.equals(b.getInheritedGroup().getFromPhase())) continue; //the animals is attached from a different rando phase
@@ -130,7 +130,7 @@ public class AttachBiosamplesHelper {
 				//The biosample looks ok but it may have been cloned.
 				//Check if one the child is compatible
 				for (Biosample c : b.getHierarchy(HierarchyMode.CHILDREN)) {
-					if (c.getAttachedStudy() != null && (c.getInheritedGroup() == null || c.getInheritedGroup().getFromGroup() == null || !c.getInheritedGroup().getFromGroup().getDividingGroups().contains(c.getInheritedGroup()))) {
+					if (c.getAttachedStudy() != null) {
 						replacementNeeded = true;
 						if (c.getBiotype().equals(b.getBiotype()) && c.getAttachedStudy().equals(study) && CompareUtils.compare(c.getInheritedGroup(), rndSample.getGroup()) == 0) {
 							replacement = c;

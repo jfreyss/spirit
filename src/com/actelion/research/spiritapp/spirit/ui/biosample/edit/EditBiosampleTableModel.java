@@ -27,7 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.actelion.research.spiritapp.spirit.ui.biosample.column.BioQualityColumn;
+import com.actelion.research.spiritapp.spirit.ui.biosample.column.BiosampleQualityColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.BiosampleElbColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.CombinedColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.ContainerAmountColumn;
@@ -43,7 +43,7 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyGroupColu
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyPhaseColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudySubGroupColumn;
-import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyTopSampleIdColumn;
+import com.actelion.research.spiritapp.spirit.ui.biosample.column.StudyParticipantIdColumn;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.LinkerColumnFactory;
 import com.actelion.research.spiritapp.spirit.ui.biosample.linker.SampleIdColumn;
 import com.actelion.research.spiritcore.business.biosample.BarcodeType;
@@ -134,12 +134,10 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 		}
 
 		//Study Elements
-		if(type!=null && type.getCategory()==BiotypeCategory.LIVING || hasAttachedSamples) {
+		if(type!=null && (type.getCategory()==BiotypeCategory.LIVING || type.getCategory()==BiotypeCategory.SOLID || type.getCategory()==BiotypeCategory.LIQUID) || hasAttachedSamples) {
 			defaultColumns.add(new StudyIdColumn());
 			defaultColumns.add(new StudyGroupColumn(this));
 			defaultColumns.add(new StudySubGroupColumn());
-		}
-		if(type==null || type.getCategory()==BiotypeCategory.SOLID || type.getCategory()==BiotypeCategory.LIQUID) {
 			defaultColumns.add(new StudyPhaseColumn(this));
 		}
 
@@ -148,7 +146,7 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 		} else if(!compactView) {
 			//Top
 			if(hasParents2) {
-				defaultColumns.add(new StudyTopSampleIdColumn());
+				defaultColumns.add(new StudyParticipantIdColumn());
 			}
 
 			//Parent (must always be displayed except for living)
@@ -192,9 +190,9 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 		res.add(new StudyGroupColumn(this));
 		res.add(new StudySubGroupColumn());
 		res.add(new StudyPhaseColumn(this));
-		res.add(new StudyTopSampleIdColumn());
+		res.add(new StudyParticipantIdColumn());
 		res.add(new ParentBiosampleColumn(this));
-		res.add(new BioQualityColumn());
+		res.add(new BiosampleQualityColumn());
 		res.add(new ExpiryDateColumn());
 		res.add(new CreationColumn(false));
 		return res;

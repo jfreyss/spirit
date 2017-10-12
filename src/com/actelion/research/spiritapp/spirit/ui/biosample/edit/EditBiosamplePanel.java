@@ -53,7 +53,7 @@ public class EditBiosamplePanel extends JPanel {
 	//Top
 	private final JButton formModeButton = new JButton("Switch to Form Mode");
 	private JPanel formModeBox = UIUtils.createHorizontalBox(formModeButton, Box.createHorizontalGlue());
-	private final BiotypeComboBox typeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
+	private final BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 
 	//Scan
 	private JButton setLocationButton = new JButton(new SetLocationAction(table));
@@ -71,15 +71,16 @@ public class EditBiosamplePanel extends JPanel {
 		add(BorderLayout.NORTH,
 				UIUtils.createVerticalBox(
 						formModeBox,
-						UIUtils.createTitleBox("Biotype", UIUtils.createHorizontalBox(new JLabel("Biotype: "), typeComboBox, Box.createHorizontalGlue(), setLocationButton))));
+						UIUtils.createTitleBox("Biotype", UIUtils.createHorizontalBox(new JLabel("Biotype: "), biotypeComboBox, Box.createHorizontalGlue(), setLocationButton))));
 		add(BorderLayout.CENTER, new JScrollPane(table));
 
-		typeComboBox.addTextChangeListener(e-> {
+		biotypeComboBox.setMemorization(true);
+		biotypeComboBox.addTextChangeListener(e-> {
 			eventBiotypeChanged();
 		});
 
 		formModeButton.addActionListener(e-> {
-			Biotype biotype = typeComboBox.getSelection();
+			Biotype biotype = biotypeComboBox.getSelection();
 			if(biotype==null) return;
 
 			if(table.getRows().size()==0) {
@@ -111,20 +112,20 @@ public class EditBiosamplePanel extends JPanel {
 			//Test if the list has metadata
 			boolean hasData = false;
 			for(Biosample b: table.getBiosamples()) {
-				if(b.getBiotype()==null) continue;
+				if(b==null || b.getBiotype()==null) continue;
 				for(BiotypeMetadata m : b.getBiotype().getMetadata()) {
 					String s = b.getMetadataValue(m);
 					if(s!=null && s.length()>0) hasData = true;
 				}
 			}
 
-			Biotype biotype = typeComboBox.getSelection();
+			Biotype biotype = biotypeComboBox.getSelection();
 			if(biotype!=null) {
 				if(hasData) {
 					if(!biotype.equals(table.getType())) {
 						//Raise an exception if the biotype was changed
 						JOptionPane.showMessageDialog(dlg, "You cannot change the type once you have entered some metadata", "Error", JOptionPane.ERROR_MESSAGE);
-						typeComboBox.setSelection(table.getType());
+						biotypeComboBox.setSelection(table.getType());
 					}
 				} else {
 					//Change the type
@@ -139,7 +140,7 @@ public class EditBiosamplePanel extends JPanel {
 				List<Biosample> biosamples = table.getBiosamples();
 				for (Biosample b : biosamples) {
 					if(b.getBiotype()==null) {
-						typeComboBox.setSelection(table.getType());
+						biotypeComboBox.setSelection(table.getType());
 						return;
 					}
 				}
@@ -164,8 +165,8 @@ public class EditBiosamplePanel extends JPanel {
 		table.setRows(biotype, biosamples);
 		push++;
 		try {
-			typeComboBox.setSelection(biotype);
-			typeComboBox.setEnabled(biotypes.size()<=1);
+			biotypeComboBox.setSelection(biotype);
+			biotypeComboBox.setEnabled(biotypes.size()<=1);
 		} finally {
 			push--;
 		}
@@ -173,12 +174,12 @@ public class EditBiosamplePanel extends JPanel {
 	}
 
 	public Biotype getBiotype() {
-		return typeComboBox.getSelection();
+		return biotypeComboBox.getSelection();
 	}
 
 	public void setForcedBiotype(Biotype biotype) {
-		typeComboBox.setSelection(biotype);
-		typeComboBox.setEnabled(biotype==null);
+		biotypeComboBox.setSelection(biotype);
+		biotypeComboBox.setEnabled(biotype==null);
 	}
 
 }

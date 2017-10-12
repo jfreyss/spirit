@@ -63,7 +63,7 @@ public class OrganTab extends JPanel {
 		this.dlg = dlg;
 		this.animalNo = animalNo;
 
-		biotypeComboBox.setSelectionString("Organ");
+		biotypeComboBox.setText("Organ");
 		onlyInCassetteCheckBox.setSelected(filterOnlyInCassette);
 
 		JPanel filterPanel = UIUtils.createHorizontalBox(
@@ -96,7 +96,7 @@ public class OrganTab extends JPanel {
 	}
 
 	public void refresh() {
-		List<Biosample> animals = dlg.getStudy().getTopAttachedBiosamples();
+		List<Biosample> animals = dlg.getStudy().getTopParticipants();
 		animalCombobox.setValues(animals, "Select One...");
 		if(animals.size()>0) {
 			animalCombobox.setSelection(animals.iterator().next());

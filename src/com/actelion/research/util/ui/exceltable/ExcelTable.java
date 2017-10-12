@@ -81,7 +81,6 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 	public static final boolean DEBUG = false;
 
 	private boolean canAddRow = true;
-	private boolean canSort = true;
 	private ExcelUndoManager undoManager = new ExcelUndoManager(this);
 	private boolean goNextOnEnter = false;
 
@@ -546,22 +545,6 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 
 	public void setGoNextOnEnter(boolean goNextOnEnter) {
 		this.goNextOnEnter = goNextOnEnter;
-	}
-
-
-	/**
-	 * @param canSort the canSort to set
-	 */
-	public void setCanSort(boolean canSort) {
-		this.canSort = canSort;
-	}
-
-
-	/**
-	 * @return the canSort
-	 */
-	public boolean isCanSort() {
-		return canSort;
 	}
 
 	/**

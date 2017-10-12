@@ -23,7 +23,10 @@ package com.actelion.research.spiritapp.spirit.ui.audit;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
@@ -38,23 +41,23 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
+import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
+import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 
 public class ResultHistoryDlg extends JEscapeDialog {
 
 
-	public ResultHistoryDlg(final List<Revision> revisions) {
+	public ResultHistoryDlg(final Result result) {
 		super(UIUtils.getMainFrame(), "Result History", true);
 
 		try {
-			if(revisions.size()==0) throw new Exception("There are no revisions saved");
-
 			final RevisionTable revisionList = new RevisionTable(false);
-			revisionList.setRows(revisions);
 			final ResultTable resultTable = new ResultTable();
 
 
@@ -80,11 +83,33 @@ public class ResultHistoryDlg extends JEscapeDialog {
 			});
 
 
-			JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+			JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT,
 					UIUtils.createTitleBox("Revisions", new JScrollPane(revisionList)),
 					UIUtils.createTitleBox("Result Revision", new JScrollPane(resultTable)));
 			splitPane.setDividerLocation(500);
 			setContentPane(splitPane);
+
+
+			//Load revisions in background
+			new SwingWorkerExtended(revisionList, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+				private List<Revision> revisions;
+				private Map<Revision, String> changeMap;
+				@Override
+				protected void doInBackground() throws Exception {
+					revisions = DAORevision.getLastRevisions(result);
+					changeMap = getChangeMap(revisions);
+				}
+
+				@Override
+				protected void done() {
+					if(revisions.size()==0) {
+						JExceptionDialog.showError("There are no revisions saved");
+					}
+					revisionList.setRows(revisions, changeMap);
+				}
+			};
+
+
 
 			UIUtils.adaptSize(this, 1000, 600);
 			setVisible(true);
@@ -92,6 +117,28 @@ public class ResultHistoryDlg extends JEscapeDialog {
 			JExceptionDialog.showError(e);
 			dispose();
 		}
+
+	}
+
+	private Map<Revision, String> getChangeMap(List<Revision> revisions ) {
+		Map<Revision, String> changeMap = new HashMap<>();
+		List<Revision> revs = new ArrayList<>();
+		for (int i = 0; i < revisions.size(); i++) {
+			Result b1 = revisions.get(i).getResults().get(0);
+			String diff;
+			if(i+1<revisions.size()) {
+				Result b2 = revisions.get(i+1).getResults().get(0);
+				diff = b1.getDifference(b2);
+			} else {
+				Result b2 = revisions.get(0).getResults().get(0);
+				diff = b1.getDifference(b2);
+				if(diff.length()==0) diff = "First version";
+			}
+
+			revs.add(revisions.get(i));
+			changeMap.put(revisions.get(i), diff);
+		}
+		return changeMap;
 
 	}
 

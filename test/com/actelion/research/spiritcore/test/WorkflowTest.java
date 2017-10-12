@@ -41,7 +41,7 @@ public class WorkflowTest extends AbstractSpiritTest {
 		
 		//Define workflow
 		SpiritProperties.getInstance().setValue(PropertyKey.STUDY_STATES, "proposed, approved, ongoing, stopped, sealed");
-		SpiritProperties.getInstance().setValue(PropertyKey.STUDY_STATE_DEFAULT, "proposed");
+		SpiritProperties.getInstance().setValue(PropertyKey.STUDY_DEFAULTSTATE, "proposed");
 		SpiritProperties.getInstance().setValue(PropertyKey.STUDY_STATES_FROM, "proposed", "approved");
 		SpiritProperties.getInstance().setValue(PropertyKey.STUDY_STATES_FROM, "approved", "proposed, ongoing");
 		SpiritProperties.getInstance().setValue(PropertyKey.STUDY_STATES_FROM, "ongoing", "approved");
@@ -65,7 +65,7 @@ public class WorkflowTest extends AbstractSpiritTest {
 		
 		//Define new study
 		Study s = new Study();
-		s.setState(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATE_DEFAULT));
+		s.setState(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_DEFAULTSTATE));
 		DAOStudy.persistStudies(Collections.singleton(s), user);
 				
 		Assert.assertEquals("proposed", MiscUtils.flatten(WorkflowHelper.getNextStates(s, DAOSpiritUser.loadUser("scientist"))));

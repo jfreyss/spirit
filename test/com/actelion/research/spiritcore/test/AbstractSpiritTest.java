@@ -7,6 +7,7 @@ import com.actelion.research.spiritcore.adapter.HSQLMemoryAdapter;
 import com.actelion.research.spiritcore.adapter.SchemaCreator;
 import com.actelion.research.spiritcore.business.Exchange;
 import com.actelion.research.spiritcore.services.SpiritUser;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 
 public abstract class AbstractSpiritTest {
 
@@ -16,6 +17,7 @@ public abstract class AbstractSpiritTest {
 	public static final void initDB() throws Exception {
 		//Init user
 		user = SpiritUser.getFakeAdmin();
+		JPAUtil.setSpiritUser(user);
 
 		//Init DB
 		DBAdapter.setAdapter(new HSQLMemoryAdapter());

@@ -54,12 +54,25 @@ public class StudyTest extends AbstractSpiritTest {
 
 	@Test
 	public void testCount() throws Exception {
-		Study s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
+		Study s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		DAOStudy.countRecentSamplesByBiotype(new Date());
 		DAOStudy.countBiosampleAndResultsByPhase(s);
 		DAOStudy.countResults(Collections.singleton(s), null);
 		DAOStudy.countResultsByStudyTest(Collections.singleton(s));
 		DAOStudy.countSamplesByStudyBiotype(Collections.singleton(s));
+	}
+
+	@Test
+	public void testDuplicate() throws Exception {
+		Study s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
+		Study s2 = s.duplicate();
+		DAOStudy.persistStudies(Collections.singleton(s2), user);
+		System.out.println("StudyTest.testDuplicate() "+s.getGroups()+" "+s2.getGroups());
+
+		Assert.assertEquals(s.getNotes(), s2.getNotes());
+		Assert.assertEquals(s.getPhases().size(), s2.getPhases().size());
+		Assert.assertEquals(s.getGroups().size(), s2.getGroups().size());
+		Assert.assertEquals(s.getStudyActions().size(), s2.getStudyActions().size());
 	}
 
 	@Test
@@ -93,9 +106,9 @@ public class StudyTest extends AbstractSpiritTest {
 	@Test
 	public void testRando() throws Exception {
 		//Load rando
-		Study s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
+		Study s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		Randomization rnd = s.getPhase("d0").getRandomization();
-		Assert.assertEquals(17, s.getTopAttachedBiosamples().size());
+		Assert.assertEquals(17, s.getTopParticipants().size());
 		Assert.assertEquals(17, rnd.getSamples().size());
 
 		//Add an animal and save
@@ -108,9 +121,9 @@ public class StudyTest extends AbstractSpiritTest {
 
 
 		//Reload
-		s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
+		s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		rnd = s.getPhase("d0").getRandomization();
-		Assert.assertEquals(17, s.getTopAttachedBiosamples().size());
+		Assert.assertEquals(17, s.getTopParticipants().size());
 		Assert.assertEquals(18, rnd.getSamples().size());
 
 		DAOStudy.loadBiosamplesFromStudyRandomization(rnd);
@@ -119,17 +132,39 @@ public class StudyTest extends AbstractSpiritTest {
 			Assert.assertEquals(a.getSampleId(), a.getBiosample().getSampleId());
 		}
 
-		//Finalize
-		//TODO: move AttachBiosampleHelper into services
+	}
+
+	@Test
+	public void testPhases() throws Exception {
+		Study s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
+		List<Phase> phases = new ArrayList<>(s.getPhases());
+		Assert.assertTrue(phases.size()>0);
+
+		Phase p = phases.get(0);
+		Assert.assertEquals(p.getName(), "d0");
+		Assert.assertEquals(p.getDescription(), "Weighing + Treatments");
+
+		Phase p1 = phases.get(1);
+		Assert.assertEquals(p1.getName(), "d1");
+		Assert.assertEquals(p1.getDescription(), "Weighing + Blood Sampling");
+
+		Phase p2 = phases.get(2);
+		Assert.assertEquals(p2.getName(), "d2");
+		Assert.assertEquals(p2.getDescription(), "Weighing + Blood Sampling");
+
+		Phase p3 = phases.get(3);
+		Assert.assertEquals(p3.getName(), "d3");
+		Assert.assertEquals(p3.getDescription(), "Weighing + Blood Sampling");
 
 	}
+
 
 	@Test
 	public void testUpdates() throws Exception {
 		ExchangeTest.initDemoExamples(user);
 		JPAUtil.clearAll();
 
-		Study s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
+		Study s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		Assert.assertTrue(s.getId()>0);
 		Assert.assertTrue(s.getStudyId().length()>0);
 		Assert.assertEquals(1, s.getPhasesWithGroupAssignments().size());
@@ -154,7 +189,7 @@ public class StudyTest extends AbstractSpiritTest {
 
 		//Set Metadata
 		for(String metadata: SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA)) {
-			s.getMetadata().put(metadata, "test");
+			s.getMetadataMap().put(metadata, "test");
 		}
 
 		//Persist
@@ -162,7 +197,7 @@ public class StudyTest extends AbstractSpiritTest {
 
 		//Rename and then remove phase: bug from v2.0
 		System.out.println("StudyTest.testUpdates() load1 with "+s.getPhases());
-		s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
+		s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		p = s.getPhase("d15_10h");
 		p.setName("");
 		p.remove();
@@ -170,7 +205,7 @@ public class StudyTest extends AbstractSpiritTest {
 
 		//And load
 		System.out.println("StudyTest.testUpdates() load2 with "+s.getPhases());
-		s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
+		s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		p = s.getPhase("d21");
 		g = s.getGroup("Test");
 		Assert.assertTrue(s.getPhases().contains(p));
@@ -182,7 +217,7 @@ public class StudyTest extends AbstractSpiritTest {
 		Assert.assertEquals(1, s.getStudyAction(g, 0, p).getNamedSamplings().size());
 		Assert.assertTrue(s.getStudyAction(g, 1, p)==null || s.getStudyAction(g, 1, p).getNamedSamplings().size()==0);
 		for(String metadata: SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA)) {
-			Assert.assertEquals("test", s.getMetadata().get(metadata));
+			Assert.assertEquals("test", s.getMetadataMap().get(metadata));
 		}
 
 		//Remove phase
@@ -191,7 +226,7 @@ public class StudyTest extends AbstractSpiritTest {
 		Assert.assertEquals(p+" was not deleted in " + s.getPhases(), np, s.getPhases().size());
 		DAOStudy.persistStudies(Collections.singleton(s), user);
 
-		s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
+		s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		g = s.getGroup(g.getName());
 
 		Assert.assertEquals(ng+1, s.getGroups().size());
@@ -226,7 +261,7 @@ public class StudyTest extends AbstractSpiritTest {
 		DAOStudy.persistStudies(Collections.singleton(s), user);
 
 		//Reload
-		s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
+		s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		p2 = s.getPhase(p2.getName());
 		g = s.getGroup(g.getName());
 		Assert.assertEquals(ng+1, s.getGroups().size());
@@ -251,7 +286,7 @@ public class StudyTest extends AbstractSpiritTest {
 		Assert.assertFalse(JPAUtil.getManager().getTransaction().isActive());
 
 		//Move one animal and add one animal to g
-		Biosample a1 = s.getTopAttachedBiosamples().iterator().next();
+		Biosample a1 = s.getTopParticipants().iterator().next();
 		a1.setAttached(s, g, 0);
 
 		Biosample a2 = new Biosample(DAOBiotype.getBiotype("Animal"));
@@ -272,7 +307,7 @@ public class StudyTest extends AbstractSpiritTest {
 
 
 		//Try rollback
-		List<Revision> revisions = DAORevision.getRevisions(s);
+		List<Revision> revisions = DAORevision.getLastRevisions(s);
 		Revision rev = revisions.get(0);
 		DAORevision.revert(rev, user, "test");
 
@@ -281,7 +316,7 @@ public class StudyTest extends AbstractSpiritTest {
 		DAORevision.restore(rev.getStudies(), user, "test");
 
 		//Try reload
-		s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
+		s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		Assert.assertEquals(ng, s.getGroups().size());
 		Assert.assertEquals(np, s.getPhases().size());
 	}
@@ -307,7 +342,7 @@ public class StudyTest extends AbstractSpiritTest {
 		Assert.assertTrue(DAOStudy.queryStudies(q, user).size()==0);
 
 		//Test biotypes/containers
-		Study s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
+		Study s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		Assert.assertTrue(DAOStudy.getBiotypes(s).size()>0);
 		Assert.assertTrue(DAOStudy.getContainerTypes(s).size()>0);
 
@@ -321,8 +356,8 @@ public class StudyTest extends AbstractSpiritTest {
 	@Test
 	public void testCreateSamplesInStudy() throws Exception {
 		//Check samples are already created
-		Study s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
-		int nTop = s.getTopAttachedBiosamples().size();
+		Study s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
+		int nTop = s.getTopParticipants().size();
 		List<Biosample> biosamples = BiosampleCreationHelper.processTemplateInStudy(s, null, null, null, null);
 		int n = biosamples.size();
 		int toCreate = 0;
@@ -336,7 +371,7 @@ public class StudyTest extends AbstractSpiritTest {
 
 		//Delete samples (except tops)
 		biosamples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForSids(Collections.singleton(s.getId())), user);
-		biosamples.removeAll(s.getTopAttachedBiosamples());
+		biosamples.removeAll(s.getTopParticipants());
 		Assert.assertTrue(biosamples.size()>0);
 		DAOBiosample.deleteBiosamples(biosamples, user);
 
@@ -375,10 +410,10 @@ public class StudyTest extends AbstractSpiritTest {
 
 	@Test
 	public void testCreateSamplesOutStudy() throws Exception {
-		Study s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
+		Study s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		NamedSampling ns = s.getNamedSamplings().iterator().next();
 
-		List<Biosample> biosamples = s.getTopAttachedBiosamples(s.getGroups().iterator().next());
+		List<Biosample> biosamples = s.getTopParticipants(s.getGroups().iterator().next());
 
 		List<Biosample> samples = BiosampleCreationHelper.processTemplate(null, ns, biosamples, true);
 		Assert.assertEquals(ns.getAllSamplings().size()*biosamples.size(), samples.size());
@@ -397,11 +432,11 @@ public class StudyTest extends AbstractSpiritTest {
 
 	@Test
 	public void testAttachedSamples() throws Exception {
-		Study s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
+		Study s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		Biosample previous = null;
 
 		//Check correctess of order
-		for(Biosample b: s.getTopAttachedBiosamples()) {
+		for(Biosample b: s.getTopParticipants()) {
 			System.out.println("StudyTest.testAttachedSamples() "+b+" "+b.getInheritedGroupString(null)+" "+b.getInheritedSubGroup()+" "+ b.getSampleName());
 			if(previous!=null) {
 				Assert.assertTrue(b.getInheritedGroup()==null
@@ -414,15 +449,15 @@ public class StudyTest extends AbstractSpiritTest {
 
 	@Test
 	public void testAttachedResults() throws Exception {
-		Study s = DAOStudy.getStudyByLocalIdOrStudyId("IVV2016-1").get(0);
+		Study s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		List<Biosample> samples = new ArrayList<>();
-		for (Biosample b : s.getTopAttachedBiosamples()) {
+		for (Biosample b : s.getTopParticipants()) {
 			samples.addAll(b.getHierarchy(HierarchyMode.ATTACHED_SAMPLES));
 		}
-		DAOResult.attachOrCreateStudyResultsToTops(s, s.getTopAttachedBiosamples(), null, null);
+		DAOResult.attachOrCreateStudyResultsToTops(s, s.getTopParticipants(), null, null);
 		DAOResult.attachOrCreateStudyResultsToSamples(s, samples, null, null);
 
-		for (Biosample b : s.getTopAttachedBiosamples()) {
+		for (Biosample b : s.getTopParticipants()) {
 			Assert.assertTrue(b.getAuxResults().size()>0);
 		}
 		int nRes = 0;
@@ -559,21 +594,42 @@ public class StudyTest extends AbstractSpiritTest {
 
 
 	@Test
-	public void testDifferences() {
+	public void testDifferences() throws Exception {
 
 		//Test infos
 		Study s1 = new Study();
 		s1.setTitle("My Title 1");
-		s1.getMetadata().put("Site", "onsite");
-		s1.getMetadata().put("Experimenter", "Employee2");
+		s1.getMetadataMap().put("Site", "onsite");
+		s1.getMetadataMap().put("Experimenter", "Employee2");
 
 		Study s2 = new Study();
 		s2.setTitle("My Title 2");
-		s2.getMetadata().put("Site", "onsite");
-		s2.getMetadata().put("Experimenter", "Employee1");
-		s2.getMetadata().put("Old", "previous");
+		s2.getMetadataMap().put("Site", "onsite");
+		s2.getMetadataMap().put("Experimenter", "Employee1");
+		s2.getMetadataMap().put("Old", "previous");
 
 		Assert.assertEquals("Title=My Title 1; Experimenter=Employee2; Old=", s1.getDifference(s2));
+
+
+
+		//Test Group Name change
+		s1.getGroups().add(new Group("G1"));
+		s1.getGroups().add(new Group("G2"));
+		s1.getPhases().add(new Phase("P1"));
+		s1 = DAOStudy.persistStudies(Collections.singleton(s1), user).get(0);
+
+		s2 = s1.clone();
+		s2.getGroups().iterator().next().setName("G3");
+		Assert.assertEquals("Groups=updated", s2.getDifference(s1));
+
+
+		s1 = DAOStudy.persistStudies(Collections.singleton(s1), user).get(0);
+		s2 = s1.clone();
+		s2.getPhases().iterator().next().getRandomization().setNAnimals(3);
+		s2.getPhases().iterator().next().serializeRandomization();
+		Assert.assertEquals("Phases=modified P1", s2.getDifference(s1));
+
+
 	}
 
 }

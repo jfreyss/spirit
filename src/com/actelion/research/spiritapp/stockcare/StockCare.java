@@ -55,8 +55,8 @@ import com.actelion.research.spiritcore.business.pivot.PivotTemplate;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.util.ui.SplashScreen2;
-import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
+import com.actelion.research.util.ui.SplashScreen;
+import com.actelion.research.util.ui.SplashScreen.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
@@ -481,7 +481,7 @@ public class StockCare extends SpiritFrame implements ISpiritChangeObserver, ISp
 	public static void main(String[] args) {
 
 		// Splash
-		SplashScreen2.show(splashConfig);
+		SplashScreen.show(splashConfig);
 		new SwingWorkerExtended() {
 			@Override
 			protected void doInBackground() throws Exception {

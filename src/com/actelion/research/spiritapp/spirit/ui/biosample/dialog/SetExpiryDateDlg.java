@@ -47,22 +47,23 @@ import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class SetExpiryDateDlg extends JSpiritEscapeDialog {
-	
+
 	private List<Biosample> biosamples;
 
-	private JCustomTextField expiryDateTextField = new JCustomTextField(JCustomTextField.DATE);
-	
-	
+	private JCustomTextField expiryDateTextField = new JCustomTextField(CustomFieldType.DATE);
+
+
 	public SetExpiryDateDlg(List<Biosample> mySamples) {
 		super(UIUtils.getMainFrame(), "Set Expiry Date", SetExpiryDateDlg.class.getName());
 		this.biosamples = JPAUtil.reattach(mySamples);
-		
+
 		JPanel centerPanel = new JPanel(new BorderLayout());
 		JLabel label = new JCustomLabel("Please enter the expiry date of those samples", Font.BOLD);
 		label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -74,13 +75,13 @@ public class SetExpiryDateDlg extends JSpiritEscapeDialog {
 		table.getModel().setMode(Mode.COMPACT);
 		table.setRows(biosamples);
 
-		
-		sp = new JScrollPane(table);			
+
+		sp = new JScrollPane(table);
 		centerPanel.add(BorderLayout.CENTER, sp);
-		
+
 		JButton okButton = new JIconButton(IconType.SAVE, "Set Expiry Date");
 		okButton.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -90,7 +91,7 @@ public class SetExpiryDateDlg extends JSpiritEscapeDialog {
 				}
 			}
 		});
-		
+
 		Date minDate = null;
 		for (Biosample biosample : biosamples) {
 			if(biosample.getExpiryDate()!=null) {
@@ -99,42 +100,42 @@ public class SetExpiryDateDlg extends JSpiritEscapeDialog {
 				}
 			}
 		}
-		
+
 		expiryDateTextField.setTextDate(minDate);
 
-		
+
 		JPanel southPanel = new JPanel(new BorderLayout());
-		southPanel.add(BorderLayout.CENTER, UIUtils.createVerticalBox(BorderFactory.createEtchedBorder(), 
+		southPanel.add(BorderLayout.CENTER, UIUtils.createVerticalBox(BorderFactory.createEtchedBorder(),
 				UIUtils.createHorizontalBox(new JLabel("Expiry Date: "), expiryDateTextField, Box.createGlue())));
 		southPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
-		
+
 		JPanel contentPanel = new JPanel(new BorderLayout());
 		contentPanel.add(BorderLayout.CENTER, centerPanel);
 		contentPanel.add(BorderLayout.SOUTH, southPanel);
-				
+
 		setContentPane(contentPanel);
-		
-		
+
+
 		setSize(900, 400);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
-		
+
 	}
-	
+
 	private void eventOk() throws Exception {
 		Date expiryDate = expiryDateTextField.getTextDate();
 		if(expiryDate==null) {
 			int res = JOptionPane.showConfirmDialog(this, "Are you sure you want to remove the expiry date?", "Set Expiry Date", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 			if(res!=JOptionPane.YES_OPTION) return;
 		}
-		
+
 		for (Biosample biosample : biosamples) {
-			biosample.setExpiryDate(expiryDate);			
+			biosample.setExpiryDate(expiryDate);
 		}
-		
+
 		DAOBiosample.persistBiosamples(biosamples, Spirit.askForAuthentication());
 		dispose();
 		SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, biosamples);
 	}
-	
+
 }

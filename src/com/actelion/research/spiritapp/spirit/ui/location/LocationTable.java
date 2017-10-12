@@ -42,15 +42,23 @@ import com.actelion.research.util.ui.FastFont;
  */
 public class LocationTable extends SpiritExtendTable<Location> {
 
-	public LocationTable() {
-		this(new LocationTableModel());
+	public static enum LocationTableMode {
+		ALL,
+		ADMIN_LOCATION,
+		USER_LOCATION
 	}
 
-	public LocationTable(LocationTableModel model) {
-		super(model);
+	private boolean showHierarchy = true;
+
+	public LocationTable() {
+		this(LocationTableMode.ALL);
+	}
+
+	public LocationTable(LocationTableMode mode) {
+		super(new LocationTableModel(mode));
 		LocationActions.attachPopup(this);
 		setBorderStrategy(BorderStrategy.NO_BORDER);
-		setRowHeight(FastFont.getDefaultFontSize()+3);
+		setRowHeight(FastFont.getDefaultFontSize()+4);
 	}
 
 	@Override
@@ -65,18 +73,22 @@ public class LocationTable extends SpiritExtendTable<Location> {
 	public void setRows(List<Location> rows) {
 		List<Location> rowsWithHierarchy = new ArrayList<>();
 
-		//We must add the roots and the specified rows
-		List<Location> toBeAdded = new ArrayList<>(rows);
-		toBeAdded.addAll(DAOLocation.getLocationRoots(SpiritFrame.getUser()));
+		if(showHierarchy) {
+			//Make sure we have all the parents
+			List<Location> toBeAdded = new ArrayList<>(rows);
+			toBeAdded.addAll(DAOLocation.getLocationRoots(SpiritFrame.getUser()));
+			Set<Location> present = new HashSet<>();
+			for (Location loc : toBeAdded) {
+				while(loc!=null && !present.contains(loc)) {
+					rowsWithHierarchy.add(loc);
+					present.add(loc);
+					//				if(loc.getParent()!=null) rowsWithHierarchy.addAll(loc.getParent().getChildren());
+					loc = loc.getParent();
 
-		//Make sure we have all the parents
-		Set<Location> present = new HashSet<>();
-		for (Location loc : toBeAdded) {
-			while(loc!=null && !present.contains(loc)) {
-				rowsWithHierarchy.add(loc);
-				present.add(loc);
-				loc = loc.getParent();
+				}
 			}
+		} else {
+			rowsWithHierarchy.addAll(rows);
 		}
 		Collections.sort(rowsWithHierarchy);
 
@@ -91,5 +103,11 @@ public class LocationTable extends SpiritExtendTable<Location> {
 		}
 	}
 
+	public void setShowHierarchy(boolean showHierarchy) {
+		this.showHierarchy = showHierarchy;
+	}
+	public boolean isShowHierarchy() {
+		return showHierarchy;
+	}
 
 }

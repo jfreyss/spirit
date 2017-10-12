@@ -85,7 +85,6 @@ public class CreateChildrenDlg extends JEscapeDialog {
 		final Biotype type = types.size()==1? types.iterator().next(): null;
 		Set<Study> studies = Biosample.getStudies(parents);
 		Set<Phase> phases = Biosample.getPhases(parents);
-		System.out.println("CreateChildrenDlg.CreateChildrenDlg() "+parents+" > "+studies);
 		if(studies.size()==1) {
 			phaseComboBox = new PhaseComboBox(studies.iterator().next().getPhases());
 			phaseComboBox.setEnabled(phases.size()==0 || (phases.size()==1 && phases.iterator().next()==null));
@@ -94,6 +93,7 @@ public class CreateChildrenDlg extends JEscapeDialog {
 			phaseComboBox = new PhaseComboBox();
 			phaseComboBox.setEnabled(false);
 		}
+		biotypeComboBox.setMemorization(true);
 
 
 		//TopPanel

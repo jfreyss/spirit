@@ -25,6 +25,5 @@ public enum RightLevel {
 	ADMIN,
 	WRITE,
 	BLIND,
-	READ,
-	VIEW
+	READ
 }

@@ -107,7 +107,7 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 	}
 
 	public void analyze() {
-		if(DBAdapter.getAdapter().isInActelionDomain()) UsageLog.logUsage("Spirit", SpiritFrame.getUsername(), null, "Analyze", study==null?"": study.getStudyId());
+		if(DBAdapter.getInstance().isInActelionDomain()) UsageLog.logUsage("Spirit", SpiritFrame.getUsername(), null, "Analyze", study==null?"": study.getStudyId());
 
 		//Analyze in a thread
 		new SwingWorkerExtended("Analyzing", editorPane) {

@@ -28,6 +28,7 @@ import java.util.List;
 import javax.swing.AbstractCellEditor;
 import javax.swing.JLabel;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.study.PhaseLabel;
@@ -58,6 +59,7 @@ public abstract class PhaseCellEditor extends AbstractCellEditor implements Tabl
 	public PhaseCellEditor(boolean allowTyping) {
 		this.allowTyping = allowTyping;
 		cb.setAllowTyping(allowTyping);
+		cb.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
 
 	public abstract Study getStudy(int row);
@@ -75,6 +77,7 @@ public abstract class PhaseCellEditor extends AbstractCellEditor implements Tabl
 		}
 		cb.setChoices(choices);
 		cb.setText(value==null?"": ((Phase)value).getName());
+		cb.selectAll();
 		return cb;
 	}
 
@@ -92,42 +95,5 @@ public abstract class PhaseCellEditor extends AbstractCellEditor implements Tabl
 		}
 		return null;
 	}
-	/*
-	@Override
-	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, final int row, int column) {
-		final EditBiosampleTable t = (EditBiosampleTable) table;
-		if(row>=0 && row<t.getRows().size()) {
-			b = t.getRows().get(row);
-		}
-		textComboBox = new JTextComboBox(false) {
-			@Override
-			public Collection<String> getChoices() {
-				List<String> choices = new ArrayList<>();
-				if(b!=null && b.getInheritedStudy()!=null) {
-					for(Phase s : b.getInheritedStudy().getPhases()) {
-						choices.add(s.getShortName());
-					}
-				}
-				return choices;
-			}
-		};
-		textComboBox.setMargin(null);
-		textComboBox.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
-		if(value==null) {
-			textComboBox.setText("");
-		} else if(value instanceof Phase) {
-			textComboBox.setText(((Phase)value).getShortName());
-		}
 
-		textComboBox.selectAll();
-		return textComboBox;
-	}
-
-	@Override
-	public Phase getCellEditorValue() {
-		Biosample b = JPAUtil.reattach(this.b);
-		Phase phase = b==null || b.getInheritedStudy()==null? null: b.getInheritedStudy().getPhase(textComboBox.getText());
-		return phase;
-	}
-	 */
 }

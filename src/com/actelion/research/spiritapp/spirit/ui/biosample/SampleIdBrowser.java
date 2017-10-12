@@ -35,62 +35,68 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
+import com.actelion.research.spiritcore.business.study.Study;
 
 public class SampleIdBrowser extends SampleIdScanField {
-	
+
+	private final BiosampleQuery query = new BiosampleQuery();;
 	private JButton button = new JButton(".");
-	private Biotype biotype;
 
 	public SampleIdBrowser() {
 		setLayout(null);
 		button.setBorder(null);
 		button.setToolTipText("Find Sample");
 		add(button);
-		
-		button.addActionListener(new ActionListener() {			
+
+		button.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				showPopup();
 			}
 		});
-		addMouseListener(new MouseAdapter() {			
+		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				showPopup();
 			}
-		});		
+		});
 	}
+
 	public SampleIdBrowser(Biotype biotype) {
 		this();
 		setBiotype(biotype);
 	}
-	
+
+	public void setStudy(Study study) {
+		query.setStudyIds(study==null?"": study.getStudyId());
+	}
+
 	public void setBiotype(Biotype biotype) {
-		this.biotype = biotype;
+		query.setBiotype(biotype);
 		setTextWhenEmpty(biotype==null?"": biotype.getName());
-		setEditable(biotype!=null && !biotype.isHideSampleId());
 	}
 
 	protected void showPopup() {
-		
+
 		if(!isShowing()) return;
 		final Point p = SampleIdBrowser.this.getLocationOnScreen();
-		
+
 		//Create the BiosampleFinder
-		final BiosampleFinder frame = new BiosampleFinder((JDialog) getTopLevelAncestor(), "Biosample Finder", null, biotype, null, getBiosample(), true) {
+		final BiosampleFinder frame = new BiosampleFinder((JDialog) getTopLevelAncestor(), "Biosample Finder", null, query, null, getBiosample(), true) {
 			@Override
 			public void onSelect(Biosample sel) {
 				setBiosample(sel); dispose();
 			}
 		};
-		
+
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-								
+
 				frame.setUndecorated(true);
-				
+
 				int x = p.x;
 				int y = p.y+getBounds().height;
 				if(y+frame.getHeight()>Toolkit.getDefaultToolkit().getScreenSize().height) {
@@ -105,19 +111,19 @@ public class SampleIdBrowser extends SampleIdScanField {
 			}
 		});
 	}
-	
-	
+
+
 	@Override
 	public void doLayout() {
 		if(button.isVisible()) button.setBounds(getWidth()-14, 1, 14, getHeight()-2);
 	}
-	
-	
-	
+
+
+
 	@Override
 	public void setBorder(Border border) {
 		if(border==null) return;
-		super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 8)));			
+		super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 8)));
 	}
 
 	@Override

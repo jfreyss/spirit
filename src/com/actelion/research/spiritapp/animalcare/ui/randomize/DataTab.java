@@ -61,12 +61,13 @@ import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 /**
  * Randomization Tab to let the user enter the animal Ids and their weights
- * 
+ *
  * @author freyssj
  *
  */
@@ -75,7 +76,7 @@ public class DataTab extends WizardPanel {
 	private RandomizationDlg dlg;
 	private AttachedBiosampleTable dataTable;
 	private AttachedBiosampleTable realTable;
-	
+
 	private SpinnerNumberModel animalsSpinnerModel = new SpinnerNumberModel(0, 0, 999, 1);
 	private JSpinner animalsSpinner = new JSpinner(animalsSpinnerModel);
 	private JLabel minAnimalLabel = new JCustomLabel("", FastFont.SMALL);
@@ -83,19 +84,19 @@ public class DataTab extends WizardPanel {
 	private SpinnerNumberModel dataSpinnerModel = new SpinnerNumberModel(0, 0, 10, 1);
 	private JSpinner dataSpinner = new JSpinner(dataSpinnerModel);
 
-	private JButton reuseButton = new JIconButton(IconType.STUDY, "Reuse samples (Crossover)");	
-	private JButton resetButton = new JIconButton(IconType.NEW, "Synchronize from current situation");	
+	private JButton reuseButton = new JIconButton(IconType.STUDY, "Reuse samples (Crossover)");
+	private JButton resetButton = new JIconButton(IconType.NEW, "Synchronize from current situation");
 	private final BalanceDecorator balanceDecorator;
 	private final JPanel realPanel;
-	
+
 	public DataTab(final RandomizationDlg dlg) {
 		super(new BorderLayout());
 		this.dlg = dlg;
-		this.balanceDecorator = new BalanceDecorator(dlg);		
+		this.balanceDecorator = new BalanceDecorator(dlg);
 		this.dataTable = new AttachedBiosampleTable(new AttachedBiosampleTableModel(Mode.RND_WEIGHING, dlg.getStudy(), null, dlg.getPhase(), dlg.getBiotype()), false);
 		this.realTable = new AttachedBiosampleTable(new AttachedBiosampleTableModel(Mode.MANUALASSIGN, dlg.getStudy(), null, dlg.getPhase(), dlg.getBiotype()), false);
 		dataTable.setGoNextOnEnter(false);
-		
+
 		animalsSpinner.addChangeListener(new ChangeListener() {
 			private int push = 0;
 			@Override
@@ -105,7 +106,7 @@ public class DataTab extends WizardPanel {
 				try {
 					int val = (Integer) animalsSpinner.getValue();
 					try {
-						dlg.getRandomization().setNAnimals(val);	
+						dlg.getRandomization().setNAnimals(val);
 						updateView();
 					} catch(Exception ex) {
 						JExceptionDialog.showError(ex);
@@ -114,10 +115,10 @@ public class DataTab extends WizardPanel {
 				} finally {
 					push--;
 				}
-				
+
 			}
 		});
-		
+
 		dataSpinner.addChangeListener(new ChangeListener() {
 			private int push = 0;
 			@Override
@@ -127,7 +128,7 @@ public class DataTab extends WizardPanel {
 				try {
 					int val = (Integer) dataSpinner.getValue();
 					try {
-						dlg.getRandomization().setNData(val);	
+						dlg.getRandomization().setNData(val);
 						updateView();
 					} catch(Exception ex) {
 						JExceptionDialog.showError(ex);
@@ -136,19 +137,19 @@ public class DataTab extends WizardPanel {
 				} finally {
 					push--;
 				}
-				
+
 			}
 		});
-		
-		reuseButton.addActionListener(new ActionListener() {			
+
+		reuseButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				populateTables(true, false);
 				repaint();
 			}
 		});
-		
-		resetButton.addActionListener(new ActionListener() {			
+
+		resetButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				populateTables(false, false);
@@ -157,33 +158,33 @@ public class DataTab extends WizardPanel {
 			}
 		});
 		resetButton.setVisible(false);
-		realPanel = UIUtils.createTitleBox("Current Data", 
+		realPanel = UIUtils.createTitleBox("Current Data",
 				UIUtils.createBox(new JScrollPane(realTable), new JInfoLabel("this is how the samples are currently attached")));
-		JSplitPane centerPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+		JSplitPane centerPanel = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT,
 				UIUtils.createTitleBox("Randomization Data",
 						UIUtils.createBox(new JScrollPane(dataTable), UIUtils.createVerticalBox(resetLabel, UIUtils.createHorizontalBox(reuseButton, resetButton, Box.createHorizontalGlue())))),
 				realPanel);
 		centerPanel.setDividerLocation(400);
 		realTable.setEnabled(false);
-		
-		
+
+
 		//Layout
 		add(BorderLayout.CENTER, UIUtils.createBox(
 				centerPanel,
 				UIUtils.createTitleBox("",  UIUtils.createTable(3,
-						new JLabel("Number of attached samples: "), animalsSpinner, minAnimalLabel, 
+						new JLabel("Number of attached samples: "), animalsSpinner, minAnimalLabel,
 						new JLabel("Number of other data: "), dataSpinner, new JInfoLabel("if the randomization must be on other parameters than the weight"))),
 				UIUtils.createHorizontalBox(balanceDecorator.getBalanceCheckBox(), new JButton(dataTable.new RegenerateSampleIdAction()), Box.createHorizontalGlue(), getNextButton())));
-		
-		
-		
+
+
+
 
 		//Fill in real tables
 		populateTables(false, true);
-		
+
 		//Fill in data table
 		updateView();
-		
+
 		//hide real table if the 2 tables are the same
 		if(realTable.getRows().size()==dataTable.getRows().size()) {
 			boolean equal = true;
@@ -196,7 +197,7 @@ public class DataTab extends WizardPanel {
 				if(!CompareUtils.equals(r1.getGroup(), r2.getGroup())) equal = false;
 				if(!CompareUtils.equals(r1.getContainerId(), r2.getContainerId())) equal = false;
 				if(!CompareUtils.equals(r1.getSubGroup(), r2.getSubGroup())) equal = false;
-				
+
 			}
 			if(equal) {
 				realPanel.setVisible(false);
@@ -204,15 +205,15 @@ public class DataTab extends WizardPanel {
 		}
 
 	}
-	
+
 	/**
 	 * Retrieve the samples from the study and not from the saved randomization
 	 */
 	private void populateTables(boolean comingFromCrossover, boolean populateRealTable) {
 		List<AttachedBiosample> rows = new ArrayList<>();
-		
+
 		Study study = dlg.getStudy();
-		
+
 		//Find accepted groups
 		boolean isGroupSplitting = true;
 		Set<Group> acceptedGroups = new HashSet<>();
@@ -223,26 +224,26 @@ public class DataTab extends WizardPanel {
 			acceptedGroups.add(group);
 			acceptedGroups.add(group.getFromGroup());
 		}
-		
+
 		//Find samples coming from the db
-		Set<Integer> usedNo = new HashSet<>(); 
+		Set<Integer> usedNo = new HashSet<>();
 		int count = 0;
 		try {
-			DAOResult.attachOrCreateStudyResultsToTops(study, study.getTopAttachedBiosamples(), dlg.getPhase(), null);
+			DAOResult.attachOrCreateStudyResultsToTops(study, study.getTopParticipants(), dlg.getPhase(), null);
 		} catch(Exception e) {
 			JExceptionDialog.showError(e);
 		}
-		
-		for(Biosample b: study.getTopAttachedBiosamples()) {
-			
+
+		for(Biosample b: study.getTopParticipants()) {
+
 			//Skip this sample if it belongs to a group which should not be randomized
 			if(!comingFromCrossover) {
 				if(!isGroupSplitting && b.getInheritedGroup()==null) {
-					//OK		
+					//OK
 				} else if(b.getInheritedGroup()!=null &&
 						(acceptedGroups.contains(b.getInheritedGroup()) ||
 								(b.getInheritedGroup().getFromGroup()!=null && dlg.getPhase().equals(b.getInheritedGroup().getFromGroup().getFromPhase()) && acceptedGroups.contains(b.getInheritedGroup().getFromGroup())))) {
-					//Ok		
+					//Ok
 				} else {
 					continue;
 				}
@@ -253,33 +254,33 @@ public class DataTab extends WizardPanel {
 			AttachedBiosample s = new AttachedBiosample();
 			s.setSampleId(b.getSampleId());
 			s.setBiosample(b);
-			
+
 			try {
 				s.setNo(Integer.parseInt(b.getSampleName()));
 			} catch(Exception e) {
-				s.setNo(count+1);	
+				s.setNo(count+1);
 			}
-			
+
 			s.setSampleName(b.getSampleName());
-			
+
 			if(!comingFromCrossover) {
 				s.setGroup(b.getInheritedGroup());
 				s.setSubGroup(b.getInheritedSubGroup());
 			}
-			
+
 			s.setContainerId(b.getContainerId());
 			s.setWeight(weighResult==null || weighResult.getOutputResultValues().size()<1? null: weighResult.getOutputResultValues().get(0).getDoubleValue());
-			
-			
+
+
 			rows.add(s);
 			usedNo.add(rows.get(count).getNo());
 			count++;
 		}
-		
 
-		
+
+
 		Collections.sort(rows);
-		
+
 		if(populateRealTable) {
 			realTable.getModel().setNData(dlg.getRandomization().getNData());
 			realTable.setRows(rows);
@@ -292,9 +293,9 @@ public class DataTab extends WizardPanel {
 			dataSpinner.setValue(0);
 		}
 	}
-	
+
 	@Override
-	public void updateModel(boolean allowDialogs) throws Exception {	
+	public void updateModel(boolean allowDialogs) throws Exception {
 
 		//Check that animals are not duplicated and not empty
 		Set<String> sampleIds = new HashSet<String>();
@@ -305,7 +306,7 @@ public class DataTab extends WizardPanel {
 			sampleIds.add(r.getSampleId());
 			notEmpty.add(r);
 		}
-		
+
 		if(allowDialogs && notEmpty.size()!=dataTable.getRows().size()) {
 			int res = JOptionPane.showConfirmDialog(this, "Would you like to remove the empty samples and keep only " + notEmpty.size()+ " samples?", "Empty Samples", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 			if(res==JOptionPane.YES_OPTION) {
@@ -320,17 +321,17 @@ public class DataTab extends WizardPanel {
 			dlg.getRandomization().setSamples(dataTable.getRows());
 		}
 	}
-	
+
 	@Override
 	public void updateView() {
-		try { 
+		try {
 			dataTable.getModel().setBiotype(dlg.getBiotype());
 			dataTable.resetPreferredColumnWidth();
 		} catch(Exception e) {
 			JExceptionDialog.showError(e);
 		}
-			
-		
+
+
 		//Update the number of animals
 		int v = dlg.getRandomization().getNAnimals();
 		if(v<=0) v = getNeededAnimalsInRando();
@@ -338,12 +339,12 @@ public class DataTab extends WizardPanel {
 		try {
 			dlg.getRandomization().setNAnimals(v);
 		} catch(Exception e) {
-			
+
 		}
-		
+
 		dataSpinner.setValue(dlg.getRandomization().getNData());
 
-		
+
 		List<AttachedBiosample> samples = dlg.getRandomization().getSamples();
 		Collections.sort(samples);
 
@@ -352,24 +353,24 @@ public class DataTab extends WizardPanel {
 		for (AttachedBiosample rndSample : samples) {
 			if(rndSample.getSampleId()!=null && rndSample.getSampleId().length()>0) alreadyStarted = true;
 		}
-		
+
 		//Check the number of attached samples coming from the corresponding groups
 		int nAttached = 0;
 		for(Group g: dlg.getStudy().getGroups()) {
 			if(!dlg.getPhase().equals( g.getFromPhase())) continue;
-			nAttached += dlg.getStudy().getTopAttachedBiosamples(g).size();
-			if(g.getFromGroup()!=null) nAttached += dlg.getStudy().getTopAttachedBiosamples(g.getFromGroup()).size();			
+			nAttached += dlg.getStudy().getTopParticipants(g).size();
+			if(g.getFromGroup()!=null) nAttached += dlg.getStudy().getTopParticipants(g.getFromGroup()).size();
 		}
-		
+
 		//Update view
 		resetButton.setVisible(nAttached>0);
-		
+
 		reuseButton.setVisible(false /*nAttached==0 && dlg.getStudy().getTopAttachedBiosamples().size()>0 && !hasGroupSplitting*/);
-		
+
 		realTable.getModel().setNData(dlg.getRandomization().getNData());
 		dataTable.getModel().setNData(dlg.getRandomization().getNData());
 		dataTable.setRows(samples);
-		
+
 		if(!alreadyStarted) {
 			if(nAttached==0) {
 				resetLabel.setText("Please enter the samplesIds and their weights");
@@ -378,19 +379,19 @@ public class DataTab extends WizardPanel {
 				populateTables(false, false);
 				resetLabel.setText("The data is retrieved from the current database's state.");
 				resetLabel.setForeground(Color.BLUE);
-			}			
+			}
 		} else {
 			resetLabel.setText("The data is retrieved from the last rando settings");
 			resetLabel.setForeground(Color.GRAY);
 		}
-			
+
 
 	}
-	
+
 	private int getNeededAnimalsInRando() {
 		int minAnimals = 0;
 		Set<Group> seen = new HashSet<Group>();
-		
+
 		for (Group group : dlg.getGroups()) {
 			if(!dlg.getPhase().equals(group.getFromPhase())) continue;
 			if(group.getFromGroup()!=null) {
@@ -398,7 +399,7 @@ public class DataTab extends WizardPanel {
 					seen.add(group.getFromGroup());
 					minAnimals += group.getFromGroup().getNAnimals(dlg.getPhase());
 				}
-			}				
+			}
 			minAnimals += group.getNAnimals(dlg.getPhase());
 		}
 		minAnimalLabel.setText("(>="+minAnimals+")");

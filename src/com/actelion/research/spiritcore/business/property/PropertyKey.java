@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.actelion.research.spiritcore.business.DataType;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.FormatterUtils;
 
@@ -41,45 +42,53 @@ public class PropertyKey {
 	public static enum Tab {
 		INTERNAL,
 		SYSTEM,
+		USER,
 		STUDY
 	}
 
 
-	/**
-	 * Contains the DB version. This property is required, otherwise it assumed to be the latest
-	 */
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// INTERNAL PROPERTIES
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/** Contains the DB version. This property is required, otherwise it assumed to be the latest */
 	public static final PropertyKey DB_VERSION = new PropertyKey(Tab.INTERNAL, "DB Version", "", "db.version", null);
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// SYSTEM PROPERTIES
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	public static final PropertyKey LAST_CHANGES = new PropertyKey(Tab.SYSTEM, "Last changes", "Home page shows changes from the last n. days", "system.home.days", "365", "1,3,7,15,31,90,365,3650");
-	public static final PropertyKey USER_ROLES = new PropertyKey(Tab.SYSTEM, "Roles", "comma separated list of roles (in addition to admin, readall)", "user.roles", "");
-	public static final PropertyKey USER_LOGIN_ROLE = new PropertyKey(Tab.SYSTEM, "Login with one specific role", "Are users requested to login with a specic role?<br>(if true, the user will be asked for a role upon login instead of having all roles simultaneously)", "user.login.role", "false", "true,false");
-	public static final PropertyKey RIGHT_ROLEONLY = new PropertyKey(Tab.SYSTEM, "Are user-rights role-based only", "Are the rights only role based??<br>(if true, the rights are purely role based and not user/dept specific)", "user.login.dept", "false", "true,false");
-	public static final PropertyKey RIGHTS_MODE = new PropertyKey(Tab.SYSTEM, "User Rights", "open = study designs are visible by everyone, all biosamples (outside studies) and their results are readable.<br>restricted = biosamples and their results are limited to the departments of the owner", "rights.mode", "restricted", "open, restricted");
-	public static final PropertyKey DATE_MODE = new PropertyKey(Tab.SYSTEM, "DateTime Format", "Localized DateTime format. Be sure to never change it", "format.date", FormatterUtils.LocaleFormat.SWISS.toString(), MiscUtils.flatten(FormatterUtils.LocaleFormat.values())) {
+	public static final PropertyKey SYSTEM_HOMEDAYS = new PropertyKey(Tab.SYSTEM, "Last changes", "Home page shows changes from the last n. days", "system.home.days", "365", "1,3,7,15,31,90,365,3650");
+	public static final PropertyKey SYSTEM_DATEFORMAT = new PropertyKey(Tab.SYSTEM, "DateTime Format", "Localized DateTime format. Be sure to never change it", "format.date", FormatterUtils.DateTimeFormat.SWISS.toString(), MiscUtils.flatten(FormatterUtils.DateTimeFormat.values())) {
 		@Override
 		public String getDefaultValue() {
 			DateFormat formatter = DateFormat.getDateInstance(DateFormat.SHORT, Locale.getDefault());
 			try {
-				String pattern       = ((SimpleDateFormat)formatter).toPattern();
-				System.out.println("PropertyKey.DATE_MODE.new PropertyKey() {...}.getDefaultValue() "+pattern+" /"+Locale.getDefault());
-				if(pattern.startsWith("d/") || pattern.startsWith("dd/")) return FormatterUtils.LocaleFormat.EUROPEAN.toString();
-				if(pattern.startsWith("d.") || pattern.startsWith("dd.")) return FormatterUtils.LocaleFormat.SWISS.toString();
-				if(pattern.startsWith("yy") || pattern.startsWith("yyyy")) return FormatterUtils.LocaleFormat.INTL.toString();
+				String pattern = ((SimpleDateFormat)formatter).toPattern();
+				if(pattern.startsWith("d/") || pattern.startsWith("dd/")) return FormatterUtils.DateTimeFormat.EUROPEAN.toString();
+				if(pattern.startsWith("d.") || pattern.startsWith("dd.")) return FormatterUtils.DateTimeFormat.SWISS.toString();
+				if(pattern.startsWith("yy") || pattern.startsWith("yyyy")) return FormatterUtils.DateTimeFormat.INTL.toString();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			return FormatterUtils.LocaleFormat.AMERICAN.toString();
+			return FormatterUtils.DateTimeFormat.AMERICAN.toString();
 		}
 	};
+	public static final PropertyKey TAB_RESULT = new PropertyKey(Tab.SYSTEM, "Result Tab is enabled", "Uncheck to remove the result functionality, for a pure LIMS system", "tab.result", "true", "true,false");
 	public static final PropertyKey FILE_SIZE = new PropertyKey(Tab.SYSTEM, "Max FileSize [Mo]:", "Max file size for the documents", "system.document.max", "15");
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// USER PROPERTIES
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public static final PropertyKey USER_ROLES = new PropertyKey(Tab.USER, "Roles", "comma separated list of roles (in addition to admin, readall)", "user.roles", "");
+	public static final PropertyKey USER_ONEROLE = new PropertyKey(Tab.USER, "Rights based on one role", "Are users requested to login with a specic role?<br>(if true, the user will be asked for a role upon login instead of having all roles simultaneously)", "user.login.role", "false", "true,false");
+	public static final PropertyKey USER_USEGROUPS = new PropertyKey(Tab.USER, "Rights based on groups", "Are the rights only role based??<br>(if true, the rights are purely role based and not user/dept specific)", "user.login.groups", "true", "true,false");
+	public static final PropertyKey USER_OPEN = new PropertyKey(Tab.USER, "User Rights", "open = study designs are visible by everyone, all biosamples (outside studies) and their results are readable.<br>restricted = biosamples and their results are limited to the departments of the owner", "rights.mode", "restricted", "open, restricted");
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// STUDY PROPERTIES
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public static final PropertyKey STUDY_AUTOGENERATEID = new PropertyKey(Tab.STUDY, "Autogenerate StudyId", "automatic generation of Id", "study.generateId", "true", "true,false");
+	public static final PropertyKey STUDY_ADVANCEDMODE = new PropertyKey(Tab.STUDY, "Advanced Mode (Animal studies)", "enable live monitoring, automatic group assignment, automatic sampling", "study.advancedMode", "true", "true,false");
+	public static final PropertyKey STUDY_TYPES = new PropertyKey(Tab.STUDY, "Study Types (CSV)", "configurable study types allowed by the study (CSV)", "study.types", "");
 
 	/**
 	 * study.metadata contains the list of configurable metadata (csv)
@@ -88,13 +97,16 @@ public class PropertyKey {
 	 * <li>KEY_STUDY_METADATA.{METADATA}.required = {DATATYPE}
 	 * <li>KEY_STUDY_METADATA.{METADATA}.parameters = {parameters for the datatype: ex list of choices}
 	 * <li>KEY_STUDY_METADATA.{METADATA}.roles = {ROLEs as csv}
+	 * <li>KEY_STUDY_METADATA.{METADATA}.types = {TYPEs as csv}
+	 * <li>KEY_STUDY_METADATA.{METADATA}.states = {STATESs as csv}
 	 */
-	public static final PropertyKey STUDY_METADATA = new PropertyKey(Tab.STUDY, "Metadata", "Extra metadata used to configure the study (CSV)", "study.metadata", "CLINICAL, PROJECT, SITE, LICENSENO, EXPERIMENTER, DISEASEAREA");
-	public static final PropertyKey STUDY_STATES = new PropertyKey(Tab.STUDY, "States", "configurable states allowed by the study (CSV)", "study.states", "EXAMPLE, TEST, ONGOING, PUBLISHED, STOPPED");
+	public static final PropertyKey STUDY_METADATA = new PropertyKey(Tab.STUDY, "Metadata (CSV)", "Extra metadata used to configure the study (CSV)", "study.metadata", "CLINICAL, PROJECT, SITE, LICENSENO, EXPERIMENTER, DISEASEAREA");
+	public static final PropertyKey STUDY_STATES = new PropertyKey(Tab.STUDY, "States (CSV)", "configurable workflow states allowed by the study (CSV)", "study.states", "EXAMPLE, TEST, ONGOING, PUBLISHED, STOPPED");
+	public static final PropertyKey STUDY_DEFAULTSTATE = new PropertyKey(Tab.STUDY, "Default State", "when creating a new study", "study.state", "ONGOING", STUDY_STATES);
 
 
 
-	public static final PropertyKey STUDY_METADATA_NAME = new PropertyKey(STUDY_METADATA, "Name", "Display for the end user", "name", "") {
+	public static final PropertyKey STUDY_METADATA_NAME = new PropertyKey(STUDY_METADATA, "Display Name", "Display for the end user", "name", "") {
 		@Override public String getDefaultValue(String nestedValue) {
 			return
 					"CLINICAL".equals(nestedValue)?"Clinical Status":
@@ -115,17 +127,22 @@ public class PropertyKey {
 	public static final PropertyKey STUDY_METADATA_PARAMETERS = new PropertyKey(STUDY_METADATA, "Parameters", "list of choices if datatype is LIST", "parameters", "") {
 		@Override public String getDefaultValue(String nestedValue) {return "CLINICAL".equals(nestedValue)?"PRECLINICAL, CLINICAL": "";};
 	};
-	public static final PropertyKey STUDY_METADATA_ROLES = new PropertyKey(STUDY_METADATA, "Roles", "Who is allowed to change it?<br>Leave empty if not concerned.", "roles", "", USER_ROLES);
-	public static final PropertyKey STUDY_METADATA_STATES = new PropertyKey(STUDY_METADATA, "States", "In which states, can we change it?<br>Leave empty if not concerned.", "states", "", STUDY_STATES);
+	public static final PropertyKey STUDY_METADATA_TYPES = new PropertyKey(STUDY_METADATA, "Enabled in types", "In which study type, can we edit it?<br>(empty = always enabled)", "types", "", STUDY_TYPES);
+	public static final PropertyKey STUDY_METADATA_ROLES = new PropertyKey(STUDY_METADATA, "Editable by roles", "Who is allowed to edit it?<br>(empty = always editable)", "roles", "", USER_ROLES);
+	public static final PropertyKey STUDY_METADATA_STATES = new PropertyKey(STUDY_METADATA, "Editable in States", "In which states, can we edit it?<br>(empty = always editable)", "states", "", STUDY_STATES);
 	public static final PropertyKey STUDY_METADATA_REQUIRED = new PropertyKey(STUDY_METADATA, "Required", "", "required", "false", "true,false");
 
 	/**
 	 * study.states contains the list of configurable workflow states.
 	 */
-	public static final PropertyKey STUDY_STATES_FROM = new PropertyKey(STUDY_STATES, "From", "Previous workflow states (opt.)", "from", "", STUDY_STATES);
+	public static final PropertyKey STUDY_STATES_FROM = new PropertyKey(STUDY_STATES, "Workflow From", "Previous workflow states<br>(if given, the study must be in one of the given state, before being promoted)", "from", "", STUDY_STATES);
 	public static final PropertyKey STUDY_STATES_PROMOTERS = new PropertyKey(STUDY_STATES, "Promoters", "Roles of users who can promote to this state (opt.)", 	"promoters", "ALL", USER_ROLES);
 	public static final PropertyKey STUDY_STATES_READ = new PropertyKey(STUDY_STATES, "Read", "Roles of readers (can query results/biosamples)", "read", "ALL", USER_ROLES) {
-		@Override public String getDefaultValue(String nestedValue) {return nestedValue.equalsIgnoreCase("PUBLISHED")?"ALL": nestedValue.equalsIgnoreCase("STOPPED")?"NONE": "";};
+		@Override public String getDefaultValue(String nestedValue) {
+			return SpiritProperties.getInstance().isOpen()?"ALL":
+				nestedValue.equalsIgnoreCase("STOPPED")?"NONE": "ALL";
+		}
+
 		@Override public String[] getSpecialChoices() {return new String[]{"ALL", "NONE"};}
 	};
 	public static final PropertyKey STUDY_STATES_EXPERT = new PropertyKey(STUDY_STATES, "Experimenter", "Roles of experimenters (can add biosamples/results)", "expert", "", USER_ROLES) {
@@ -139,7 +156,6 @@ public class PropertyKey {
 	};
 	public static final PropertyKey STUDY_STATES_SEALED = new PropertyKey(STUDY_STATES, "Sealed", "Should we seal the study in this state? (no more editable except by an admin)", "seal", "false", "true,false");
 
-	public static final PropertyKey STUDY_STATE_DEFAULT = new PropertyKey(Tab.STUDY, "Default State", "when creating a new study", "study.state", "ONGOING", STUDY_STATES);
 
 
 	private static Map<Tab, List<PropertyKey>> tab2properties;

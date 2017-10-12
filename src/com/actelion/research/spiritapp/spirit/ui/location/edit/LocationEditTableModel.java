@@ -34,7 +34,7 @@ import com.actelion.research.spiritapp.spirit.ui.location.column.LocationPrivacy
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationRowsColumn;
 import com.actelion.research.spiritapp.spirit.ui.location.column.LocationTypeColumn;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
+import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.util.ui.exceltable.Column;
@@ -44,7 +44,6 @@ public class LocationEditTableModel extends ExtendTableModel<Location> {
 	public LocationEditTableModel() {
 		LocationNameColumn nameColumn = new LocationNameColumn();
 		nameColumn.setDiplayIcon(false);
-		nameColumn.setBold(true);
 
 		List<Column<Location, ?>> columns = new ArrayList<>();
 		columns.add(new LocationTypeColumn());
@@ -54,7 +53,7 @@ public class LocationEditTableModel extends ExtendTableModel<Location> {
 		columns.add(new LocationLabelingColumn());
 		columns.add(new LocationRowsColumn());
 		columns.add(new LocationColsColumn());
-		if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER) {
+		if(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER) {
 			columns.add(new LocationPrivacyColumn());
 		}
 

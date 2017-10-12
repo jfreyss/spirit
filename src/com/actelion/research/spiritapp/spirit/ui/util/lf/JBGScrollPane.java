@@ -19,7 +19,7 @@
  * @author Joel Freyss
  */
 
-package com.actelion.research.spiritapp.spirit.ui.util.bgpane;
+package com.actelion.research.spiritapp.spirit.ui.util.lf;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -31,37 +31,46 @@ import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 
 public class JBGScrollPane extends JScrollPane {
-	
+
 	private final int scheme;
-	
+
+	public JBGScrollPane(Component comp) {
+		this(comp, 0);
+	}
+
 	public JBGScrollPane(Component comp, int scheme) {
 		super(comp);
 		this.scheme = scheme;
 		getViewport().setOpaque(false);
 		getViewport().setScrollMode(JViewport.SIMPLE_SCROLL_MODE);
 	}
-	
+
 	private final Color SCHEME1_1 = new Color(239,243,255);
 	private final Color SCHEME1_2 = new Color(255,255,255);
 	private final Color SCHEME2_1 = new Color(239,255,251);
 	private final Color SCHEME2_2 = new Color(255,255,255);
 	private final Color SCHEME3_1 = new Color(255,254,239);
 	private final Color SCHEME3_2 = new Color(255,255,255);
-	
-	
+
+
 	@Override
 	public void paint(Graphics g) {
-		
+
 		Graphics2D g2d = (Graphics2D) g;
 		if(scheme==1) {
 			g2d.setPaint(new GradientPaint(0, 0, SCHEME1_1, getWidth(), getHeight(), SCHEME1_2));
+			g2d.fillRect(0, 0, getWidth(), getHeight());
 		} else if(scheme==2) {
 			g2d.setPaint(new GradientPaint(0, 0, SCHEME2_1, getWidth(), getHeight(), SCHEME2_2));
-		} else  {
+			g2d.fillRect(0, 0, getWidth(), getHeight());
+		} else if(scheme==3) {
 			g2d.setPaint(new GradientPaint(0, 0, SCHEME3_1, getWidth(), getHeight(), SCHEME3_2));
+			g2d.fillRect(0, 0, getWidth(), getHeight());
+		} else {
+			g2d.setPaint(Color.WHITE);
+			g2d.fillRect(0, 0, getWidth(), getHeight());
 		}
-		g2d.fillRect(0, 0, getWidth(), getHeight());
-		
+
 		super.paint( g );
 	}
 

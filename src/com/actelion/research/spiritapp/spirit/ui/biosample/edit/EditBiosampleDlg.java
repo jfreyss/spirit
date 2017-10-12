@@ -59,6 +59,7 @@ import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
@@ -69,7 +70,7 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 
 	private final EditBiosamplePanel editPanel = new EditBiosamplePanel(this);
 	private final List<Biosample> resSavedBiosamples = new ArrayList<>();
-	private Study candidatesForStudy = null;
+	private Study participatingStudy = null;
 	private JButton excelButton = new JIconButton(IconType.EXCEL, "Export to Excel");
 	private JButton okButton = new JIconButton(IconType.SAVE, "Save");
 
@@ -133,7 +134,7 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 					try {
 						SpiritUser user = Spirit.askForAuthentication();
 
-						toSave = validate(EditBiosampleDlg.this, editPanel.getTable().getBiosamples(), editPanel.getTable(), getCandidatesForStudy()!=null, true);
+						toSave = validate(EditBiosampleDlg.this, editPanel.getTable().getBiosamples(), editPanel.getTable(), getParticipitatingStudy()!=null, true);
 
 						if(toSave==null) return;
 						if(toSave.size()==0) throw new Exception("There are no samples to save");
@@ -177,13 +178,13 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 
 	}
 
-	public void setCandidatesForStudy(Study candidatesForStudy) {
-		this.candidatesForStudy = candidatesForStudy;
-		editPanel.getTable().getModel().setStudy(candidatesForStudy);
+	public void setParticipatingStudy(Study participatingStudy) {
+		this.participatingStudy = participatingStudy;
+		editPanel.getTable().getModel().setStudy(participatingStudy);
 
 	}
-	public Study getCandidatesForStudy() {
-		return candidatesForStudy;
+	public Study getParticipitatingStudy() {
+		return participatingStudy;
 	}
 
 	/**
@@ -239,7 +240,7 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 			}
 			if(groupsToBeCreated.size()>0 || phasesToBeCreated.size()>0) {
 				//Confirm new groups to be created
-				String msg = "The following\n " + (groupsToBeCreated.size()>0? " groups: " + groupsToBeCreated + "\n": "")  + (phasesToBeCreated.size()>0? " phases: " + phasesToBeCreated + "\n": "") + " are new and will be added to the study";
+				String msg = "The following\n " + (groupsToBeCreated.size()>0? " groups: " + MiscUtils.flatten(groupsToBeCreated) + "\n": "")  + (phasesToBeCreated.size()>0? " phases: " + MiscUtils.flatten(phasesToBeCreated) + "\n": "") + " will be added to the study";
 				int res = JOptionPane.showConfirmDialog(opener, msg, "New Groups/Phases", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 				if(res!=JOptionPane.YES_OPTION) throw new ValidationException("Please correct the groups", null, "SampleId");
 

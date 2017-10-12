@@ -21,25 +21,26 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.column;
 
+import java.awt.Color;
+import java.util.Date;
+
+import javax.swing.JComponent;
+import javax.swing.table.TableCellEditor;
+
 import com.actelion.research.spiritapp.spirit.ui.biosample.editor.DateCellEditor;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
-import javax.swing.*;
-import javax.swing.table.TableCellEditor;
-import java.awt.*;
-import java.util.Date;
-
 public class ExpiryDateColumn extends Column<Biosample, Date> {
-	
+
 	private Date now = JPAUtil.getCurrentDateFromDatabase();
-	
+
 	public ExpiryDateColumn() {
-		super("ExpiryDate", Date.class, 40, 100);
+		super("Sample\nExpiryDate", Date.class, 40, 100);
 	}
-	
+
 	@Override
 	public float getSortingKey() {return 9.7f;}
 
@@ -60,8 +61,8 @@ public class ExpiryDateColumn extends Column<Biosample, Date> {
 
 	@Override
 	public boolean isEditable(Biosample row) {return true;}
-	
-	
+
+
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		if(row.getExpiryDate()!=null && row.getExpiryDate().before(now)) {
@@ -69,8 +70,8 @@ public class ExpiryDateColumn extends Column<Biosample, Date> {
 		} else {
 			comp.setForeground(Color.BLACK);
 		}
-	}		
-	
+	}
+
 
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {

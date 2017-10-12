@@ -48,6 +48,7 @@ import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 
 public class ContainerCreatorDlg extends JSpiritEscapeDialog {
 
@@ -112,7 +113,7 @@ public class ContainerCreatorDlg extends JSpiritEscapeDialog {
 		centerFirstPane.add(BorderLayout.CENTER, new JScrollPane(templatePreviewPanel));
 		centerFirstPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), nextButton));
 
-		JSplitPane firstPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, samplePoolTabs, centerFirstPane);
+		JSplitPane firstPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, samplePoolTabs, centerFirstPane);
 		firstPane.setDividerLocation(250);
 
 		//SlideGenerator

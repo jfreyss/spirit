@@ -61,6 +61,7 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JTextComboBox;
@@ -80,8 +81,8 @@ public class SamplingDlg extends JEscapeDialog {
 
 	private List<JComponent> components = new ArrayList<>();
 	private JTextComponent nameTextField;
-	private JCustomTextField amountTextField = new JCustomTextField(JCustomTextField.DOUBLE);
-	private JCustomTextField commentsTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 30);
+	private JCustomTextField amountTextField = new JCustomTextField(CustomFieldType.DOUBLE);
+	private JCustomTextField commentsTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 30);
 
 	private final JCheckBox weightCheckBox = new JCheckBox("Weight");
 	private final JCheckBox lengthCheckBox = new JCheckBox("Length");
@@ -248,7 +249,7 @@ public class SamplingDlg extends JEscapeDialog {
 					nameTextField = new JTextComboBox(new ArrayList<String>( DAOBiotype.getAutoCompletionFieldsForName(type, null)));
 					((JTextComboBox)nameTextField).setColumns(20);
 				} else {
-					nameTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 20);
+					nameTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 20);
 				}
 				nameTextField.setText(sampling.getSampleName());
 

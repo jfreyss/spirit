@@ -119,7 +119,7 @@ public class ResultQuery implements Serializable {
 
 		this.setQuality(query.minQuality);
 		this.setTestIds(new HashSet<>(query.testIds));
-		this.setAttribute2Values(new SetHashMap<TestAttribute, String>(query.attribute2values));
+		this.setAttribute2Values(new SetHashMap<>(query.attribute2values));
 	}
 
 	public String getSampleIds() {

@@ -22,8 +22,10 @@
 package com.actelion.research.spiritapp.spirit.ui.util.lf;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JComponent;
 
@@ -66,33 +68,30 @@ public class SpiritExtendTable<T> extends ExtendTable<T> {
 		List<T> rows = getRows();
 		if(rows.size()>0 && rows.get(0) instanceof IObject) {
 			List<T> sel = getSelection();
+			List<IObject> toReload = new ArrayList<>();
 			for (int i = 0; i < rows.size(); i++) {
 				IObject old = (IObject) rows.get(i);
+				if(old.getId()>0) {
+					toReload.add(old);
+				}
+			}
+			Map<Integer, IObject> reloaded = JPAUtil.mapIds(JPAUtil.reattach(toReload));
 
-				if(old.getId()>0 && !JPAUtil.isValid(old)) {
-					//The row is coming from the DB, reload it (or remove it if it deleted)
-					T t = (T) JPAUtil.reattach(old);
+
+			//The row is coming from the DB, reload it (or remove it if it deleted)
+			for (int i = 0; i < rows.size(); i++) {
+				IObject old = (IObject) rows.get(i);
+				if(old.getId()>0) {
+					IObject t = reloaded.get(old.getId());
 					if(t==null) {
 						rows.remove(i--);
 					} else {
-						rows.set(i, t);
-					}
-				} else if(getModel().getTreeColumn()!=null) {
-					//The row is not coming from the DB and has children, reload the children (or remove it if it deleted)
-					List<IObject> children = (List<IObject>) getModel().getTreeChildren((T) old);
-					for (int j = 0; j < children.size(); j++) {
-						IObject c = JPAUtil.reattach(children.get(j));
-						if(c==null) {
-							children.remove(j--);
-						} else {
-							children.set(j, c);
-						}
+						rows.set(i, (T) t);
 					}
 				}
 			}
 
 			getModel().fireTableDataChanged();
-
 			setSelection(sel);
 		}
 	}

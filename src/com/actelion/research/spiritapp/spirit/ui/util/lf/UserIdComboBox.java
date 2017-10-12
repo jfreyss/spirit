@@ -53,7 +53,7 @@ public class UserIdComboBox extends JObjectComboBox<Employee> {
 
 	@Override
 	public Collection<Employee> getValues() {
-		return DBAdapter.getAdapter().getEmployees();
+		return DBAdapter.getInstance().getEmployees();
 	}
 
 

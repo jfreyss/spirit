@@ -88,7 +88,7 @@ public class BiosampleHistoryPanel extends ImageEditorPane implements IBiosample
 				} else {
 
 					try {
-						List<Revision> revisions = DAORevision.getRevisions(b);
+						List<Revision> revisions = DAORevision.getLastRevisions(b);
 						for (int i = 0; i < revisions.size(); i++) {
 							Revision rev = revisions.get(i);
 

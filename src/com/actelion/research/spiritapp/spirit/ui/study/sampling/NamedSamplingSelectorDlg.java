@@ -23,6 +23,7 @@ package com.actelion.research.spiritapp.spirit.ui.study.sampling;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -33,6 +34,7 @@ import javax.swing.JScrollPane;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
+import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.services.dao.DAONamedSampling;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.JEscapeDialog;
@@ -41,8 +43,8 @@ import com.actelion.research.util.ui.UIUtils;
 public class NamedSamplingSelectorDlg extends JEscapeDialog {
 
 	private NamedSamplingComboBox namedSamplingComboBox = new NamedSamplingComboBox();
-	JButton reuseTemplateButton = new JButton("Import");
-	JButton newTemplateButton = new JButton("New Template");
+	private JButton reuseTemplateButton = new JButton("Import");
+	private JButton newTemplateButton = new JButton("New Template");
 
 	private NamedSampling namedSampling;
 	private boolean success = false;
@@ -51,7 +53,9 @@ public class NamedSamplingSelectorDlg extends JEscapeDialog {
 		super(UIUtils.getMainFrame(), "Import sampling");
 
 		//CenterPane
-		namedSamplingComboBox.setValues(DAONamedSampling.getNamedSamplings(SpiritFrame.getUser(), null));
+		List<NamedSampling> nss = DAONamedSampling.getNamedSamplings(SpiritFrame.getUser(), null);
+		System.out.println("NamedSamplingSelectorDlg.NamedSamplingSelectorDlg() "+nss);
+		namedSamplingComboBox.setValues(nss);
 
 		final JEditorPane editorPane = new JEditorPane("text/html", "");
 		LF.initComp(editorPane);
@@ -61,7 +65,7 @@ public class NamedSamplingSelectorDlg extends JEscapeDialog {
 		scrollPane.setPreferredSize(new Dimension(300, 300));
 
 		//Actions
-		namedSamplingComboBox.addActionListener(e-> {
+		namedSamplingComboBox.addTextChangeListener(e-> {
 			namedSampling = namedSamplingComboBox.getSelection();
 			reuseTemplateButton.setEnabled(namedSampling!=null);
 			if(namedSampling==null) {
@@ -76,7 +80,11 @@ public class NamedSamplingSelectorDlg extends JEscapeDialog {
 		reuseTemplateButton.addActionListener(e-> {
 			if(namedSamplingComboBox.getSelection()==null) return;
 			success = true;
-			namedSampling = namedSamplingComboBox.getSelection().duplicate();
+			namedSampling = namedSamplingComboBox.getSelection().clone();
+			namedSampling.setId(0);
+			for (Sampling s : namedSampling.getAllSamplings()) {
+				s.setId(0);
+			}
 			dispose();
 		});
 

@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -111,7 +110,7 @@ public class DAOStudy {
 			Query query = session.createQuery("from Study s where s.creDate > ?1");
 			Calendar cal = Calendar.getInstance();
 			cal.setTime(JPAUtil.getCurrentDateFromDatabase());
-			cal.add(Calendar.DAY_OF_YEAR, -365);
+			cal.add(Calendar.DAY_OF_YEAR, user==null? -365: -365*5);
 			query.setParameter(1, cal.getTime());
 
 			List<Study> res = query.getResultList();
@@ -128,8 +127,6 @@ public class DAOStudy {
 						if(SpiritRights.canExpert(study, user)) studies.add(study);
 					} else if(level==RightLevel.READ) {
 						if(SpiritRights.canRead(study, user)) studies.add(study);
-					} else if(level==RightLevel.VIEW) {
-						if(SpiritRights.canView(study, user)) studies.add(study);
 					}
 				}
 			} else {
@@ -175,8 +172,8 @@ public class DAOStudy {
 		if(res==null) {
 			Set<String> set = new TreeSet<>();
 			for (Study s : getStudies()) {
-				if(s.getMetadata().get(metadata)!=null) {
-					set.add(s.getMetadata().get(metadata));
+				if(s.getMetadata(metadata)!=null) {
+					set.add(s.getMetadata(metadata));
 				}
 			}
 			res = new ArrayList<>(set);
@@ -205,7 +202,7 @@ public class DAOStudy {
 		return s;
 	}
 
-	public static List<Study> getStudyByLocalIdOrStudyId(String ids) {
+	public static List<Study> getStudyByLocalIdOrStudyIds(String ids) {
 		EntityManager session = JPAUtil.getManager();
 		try {
 			String sql = "select s from Study s where " + QueryTokenizer.expandOrQuery("s.localId = ? or s.studyId = ?", ids);
@@ -274,8 +271,22 @@ public class DAOStudy {
 			}
 
 			if(q.getState()!=null && q.getState().length()>0) {
-				clause.append(" and (s.state = ?)");
+				clause.append(" and s.state = ?");
 				parameters.add(q.getState());
+			}
+
+			if(q.getType()!=null && q.getType().length()>0) {
+				clause.append(" and s.type = ?");
+				parameters.add(q.getType());
+			}
+
+			if(q.getMetadataMap().size()>0) {
+				for (Map.Entry<String, String> e : q.getMetadataMap().entrySet()) {
+					if(e.getValue().length()>0) {
+						clause.append(" and s.serializedMetadata like ?");
+						parameters.add("%" + e.getValue() + "%");
+					}
+				}
 			}
 
 			if(q.getUser()!=null && q.getUser().length()>0) {
@@ -322,6 +333,8 @@ public class DAOStudy {
 
 			if(clause.length()>0) jpql += clause;
 		}
+
+		//Query the DB
 		jpql = JPAUtil.makeQueryJPLCompatible(jpql);
 		Query query = session.createQuery(jpql);
 		for (int i = 0; i < parameters.size(); i++) {
@@ -329,22 +342,27 @@ public class DAOStudy {
 		}
 		List<Study> studies = query.getResultList();
 
-		Collections.sort(studies, new Comparator<Study>() {
-			@Override
-			public int compare(Study o1, Study o2) {
-				return -o1.getCreDate().compareTo(o2.getCreDate());
+		//Post Filter according to metadata
+		if(q.getMetadataMap().size()>0) {
+			List<Study> filtered = new ArrayList<>();
+			loop: for (Study study : studies) {
+				for (Map.Entry<String, String> e : q.getMetadataMap().entrySet()) {
+					if(e.getValue().length()>0 && !e.getValue().equalsIgnoreCase(study.getMetadata(e.getKey()))) continue loop;
+				}
+				filtered.add(study);
 			}
-		});
+			studies = filtered;
+		}
+		Collections.sort(studies, (o1,o2) -> -o1.getCreDate().compareTo(o2.getCreDate()));
 
-		//All users can view all studies except test studies
+		//Post Filter according to user rights
 		if(user!=null) {
 			for (Iterator<Study> iterator = studies.iterator(); iterator.hasNext();) {
 				Study study = iterator.next();
-				if(!SpiritRights.canView(study, user)) iterator.remove();
+				if(!SpiritRights.canRead(study, user)) iterator.remove();
 			}
 		}
 		LoggerFactory.getLogger(DAOStudy.class).info("queryStudies() in "+(System.currentTimeMillis()-s)+"ms");
-		//		postLoad(studies);
 		return studies;
 	}
 
@@ -355,17 +373,18 @@ public class DAOStudy {
 	 * @return
 	 * @throws Exception
 	 */
-	public static void persistStudies(Collection<Study> studies, SpiritUser user) throws Exception {
+	public static List<Study> persistStudies(Collection<Study> studies, SpiritUser user) throws Exception {
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {
 			txn = session.getTransaction();
 			txn.begin();
 
-			persistStudies(session, studies, user);
+			List<Study> res = persistStudies(session, studies, user);
 
 			txn.commit();
 			txn = null;
+			return res;
 		} finally {
 			if(txn!=null && txn.isActive()) txn.rollback();
 		}
@@ -413,7 +432,9 @@ public class DAOStudy {
 
 
 			if(!SpiritRights.canAdmin(study, user) && !SpiritRights.canBlind(study, user)) throw new Exception("You are not allowed to edit this study");
-			if(study.getId()<0 && getStudyByLocalIdOrStudyId(study.getLocalId()).size()>0) throw new Exception("The internalId must be unique");
+
+			Study existing = DAOStudy.getStudyByStudyId(study.getStudyId());
+			if(existing!=null && existing.getId()!=study.getId()) throw new Exception("The studyId "+study.getStudyId()+" is not unique");
 
 
 			Date now = JPAUtil.getCurrentDateFromDatabase();
@@ -434,7 +455,10 @@ public class DAOStudy {
 					logger.info("Merge "+study);
 				}
 			} else {
-				study.setStudyId(getNextStudyId(session));
+				if(study.getStudyId()==null || study.getStudyId().length()==0) {
+					study.setStudyId(getNextStudyId(session));
+				}
+
 				study.setCreUser(study.getUpdUser());
 				study.setCreDate(study.getUpdDate());
 				session.persist(study);
@@ -594,7 +618,7 @@ public class DAOStudy {
 				b = new Biosample();
 				b.setSampleId(sampleId);
 				try {
-					DBAdapter.getAdapter().populateFromExternalDB(b);
+					DBAdapter.getInstance().populateFromExternalDB(b);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -1120,11 +1144,14 @@ public class DAOStudy {
 
 	public static List<Study> getRecentChanges(Date d) throws Exception {
 		EntityManager em = JPAUtil.getManager();
-		Set<Study> list1 = new TreeSet<>();
+		Set<Study> list1 = new HashSet<>();
 		list1.addAll(em.createQuery("select s from Study s where s.updDate > ?1 ").setParameter(1, d).setLockMode(LockModeType.NONE).getResultList());
 		list1.addAll(em.createQuery("select b.inheritedStudy from Biosample b where b.updDate > ?1 and b.inheritedStudy is not null").setParameter(1, d).setLockMode(LockModeType.NONE).getResultList());
 		list1.addAll(em.createQuery("select r.biosample.inheritedStudy from Result r where r.updDate > ?1 and r.biosample.inheritedStudy is not null").setLockMode(LockModeType.NONE).setParameter(1, d).getResultList());
-		return new ArrayList<Study>(list1);
+
+		List<Study> res = new ArrayList<>(list1);
+		Collections.sort(res);
+		return res;
 	}
 
 	/**
@@ -1134,7 +1161,7 @@ public class DAOStudy {
 	@SuppressWarnings("unused")
 	public static void fullLoad(Study study) {
 		if(study!=null) {
-			for(Biosample b: study.getAttachedBiosamples()) {
+			for(Biosample b: study.getParticipants()) {
 
 			}
 			for(Group g: study.getGroups()) {

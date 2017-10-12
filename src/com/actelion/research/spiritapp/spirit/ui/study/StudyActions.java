@@ -51,14 +51,15 @@ import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions.Acti
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.StudyDepictor;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachSamplesManuallyDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.StudyDiscardDlg;
+import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyDesignDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyInfoDlg;
-import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyWizardDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritAction;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.UserIdComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Group;
@@ -90,12 +91,12 @@ public class StudyActions {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			Study study = new Study();
-			study.setState(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATE_DEFAULT));
+			study.setState(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_DEFAULTSTATE));
 			if(SpiritFrame.getUser()!=null) {
 				study.setAdminUsers(SpiritFrame.getUser().getUsername());
 			}
 			if(SpiritFrame.getUser().getMainGroup()!=null) study.setEmployeeGroups(Collections.singletonList(SpiritFrame.getUser().getMainGroup()));
-			StudyWizardDlg.editStudy(study);
+			StudyDesignDlg.editStudy(study);
 			SpiritContextListener.setStudy(study);
 		}
 	}
@@ -128,7 +129,7 @@ public class StudyActions {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			StudyWizardDlg.editStudy(study);
+			StudyDesignDlg.editStudy(study);
 		}
 	}
 
@@ -159,7 +160,7 @@ public class StudyActions {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			StudyWizardDlg.duplicateStudy(study);
+			StudyDesignDlg.duplicateStudy(study);
 		}
 	}
 
@@ -233,10 +234,10 @@ public class StudyActions {
 		}
 	}
 
-	public static class Action_ManualAssignment extends AbstractAction {
+	public static class Action_LinkParticipants extends AbstractAction {
 		private final Study study;
-		public Action_ManualAssignment(Study study) {
-			super("Manual Assignment");
+		public Action_LinkParticipants(Study study) {
+			super("Link to existing participants");
 			this.study = study;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
 			putValue(AbstractAction.SMALL_ICON, IconType.LINK.getIcon());
@@ -296,7 +297,7 @@ public class StudyActions {
 			putValue(AbstractAction.SMALL_ICON, IconType.FOOD.getIcon());
 
 			this.study = study;
-			setEnabled(study!=null && study.getPhases().size()>0 && SpiritRights.canBlind(study, SpiritFrame.getUser()) && study.getAttachedBiosamples().size()>0 );
+			setEnabled(study!=null && study.getPhases().size()>0 && SpiritRights.canBlind(study, SpiritFrame.getUser()) && study.getParticipants().size()>0 );
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -309,33 +310,6 @@ public class StudyActions {
 		}
 	}
 
-	/*
-	public static class Action_ExtraSampling extends AbstractAction {
-		private final Study study;
-		public Action_ExtraSampling(Study study) {
-			super(study==null?"Sampling": study.isSynchronizeSamples()? "Add Exceptional Sampling": "Apply Sampling");
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('s'));
-
-			this.study = study;
-			putValue(AbstractAction.SMALL_ICON, IconType.BIOSAMPLE.getIcon());
-			putValue(AbstractAction.SHORT_DESCRIPTION, "Modify the design to add an extra sampling for one sample or a group of sample");
-			setEnabled(SpiritRights.canBlind(study, Spirit.getUser()));
-		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			try {
-				if(study==null) return;
-				if(study.isSynchronizeSamples()) {
-					new AddExceptionalSamplingDlg(study);
-				} else {
-					new ApplySamplingDlg(study);
-				}
-			} catch (Exception ex) {
-				JExceptionDialog.showError(ex);
-			}
-		}
-	}
-	 */
 	public static class Action_ManageSamples extends AbstractAction {
 		private final Study study;
 		public Action_ManageSamples(Study study) {
@@ -344,7 +318,7 @@ public class StudyActions {
 
 			this.study = study;
 			putValue(AbstractAction.SMALL_ICON, IconType.PRINT.getIcon());
-			setEnabled(study!=null && (SpiritRights.canExpert(study, SpiritFrame.getUser()) || SpiritRights.canBlind(study, SpiritFrame.getUser())) && study.getAttachedBiosamples().size()>0);
+			setEnabled(study!=null && (SpiritRights.canExpert(study, SpiritFrame.getUser()) || SpiritRights.canBlind(study, SpiritFrame.getUser())) && study.getParticipants().size()>0);
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -361,7 +335,7 @@ public class StudyActions {
 
 			this.study = study;
 			putValue(AbstractAction.SMALL_ICON, IconType.BALANCE.getIcon());
-			setEnabled(study!=null && (study.getPhases().size()>0 && SpiritRights.canBlind(study, SpiritFrame.getUser())) && study.getAttachedBiosamples().size()>0);
+			setEnabled(study!=null && (study.getPhases().size()>0 && SpiritRights.canBlind(study, SpiritFrame.getUser())) && study.getParticipants().size()>0);
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -393,9 +367,9 @@ public class StudyActions {
 	public static class Action_History extends AbstractAction {
 		private final Study study;
 		public Action_History(Study study) {
-			super("View Change History");
+			super("Audit Trail");
 			this.study = study;
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('h'));
+			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
 			putValue(Action.SMALL_ICON, IconType.HISTORY.getIcon());
 			setEnabled(SpiritRights.canExpert(study, SpiritFrame.getUser()));
 		}
@@ -468,7 +442,7 @@ public class StudyActions {
 
 	public static JPopupMenu createPopup(Study s) {
 		//Reload the study to make sure the object is accurate
-		final Study study = JPAUtil.reattach(s);
+		final Study study = s==null? null: DAOStudy.getStudy(s.getId());
 
 		JPopupMenu popupMenu = new JPopupMenu();
 		if(study!=null) {
@@ -508,87 +482,97 @@ public class StudyActions {
 				attachMenu.setEnabled(false);
 			}
 			{
-				JMenu autoMenu = new JMenu("Automatic Assignment");
-				autoMenu.setIcon(IconType.LINK.getIcon());
-				autoMenu.setMnemonic('a');
-				attachMenu.add(autoMenu);
-				Set<Phase> randoPhases = study.getPhasesWithGroupAssignments();
-				if(randoPhases.size()>0) {
-					for (Phase phase : randoPhases) {
-						assert phase.getStudy()!=null;
-						autoMenu.add(new JMenuItem(new Action_GroupAssignment(phase)));
+				if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)) {
+					JMenu autoMenu = new JMenu("Automatic Assignment");
+					autoMenu.setIcon(IconType.LINK.getIcon());
+					autoMenu.setMnemonic('a');
+					attachMenu.add(autoMenu);
+					Set<Phase> randoPhases = study.getPhasesWithGroupAssignments();
+					if(randoPhases.size()>0) {
+						for (Phase phase : randoPhases) {
+							assert phase.getStudy()!=null;
+							autoMenu.add(new JMenuItem(new Action_GroupAssignment(phase)));
+						}
+					} else {
+						autoMenu.add(new JMenuItem());
+						autoMenu.setEnabled(false);
 					}
-				} else {
-					autoMenu.add(new JMenuItem());
-					autoMenu.setEnabled(false);
+					attachMenu.add(new JSeparator());
 				}
 
-				attachMenu.add(new JMenuItem(new Action_ManualAssignment(study)));
-				attachMenu.add(new JSeparator());
-				attachMenu.add(new JMenuItem(new BiosampleActions.Action_BatchEdit("Edit Participants", study) {
+				//				attachMenu.add(new JMenuItem(new Action_LinkParticipants(study)));
+				//				attachMenu.add(new JSeparator());
+				attachMenu.add(new JMenuItem(new BiosampleActions.Action_BatchEdit("Edit Participants", study, study.getTopParticipants().size()>0 && SpiritRights.canExpert(study, Spirit.getUser())) {
 					@Override
 					public List<Biosample> getBiosamples() {
-						List<Biosample> res = new ArrayList<>(study.getAttachedBiosamples());
-						if(res.size()==0) {
-							//Create an empty template from the existing animals
-							for (Group group : study.getGroups()) {
-								for(int subgroup=0; subgroup<Math.max(1, group.getNSubgroups()); subgroup++) {
-									int subgroupNo = group.getNSubgroups()<=1? 0: subgroup;
-									int n = group.getSubgroupSize(subgroupNo);
-									if(n==0 && group.getFromGroup()==null) n=4;
-									for(int i=0; i<n; i++) {
-										Biosample b = new Biosample();
-										b.setBiotype(DAOBiotype.getBiotype("Animal"));
-										b.setAttached(study, group, subgroupNo);
-										res.add(b);
-									}
-								}
-							}
-						}
-
+						List<Biosample> res = new ArrayList<>(study.getTopParticipants());
 						Collections.sort(res);
 						return res;
 					}
 				}));
-				attachMenu.add(new JMenuItem(new BiosampleActions.Action_BatchEdit("Add Participants", study) {
+				attachMenu.add(new JMenuItem(new BiosampleActions.Action_BatchEdit("Add Participants", study, SpiritRights.canExpert(study, Spirit.getUser())) {
 					@Override
 					public List<Biosample> getBiosamples() {
+						Study s = JPAUtil.reattach(study);
+						//Creates a biosample (either a new animal or a sample similar to the existing participants)
 						Biosample b = new Biosample();
-						b.setBiotype(Biosample.getBiotype(study.getAttachedBiosamples()));
-						b.setContainerType(Biosample.getContainerType(study.getAttachedBiosamples()));
-						b.setAttachedStudy(study);
+						Biotype biotype = Biosample.getBiotype(s.getParticipants());
+						b.setBiotype(biotype==null? DAOBiotype.getBiotype(Biotype.ANIMAL): biotype);
+						b.setContainerType(Biosample.getContainerType(s.getParticipants()));
 						if(b.getBiotype()!=null) {
 							for (BiotypeMetadata bType : b.getBiotype().getMetadata()) {
-								Set<String> vals = Biosample.getMetadata(bType, study.getAttachedBiosamples());
+								Set<String> vals = Biosample.getMetadata(bType, s.getParticipants());
 								b.setMetadataValue(bType, vals.size()==1? vals.iterator().next(): null);
 							}
 						}
-						return Collections.singletonList(b);
+
+						//Creates the list of participants to edit
+						List<Biosample> res = new ArrayList<>();
+						if(s.getParticipants().size()==0) {
+							//Create an empty template from the existing animals
+							for (Group group : s.getGroups()) {
+								for(int subgroup=0; subgroup<Math.max(1, group.getNSubgroups()); subgroup++) {
+									int n = group.getSubgroupSize(subgroup);
+									if(n==0 && group.getFromGroup()==null) n=1;
+									for(int i=0; i<n; i++) {
+										Biosample b2 = b.clone();
+										b2.setAttached(s, group, subgroup);
+										res.add(b2);
+									}
+								}
+							}
+						}
+						if(res.isEmpty()) {
+							b.setAttached(s, null, 0);
+							res.add(b);
+						}
+
+						return res;
 					}
 				}));
 			}
 
 
-			popupMenu.add(new JSeparator());
-			popupMenu.add(new Action_AnimalMonitoring(study));
-			popupMenu.add(new Action_SetLivingStatus(study));
-			popupMenu.add(new JSeparator());
-			popupMenu.add(new Action_ManageSamples(study));
-			popupMenu.add(new Action_MeasurementSamples(study));
-
+			if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)) {
+				popupMenu.add(new JSeparator());
+				popupMenu.add(new Action_AnimalMonitoring(study));
+				popupMenu.add(new Action_SetLivingStatus(study));
+				popupMenu.add(new JSeparator());
+				popupMenu.add(new Action_ManageSamples(study));
+				popupMenu.add(new Action_MeasurementSamples(study));
+			}
 
 			popupMenu.add(new JSeparator());
 			popupMenu.add(new Action_Report(study));
 			popupMenu.add(new JSeparator());
 
-			//System
+			//Advanced
+			popupMenu.add(new Action_History(study));
 			JMenu systemMenu = new JMenu("Advanced");
 			systemMenu.setIcon(IconType.ADMIN.getIcon());
 			systemMenu.add(new Action_Delete(study));
 			systemMenu.add(new JSeparator());
 			systemMenu.add(new Action_AssignTo(study));
-			systemMenu.add(new JSeparator());
-			systemMenu.add(new Action_History(study));
 			popupMenu.add(systemMenu);
 
 

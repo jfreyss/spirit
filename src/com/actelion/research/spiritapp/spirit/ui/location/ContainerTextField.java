@@ -29,69 +29,69 @@ import com.actelion.research.util.ui.JCustomTextField;
 public class ContainerTextField extends JCustomTextField {
 
 	/**ContainerType used to suggest name*/
-//	private ContainerType containerType;
-		
-//	private JButton generateButton = new JButton("Gen");
+	//	private ContainerType containerType;
+
+	//	private JButton generateButton = new JButton("Gen");
 	private Dimension size = new Dimension(160, 27);
-	
+
 	@Override
 	public Dimension getPreferredSize() {
 		return size;
 	}
-	
+
 	@Override
 	public Dimension getMinimumSize() {
 		return size;
 	}
-	
-	public ContainerTextField() {		
-		super(JCustomTextField.ALPHANUMERIC, 15);
+
+	public ContainerTextField() {
+		super(CustomFieldType.ALPHANUMERIC, 15);
 		setLayout(null);
-		
-//		generateButton.setFont(FastFont.REGULAR.deriveSize(8));
-//		generateButton.setBorder(null);
-//		generateButton.setToolTipText("Set the location (or checkin/relocate)");
-//		add(generateButton);
-//		 
-//		generateButton.addActionListener(new ActionListener() {
-//			private String generated = null;
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				if(ContainerIdTextField.this.isFocusOwner() || generateButton.isFocusOwner()) {
-//					if(containerType==null) {
-//						JExceptionDialog.show(ContainerIdTextField.this, "You must first select a containerType");
-//					} else {
-//						if(generated==null) {
-//							generated = DAOBarcode.getNextId(containerType);
-//						}
-//						setText(generated);
-//					}
-//				}
-//			}
-//		});
-		
+
+		//		generateButton.setFont(FastFont.REGULAR.deriveSize(8));
+		//		generateButton.setBorder(null);
+		//		generateButton.setToolTipText("Set the location (or checkin/relocate)");
+		//		add(generateButton);
+		//
+		//		generateButton.addActionListener(new ActionListener() {
+		//			private String generated = null;
+		//			@Override
+		//			public void actionPerformed(ActionEvent e) {
+		//				if(ContainerIdTextField.this.isFocusOwner() || generateButton.isFocusOwner()) {
+		//					if(containerType==null) {
+		//						JExceptionDialog.show(ContainerIdTextField.this, "You must first select a containerType");
+		//					} else {
+		//						if(generated==null) {
+		//							generated = DAOBarcode.getNextId(containerType);
+		//						}
+		//						setText(generated);
+		//					}
+		//				}
+		//			}
+		//		});
+
 	}
 
-	
-//	@Override
-//	public void doLayout() {
-//		Dimension size = getSize();
-//		generateButton.setBounds(size.width-18, 1, 18, size.height-2);
-//		generateButton.setEnabled(getText().length()==0);
-//	}
-	
+
+	//	@Override
+	//	public void doLayout() {
+	//		Dimension size = getSize();
+	//		generateButton.setBounds(size.width-18, 1, 18, size.height-2);
+	//		generateButton.setEnabled(getText().length()==0);
+	//	}
+
 	public void setContainerType(ContainerType containerType) {
-//		this.containerType = containerType;
-//		generateButton.setEnabled(containerType!=null && containerType.getBarcodeType()==BarcodeType.GENERATE);
+		//		this.containerType = containerType;
+		//		generateButton.setEnabled(containerType!=null && containerType.getBarcodeType()==BarcodeType.GENERATE);
 	}
-	
-//	@Override
-//	public void setBorder(Border border) {
-//		if(border==null) {
-//			super.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 17));
-//		} else {
-//			super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 17)));			
-//		}
-//	}
+
+	//	@Override
+	//	public void setBorder(Border border) {
+	//		if(border==null) {
+	//			super.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 17));
+	//		} else {
+	//			super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 17)));
+	//		}
+	//	}
 
 }

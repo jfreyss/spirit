@@ -362,6 +362,8 @@ public class SpiritRights {
 		if(study==null) return true;
 		if(study.getId()<=0) return true;
 
+		//		if(SpiritProperties.getInstance().isOpen()) return true;
+
 		String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState());
 
 		if(MiscUtils.contains(roles, "NONE")) {
@@ -380,10 +382,6 @@ public class SpiritRights {
 			return true;
 		}
 		return false;
-	}
-
-	public static boolean canView(Study study, SpiritUser user) {
-		return SpiritProperties.getInstance().isOpen() || canRead(study, user);
 	}
 
 	/**

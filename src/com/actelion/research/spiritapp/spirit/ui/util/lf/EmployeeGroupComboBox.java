@@ -59,7 +59,7 @@ public class EmployeeGroupComboBox extends JObjectComboBox<EmployeeGroup> {
 	@Override
 	public Collection<EmployeeGroup> getValues() {
 		List<EmployeeGroup> list = new ArrayList<>();
-		for (EmployeeGroup g: DBAdapter.getAdapter().getEmployeeGroups()) {
+		for (EmployeeGroup g: DBAdapter.getInstance().getEmployeeGroups()) {
 			if(onlyWithMembership && (SpiritFrame.getUser()==null || !SpiritFrame.getUser().isSuperAdmin()) && !SpiritFrame.getUser().isMember(g)) {
 				continue;
 			}

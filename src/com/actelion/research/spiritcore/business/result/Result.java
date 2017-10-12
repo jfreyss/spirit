@@ -59,7 +59,8 @@ import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.RevisionNumber;
 
 import com.actelion.research.spiritcore.business.DataType;
-import com.actelion.research.spiritcore.business.IEntity;
+import com.actelion.research.spiritcore.business.IAuditable;
+import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
@@ -67,6 +68,7 @@ import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.PhaseFormat;
 import com.actelion.research.spiritcore.business.study.Study;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.SetHashMap;
 import com.actelion.research.util.CompareUtils;
 
@@ -78,7 +80,7 @@ import com.actelion.research.util.CompareUtils;
 		@Index(name="assay_result_phase_idx", columnList = "phase_id")})
 @SequenceGenerator(name="assay_result_seq", sequenceName="assay_result_seq", allocationSize=1)
 @Audited
-public class Result implements Comparable<Result>, IEntity, Cloneable {
+public class Result implements Comparable<Result>, Cloneable, IObject, IAuditable {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="assay_result_seq")
@@ -116,6 +118,11 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private Test test;
 
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="study_id")
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+	private Study study;
+
 	/**
 	 * The phase is only used if the biosample has no phase
 	 */
@@ -130,7 +137,7 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 	@BatchSize(size=512)
 	private Map<TestAttribute, ResultValue> values = new HashMap<>();
 
-	private Quality quality = Quality.VALID;
+	private Quality quality = null;
 
 	public Result() {
 	}
@@ -193,7 +200,6 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 		this.comments = comments==null? null: comments.trim();
 	}
 
-	@Override
 	public String getUpdUser() {
 		return updUser;
 	}
@@ -202,7 +208,6 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 		this.updUser = updUser;
 	}
 
-	@Override
 	public Date getUpdDate() {
 		return updDate;
 	}
@@ -223,11 +228,17 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 		return test;
 	}
 
+	/**
+	 * Sets the test and make sure all the link values are correctly associated to the new tests.
+	 * ie. if the result has 1 input and 2 output and the new test has just 1 output, then the updated result will just keep the 1st value.
+	 *
+	 * @param test
+	 */
 	public void setTest(Test test) {
 		if(test==null) {
 			values.clear();
 		} else {
-			Map<TestAttribute, ResultValue> newValues = new HashMap<TestAttribute, ResultValue>();
+			Map<TestAttribute, ResultValue> newValues = new HashMap<>();
 			if(this.test!=null && !this.test.equals(test)) {
 
 				//Update the test, but keep the same input/output values if possible
@@ -260,20 +271,29 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 		assert att!=null;
 		return values.remove(att);
 	}
+
 	public Collection<ResultValue> getResultValues() {
 		return values.values();
 	}
+
 	public Map<TestAttribute, ResultValue> getResultValueMap() {
 		return values;
 	}
+
 	public void setResultValueMap(Map<TestAttribute, ResultValue> values) {
 		this.values = values;
 	}
 
+	public String getResultValueString(TestAttribute att) {
+		ResultValue rv = getResultValue(att);
+		return rv==null?"": rv.getValue();
+	}
+
+
 	public ResultValue getResultValue(TestAttribute att) {
-		assert test!=null;
-		assert att!=null;
-		assert test.equals(att.getTest()): test +"("+test.getId()+")" + " is not equal to "+att.getTest()+"("+att.getTest().getId()+") for result.id= "+getId();
+		if(test==null) return null;
+		if(att==null) return null;
+		if(!test.equals(att.getTest())) return null;
 
 		ResultValue v = getResultValueMap().get(att);
 		if(v==null) {
@@ -451,23 +471,32 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 
 	/**
 	 * Sets the phase of the result.
-	 * Note: the phase should be null if the biosample has a phase to avoid redundancies.
+	 * Note: the phase should be null if the biosample itself has a phase to avoid redundancies.
 	 * @param phase
 	 */
 	public void setPhase(Phase phase) {
 		this.phase = phase;
+		if(phase!=null && phase.getStudy()!=null && !phase.getStudy().equals(study)) this.study = phase.getStudy();
 	}
 
 	public Phase getPhase() {
 		return phase;
 	}
 
+	/**
+	 * Return the phase of the result, if any, or the phase of the biosample
+	 * @return
+	 */
 	public Phase getInheritedPhase() {
 		return getPhase()!=null? getPhase(): getBiosample()!=null? getBiosample().getInheritedPhase(): null;
 	}
 
 	public Study getStudy() {
-		return getBiosample()!=null? getBiosample().getInheritedStudy(): null;
+		return study;
+	}
+
+	public void setStudy(Study study) {
+		this.study = study;
 	}
 
 
@@ -496,7 +525,7 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 		this.quality = quality;
 	}
 	public Quality getQuality() {
-		return quality==null? Quality.VALID: quality;
+		return quality==null?  (getBiosample()==null? Quality.VALID: getBiosample().getQuality()) : quality;
 	}
 
 	@Override
@@ -663,7 +692,6 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 			if(r.getInheritedPhase()==null) continue;
 			if(current.getBiosample()!=null && !current.getBiosample().equals(r.getBiosample())) continue;
 			if(!r.getTest().equals(current.getTest())) continue;
-			if(!r.getStudy().equals(current.getStudy())) continue;
 			if(r.getInheritedPhase().compareTo(current.getInheritedPhase())>=0) continue;
 			if(r.getFirstValue()==null) continue;
 
@@ -687,7 +715,6 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 			if(r.getInheritedPhase()==null) continue;
 			if(current.getBiosample()!=null && !current.getBiosample().equals(r.getBiosample())) continue;
 			if(!r.getTest().equals(current.getTest())) continue;
-			if(!r.getStudy().equals(current.getStudy())) continue;
 			if(r.getInheritedPhase().compareTo(current.getInheritedPhase())>=0) continue;
 			if(r.getFirstValue()==null) continue;
 
@@ -802,4 +829,52 @@ public class Result implements Comparable<Result>, IEntity, Cloneable {
 		return "[Res:"+id+(biosample==null?"":",biosample="+biosample.debugInfo())+(phase==null || phase.getStudy()==null?"":",study="+phase.getStudy().getId())+"]";
 	}
 
+
+	/**
+	 * Returns a string containing the differences between 2 results (usually 2 different versions).
+	 * The result is an empty string if there are no differences or if b is null
+	 * @param b
+	 * @return
+	 */
+	@Override
+	public String getDifference(IAuditable r) {
+		if(r==null) r = new Result();
+		if(!(r instanceof Result)) return "";
+		return MiscUtils.flatten(getDifferenceMap((Result)r));
+	}
+
+	/**
+	 * Returns a map containing the differences between 2 results (usually 2 different versions).
+	 * The result is an empty string if there are no differences or if b is null
+	 * @param b
+	 * @return
+	 */
+	public Map<String, String> getDifferenceMap(Result r) {
+
+		Map<String, String> map = new LinkedHashMap<>();
+		if(r==null) return map;
+		if(!CompareUtils.equals(getStudy(), r.getStudy())) {
+			map.put("Study", getStudy()==null?"NA":getStudy().getStudyId());
+		}
+
+		if(!CompareUtils.equals(getTest(), r.getTest())) {
+			map.put("Test", getTest().getName());
+		}
+
+		if(!CompareUtils.equals(getPhase(), r.getPhase())) {
+			map.put("Phase", getPhase()==null?"NA":getPhase().getName());
+		}
+
+		if(!CompareUtils.equals(getCreUser(), r.getCreUser())) {
+			map.put("Owner", getCreUser());
+		}
+
+		for (TestAttribute ta : getTest().getAttributes()) {
+			if(!CompareUtils.equals(getResultValueString(ta), r.getResultValueString(ta))) {
+				map.put(ta.getName(), getResultValueString(ta));
+			}
+		}
+
+		return map;
+	}
 }

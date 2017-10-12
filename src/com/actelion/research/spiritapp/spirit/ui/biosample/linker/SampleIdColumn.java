@@ -23,7 +23,6 @@ package com.actelion.research.spiritapp.spirit.ui.biosample.linker;
 
 import java.awt.Font;
 import java.awt.event.ActionEvent;
-import java.util.Comparator;
 
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
@@ -86,9 +85,8 @@ public class SampleIdColumn extends AbstractLinkerColumn<String> {
 
 	@Override
 	public String getValue(Biosample row) {
-		row = linker.getLinked(row);
 		if(row==null) return null;
-
+		row = linker.getLinked(row);
 
 		if(isDisplayName() && (row.getBiotype()==null || row.getBiotype().getSampleNameLabel()!=null)) {
 			String s =  row.getSampleId()==null? "": row.getSampleId();
@@ -112,8 +110,8 @@ public class SampleIdColumn extends AbstractLinkerColumn<String> {
 	@Override
 	public void setValue(Biosample row, String value) {
 		if(value==null) value = "";
+		row = linker.getLinked(row);
 		String split[] = value.split("\t");
-
 
 		if(isDisplayName() && (row.getBiotype()==null || (!row.getBiotype().isHideSampleId() && row.getBiotype().getSampleNameLabel()!=null))) {
 			row.setSampleId(split[0].trim());
@@ -124,7 +122,7 @@ public class SampleIdColumn extends AbstractLinkerColumn<String> {
 
 		//Prepopulate the other metadata from external db
 		try {
-			DBAdapter.getAdapter().populateFromExternalDB(row);
+			DBAdapter.getInstance().populateFromExternalDB(row);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -136,33 +134,33 @@ public class SampleIdColumn extends AbstractLinkerColumn<String> {
 		popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
 
 		Biotype biotype = linker.getBiotypeForLabel();
-		popupMenu.add(new AbstractAction("Sort by SampleId") {
+		popupMenu.add(new AbstractAction("Sort by Group/SampleId") {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				table.sortBy(SampleIdColumn.this, 1, new Comparator<Biosample>() {
-					@Override
-					public int compare(Biosample o1, Biosample o2) {
-						Biosample l1 = getLinker().getLinked(o1);
-						Biosample l2 = getLinker().getLinked(o2);
-						return CompareUtils.compare(l1==null?"": l1.getSampleId(), l2==null?"": l2.getSampleId());
-					}
+				table.sortBy(SampleIdColumn.this, 1, (o1,o2)-> {
+					return CompareUtils.compare(o1, o2);
 				});
 			}
 		});
-
+		popupMenu.add(new AbstractAction("Sort by SampleId") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				table.sortBy(SampleIdColumn.this, 1, (o1,o2) -> {
+					Biosample l1 = getLinker().getLinked(o1);
+					Biosample l2 = getLinker().getLinked(o2);
+					return CompareUtils.compare(l1==null?"": l1.getSampleId(), l2==null?"": l2.getSampleId());
+				});
+			}
+		});
 		if(biotype==null || biotype.getSampleNameLabel()!=null ) {
 			popupMenu.add(new AbstractAction("Sort by " + (biotype==null?"SampleName": biotype.getSampleNameLabel())) {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					table.sortBy(SampleIdColumn.this, 2, new Comparator<Biosample>() {
-						@Override
-						public int compare(Biosample o1, Biosample o2) {
-							Biosample l1 = getLinker().getLinked(o1);
-							Biosample l2 = getLinker().getLinked(o2);
-							return CompareUtils.compare(l1==null?"": l1.getSampleName(), l2==null?"": l2.getSampleName());
-						}
+					table.sortBy(SampleIdColumn.this, 2, (o1,o2) -> {
+						Biosample l1 = getLinker().getLinked(o1);
+						Biosample l2 = getLinker().getLinked(o2);
+						return CompareUtils.compare(l1==null?"": l1.getSampleName(), l2==null?"": l2.getSampleName());
 					});
-
 				}
 			});
 		}
@@ -171,9 +169,8 @@ public class SampleIdColumn extends AbstractLinkerColumn<String> {
 
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value) {
-		row = linker.getLinked(row); //Only one sampleid
+		row = linker.getLinked(row);
 		sampleIdLabel.setBiosample(row);
-
 		return sampleIdLabel;
 	}
 
@@ -188,6 +185,9 @@ public class SampleIdColumn extends AbstractLinkerColumn<String> {
 		}
 	}
 
+	/**
+	 * Returns null as the editor is set programatically by the table
+	 */
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Biosample> table) {
 		return null;

@@ -82,6 +82,7 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.business.location.Location;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
@@ -90,6 +91,7 @@ import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.ListHashMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.FastFont;
@@ -206,13 +208,13 @@ public class BiosampleActions {
 		private final List<Biosample> biosamples;
 
 		public Action_Order(List<Biosample> biosamples) {
-			super("Order Biosamples from " + (DBAdapter.getAdapter().getAutomatedStoreLocation().size()==1? DBAdapter.getAdapter().getAutomatedStoreLocation().iterator().next().getName():" Automatic Stores"));
+			super("Order Biosamples from " + (DBAdapter.getInstance().getAutomatedStoreLocation().size()==1? DBAdapter.getInstance().getAutomatedStoreLocation().iterator().next().getName():" Automatic Stores"));
 			this.biosamples = biosamples;
 			putValue(Action.MNEMONIC_KEY, (int)('o'));
 			boolean enabled = biosamples.size()>0;
 			if(enabled) {
 				for(Biosample b: biosamples) {
-					if(b.getLocation()==null || !DBAdapter.getAdapter().isInAutomatedStore(b.getLocation())) {
+					if(b.getLocation()==null || !DBAdapter.getInstance().isInAutomatedStore(b.getLocation())) {
 						enabled = false;
 						break;
 					}
@@ -223,16 +225,16 @@ public class BiosampleActions {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			assert DBAdapter.getAdapter().getAutomaticStores()!=null;
+			assert DBAdapter.getInstance().getAutomaticStores()!=null;
 			ListHashMap<Location, Biosample> map = new ListHashMap<Location, Biosample>();
 			for (Biosample b : biosamples) {
 				map.add(b.getLocation(), b);
 			}
 
-			for (Location l: DBAdapter.getAdapter().getAutomaticStores().keySet()) {
+			for (Location l: DBAdapter.getInstance().getAutomaticStores().keySet()) {
 				if(map.get(l)==null || map.get(l).size()==0) continue;
 
-				URL url = DBAdapter.getAdapter().getAutomaticStores().get(l);
+				URL url = DBAdapter.getInstance().getAutomaticStores().get(l);
 				assert url!=null;
 
 
@@ -343,7 +345,7 @@ public class BiosampleActions {
 	public static class Action_BatchEdit extends AbstractAction {
 
 		private final List<Biosample> biosamples;
-		private final Study candidatesForStudy;
+		private final Study participatingStudy;
 
 		/**
 		 * Constructor for an edit action (generic, you must implement getBiosamples)
@@ -353,15 +355,16 @@ public class BiosampleActions {
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(Action.SMALL_ICON, IconType.EDIT.getIcon());
 			this.biosamples = null;
-			this.candidatesForStudy = null;
+			this.participatingStudy = null;
 		}
 
-		public Action_BatchEdit(String title, Study candidatesForStudy) {
+		public Action_BatchEdit(String title, Study participatingStudy, boolean enabled) {
 			super(title);
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(Action.SMALL_ICON, IconType.BIOSAMPLE.getIcon());
+			setEnabled(enabled);
 			this.biosamples = null;
-			this.candidatesForStudy = candidatesForStudy;
+			this.participatingStudy = participatingStudy;
 		}
 
 		/**
@@ -374,7 +377,7 @@ public class BiosampleActions {
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(Action.SMALL_ICON, IconType.EDIT.getIcon());
 			setEnabled(SpiritRights.canEditBiosamples(biosamples,SpiritFrame.getUser()));
-			this.candidatesForStudy = null;
+			this.participatingStudy = null;
 		}
 
 		public List<Biosample> getBiosamples() {
@@ -383,27 +386,30 @@ public class BiosampleActions {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			List<Biosample> biosamples = getBiosamples();
 			try {
-				if(biosamples==null || biosamples.size()==0) throw new Exception("Your selection is empty");
+				JPAUtil.pushEditableContext(Spirit.getUser());
+				List<Biosample> biosamples = getBiosamples();
+				if(biosamples==null || biosamples.size()==0) throw new Exception("There are no samples to edit");
 
 				//Analyze the data, to check if we can edit
 				if(!SpiritRights.canEditBiosamples(biosamples, Spirit.askForAuthentication())) {
 					throw new Exception("You are not allowed to edit those biosamples");
 				}
 
-				if(candidatesForStudy==null && biosamples.size()==1 && biosamples.get(0).getInheritedStudy()==null) {
+				if(participatingStudy==null && biosamples.size()==1 && biosamples.get(0).getInheritedStudy()==null) {
 					//We open the component editor only if we have one item and no study
 					new BiosampleFormDlg(biosamples.get(0));
 				} else {
 					//Open the batch edit dialog
-					EditBiosampleDlg dlg = EditBiosampleDlg.createDialogForEditInTransactionMode(getBiosamples());
-					dlg.setCandidatesForStudy(candidatesForStudy);
+					EditBiosampleDlg dlg = EditBiosampleDlg.createDialogForEditInTransactionMode(biosamples);
+					dlg.setParticipatingStudy(participatingStudy);
 					dlg.setVisible(true);
 				}
 
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
+			} finally {
+				JPAUtil.popEditableContext();
 			}
 		}
 	}
@@ -414,7 +420,7 @@ public class BiosampleActions {
 		private final Study study;
 
 		public Action_SetLivingStatus(Study study) {
-			this(study==null? new ArrayList<Biosample>(): new ArrayList<>(study.getTopAttachedBiosamples()));
+			this(study==null? new ArrayList<Biosample>(): new ArrayList<>(study.getTopParticipants()));
 		}
 
 		public Action_SetLivingStatus(List<Biosample> biosamples) {
@@ -536,9 +542,9 @@ public class BiosampleActions {
 	public static class Action_History extends AbstractAction {
 		private final Collection<Biosample> biosamples;
 		public Action_History(Collection<Biosample> biosamples) {
-			super("View Change History");
+			super("Audit Trail");
 			this.biosamples = biosamples;
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('h'));
+			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
 			putValue(Action.SMALL_ICON, IconType.HISTORY.getIcon());
 			setEnabled(biosamples.size()==1);
 		}
@@ -881,7 +887,9 @@ public class BiosampleActions {
 		newMenu.add(new Action_Duplicate(biosamples));
 		newMenu.add(new JSeparator());
 		newMenu.add(new Action_NewChildren(biosamples));
-		newMenu.add(new Action_NewResults(biosamples));
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+			newMenu.add(new Action_NewResults(biosamples));
+		}
 
 		//Edit
 		JMenu editMenu = new JMenu("Edit");
@@ -944,11 +952,12 @@ public class BiosampleActions {
 		menu.add(new JSeparator());
 
 		//Order from storage??
-		if(DBAdapter.getAdapter().getAutomaticStores()!=null && DBAdapter.getAdapter().getAutomaticStores().size()>0) {
+		if(DBAdapter.getInstance().getAutomaticStores()!=null && DBAdapter.getInstance().getAutomaticStores().size()>0) {
 			menu.add(new Action_Order(biosamples));
 		}
 
 		//Advanced
+		menu.add(new Action_History(biosamples));
 		JMenu systemMenu = new JMenu("Advanced");
 		systemMenu.setIcon(IconType.ADMIN.getIcon());
 		systemMenu.add(new Action_Delete(biosamples));
@@ -957,7 +966,6 @@ public class BiosampleActions {
 		systemMenu.add(new JSeparator());
 		systemMenu.add(new Action_AssignTo(biosamples));
 		systemMenu.add(new JSeparator());
-		systemMenu.add(new Action_History(biosamples));
 		menu.add(systemMenu);
 
 

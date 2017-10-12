@@ -36,19 +36,19 @@ import java.util.TreeSet;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode.FieldType;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.CheckboxNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.InputNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.LabelNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.ObjectComboBoxNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxMultipleNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxNode;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeNode;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.CreUserNode;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.PhaseNode;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.QualityComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.UpdDateNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.CheckboxNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.ComboBoxNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.InputNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.LabelNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxMultipleNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxNode;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
@@ -164,36 +164,7 @@ public class ResultSearchTree extends FormTree {
 
 		///////////////////////////////////////////////////////////////////////////////
 		//advancedNode
-		PhaseNode phaseNode = new PhaseNode(this, new Strategy<String>() {
-			@Override
-			public String getModel() {
-				return query.getPhases();
-			}
-			@Override
-			public void setModel(String modelValue) {
-				query.setPhases(modelValue);
-			}
-
-		}) {
-			@Override
-			public Collection<String> getChoices() {
-				Set<String> res = new TreeSet<String>();
-				try {
-					for(Study s: DAOStudy.queryStudies(StudyQuery.createForStudyIds(frame==null? null: frame.getStudyId()), SpiritFrame.getUser())){
-						for(Phase p: s.getPhases()) {
-							res.add(p.getShortName());
-						}
-					}
-				} catch(Exception e) {
-					e.printStackTrace();
-				}
-				return new ArrayList<String>(res);
-
-			}
-		};
-		advancedNode.add(phaseNode);
-
-		//ELB
+		///////////////////////////////////////////////////////////////////////////////
 		elbNode = new TextComboBoxNode(this, "ELBs", true, new Strategy<String>() {
 			@Override
 			public String getModel() {
@@ -224,6 +195,35 @@ public class ResultSearchTree extends FormTree {
 		};
 		advancedNode.add(elbNode);
 
+		PhaseNode phaseNode = new PhaseNode(this, new Strategy<String>() {
+			@Override
+			public String getModel() {
+				return query.getPhases();
+			}
+			@Override
+			public void setModel(String modelValue) {
+				query.setPhases(modelValue);
+			}
+
+		}) {
+			@Override
+			public Collection<String> getChoices() {
+				Set<String> res = new TreeSet<String>();
+				try {
+					for(Study s: DAOStudy.queryStudies(StudyQuery.createForStudyIds(frame==null? null: frame.getStudyId()), SpiritFrame.getUser())){
+						for(Phase p: s.getPhases()) {
+							res.add(p.getShortName());
+						}
+					}
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
+				return new ArrayList<String>(res);
+
+			}
+		};
+		advancedNode.add(phaseNode);
+
 		advancedNode.add(new CreUserNode(this, new Strategy<String>() {
 			@Override
 			public String getModel() {
@@ -234,6 +234,7 @@ public class ResultSearchTree extends FormTree {
 				query.setUpdUser(modelValue);
 			}
 		}));
+
 		advancedNode.add(new UpdDateNode(this, new Strategy<String>() {
 			@Override
 			public String getModel() {
@@ -244,7 +245,8 @@ public class ResultSearchTree extends FormTree {
 				query.setUpdDate(modelValue);
 			}
 		}));
-		ComboBoxNode<Quality> qualityNode = new ComboBoxNode<Quality>(this, new QualityComboBox(), "Min Quality", new Strategy<Quality>() {
+
+		ObjectComboBoxNode<Quality> qualityNode = new ObjectComboBoxNode<Quality>(this, "Min Quality", new QualityComboBox(), new Strategy<Quality>() {
 			@Override
 			public Quality getModel() {
 				return query.getQuality();
@@ -254,7 +256,6 @@ public class ResultSearchTree extends FormTree {
 				query.setQuality(modelValue);
 			}
 		});
-		qualityNode.getComboBox().setEditable(false);
 		advancedNode.add(qualityNode);
 
 		root.add(advancedNode);
@@ -277,8 +278,6 @@ public class ResultSearchTree extends FormTree {
 			protected void doInBackground() throws Exception {
 
 				studies = query.getStudyIds()==null || query.getStudyIds().length()==0? null: DAOStudy.queryStudies(StudyQuery.createForStudyIds(query.getStudyIds()), user);
-
-				//Inputs
 				inputKeywords = getResultFilters();
 			}
 
@@ -341,7 +340,6 @@ public class ResultSearchTree extends FormTree {
 									refreshFilters(true);
 								}
 							});
-
 						}
 					}
 
@@ -354,7 +352,6 @@ public class ResultSearchTree extends FormTree {
 					}
 					biotypeNode.setVisible(inputKeywords.types.size()>0);
 					inputNode.setVisible(inputKeywords.inputChoices.size()>0);
-					//					outputNode.setVisible(inputKeywords.outputDisplays.size()>0);
 
 					query.getBiotypes().retainAll(inputKeywords.types);
 					for(TestAttribute att: inputKeywords.inputChoices.keySet()) {

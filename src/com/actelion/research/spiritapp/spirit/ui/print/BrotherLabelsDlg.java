@@ -74,6 +74,7 @@ import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
@@ -229,7 +230,7 @@ public class BrotherLabelsDlg extends JEscapeDialog {
 		centerPane.add(BorderLayout.CENTER, UIUtils.createTitleBox("Preview", previewPanel));
 		centerPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), printLabel, printButton));
 
-		JSplitPane contentPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(labelTable), centerPane);
+		JSplitPane contentPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(labelTable), centerPane);
 		contentPane.setDividerLocation(200);
 		setContentPane(contentPane);
 

@@ -650,6 +650,9 @@ public class DAOBiosample {
 	public static List<Biosample> persistBiosamples(Collection<Biosample> biosamples, SpiritUser user) throws Exception {
 		List<Biosample> res = new ArrayList<>();
 		if(biosamples==null || biosamples.size()==0) return res;
+
+		long start = System.currentTimeMillis();
+
 		logger.info("Persist "+biosamples.size()+" biosamples");
 
 		for (Biosample biosample : biosamples) {
@@ -672,8 +675,12 @@ public class DAOBiosample {
 
 		try {
 
-			//Find dependancies that must be saved first
+			/////////////////////////////////////////////////
+			//Find dependent studues that must be saved first
+			/////////////////////////////////////////////////
 			Set<Study> studyToSave = new HashSet<>();
+			Set<Group> groupToSave = new HashSet<>();
+			Set<Phase> phaseToSave = new HashSet<>();
 			for (Biosample b : biosamples) {
 				Study s = b.getInheritedStudy();
 				Group g = b.getInheritedGroup();
@@ -682,16 +689,31 @@ public class DAOBiosample {
 				//Do we need to save the group?
 				if(g!=null && g.getId()<=0) {
 					g.setStudy(s);
+					groupToSave.add(g);
 					studyToSave.add(s);
 				}
 
 				//Do we need to save the phase?
 				if(p!=null && p.getId()<=0) {
 					p.setStudy(s);
+					phaseToSave.add(p);
 					studyToSave.add(s);
 				}
 			}
 
+			//Remove orphan groups and phases, which may have been created in the process
+			for (Study study : studyToSave) {
+				for (Phase phase : new ArrayList<>(study.getPhases())) {
+					if(phase.getId()<=0 && !phaseToSave.contains(phase)) {
+						phase.setStudy(null);
+					}
+				}
+				for (Group group : new ArrayList<>(study.getGroups())) {
+					if(group.getId()<=0 && !groupToSave.contains(group)) {
+						group.setStudy(null);
+					}
+				}
+			}
 
 
 			txn = session.getTransaction();
@@ -734,6 +756,7 @@ public class DAOBiosample {
 		} finally {
 			if (txn != null && txn.isActive())try {txn.rollback();} catch (Exception e2) {e2.printStackTrace();}
 		}
+		logger.info("Persist "+biosamples.size()+" biosamples: done in "+(System.currentTimeMillis()-start));
 		return res;
 	}
 
@@ -798,13 +821,11 @@ public class DAOBiosample {
 			}
 		}
 
-		// ///////////////////////
-
+		/////////////////////////
 		// Validation
-
 		for (Biosample biosample : biosamples) {
 
-			// Test that the biosample has a sampleid
+			// Generate missing sampleId (if possible)
 			if (biosample.getSampleId() == null || biosample.getSampleId().length() == 0) {
 				biosample.setSampleId(DAOBarcode.getNextId(biosample.getBiotype()));
 				if (biosample.getSampleId() == null || biosample.getSampleId().length() == 0) {
@@ -815,11 +836,12 @@ public class DAOBiosample {
 				throw new Exception("The sampleId '" + biosample.getSampleId() + "' cannot have spaces");
 			}
 
-			// Test that the biosample has a type
+			// Test that the biosample has biotype
 			if (biosample.getBiotype() == null) {
 				throw new Exception("The sampleId '" + biosample.getSampleId() + "' must have a biotype");
 			}
 
+			// Check consistency: the study must be saved before
 			if(biosample.getAttachedStudy()!=null && biosample.getAttachedStudy().getId()<=0) {
 				throw new Exception("The sampleId '" + biosample.getSampleId() + "' is a study, which was not saved: "+biosample.getAttachedStudy());
 			}
@@ -833,7 +855,7 @@ public class DAOBiosample {
 			}
 		}
 
-		//Test name (required, and uniqueness)
+		//Test samplename (required, and uniqueness)
 		Map<Biotype, Map<String, Biosample>> biotype2name2sample = new HashMap<>();
 		for (Biosample b : biosamples) {
 			if(b.getBiotype().getSampleNameLabel()==null) continue;
@@ -864,8 +886,17 @@ public class DAOBiosample {
 			}
 		}
 
+		//Test aggregated samples
 		for (Biosample biosample : biosamples) {
-			// Test that the biosample location is valid and unique
+			for(BiotypeMetadata bType: biosample.getBiotype().getMetadata()) {
+				if(bType.getDataType()!=DataType.BIOSAMPLE) continue;
+				Biosample agg = biosample.getMetadataBiosample(bType);
+				if(agg!=null && agg.getId()<=0 && !biosamples.contains(agg)) throw new Exception("The linked biosample "+agg+" does not exist");
+			}
+		}
+
+		//Test that the biosample location is valid and unique
+		for (Biosample biosample : biosamples) {
 			if (biosample.getLocation() != null) {
 				Location loc = biosample.getLocation();
 				if (biosample.isAbstract()) {
@@ -890,10 +921,10 @@ public class DAOBiosample {
 
 
 
+		//////////////////////////////////////
 		for (Biosample biosample : biosamples) {
 			// Update the top
 			biosample.setTopParent(biosample.getParent() == null ? biosample : biosample.getParent().getTopParent());
-
 
 			//Check the coherence of the inherited study and the attached study
 			if (biosample.getAttachedStudy() != null) {
@@ -954,7 +985,7 @@ public class DAOBiosample {
 
 		}
 
-		//Compute formula if needed
+		//Compute formula (when needed)
 		computeFormula(biosamples);
 
 		// /////////////////
@@ -994,10 +1025,8 @@ public class DAOBiosample {
 			if (b.getId() <= 0) {
 				b.setCreUser(b.getUpdUser());
 				b.setCreDate(b.getUpdDate());
-				System.out.println("DAOBiosample.persistBiosamples() persist "+b);
 				session.persist(b);
 			} else if (!session.contains(b)) {
-				System.out.println("DAOBiosample.persistBiosamples() merge "+b);
 				b = session.merge(b);
 			}
 			res.add(b);
@@ -1006,16 +1035,14 @@ public class DAOBiosample {
 
 		//////////////////////////////////////////////////////
 		// Update Containers
-		Set<String> containerIds = Biosample.getContainerIds(biosamples);
+		Set<String> containerIds = Biosample.getContainerIds(res);
 		Map<String, Container> cid2container = new HashMap<>();// Container.mapContainerId(getContainers(containerIds));
 		if(containerIds.size()>0) {
 			List<Biosample> inBiosamples = session.createQuery("from Biosample b where " + QueryTokenizer.expandForIn("b.container.containerId", containerIds)).getResultList();
 			cid2container.putAll(Container.mapContainerId(Biosample.getContainers(inBiosamples, true)));
 		}
 
-
-		for (Biosample biosample : biosamples) {
-
+		for (Biosample biosample : res) {
 			if(biosample.getContainerType()==null) {
 				biosample.setContainerId(null);
 			} else {
@@ -1023,50 +1050,19 @@ public class DAOBiosample {
 				if (containerId!=null && containerId.length()>0) {
 					Container c = cid2container.get(containerId);
 					if(c!=null && c.getContainerType().isMultiple() && !SpiritRights.canEdit(c, user)) throw new Exception("You are not allowed to edit the container " + containerId);
-					if(c!=null && c.getContainerType().isMultiple() && c.getContainerType()!=biosample.getContainerType()) throw new Exception("The container's type of " + containerId+" is " + c.getContainerType());
+					if(c!=null && c.getContainerType().isMultiple() && c.getContainerType()!=biosample.getContainerType()) throw new Exception("The container's type of " + biosample.getSampleId() + ": " + containerId+" is " + c.getContainerType());
 					if(c!=null && !c.getContainerType().isMultiple() && c.getBiosamples().size()>0 && !c.getBiosamples().contains(biosample)) throw new Exception("The container " + containerId + " of " + biosample + " is already used by "+c.getBiosamples());
 					if(c==null) cid2container.put(containerId, biosample.getContainer());
 				}
 
-				//Unset the container for abstract samples
+				//Remove container of abstract samples
 				if(biosample.getBiotype().isAbstract()) {
 					biosample.setContainer(null);
 				}
 			}
-
 		}
-
-		/*
-		// Test uniqueness of the sampleId
-		//Load samples from the DB with the same sampleIds, and exclude the samples to be saved
-		List<Object[]> existingSamplesList = session.createQuery("select b.sampleId, b.id from Biosample b where " + QueryTokenizer.expandForIn("b.sampleId", Biosample.getSampleIds(biosamples))).getResultList();
-		Map<String, Integer> existingSamples = new HashMap<>();
-		Set<Integer> idsToSave = new HashSet<>(JPAUtil.getIds(biosamples));
-		for (Object[] a : existingSamplesList) {
-			String sampleId = (String) a[0];
-			int id = (Integer) a[1];
-			if(!idsToSave.contains(id)) {
-				existingSamples.put(sampleId, id);
-			}
-		}
-		System.out.println("DAOBiosample.persistBiosamples() "+existingSamples);
-		for (Biosample biosample : biosamples) {
-
-			Integer checkUniqueId = existingSamples.get(biosample.getSampleId());// getBiosample(biosample.getSampleId());
-			if(checkUniqueId != null) {
-				if (biosample.getId()<=0) {
-					throw new Exception("The sampleId " + biosample.getSampleId() + " is present 2 times");
-				} else if (checkUniqueId.intValue() != biosample.getId()) {
-					throw new Exception("The sampleId " + biosample.getSampleId() + " is already present in the DB (cloning error?)");
-				}
-			}
-			existingSamples.put(biosample.getSampleId(), biosample.getId());
-		}
-		 */
-
 
 		for (Biosample b : res) {
-
 			List<Biosample> toCheck = new LinkedList<>();
 			toCheck.addAll(b.getChildren());
 			while(!toCheck.isEmpty()) {
@@ -1238,15 +1234,13 @@ public class DAOBiosample {
 
 			for (Biosample b : biosamples) {
 				if (b.getId() <= 0) continue;
-
-				//				ActionOwnership a = new ActionOwnership(b, toUser.getUsername());
-				//				b.addAction(a);
 				b.setUpdUser(user.getUsername());
 				b.setUpdDate(now);
 				b.setCreUser(toUser.getUsername());
 				b.setEmployeeGroup(toUser.getMainGroup());
-				//				session.persist(a);
-				session.merge(b);
+				if(!session.contains(b)) {
+					session.merge(b);
+				}
 			}
 
 			txn.commit();

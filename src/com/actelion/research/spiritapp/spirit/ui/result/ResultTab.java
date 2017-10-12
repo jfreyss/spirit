@@ -41,17 +41,14 @@ import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 
 public class ResultTab extends SpiritTab {
 
 	private final ResultSearchPane searchPane;
 
-	//	private JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
 	private final GraphPanelWithResults graphPanel;
-	//	private final PivotPanel pivotPanel;
-
-	//	private final JPanel center = new JPanel(new BorderLayout());
 	private List<Result> results = new ArrayList<>();
 
 	public ResultTab(SpiritFrame frame) {
@@ -63,27 +60,17 @@ public class ResultTab extends SpiritTab {
 
 		this.searchPane = new ResultSearchPane(this, forcedBiotype);
 		this.graphPanel = new GraphPanelWithResults();
-		//		this.pivotPanel = new PivotPanel(true, null, null);
-
-		//		tabbedPane.add("Graphical", graphPanel);
-		//		tabbedPane.add("All Data", pivotPanel);
-		//
-		//		tabbedPane.addChangeListener(e-> {
-		//			refreshResults();
-		//		});
 
 		JPanel queryPanel = new JPanel(new BorderLayout());
 		queryPanel.add(BorderLayout.CENTER, searchPane);
 
-		JSplitPane contentPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, queryPanel, UIUtils.createBox(graphPanel, createButtonsPanel()));
+		JSplitPane contentPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, queryPanel, UIUtils.createBox(graphPanel, createButtonsPanel()));
 		contentPane.setDividerLocation(300);
-		contentPane.setOneTouchExpandable(true);
 
 
 		setLayout(new BorderLayout());
 		add(BorderLayout.CENTER, contentPane);
 
-		//		ResultActions.attachPopup(pivotPanel.getPivotTable());
 		ResultActions.attachPopup(graphPanel.getPivotTable());
 
 		searchPane.addPropertyChangeListener(evt-> {
@@ -112,29 +99,22 @@ public class ResultTab extends SpiritTab {
 	}
 
 	private void refreshResults() {
-		//		if(tabbedPane.getSelectedIndex()==0) {
-		graphPanel.setResults(results);
-		//		} else {
-		//			pivotPanel.setResults(results);
-		//		}
+		graphPanel.setResults(results, true);
 	}
 
 	public void query(ResultQuery q, int graphIndex) {
 		searchPane.setQuery(q).afterDone(() -> {
 			if(graphIndex>=0) {
-				//				tabbedPane.setSelectedIndex(0);
 				graphPanel.getGraphPanel().setSelectedIndex(graphIndex);
 			}
 		});
 	}
 
 	public void setCurrentPivotTemplate(PivotTemplate pivotTemplate) {
-		//		pivotPanel.setCurrentPivotTemplate(pivotTemplate);
 		graphPanel.setPivotTemplate(pivotTemplate);
 	}
 
 	public void setDefaultTemplates(PivotTemplate[] pivotTemplates) {
-		//		pivotPanel.setDefaultTemplates(pivotTemplates);
 		graphPanel.setDefaultTemplates(pivotTemplates);
 	}
 

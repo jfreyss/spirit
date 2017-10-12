@@ -36,8 +36,14 @@ import com.actelion.research.util.ui.JObjectComboBox;
 public class TestComboBox extends JObjectComboBox<Test> {
 
 
-	public TestComboBox() {
+	private boolean showHidden;
 
+	public TestComboBox() {
+		this(false);
+	}
+
+	public TestComboBox(boolean showHidden) {
+		this.showHidden = showHidden;
 		addActionListener(e-> {
 			String test = getSelection()==null? null: getSelection().getName();
 			if(test!=null) {
@@ -61,7 +67,7 @@ public class TestComboBox extends JObjectComboBox<Test> {
 
 	@Override
 	public Collection<Test> getValues() {
-		return DAOTest.getTests();
+		return DAOTest.getTests(showHidden);
 	}
 
 	/**

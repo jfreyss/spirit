@@ -22,8 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.study.wizard.phase;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.util.ArrayList;
@@ -42,10 +40,11 @@ import javax.swing.JScrollPane;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
-import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyWizardDlg;
+import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyDesignDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.HelpBinder;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Phase;
@@ -55,9 +54,11 @@ import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
@@ -66,18 +67,18 @@ import com.actelion.research.util.ui.UIUtils;
 
 public class PhaseDlg extends JEscapeDialog {
 
-	private final StudyWizardDlg dlg;
+	private final StudyDesignDlg dlg;
 	private final Study study;
 
 	private JGenericComboBox<PhaseFormat> formatComboBox = new JGenericComboBox<PhaseFormat>(PhaseFormat.values(), false);
-	private JCustomTextField startingDayPicker = new JCustomTextField(JCustomTextField.DATE);
+	private JCustomTextField startingDayPicker = new JCustomTextField(CustomFieldType.DATE);
 
 	private JLabel startingDateLabel = new JLabel();
 
 	private PhaseEditTable phaseTable;
 	private int push = 0;
 
-	public PhaseDlg(final StudyWizardDlg dlg, final Study study) {
+	public PhaseDlg(final StudyDesignDlg dlg, final Study study) {
 		super(dlg, "Study Wizard - Edit Phases");
 		this.dlg = dlg;
 		this.study = study;
@@ -89,27 +90,24 @@ public class PhaseDlg extends JEscapeDialog {
 
 		//formatPanel
 		formatComboBox.setSelection(study.getPhaseFormat());
-		formatComboBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if(formatComboBox.getSelection()==study.getPhaseFormat()) return;
-				try {
-					for (Phase p : study.getPhases()) {
-						if(formatComboBox.getSelection()==PhaseFormat.NUMBER && (p.getMinutes()!=0 || p.getHours()!=0)) {
-							formatComboBox.setSelection(study.getPhaseFormat());
-							throw new Exception("You cannot change the format to " + PhaseFormat.NUMBER.getDescription() + " if you have hours or minutes in your phases");
-						}
+		formatComboBox.addActionListener(e-> {
+			if(formatComboBox.getSelection()==study.getPhaseFormat()) return;
+			try {
+				for (Phase p : study.getPhases()) {
+					if(formatComboBox.getSelection()==PhaseFormat.NUMBER && (p.getMinutes()!=0 || p.getHours()!=0)) {
+						formatComboBox.setSelection(study.getPhaseFormat());
+						throw new Exception("You cannot change the format to " + PhaseFormat.NUMBER.getDescription() + " if you have hours or minutes in your phases");
 					}
-					for (Phase p : study.getPhases()) {
-						p.setName(Phase.cleanName(p.getName(), formatComboBox.getSelection()));
-					}
-					study.setPhaseFormat(formatComboBox.getSelection());
-				} catch(Exception ex ) {
-					JExceptionDialog.showError(ex);
 				}
-				refresh();
-				dlg.refresh();
+				for (Phase p : study.getPhases()) {
+					p.setName(Phase.cleanName(p.getName(), formatComboBox.getSelection()));
+				}
+				study.setPhaseFormat(formatComboBox.getSelection());
+			} catch(Exception ex ) {
+				JExceptionDialog.showError(ex);
 			}
+			refresh();
+			dlg.refresh();
 		});
 
 		startingDayPicker.setTextDate(study.getFirstDate());
@@ -132,9 +130,11 @@ public class PhaseDlg extends JEscapeDialog {
 				}
 			}
 		});
+		boolean advanced = SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE);
 		JPanel formatPanel = UIUtils.createTable(
 				new JLabel("Phase Format: "), formatComboBox,
-				new JLabel("Starting Date (opt.): "), startingDayPicker);
+				(advanced? new JLabel("Starting Date (opt.): "): null), (advanced? startingDayPicker: null));
+
 
 
 		refresh();
@@ -147,32 +147,23 @@ public class PhaseDlg extends JEscapeDialog {
 		});
 
 		JButton addButton = new JButton("Add Phases");
-		addButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				new PhaseAddDlg(PhaseDlg.this);
-				refresh();
-			}
+		addButton.addActionListener(e-> {
+			new PhaseAddDlg(PhaseDlg.this);
+			refresh();
 		});
 		JButton removeButton = new JButton("Remove");
-		removeButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					phaseTable.getModel().getRows().removeAll(phaseTable.getSelection());
-					phaseTable.getModel().fireTableDataChanged();
-					synchroTable();
-				} catch(Exception ex) {
-					JExceptionDialog.showError(PhaseDlg.this, ex);
-				}
+		removeButton.addActionListener(e-> {
+			try {
+				phaseTable.getModel().getRows().removeAll(phaseTable.getSelection());
+				phaseTable.getModel().fireTableDataChanged();
+				synchroTable();
+			} catch(Exception ex) {
+				JExceptionDialog.showError(PhaseDlg.this, ex);
 			}
 		});
 		JButton selectEmpty = new JButton("Select Empty Phases");
-		selectEmpty.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				selectEmpty();
-			}
+		selectEmpty.addActionListener(e-> {
+			selectEmpty();
 		});
 		//ContentPane
 		add(BorderLayout.CENTER, UIUtils.createBox(
@@ -197,7 +188,6 @@ public class PhaseDlg extends JEscapeDialog {
 		setVisible(true);
 	}
 
-
 	public Study getStudy() {
 		return study;
 	}
@@ -205,7 +195,6 @@ public class PhaseDlg extends JEscapeDialog {
 	private void synchroTable() {
 		if(push>0) return;
 		List<Phase> rows = phaseTable.getNonEmptyRows();
-		System.out.println("PhaseDlg.synchroTable() rows="+rows);
 		try {
 			//Add new phases
 			Set<Phase> newPhases = new HashSet<>(rows);
@@ -218,9 +207,6 @@ public class PhaseDlg extends JEscapeDialog {
 			Set<Phase> removePhases = new HashSet<>(study.getPhases());
 			removePhases.removeAll(rows);
 			removePhases(removePhases);
-
-
-			System.out.println("PhaseDlg.synchroTable() newPhases="+newPhases+" removePhases="+removePhases+" phases="+study.getPhases());
 
 			//Sort phases
 			study.setStartingDate(startingDayPicker.getTextDate());
@@ -274,7 +260,6 @@ public class PhaseDlg extends JEscapeDialog {
 	}
 
 	private void removePhases(Collection<Phase> phases) throws Exception {
-
 		//Test that the user can delete the phase
 		for(Phase phase: phases) {
 			checkCanDelete(phase);
@@ -284,7 +269,6 @@ public class PhaseDlg extends JEscapeDialog {
 		for(Phase phase: phases) {
 			phase.remove();
 		}
-
 	}
 
 	public void refresh() {

@@ -33,19 +33,16 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 public class LastChangeColumn extends Column<Biosample, String> {
 
-	public static int revId;
+	public final int revId;
 
-	public LastChangeColumn() {
-		super("Audit\nLast Change", String.class, 120);
-		revId = -1;
+	public LastChangeColumn(int revId) {
+		super("Audit Trail\nLast Change", String.class, 120);
+		this.revId = revId;
 	}
 
-	public static void setRevId(int revId) {
-		LastChangeColumn.revId = revId;
-	}
-
-	public static int getRevId() {
-		return revId;
+	@Override
+	public String getToolTipText() {
+		return revId>0?"At Revision "+revId:"Last Change";
 	}
 
 	@Override
@@ -56,25 +53,26 @@ public class LastChangeColumn extends Column<Biosample, String> {
 		if(SpiritRights.isBlind(b.getInheritedStudy(), Spirit.getUser())) return "Blind";
 		StringBuilder sb = new StringBuilder();
 		try {
-			List<Revision> revisions = DAORevision.getRevisions(b, revId);
-			for (int i = 0; i < revisions.size(); i++) {
-				Revision rev = revisions.get(i);
+			//Load all revisions of the object
+			List<Revision> revisions = DAORevision.getLastRevisions(b, revId, 2);
+			if(revisions.size()==0) return "";
+			String diff;
+			Revision rev0 = revisions.get(0);
+			if(revisions.size()<2) {
+				diff = "First version";
+			} else {
+				Revision rev1 = revisions.get(1);
+				if(revId>0 && rev0.getRevId()!=revId) return "Rev was "+rev0.getRevId()+" expected "+revId+ "(second is"+(revisions.size()<1?"":rev0.getRevId());
 
-				String diff;
-				Biosample b1 = revisions.get(i).getBiosamples().get(0);
-				if(i+1<revisions.size()) {
-					Biosample b2 = revisions.get(i+1).getBiosamples().get(0);
-					diff = b1.getDifference(b2);
-				} else {
-					Biosample b2 = revisions.get(0).getBiosamples().get(0);
-					diff = b1.getDifference(b2);
-					if(diff.length()==0) diff = "First version";
-				}
+				//Find the first difference
+				Biosample b1 = rev0.getBiosamples().get(0);
+				Biosample b2 = rev1.getBiosamples().get(0);
+				diff = b1.getDifference(b2);
+			}
 
-				if(revId<0 && diff.length()==0) continue;
-				sb.append("<B>" + FormatterUtils.formatDateTimeShort(rev.getDate()) + " - " + rev.getUser() + "\n");
+			if(revId>0 || diff.length()>0) {
+				sb.append("<B>" + rev0.getRevId() + " " + FormatterUtils.formatDateTimeShort(rev0.getDate()) + " - " + rev0.getUser() + "\n");
 				sb.append(diff.replace(";", "\n"));
-				break;
 			}
 		} catch(Exception e) {
 			e.printStackTrace();

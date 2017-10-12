@@ -21,6 +21,7 @@
 
 package com.actelion.research.spiritcore.test;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,10 +36,25 @@ import com.actelion.research.spiritcore.services.StringEncrypter;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ArgumentParser;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.FormatterUtils;
+import com.actelion.research.util.FormatterUtils.DateTimeFormat;
 
 import junit.framework.AssertionFailedError;
 
 public class UtilsTest {
+
+
+	@Test
+	public void testLongestSubstring() {
+		Assert.assertEquals("Test:", MiscUtils.lcs("Test:A1", "Test:B2"));
+		Assert.assertEquals("Test:1", MiscUtils.lcs("Test:A1", "Test:B1"));
+		Assert.assertEquals("Test:10", MiscUtils.lcs("Test:A10", "Test:B10"));
+	}
+
+	@Test
+	public void testStartDigits() {
+		Assert.assertEquals("124", MiscUtils.extractStartDigits("124B12"));
+	}
 
 
 	@Test
@@ -247,11 +263,31 @@ public class UtilsTest {
 		Assert.assertEquals("added Roman", MiscUtils.diffCollectionsSummary(l1, MiscUtils.listOf("Joel", "Antony"), null));
 		Assert.assertEquals("removed Thomas", MiscUtils.diffCollectionsSummary(l1, MiscUtils.listOf("Joel", "Antony", "Roman", "Thomas"), null));
 		Assert.assertEquals("updated", MiscUtils.diffCollectionsSummary(l1, MiscUtils.listOf("Joel", "Antony", "ROMAN"), null));
+	}
 
-		//		class G {
-		//			int id; String name;
-		//			G(int id, String)
-		//		}
+	@Test
+	public void testDateFormat() throws Exception {
+		SimpleDateFormat df = new SimpleDateFormat("yy");
+		df.setLenient(false);
+
+		df.parse("45-48");
+
+		FormatterUtils.setLocaleFormat(DateTimeFormat.EUROPEAN);
+		Assert.assertEquals("10/11/2017", FormatterUtils.cleanDate("10/11/17"));
+		Assert.assertEquals("10/11/2017", FormatterUtils.cleanDate("10/11/2017"));
+		Assert.assertEquals("10/11/2017", FormatterUtils.cleanDate("10.11.2017"));
+		Assert.assertEquals("01/01/2017", FormatterUtils.cleanDate("2017"));
+		Assert.assertEquals("01/05/2017", FormatterUtils.cleanDate("5/17"));
+		Assert.assertEquals(null, FormatterUtils.cleanDate("5-17"));
+
+		FormatterUtils.setLocaleFormat(DateTimeFormat.SWISS);
+		Assert.assertEquals("01.05.2017", FormatterUtils.cleanDate("5.17"));
+		Assert.assertEquals(null, FormatterUtils.cleanDate("5-17"));
+
+		FormatterUtils.setLocaleFormat(DateTimeFormat.INTL);
+		Assert.assertEquals("2017-05-01", FormatterUtils.cleanDate("2017-5-1"));
+		Assert.assertEquals("2017-05-01", FormatterUtils.cleanDate("17-5"));
+
 	}
 
 }

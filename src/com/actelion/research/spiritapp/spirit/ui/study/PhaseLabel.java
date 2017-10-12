@@ -26,21 +26,19 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
-import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.util.ui.FastFont;
-import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.exceltable.JComponentNoRepaint;
 
 public class PhaseLabel extends JComponentNoRepaint {
 
-	private Color groupColor;
+	//	private Color groupColor;
 	private String phaseLabel;
 	private String shortName;
-	
+
 	private Dimension dim = new Dimension();
-	
+
 	public PhaseLabel() {
 		setMinimumSize(new Dimension(40, 22));
 	}
@@ -48,43 +46,43 @@ public class PhaseLabel extends JComponentNoRepaint {
 		this();
 		setPhase(phase, group);
 	}
-		
+
 	public void setPhase(Phase phase) {
 		setPhase(phase, null);
 	}
-	
-	
+
+
 	@Override
 	public Dimension getPreferredSize() {
 		dim.width = getFontMetrics(FastFont.REGULAR).stringWidth(shortName==null?"":shortName);
 		dim.height = 22;
 		return dim;
 	}
-	
-	public void setPhase(Phase phase, Group group) {		
-		this.groupColor = group==null? null: group.getBlindedColor(SpiritFrame.getUsername());
+
+	public void setPhase(Phase phase, Group group) {
+		//		this.groupColor = group==null? null: group.getBlindedColor(SpiritFrame.getUsername());
 		this.shortName  = phase==null? null: phase.getShortName();
 		this.phaseLabel = phase==null? null: phase.getLabel();
 	}
-	
+
 	@Override
-	protected void paintComponent(Graphics graphics) {	
+	protected void paintComponent(Graphics graphics) {
 		Graphics2D g = (Graphics2D) graphics;
 		super.paintComponent(g);
 		int width = getWidth();
 		int height = getHeight();
 		if(isOpaque()) {
 			Color bgColor = getBackground();
-			if(groupColor!=null) {
-				bgColor = UIUtils.getDilutedColor(getBackground(), groupColor);
-			}
+			//			if(groupColor!=null) {
+			//				bgColor = UIUtils.getDilutedColor(getBackground(), groupColor);
+			//			}
 			g.setBackground(bgColor);
 			g.clearRect(0, 0, width, height);
 		}
-		
+
 		if(shortName==null || !isVisible()) return;
-		
-		
+
+
 		if(phaseLabel==null || phaseLabel.length()==0) {
 			g.setFont(FastFont.REGULAR);
 			g.setColor(getForeground());
@@ -97,7 +95,7 @@ public class PhaseLabel extends JComponentNoRepaint {
 			g.setFont(FastFont.REGULAR);
 			g.setColor(getForeground());
 			g.drawString(shortName, 2, FastFont.REGULAR.getSize()-1);
-			
+
 		}
 	}
 }

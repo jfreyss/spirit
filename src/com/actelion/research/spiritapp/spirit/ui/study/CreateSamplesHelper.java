@@ -52,11 +52,13 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
 import com.actelion.research.spiritcore.business.biosample.Status;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBarcode;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.helper.BiosampleCreationHelper;
 import com.actelion.research.spiritcore.util.ListHashMap;
 import com.actelion.research.util.ui.FastFont;
@@ -81,6 +83,7 @@ public class CreateSamplesHelper {
 	public static boolean synchronizeSamples(Study study) throws Exception {
 
 		if(study==null) return true;
+		if(!SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)) return true;
 		if(!study.isSynchronizeSamples()) return true;
 
 		//Check user rights, read access is enough, because this function only mimics what is in the design.
@@ -104,9 +107,9 @@ public class CreateSamplesHelper {
 			////////////////////////////////////////
 
 			//Check dividing samples to be added
-			List<Biosample> dividingBiosamplesToRemove = new ArrayList<Biosample>();
-			toAdd.addAll(BiosampleCreationHelper.processDividingSamples(study, dividingBiosamplesToRemove));
-			toDelete.addAll(dividingBiosamplesToRemove);
+			//			List<Biosample> dividingBiosamplesToRemove = new ArrayList<Biosample>();
+			//			toAdd.addAll(BiosampleCreationHelper.processDividingSamples(study, dividingBiosamplesToRemove));
+			//			toDelete.addAll(dividingBiosamplesToRemove);
 
 			//First filter: Find which ones must be deleted or created based on their status and their existence
 			for (Biosample b : allNeeded) {
@@ -134,7 +137,7 @@ public class CreateSamplesHelper {
 
 			////////////////////////////////////////
 			//Check samples to be deleted
-			for(Biosample top: study.getTopAttachedBiosamples()) {
+			for(Biosample top: study.getTopParticipants()) {
 				//Skip dead/necropsied/...
 				if(!top.getStatus().isAvailable()) continue;
 

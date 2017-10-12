@@ -102,7 +102,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 			return;
 		}
 
-		List<Biosample> biosamples = new ArrayList<>(study.getAttachedBiosamples());
+		List<Biosample> biosamples = new ArrayList<>(study.getParticipants());
 		Collections.sort(biosamples);
 
 
@@ -259,7 +259,7 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 		if(replacement!=null && animals.size()>1) throw new Exception("You can only set a replacement if you select one sample");
 
 		//Validate DOD
-		Date dod = FormatterUtils.parseDate(dateField.getText());
+		Date dod = FormatterUtils.parseDateTime(dateField.getText());
 		if(dateField.getText().length()>0 && dod==null) throw new Exception("You must give a valid date of death");
 
 		//Validate Phase (mandatory for dead, killed, necropsy

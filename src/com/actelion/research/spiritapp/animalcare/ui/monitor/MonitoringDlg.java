@@ -26,7 +26,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -75,7 +74,9 @@ import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
+import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 
 public class MonitoringDlg extends JEscapeDialog {
 
@@ -111,7 +112,7 @@ public class MonitoringDlg extends JEscapeDialog {
 
 		this.phase = p;
 		this.study = JPAUtil.reattach(phase.getStudy());
-		List<Biosample> animals = study.getTopAttachedBiosamples();
+		List<Biosample> animals = study.getTopParticipants();
 		this.elb = DAOResult.suggestElb(SpiritFrame.getUsername());
 
 		// Reload results
@@ -123,17 +124,18 @@ public class MonitoringDlg extends JEscapeDialog {
 		}
 
 		// Filter Components
-		ActionListener queryListener = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				updateFilters();
-				updateView();
-			}
+		ActionListener queryListener = e-> {
+			updateFilters();
+			updateView();
+		};
+		TextChangeListener textListener = e-> {
+			updateFilters();
+			updateView();
 		};
 		cageComboBox = new ContainerComboBox();
 		treatmentComboBox = new NamedTreatmentComboBox(getNamedTreatments(), "");
 		treatmentComboBox.setEnabled(!SpiritRights.isBlindAll(study, SpiritFrame.getUser()));
-		cageComboBox.addActionListener(queryListener);
+		cageComboBox.addTextChangeListener(textListener);
 		treatmentComboBox.addActionListener(queryListener);
 		onlyRequiredCheckBox.addActionListener(queryListener);
 		sortComboBox1.addActionListener(queryListener);
@@ -175,7 +177,7 @@ public class MonitoringDlg extends JEscapeDialog {
 		animalSp.add(BorderLayout.CENTER, sp2);
 		animalSp.setMinimumSize(new Dimension(0,0));
 
-		splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, cageSp, animalSp);
+		splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, cageSp, animalSp);
 		splitPane.setDividerLocation(250);
 		splitPane.setOneTouchExpandable(true);
 
@@ -209,7 +211,7 @@ public class MonitoringDlg extends JEscapeDialog {
 		NamedTreatment filterTreatment = treatmentComboBox.getSelection();
 
 		Set<Container> cages = new TreeSet<>();
-		for (Biosample animal : study.getTopAttachedBiosamples()) {
+		for (Biosample animal : study.getTopParticipants()) {
 			StudyAction a = animal.getStudyAction(phase);
 			if (filterTreatment != null) {
 				if (filterTreatment.getId() <= 0 && a != null && a.getNamedTreatment() != null)
@@ -224,7 +226,7 @@ public class MonitoringDlg extends JEscapeDialog {
 				cages.add(animal.getContainer());
 		}
 
-		cageComboBox.setValues(cages, true);
+		cageComboBox.setValues(cages);
 	}
 
 	private void updateView() {
@@ -236,7 +238,7 @@ public class MonitoringDlg extends JEscapeDialog {
 		// Apply filters
 		List<Biosample> filteredAnimals = new ArrayList<>();
 		List<Container> filteredContainers = new ArrayList<>();
-		for (Biosample animal : study.getTopAttachedBiosamples()) {
+		for (Biosample animal : study.getTopParticipants()) {
 			StudyAction a = animal.getStudyAction(phase);
 			if (filterTreatment != null) {
 				if (filterTreatment.getId() <= 0 && a != null && a.getNamedTreatment() != null)
@@ -433,7 +435,7 @@ public class MonitoringDlg extends JEscapeDialog {
 	public static List<FoodWater> getOrCreateFoodWaterFor(Phase phase) {
 		List<FoodWater> fwsFromGivenPhase = DAOFoodWater.getFoodWater(phase.getStudy(), phase);
 		List<FoodWater> res = new ArrayList<FoodWater>();
-		for (Container cage: Biosample.getContainers(phase.getStudy().getTopAttachedBiosamples())) {
+		for (Container cage: Biosample.getContainers(phase.getStudy().getTopParticipants())) {
 
 			//Create or retrieve a row for this cage/phase
 			FoodWater sel = null;

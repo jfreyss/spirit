@@ -25,6 +25,7 @@ import java.awt.Component;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdBrowser;
@@ -34,8 +35,10 @@ import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 
 public class BiosampleIdCellEditor extends AbstractCellEditor implements TableCellEditor {
 	private final SampleIdBrowser sampleIdBrowser;
+
 	public BiosampleIdCellEditor(Biotype forcedBiotype) {
-		sampleIdBrowser = new SampleIdBrowser(forcedBiotype);			
+		sampleIdBrowser = new SampleIdBrowser(forcedBiotype);
+		sampleIdBrowser.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
 
 	@Override
@@ -50,5 +53,5 @@ public class BiosampleIdCellEditor extends AbstractCellEditor implements TableCe
 		sampleIdBrowser.selectAll();
 		return sampleIdBrowser;
 	}
-	
+
 }

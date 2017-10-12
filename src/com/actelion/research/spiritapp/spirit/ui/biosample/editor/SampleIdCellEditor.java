@@ -25,6 +25,7 @@ import java.awt.Component;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdGenerateField;
@@ -33,23 +34,21 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 
 /**
  * SampleIdGenerateEditor
- * 
+ *
  * Editor for a scanned or generated biosample (underlyingvalue is a sampleId as string).
- * 
+ *
  * @author freyssj
  *
  */
 public class SampleIdCellEditor extends AbstractCellEditor implements TableCellEditor {
 
-	
-	
-	private SampleIdGenerateField<Biosample> scanTextField;
-	
+	private SampleIdGenerateField<Biosample> scanTextField = new SampleIdGenerateField<>();
+
 	public SampleIdCellEditor() {
-		scanTextField = new SampleIdGenerateField<Biosample>();
+		scanTextField.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
-	
-	
+
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
@@ -64,7 +63,8 @@ public class SampleIdCellEditor extends AbstractCellEditor implements TableCellE
 	@Override
 	public Object getCellEditorValue() {
 		return scanTextField.getSampleId();
-	}		
+	}
+
 	public String generateSampleIdFor(Biosample row) {
 		return scanTextField.generateSampleIdFor(row, row.getBiotype()==null?"INT": row.getBiotype().getPrefix());
 	}

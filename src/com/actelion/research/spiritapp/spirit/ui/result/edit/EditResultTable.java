@@ -55,14 +55,14 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 
 /**
  * Excel like table to edit results
- * 
+ *
  * @author Joel Freyss
  *
  */
 public class EditResultTable extends SpiritExcelTable<Result>  {
-	
+
 	private EditResultDlg dlg;
-	
+
 	/**
 	 * Constructor
 	 */
@@ -70,7 +70,7 @@ public class EditResultTable extends SpiritExcelTable<Result>  {
 		super(new EditResultTableModel());
 		this.dlg = dlg;
 	}
-	
+
 	@Override
 	public EditResultTableModel getModel() {
 		return (EditResultTableModel) super.getModel();
@@ -80,33 +80,33 @@ public class EditResultTable extends SpiritExcelTable<Result>  {
 		//Update the results to the new test
 		for(Result r: getModel().getRows()) {
 			r.setTest(test);
-		}		
+		}
 		if(getModel().getRows().size()==0 && test!=null) {
 			List<Result> results = new ArrayList<>();
 			results.add(new Result(test));
-			getModel().setRows(results);			
+			getModel().setRows(results);
 		}
-		
+
 		//update the test
 		getModel().setTest(test);
-		
+
 		Set<Biosample> biosamples = Result.getBiosamples(getModel().getRows());
 		Set<Biosample> topIds = Biosample.getTopParentsInSameStudy(biosamples);
 		boolean differentParent = Collections.disjoint(biosamples, topIds);
-		
-		
+
+
 		//Recreate the columns
 		List<Column<Result,?>> columns = new ArrayList<>();
 		if(test!=null) {
-			
+
 			columns.add(getModel().COLUMN_ROWNO);
-			columns.add(new ElbColumn());
-			
-			
+			columns.add(new ElbColumn().setHideable(Result.getElbs(getRows()).size()<=1));
+
+
 			columns.add(new TopIdColumn().setHideable(!differentParent));
 			columns.add(new SampleIdColumn());
 			columns.add(new PhaseColumn());
-			
+
 			for (final TestAttribute att : test.getAttributes()) {
 				if(att.getDataType()==DataType.D_FILE || att.getDataType()==DataType.FILES) {
 					columns.add(new DocumentColumn(att));
@@ -114,59 +114,59 @@ public class EditResultTable extends SpiritExcelTable<Result>  {
 					columns.add(new AttributeColumn(att));
 				}
 			}
-			
-			columns.add(new CommentsColumn());			
+
+			columns.add(new CommentsColumn());
 			columns.add(new QualityColumn());
 			columns.add(new CreationColumn(true).setHideable(true));
 			columns.add(new CreationColumn(false));
-			
+
 		}
 		getModel().setColumns(columns);
 		getModel().showAllHideable(false);
 		resetPreferredColumnWidth();
-		
+
 	}
-	
+
 	@Override
 	protected void populateHeaderPopup(JPopupMenu popupMenu, Column<Result, ?> column) {
-		
+
 		popupMenu.add(new JSeparator());
-		
+
 		if(column instanceof AttributeColumn) {
 			AttributeColumn attColumn = (AttributeColumn) column;
 			if(attColumn.getAttribute().getDataType()==DataType.LIST) {
 				List<String> options = Arrays.asList(attColumn.getAttribute().getParametersArray());
-				popupMenu.add(new FillCellAction(this, column, options));				
+				popupMenu.add(new FillCellAction(this, column, options));
 			} else {
 				popupMenu.add(new FillCellAction(this, column));
 			}
-		} else { 
+		} else {
 			popupMenu.add(new FillCellAction(this, column));
-		}		
+		}
 	}
-	
+
 	@Override
 	protected void pasteSelection() {
 		Test test = getModel().getTest();
-		
+
 		//Check if we paste a pivot table
 		String paste = EasyClipboard.getClipboard();
 		if(paste==null) return;
-		
+
 		String[][] table = POIUtils.convertTable(paste);
-		
+
 		if(DEBUG) System.out.println("ExcelTable: Paste "+paste);
 		if(table.length==0) return;
-		
+
 		if(table.length>0 && dlg!=null) {
-			
+
 			//Analyze first row
 			boolean isPivot = table[0].length>getColumnCount();
 			for (int i = 0; !isPivot && i < table[0].length; i++) {
 				String s = table[0][i].replace(" ", "");
 				if(s.equalsIgnoreCase("sampleid") || s.equalsIgnoreCase("animalid") || s.equalsIgnoreCase("phase")) isPivot = true;
 			}
-			
+
 			//Ask to pivot
 			if(isPivot) {
 				int res = JOptionPane.showConfirmDialog(getParent(), "Are you pasting a pivoted table?", "Pivot Table?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, IconType.PIVOT.getIcon());
@@ -180,11 +180,11 @@ public class EditResultTable extends SpiritExcelTable<Result>  {
 					}
 					return;
 				}
-			} 
+			}
 		}
-			
-		
-		
+
+
+
 		Exception exception = null;
 		try {
 			super.pasteSelection();
@@ -192,16 +192,16 @@ public class EditResultTable extends SpiritExcelTable<Result>  {
 			exception = ex;
 		}
 
-		
+
 		if(exception!=null && dlg==null) {
 			JExceptionDialog.showError(EditResultTable.this, exception);
 		} else if(exception!=null) {
 			JOptionPane.showMessageDialog(EditResultTable.this, "Pasting data returned some errors:\n"+exception.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
-		
+
 	}
-	
-	
+
+
 	@Override
 	public void setRows(List<Result> data) {
 		for (Result result : data) {

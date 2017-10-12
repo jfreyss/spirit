@@ -39,7 +39,7 @@ import com.actelion.research.util.ui.exceltable.Column;
 public class ResultColumn extends Column<Biosample, String> {
 
 	public ResultColumn() {
-		super("Linked\nResults", String.class, 80);
+		super("Data\nResults", String.class, 80);
 	}
 	@Override
 	public float getSortingKey() {return 20.2f;}
@@ -58,8 +58,6 @@ public class ResultColumn extends Column<Biosample, String> {
 			e.printStackTrace();
 			return e.toString();
 		}
-
-
 
 		Set<Test> tests = Result.getTests(results);
 		if(tests.size()>1) {

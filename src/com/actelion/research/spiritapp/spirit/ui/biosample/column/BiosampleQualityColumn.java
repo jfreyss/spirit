@@ -31,10 +31,10 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
-public class BioQualityColumn extends Column<Biosample, Quality> {
+public class BiosampleQualityColumn extends Column<Biosample, Quality> {
 
-	public BioQualityColumn() {
-		super("Quality", Quality.class, 40);
+	public BiosampleQualityColumn() {
+		super("Sample\nQuality", Quality.class, 40);
 	}
 	@Override
 	public float getSortingKey() {

@@ -37,6 +37,7 @@ import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
@@ -44,7 +45,7 @@ import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class EmployeeGroupEditDlg extends JSpiritEscapeDialog {
 
-	private JCustomTextField nameField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 25);
+	private JCustomTextField nameField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 25);
 	private EmployeeGroupComboBox parentComboBox = new EmployeeGroupComboBox(true);
 	private EmployeeGroup group;
 
@@ -65,13 +66,13 @@ public class EmployeeGroupEditDlg extends JSpiritEscapeDialog {
 			try {
 				group.setName(nameField.getText());
 				group.setParent(parentComboBox.getSelection());
-
 				DAOEmployee.persistEmployeeGroups(Collections.singleton(group), SpiritFrame.getUser());
 				dispose();
 			} catch (Exception e) {
 				JExceptionDialog.showError(e);
 			}
 		});
+
 
 		JPanel contentPane = new JPanel(new BorderLayout());
 		contentPane.add(BorderLayout.CENTER, centerPane);

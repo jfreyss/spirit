@@ -23,11 +23,8 @@ package com.actelion.research.spiritapp.animalcare.ui.randomize;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -66,8 +63,7 @@ public class CageTab extends WizardPanel {
 	public CageTab(final RandomizationDlg dlg) {
 		super(new BorderLayout());
 		this.dlg = dlg;
-		
-		
+
 		//North Panel
 		JPanel selectCagesPanel = new JPanel(new GridLayout(1, 9, 2,0));
 		selectCagesPanel.setOpaque(false);
@@ -78,55 +74,50 @@ public class CageTab extends WizardPanel {
 			buttonGroup.add(b);
 			nButtons.add(b);
 			final int maxAnimals = i;
-			b.addActionListener(new ActionListener() {				
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					try {
-						reassignCages(maxAnimals, reuseCagesCheckbox.isEnabled() && reuseCagesCheckbox.isSelected());
-						refreshTables();
-					} catch (Exception ex) {
-						ex.printStackTrace();
-						JExceptionDialog.showError(CageTab.this, "Could not assign "+maxAnimals+" per cage");
-					}
-
+			b.addActionListener(e-> {
+				try {
+					reassignCages(maxAnimals, reuseCagesCheckbox.isEnabled() && reuseCagesCheckbox.isSelected());
+					refreshTables();
+				} catch (Exception ex) {
+					JExceptionDialog.showError(CageTab.this, "Could not assign "+maxAnimals+" per cage");
 				}
 			});
 		}
-		
+
 
 		JPanel northPanel = UIUtils.createTitleBox("", UIUtils.createVerticalBox(
 				UIUtils.createHorizontalBox(reuseCagesCheckbox, Box.createHorizontalGlue()),
 				UIUtils.createHorizontalBox(new JLabel("Maximal number per cage: "), selectCagesPanel, Box.createHorizontalGlue())));
-		
-		
+
+
 
 		//CenterPanel
 		add(BorderLayout.NORTH, northPanel);
 		add(BorderLayout.CENTER, centerPanel);
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(/*dlg.createSaveButton(),*/ Box.createHorizontalGlue(), getNextButton()));
 	}
-	
+
 	private void reassignCages(int maxAnimalsPerCage, boolean reuseCages) throws Exception {
-		
+
 		if(maxAnimalsPerCage<1) return;
 
 		dlg.setMustAskForExit(true);
-		
-		List<Integer> groupIds = new ArrayList<Integer>();
-		for (Group g : groups) groupIds.add((int)g.getId());
+
+		List<Integer> groupIds = new ArrayList<>();
+		for (Group g : groups) groupIds.add(g.getId());
 		groupIds.add(-1);
-		
+
 		List<AttachedBiosample> samples = dlg.getRandomization().getSamples();
 		Map<Integer, List<AttachedBiosample>> splits = RandomizationDlg.splitByGroup(samples);
-		
+
 		//Extract Biosamples
-		List<Biosample> toBeModified = new ArrayList<Biosample>();
+		List<Biosample> toBeModified = new ArrayList<>();
 		for (AttachedBiosample s : samples) if(s.getBiosample()!=null) toBeModified.add(s.getBiosample());
-		
+
 		//Get former cageNames
-		Set<String> reusableCageNames = new HashSet<String>();
-		Set<String> nonreusableCageNames = new HashSet<String>();
-		for(Biosample b: dlg.getStudy().getTopAttachedBiosamples()) {
+		Set<String> reusableCageNames = new HashSet<>();
+		Set<String> nonreusableCageNames = new HashSet<>();
+		for(Biosample b: dlg.getStudy().getTopParticipants()) {
 			if(b.getContainerId()==null || b.getContainerId()=="") continue;
 			if(toBeModified.contains(b)) {
 				if(reuseCages) {
@@ -138,10 +129,10 @@ public class CageTab extends WizardPanel {
 				nonreusableCageNames.add(b.getContainerId());
 			}
 		}
-		
-		
-		List<String> cageNamesPool = new ArrayList<String>(); 
-		cageNamesPool.addAll(reusableCageNames);		
+
+
+		List<String> cageNamesPool = new ArrayList<String>();
+		cageNamesPool.addAll(reusableCageNames);
 		cageNamesPool.removeAll(nonreusableCageNames);
 
 		//Create new cageNames
@@ -162,20 +153,16 @@ public class CageTab extends WizardPanel {
 				cageNamesPool.remove(b.getContainerId());
 			}
 		}
-		
-		
-		
-		//Sort by cageNo
-		Collections.sort(cageNamesPool, new Comparator<String>() {
-			@Override
-			public int compare(String o1, String o2) {
-				return CompareUtils.compare(o1, o2);
-			}
-		});
 
+
+
+		//Sort by cageNo
+		Collections.sort(cageNamesPool, (o1, o2) -> CompareUtils.compareSpecial(o1, o2));
+
+
+		System.out.println("CageTab.reassignCages() "+cageNamesPool);
 
 		int cageNo = 0;
-		
 		for(Integer groupId: groupIds) {
 			List<AttachedBiosample> list = splits.get(groupId);
 			if(list==null) continue;
@@ -186,22 +173,22 @@ public class CageTab extends WizardPanel {
 				int nInCage = (list.size()-index + nCages-i - 1) / (nCages-i);
 				//Assign the animals of this group
 				for (int j = 0; j < nInCage && index<list.size(); j++) {
-					String cageName = cageNamesPool.get(cageNo%cageNamesPool.size());					
+					String cageName = cageNamesPool.get(cageNo%cageNamesPool.size());
 					list.get(index).setContainerId(cageName);
 					index++;
 				}
 				cageNo++;
 			}
 		}
-		
+
 	}
-	
-	
+
+
 	@Override
 	public void updateModel(boolean allowDialogs) throws Exception {
-		//Nothing		
+		//Nothing
 	}
-		
+
 	@Override
 	public void updateView() {
 		//Create groupPanels
@@ -209,12 +196,12 @@ public class CageTab extends WizardPanel {
 		centerPanel.removeAll();
 		groupPanels.clear();
 		groups.clear();
-		
+
 		boolean canReuseCages = false;
 		for (Group gr : dlg.getGroups()) {
 			if(!dlg.getPhase().equals(gr.getFromPhase())) continue;
 			if(gr.getFromGroup()!=null) {
-				canReuseCages = true; 
+				canReuseCages = true;
 				if(!groups.contains(gr.getFromGroup())) groups.add(gr.getFromGroup());
 			}
 			groups.add(gr);
@@ -222,22 +209,22 @@ public class CageTab extends WizardPanel {
 
 		reuseCagesCheckbox.setEnabled(canReuseCages);
 		if(!reuseCagesCheckbox.isEnabled()) reuseCagesCheckbox.setSelected(false);
-		
+
 		JPanel nonReservePanel = new JPanel();
 		for (Group gr : groups) {
 			GroupPanel grPanel = new GroupPanel(dlg, gr, true, true);
 			groupPanels.add(grPanel);
 			nonReservePanel.add(grPanel);
-			
+
 		}
-		
-		int cols = Math.max(1, (centerPanel.getWidth()-PANEL_WIDTH)/PANEL_WIDTH);	
+
+		int cols = Math.max(1, (centerPanel.getWidth()-PANEL_WIDTH)/PANEL_WIDTH);
 		while(nonReservePanel.getComponentCount()<cols) nonReservePanel.add(new JPanel());
 		nonReservePanel.setLayout(new GridLayout(0, cols));
 
-		
+
 		//Reserve
-		GroupPanel grPanel = new GroupPanel(dlg, null, true, false);			
+		GroupPanel grPanel = new GroupPanel(dlg, null, true, false);
 		JPanel reservePanel = grPanel;
 		groupPanels.add(grPanel);
 
@@ -248,17 +235,17 @@ public class CageTab extends WizardPanel {
 		nonReservePanel.setAutoscrolls(true);
 		centerPanel.add(BorderLayout.CENTER, sp);
 		centerPanel.add(BorderLayout.EAST, reservePanel);
-		
-		
-		
+
+
+
 		refreshTables();
-		
+
 		validate();
-		
-		
-	
+
+
+
 	}
-	
+
 	public void refreshTables() {
 		for (GroupPanel groupPanel : groupPanels) {
 			Group g = groupPanel.getGroup();
@@ -269,7 +256,7 @@ public class CageTab extends WizardPanel {
 				}
 			}
 			Collections.sort(rows);
-			groupPanel.setRows(dlg.getRandomization(), rows);			
+			groupPanel.setRows(dlg.getRandomization(), rows);
 		}
 	}
 

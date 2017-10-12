@@ -51,6 +51,7 @@ import com.actelion.research.spiritcore.util.Config;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.JInfoLabel;
@@ -62,8 +63,8 @@ import com.actelion.research.util.ui.scanner.ScannerConfiguration;
 
 /**
  * Util class to scan tubes for Spirit.
- * 
- * 
+ *
+ *
  * @author freyssj
  *
  */
@@ -72,31 +73,31 @@ public class SpiritScanner {
 	public enum Verification {
 		NONE,
 		EMPTY_CONTAINERS,
-		EXISTING_CONTAINER;		
+		EXISTING_CONTAINER;
 	}
 
 	private static ScannerConfiguration defaultScannerConfiguration = ScannerConfiguration.SCANNER_CONFIGURATION_MATRIX_1_0PP;
 	private Verification verification = Verification.NONE;
-	 
+
 	/**
 	 * Return the ScannerConfiguration, which was selected by the user
 	 */
-	private ScannerConfiguration scannerConfiguration; 
+	private ScannerConfiguration scannerConfiguration;
 	private Location scannedRack = new Location();
 	private Location storedLocation = null;
-	
+
 	public SpiritScanner() {}
-	
+
 	public SpiritScanner(Verification verification) {
 		this.verification = verification;
 	}
-	
+
 
 	public static void setDefaultScannerConfiguration(ScannerConfiguration defaultScannerConfiguration) {
 		Config.getInstance(".spirit").setProperty("scannerConfig", defaultScannerConfiguration.name());
 		SpiritScanner.defaultScannerConfiguration = defaultScannerConfiguration;
 	}
-	
+
 	public static ScannerConfiguration getDefaultScannerConfiguration() {
 		String config = Config.getInstance(".spirit").getProperty("scannerConfig", defaultScannerConfiguration.name());
 		try {
@@ -104,16 +105,16 @@ public class SpiritScanner {
 		} catch(Exception e) {
 			return defaultScannerConfiguration;
 		}
-		
+
 	}
-	
+
 	public void setVerification(Verification verification) {
 		this.verification = verification;
 	}
 	public Verification getVerification() {
 		return verification;
 	}
-	
+
 	/**
 	 * Opens a dialog to ask which type of tubes
 	 * @return null if no configuration is selected, otherwise a new location containing the scanned tubes
@@ -122,58 +123,58 @@ public class SpiritScanner {
 	public Pair<ScannerConfiguration, Location> askForScannerConfAndLocation(boolean askLocation, Location defaultRackLocation) throws Exception {
 		//Check Scanner is installed
 		if(!FluidxScanner.isInstalled()) throw new Exception("Could not find the XTR96 Scanner");
-		
+
 		//find compatible scanner configuration for biosamples
-		List<ScannerConfiguration> configs = new ArrayList<ScannerConfiguration>();
+		List<ScannerConfiguration> configs = new ArrayList<>();
 		for (ScannerConfiguration c : ScannerConfiguration.values()) {
 			if(c.isAllowBiosamples() && c.getDefaultTubeType()!=null && ContainerType.get(c.getDefaultTubeType())!=null) {
 				configs.add(c);
 			}
 		}
 		configs.add(ScannerConfiguration.SCANNER_CONFIGURATION_OPENFILE);
-		
+
 		//Ask for type of rack to scan
 		JGenericComboBox<ScannerConfiguration> scannerConfComboBox = new JGenericComboBox<>(configs, false);
-		JCustomTextField rackNameTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 20);
+		JCustomTextField rackNameTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 20);
 		LocationBrowser locationBrowser = new LocationBrowser(LocationBrowserFilter.CONTAINER);
-		if(askLocation && defaultRackLocation!=null) rackNameTextField.setText(defaultRackLocation.getName()); 
-		if(askLocation && defaultRackLocation!=null) locationBrowser.setBioLocation(defaultRackLocation.getParent()); 
-		
+		if(askLocation && defaultRackLocation!=null) rackNameTextField.setText(defaultRackLocation.getName());
+		if(askLocation && defaultRackLocation!=null) locationBrowser.setBioLocation(defaultRackLocation.getParent());
+
 		JScrollPane locationSp = new JScrollPane(locationBrowser);
 		JPanel contentPanel = UIUtils.createBox(
 				UIUtils.createTable(3,
-					new JLabel("Rack Type: "), scannerConfComboBox, null, 
-					askLocation? new JLabel("Rack Name: "): null, askLocation? rackNameTextField: null, askLocation? new JInfoLabel(" optional to save the rack"): null,
-					askLocation? new JLabel("Location: "): null, askLocation? locationSp: null, null),
-					
+						new JLabel("Rack Type: "), scannerConfComboBox, null,
+						askLocation? new JLabel("Rack Name: "): null, askLocation? rackNameTextField: null, askLocation? new JInfoLabel(" optional to save the rack"): null,
+								askLocation? new JLabel("Location: "): null, askLocation? locationSp: null, null),
+
 				new JHeaderLabel("Scan Rack"));
 		locationSp.setPreferredSize(new Dimension(280, 70));
-				
-				
+
+
 		int res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(), contentPanel, "Scan", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
 		ScannerConfiguration scannerConf = scannerConfComboBox.getSelection();
 		if(res!=JOptionPane.YES_OPTION || scannerConf==null) return null;
-		
+
 		//Memo Contiguration
 		setDefaultScannerConfiguration(scannerConf);
-		
+
 		if(rackNameTextField.getText().trim().length()==0) {
 			defaultRackLocation = null;
 		} else {
 			defaultRackLocation = new Location(LocationType.RACK);
 			defaultRackLocation.setRows(scannerConf.getRows());
 			defaultRackLocation.setCols(scannerConf.getCols());
-			defaultRackLocation.setName(rackNameTextField.getText().trim());			
+			defaultRackLocation.setName(rackNameTextField.getText().trim());
 			defaultRackLocation.setLabeling(LocationLabeling.ALPHA);
 		}
 
-		
+
 		//Scan
 		return new Pair<ScannerConfiguration, Location>(scannerConf, defaultRackLocation);
-	}	
+	}
 
 	/**
-	 * Scan based on a containerType, 
+	 * Scan based on a containerType,
 	 * ie find or request the appropriate scannerconfiguration
 	 * @param containerType
 	 * @return
@@ -193,9 +194,9 @@ public class SpiritScanner {
 		} else  if(res.size()>0) {
 			config = res.iterator().next();
 		} else {
-			throw new Exception("There is no scanner definition for "+containerType);			
+			throw new Exception("There is no scanner definition for "+containerType);
 		}
-		
+
 		if(config!=null) return scan(config, false);
 		return null;
 	}
@@ -207,17 +208,17 @@ public class SpiritScanner {
 	 */
 	public Location scan(ScannerConfiguration scannerConfiguration, boolean allowRackName) throws Exception {
 		Location rackLocation = null;
-		
+
 		if(scannerConfiguration==null) {
 			Pair<ScannerConfiguration, Location> res = askForScannerConfAndLocation(allowRackName, rackLocation);
 			if(res==null) return null;
 			scannerConfiguration = res.getFirst();
 			if(allowRackName) rackLocation = res.getSecond();
 		}
-		
+
 		String tubeType = scannerConfiguration.getDefaultTubeType();
 		ContainerType containerType = tubeType==null? ContainerType.UNKNOWN: ContainerType.get(tubeType);
-		
+
 		List<Biosample> biosamples;
 		int rows, cols;
 		if(scannerConfiguration==ScannerConfiguration.SCANNER_CONFIGURATION_OPENFILE) {
@@ -244,7 +245,7 @@ public class SpiritScanner {
 						String pos = split[0].trim();
 						String id = split[1].trim();
 						containerIds.add(id);
-						if(pos2id.get(pos)!=null) throw new Exception("The position "+pos+" is duplicated"); 
+						if(pos2id.get(pos)!=null) throw new Exception("The position "+pos+" is duplicated");
 						pos2id.put(pos, id);
 					}
 					Map<String, List<Biosample>> map = Biosample.mapContainerId(DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForContainerIds(containerIds), null));
@@ -257,7 +258,7 @@ public class SpiritScanner {
 							b.setContainerId(tubeId);
 							b.setScannedPosition(pos);
 							biosamples.add(b);
-							
+
 						} else {
 							for (Biosample b : l) {
 								b.setScannedPosition(pos);
@@ -265,21 +266,21 @@ public class SpiritScanner {
 								biosamples.add(b);
 							}
 						}
-						
+
 					}
-					
+
 					done = true;
 				} catch(Exception e) {
 					JExceptionDialog.showError(e);
 				}
 			} while(!done);
-			
-			
+
+
 		} else {
 			//SCAN FROM CONFIGURATION
 			this.scannerConfiguration = scannerConfiguration;
-	
-			
+
+
 			//Verify NOREAD
 			Plate plate = new FluidxScanner().scanPlate(scannerConfiguration);
 			for(int i=0; i<plate.getTubes().size(); i++) {
@@ -287,26 +288,26 @@ public class SpiritScanner {
 					throw new Exception("The tube at "+plate.getTubes().get(i).getPosition()+" cannot be read");
 				}
 			}
-	
+
 			//Load existing containers
 			Map<String, List<Biosample>> map = Biosample.mapContainerId(DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForContainerIds(RackPos.getTubeIds(plate.getTubes())), null));
-			
+
 			//Gets containers
-			
+
 			biosamples = new ArrayList<>();
 			for (RackPos t : plate.getTubes()) {
 				String tubeId = t.getTubeId();
 				String pos = t.getPosition();
-				
+
 				List<Biosample> l = map.get(tubeId);
 				if(l==null) {
-					//The tube is not known: create a 
+					//The tube is not known: create a
 					Biosample b = new Biosample();
 					b.setContainerType(containerType);
 					b.setContainerId(tubeId);
 					b.setScannedPosition(pos);
 					biosamples.add(b);
-					
+
 				} else {
 					for (Biosample b : l) {
 						b.setScannedPosition(pos);
@@ -318,15 +319,15 @@ public class SpiritScanner {
 			rows = scannerConfiguration.getRows();
 			cols = scannerConfiguration.getCols();
 		}
-		
+
 		//Verify the containers
 		if(verification==Verification.EMPTY_CONTAINERS) {
 			for(Container container: Biosample.getContainers(biosamples)) {
 				if(!container.isEmpty()) {
 					throw new Exception("The container " + container.getContainerId() + " at " + container.getScannedPosition()
-						+ " should be empty but it contains:\n "
-						+ MiscUtils.flatten(Biosample.getSampleIds(container.getBiosamples())) + "\n"
-						+ container.getPrintLabel());
+					+ " should be empty but it contains:\n "
+					+ MiscUtils.flatten(Biosample.getSampleIds(container.getBiosamples())) + "\n"
+					+ container.getPrintLabel());
 				}
 			}
 		} else if(verification==Verification.EXISTING_CONTAINER) {
@@ -335,7 +336,7 @@ public class SpiritScanner {
 				if(container.getContainerType()!=containerType) throw new Exception("The container "+container+" at " + container.getScannedPosition() + " is registered as a " +container.getContainerType());
 			}
 		}
-		
+
 		if(rackLocation!=null) {
 			//Load matching rack?
 			Location rack = DAOLocation.getLocation(null, rackLocation.getName());
@@ -343,9 +344,9 @@ public class SpiritScanner {
 				if(!rack.isEmpty() || rack.getParent()!=null) throw new Exception(rackLocation.getName()+" already exists and cannot be reused");
 				if(rack.getLocationType()!=LocationType.RACK) throw new Exception(rackLocation.getName()+" is a "+rack.getLocationType()+" (expected: "+LocationType.RACK+")");
 				rackLocation = rack;
-			}			
-		} 		
-		if(rackLocation!=null) {			
+			}
+		}
+		if(rackLocation!=null) {
 			for (Biosample b : biosamples) {
 				b.setLocPos(rackLocation, rackLocation.parsePosition(b.getScannedPosition()));
 			}
@@ -359,22 +360,22 @@ public class SpiritScanner {
 
 		return rackLocation;
 	}
-	
+
 	public ScannerConfiguration getScannerConfiguration() {
 		return scannerConfiguration;
 	}
-	
+
 	public Location getScannedRack() {
 		return scannedRack;
 	}
-	
+
 	public Location getStoredLocation() {
 		return storedLocation;
 	}
-	
+
 	public void setStoredLocation(Location storedLocation) {
 		this.storedLocation = storedLocation;
 	}
 
-	
+
 }

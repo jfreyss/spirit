@@ -47,6 +47,9 @@ import com.actelion.research.util.ui.UIUtils;
  */
 public class StudyComboBox extends JObjectComboBox<Study> {
 
+	private RightLevel level;
+	private StudyLabel studyLabel = new StudyLabel();
+
 	private class StudyLabel extends JLabel {
 		Study study;
 
@@ -66,7 +69,7 @@ public class StudyComboBox extends JObjectComboBox<Study> {
 				return;
 			} else {
 				String title = (study.getTitle()==null?"":study.getTitle());
-				boolean resp = study.isMentioned(user);
+				boolean resp = study.isMember(user);
 
 				Color bg = getBackground();
 				if(resp) {
@@ -106,13 +109,6 @@ public class StudyComboBox extends JObjectComboBox<Study> {
 			return new Dimension(500, 20);
 		}
 	}
-
-
-
-
-
-	private RightLevel level;
-	private StudyLabel studyLabel = new StudyLabel();
 
 	public StudyComboBox() {
 		this(RightLevel.READ, "StudyId");

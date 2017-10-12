@@ -151,7 +151,7 @@ public class SpiritAction {
 
 	public static void logUsage(final String app) {
 		String version = Spirit.class.getPackage().getImplementationVersion();
-		if(DBAdapter.getAdapter().isInActelionDomain()) {
+		if(DBAdapter.getInstance().isInActelionDomain()) {
 			//Record usage and version
 			if(version==null) return;
 			UsageLog.logUsage("Spirit", SpiritFrame.getUsername(), null, UsageLog.ACTION_LOGON, "app=" + app + ";v="+version);

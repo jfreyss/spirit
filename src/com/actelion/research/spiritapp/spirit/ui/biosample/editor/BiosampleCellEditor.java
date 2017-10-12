@@ -21,12 +21,11 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.editor;
 
-import java.awt.Color;
 import java.awt.Component;
 
 import javax.swing.AbstractCellEditor;
-import javax.swing.BorderFactory;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.SampleIdBrowser;
@@ -35,11 +34,11 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 
 public class BiosampleCellEditor extends AbstractCellEditor implements TableCellEditor {
 	private final SampleIdBrowser sampleIdBrowser;
-	
+
 	public BiosampleCellEditor(Biotype forcedBiotype) {
-		sampleIdBrowser = new SampleIdBrowser(forcedBiotype);			
+		sampleIdBrowser = new SampleIdBrowser(forcedBiotype);
 		sampleIdBrowser.setMargin(null);
-		sampleIdBrowser.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
+		sampleIdBrowser.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
 
 	@Override
@@ -49,10 +48,10 @@ public class BiosampleCellEditor extends AbstractCellEditor implements TableCell
 
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-		
+
 		sampleIdBrowser.setBiosample((Biosample) value);
 		sampleIdBrowser.selectAll();
 		return sampleIdBrowser;
 	}
-	
+
 }

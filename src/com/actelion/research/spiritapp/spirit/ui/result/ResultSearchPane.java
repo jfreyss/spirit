@@ -24,8 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui.result;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +42,7 @@ import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
+import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
@@ -75,11 +73,8 @@ public class ResultSearchPane extends JPanel {
 		setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
 		setPreferredSize(new Dimension(200, 200));
 
-		tree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				new Action_Search().actionPerformed(null);
-			}
+		tree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, evt -> {
+			new Action_Search().actionPerformed(null);
 		});
 	}
 
@@ -149,7 +144,7 @@ public class ResultSearchPane extends JPanel {
 		public void actionPerformed(ActionEvent e) {
 			final ResultQuery query = tree.getQuery();
 			query.setMaxResults(100000);
-			if(DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && query.isEmpty()) {
+			if(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER && query.isEmpty()) {
 				JOptionPane.showMessageDialog(ResultSearchPane.this, "Please enter more criteria", "Search", JOptionPane.ERROR_MESSAGE);
 			} else {
 				query(query);
@@ -172,7 +167,7 @@ public class ResultSearchPane extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			ResultQuery q = new ResultQuery();
-			q.setStudyIds(tab.getFrame()==null?null: tab.getFrame().getStudyId());
+			q.setStudyIds("");
 			tree.expandAll(false);
 			tree.setQuery(q);
 			tab.setResults(new ArrayList<Result>());

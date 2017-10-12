@@ -37,8 +37,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
-import com.actelion.research.spiritapp.spirit.ui.util.bgpane.JBGScrollPane;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeComboBox;
+import com.actelion.research.spiritapp.spirit.ui.util.lf.JBGScrollPane;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationQuery;
@@ -56,13 +56,13 @@ public class LocationSearchPane extends JPanel {
 	public static final String PROPERTY_QUERIED = "queried";
 
 	private final SpiritFrame frame;
-	private final Biotype forcedBiotype;
+	//	private final Biotype forcedBiotype;
 	private final JCustomTextField keywordsTextField = new JCustomTextField(20, "", "Name");
 	private final LocationTable locationTable = new LocationTable();
+	//	private final LocationTable locationTable2 = new LocationTable(LocationTableMode.USER_LOCATION);
 	private final BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
-	private final JCheckBox emptyCheckbox = new JCheckBox("Empty", false);
-	private final JCheckBox nonEmptyCheckbox = new JCheckBox("Non Empty", false);
-	private final JButton viewMineButton = new JIconButton(new Action_ViewMine());
+	private final JCheckBox emptyCheckbox = new JCheckBox("Empty", true);
+	private final JCheckBox nonEmptyCheckbox = new JCheckBox("Non Empty", true);
 	private final JButton resetButton = new JIconButton(new Action_Reset());
 	private final JButton searchButton = new JIconButton(new Action_Search());
 
@@ -78,16 +78,18 @@ public class LocationSearchPane extends JPanel {
 				UIUtils.createHorizontalBox(emptyCheckbox, nonEmptyCheckbox));
 		filterLocation.setOpaque(true);
 		filterLocation.setBackground(Color.WHITE);
-		viewMineButton.setVisible(SpiritFrame.getUser()!=null && SpiritFrame.getUser().getMainGroup()!=null);
+		//		viewMineButton.setVisible(SpiritFrame.getUser()!=null && SpiritFrame.getUser().getMainGroup()!=null);
 
-		this.forcedBiotype = forcedBiotype;
+		//		this.forcedBiotype = forcedBiotype;
 		if(forcedBiotype!=null) {
 			biotypeComboBox.setSelection(forcedBiotype);
 			biotypeComboBox.setEnabled(false);
 		}
 
-		add(BorderLayout.NORTH, UIUtils.createBox(new JScrollPane(filterLocation), null, UIUtils.createHorizontalBox(viewMineButton, Box.createHorizontalGlue(), resetButton, searchButton)));
-		add(BorderLayout.CENTER, new JBGScrollPane(locationTable, 2));
+		add(BorderLayout.NORTH, UIUtils.createBox(new JScrollPane(filterLocation), null, UIUtils.createHorizontalBox(/*viewMineButton,*/ Box.createHorizontalGlue(), resetButton, searchButton)));
+
+		//		JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JBGScrollPane(locationTable1), new JBGScrollPane(locationTable2));
+		add(BorderLayout.CENTER, new JBGScrollPane(locationTable));
 		setMinimumSize(new Dimension(150, 200));
 		setPreferredSize(new Dimension(200, 200));
 
@@ -126,6 +128,7 @@ public class LocationSearchPane extends JPanel {
 	}
 
 	public void reset() {
+		frame.setStudyId("");
 		keywordsTextField.setText("");
 		if(biotypeComboBox.isEnabled()) biotypeComboBox.setSelection(null);
 		emptyCheckbox.setSelected(true);
@@ -147,9 +150,11 @@ public class LocationSearchPane extends JPanel {
 				if(query.isEmpty()) {
 					res = DAOLocation.getLocationRoots(SpiritFrame.getUser());
 					acceptedAdminLocations = null;
+					locationTable.setHighlightRows(null);
 				} else {
 					res = DAOLocation.queryLocation(query, SpiritFrame.getUser());
 					acceptedAdminLocations = res;
+					locationTable.setHighlightRows(res);
 				}
 			}
 
@@ -193,24 +198,24 @@ public class LocationSearchPane extends JPanel {
 		return acceptedAdminLocations;
 	}
 
-	public void queryMyLocations() {
-		LocationQuery query = new LocationQuery();
-		query.setEmployeeGroup(SpiritFrame.getUser().getMainGroup());
-		query.setBiotype(forcedBiotype);
-		query.setFilterAdminLocation(true);
-		query(query);
-	}
+	//	public void queryMyLocations() {
+	//		LocationQuery query = new LocationQuery();
+	//		query.setEmployeeGroup(SpiritFrame.getUser().getMainGroup());
+	//		query.setBiotype(forcedBiotype);
+	//		query.setFilterAdminLocation(true);
+	//		query(query);
+	//	}
 
-	public class Action_ViewMine extends AbstractAction {
-		public Action_ViewMine() {
-			super("MyLocations");
-			setToolTipText("Query and display the locations used by my department");
-		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			queryMyLocations();
-		}
-	}
+	//	public class Action_ViewMine extends AbstractAction {
+	//		public Action_ViewMine() {
+	//			super("MyLocations");
+	//			setToolTipText("Query and display the locations used by my department");
+	//		}
+	//		@Override
+	//		public void actionPerformed(ActionEvent e) {
+	//			queryMyLocations();
+	//		}
+	//	}
 
 	public class Action_Search extends AbstractAction {
 		public Action_Search() {

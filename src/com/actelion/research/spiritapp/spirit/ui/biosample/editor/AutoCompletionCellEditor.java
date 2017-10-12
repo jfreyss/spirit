@@ -21,13 +21,12 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.editor;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.util.Collection;
 
 import javax.swing.AbstractCellEditor;
-import javax.swing.BorderFactory;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -47,7 +46,7 @@ public class AutoCompletionCellEditor extends AbstractCellEditor implements Tabl
 	private TestAttribute att;
 	private BiotypeMetadata mt;
 	private Collection<String> choices;
-	
+
 	private JTextComboBox textComboBox = new JTextComboBox() {
 		@Override
 		public java.util.Collection<String> getChoices() {
@@ -55,36 +54,40 @@ public class AutoCompletionCellEditor extends AbstractCellEditor implements Tabl
 				if(att!=null) {
 					choices = DAOTest.getAutoCompletionFields(att);
 				} else if(mt!=null) {
-					choices = DAOBiotype.getAutoCompletionFields(mt, null);						
+					choices = DAOBiotype.getAutoCompletionFields(mt, null);
 				} else if(biotype!=null) {
-					choices = DAOBiotype.getAutoCompletionFieldsForName(biotype, null);	
+					choices = DAOBiotype.getAutoCompletionFieldsForName(biotype, null);
 				} else {
 					throw new IllegalArgumentException("Invalid choices");
 				}
 			}
-			return choices;				
+			return choices;
 		}
 	};
-	
-	
-	
+
+
+
 	public AutoCompletionCellEditor(final Biotype biotype) {
 		this.biotype = biotype;
+		textComboBox.setMargin(null);
+		textComboBox.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
-	
+
 	public AutoCompletionCellEditor(final TestAttribute att) {
 		this.att = att;
+		textComboBox.setMargin(null);
+		textComboBox.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
-	
+
 	public AutoCompletionCellEditor(final BiotypeMetadata mt) {
 		this.mt = mt;
+		textComboBox.setMargin(null);
+		textComboBox.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
-	
+
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-		
-		textComboBox.setMargin(null);
-		textComboBox.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
+
 		textComboBox.setText(value==null?"": value.toString());
 		textComboBox.selectAll();
 		return textComboBox;
@@ -93,5 +96,5 @@ public class AutoCompletionCellEditor extends AbstractCellEditor implements Tabl
 	@Override
 	public Object getCellEditorValue() {
 		return textComboBox.getText();
-	}						
+	}
 }

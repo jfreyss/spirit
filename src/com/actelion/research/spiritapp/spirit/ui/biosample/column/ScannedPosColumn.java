@@ -26,22 +26,22 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 public class ScannedPosColumn extends Column<Biosample, String> {
 	public ScannedPosColumn() {
-		super("Scanned\nPos", String.class, 50, 60);
+		super("Sample\nScanPos", String.class, 50, 60);
 	}
-	
+
 	@Override
 	public float getSortingKey() {
 		return 1.2f;
 	}
-	
+
 	@Override
 	public String getValue(Biosample row) {
 		return row.getScannedPosition();
 	}
-	
+
 	@Override
 	public boolean isEditable(Biosample row) {return false;}
-	
+
 	@Override
 	public String getToolTipText() {return "Scanned Position";}
 }

@@ -30,6 +30,7 @@ import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 
 /**
  * DoubleCellEditor (value=double)
@@ -37,8 +38,8 @@ import com.actelion.research.util.ui.JCustomTextField;
  *
  */
 public class DoubleCellEditor extends AbstractCellEditor implements TableCellEditor {
-	private JCustomTextField alphaTextField = new JCustomTextField(JCustomTextField.DOUBLE);
-	
+	private JCustomTextField alphaTextField = new JCustomTextField(CustomFieldType.DOUBLE);
+
 	public DoubleCellEditor() {
 		alphaTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 		alphaTextField.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
@@ -54,7 +55,7 @@ public class DoubleCellEditor extends AbstractCellEditor implements TableCellEdi
 		} else {
 			s = d.toString();
 		}
-			
+
 		alphaTextField.setText(s);
 		alphaTextField.selectAll();
 		return alphaTextField;
@@ -63,5 +64,5 @@ public class DoubleCellEditor extends AbstractCellEditor implements TableCellEdi
 	@Override
 	public Object getCellEditorValue() {
 		return alphaTextField.getTextDouble();
-	}						
+	}
 }

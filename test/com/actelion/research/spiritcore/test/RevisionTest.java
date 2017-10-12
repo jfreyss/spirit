@@ -27,6 +27,7 @@ import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
+import com.actelion.research.spiritcore.services.dao.DAORevision.RevisionQuery;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
@@ -41,14 +42,14 @@ public class RevisionTest extends AbstractSpiritTest {
 
 	@Test
 	public void testQueryRevision() throws Exception {
-		List<Revision> revs = DAORevision.getRevisions(null, "S-00001", null, null, true, false, false, false, false);
+		List<Revision> revs = DAORevision.queryRevisions(new RevisionQuery(null, "S-00001", null, null, true, false, false, false, false));
 		System.out.println("RevisionTest.testQueryRevision() "+revs);
 		Assert.assertTrue(revs.size()>0);
 
-		revs = DAORevision.getRevisions(null, "S-00001", null, null, false, true, true, true, true);
+		revs = DAORevision.queryRevisions(new RevisionQuery(null, "S-00001", null, null, false, true, true, true, true));
 		Assert.assertTrue(revs.size()>0);
 
-		revs = DAORevision.getRevisions(null, "S-00000", null, null, true, true, true, true, true);
+		revs = DAORevision.queryRevisions(new RevisionQuery(null, "S-00000", null, null, true, true, true, true, true));
 		Assert.assertTrue(revs.size()==0);
 	}
 
@@ -62,7 +63,7 @@ public class RevisionTest extends AbstractSpiritTest {
 		Assert.assertNotNull(sampleId);
 		Assert.assertNotNull(DAOBiosample.getBiosample(sampleId));
 
-		List<Revision> revisions = DAORevision.getRevisions(b);
+		List<Revision> revisions = DAORevision.getLastRevisions(b);
 		Assert.assertEquals(1, revisions.size());
 
 		Revision rev = revisions.get(0);
@@ -94,7 +95,7 @@ public class RevisionTest extends AbstractSpiritTest {
 
 		// Load Revisions
 		JPAUtil.clearAll();
-		List<Revision> revisions = DAORevision.getRevisions(b);
+		List<Revision> revisions = DAORevision.getLastRevisions(b);
 		Assert.assertEquals(2, revisions.size());
 
 		Revision rev = revisions.get(0);
@@ -122,7 +123,7 @@ public class RevisionTest extends AbstractSpiritTest {
 		Assert.assertNull(DAOBiosample.getBiosample(sampleId));
 
 		// Load Revisions
-		List<Revision> revisions = DAORevision.getRevisions(b);
+		List<Revision> revisions = DAORevision.getLastRevisions(b);
 		Assert.assertEquals(2, revisions.size());
 
 		Revision rev = revisions.get(0);
@@ -166,7 +167,7 @@ public class RevisionTest extends AbstractSpiritTest {
 
 		// Load Revisions
 		JPAUtil.clearAll();
-		List<Revision> revisions = DAORevision.getRevisions(b);
+		List<Revision> revisions = DAORevision.getLastRevisions(b);
 		Assert.assertEquals(2, revisions.size());
 
 		Revision rev = revisions.get(0);
@@ -183,7 +184,7 @@ public class RevisionTest extends AbstractSpiritTest {
 		ExchangeTest.initDemoExamples(user);
 
 		Study study = DAOStudy.queryStudies(StudyQuery.createForLocalId("IVV2016-2"), user).get(0);
-		List<Revision> revisions = DAORevision.getRevisions(study);
+		List<Revision> revisions = DAORevision.getLastRevisions(study);
 		Assert.assertTrue(revisions.size() > 0);
 		JPAUtil.pushEditableContext(user);
 
@@ -194,7 +195,7 @@ public class RevisionTest extends AbstractSpiritTest {
 		// Load Revisions
 		study = DAOStudy.queryStudies(StudyQuery.createForLocalId("IVV2016-2"), user).get(0);
 		Assert.assertEquals("Test Combo2", study.getNotes());
-		revisions = DAORevision.getRevisions(study);
+		revisions = DAORevision.getLastRevisions(study);
 		Assert.assertTrue(revisions.size() > 0);
 
 		Revision rev = revisions.get(0);
@@ -203,29 +204,33 @@ public class RevisionTest extends AbstractSpiritTest {
 		study = DAOStudy.queryStudies(StudyQuery.createForLocalId("IVV2016-2"), user).get(0);
 		Assert.assertNotNull(study);
 
-		// Delete results
+		//Close Factory
+		JPAUtil.closeFactory();
+
+		// Delete results (rev 1)
 		List<Result> res = DAOResult.queryResults(ResultQuery.createQueryForSids(Collections.singleton(study.getId())), user);
 		Assert.assertTrue(res.size() > 0);
 		DAOResult.deleteResults(res, user);
 		res = DAOResult.queryResults(ResultQuery.createQueryForSids(Collections.singleton(study.getId())), user);
-		Assert.assertTrue("Loaded " + res, res.size() == 0);
+		Assert.assertEquals(0, res.size());
 
-		// Delete biosamples
+		// Delete biosamples (rev 2)
 		List<Biosample> bios = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForSids(Collections.singleton(study.getId())), user);
 		Assert.assertTrue(bios.size() > 0);
 		DAOBiosample.deleteBiosamples(bios, user);
 
 		//Make sure deletion worked
 		bios = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForSids(Collections.singleton(study.getId())), user);
-		Assert.assertTrue("Loaded " + bios, bios.size() == 0);
+		Assert.assertEquals(0, bios.size());
 
+		//Close Factory
 		JPAUtil.closeFactory();
 
 		//Load revisions and revert
-		revisions = DAORevision.getRevisions(null, null, null, null, true, true, true, true, true);
-
+		revisions = DAORevision.queryRevisions(new RevisionQuery());
+		System.out.println("RevisionTest.testRevertCombo2() "+revisions);
 		rev = revisions.get(0);
-		Assert.assertEquals(RevisionType.DEL, rev.getRevisionType());
+		//		Assert.assertEquals(RevisionType.DEL, rev.getRevisionType());
 		Assert.assertTrue(rev.getBiosamples().size() > 0);
 		DAORevision.revert(rev, user, "Revert");
 
@@ -271,7 +276,7 @@ public class RevisionTest extends AbstractSpiritTest {
 		Assert.assertEquals("test2", b1.getMetadataValue(biotype.getMetadata("large")));
 
 		// Retrieve versions
-		List<Revision> revs = DAORevision.getRevisions(b1);
+		List<Revision> revs = DAORevision.getLastRevisions(b1);
 		Assert.assertEquals(2, revs.size());
 
 		Biosample r1 = revs.get(0).getBiosamples().get(0);
@@ -298,7 +303,7 @@ public class RevisionTest extends AbstractSpiritTest {
 
 
 		//Test revision
-		List<Revision> revs = DAORevision.getRevisions(b);
+		List<Revision> revs = DAORevision.getLastRevisions(b);
 		Assert.assertEquals(2, revs.size());
 		Assert.assertEquals(RevisionType.DEL, revs.get(0).getRevisionType());
 
@@ -313,7 +318,38 @@ public class RevisionTest extends AbstractSpiritTest {
 		Assert.assertEquals(biotype, biosamples.get(0).getBiotype());
 		Assert.assertEquals("Test", new String(biosamples.get(0).getMetadataDocument(biotype.getMetadata("doc")).getFileName()));
 		Assert.assertEquals("bytes", new String(biosamples.get(0).getMetadataDocument(biotype.getMetadata("doc")).getBytes()));
+	}
 
+
+	@Test
+	public void testRecentChangesPerStudy() throws Exception {
+		Study study = DAOStudy.queryStudies(StudyQuery.createForLocalId("IVV2016-1"), user).get(0);
+
+		//Study changes
+		RevisionQuery query = new RevisionQuery();
+		query.setStudyIdFilter(study.getStudyId());
+		query.setStudies(true);
+		query.setSamples(false);
+		query.setResults(false);
+		List<Revision> revs = DAORevision.queryRevisions(query);
+		Assert.assertTrue(revs.size()>0);
+		System.out.println("RevisionTest.testRecentChanges() "+revs);
+
+		//samples changes
+		query.setStudies(false);
+		query.setSamples(true);
+		query.setResults(false);
+		revs = DAORevision.queryRevisions(query);
+		Assert.assertTrue(revs.size()>0);
+		System.out.println("RevisionTest.testRecentChanges() "+revs);
+
+		//results changes
+		query.setStudies(false);
+		query.setSamples(false);
+		query.setResults(true);
+		revs = DAORevision.queryRevisions(query);
+		Assert.assertTrue(revs.size()>0);
+		System.out.println("RevisionTest.testRecentChanges() "+revs);
 
 	}
 

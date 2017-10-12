@@ -120,7 +120,7 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		phaseComboBox.selectCurrentPhase();
 
 		final List<Biosample> animalInGroups = new ArrayList<>();
-		for(Biosample b: study.getTopAttachedBiosamples()) {
+		for(Biosample b: study.getTopParticipants()) {
 			if(b.getInheritedGroup()!=null) animalInGroups.add(b);
 		}
 
@@ -199,7 +199,7 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		//Proceed with this group/subgroup
 		//Create 2 sets of animals: 1 that will be updated with this sampling (samplesToStayInSubgroup) and 1 that will be moved to a new subgroup (samplesToMoveInNewSubgroup)
 		List<Biosample> toSave = new ArrayList<>();
-		Set<Biosample> samplesToStayInSubgroup = new HashSet<>(study.getTopAttachedBiosamples(group, subgroup));
+		Set<Biosample> samplesToStayInSubgroup = new HashSet<>(study.getTopParticipants(group, subgroup));
 		for (Biosample animal : animals) {
 			if(animal.getStatus().isAvailable()) {
 				samplesToStayInSubgroup.remove(animal);
@@ -208,7 +208,7 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 
 		Set<Biosample> samplesToMoveInNewSubgroup = new HashSet<>(animals);
 
-		LoggerFactory.getLogger(getClass()).debug("considered=                "+study.getTopAttachedBiosamples(group, subgroup));
+		LoggerFactory.getLogger(getClass()).debug("considered=                "+study.getTopParticipants(group, subgroup));
 		LoggerFactory.getLogger(getClass()).debug("samplesToStayInSubgroup=   "+samplesToStayInSubgroup+" / subgroup="+subgroup);
 		LoggerFactory.getLogger(getClass()).debug("samplesToMoveInNewSubgroup="+samplesToMoveInNewSubgroup);
 

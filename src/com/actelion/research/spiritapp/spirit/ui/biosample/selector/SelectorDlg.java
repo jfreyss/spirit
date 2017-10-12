@@ -64,6 +64,7 @@ import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
@@ -183,7 +184,7 @@ public class SelectorDlg extends JEscapeDialog {
 
 		BiosampleActions.attachPopup(biosampleTable);
 
-		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPaneNorth, UIUtils.createTitleBox("Selection", new JScrollPane(biosampleTable)));
+		JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, splitPaneNorth, UIUtils.createTitleBox("Selection", new JScrollPane(biosampleTable)));
 		splitPane.setDividerLocation(460);
 		splitPane.setPreferredSize(new Dimension(1050, 750));
 
@@ -205,7 +206,6 @@ public class SelectorDlg extends JEscapeDialog {
 		//Init
 		reset();
 		updatePanelLayout();
-
 
 		setContentPane(contentPane);
 		pack();

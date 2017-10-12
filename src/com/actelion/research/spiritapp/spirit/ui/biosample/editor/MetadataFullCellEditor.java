@@ -27,51 +27,48 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.biosample.edit.EditBiosampleTable;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 
 public class MetadataFullCellEditor extends AbstractCellEditor implements TableCellEditor {
-	
+
 	private final EditBiosampleTable table;
 	private Biosample ref = null;
 	private JTextField lbl = new JTextField();
-	
+
 	public MetadataFullCellEditor(final EditBiosampleTable table) {
 		this.table = table;
-		lbl.addCaretListener(new CaretListener() {				
-			@Override
-			public void caretUpdate(CaretEvent e) {
-				if(ref!=null) {
-					if(table.isShowing() && table.isEditing()) {
-						final int rowNo = table.getModel().getRows().indexOf(ref);
-						final int colNo = table.getSelectedColumn();
-						stopCellEditing();
-						
-						SwingUtilities.invokeLater(new Runnable() {
-							
-							@Override
-							public void run() {
-								Biosample oldObj = ref.clone();
-								new MetadataFullDlg(table, lbl, ref);
+		lbl.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
+		lbl.addCaretListener(e-> {
+			if(ref!=null) {
+				if(table.isShowing() && table.isEditing()) {
+					final int rowNo = table.getModel().getRows().indexOf(ref);
+					final int colNo = table.getSelectedColumn();
+					stopCellEditing();
 
-								table.setRowSelectionInterval(rowNo, rowNo);
-								table.setColumnSelectionInterval(colNo, colNo);
-								
-								Biosample newObj = ref.clone();
-								table.getUndoManager().addOfflineRowChange(rowNo, oldObj, newObj);
-								table.repaint();
-							}
-						});
-					}
+					SwingUtilities.invokeLater(new Runnable() {
+
+						@Override
+						public void run() {
+							Biosample oldObj = ref.clone();
+							new MetadataFullDlg(table, lbl, ref);
+
+							table.setRowSelectionInterval(rowNo, rowNo);
+							table.setColumnSelectionInterval(colNo, colNo);
+
+							Biosample newObj = ref.clone();
+							table.getUndoManager().addOfflineRowChange(rowNo, oldObj, newObj);
+							table.repaint();
+						}
+					});
 				}
 			}
 		});
 	}
-	
+
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, final int row, int column) {
 		lbl.setText(value==null?"": value.toString());
@@ -82,6 +79,6 @@ public class MetadataFullCellEditor extends AbstractCellEditor implements TableC
 	@Override
 	public Object getCellEditorValue() {
 		return null;
-	}		
-			
+	}
+
 }

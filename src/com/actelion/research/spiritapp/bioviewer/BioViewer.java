@@ -36,8 +36,8 @@ import com.actelion.research.spiritapp.spirit.ui.result.ResultTab;
 import com.actelion.research.spiritapp.spirit.ui.study.StudyTab;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritAction;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.util.ui.SplashScreen2;
-import com.actelion.research.util.ui.SplashScreen2.SplashConfig;
+import com.actelion.research.util.ui.SplashScreen;
+import com.actelion.research.util.ui.SplashScreen.SplashConfig;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 
 public class BioViewer extends SpiritFrame {
@@ -111,7 +111,7 @@ public class BioViewer extends SpiritFrame {
 
 	public static void main(String[] args) {
 
-		SplashScreen2.show(splashConfig);
+		SplashScreen.show(splashConfig);
 
 		new SwingWorkerExtended() {
 			@Override

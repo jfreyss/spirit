@@ -38,6 +38,7 @@ import javax.swing.JRadioButton;
 import javax.swing.SwingUtilities;
 
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
@@ -48,7 +49,7 @@ public class FillCellAction extends AbstractAction{
 	private ExcelTable<?> table;
 	private Column<?, ?> column;
 	private List<String> choices;
-	
+
 	public FillCellAction(ExcelTable<?> table, Column<?, ?> column) {
 		this(table, column, null);
 	}
@@ -57,29 +58,29 @@ public class FillCellAction extends AbstractAction{
 		this.table = table;
 		this.choices = choices;
 		this.column = column;
-		
-		
+
+
 		setEnabled(false);
-		
+
 		try {
 			if(column.isEditable(null)) {
-				setEnabled(true); 
+				setEnabled(true);
 			}
 		} catch (Exception e) {
 		}
 	}
-	
-	
+
+
 	private class FillDlg extends JEscapeDialog {
 		private JCustomTextField textField = null;
 		private JGenericComboBox<String> comboBox = null;
 
-		public FillDlg() {			
+		public FillDlg() {
 			super(UIUtils.getMainFrame(), "Fill Empty Cells");
-			
+
 			//Analyze the selection
 			final int col = table.convertColumnIndexToView(table.getModel().getColumns().indexOf(column));
-			
+
 			String defaultValue = "";
 			if(col>=0 && table.getSelectedRow()>=0) {
 				Object obj = table.getValueAt(table.getSelectedRow(), col);
@@ -89,7 +90,7 @@ public class FillCellAction extends AbstractAction{
 			for(int row=0; row<table.getRowCount(); row++) {
 				if(table.getValueAt(row, col)==null || table.getValueAt(row, col).toString().length()==0) {
 					count++;
-				}			
+				}
 			}
 			if(count==0) {
 				JExceptionDialog.showError(table, "All cells are already filled");
@@ -97,17 +98,17 @@ public class FillCellAction extends AbstractAction{
 			}
 			Column<?, ?> column = table.getModel().getColumn(table.convertColumnIndexToModel(col));
 
-			ButtonGroup group = new ButtonGroup(); 
+			ButtonGroup group = new ButtonGroup();
 			//FixedValuePanel
 			final Box fixedValuePanel = Box.createVerticalBox();
 			final JRadioButton fixedValueButton = new JRadioButton("Fill empty cells with a fixed value", true);
 			group.add(fixedValueButton);
 			{
-				Box line1 = Box.createHorizontalBox(); 
+				Box line1 = Box.createHorizontalBox();
 				line1.add(fixedValueButton);
 				line1.add(Box.createHorizontalGlue());
 
-				Box line2 = Box.createHorizontalBox(); 
+				Box line2 = Box.createHorizontalBox();
 				line2.add(Box.createHorizontalStrut(10));
 				line2.add(new JLabel(column.getName()+":"));
 				if(choices!=null && choices.size()>0) {
@@ -115,7 +116,7 @@ public class FillCellAction extends AbstractAction{
 					line2.add(comboBox);
 					SwingUtilities.invokeLater(new Runnable() {@Override public void run() {comboBox.requestFocusInWindow();}});
 				} else {
-					textField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, defaultValue);
+					textField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, defaultValue);
 					line2.add(textField);
 					SwingUtilities.invokeLater(new Runnable() {@Override public void run() {textField.requestFocusInWindow();}});
 				}
@@ -123,10 +124,10 @@ public class FillCellAction extends AbstractAction{
 				fixedValuePanel.add(line1);
 				fixedValuePanel.add(line2);
 			}
-			
+
 			//SequencePanel
 			Box sequencePanel = Box.createVerticalBox();
-			
+
 			//CenterPanel
 			JPanel centerPanel = new JPanel(new GridBagLayout());
 			GridBagConstraints c = new GridBagConstraints();
@@ -135,12 +136,12 @@ public class FillCellAction extends AbstractAction{
 			if(choices==null) {
 				c.gridx = 0; c.gridy = 1; centerPanel.add(sequencePanel, c);
 			}
-//			String value = (String) JOptionPane.showInputDialog(table, "Fill '" + column.getName() + "' with: (" + count +" cells empty)", "Fill Column", JOptionPane.QUESTION_MESSAGE, null, choices==null? null: choices.toArray(new String[0]), defaultValue);
-			
-			
+			//			String value = (String) JOptionPane.showInputDialog(table, "Fill '" + column.getName() + "' with: (" + count +" cells empty)", "Fill Column", JOptionPane.QUESTION_MESSAGE, null, choices==null? null: choices.toArray(new String[0]), defaultValue);
+
+
 			//Buttons
 			JButton okButton = new JButton("Fill Cells");
-			okButton.addActionListener(new ActionListener() {				
+			okButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent ev) {
 					try {
@@ -149,15 +150,15 @@ public class FillCellAction extends AbstractAction{
 							fillColumn(col, value);
 							dispose();
 						} else {
-							
+
 						}
 					} catch (Exception e) {
 						JExceptionDialog.showError(e);
 					}
 				}
 			});
-			
-			
+
+
 			//ContentPane
 			JPanel contentPanel = new JPanel(new BorderLayout());
 			contentPanel.add(BorderLayout.CENTER, centerPanel);
@@ -168,15 +169,15 @@ public class FillCellAction extends AbstractAction{
 			setLocationRelativeTo(UIUtils.getMainFrame());
 			setVisible(true);
 		}
-		
+
 	}
-	
+
 	@Override
 	public void actionPerformed(ActionEvent ev) {
 		new FillDlg();
 	}
-	
-	
+
+
 	public void fillColumn(int col, String value) throws Exception {
 		if(value!=null) {
 			table.getUndoManager().setTransaction(true);
@@ -187,7 +188,7 @@ public class FillCellAction extends AbstractAction{
 					}
 				}
 			} finally {
-				table.getUndoManager().setTransaction(false);				
+				table.getUndoManager().setTransaction(false);
 			}
 		}
 		table.repaint();

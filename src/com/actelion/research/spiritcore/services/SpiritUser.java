@@ -64,7 +64,7 @@ public class SpiritUser {
 	}
 
 	public static SpiritUser getFakeAdmin() {
-		SpiritUser user = new SpiritUser("###");
+		SpiritUser user = new SpiritUser("FAKE");
 		user.setRole(ROLE_ADMIN, true);
 		return user;
 	}

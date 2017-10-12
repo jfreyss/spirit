@@ -30,6 +30,7 @@ import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
+import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.util.ui.FastFont;
@@ -44,20 +45,34 @@ import com.actelion.research.util.ui.UIUtils;
  */
 public class BiotypeComboBox extends JObjectComboBox<Biotype> {
 
+	private boolean memorization;
+
 	public BiotypeComboBox() {
-		this("");
+		this("Biotype");
 	}
 
 	public BiotypeComboBox(String label) {
 		this(null, label);
 	}
+
 	public BiotypeComboBox(Collection<Biotype> values) {
 		this(values, "Biotype");
 	}
+
 	public BiotypeComboBox(Collection<Biotype> values, String label) {
 		this.setTextWhenEmpty(label);
 		setValues(values);
-
+	}
+	public void setMemorization(boolean v) {
+		if(v!=memorization) {
+			this.memorization = v;
+			addTextChangeListener(e-> {
+				Spirit.getConfig().setProperty("biotype", getText());
+			});
+			if(getValues()!=null && Biotype.getNames(getValues()).contains(Spirit.getConfig().getProperty("biotype", ""))) {
+				setText(Spirit.getConfig().getProperty("biotype", ""));
+			}
+		}
 	}
 
 	@Override
@@ -78,15 +93,6 @@ public class BiotypeComboBox extends JObjectComboBox<Biotype> {
 			comp.setText(typeName);
 		}
 		return comp;
-	}
-
-	public void setSelectionString(String type) {
-		setText(type);
-	}
-
-
-	public String getSelectionString() {
-		return getText();
 	}
 
 }

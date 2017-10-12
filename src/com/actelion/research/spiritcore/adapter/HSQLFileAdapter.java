@@ -62,8 +62,8 @@ import com.actelion.research.spiritcore.services.migration.MigrationScript;
 	}
 		
 	@Override
-	public UserAdministrationMode getUserManagedMode() {
-		return UserAdministrationMode.UNIQUE_USER;
+	public UserManagedMode getUserManagedMode() {
+		return UserManagedMode.UNIQUE_USER;
 	}
 	
 	@Override

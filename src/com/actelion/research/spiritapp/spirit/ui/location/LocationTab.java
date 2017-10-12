@@ -22,40 +22,28 @@
 package com.actelion.research.spiritapp.spirit.ui.location;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.SpiritTab;
-import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTabbedPane;
-import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.location.depictor.LocationDepictor;
-import com.actelion.research.spiritapp.spirit.ui.location.depictor.RackDepictorListener;
-import com.actelion.research.spiritapp.spirit.ui.util.POIUtils;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
-import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.util.CSVUtils;
-import com.actelion.research.util.ui.JCustomTabbedPane;
-import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
@@ -68,9 +56,7 @@ public class LocationTab extends SpiritTab {
 
 	//East Components
 	private LocationBrowser locationBrowser = new LocationBrowser();
-	private JTabbedPane tabbedPane = new JCustomTabbedPane(JTabbedPane.BOTTOM);
-	private LocationDepictor locationDepictor = new LocationDepictor();
-	private BiosampleTable biosampleTable = new BiosampleTable();
+	private LocationOrTableTabbedPane tabbedPane = new LocationOrTableTabbedPane();
 	private boolean first = true;
 	private int push = 0;
 
@@ -83,80 +69,31 @@ public class LocationTab extends SpiritTab {
 
 		searchPane = new LocationSearchPane(frame, forcedBiotype);
 
-		locationDepictor.setDisplayChildren(true);
-		locationDepictor.setShowOneEmptyPosition(false);
-
-		//Graphical or biosample tab
-		tabbedPane.add("Graphical", locationDepictor);
-		tabbedPane.add("Biosamples", new JScrollPane(biosampleTable));
-		tabbedPane.addChangeListener(e-> {
-			//Memorize the selection
-			List<Biosample> selection;
-			if(tabbedPane.getSelectedIndex()==0) {
-				selection = biosampleTable.getSelection();
-			} else {
-				selection = Container.getBiosamples(locationDepictor.getSelectedContainers());
-			}
-
-			//Update
-			updateDepictorOrTable();
-
-			//Keep the selection
-			if(tabbedPane.getSelectedIndex()==0) {
-				locationDepictor.setSelectedContainers(Biosample.getContainers(selection));
-			} else {
-				biosampleTable.setSelection(selection);
-			}
-		});
 
 		//CSV Export
 		JButton csvButton = new JIconButton(IconType.CSV, "CSV");
-		csvButton.addActionListener(e-> {
-			try {
-				if(tabbedPane.getSelectedIndex()==0) {
-					CSVUtils.exportToCsv(locationDepictor.getLocationLayout());
-				} else {
-					CSVUtils.exportToCsv(biosampleTable.getTabDelimitedTable());
-				}
-			} catch(Exception ex) {
-				JExceptionDialog.showError(ex);
-			}
-		});
+		csvButton.addActionListener(e-> tabbedPane.exportToCsv());
 
 		//Excel Export
 		JButton excelButton = new JIconButton(IconType.EXCEL, "XLS");
-		excelButton.addActionListener(e-> {
-			try {
-				if(tabbedPane.getSelectedIndex()==0) {
-					String[][] layout = locationDepictor.getLocationLayout();
-					if(layout==null) throw new Exception("You cannot export the layout if there are biosamples");
-					POIUtils.exportToExcel(layout, POIUtils.ExportMode.HEADERS_TOPLEFT);
-				} else {
-					POIUtils.exportToExcel(biosampleTable.getTabDelimitedTable(), POIUtils.ExportMode.HEADERS_TOP);
-				}
-			} catch(Exception ex) {
-				JExceptionDialog.showError(ex);
-			}
-		});
+		excelButton.addActionListener(e-> tabbedPane.exportToExcel());
 
 		JPanel buttonsPanel = createButtonsPanel();
 		JPanel locationPanel = UIUtils.createBox(
 				tabbedPane,
-				UIUtils.createBox(locationBrowser, null, null, null, UIUtils.createHorizontalBox(locationDepictor.createZoomPanel(), csvButton, excelButton)),
+				UIUtils.createBox(locationBrowser, null, null, null, UIUtils.createHorizontalBox(tabbedPane.getLocationDepictor().createZoomPanel(), csvButton, excelButton)),
 				buttonsPanel==null? null: buttonsPanel);
 
-		westPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, searchPane, detailPane);
-		JSplitPane contentPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, westPane, locationPanel);
-
+		westPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, searchPane, detailPane);
 		westPane.setDividerLocation(1200);
-		westPane.setOneTouchExpandable(true);
+
+		JSplitPane contentPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, westPane, locationPanel);
 		contentPane.setDividerLocation(300);
-		contentPane.setOneTouchExpandable(true);
 
 		//If a query is made, restricts the displayed locations to the result's location
 		searchPane.addPropertyChangeListener(LocationSearchPane.PROPERTY_QUERIED,  evt-> {
 			detailPane.setBiosamples(null);
-			locationDepictor.setAcceptedAdminLocations(searchPane.getLocationQuery().isEmpty()? null: searchPane.getAcceptedAdminLocations());
+			//			locationDepictor.setAcceptedAdminLocations(searchPane.getLocationQuery().isEmpty()? null: searchPane.getAcceptedAdminLocations());
 		});
 
 		//If the locationBrowser is changed, update the location
@@ -166,41 +103,22 @@ public class LocationTab extends SpiritTab {
 			setBioLocation(l);
 		});
 
-		//hide or show the selected biosamples if a selection is made
-		locationDepictor.addRackDepictorListener(new RackDepictorListener() {
-			@Override
-			public void onSelect(Collection<Integer> pos, Container lastSelect, boolean dblClick) {
-				Set<Container> sel = locationDepictor.getSelectedContainers();
-				if(sel.size()==1 && SpiritRights.canReadBiosamples(sel.iterator().next().getBiosamples(), SpiritFrame.getUser())) {
-					if(westPane.getDividerLocation()>getHeight()-100) {
-						westPane.setDividerLocation(580);
-					}
-					detailPane.setBiosamples(sel.iterator().next().getBiosamples());
-				} else {
-					if(westPane.getDividerLocation()<getHeight()-100) {
-						westPane.setDividerLocation(2400);
-					}
-					detailPane.setBiosamples(null);
+		tabbedPane.addPropertyChangeListener(LocationOrTableTabbedPane.PROPERTY_SELECTION, e-> {
+			@SuppressWarnings("unchecked")
+			Collection<Biosample> sel = (Collection<Biosample>) e.getNewValue();
+
+			if(sel.size()>0 && SpiritRights.canReadBiosamples(sel, SpiritFrame.getUser())) {
+				if(westPane.getDividerLocation()>getHeight()-100) {
+					westPane.setDividerLocation(580);
 				}
-			}
-			@Override
-			public void locationSelected(final Location location) {
-				setBioLocation(location);
-			}
-			@Override
-			public void onPopup(Collection<Integer> pos, Container lastSelect, Component comp, Point point) {
-				Set<Container> containers = locationDepictor.getSelectedContainers();
-				if(pos.size()>0) {
-					ContainerActions.createPopup(containers).show(comp, point.x, point.y);
+				detailPane.setBiosamples(sel);
+			} else {
+				if(westPane.getDividerLocation()<getHeight()-100) {
+					westPane.setDividerLocation(2400);
 				}
-			}
-			@Override
-			public void locationPopup(Location location, Component comp, Point point) {
-				LocationActions.createPopup(location).show(comp, point.x, point.y);
+				detailPane.setBiosamples(null);
 			}
 		});
-
-		BiosampleActions.attachPopup(biosampleTable);
 
 		//Link the BiosampleTable to the depictor
 		searchPane.getLocationTable().getSelectionModel().addListSelectionListener(e->{
@@ -214,23 +132,7 @@ public class LocationTab extends SpiritTab {
 				locationBrowser.setBioLocation(null);
 				setBioLocation(null, -1, true);
 			}
-		});
 
-		//Link the biosampleTab view to the graphicalTab view
-		biosampleTable.getSelectionModel().addListSelectionListener(e-> {
-			if(e.getValueIsAdjusting()) return;
-
-			if(biosampleTable.getSelection().size()>0 && SpiritRights.canReadBiosamples(biosampleTable.getSelection(), SpiritFrame.getUser())) {
-				if(westPane.getDividerLocation()>getHeight()-100) {
-					westPane.setDividerLocation(580);
-				}
-				detailPane.setBiosamples(biosampleTable.getSelection());
-			} else {
-				if(westPane.getDividerLocation()<getHeight()-100) {
-					westPane.setDividerLocation(2400);
-				}
-				detailPane.setBiosamples(null);
-			}
 		});
 
 		setLayout(new BorderLayout());
@@ -264,36 +166,15 @@ public class LocationTab extends SpiritTab {
 
 				//Update the browser
 				locationBrowser.setBioLocation(location);
-				locationDepictor.setSelectedPoses(null);
+				tabbedPane.getLocationDepictor().setSelectedPoses(null);
 
 				//Update the depictor
-				updateDepictorOrTable();
-				if(pos>=0) locationDepictor.setSelectedPoses(Collections.singletonList(pos));
+				tabbedPane.setBioLocation(location);
+				if(pos>=0) tabbedPane.getLocationDepictor().setSelectedPoses(Collections.singletonList(pos));
 			}
 		};
 	}
 
-	/**
-	 * Precondition: locationBrowser.location is set
-	 * Recreate the LocationDepictor or the table (depending which one is visible)
-	 */
-	private void updateDepictorOrTable() {
-		Location location = locationBrowser.getBioLocation();
-		if(tabbedPane.getSelectedIndex()==0) {
-			locationDepictor.setBioLocation(location);
-		} else {
-			List<Biosample> biosamples = new ArrayList<>();
-			if(location!=null) {
-				for (Biosample b: location.getBiosamples()) {
-					if(SpiritRights.canRead(b, SpiritFrame.getUser())) {
-						biosamples.add(b);
-					}
-				}
-			}
-			Collections.sort(biosamples, Biosample.COMPARATOR_POS);
-			biosampleTable.setRows(biosamples);
-		}
-	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -342,19 +223,19 @@ public class LocationTab extends SpiritTab {
 				setBioLocation(locs.size()>=1? locs.get(0): null);
 			}
 		} else {
-			Location l = locationDepictor.getBioLocation();
+			Location l = tabbedPane.getBioLocation();
 			l = JPAUtil.reattach(l);
-			Collection<Container> sel = locationDepictor.getSelectedContainers();
-
-
-			//Refresh the loc (set null first to be sure to trigger a change)
-			locationDepictor.setSelectedContainers(sel);
+			//			Collection<Container> sel = locationDepictor.getSelectedContainers();
+			//
+			//
+			//			//Refresh the loc (set null first to be sure to trigger a change)
+			//			locationDepictor.setSelectedContainers(sel);
 			setBioLocation(l);
 		}
 	}
 
 	public LocationDepictor getLocationDepictor() {
-		return locationDepictor;
+		return tabbedPane.getLocationDepictor();
 	}
 
 	public List<Location> getLocations() {
@@ -379,7 +260,8 @@ public class LocationTab extends SpiritTab {
 			if(getFrame()!=null && getFrame().getStudyId().length()>0) {
 				searchPane.query();
 			} else {
-				searchPane.queryMyLocations();
+				searchPane.query();
+				//				searchPane.queryMyLocations();
 			}
 		}
 	}

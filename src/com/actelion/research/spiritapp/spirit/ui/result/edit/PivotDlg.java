@@ -21,9 +21,6 @@
 
 package com.actelion.research.spiritapp.spirit.ui.result.edit;
 
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,8 +34,8 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.LF;
@@ -58,7 +55,15 @@ import com.actelion.research.util.ui.exceltable.GridInputTable;
 public class PivotDlg extends JEscapeDialog {
 
 	//	private JTextArea textArea = new JTextArea(120, 50);
-	private GridInputTable gridTable = new GridInputTable();
+	private GridInputTable gridTable = new GridInputTable() {
+		@Override
+		protected void pasteSelection() throws Exception {
+			setTable(new String[][]{{""}});
+			setRowSelectionInterval(0, 0);
+			setColumnSelectionInterval(0, 0);
+			super.pasteSelection();
+		}
+	};
 	private EditResultTab tab;
 	private List<Result> results;
 	private final TestAttribute inputAtt;
@@ -82,30 +87,25 @@ public class PivotDlg extends JEscapeDialog {
 			}
 		}
 
-
 		inputAtt = test.getAttributes(OutputType.INPUT).size()==0? null: test.getAttributes(OutputType.INPUT).get(0);
 		this.pivotMode = pivotMode;
 
 		populateTextArea();
 
-
 		JButton importButton = new JButton("Import");
-		importButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					String[][] table = gridTable.getTable();
-					results = parse(test, table, pivotMode);
-					dispose();
-				} catch (Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
+		importButton.addActionListener(e-> {
+			try {
+				String[][] table = gridTable.getTable();
+				results = parse(test, table, pivotMode);
+				dispose();
+			} catch (Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});
 
-
-
 		gridTable.selectAll();
+		SwingUtilities.invokeLater(()->gridTable.requestFocus());
+
 
 		JEditorPane helpPane = new ImageEditorPane("<html><body>" +
 				"<div style='margin-left-10px'> Copy and Paste your data in the table below here. The data should be formatted like this:<br>" +
@@ -120,13 +120,9 @@ public class PivotDlg extends JEscapeDialog {
 		helpPane.setEditable(false);
 		helpPane.setBorder(BorderFactory.createEtchedBorder());
 
-		JPanel contentPane = new JPanel(new BorderLayout());
-		contentPane.add(BorderLayout.NORTH, helpPane);
-		contentPane.add(BorderLayout.CENTER, new JScrollPane(gridTable));
-		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(
-				Box.createHorizontalGlue(),
-				importButton));
-		setContentPane(contentPane);
+		setContentPane(UIUtils.createBox(new JScrollPane(gridTable),
+				helpPane,
+				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), importButton)));
 		setSize(1150, 650);
 		setLocationRelativeTo(owner);
 		setVisible(true);

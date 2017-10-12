@@ -46,13 +46,13 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import com.actelion.research.spiritcore.business.IEntity;
+import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
 @Entity
 @Table(name="employee", indexes= {@Index(name="employeegroup_username_index", columnList="user_name")})
 @SequenceGenerator(name="employee_sequence", sequenceName="employee_sequence", allocationSize=1)
-public class Employee implements Comparable<Employee>, IEntity {
+public class Employee implements Comparable<Employee>, IObject {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="employee_sequence")
@@ -216,8 +216,6 @@ public class Employee implements Comparable<Employee>, IEntity {
 		return disabled==Boolean.TRUE;
 	}
 
-
-	@Override
 	public String getUpdUser() {
 		return updUser;
 	}
@@ -226,7 +224,6 @@ public class Employee implements Comparable<Employee>, IEntity {
 		this.updUser = updUser;
 	}
 
-	@Override
 	public Date getUpdDate() {
 		return updDate;
 	}

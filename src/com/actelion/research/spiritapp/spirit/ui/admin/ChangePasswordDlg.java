@@ -106,7 +106,7 @@ public class ChangePasswordDlg extends JEscapeDialog {
 		if(new1Field.getPassword().length<6) throw new Exception("Your new password must have at least 6 characters");
 		if(!new String(new1Field.getPassword()).equals(new String(new2Field.getPassword()))) throw new Exception("Your passwords don't match");
 		
-		employee.setPassword(DBAdapter.getAdapter().encryptPassword(new1Field.getPassword()));
+		employee.setPassword(DBAdapter.getInstance().encryptPassword(new1Field.getPassword()));
 		DAOEmployee.persistEmployees(Collections.singleton(employee), SpiritFrame.getUser());
 	}
 }

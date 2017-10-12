@@ -21,13 +21,12 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.editor;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.util.List;
 
 import javax.swing.AbstractCellEditor;
-import javax.swing.BorderFactory;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
@@ -42,18 +41,18 @@ public class MetadataComboboxCellEditor extends AbstractCellEditor implements Ta
 	private JTextComboBox textComboBox = new JTextComboBox(false) {
 		@Override
 		public List<String> getChoices() {
-			return choices;				
+			return choices;
 		}
 	};
-	
+
 	private final List<String> choices;
-	
+
 	public MetadataComboboxCellEditor(String csvChoices) {
 		choices = BiotypeMetadata.splitChoices(csvChoices);
 		textComboBox.setMargin(null);
-		textComboBox.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
+		textComboBox.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
-	
+
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 		textComboBox.setText(value==null?"": value.toString());
@@ -63,6 +62,6 @@ public class MetadataComboboxCellEditor extends AbstractCellEditor implements Ta
 
 	@Override
 	public String getCellEditorValue() {
-		return (String) textComboBox.getText();
-	}				
+		return textComboBox.getText();
+	}
 }

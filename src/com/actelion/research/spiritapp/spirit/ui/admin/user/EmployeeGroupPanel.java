@@ -22,8 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.admin.user;
 
 import java.awt.GridLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,6 +33,7 @@ import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
+import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -47,10 +46,16 @@ public class EmployeeGroupPanel extends JPanel {
 	private EmployeeGroupTable employeeGroupTable = new EmployeeGroupTable();
 
 	public EmployeeGroupPanel() {
+		super(new GridLayout());
 
 		final JButton deleteButton = new JIconButton(IconType.DELETE, "Delete");
 		final JButton editButton = new JIconButton(IconType.EDIT, "Edit");
 		final JButton createButton = new JIconButton(IconType.NEW, "Create Group");
+
+		boolean editable = DBAdapter.getInstance().getUserManagedMode()==UserManagedMode.WRITE_NOPWD || DBAdapter.getInstance().getUserManagedMode()==UserManagedMode.WRITE_PWD;
+		deleteButton.setVisible(editable);
+		editButton.setVisible(editable);
+		createButton.setVisible(editable);
 
 		deleteButton.addActionListener(ev-> {
 			List<EmployeeGroup> sel = employeeGroupTable.getSelection();
@@ -81,31 +86,29 @@ public class EmployeeGroupPanel extends JPanel {
 			employeeGroupTable.setSelection(Collections.singletonList(group));
 		});
 
-		employeeGroupTable.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(e.getClickCount()==2) {
-					editButton.getActionListeners()[0].actionPerformed(null);
-				}
-			}
-		});
+		//		if(editable) {
+		//			employeeGroupTable.addMouseListener(new MouseAdapter() {
+		//				@Override
+		//				public void mouseClicked(MouseEvent e) {
+		//					if(e.getClickCount()==2) {
+		//						editButton.getActionListeners()[0].actionPerformed(null);
+		//					}
+		//				}
+		//			});
+		//		}
 
-		setLayout(new GridLayout());
 		add(UIUtils.createBox(
 				UIUtils.createTitleBox("Groups", new JScrollPane(employeeGroupTable)),
 				null,
 				UIUtils.createHorizontalBox(deleteButton, editButton, createButton, Box.createHorizontalGlue())));
 
-
-
 		refresh();
-
 
 	}
 
 	public void refresh() {
 		SpiritFrame.clearAll();
-		List<EmployeeGroup> emps = DBAdapter.getAdapter().getEmployeeGroups();
+		List<EmployeeGroup> emps = DBAdapter.getInstance().getEmployeeGroups();
 		employeeGroupTable.setRows(emps);
 	}
 }

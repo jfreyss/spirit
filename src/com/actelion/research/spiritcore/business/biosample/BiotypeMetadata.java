@@ -23,6 +23,7 @@ package com.actelion.research.spiritcore.business.biosample;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -279,5 +280,31 @@ public class BiotypeMetadata implements Serializable, Comparable<BiotypeMetadata
 		}
 		return MiscUtils.serializeIntegerMap(map);
 	}
+
+	/**
+	 * Comparator that compare all fields, to check if a modification occured
+	 */
+	public static Comparator<BiotypeMetadata> EXACT_COMPARATOR = new Comparator<BiotypeMetadata>() {
+		@Override
+		public int compare(BiotypeMetadata o1, BiotypeMetadata o2) {
+			int c = CompareUtils.compare(o1.getName(), o2.getName());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.getDataType(), o2.getDataType());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.getParameters(), o2.getParameters());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.isRequired(), o2.isRequired());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.isSecundary(), o2.isSecundary());
+			if(c!=0) return c;
+
+			return 0;
+		}
+	};
+
 
 }

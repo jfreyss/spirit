@@ -36,6 +36,7 @@ import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 
 public class GraphPanelWithResults extends JPanel {
 
@@ -44,10 +45,10 @@ public class GraphPanelWithResults extends JPanel {
 
 	public GraphPanelWithResults() {
 		super(new GridLayout());
-		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, graphPanel, pivotPanel);
+		JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, graphPanel, pivotPanel);
+		splitPane.setDividerLocation(150);
 		add(splitPane);
 
-		splitPane.setDividerLocation(150);
 		graphPanel.setListSelectionListener(e->{
 			pivotPanel.setResults(graphPanel.getSelectedResults());
 		});
@@ -59,6 +60,10 @@ public class GraphPanelWithResults extends JPanel {
 
 	public PivotPanel getPivotPanel() {
 		return pivotPanel;
+	}
+
+	public void setSelectedIndex(int index) {
+		graphPanel.setSelectedIndex(index);
 	}
 
 	public PivotTable getPivotTable() {
@@ -79,9 +84,13 @@ public class GraphPanelWithResults extends JPanel {
 	 * Upon completion, select all graphs (if less than 10), or select the first one
 	 * @param results
 	 */
-	public void setResults(List<Result> results) {
+	public void setResults(List<Result> results, boolean selectAll) {
 		graphPanel.setResults(results).afterDone(() -> {
-			graphPanel.selectAll();
+			if(selectAll) {
+				graphPanel.selectAll();
+			} else {
+				graphPanel.setSelectedIndex(0);
+			}
 		});
 	}
 
@@ -91,7 +100,7 @@ public class GraphPanelWithResults extends JPanel {
 		q.setStudyIds("S-00629");
 		List<Result> results = DAOResult.queryResults(q, null);
 		GraphPanelWithResults p = new GraphPanelWithResults();
-		p.setResults(results);
+		p.setResults(results, true);
 
 		JFrame f = new JFrame("Test");
 		f.setContentPane(p);

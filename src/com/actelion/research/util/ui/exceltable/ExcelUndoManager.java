@@ -97,7 +97,6 @@ public class ExcelUndoManager extends UndoManager {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	protected class RowEdit<ROW> extends AbstractUndoableEdit {
 		private int row;
 		private ROW oldRow;
@@ -136,7 +135,6 @@ public class ExcelUndoManager extends UndoManager {
 	}
 
 
-	//private Object old = null;
 	private ExcelTable table;
 	private int push = 0;
 	private boolean transaction = false;

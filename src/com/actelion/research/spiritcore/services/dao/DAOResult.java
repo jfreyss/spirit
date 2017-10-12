@@ -194,16 +194,16 @@ public class DAOResult {
 			clause.append(" and r.phase.id = " + q.getPhase().getId());
 		}
 		if(q.getSid()>0) {
-			clause.append(" and b.inheritedStudy.id = " + q.getSid());
+			clause.append(" and r.study.id = " + q.getSid());
 		}
 		if(q.getStudyIds()!=null && q.getStudyIds().equalsIgnoreCase("NONE")) {
-			clause.append(" and b.inheritedStudy is null");
+			clause.append(" and r.study is null");
 		} else if(q.getStudyIds()!=null && q.getStudyIds().length()>0) {
-			clause.append(" and (" + QueryTokenizer.expandOrQuery("b.inheritedStudy.studyId = ?", q.getStudyIds()) + ")");
+			clause.append(" and (" + QueryTokenizer.expandOrQuery("r.study.studyId = ?", q.getStudyIds()) + ")");
 		}
 
 		if(q.getSids()!=null && q.getSids().size()>0) {
-			clause.append(" and " + QueryTokenizer.expandForIn("b.inheritedStudy.id", q.getSids()));
+			clause.append(" and " + QueryTokenizer.expandForIn("r.study.id", q.getSids()));
 		}
 
 		if(q.getGroups()!=null && q.getGroups().length()>0) {
@@ -556,6 +556,10 @@ public class DAOResult {
 		//Compute formula if needed
 		computeFormula(results);
 
+		//Set the study link
+		for (Result result : results) {
+			result.setStudy(result.getBiosample()==null? null: result.getBiosample().getInheritedStudy());
+		}
 
 		for (Result result : results) {
 			if(result.getId()<=0 && result.isEmpty()) continue;
@@ -837,11 +841,11 @@ public class DAOResult {
 	}
 
 	public static List<String> getElbsForStudy(String studyIds) {
-		if(studyIds==null || studyIds.length()==0) return new ArrayList<String>();
+		if(studyIds==null || studyIds.length()==0) return new ArrayList<>();
 
 		EntityManager session = JPAUtil.getManager();
 		try {
-			List<String> res = session.createQuery("select distinct(r.elb) from Result r where " + QueryTokenizer.expandOrQuery("r.biosample.inheritedStudy.studyId = ?", studyIds)).getResultList();
+			List<String> res = session.createQuery("select distinct(r.elb) from Result r where " + QueryTokenizer.expandOrQuery("r.study.studyId = ?", studyIds)).getResultList();
 			Collections.sort(res);
 			return res;
 		} catch(Exception e) {
@@ -851,7 +855,7 @@ public class DAOResult {
 	}
 
 	public static List<ElbLink> getNiobeLinksForStudy(Study study) {
-		if(!DBAdapter.getAdapter().isInActelionDomain()) return new ArrayList<>();
+		if(!DBAdapter.getInstance().isInActelionDomain()) return new ArrayList<>();
 		List<ElbLink> res = (List<ElbLink>) Cache.getInstance().get("elb_links_"+study.getId());
 		if(res==null) {
 			Map<String, ElbLink> map = new HashMap<>();
@@ -860,7 +864,7 @@ public class DAOResult {
 			//Load elbs accessible in Niobe
 			Connection conn = null;
 			try {
-				conn = DBAdapter.getAdapter().getConnection();
+				conn = DBAdapter.getInstance().getConnection();
 				Statement stmt = conn.createStatement();
 				ResultSet rs = stmt.executeQuery("select displayname, labjournal, title, scientist, createdate, sealdate" +
 						" from niobe.references ref, niobe.documents doc" +
@@ -911,7 +915,7 @@ public class DAOResult {
 	 * @throws Exception
 	 */
 	public static void attachOrCreateStudyResultsToTops(Study study, Collection<Biosample> allBiosamples, Phase phaseFilter, String elbForCreatingMissingOnes) throws Exception  {
-		if(allBiosamples==null) allBiosamples = study.getAttachedBiosamples();
+		if(allBiosamples==null) allBiosamples = study.getParticipants();
 		Test weighingTest = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
 		Test fwTest = DAOTest.getTest(DAOTest.FOODWATER_TESTNAME);
 		Test obsTest = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);
@@ -939,7 +943,7 @@ public class DAOResult {
 	 * @throws Exception
 	 */
 	public static void attachOrCreateStudyResultsToSamples(Study study, Collection<Biosample> allBiosamples, Phase phaseFilter, String elbForCreatingMissingOnes) throws Exception  {
-		if(allBiosamples==null) allBiosamples = study.getAttachedBiosamples();
+		if(allBiosamples==null) allBiosamples = study.getParticipants();
 		Test weighingTest = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
 		Test lengthTest = DAOTest.getTest(DAOTest.LENGTH_TESTNAME);
 		Test obsTest = DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME);
@@ -963,7 +967,8 @@ public class DAOResult {
 	 * @throws Exception
 	 */
 	private static void attachOrCreateStudyResults(Study study, boolean skipEmptyPhase, Collection<Biosample> biosamples, Collection<Test> tests, Phase phaseFilter, String elbForCreatingMissingOnes) throws Exception  {
-		Set<Biosample> allBiosamples = new HashSet<Biosample>(biosamples);
+		System.out.println("DAOResult.attachOrCreateStudyResults() "+study+" "+skipEmptyPhase+" "+biosamples+" "+tests+" "+phaseFilter+" "+elbForCreatingMissingOnes);
+		Set<Biosample> allBiosamples = new HashSet<>(biosamples);
 		//Clean previous data
 		if(phaseFilter!=null) {
 			for (Biosample biosample : allBiosamples) {
@@ -975,13 +980,10 @@ public class DAOResult {
 		//Query all results associated to those samples
 		ResultQuery q = new ResultQuery();
 		q.setQuality(null);
-		//		q.setElbs(study.getStudyId());
 		q.setBids(JPAUtil.getIds(allBiosamples));
 		q.getTestIds().addAll(JPAUtil.getIds(tests));
+		q.setPhase(phaseFilter);
 
-		if(phaseFilter!=null) {
-			q.setPhase(phaseFilter);
-		}
 		List<Result> results = queryResults(q, null);
 
 		//Map the result to the associated biosample
@@ -1000,18 +1002,23 @@ public class DAOResult {
 		//Create missing results
 		if(elbForCreatingMissingOnes!=null) {
 			for (Biosample biosample : allBiosamples) {
-				Phase p = biosample.getInheritedPhase()!=null? biosample.getInheritedPhase(): phaseFilter;
+				Phase p = biosample.getAttachedStudy()==null? biosample.getInheritedPhase(): phaseFilter;
+
+				System.out.println("DAOResult.attachOrCreateStudyResults() "+biosample+">"+p+"<>"+phaseFilter+" ("+biosample.getAttachedStudy()+")");
 
 				if(phaseFilter==null && skipEmptyPhase && biosample.getInheritedPhase()==null) continue; //if no phase filter -> returns only samples
 				if(phaseFilter!=null && !phaseFilter.equals(p)) continue; //if phase filter -> returns only results with samples and animals at this phase
 
+				System.out.println("DAOResult.attachOrCreateStudyResults() "+biosample+">"+p);
 				for(Test test: tests) {
+					System.out.println("DAOResult.attachOrCreateStudyResults() "+biosample+">"+p+","+test+">"+biosample.getAuxResult(test, p));
 					if(biosample.getAuxResult(test, p)==null) {
 						Result r = new Result(test);
 						r.setElb(elbForCreatingMissingOnes);
 						r.setBiosample(biosample);
-						r.setPhase(biosample.getInheritedPhase()!=null? null: phaseFilter);
+						r.setPhase(biosample.getAttachedStudy()==null? null: phaseFilter);
 						biosample.addAuxResult(r);
+						System.out.println("DAOResult.attachOrCreateStudyResults() create "+r);
 					}
 				}
 			}
@@ -1053,7 +1060,7 @@ public class DAOResult {
 
 		StringBuilder jpql = new StringBuilder();
 		jpql.append("SELECT distinct(r.biosample.biotype) FROM Result r " +
-				" where (" + QueryTokenizer.expandOrQuery("r.biosample.inheritedStudy.studyId = ?", studyIds) + ")");
+				" where (" + QueryTokenizer.expandOrQuery("r.study.studyId = ?", studyIds) + ")");
 
 		if(testIds!=null && testIds.size()>0) {
 			jpql.append(" and (");

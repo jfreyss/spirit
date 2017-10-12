@@ -66,6 +66,7 @@ import com.actelion.research.spiritcore.util.Config;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
@@ -133,7 +134,7 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 		});
 
 		locationDepictor.setHighlightContainers(containers);
-		locationDepictor.setDisplayChildren(false);
+		//		locationDepictor.setDisplayChildren(false);
 		locationDepictor.addRackDepictorListener(new RackDepictorListener() {
 			@Override
 			public void onSelect(Collection<Integer> pos, Container lastSelect, boolean dblClick) {
@@ -293,7 +294,7 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 			}
 		});
 
-		JSplitPane centerPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, UIUtils.createTitleBox("Containers", containerPanel), locationPanel);
+		JSplitPane centerPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, UIUtils.createTitleBox("Containers", containerPanel), locationPanel);
 		centerPane.setDividerLocation(340);
 		setContentPane(centerPane);
 
@@ -349,7 +350,8 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 		}
 
 		makePreview();
-		repaint();
+		locationDepictor.validate();
+		locationDepictor.repaint();
 	}
 
 	/**
@@ -396,7 +398,6 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 		locationDepictor.setSelectedContainers(containers);
 		containerTable.repaint();
 		locationDepictor.setBioLocation(location);
-		locationDepictor.updateView();
 	}
 
 	private void containerDropped(List<Container> containers, Collection<Integer> toPos) {
@@ -413,8 +414,7 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 			c.setPos(pos);
 			toSave.add(c);
 		}
-		locationDepictor.updateView();
-		repaint();
+		//		locationDepictor.setBioLocation(locationDepictor.getBioLocation());
 	}
 
 	public void eventOk() throws Exception {

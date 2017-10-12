@@ -149,29 +149,6 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 		}
 	}
 
-	public static class ContainerIdColumn extends Column<Container, String> {
-		private static ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.CONTAINERID_OR_BIOSAMPLEID);
-
-		public ContainerIdColumn() {
-			super("ContainerId", String.class, 55);
-		}
-
-		@Override
-		public String getValue(Container row) {
-			return row.getContainerOrBiosampleId();
-		}
-
-		@Override
-		public JComponent getCellComponent(AbstractExtendTable<Container> table, Container row, int rowNo, Object value) {
-			containerLabel.setContainer(row);
-			return containerLabel;
-		}
-		@Override
-		public boolean shouldMerge(Container r1, Container r2) {
-			return false;
-		}
-	}
-
 	public static class ContainerFullColumn extends Column<Container, String> {
 		private static ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.FULL);
 
@@ -301,7 +278,7 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 		public String getValue(Container row) {
 			StringBuilder sb = new StringBuilder();
 			for (Biosample b : row.getBiosamples()) {
-				sb.append(b.getSampleIdName()+"\n");
+				sb.append(b.getSampleId() +  (b.getSampleName()!=null && b.getSampleName().length()>0? " " + b.getSampleName() :"") +  "\n");
 			}
 			return sb.toString();
 		}

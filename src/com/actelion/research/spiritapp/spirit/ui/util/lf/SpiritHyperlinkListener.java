@@ -30,7 +30,6 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkEvent.EventType;
 import javax.swing.event.HyperlinkListener;
 
-import com.actelion.research.spiritapp.spirit.ui.pivot.PivotAnalyzerDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.spirit.ui.util.component.DocumentTextField;
 import com.actelion.research.spiritcore.business.Document;
@@ -51,7 +50,7 @@ public class SpiritHyperlinkListener implements HyperlinkListener {
 	@Override
 	public void hyperlinkUpdate(final HyperlinkEvent e) {
 		if(e.getEventType()==EventType.ACTIVATED) {
-			new SwingWorkerExtended("", (Component)e.getSource(), SwingWorkerExtended.FLAG_SYNCHRONOUS) {				
+			new SwingWorkerExtended("", (Component)e.getSource(), SwingWorkerExtended.FLAG_SYNCHRONOUS) {
 				@Override
 				protected void done() {
 					if(e.getDescription().startsWith("doc:")) {
@@ -59,12 +58,12 @@ public class SpiritHyperlinkListener implements HyperlinkListener {
 						try {
 							int id = Integer.parseInt(params[0]);
 							Document doc = DAODocument.getDocument(id);
-							
+
 							if(params.length>1) {
 								int entry = Integer.parseInt(params[1]);
 								doc = doc.getZipEntry(entry);
 							}
-							
+
 							DocumentTextField.open(doc);
 						} catch (Exception ex) {
 							JExceptionDialog.showError(ex);
@@ -85,7 +84,7 @@ public class SpiritHyperlinkListener implements HyperlinkListener {
 							JExceptionDialog.showError(ex);
 						}
 					} else if(e.getDescription().startsWith("stu:")) {
-//						SpiritContextListener.setStudy(null);
+						//						SpiritContextListener.setStudy(null);
 						String param = e.getDescription().substring(4);
 						try {
 							int id = Integer.parseInt(param);
@@ -101,7 +100,7 @@ public class SpiritHyperlinkListener implements HyperlinkListener {
 						try {
 							int id = Integer.parseInt(param);
 							Biosample b = DAOBiosample.getBiosamplesByIds(Collections.singleton(id)).get(id);
-							
+
 							if(b!=null) {
 								SpiritContextListener.setBiosamples(Collections.singletonList(b));
 							}
@@ -110,14 +109,14 @@ public class SpiritHyperlinkListener implements HyperlinkListener {
 						}
 					} else if(e.getDescription().startsWith("bios:")) { //studyId:typeName
 						SpiritContextListener.query((BiosampleQuery)null);
-						String[] s = e.getDescription().substring("bios:".length()).split(":");						
+						String[] s = e.getDescription().substring("bios:".length()).split(":");
 						BiosampleQuery q = new BiosampleQuery();
 						q.setStudyIds(s[0]);
 						if(s.length>1) q.setBiotype(DAOBiotype.getBiotype(s[1]));
 						if(s.length>2) q.setUpdDays(Integer.parseInt(s[2]));
 						SpiritContextListener.query(q);
 					} else if(e.getDescription().startsWith("test:")) {
-						String[] s = e.getDescription().substring("test:".length()).split(":");						
+						String[] s = e.getDescription().substring("test:".length()).split(":");
 						ResultQuery q = new ResultQuery();
 						q.setStudyIds(s[0]);
 						if(s.length>1) q.getTestIds().add(Integer.parseInt(s[1]));
@@ -131,21 +130,10 @@ public class SpiritHyperlinkListener implements HyperlinkListener {
 						} catch(Exception ex) {
 							JExceptionDialog.showError(ex);
 						}
-					} else if(e.getDescription().startsWith("analyze:")) {
-						String param = e.getDescription().substring("analyze:".length());
-						try {
-							int id = Integer.parseInt(param);
-							Study study = DAOStudy.getStudy(id);
-							if(study!=null) {
-								new PivotAnalyzerDlg(study);
-							}
-						} catch (Exception ex) {
-							JExceptionDialog.showError(ex);
-						}
 					}
 				}
 			};
-			
+
 		}
 	}
 }

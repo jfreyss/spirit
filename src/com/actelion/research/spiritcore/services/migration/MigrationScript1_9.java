@@ -85,7 +85,7 @@ public class MigrationScript1_9 extends MigrationScript {
 	
 	@Override
 	public String getMigrationSql(SQLVendor vendor) throws Exception {
-		Connection conn = DBAdapter.getAdapter().getConnection();
+		Connection conn = DBAdapter.getInstance().getConnection();
 		
 		try {			
 

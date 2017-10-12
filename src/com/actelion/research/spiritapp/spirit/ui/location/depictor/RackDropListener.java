@@ -70,13 +70,13 @@ public class RackDropListener implements DropTargetListener, DragSourceListener,
 		this.rackPanel = rackPanel;
 	}
 
-	
+
 	@Override
 	public void dragGestureRecognized(DragGestureEvent dge) {
 		pos2Color.clear();
 		Set<Container> sel = this.rackPanel.getSelectedContainers();
 		if(sel.size()<0) return;
-		
+
 		boolean acceptDrag = false;
 		if(rackPanel.getDepictor()!=null && this.rackPanel.getDepictor().getRackDepictorListeners()!=null) {
 			for (RackDepictorListener listener : this.rackPanel.getDepictor().getRackDepictorListeners()) {
@@ -84,20 +84,20 @@ public class RackDropListener implements DropTargetListener, DragSourceListener,
 				acceptDrag = true;
 			}
 		}
-		
+
 		if(acceptDrag) {
 			Transferable transferable = new ContainerTransferable(sel);
 			dge.startDrag(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR), transferable, this);
-			
+
 			if(dge.getComponent() instanceof RackDepictor) {
 				int currentPos = ((RackDepictor) dge.getComponent()).getPosAt(dge.getDragOrigin().x, dge.getDragOrigin().y);
 				mouseOffsetPosition = currentPos;
 			} else {
-				mouseOffsetPosition = -1;	
+				mouseOffsetPosition = -1;
 			}
-			 
+
 		}
-		
+
 
 	}
 
@@ -118,7 +118,7 @@ public class RackDropListener implements DropTargetListener, DragSourceListener,
 
 			if(!ok) dtde.rejectDrag();
 			else dtde.acceptDrag(DnDConstants.ACTION_COPY_OR_MOVE);
-			
+
 			this.rackPanel.repaint();
 		} catch (Exception e) {
 			dtde.rejectDrag();
@@ -138,43 +138,44 @@ public class RackDropListener implements DropTargetListener, DragSourceListener,
 	@SuppressWarnings("unchecked")
 	@Override
 	public void drop(DropTargetDropEvent dtde) {
-		
+
 		pos2Color.clear();
-		
+
 		try {
 			List<Container> containers = (List<Container>) dtde.getTransferable().getTransferData(ContainerTransferable.DATA_FLAVOR);
 			if(containers.size()>0) {
 				for (RackDepictorListener listener : this.rackPanel.getDepictor().getRackDepictorListeners()) {
 					if(listener==null || !listener.acceptDrag()) continue;
 					listener.containerDropped(containers, droppedPoses);
-				}				
+				}
 			}
 			dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
-			this.rackPanel.repaint();
 			this.rackPanel.setSelectedPoses(Container.getPoses(containers));
+			this.rackPanel.doLayout();
+			this.rackPanel.repaint();
 		} catch (Exception e) {
 			dtde.rejectDrop();
-			JExceptionDialog.showError(e);			
+			JExceptionDialog.showError(e);
 		}
 		dtde.dropComplete(true);
-		
+
 	}
 
 
 	@Override
-	public void dragEnter(DragSourceDragEvent dsde) {	
+	public void dragEnter(DragSourceDragEvent dsde) {
 	}
 
 	@Override
-	public void dragOver(DragSourceDragEvent dsde) {		
+	public void dragOver(DragSourceDragEvent dsde) {
 	}
 
 	@Override
-	public void dropActionChanged(DragSourceDragEvent dsde) {		
+	public void dropActionChanged(DragSourceDragEvent dsde) {
 	}
 
 	@Override
-	public void dragExit(DragSourceEvent dse) {		
+	public void dragExit(DragSourceEvent dse) {
 	}
 
 	@SuppressWarnings("unchecked")
@@ -183,25 +184,25 @@ public class RackDropListener implements DropTargetListener, DragSourceListener,
 		pos2Color.clear();
 		mouseOffsetPosition = -1;
 		try {
-			List<Container> containers = (List<Container>) dsde.getDragSourceContext().getTransferable().getTransferData(ContainerTransferable.DATA_FLAVOR);	
+			List<Container> containers = (List<Container>) dsde.getDragSourceContext().getTransferable().getTransferData(ContainerTransferable.DATA_FLAVOR);
 			this.rackPanel.setSelectedPoses(Container.getPoses(containers));
 		} catch (Exception e) {
 			e.printStackTrace();
-		}						
-		
+		}
+
 		this.rackPanel.repaint();
-		
+
 	}
 
 	/**
-	 * Computes and highlights the new positions where the container could be dropped   
+	 * Computes and highlights the new positions where the container could be dropped
 	 * @param startPos
 	 * @param mouseOffsetPosition (-1 to place the containers one by one starting from newpos and following the direction, >=0 to place them as they are correctly but with the given offset)
 	 * @param containers
 	 * @return true if this is possible
 	 */
 	public boolean computeDroppedPoses(int startPos, int mouseOffsetPosition, Collection<Container> containers) {
-		
+
 		droppedPoses.clear();
 		pos2Color.clear();
 
@@ -228,13 +229,13 @@ public class RackDropListener implements DropTargetListener, DragSourceListener,
 			}
 			smallestPos = Math.min(smallestPos, oriPos);
 		}
-		
+
 		Map<Integer, Container> pos2containers = location.getContainersMap();
-		for (Container c : containers) {		
+		for (Container c : containers) {
 			int pos;
-			if(mouseOffsetPosition>=0) { 
+			if(mouseOffsetPosition>=0) {
 				//Dragging from depictor to depictor
-				//Translate the existing position					
+				//Translate the existing position
 				pos = startPos + c.getPos() - mouseOffsetPosition;
 			} else {
 				int oriPos;
@@ -252,7 +253,7 @@ public class RackDropListener implements DropTargetListener, DragSourceListener,
 				if(d==Direction.PATTERN) {
 					pos = location.getLabeling().getNextForPattern(location, startPos, oriPos-smallestPos);
 				} else {
-					pos = location.getLabeling().getNext(location, startPos, d, index);						
+					pos = location.getLabeling().getNext(location, startPos, d, index);
 				}
 				index++;
 			}
@@ -269,16 +270,16 @@ public class RackDropListener implements DropTargetListener, DragSourceListener,
 				pos2Color.put(pos, Color.GREEN);
 				ok = true;
 			}  else {
-				pos2Color.put(pos, Color.RED);					
+				pos2Color.put(pos, Color.RED);
 				ok = false;
 			}
-			
-			
+
+
 			//Ok position, add it in the preview
 			if(ok && pos>=0) {
-				
+
 				if(droppedPoses.contains(pos)) {
-					pos2Color.put(pos, Color.RED);					
+					pos2Color.put(pos, Color.RED);
 					ok = false;
 				} else {
 					droppedPoses.add(pos);
@@ -287,11 +288,11 @@ public class RackDropListener implements DropTargetListener, DragSourceListener,
 		}
 		return droppedPoses.size()==containers.size();
 	}
-	
+
 	public List<Integer> getDroppedPoses() {
 		return droppedPoses;
 	}
-	
+
 	public Map<Integer, Color> getPos2Color() {
 		return pos2Color;
 	}
@@ -301,5 +302,5 @@ public class RackDropListener implements DropTargetListener, DragSourceListener,
 	public static void setDirection(Direction d) {
 		direction = d;
 	}
-	
+
 }

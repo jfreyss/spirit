@@ -48,27 +48,27 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 public class StudySearchPane extends JPanel {
 
 	private final StudySearchTree studySearchTree;
-	
-	private final JButton myStudiesButton = new JButton(new Action_MyStudies());
+
+	//	private final JButton myStudiesButton = new JButton(new Action_MyStudies());
 	private final JButton searchButton = new JButton(new Action_Search());
 	private final JButton resetButton = new JButton(new Action_Reset());
-	
+
 	private final StudyTable table;
-	
+
 	public StudySearchPane(SpiritFrame frame, StudyTable table) {
 		super(new BorderLayout(0, 0));
 		this.table = table;
 		this.studySearchTree = new StudySearchTree(frame);
-		
-		
+
+
 		add(BorderLayout.CENTER, new JScrollPane(studySearchTree));
-		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(myStudiesButton, Box.createHorizontalGlue(), resetButton, searchButton));
-		
+		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(/*myStudiesButton,*/ Box.createHorizontalGlue(), resetButton, searchButton));
+
 		studySearchTree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, e-> {
 			query(studySearchTree.getQuery());
 		});
-		
-		setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));	
+
+		setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
 		setPreferredSize(new Dimension(220, 200));
 	}
 
@@ -87,19 +87,19 @@ public class StudySearchPane extends JPanel {
 			query();
 		}
 	}
-	
-	public class Action_MyStudies extends AbstractAction {
-		public Action_MyStudies() {
-			super("MyStudies");
-		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			StudyQuery q = new StudyQuery();
-			q.setUser(SpiritFrame.getUser()==null? null: SpiritFrame.getUser().getUsername());
-			query(q);
-		}
-	}
-	
+
+	//	public class Action_MyStudies extends AbstractAction {
+	//		public Action_MyStudies() {
+	//			super("MyStudies");
+	//		}
+	//		@Override
+	//		public void actionPerformed(ActionEvent e) {
+	//			StudyQuery q = new StudyQuery();
+	//			q.setUser(SpiritFrame.getUser()==null? null: SpiritFrame.getUser().getUsername());
+	//			query(q);
+	//		}
+	//	}
+
 	public class Action_Reset extends AbstractAction {
 		public Action_Reset() {
 			super("");
@@ -112,17 +112,17 @@ public class StudySearchPane extends JPanel {
 			table.getSelectionModel().clearSelection();
 		}
 	}
-	
+
 	public void reset() {
 		studySearchTree.setQuery(new StudyQuery());
 		query(new StudyQuery());
-		
+
 	}
-	
+
 	public SwingWorkerExtended query() {
 		return query(studySearchTree.getQuery());
 	}
-			
+
 	public SwingWorkerExtended query(final StudyQuery query) {
 		table.setRows(new ArrayList<>());
 		return new SwingWorkerExtended("Querying Studies", table, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
@@ -140,16 +140,16 @@ public class StudySearchPane extends JPanel {
 					table.setSelection(studies);
 				}
 				SpiritContextListener.setStatus(studies.size() + " Studies");
-			}			
-		};		
+			}
+		};
 	}
-	
+
 	public JButton getSearchButton() {
 		return searchButton;
 	}
 
-	
-//	public void setStudyIds(String studyIds) {
-//		studySearchTree.setStudyIds(studyIds);
-//	}
+
+	//	public void setStudyIds(String studyIds) {
+	//		studySearchTree.setStudyIds(studyIds);
+	//	}
 }

@@ -28,6 +28,7 @@ import java.util.List;
 import javax.swing.AbstractCellEditor;
 import javax.swing.JLabel;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
@@ -54,6 +55,7 @@ public abstract class GroupCellEditor extends AbstractCellEditor implements Tabl
 	public GroupCellEditor(boolean allowTyping) {
 		this.allowTyping = allowTyping;
 		cb.setAllowTyping(allowTyping);
+		cb.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
 
 
@@ -72,6 +74,7 @@ public abstract class GroupCellEditor extends AbstractCellEditor implements Tabl
 		}
 		cb.setChoices(choices);
 		cb.setText(value==null?"": ((Group)value).getBlindedName(SpiritFrame.getUsername()));
+		cb.selectAll();
 		return cb;
 	}
 
@@ -81,14 +84,12 @@ public abstract class GroupCellEditor extends AbstractCellEditor implements Tabl
 
 		for (Group group : groups) {
 			if(group.getName().equals(cb.getText())) {
-				System.out.println("GroupCellEditor.getCellEditorValue() > "+group + " "+group.getId());
 				return group;
 			}
 		}
 		if(allowTyping) {
 			Group group = new Group(cb.getText());
 			group.setStudy(study);
-			System.out.println("GroupCellEditor.getCellEditorValue() > "+group + " "+group.getId());
 			return group;
 		}
 		return null;

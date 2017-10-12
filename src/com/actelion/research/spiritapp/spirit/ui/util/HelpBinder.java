@@ -71,7 +71,7 @@ import com.actelion.research.spiritapp.spirit.ui.study.StudyTab;
 import com.actelion.research.spiritapp.spirit.ui.study.edit.AttachSamplesManuallyDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.sampling.NamedSamplingDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyInfoDlg;
-import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyWizardDlg;
+import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyDesignDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.group.StudyGroupDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.phase.PhaseDlg;
 import com.actelion.research.spiritapp.spirit.ui.study.wizard.treatment.StudyTreatmentDlg;
@@ -96,7 +96,7 @@ public class HelpBinder {
 			class2Ref.put(ResultTab.class, "result_visualization");
 			
 			class2Ref.put(StudyInfoDlg.class, "study_infos");
-			class2Ref.put(StudyWizardDlg.class, "study_design");
+			class2Ref.put(StudyDesignDlg.class, "study_design");
 			class2Ref.put(PhaseDlg.class, "study_phase");
 			class2Ref.put(StudyGroupDlg.class, "study_group");
 			class2Ref.put(StudyTreatmentDlg.class, "study_treatment");

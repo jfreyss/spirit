@@ -55,7 +55,7 @@ public class ContainerFullColumn extends Column<Biosample, String> {
 	private static ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.FULL);
 
 	public ContainerFullColumn() {
-		super("Container\n", String.class, 45, 180);
+		super("Container\n+Location", String.class, 45, 160);
 	}
 
 	@Override
@@ -77,10 +77,19 @@ public class ContainerFullColumn extends Column<Biosample, String> {
 	}
 
 	@Override
+	public String getToolTipText(Biosample row) {
+		return "<html>" +
+				(row.getContainerType()==null?"": row.getContainerType().getName() + " ") +
+				(row.getContainerId()==null?"": row.getContainerId()) + "<br>" +
+				(row.getAmount()==null?"": row.getAmountAndUnit() + "<br>") +
+				(row.getLocation()==null?"": row.getLocationString(LocationFormat.FULL_POS, SpiritFrame.getUser())) +
+				"</html>";
+	}
+
+	@Override
 	public String getCopyValue(Biosample row, int rowNo) {
 		return row.getContainerId()==null?"": row.getContainerId();
 	}
-
 
 	@Override
 	public void setValue(Biosample row, String value) {

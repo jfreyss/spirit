@@ -33,52 +33,54 @@ import org.slf4j.LoggerFactory;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.HSQLFileAdapter;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.SQLConverter.SQLVendor;
 
 /**
  * The Migration Script class is responsible for updating the DB from one version to the next. Therefore each script must implement:
  * - getToVersion()
- * - getScript() 
- * 
+ * - getScript()
+ *
  * This superclass MigrationScript implements some static methods to know the current version and what scripts should be called.
- * 
- *  
+ *
+ *
  * @author freyssj
  */
 public abstract class MigrationScript {
 
 	private final String toVersion;
-	
+
 	public static class FatalException extends RuntimeException {
 		public FatalException(String message) {
 			super(message);
 		}
 	}
- 	
+
 	public static class MismatchDBException extends Exception {
 		public MismatchDBException(String dbVersion) {
 			super("The current version of the Spirit program ("+getExpectedDBVersion()+") does not match the DB version ("+(dbVersion==null?"NA":"")+")");
 		}
 	}
-	
+
 	public static interface ILogger {
 		public void info(String sql, String msg);
 		public void error(String sql, Exception e);
 	}
-	
+
 	private static List<MigrationScript> getScripts() {
-		List<MigrationScript> scripts = new ArrayList<>();		
+		List<MigrationScript> scripts = new ArrayList<>();
 		scripts.add(new MigrationScript1_9());
 		scripts.add(new MigrationScript2_0());
 		scripts.add(new MigrationScript2_1());
+		scripts.add(new MigrationScript2_2());
 		return scripts;
-	}	
-	
+	}
+
 	public static String getExpectedDBVersion() {
 		List<MigrationScript> scripts = getScripts();
 		return scripts.get(scripts.size()-1).getToVersion();
 	}
-	
+
 	/**
 	 * Throws a MismatchDBException if the DB verson is not the one expected by the program
 	 * @throws MismatchDBException
@@ -90,38 +92,45 @@ public abstract class MigrationScript {
 		} catch(Exception e) {
 			dbVersion = null;
 		}
-			
+
 		if(dbVersion==null || !dbVersion.equals(MigrationScript.getExpectedDBVersion())) {
 			throw new MismatchDBException(dbVersion);
 		}
 	}
 
-	
+
 	public static String getSql(SQLVendor vendor) throws Exception {
 		StringBuilder sb = new StringBuilder();
 		String version = MigrationScript.getDBVersion();
 		for (MigrationScript script : getScripts()) {
 			if(version==null || version.compareTo(script.getToVersion())<0) {
 				sb.append("\r\n");
-				sb.append("/* Migration to " + script.getToVersion() + " */\r\n");
+				sb.append("/* Migration to " + script.getToVersion() + " */;\r\n");
 				sb.append(script.getMigrationSql(vendor));
-				sb.append("update spirit.spirit_property set value = '" + script.getToVersion() + "' where id = '" + PropertyKey.DB_VERSION.getKey() + "' and value < '" + script.getToVersion() + "';");		
+				sb.append("update spirit.spirit_property set value = '" + script.getToVersion() + "' where id = '" + PropertyKey.DB_VERSION.getKey() + "' and value < '" + script.getToVersion() + "';");
 			}
 		}
 		return sb.toString();
 	}
-	
+
 	/**
-	 * Updates the DB, bx exececting the migration script.
+	 * Updates the DB, by executing the migration script, as specified in the concrete class.
 	 * However the DB version is not set.
 	 * @param vendor
 	 * @param logger
 	 * @throws Exception
 	 */
 	public static void updateDB(SQLVendor vendor, ILogger logger) throws Exception {
-		Connection conn = DBAdapter.getAdapter().getConnection();
+
+		//Retrieve the script
+		String sql = getSql(vendor);
+
+		//Close all hibernate connections
+		JPAUtil.closeFactory();
+
+		//Open a JDBC connection and execute the script
+		Connection conn = DBAdapter.getInstance().getConnection();
 		try {
-			String sql = getSql(vendor);
 			executeScript(conn, sql, false, logger);
 			conn.commit();
 		} catch(Exception e) {
@@ -131,8 +140,8 @@ public abstract class MigrationScript {
 			conn.close();
 		}
 	}
-	
-	
+
+
 	/**
 	 * Constructs a new migration script from the given version to the next version.
 	 * The version is given by JPAUtil.getDBVersion()
@@ -143,13 +152,13 @@ public abstract class MigrationScript {
 		assert toVersion!=null;
 		this.toVersion = toVersion;
 	}
-	
+
 	public String getToVersion() {
 		return toVersion;
 	}
-	
+
 	public abstract String getMigrationSql(SQLVendor vendor) throws Exception;
-	
+
 	/**
 	 * Return the DB Version as stated in the table spirit.spirit_property.
 	 * If the version is not set, this routine will update it
@@ -158,23 +167,23 @@ public abstract class MigrationScript {
 	public static String getDBVersion() throws Exception {
 		Connection conn = null;
 		try {
-			conn = DBAdapter.getAdapter().getConnection();
-			
+			conn = DBAdapter.getInstance().getConnection();
+
 			Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery("select max(value) from spirit.spirit_property where id = '" + PropertyKey.DB_VERSION.getKey() + "'");
 			rs.next();
 			String version = rs.getString(1);
 			rs.close();
 			stmt.close();
-			
-			LoggerFactory.getLogger(MigrationScript.class).info("DBVersion: " + version);			
+
+			LoggerFactory.getLogger(MigrationScript.class).info("DBVersion: " + version);
 			return version;
 		} catch(Exception ex) {
 			//Throw the exception in case of lock (HSQL file mode)
-			if(ex.getMessage().startsWith("Database lock acquisition failure") && DBAdapter.getAdapter().getClass()==HSQLFileAdapter.class) {
+			if(ex.getMessage().startsWith("Database lock acquisition failure") && DBAdapter.getInstance().getClass()==HSQLFileAdapter.class) {
 				throw new FatalException("Please close the other Spirit instance before opening a new one.");
 			}
-			
+
 			LoggerFactory.getLogger(MigrationScript.class).warn(ex.getMessage());
 			return null;
 		} finally {
@@ -191,10 +200,10 @@ public abstract class MigrationScript {
 	 * @throws Exception
 	 */
 	public static void executeScript(Connection conn, String scripts, boolean failOnError, ILogger logger) throws Exception {
-		
+
 		for (String script : split(scripts)) {
 			if(script.trim().length()==0) continue;
-			
+
 			try (Statement stmt = conn.createStatement()) {
 				LoggerFactory.getLogger(MigrationScript.class).info("execute:  "+script+"");
 				stmt.setQueryTimeout(180);
@@ -208,7 +217,7 @@ public abstract class MigrationScript {
 			}
 		}
 	}
-	
+
 	private static List<String> split(String string){
 		List<String> l = new ArrayList<>();
 		StringTokenizer st = new StringTokenizer(string, ";\'\\\r\n", true);
@@ -219,7 +228,7 @@ public abstract class MigrationScript {
 			String s = st.nextToken();
 			if(s.equals("\r") || s.equals("\n")) {
 				//ignore
-			} else if(s.equals(";")) { 
+			} else if(s.equals(";")) {
 				if(inQuotes) {
 					sb.append(s);
 				} else {
@@ -240,8 +249,8 @@ public abstract class MigrationScript {
 			System.err.println("error in "+string);
 		}
 		l.add(sb.toString());
-		
+
 		return l;
 	}
-	
+
 }

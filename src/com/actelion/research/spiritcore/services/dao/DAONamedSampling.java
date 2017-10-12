@@ -52,14 +52,14 @@ public class DAONamedSampling {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static List<NamedSampling> getNamedSamplings(SpiritUser user, Study orStudy) {
+	public static List<NamedSampling> getNamedSamplings(SpiritUser user, Study study) {
 		assert user!=null;
 
 		List<Integer> sids;
-		if(orStudy==null) {
+		if(study==null) {
 			sids = JPAUtil.getIds(DAOStudy.getRecentStudies(user, RightLevel.READ));
 		} else {
-			sids = Collections.singletonList(orStudy.getId());
+			sids = Collections.singletonList(study.getId());
 		}
 
 		EntityManager session = JPAUtil.getManager();

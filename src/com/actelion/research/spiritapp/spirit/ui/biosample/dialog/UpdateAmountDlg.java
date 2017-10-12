@@ -43,25 +43,26 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
-import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample.AmountOp;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class UpdateAmountDlg extends JSpiritEscapeDialog {
-	
+
 	private JComboBox<String> whatComboBox = new JComboBox<String>(new String[] { "", "Add", "Substract", "Set To"});
-	private JCustomTextField doubleTextField = new JCustomTextField(JCustomTextField.DOUBLE, 5);
-	
+	private JCustomTextField doubleTextField = new JCustomTextField(CustomFieldType.DOUBLE, 5);
+
 	public UpdateAmountDlg(final List<Biosample> mySamples) throws Exception {
 		super(UIUtils.getMainFrame(), "Biosample - Update Amount", UpdateAmountDlg.class.getName());
-		
+
 		final List<Biosample> biosamples = JPAUtil.reattach(mySamples);
-		
+
 		Biotype type = null;
 		for (Biosample b : biosamples) {
 			if(type==null) type = b.getBiotype();
@@ -69,15 +70,15 @@ public class UpdateAmountDlg extends JSpiritEscapeDialog {
 		}
 		if(type==null) throw new Exception("No biotype");
 		if(type.getAmountUnit()==null) throw new Exception("No amount");
-		
+
 		Box northPanel = Box.createVerticalBox();
 		northPanel.setBorder(BorderFactory.createTitledBorder(""));
-		northPanel.add(UIUtils.createHorizontalBox(new JCustomLabel("Update " + type.getAmountUnit().getName() + " of " + (biosamples.size()==1? biosamples.get(0).getSampleId(): biosamples.size()+" "+type.getName()), Font.ITALIC), Box.createHorizontalGlue()));		
+		northPanel.add(UIUtils.createHorizontalBox(new JCustomLabel("Update " + type.getAmountUnit().getName() + " of " + (biosamples.size()==1? biosamples.get(0).getSampleId(): biosamples.size()+" "+type.getName()), Font.ITALIC), Box.createHorizontalGlue()));
 		northPanel.add(UIUtils.createHorizontalBox(whatComboBox, Box.createHorizontalStrut(10), doubleTextField, new JLabel(type.getAmountUnit().getUnit())));
-		
+
 		JButton okButton = new JIconButton(IconType.SAVE, "Update Amount");
 		okButton.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -89,21 +90,21 @@ public class UpdateAmountDlg extends JSpiritEscapeDialog {
 					SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, biosamples);
 				} catch (Exception ex) {
 					JExceptionDialog.showError(ex);
-				}				
+				}
 			}
 		});
-		
+
 		JPanel contentPane = new JPanel(new BorderLayout());
 		contentPane.add(BorderLayout.CENTER, northPanel);
 		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
-		
-		
+
+
 		setContentPane(contentPane);
 		pack();
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
 	}
-	
+
 	public static void updateAmount(List<Biosample> biosamples, AmountOp op, double amount, SpiritUser user) throws Exception {
 		for (Biosample b : biosamples) {
 			if (!SpiritRights.canEdit(b, user)) {
@@ -127,5 +128,5 @@ public class UpdateAmountDlg extends JSpiritEscapeDialog {
 
 		DAOBiosample.persistBiosamples(biosamples, user);
 	}
-	
+
 }

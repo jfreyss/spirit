@@ -24,8 +24,6 @@ package com.actelion.research.spiritapp.spirit.ui.study.wizard;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -45,6 +43,7 @@ import com.actelion.research.spiritapp.spirit.ui.study.PhaseComboBox;
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.Selection;
 import com.actelion.research.spiritapp.spirit.ui.study.depictor.StudyDepictor;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Measurement;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
@@ -52,13 +51,14 @@ import com.actelion.research.spiritcore.business.study.NamedTreatment;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.UIUtils;
 
 public class StudyDesignerPanel extends JPanel {
-	
+
 	public static String PROPERTY_UPDATED = "UPDATED";
 
 	/**
@@ -67,20 +67,19 @@ public class StudyDesignerPanel extends JPanel {
 	private StudyDepictor depictor = new StudyDepictor() {
 		private int x = -1, y = -1;
 		private int toX, toY;
-		
+
 		@Override
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
-			
+
 			if(x>0 && x>=0 && (toX!=x || toY!=y)) {
-				
 				g.setColor(UIUtils.getColor(0, 0, 20, 12));
 				g.fillRect(Math.min(x, toX), Math.min(y, toY), Math.abs(toX-x), Math.abs(toY-y));
 				g.setColor(Color.GRAY);
 				g.drawRect(Math.min(x, toX), Math.min(y, toY), Math.abs(toX-x), Math.abs(toY-y));
-			}			
+			}
 		}
-		
+
 		@Override
 		public void mouseClicked(MouseEvent e) {
 			if(e.getButton()==MouseEvent.BUTTON1) {
@@ -91,17 +90,17 @@ public class StudyDesignerPanel extends JPanel {
 					if(a!=null) applyChange(a);
 				}
 			}
-			
+
 			repaint(true);
-				
+
 		}
-		
+
 		@Override
 		public void mousePressed(MouseEvent e) {
 			x = e.getX();
-			y = e.getY();					
+			y = e.getY();
 		}
-	
+
 		@Override
 		public void mouseReleased(MouseEvent e) {
 			applyChange(x, y, e.getX(), e.getY());
@@ -111,9 +110,9 @@ public class StudyDesignerPanel extends JPanel {
 		@Override
 		public void mouseExited(MouseEvent e) {
 			x = y = -1;
-			repaint(true);			
+			repaint(true);
 		}
-		
+
 		@Override
 		public void mouseDragged(MouseEvent e) {
 			toX = e.getX();
@@ -122,7 +121,7 @@ public class StudyDesignerPanel extends JPanel {
 		}
 	};
 
-	private final StudyWizardDlg dlg;
+	private final StudyDesignDlg dlg;
 	private JScrollPane sp = new JScrollPane(depictor);
 	private JGenericComboBox<String> measurementCombobox = new JGenericComboBox<>();
 	private List<Measurement> extraMeasurements;
@@ -131,119 +130,106 @@ public class StudyDesignerPanel extends JPanel {
 	private JGenericComboBox<String> labelCombobox = new JGenericComboBox<>();
 	private int push = 0;
 
-	public StudyDesignerPanel(StudyWizardDlg dlg) {
+	public StudyDesignerPanel(StudyDesignDlg dlg) {
 		super(null);
 		this.dlg = dlg;
-		
+
 		depictor.setDesignerMode(true);
 
-		measurementCombobox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if(push>0) return;
-				push++;
-				if(treatmentCombobox.getItemCount()>0) treatmentCombobox.setSelectedIndex(0);
-				if(samplingCombobox.getItemCount()>0) samplingCombobox.setSelectedIndex(0);
-				if(labelCombobox.getItemCount()>0) labelCombobox.setSelectedIndex(0);
-				push--;
-				
-				if("<<New>>".equals(measurementCombobox.getSelection())) {
-					Measurement em  = askForExtraMeasurement();
-					if(em==null) {
-						measurementCombobox.setSelectedIndex(0);
-						return;
-					}
-					
-					String key = em.getDescription();
-					List<String> measurementOptions = measurementCombobox.getValues();
-					measurementOptions.add(key);
-					measurementCombobox.setValues(measurementOptions);
-					measurementCombobox.setSelection(key);
-					
-					extraMeasurements.add(em);
+		measurementCombobox.addActionListener(e-> {
+			if(push>0) return;
+			push++;
+			if(treatmentCombobox.getItemCount()>0) treatmentCombobox.setSelectedIndex(0);
+			if(samplingCombobox.getItemCount()>0) samplingCombobox.setSelectedIndex(0);
+			if(labelCombobox.getItemCount()>0) labelCombobox.setSelectedIndex(0);
+			push--;
 
+			if("<<New>>".equals(measurementCombobox.getSelection())) {
+				Measurement em  = askForExtraMeasurement();
+				if(em==null) {
+					measurementCombobox.setSelectedIndex(0);
+					return;
 				}
+
+				String key = em.getDescription();
+				List<String> measurementOptions = measurementCombobox.getValues();
+				measurementOptions.add(key);
+				measurementCombobox.setValues(measurementOptions);
+				measurementCombobox.setSelection(key);
+
+				extraMeasurements.add(em);
 			}
 		});
-		treatmentCombobox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if(push>0) return;
-				push++;
-				if(measurementCombobox.getItemCount()>0) measurementCombobox.setSelectedIndex(0);
-				if(samplingCombobox.getItemCount()>0) samplingCombobox.setSelectedIndex(0);
-				if(labelCombobox.getItemCount()>0) labelCombobox.setSelectedIndex(0);
-				push--;
-			}
+		treatmentCombobox.addActionListener(e-> {
+			if(push>0) return;
+			push++;
+			if(measurementCombobox.getItemCount()>0) measurementCombobox.setSelectedIndex(0);
+			if(samplingCombobox.getItemCount()>0) samplingCombobox.setSelectedIndex(0);
+			if(labelCombobox.getItemCount()>0) labelCombobox.setSelectedIndex(0);
+			push--;
 		});
-		samplingCombobox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if(push>0) return;
-				push++;
-				if(measurementCombobox.getItemCount()>0) measurementCombobox.setSelectedIndex(0);
-				if(treatmentCombobox.getItemCount()>0) treatmentCombobox.setSelectedIndex(0);
-				if(labelCombobox.getItemCount()>0) labelCombobox.setSelectedIndex(0);
-				push--;
-			}
+		samplingCombobox.addActionListener(e-> {
+			if(push>0) return;
+			push++;
+			if(measurementCombobox.getItemCount()>0) measurementCombobox.setSelectedIndex(0);
+			if(treatmentCombobox.getItemCount()>0) treatmentCombobox.setSelectedIndex(0);
+			if(labelCombobox.getItemCount()>0) labelCombobox.setSelectedIndex(0);
+			push--;
 		});
-			
-		labelCombobox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if(push>0) return;
-				push++;
-				if(measurementCombobox.getItemCount()>0) measurementCombobox.setSelectedIndex(0);
-				if(treatmentCombobox.getItemCount()>0) treatmentCombobox.setSelectedIndex(0);
-				if(samplingCombobox.getItemCount()>0) samplingCombobox.setSelectedIndex(0);
-				push--;
-				
-				if("<<New>>".equals(labelCombobox.getSelection())) {
-					String selLabel = JOptionPane.showInputDialog(StudyDesignerPanel.this, "Enter the name of the label", "New Label", JOptionPane.QUESTION_MESSAGE);
-					if(selLabel==null) {
-						labelCombobox.setSelectedIndex(0);
-						return;
-					}
-					List<String> values = labelCombobox.getValues();
-					values.add(selLabel);					
-					labelCombobox.setValues(values);
-					labelCombobox.setSelection(selLabel);
+
+		labelCombobox.addActionListener(e-> {
+			if(push>0) return;
+			push++;
+			if(measurementCombobox.getItemCount()>0) measurementCombobox.setSelectedIndex(0);
+			if(treatmentCombobox.getItemCount()>0) treatmentCombobox.setSelectedIndex(0);
+			if(samplingCombobox.getItemCount()>0) samplingCombobox.setSelectedIndex(0);
+			push--;
+
+			if("<<New>>".equals(labelCombobox.getSelection())) {
+				String selLabel = JOptionPane.showInputDialog(StudyDesignerPanel.this, "Enter the name of the label", "New Label", JOptionPane.QUESTION_MESSAGE);
+				if(selLabel==null) {
+					labelCombobox.setSelectedIndex(0);
+					return;
 				}
+				List<String> values = labelCombobox.getValues();
+				values.add(selLabel);
+				labelCombobox.setValues(values);
+				labelCombobox.setSelection(selLabel);
 			}
 		});
-			
+
 		setLayout(new BorderLayout());
 		add(BorderLayout.CENTER, sp);
-		add(BorderLayout.NORTH, UIUtils.createVerticalBox(
-				new JCustomLabel("Select an action and click on the study design to add it.", Color.GRAY),
-				UIUtils.createHorizontalBox(
-						new JLabel("Add Measurement: "),
-						measurementCombobox, 
-						Box.createHorizontalStrut(10),
-						new JLabel("Add Treatment: "),
-						treatmentCombobox, 
-						Box.createHorizontalStrut(10),
-						new JLabel("Add Sampling: "),
-						samplingCombobox, 
-						Box.createHorizontalStrut(10),
-						new JLabel("Add label: "),
-						labelCombobox, 
-						Box.createHorizontalGlue())));
-		
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)) {
+			add(BorderLayout.NORTH, UIUtils.createVerticalBox(
+					new JCustomLabel("Select an action and click on the study design to add it.", Color.GRAY),
+					UIUtils.createHorizontalBox(
+							new JLabel("Add Measurement: "),
+							measurementCombobox,
+							Box.createHorizontalStrut(10),
+							new JLabel("Add Treatment: "),
+							treatmentCombobox,
+							Box.createHorizontalStrut(10),
+							new JLabel("Add Sampling: "),
+							samplingCombobox,
+							Box.createHorizontalStrut(10),
+							new JLabel("Add label: "),
+							labelCombobox,
+							Box.createHorizontalGlue())));
+		}
 	}
-	
+
 	public void setSelectedNamedSampling(NamedSampling ns) {
 		samplingCombobox.setSelection(ns);
 	}
-	
+
 	public void setSelectedNamedTreatment(NamedTreatment nt) {
 		treatmentCombobox.setSelection(nt);
 	}
-	
+
 	public void setStudy(Study study) {
 		depictor.setStudy(study);
-		
-		
+
 		if(study!=null) {
 			List<String> measurementOptions = new ArrayList<>();
 			measurementOptions.add("<<New>>");
@@ -258,7 +244,7 @@ public class StudyDesignerPanel extends JPanel {
 				extraMeasurements.add(em);
 				measurementOptions.add(em.getDescription());
 			}
-			
+
 			TreeSet<String> labels = new TreeSet<>();
 			labels.add("<<New>>");
 			labels.add("<<Remove>>");
@@ -270,19 +256,19 @@ public class StudyDesignerPanel extends JPanel {
 			treatmentCombobox.setValues(study.getNamedTreatments(), "Treatment...");
 			samplingCombobox.setValues(study.getNamedSamplings(), "Sampling...");
 			labelCombobox.setValues(labels, "Label...");
-			
+
 			treatmentCombobox.setEnabled(study.getNamedTreatments().size()>0);
 			samplingCombobox.setEnabled(study.getNamedSamplings().size()>0);
 		}
 	}
 
-	
+
 	private void applyChange(StudyAction model) {
 		int x = depictor.getX(model.getPhase());
 		int y = depictor.getY(model.getGroup(), model.getSubGroup());
 		applyChange(x, y, x, y, model);
 	}
-	
+
 	private void applyChange(int fromX, int fromY, int toX, int toY) {
 		if(fromX>toX) {int tmp = fromX; fromX = toX; toX = tmp;}
 		if(fromY>toY) {int tmp = fromY; fromY = toY; toY = tmp;}
@@ -290,9 +276,9 @@ public class StudyDesignerPanel extends JPanel {
 		applyChange(fromX, fromY, toX, toY, null);
 	}
 	private void applyChange(int fromX, int fromY, int toX, int toY, StudyAction model) {
-		
+
 		Study study = depictor.getStudy();
-		
+
 		for (Phase phase : study.getPhases()) {
 			int x = depictor.getX(phase);
 			if(x<fromX || x>toX) continue;
@@ -300,11 +286,11 @@ public class StudyDesignerPanel extends JPanel {
 				for(int subgroup=0; subgroup<group.getNSubgroups(); subgroup++) {
 					int y = depictor.getY(group, subgroup);
 					if(y<fromY || y>toY) continue;
-					
-					StudyAction action = study.getOrCreateStudyAction(group, subgroup, phase);		
+
+					StudyAction action = study.getOrCreateStudyAction(group, subgroup, phase);
 					if(model==null) model = new StudyAction(action);
-					
-					if(measurementCombobox.getSelectedIndex()>0 && action.getGroup().getDividingSampling()!=null) continue;
+
+					//					if(measurementCombobox.getSelectedIndex()>0 && action.getGroup().getDividingSampling()!=null) continue;
 
 					//Apply the actions
 					if(measurementCombobox.getSelectedIndex()==2) {
@@ -314,9 +300,9 @@ public class StudyDesignerPanel extends JPanel {
 						action.setMeasureWeight(false);
 						action.setMeasurements(null);
 					} else if(measurementCombobox.getSelectedIndex()==3) {
-						action.setMeasureWeight(!model.isMeasureWeight());				
+						action.setMeasureWeight(!model.isMeasureWeight());
 					} else if(measurementCombobox.getSelectedIndex()==4) {
-						action.setMeasureFood(!model.isMeasureFood());				
+						action.setMeasureFood(!model.isMeasureFood());
 					} else if(measurementCombobox.getSelectedIndex()==5) {
 						action.setMeasureWater(!model.isMeasureWater());
 					} else if(measurementCombobox.getSelectedIndex()>=6) {
@@ -331,7 +317,7 @@ public class StudyDesignerPanel extends JPanel {
 							action.setMeasurements(ems);
 							setStudy(study);
 						}
-						
+
 					} else if(samplingCombobox.getSelection()!=null) {
 						NamedSampling ns = samplingCombobox.getSelection();
 						boolean present = ns.equals(model.getNamedSampling1()) || ns.equals(model.getNamedSampling2());
@@ -343,14 +329,14 @@ public class StudyDesignerPanel extends JPanel {
 							} else {
 								//TO add a sampling, we should first make sure, that the necropsy is only set in one phase
 								boolean res = checkAndAddSampling(action, ns);
-								if(!res) return;							
-								
+								if(!res) return;
+
 							}
 						} catch(Exception e) {
 							JExceptionDialog.showError(e);
 							return;
 						}
-						
+
 					} else if(treatmentCombobox.getSelection()!=null) {
 						NamedTreatment t = treatmentCombobox.getSelection();
 						boolean present = t.equals(model.getNamedTreatment());
@@ -368,13 +354,13 @@ public class StudyDesignerPanel extends JPanel {
 				}
 			}
 		}
-		
-		
-		repaint();		
+
+
+		repaint();
 		StudyDesignerPanel.this.firePropertyChange(PROPERTY_UPDATED, "", null);
 
 	}
-	
+
 
 	/**
 	 * Return true if done
@@ -394,21 +380,21 @@ public class StudyDesignerPanel extends JPanel {
 				}
 			}
 		}
-		study.setNamedSampling(action.getGroup(), action.getPhase(), action.getSubGroup(), ns, true);		
+		study.setNamedSampling(action.getGroup(), action.getPhase(), action.getSubGroup(), ns, true);
 		return true;
 
 	}
 	/**
-	 * 
+	 *
 	 * @param action
 	 * @param ns
 	 * @return true if done
 	 */
 	public boolean checkAndRemoveSampling(StudyAction action, NamedSampling ns) throws Exception {
 		Study study = depictor.getStudy();
-		//Check that this sampling can be removed, ie there are no biosamples attached to this sampling at this phase, group, subgroup		
+		//Check that this sampling can be removed, ie there are no biosamples attached to this sampling at this phase, group, subgroup
 		Set<Biosample> samples = study.getSamples(action, ns);
-		
+
 		//Remove the samples from dead animals
 		Set<Biosample> availables = new HashSet<>();
 		for (Biosample sample : samples) {
@@ -417,25 +403,25 @@ public class StudyDesignerPanel extends JPanel {
 			}
 		}
 		samples = availables;
-		
+
 		if(samples.size()>0) {
-			
+
 			JRadioButton moveButton = new JRadioButton("Move to phase");
 			JRadioButton deleteButton = new JRadioButton("Delete those samples");
 			ButtonGroup buttonGroup = new ButtonGroup();
 			buttonGroup.add(moveButton);
 			buttonGroup.add(deleteButton);
-		
+
 			PhaseComboBox phaseComboBox = new PhaseComboBox(study.getPhases());
 			phaseComboBox.setSelection(action.getPhase());
-			
+
 			JPanel centerPanel = UIUtils.createBox(
 					UIUtils.createVerticalBox(
 							UIUtils.createHorizontalBox(Box.createHorizontalStrut(15), moveButton, phaseComboBox, Box.createHorizontalGlue()),
 							UIUtils.createHorizontalBox(Box.createHorizontalStrut(15), deleteButton, Box.createHorizontalGlue())
-					), 
+							),
 					new JLabel("You have "+samples.size()+" samples already attached to this action.\nDo you want to delete or move them?"), null, null, null);
-			
+
 			int accept = JOptionPane.showConfirmDialog(this, centerPanel, "Samples Attached", JOptionPane.WARNING_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
 			if(accept!=JOptionPane.OK_OPTION) return false;
 
@@ -446,7 +432,7 @@ public class StudyDesignerPanel extends JPanel {
 				for (Biosample b : samples) {
 					b.setInheritedPhase(movePhase);
 				}
-				 dlg.getToUpdate().addAll(samples);
+				dlg.getToUpdate().addAll(samples);
 			} else if(deleteButton.isSelected()) {
 				study.setNamedSampling(action.getGroup(), action.getPhase(), action.getSubGroup(), ns, false);
 				dlg.getToDelete().addAll(samples);
@@ -454,22 +440,22 @@ public class StudyDesignerPanel extends JPanel {
 				JOptionPane.showMessageDialog(this, "You must select one radio button");
 				return false;
 			}
-			
+
 		} else {
 			study.setNamedSampling(action.getGroup(), action.getPhase(), action.getSubGroup(), ns, false);
 		}
 		return true;
-		
+
 	}
 
 	public StudyDepictor getDepictor() {
 		return depictor;
 	}
-	
+
 	private Measurement askForExtraMeasurement() {
 		ExtraMeasurementDlg dlg = new ExtraMeasurementDlg();
 		return dlg.getExtraMeasurement();
-		
+
 	}
-	
+
 }

@@ -28,22 +28,22 @@ import com.actelion.research.util.ui.exceltable.Column;
 
 public class BiotypeColumn extends Column<Biosample, Biotype> {
 	public BiotypeColumn() {
-		super("\nBiotype", Biotype.class);
+		super("Sample\nBiotype", Biotype.class);
 	}
-	
+
 	@Override
 	public float getSortingKey() {return 6.00f;}
-	
+
 	@Override
 	public Biotype getValue(Biosample row) {
 		return row.getBiotype();
 	}
-	
+
 	@Override
 	public void setValue(Biosample row, Biotype value) {
 		row.setBiotype(value);
 	}
-	
+
 	@Override
 	public void paste(Biosample row, String value) throws Exception {
 		if(value==null || value.length()==0) setValue(row, null);
@@ -51,17 +51,17 @@ public class BiotypeColumn extends Column<Biosample, Biotype> {
 			Biotype biotype = DAOBiotype.getBiotype(value);
 			if( biotype==null) throw new Exception("The biotype " +  value + " is invalid");
 			setValue(row, biotype);
-		}			
+		}
 	}
-	
+
 	@Override
 	public boolean isEditable(Biosample row) {
 		return row.getBiotype()==null || (row.getBiotype().getSampleNameLabel()==null && row.getMetadataAsString().length()==0);
 	}
-	
+
 	@Override
 	public String getToolTipText() {return "Biotype";}
-	
+
 	@Override
 	public boolean isHideable() {
 		return true;

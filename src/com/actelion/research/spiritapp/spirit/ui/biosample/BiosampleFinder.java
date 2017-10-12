@@ -60,6 +60,7 @@ import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
@@ -85,7 +86,7 @@ public abstract class BiosampleFinder extends JEscapeDialog {
 	private final JPanel centerPane;
 	private final JSplitPane westPane;
 
-	public BiosampleFinder(JDialog top, String title, String text, Biotype defaultBiotype, List<Biosample> choices, final Biosample currentSelection, boolean canCreate) {
+	public BiosampleFinder(JDialog top, String title, String text, BiosampleQuery query, List<Biosample> choices, final Biosample currentSelection, boolean canCreate) {
 		super(top, title, top == null);
 		this.choices = choices;
 		this.currentSelection = currentSelection;
@@ -102,11 +103,8 @@ public abstract class BiosampleFinder extends JEscapeDialog {
 			}
 		});
 
-		BiosampleQuery query = new BiosampleQuery();
-		query.setBiotype(defaultBiotype);
-
 		searchTree = new BiosampleSearchTree(null, null, true);
-		searchTree.setQuery(query);
+		searchTree.setQuery(query==null? new BiosampleQuery(): query);
 		searchTree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, evt-> {
 			search();
 		});
@@ -156,7 +154,7 @@ public abstract class BiosampleFinder extends JEscapeDialog {
 		filtersPanel.add(BorderLayout.SOUTH, box);
 		filtersPanel.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
 
-		westPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, filtersPanel, detailPane);
+		westPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, filtersPanel, detailPane);
 		westPane.setDividerLocation(1200);
 		westPane.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
@@ -164,7 +162,7 @@ public abstract class BiosampleFinder extends JEscapeDialog {
 		centerPane.add(BorderLayout.CENTER, new JScrollPane(table));
 		centerPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(statusLabel, Box.createHorizontalGlue(), okButton));
 
-		JSplitPane splitPane2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, westPane, centerPane);
+		JSplitPane splitPane2 = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, westPane, centerPane);
 		splitPane2.setDividerLocation(300);
 		splitPane2.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 

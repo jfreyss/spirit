@@ -45,6 +45,7 @@ import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.itextpdf.text.Font;
@@ -150,7 +151,7 @@ public class PrintingTab extends JPanel {
 			printPanel = UIUtils.createTitleBox("Settings", printerPanel);
 		}
 
-		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, printPanel, containerPanel);
+		JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, printPanel, containerPanel);
 		splitPane.setDividerLocation(250);
 		add(BorderLayout.CENTER, splitPane);
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), printLabel, Box.createHorizontalStrut(15), printAllButton, printSelectionButton, Box.createHorizontalStrut(15), printButton));

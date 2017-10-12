@@ -25,6 +25,7 @@ import java.awt.Component;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.location.LocationTextField;
@@ -33,8 +34,11 @@ import com.actelion.research.spiritcore.business.location.Location;
 public class LocationCellEditor extends AbstractCellEditor implements TableCellEditor {
 
 	private LocationTextField browser = new LocationTextField();
-	
-	
+
+	public LocationCellEditor() {
+		browser.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
+	}
+
 	@Override
 	public Object getCellEditorValue() {
 		try {
@@ -42,7 +46,7 @@ public class LocationCellEditor extends AbstractCellEditor implements TableCellE
 		} catch(Exception e) {
 			return null;
 		}
-		
+
 	}
 
 	@Override
@@ -51,6 +55,6 @@ public class LocationCellEditor extends AbstractCellEditor implements TableCellE
 		browser.selectAll();
 		return browser;
 	}
-	
+
 
 }

@@ -43,11 +43,13 @@ import com.actelion.research.spiritapp.spirit.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
+import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 
 public class LocationHistoryDlg extends JEscapeDialog {
 
@@ -59,7 +61,7 @@ public class LocationHistoryDlg extends JEscapeDialog {
 			if(revisions.size()==0) throw new Exception("There are no revisions saved");
 
 			final RevisionTable revisionList = new RevisionTable(false);
-			revisionList.setRows(revisions);
+			revisionList.setRows(revisions, DAORevision.getLastChanges(revisions));
 			final LocationTable locationTable = new LocationTable();
 			final LocationDepictor locationDepictor = new LocationDepictor();
 
@@ -92,7 +94,7 @@ public class LocationHistoryDlg extends JEscapeDialog {
 
 			JScrollPane sp = new JScrollPane(locationTable);
 			sp.setPreferredSize(new Dimension(400, 180));
-			JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+			JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT,
 					UIUtils.createTitleBox("Revisions", new JScrollPane(revisionList)),
 					UIUtils.createTitleBox("Location Revision", UIUtils.createBox(locationDepictor, sp)));
 

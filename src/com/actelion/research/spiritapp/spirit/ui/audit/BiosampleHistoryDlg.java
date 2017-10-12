@@ -51,6 +51,7 @@ import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 
 /**
  * Dialog used to show the previous versions of a biosample
@@ -94,7 +95,7 @@ public class BiosampleHistoryDlg extends JEscapeDialog {
 				}
 			});
 
-			JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+			JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT,
 					UIUtils.createTitleBox("Revisions", new JScrollPane(revisionList)),
 					UIUtils.createTitleBox("Biosample Revision", new JScrollPane(detailPanel)));
 			splitPane.setDividerLocation(500);
@@ -107,7 +108,7 @@ public class BiosampleHistoryDlg extends JEscapeDialog {
 				private Map<Revision, String> changeMap;
 				@Override
 				protected void doInBackground() throws Exception {
-					revisions = DAORevision.getRevisions(biosample);
+					revisions = DAORevision.getLastRevisions(biosample);
 					changeMap = getChangeMap(revisions);
 				}
 

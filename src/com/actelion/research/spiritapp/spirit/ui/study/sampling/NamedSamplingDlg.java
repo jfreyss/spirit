@@ -32,7 +32,6 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -58,7 +57,7 @@ import com.actelion.research.spiritapp.spirit.Spirit;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.biosample.BiosampleTable;
 import com.actelion.research.spiritapp.spirit.ui.location.ContainerTypeComboBox;
-import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyWizardDlg;
+import com.actelion.research.spiritapp.spirit.ui.study.wizard.StudyDesignDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.HelpBinder;
 import com.actelion.research.spiritapp.spirit.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -80,6 +79,7 @@ import com.actelion.research.spiritcore.services.helper.BiosampleCreationHelper;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
@@ -89,39 +89,39 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class NamedSamplingDlg extends JSpiritEscapeDialog {
-	
-	private final StudyWizardDlg dlg;
+
+	private final StudyDesignDlg dlg;
 	private final boolean addDlg;
 	private final Study study;
 	private final boolean transactionMode;
 	private boolean success;
-	
+
 	private NamedSampling namedSamplingToEdit;
 	private NamedSampling namedSamplingProxy;
 	private JCheckBox necropsyCheckbox = new JCheckBox("Perform Necropsy after this sampling");
-	private final JCustomTextField nameTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 14);		
+	private final JCustomTextField nameTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 14);
 	private final JPanel samplingsPanel = new JPanel(new GridBagLayout());
 	private final NamedSamplingEditorPane namedSamplingEditorPane = new NamedSamplingEditorPane();
 
-	public NamedSamplingDlg(final Study myStudy, NamedSampling namedSamplingToEdit, final StudyWizardDlg dlg) {
+	public NamedSamplingDlg(final Study myStudy, NamedSampling namedSamplingToEdit, final StudyDesignDlg dlg) {
 		super(UIUtils.getMainFrame(), "Edit Sampling Template", dlg==null? NamedSamplingDlg.class.getName(): null);
 		this.study = JPAUtil.reattach(myStudy);
 		this.transactionMode = dlg==null;
 		this.dlg = dlg;
-		
+
 		if(transactionMode && study!=null) throw new IllegalArgumentException("You can only edit a Sampling Template outside a study from here");
 		if(!transactionMode && study==null) throw new IllegalArgumentException("You can only edit a Sampling Template in a study from here");
-		
-		
+
+
 		if(namedSamplingToEdit == null) {
 			//New sampling -> propose retrieving an existing template
 			addDlg = true;
-			
+
 			NamedSamplingSelectorDlg dlg2 = new NamedSamplingSelectorDlg();
-			
+
 			if(!dlg2.isSuccess()) return;
 			this.namedSamplingToEdit = dlg2.getNamedSampling();
-			
+
 		} else {
 			//Old sampling
 			addDlg = false;
@@ -133,55 +133,48 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		namedSamplingProxy.copyFrom(this.namedSamplingToEdit);
 		necropsyCheckbox.setEnabled(study!=null);
 
-		
+
 		//TopPanel
-		JPanel topPanel = UIUtils.createTitleBox("", 
+		JPanel topPanel = UIUtils.createTitleBox("",
 				UIUtils.createHorizontalBox(new JLabel("Template Name: "), nameTextField, Box.createHorizontalStrut(30), necropsyCheckbox, Box.createHorizontalGlue()));
-		
+
 		//CenterPanel
 		JScrollPane sp1 = new JScrollPane(samplingsPanel);
 		sp1.setBorder(BorderFactory.createLoweredBevelBorder());
 		samplingsPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-				
+
 		nameTextField.setText(this.namedSamplingToEdit.getName());
 		necropsyCheckbox.setSelected(this.namedSamplingToEdit.isNecropsy());
 		refresh();
-		
-	
+
+
 		//Events
 		JButton deleteButton = new JIconButton(IconType.DELETE, "Delete");
 		JButton saveButton = new JIconButton(IconType.SAVE, transactionMode? "Save": "Accept");
 
-		
-		
+
+
 		if(addDlg) {
 			deleteButton.setEnabled(false);
 		}
-			
-		deleteButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ae) {
-				try {
-					removeEvent();
-				} catch (Exception e) {
-					JExceptionDialog.showError(NamedSamplingDlg.this, e);
-				}
-				
+
+		deleteButton.addActionListener(ev-> {
+			try {
+				removeEvent();
+			} catch (Exception e) {
+				JExceptionDialog.showError(NamedSamplingDlg.this, e);
 			}
 		});
-		
+
 		getRootPane().setDefaultButton(saveButton);
-		saveButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent ae) {
-				try {
-					saveEvent();
-				} catch (Exception e) {
-					JExceptionDialog.showError(NamedSamplingDlg.this, e);
-				}				
+		saveButton.addActionListener( ev-> {
+			try {
+				saveEvent();
+			} catch (Exception e) {
+				JExceptionDialog.showError(NamedSamplingDlg.this, e);
 			}
 		});
-		
+
 		setLayout(new BorderLayout());
 		add(BorderLayout.NORTH, topPanel);
 		add(BorderLayout.CENTER, UIUtils.createTitleBox("Samplings", sp1));
@@ -194,35 +187,34 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 				Box.createHorizontalGlue(),
 				saveButton));
 		UIUtils.adaptSize(this, 1000, 850);
-//		centerPanel.setDividerLocation(getSize().width-350);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setLocationRelativeTo(UIUtils.getMainFrame());		
+		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
-		
-		
-	}	
-	
+
+
+	}
+
 	/**
 	 * Refresh the panel
-	 * 
+	 *
 	 * Layout:
 	 * ---------------------------------------------------------------------------------
 	 *     0  1                 2                          5             6          7
-	 * 0   Sampling                                
-	 * 1   Animal                                          
-	 * 2                                                   
-	 * 3    - Sample 1                                     
-	 * 4                                                   
-	 * 5                                                   
-	 * 6    - Sample 2          Weight[  ]                                            
+	 * 0   Sampling
+	 * 1   Animal
+	 * 2
+	 * 3    - Sample 1
+	 * 4
+	 * 5
+	 * 6    - Sample 2          Weight[  ]
 	 */
 	public void refresh() {
 		samplingsPanel.removeAll();
-		
+
 		//Header
 		rowNo = 0;
 		int y = 0;
-		
+
 
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = GridBagConstraints.WEST;
@@ -230,13 +222,13 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		c.weighty = 0;
 		c.gridy = y;
 		//SampleName
-		c.gridx = 13; samplingsPanel.add(Box.createHorizontalStrut(5), c);		
+		c.gridx = 13; samplingsPanel.add(Box.createHorizontalStrut(5), c);
 		//Container
 		c.gridx = 22; samplingsPanel.add(new JLabel("Container"), c);
 		//Amount
 		c.gridx = 25; samplingsPanel.add(new JLabel("Amount"), c);
 		c.gridx = 30; samplingsPanel.add(Box.createHorizontalStrut(5), c);
-		
+
 		//Actions
 		c.gridx = 34; samplingsPanel.add(new JLabel("Wgh. "), c);
 		c.gridx = 35; samplingsPanel.add(new JLabel("Len. "), c);
@@ -246,53 +238,47 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		for (Sampling s : namedSamplingProxy.getTopSamplings()) {
 			y = drawRec(y, 0, s);
 		}
-		
+
 		c.gridy = ++y;
 		//
 		// Add Sample Button
 		JButton addSampleButton = new JIconButton(IconType.ADD_ROW, "Add Sampling");
-		addSampleButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Sampling sd = new Sampling();
-				SamplingDlg dlg = new SamplingDlg(NamedSamplingDlg.this, study, sd, true);
-				if(dlg.isSuccess() && sd.getBiotype()!=null) {
-					namedSamplingProxy.getAllSamplings().add(sd);
-					refresh();
-				}
+		addSampleButton.addActionListener(e-> {
+			Sampling sd = new Sampling();
+			SamplingDlg dlg = new SamplingDlg(NamedSamplingDlg.this, study, sd, true);
+			if(dlg.isSuccess() && sd.getBiotype()!=null) {
+				namedSamplingProxy.getAllSamplings().add(sd);
+				refresh();
 			}
 		});
-		
+
 		c.gridy++; c.gridwidth = 35; c.gridx = 0; samplingsPanel.add(new JLabel(" "), c);
 		c.gridy++; c.gridwidth = 35; c.gridx = 0; samplingsPanel.add(addSampleButton, c);
-		
-		
+
+
 		c.gridy++; c.weighty = 1; c.weightx=1;
 		c.gridx = 41; samplingsPanel.add(Box.createGlue(), c);
-		
+
 		samplingsPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLoweredBevelBorder(), BorderFactory.createEmptyBorder(2, 2, 2, 2)));
 		samplingsPanel.setBackground(Color.WHITE);
 		samplingsPanel.revalidate();
 		repaint();
-		
+
 		namedSamplingEditorPane.setNamedSampling(namedSamplingProxy);
 	}
-	
-	
+
+
 
 	private int rowNo;
 	private int drawRec(int y, int depth, final Sampling sampling) {
-		
+
 		final JButton actionButton = new JButton(IconType.NEXT.getIcon());
 		actionButton.setBorder(BorderFactory.createEmptyBorder(3, 8, 3, 8));
-		actionButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				createActionMenu(sampling).show(actionButton, 0, actionButton.getBounds().height);
-			}
+		actionButton.addActionListener(e-> {
+			createActionMenu(sampling).show(actionButton, 0, actionButton.getBounds().height);
 		});
 
-		
+
 		SamplingLabel nameLbl = new SamplingLabel(sampling);
 		nameLbl.setWrappingWidth(260);
 
@@ -312,122 +298,105 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 					}
 				},
 				nameLbl);
-		
+
 		final ContainerTypeComboBox containerTypeComboBox = new ContainerTypeComboBox();
 		containerTypeComboBox.setSelection(sampling.getContainerType());
-		
+
 		final BlocNoComboBox blocNoComboBox = new BlocNoComboBox(false);
 		blocNoComboBox.setSelection(sampling.getBlocNo()==null? 1: sampling.getBlocNo());
 		blocNoComboBox.setVisible(sampling.getContainerType()!=null && sampling.getContainerType().isMultiple());
-				
+
 		containerTypeComboBox.setSelection(sampling.getContainerType());
-		
-		final JCustomTextField amountTextField = new JCustomTextField(JCustomTextField.DOUBLE);
+
+		final JCustomTextField amountTextField = new JCustomTextField(CustomFieldType.DOUBLE);
 		amountTextField.setText(sampling.getAmount()==null?"": ""+sampling.getAmount());
 		amountTextField.addTextChangeListener(new TextChangeListener() {
 			@Override
 			public void textChanged(JComponent src) {
 				try {
 					Sampling copyFrom = sampling.clone();
-					sampling.setAmount(amountTextField.getText().length()==0? null: Double.parseDouble(amountTextField.getText()));					
+					sampling.setAmount(amountTextField.getText().length()==0? null: Double.parseDouble(amountTextField.getText()));
 					synchronizeSamples(study, copyFrom, sampling);
-					
+
 				} catch(Exception e) {
 					amountTextField.setText("");
 				}
 			}
 		});
-		
-		
+
+
 		final JCheckBox weighingCheckBox = new JCheckBox("", sampling.isWeighingRequired());
 		weighingCheckBox.setToolTipText("Measure Weighing");
 		final JCheckBox lengthCheckBox = new JCheckBox("", sampling.isLengthRequired());
 		lengthCheckBox.setToolTipText("Measure Length");
 		final JCheckBox obsCheckBox = new JCheckBox("", sampling.isCommentsRequired());
 		obsCheckBox.setToolTipText("Measure Observation");
-		weighingCheckBox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				sampling.setWeighingRequired(weighingCheckBox.isSelected());
-			}
+		weighingCheckBox.addActionListener(e-> {
+			sampling.setWeighingRequired(weighingCheckBox.isSelected());
 		});
-		lengthCheckBox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				sampling.setLengthRequired(lengthCheckBox.isSelected());
-			}
+		lengthCheckBox.addActionListener(e-> {
+			sampling.setLengthRequired(lengthCheckBox.isSelected());
 		});
-		obsCheckBox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				sampling.setCommentsRequired(obsCheckBox.isSelected());
-			}
-		});		
+		obsCheckBox.addActionListener(e-> {
+			sampling.setCommentsRequired(obsCheckBox.isSelected());
+		});
 
 		hierarchyLabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				new Action_EditSample(sampling);
-//				createActionMenu(sampling).show(hierarchyLabel, e.getX(), e.getY());
 			}
 		});
-		
-		containerTypeComboBox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					Sampling copyFrom = sampling.clone();
-					sampling.setContainerType(containerTypeComboBox.getSelection());
-					blocNoComboBox.setVisible(sampling.getContainerType()!=null && sampling.getContainerType().isMultiple());
-					synchronizeSamples(study, copyFrom, sampling);
-				} catch(Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
 
+		containerTypeComboBox.addTextChangeListener(e-> {
+			try {
+				Sampling copyFrom = sampling.clone();
+				sampling.setContainerType(containerTypeComboBox.getSelection());
+				blocNoComboBox.setVisible(sampling.getContainerType()!=null && sampling.getContainerType().isMultiple());
+				synchronizeSamples(study, copyFrom, sampling);
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});
-		blocNoComboBox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					Sampling copyFrom = sampling.clone();
-					sampling.setBlocNo(blocNoComboBox.getSelection());
-					synchronizeSamples(study, copyFrom, sampling);
-				} catch(Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
+		blocNoComboBox.addActionListener(e-> {
+			try {
+				Sampling copyFrom = sampling.clone();
+				sampling.setBlocNo(blocNoComboBox.getSelection());
+				synchronizeSamples(study, copyFrom, sampling);
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
-		});		
+		});
 
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridy = y+1;
 		c.weightx = 0;
 		c.insets = new Insets(0, 1, 0, 1);
-		
+
 
 		c.anchor = GridBagConstraints.EAST;
-		c.gridx = 0; samplingsPanel.add(new JLabel((++rowNo)+". "), c);			
+		c.gridx = 0; samplingsPanel.add(new JLabel((++rowNo)+". "), c);
 
 		c.anchor = GridBagConstraints.WEST;
-		
+
 		amountTextField.setVisible(sampling.getBiotype()!=null && sampling.getBiotype().getAmountUnit()!=null);
 		//Action
 		c.gridx = 1; samplingsPanel.add(actionButton, c);
 		//SampleName
 		c.gridx = 11; samplingsPanel.add(hierarchyLabel, c);
-		c.gridx = 13; samplingsPanel.add(Box.createHorizontalStrut(5), c);		
+		c.gridx = 13; samplingsPanel.add(Box.createHorizontalStrut(5), c);
 		//Container
 		c.gridx = 22; samplingsPanel.add(containerTypeComboBox, c);
 		c.gridx = 23; samplingsPanel.add(blocNoComboBox, c);
 		//Amount
 		c.gridx = 25; samplingsPanel.add(UIUtils.createHorizontalBox(amountTextField, new JCustomLabel(sampling.getBiotype()!=null && sampling.getBiotype().getAmountUnit()!=null? sampling.getBiotype().getAmountUnit().getUnit():"", FastFont.SMALL)), c);
 		c.gridx = 30; samplingsPanel.add(Box.createHorizontalStrut(5), c);
-		
+
 		//Actions
 		c.gridx = 34; samplingsPanel.add(UIUtils.createHorizontalBox(weighingCheckBox, Box.createHorizontalStrut(10)), c);
 		c.gridx = 35; samplingsPanel.add(UIUtils.createHorizontalBox(lengthCheckBox, Box.createHorizontalStrut(10)), c);
 		c.gridx = 36; samplingsPanel.add(UIUtils.createHorizontalBox(obsCheckBox, Box.createHorizontalStrut(10)), c);
-		
+
 		StringBuilder sb = new StringBuilder();
 		if(sampling.getMeasurements().size()>0) {
 			for (Measurement m : sampling.getMeasurements()) {
@@ -440,21 +409,21 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		measurementLabel.setToolTipText(sb.toString());
 		c.gridx = 37; samplingsPanel.add(UIUtils.createHorizontalBox(measurementLabel, Box.createHorizontalStrut(10)), c);
 
-		//nCreated		
+		//nCreated
 		if(sampling.getSamples().size()>0) {
 			c.gridx = 40; samplingsPanel.add(UIUtils.createHorizontalBox(Box.createHorizontalStrut(5), new JLabel("> "+sampling.getSamples().size()+" created")), c);
 		}
-		
-		//Spacer		
-		c.weightx = 1; c.gridx = 41; samplingsPanel.add(new JLabel(" "), c);					
-		
+
+		//Spacer
+		c.weightx = 1; c.gridx = 41; samplingsPanel.add(new JLabel(" "), c);
+
 		//Draw separation
 		c.gridy++;
 		JPanel borderPanel = new JPanel(new BorderLayout());
 		borderPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY));
-		c.gridx = 0; c.gridwidth=99; c.fill=GridBagConstraints.HORIZONTAL; samplingsPanel.add(borderPanel, c); c.fill=GridBagConstraints.NONE; 
+		c.gridx = 0; c.gridwidth=99; c.fill=GridBagConstraints.HORIZONTAL; samplingsPanel.add(borderPanel, c); c.fill=GridBagConstraints.NONE;
 
-		
+
 		//Draw children
 		List<Sampling> children = new ArrayList<>(sampling.getChildren());
 		Collections.sort(children);;
@@ -463,11 +432,11 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			assert child!=null;
 			c.gridy = drawRec(c.gridy, depth + 1, child);
 		}
-		
+
 		return c.gridy;
 	}
-	
-	
+
+
 	private class Action_EditSample extends AbstractAction {
 		private Sampling sampling;
 		public Action_EditSample(Sampling sampling) {
@@ -500,7 +469,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 				if(sampling.getParent()!=null) sampling.getParent().getChildren().add(s);
 				refresh();
 			}
-			
+
 			refresh();
 		}
 	}
@@ -515,10 +484,10 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			Sampling s = new Sampling();
-			s.setBiotype(sampling.getBiotype());			
+			s.setBiotype(sampling.getBiotype());
 			s.setMetadataMap(sampling.getMetadataMap());
 			s.setComments(sampling.getComments());
-			
+
 			SamplingDlg dlg = new SamplingDlg(NamedSamplingDlg.this, study, s, true);
 			if(dlg.isSuccess() && s.getBiotype()!=null) {
 				namedSamplingProxy.getAllSamplings().add(s);
@@ -527,7 +496,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 				sampling.getChildren().add(s);
 				refresh();
 			}
-			
+
 			refresh();
 		}
 	}
@@ -547,24 +516,24 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 					return;
 				}
 				if(sampling.getSamples().size()>0) {
-					
+
 					List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForBiosampleIds(JPAUtil.getIds(sampling.getSamples())), null);
 					if(results.size()>0) throw new Exception("There are "+sampling.getSamples().size()+" samples already saved and those have " + results.size()+" associated results.\nYou must first delete the results to delete this sampling.");
-					
+
 					if(dlg!=null) {
-						List<Biosample> list = new ArrayList<>(sampling.getSamples());					
+						List<Biosample> list = new ArrayList<>(sampling.getSamples());
 						int res = createOptionDialog(NamedSamplingDlg.this, "There are "+sampling.getSamples().size()+" samples already saved. Would you like to DELETE those?", list, null, null, new String[] {"Delete", "Cancel"});
 						if(res!=0) return;
-						
+
 						for (Biosample b : list) {
-							b.setAttachedSampling(null);							
+							b.setAttachedSampling(null);
 						}
 						sampling.getSamples().clear();
-						
+
 						if(dlg!=null) dlg.getToDelete().addAll(list);
 					}
 				}
-				
+
 				sampling.remove();
 				namedSamplingProxy.getAllSamplings().remove(sampling);
 				refresh();
@@ -573,7 +542,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			}
 		}
 	}
-	
+
 	private JPopupMenu createActionMenu(Sampling sampling) {
 		JPopupMenu menu = new JPopupMenu();
 		menu.add(new Action_EditSample(sampling));
@@ -582,17 +551,17 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		menu.add(new Action_DelSample(sampling));
 		return menu;
 	}
-	
-	
-	
+
+
+
 	public static int createOptionDialog(Component parent, String message, List<Biosample> biosamplesToDelete, List<Biosample> biosamplesToOverwrite, List<Biosample> biosamplesToKeep, String[] options) {
-		
+
 		if(biosamplesToDelete!=null) Collections.sort(biosamplesToDelete);
 		if(biosamplesToOverwrite!=null) Collections.sort(biosamplesToOverwrite);
 		if(biosamplesToKeep!=null) Collections.sort(biosamplesToKeep);
 
-		
-		
+
+
 		JPanel mainPanel = new JPanel(new GridLayout(0, 1));
 		if(biosamplesToDelete!=null && biosamplesToDelete.size()>0) {
 			BiosampleTable table = new BiosampleTable();
@@ -607,16 +576,16 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 					return comp;
 				}
 			});
-			
+
 			mainPanel.add(UIUtils.createTitleBox("To be deleted", sp));
 		}
-		
+
 		if(biosamplesToOverwrite!=null && biosamplesToOverwrite.size()>0) {
 			BiosampleTable table = new BiosampleTable();
 			table.setRows(biosamplesToOverwrite);
 			JScrollPane sp = new JScrollPane(table);
 			sp.setPreferredSize(new Dimension(900, 250));
-			
+
 			mainPanel.add(UIUtils.createTitleBox("To be overwritten", sp));
 		}
 		if(biosamplesToKeep!=null && biosamplesToKeep.size()>0) {
@@ -632,42 +601,42 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 					return comp;
 				}
 			});
-			
+
 			mainPanel.add(UIUtils.createTitleBox("Attached samples, to be kept unchanged", sp));
 		}
-		
+
 		JPanel panel = new JPanel(new BorderLayout());
 		panel.add(BorderLayout.NORTH, new JLabel("<html><b>" + message + "</b></html>"));
-		panel.add(BorderLayout.CENTER, mainPanel); 
-				
-		
+		panel.add(BorderLayout.CENTER, mainPanel);
+
+
 		int res = JOptionPane.showOptionDialog(parent, panel, "Existing Samples", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
 		return res;
-		
+
 	}
-	
+
 	public Study getStudy() {
 		return study;
 	}
-	
-	
+
+
 	public NamedSampling getSavedNamedSampling() {
 		return success? namedSamplingToEdit: null;
 	}
-	
+
 	private void removeEvent() throws Exception {
-		
-		
+
+
 		//Update the Study
 		if(namedSamplingToEdit==null) throw new Exception("Cannot remove this");
 		if(study!=null) {
-			
+
 			//make sure there are no links to it
 			for(Sampling s: namedSamplingToEdit.getAllSamplings()) {
 				if(!s.getSamples().isEmpty()) throw new Exception("You cannot delete a sampling template, if there are samples associated to it");
 			}
-			
-			
+
+
 			List<StudyAction> actionsToUpdate = new ArrayList<StudyAction>();
 			for ( StudyAction action : study.getStudyActions()) {
 				if(NamedSamplingDlg.this.namedSamplingToEdit.equals(action.getNamedSampling1()) || NamedSamplingDlg.this.namedSamplingToEdit.equals(action.getNamedSampling2())) {
@@ -678,17 +647,17 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			if(actionsToUpdate.size()>0) {
 				int res = JOptionPane.showConfirmDialog(NamedSamplingDlg.this, "The study contains actions referencing " + NamedSamplingDlg.this.namedSamplingToEdit + ".\nWould you like to delete them?", "Question", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 				if(res!=JOptionPane.YES_OPTION) return;
-				
+
 				for (StudyAction action : actionsToUpdate) {
-					if(NamedSamplingDlg.this.namedSamplingToEdit.equals(action.getNamedSampling1())) action.setNamedSampling1(null);								
-					if(NamedSamplingDlg.this.namedSamplingToEdit.equals(action.getNamedSampling2())) action.setNamedSampling2(null);								
+					if(NamedSamplingDlg.this.namedSamplingToEdit.equals(action.getNamedSampling1())) action.setNamedSampling1(null);
+					if(NamedSamplingDlg.this.namedSamplingToEdit.equals(action.getNamedSampling2())) action.setNamedSampling2(null);
 				}
 			}
 			study.setUpdUser(Spirit.askForAuthentication().getUsername());
-			
-			if(transactionMode) DAOStudy.persistStudies(Collections.singleton(study), Spirit.askForAuthentication());								
+
+			if(transactionMode) DAOStudy.persistStudies(Collections.singleton(study), Spirit.askForAuthentication());
 		}
-		
+
 		//Delete the NamedSampling
 		if(transactionMode) {
 			DAONamedSampling.deleteNamedSampling(namedSamplingToEdit, Spirit.askForAuthentication());
@@ -698,10 +667,10 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		}
 		dispose();
 	}
-	
+
 	private void saveEvent() throws Exception {
 		if(nameTextField.getText().trim().length()==0) throw new Exception("The name cannot be empty");
-		
+
 		String name = nameTextField.getText();
 		if(study!=null) {
 			//In a study, the name must be unique for that study
@@ -709,7 +678,7 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 				if(ns.equals(namedSamplingToEdit)) continue;
 				if(ns.getName().equals(name)) throw new Exception("The name must be unique");
 			}
-			
+
 			//Check that the user didn't forget to click necropsy
 			if(necropsyCheckbox.isEnabled() && !necropsyCheckbox.isSelected()) {
 				boolean hasSolid = false;
@@ -737,42 +706,42 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			//No study, the name must be globaly unique
 			for(NamedSampling ns: DAONamedSampling.getNamedSamplings(SpiritFrame.getUser(), null)) {
 				if(ns.equals(namedSamplingProxy)) continue;
-				if(ns.getName().equals(name)) throw new Exception("The name must be unique");				
+				if(ns.getName().equals(name)) throw new Exception("The name must be unique");
 			}
 		}
-		
+
 		namedSamplingProxy.setName(name);
 		namedSamplingProxy.setNecropsy(necropsyCheckbox.isSelected());
 		this.namedSamplingToEdit.copyFrom(namedSamplingProxy);
-		
-		
+
+
 		if(transactionMode) DAONamedSampling.persistNamedSampling(namedSamplingToEdit, Spirit.askForAuthentication());
 		this.success = true;
-		
+
 		if(study!=null) {
 			//Update the study
 			namedSamplingToEdit.setStudy(study);
 			study.getNamedSamplings().add(namedSamplingToEdit);
-		}		
+		}
 		dispose();
 
 	}
 
 	public boolean synchronizeSamples(Study study, Sampling fromSamplingClone, Sampling toSampling) throws Exception {
-	
+
 		//Check that there are no samples coming from this sampling
 		Set<Biosample> samples = toSampling.getSamples();
 		List<Biosample> samplesToUpdate = new ArrayList<>();
 		List<Biosample> samplesToKeep = new ArrayList<>();
 		if(samples.size()>0) {
-			
+
 			//Check that samples have not been modified
 			for (Biosample b : samples) {
 				double score = fromSamplingClone.getMatchingScore(b);
 				if(score<1) samplesToKeep.add(b);
 				else samplesToUpdate.add(b);
 			}
-			
+
 			//Open dialog
 			String[] options;
 			if(samplesToKeep.size()>0 && samplesToUpdate.size()>0) {
@@ -783,13 +752,13 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 				options = new String[] {"Update all samples", "Do not update/synchronize"};
 			}
 			int res = createOptionDialog(null, "There are "+samples.size()+" samples already saved. Would you like to update those existing samples to the new settings?", null, samplesToUpdate, samplesToKeep, options);
-			if(samplesToKeep.size()>0 && samplesToUpdate.size()>0) {				
+			if(samplesToKeep.size()>0 && samplesToUpdate.size()>0) {
 				if(res==1) {
 					samplesToUpdate.addAll(samplesToKeep);
 				} else if(res!=0) {
 					return false;
 				}
-			} else if(samplesToKeep.size()>0 ) {				
+			} else if(samplesToKeep.size()>0 ) {
 				if(res==1) {
 					samplesToUpdate.addAll(samplesToKeep);
 				} else {
@@ -797,26 +766,26 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 				}
 			} else {
 				if(res!=0) {
-					return false;				
+					return false;
 				}
 			}
-	
+
 			//Update the samples
 			for (Biosample b : samplesToUpdate) {
 				if(!b.getBiotype().equals( toSampling.getBiotype())) throw new Exception("The biotype cannot be changed");
 				toSampling.populate(b);
 				b.setAttachedSampling(toSampling);
-			}	
-			
+			}
+
 			//Update the containers
 			BiosampleQuery q = new BiosampleQuery();
 			q.setStudyIds(study.getStudyId());
 			q.setFilterNotInContainer(true);
-	
+
 			List<Biosample> pool = DAOBiosample.queryBiosamples(q, null);
 			pool.removeAll(samplesToUpdate);
 			BiosampleCreationHelper.assignContainers(pool, samplesToUpdate);
-			
+
 			//Inform the parent dlg, that those samples have to be updated before saved (to set upddate)
 			if(dlg!=null) {
 				dlg.getToUpdate().addAll(samplesToUpdate);

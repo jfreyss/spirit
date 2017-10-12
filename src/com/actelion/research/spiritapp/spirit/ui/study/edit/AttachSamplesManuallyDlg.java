@@ -168,7 +168,7 @@ public class AttachSamplesManuallyDlg extends JSpiritEscapeDialog {
 
 		//Recreate animal table, group per group
 		List<AttachedBiosample> rows = new ArrayList<>();
-		List<Biosample> topAttached = study.getTopAttachedBiosamples();
+		List<Biosample> topAttached = study.getTopParticipants();
 		if(topAttached.size()>0) {
 
 			//Create a template from the existing animals

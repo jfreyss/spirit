@@ -68,6 +68,7 @@ import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 
 public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChangeObserver {
 
@@ -114,7 +115,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 				System.out.println("MonitoringOverviewDlg.recreateUIInThread().new SwingWorkerExtended() {...}.doInBackground()");
 				// Load animals
 				study = JPAUtil.reattach(s);
-				animals = study.getTopAttachedBiosamples();
+				animals = study.getTopParticipants();
 
 				//Load Results (except foodwater which is loaded separately)
 				DAOResult.attachOrCreateStudyResultsToTops(study, animals, null, null);
@@ -203,7 +204,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 					GraphPanelWithResults graphPanel = new GraphPanelWithResults();
 					graphPanel.setPivotTemplate(new MonitorPivotTemplate());
 
-					JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, displaySp, graphPanel);
+					JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, displaySp, graphPanel);
 					splitPane.setDividerLocation(380);
 					contentPanel.removeAll();
 					contentPanel.add(BorderLayout.CENTER, splitPane);
@@ -218,7 +219,7 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 							Point pt = SwingUtilities.convertPoint(comp, 0, 0, displaySp);
 							displaySp.getVerticalScrollBar().setValue(pt.y-displaySp.getHeight()/2);
 						}
-						graphPanel.setResults(results);
+						graphPanel.setResults(results, false);
 					});
 				} catch(Exception e) {
 					JExceptionDialog.showError(e);

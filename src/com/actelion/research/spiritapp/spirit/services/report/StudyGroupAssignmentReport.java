@@ -56,7 +56,7 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 
 	@Override
 	protected void populateWorkBook() throws Exception {
-		List<Biosample> topBiosamples = new ArrayList<>(study.getAttachedBiosamples());
+		List<Biosample> topBiosamples = new ArrayList<>(study.getParticipants());
 		Biotype biotype = Biosample.getBiotype(topBiosamples);
 		List<Phase> phases = new ArrayList<>();
 		phases.addAll(study.getPhases());

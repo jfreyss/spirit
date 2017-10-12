@@ -29,23 +29,17 @@ public class GroupPojo implements Serializable {
 	private int id = 0;
 	private String name = "";
 	private Integer colorRgb = null;
-	
+
 	/**
 	 * Uses when this group comes from another group, either when:
 	 * - a "sick" group is splitted into "sick treated" and "sick untreated"
-	 * - samples are created from a group and assigned to this new subgroup  
+	 * - samples are created from a group and assigned to this new subgroup
 	 */
 	private String fromGroup;
-	
-	/**
-	 * Used when this group comes from another group, and when the animal is splitted into samples.
-	 * For example, at d7, we treat 4 fragments of skin and extract cells over several days
-	 */
-	private SamplingPojo dividingSampling;
 
 	private String fromPhase;
-	
-	private int[] subgroupSizes;	
+
+	private int[] subgroupSizes;
 
 	public int getId() {
 		return id;
@@ -79,14 +73,6 @@ public class GroupPojo implements Serializable {
 		this.fromGroup = fromGroup;
 	}
 
-	public SamplingPojo getDividingSampling() {
-		return dividingSampling;
-	}
-
-	public void setDividingSampling(SamplingPojo dividingSampling) {
-		this.dividingSampling = dividingSampling;
-	}
-
 	public String getFromPhase() {
 		return fromPhase;
 	}
@@ -106,7 +92,7 @@ public class GroupPojo implements Serializable {
 	public void setSubgroupSizes(int[] subgroupSizes) {
 		this.subgroupSizes = subgroupSizes;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "[GroupPOJO:"+id+":"+name+"'"+Arrays.toString(subgroupSizes)+"]";

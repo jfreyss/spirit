@@ -66,6 +66,7 @@ import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
+import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 
 public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObserver {
 
@@ -96,7 +97,7 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 
 		try {
 			if(s.isSynchronizeSamples()) {
-				//Always synchronize samples to match the study design
+				//Synchronize samples to match the study design
 				boolean res = CreateSamplesHelper.synchronizeSamples(s);
 				if(!res) return;
 			}
@@ -105,7 +106,7 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 			this.animals = animals==null? null: JPAUtil.reattach(animals);
 
 			//Retrieve all samples to be printed
-			if(study.getTopAttachedBiosamples().size()==0) throw new Exception("You must first assign some samples to this study");
+			if(study.getTopParticipants().size()==0) throw new Exception("You must first assign some samples to this study");
 
 			//Init components
 			SpiritChangeListener.register(this);
@@ -113,14 +114,19 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 			JButton printButton = new JButton(new BiosampleActions.Action_Print(null) {
 				@Override
 				public List<Biosample> getBiosamples() {
-					return biosampleTable.getSelection().size()>=1? biosampleTable.getSelection(): biosampleTable.getRows();
+					List<Biosample> list = new ArrayList<>(biosampleTable.getRows());
+					Collections.sort(list);
+					System.out.println("ManageSamplesDlg.ManageSamplesDlg(...).new Action_Print() {...}.getBiosamples() "+list);
+					return list;
 				}
 			});
 
 			JButton assignButton = new JButton(new BiosampleActions.Action_AssignTo(null) {
 				@Override
 				public List<Biosample> getBiosamples() {
-					return biosampleTable.getSelection().size()>=1? biosampleTable.getSelection(): biosampleTable.getRows();
+					List<Biosample> list = new ArrayList<>(biosampleTable.getRows());
+					Collections.sort(list);
+					return list;
 				}
 			});
 
@@ -132,7 +138,7 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 
 			BiosampleActions.attachPopup(biosampleTable);
 
-			//			JButton filterButton = new JIconButton(IconType.SEARCH, "Filter");
+			JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(biosampleTable), detailPane);
 
 			//ContentPane
 			JPanel centerPane = new JPanel(new BorderLayout());
@@ -148,8 +154,6 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 									UIUtils.createVerticalBox(hideWithoutContainersCheckbox, hideDeadCheckBox),
 									//									UIUtils.createVerticalBox(new JLabel(""), filterButton),
 									Box.createHorizontalGlue())));
-			JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(biosampleTable), detailPane);
-
 			centerPane.add(BorderLayout.CENTER, splitPane);
 			centerPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(
 					new JLabel("Select some biosamples and select an action: "),
@@ -160,12 +164,8 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 
 
 			//Add events
-			ActionListener al = e-> {
-				query(false);
-			};
-			TextChangeListener tl = e-> {
-				query(false);
-			};
+			ActionListener al = e-> query(false);
+			TextChangeListener tl = e-> query(false);
 
 			containerTypeFilter.addTextChangeListener(tl);
 			groupFilter.addTextChangeListener(tl);
@@ -176,21 +176,14 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 			hideDeadCheckBox.addActionListener(al);
 			biosearchTextField.addTextChangeListener(tl);
 			namedSamplingComboBox.addTextChangeListener(tl);
-			//			filterButton.addActionListener(queryActionListener);
 
 			//Preload all samples
 			query(true);
 
-
 			setContentPane(centerPane);
 			UIUtils.adaptSize(this, 1400, 950);
 			splitPane.setDividerLocation(1200);
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					splitPane.setDividerLocation(getSize().width-250);
-				}
-			});
+			SwingUtilities.invokeLater(()->splitPane.setDividerLocation(getSize().width-250));
 			setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 			setVisible(true);
 
@@ -209,11 +202,9 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 				push++;
 				try {
 					if(allSamples==null || refreshFromDB) {
-
-
 						Study s = JPAUtil.reattach(study);
 						allSamples = new LinkedHashSet<>();
-						Collection<Biosample> tops = s.getTopAttachedBiosamples();
+						Collection<Biosample> tops = s.getTopParticipants();
 						for (Biosample animal : tops) {
 							if(animals!=null && !animals.contains(animal)) continue;
 							allSamples.addAll(animal.getHierarchy(HierarchyMode.CHILDREN));

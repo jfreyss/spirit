@@ -25,28 +25,26 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JTabbedPane;
 
+import com.actelion.research.spiritcore.business.property.PropertyKey;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.UIUtils;
 
 public class UserAdminDlg extends JEscapeDialog {
-	private EmployeePanel employeePanel = new EmployeePanel();
-	private EmployeeGroupPanel employeeGroupPanel = new EmployeeGroupPanel();
-	
+
 	public UserAdminDlg() {
 		super(UIUtils.getMainFrame(), "User/Group Administration");
-		
+
 		JTabbedPane tabbedPane = new JCustomTabbedPane();
-		tabbedPane.add("Users", employeePanel);
-		tabbedPane.add("Groups", employeeGroupPanel);
+		tabbedPane.add("Users", new EmployeePanel());
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			tabbedPane.add("Groups", new EmployeeGroupPanel());
+		}
 
 		setContentPane(UIUtils.createBox(tabbedPane, null, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), new JButton(new CloseAction()))));
 
-//		//Open employee creation if there are no employees
-//		if(employeeTable.getRows().size()==0) {
-//			createUser("admin_spirit");
-//		}
-		
+
 		UIUtils.adaptSize(this, 800, 620);
 		setVisible(true);
 	}

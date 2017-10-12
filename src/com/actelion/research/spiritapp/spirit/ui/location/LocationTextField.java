@@ -63,7 +63,7 @@ public class LocationTextField extends JCustomTextField {
 	}
 
 	public LocationTextField() {
-		super(JCustomTextField.ALPHANUMERIC, 22);
+		super(CustomFieldType.ALPHANUMERIC, 22);
 		locationBrowser.setAllowTextEditing(false);
 
 		setLayout(null);

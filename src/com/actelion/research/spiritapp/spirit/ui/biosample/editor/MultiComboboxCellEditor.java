@@ -21,15 +21,14 @@
 
 package com.actelion.research.spiritapp.spirit.ui.biosample.editor;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import javax.swing.AbstractCellEditor;
-import javax.swing.BorderFactory;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
@@ -50,9 +49,9 @@ public class MultiComboboxCellEditor extends AbstractCellEditor implements Table
 			choices.add(s);
 		}
 		Collections.sort(choices);
+		cb.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 		cb.setAllowTyping(false);
 		cb.setMargin(null);
-		cb.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.BLUE));
 	}
 
 	@Override

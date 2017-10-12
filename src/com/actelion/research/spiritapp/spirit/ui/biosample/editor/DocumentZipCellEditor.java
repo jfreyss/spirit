@@ -25,21 +25,23 @@ import java.awt.Component;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.util.component.DocumentZipTextField;
 import com.actelion.research.spiritcore.business.Document;
 
 public class DocumentZipCellEditor extends AbstractCellEditor implements TableCellEditor {
-	
+
 	private DocumentZipTextField documentTextField = new DocumentZipTextField();
-	
+
 	public DocumentZipCellEditor() {
+		documentTextField.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
 
 	@Override
 	public Document getCellEditorValue() {
-		Document doc = (Document) documentTextField.getSelectedDocument();
+		Document doc = documentTextField.getSelectedDocument();
 		return doc;
 	}
 

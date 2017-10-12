@@ -36,12 +36,16 @@ import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 
-
+/**
+ * Column is used to represent any column in the AbstractExtendTable
+ *
+ * @author freyssj
+ */
 public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 
 	private static int staticCounter = 0;
 
-	private String category;
+	private String category = "";
 	private String name;
 	private Class<VALUE> columnClass;
 	private int minWidth;
@@ -123,6 +127,7 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 	 * @return
 	 */
 	public String getCategory() {
+		assert category!=null;
 		return category;
 
 	}
@@ -193,7 +198,7 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 			} else if(columnClass==Integer.class) {
 				setValue(row, (VALUE) (Integer) Integer.parseInt(value.trim()));
 			} else if(columnClass==Date.class) {
-				setValue(row, (VALUE) FormatterUtils.parseDate(value.trim()));
+				setValue(row, (VALUE) FormatterUtils.parseDateTime(value.trim()));
 			} else {
 				setValue(row, (VALUE) value);
 			}
@@ -259,13 +264,15 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 	 */
 	public void populateHeaderPopup(final AbstractExtendTable<ROW> table, final JPopupMenu popupMenu) {
 		popupMenu.add(new JSeparator());
-		popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
-		popupMenu.add(new AbstractAction("Sort by "+getShortName()) {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				table.sortBy(Column.this);
-			}
-		});
+		if(table.isCanSort()) {
+			popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
+			popupMenu.add(new AbstractAction("Sort by "+getShortName()) {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					table.sortBy(Column.this);
+				}
+			});
+		}
 
 	}
 

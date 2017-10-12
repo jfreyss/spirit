@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -62,16 +63,18 @@ import org.hibernate.annotations.SortNatural;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
-import com.actelion.research.spiritcore.business.IEntity;
+import com.actelion.research.spiritcore.business.IAuditable;
+import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.LocationType.LocationCategory;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 
 /**
- * 
+ *
  *
  */
 @Entity
@@ -79,88 +82,95 @@ import com.actelion.research.util.CompareUtils;
 @Audited
 @Table(name="biolocation", uniqueConstraints= {@UniqueConstraint(columnNames= {"name", "parent_id"})})
 @SequenceGenerator(name="biolocation_sequence", sequenceName="biolocation_sequence", allocationSize=1)
-public class Location implements IEntity, Serializable, Comparable<Location>, Cloneable {
+public class Location implements Serializable, Comparable<Location>, Cloneable, IObject, IAuditable {
 
 
 	public static final String SEPARATOR = "/";
-	public static final String PREFIX = "LOC"; 
-		
+	public static final String PREFIX = "LOC";
+
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="biolocation_sequence")
 	private int id = 0;
-		
+
+	@Column(name="name", length=64)
 	private String name = "";
-	
+
 	@Column(name="description", length=256)
-	private String description = "";	
-	
+	private String description = "";
+
+	@Column(name="flag")
+	@Enumerated(EnumType.STRING)
+	private LocationFlag flag = null;
+
+
 	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY, optional=true)
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@JoinColumn(name="parent_id")
 	private Location parent = null;
-	
-	@OneToMany(fetch=FetchType.LAZY, mappedBy="parent")	
+
+	@OneToMany(fetch=FetchType.LAZY, mappedBy="parent")
 	@SortNatural
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@BatchSize(size=4)
 	private Set<Location> children = new TreeSet<>();
 
 	@OneToMany(fetch=FetchType.LAZY, mappedBy="location")
-	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@BatchSize(size=1)
 	private Set<Biosample> biosamples = new LinkedHashSet<>();
-		
+
 	@Column(name="locationType", nullable=false)
 	@Enumerated(EnumType.STRING)
 	private LocationType locationType;
-	
+
 	@Column(nullable=false)
 	private Privacy privacy = Privacy.INHERITED;
-	
+
 	@Column(length=10)
 	@Enumerated(EnumType.STRING)
 	private LocationLabeling labeling;
 
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="department_id")
-	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)	
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	private EmployeeGroup employeeGroup;
-	
-	
+
 	/** Used for Labeling==ALPHA or NUMERICAL */
 	@Column(name="ncols", nullable=false)
 	private int cols = 0;
-	
+
 	/** Used for Labeling==ALPHA or NUMERICAL */
 	@Column(name="nrows", nullable=false)
 	private int rows = 0;
-		
+
+	@Column(name="updUser", length=20)
 	private String updUser;
-	
+
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date updDate;
-	
+
+	@Column(name="creUser", length=20)
 	private String creUser;
-	
+
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date creDate;
-	
-	
+
+
 	private transient boolean wasUpdated = false;
-	
-	public Location() {}	
-	
+
+	public Location() {}
+
 	public Location(Location parent, String name) {
 		this.parent = parent;
 		this.name = name;
 		this.labeling = LocationLabeling.NONE;
 	}
-	
+
 	public Location(String name) {
 		this(null, name);
 	}
-	
+
 	public Location(LocationType type) {
 		setLocationType(type);
 	}
@@ -169,11 +179,11 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 	public int getId() {
 		return id;
 	}
-	
+
 	public String getLocationId() {
 		return id>=0?PREFIX + id:"";
 	}
-	
+
 	public String getName() {
 		return name==null?"":name;
 	}
@@ -181,24 +191,24 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		StringBuilder res = new StringBuilder();
 		Location loc = this;
 		int depth = 0;
-		while(loc!=null) {			
+		while(loc!=null) {
 			res.insert(0, loc.getName() + (depth>0? Location.SEPARATOR:""));
 			loc = loc.getParent();
 			if(++depth>=10) break;
 		}
 		return res.toString();
 	}
-	
+
 	public String getHierarchyMedium() {
 		StringBuilder res = new StringBuilder();
 		Location loc = this;
 		int depth = 0;
-		while(true) {			
+		while(true) {
 			String name = loc.getName();
 			if(name.indexOf("(")>4 && name.indexOf("(")<name.lastIndexOf(")")) name = (name.substring(0, name.indexOf("(")) + name.substring(name.lastIndexOf(")")+1)).trim();
-			if(name.length()>10) name = name.substring(0, 5) + "..." + name.substring(name.length()-3);
+			//			if(name.length()>10) name = name.substring(0, 5) + "..." + name.substring(name.length()-3);
 			res.insert(0, name + (depth>0? Location.SEPARATOR:""));
-			
+
 			if(loc.getLocationType().getCategory()==LocationCategory.ADMIN) break;
 
 			loc = loc.getParent();
@@ -206,7 +216,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		}
 		return res.toString();
 	}
-	
+
 	/**
 	 * Gets the hierarchy of parents: [Top , ..., Parent , this ] with a max of 10 locations
 	 * @return
@@ -221,18 +231,27 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		}
 		return res;
 	}
-	
+
+	@Override
 	public void setId(int id) {
 		this.id = id;
 	}
+
 	public void setName(String name) {
 		assert name==null || (name.indexOf('/')<0 && name.indexOf(':')<0);
 		name = name==null? null: name.replace('/', '_').replace(':', '_');
 		this.name = name;
 	}
 
+	public LocationFlag getLocationFlag() {
+		return flag;
+	}
 
-	public int getSize() {		
+	public void setLocationFlag(LocationFlag flag) {
+		this.flag = flag;
+	}
+
+	public int getSize() {
 		return getCols()<=0 || getRows()<=0? -1: getCols()*getRows();
 	}
 
@@ -259,35 +278,35 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 	@Override
 	public boolean equals(Object obj) {
 		if(obj==this) return true;
-		if(!(obj instanceof Location)) return false;		
+		if(!(obj instanceof Location)) return false;
 		return getId() == ((Location)obj).getId();
 	}
-	
+
 	@Override
 	public int compareTo(Location o2) {
 		if(o2==null) return -1;
 		if(equals(o2)) return 0;
-		
+
 		if((getParent()==null && o2.getParent()==null) || (getParent()!=null && o2.getParent()!=null && getParent().getId()>0 && getParent().getId()==o2.getParent().getId())) {
-			return CompareUtils.compare(getName(), o2.getName());			
+			return CompareUtils.compareSpecial(getName(), o2.getName());
 		}
-		return CompareUtils.compare(this.getHierarchyFull(), o2.getHierarchyFull());
+		return CompareUtils.compareSpecial(this.getHierarchyFull(), o2.getHierarchyFull());
 	}
-	
+
 	public void setChildren(Set<Location> children) {
 		this.children = children;
 	}
 	public Set<Location> getChildren() {
 		return children;
 	}
-	
+
 	public Location getChildByName(String name) {
 		for (Location l : getChildren()) {
 			if(l.getName().equals(name)) return l;
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Return children recursively including this
 	 * @param maxDepth
@@ -303,26 +322,26 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		}
 		return childrenRec;
 	}
-	
+
 	/**
 	 * Sets the parent (and make sure the dual relationship is correct)
 	 * @param parent
 	 */
 	public void setParent(Location parent) {
 		if(this.parent==parent) return;
-		
+
 		//update the double relationship
 		if(this.parent!=null) {
 			this.parent.getChildren().remove(this);
 		}
-		
+
 		this.parent = parent;
-		
+
 		//update the double relationship
 		if(parent!=null) {
 			parent.getChildren().add(this);
 		}
-		
+
 	}
 	public Location getParent() {
 		return parent;
@@ -332,8 +351,8 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		if(getLabeling()==null) return -1;
 		return getLabeling().getPos(this, posString);
 	}
-	
-	
+
+
 	@Override
 	public String toString() {
 		return getHierarchyFull();
@@ -359,7 +378,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		return rows;
 	}
 
-	
+
 	/**
 	 * @param privacy the privacy to set
 	 */
@@ -372,7 +391,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 	public Privacy getPrivacy() {
 		return privacy;
 	}
-	
+
 	public Privacy getInheritedPrivacy() {
 		Location l = this;
 		int depth=0;
@@ -388,7 +407,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		}
 		return Privacy.PUBLIC;
 	}
-	
+
 	public EmployeeGroup getInheritedEmployeeGroup() {
 		Location l = this;
 		int depth=0;
@@ -404,7 +423,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		}
 		return null;
 	}
-	
+
 	/**
 	 * @param department the department to set
 	 */
@@ -428,7 +447,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 			setCols(type.getDefaultCols());
 			setRows(type.getDefaultRows());
 		}
-		
+
 	}
 	/**
 	 * @return the category
@@ -436,13 +455,13 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 	public LocationType getLocationType() {
 		return locationType;
 	}
-	
+
 	public List<Container> getContainers() {
 		List<Container> containers = new ArrayList<>(Biosample.getContainers(biosamples, true));
 		return containers;
 	}
-	
-	
+
+
 	/**
 	 * Gets the biosamples from this location (not sorted)
 	 * The location may be temporary (not persistent), if biosample.location == null
@@ -451,14 +470,14 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 	public Set<Biosample> getBiosamples() {
 		return biosamples;
 	}
-	
+
 	public void setBiosamples(Set<Biosample> biosamples) {
-		this.biosamples = biosamples;		
+		this.biosamples = biosamples;
 	}
-	
-	
+
+
 	public Map<Integer, Container> getContainersMap() {
-		
+
 		Map<Integer, Container> res = new HashMap<>();
 		if(getLabeling()==LocationLabeling.NONE) {
 			List<Biosample> biosamples = new ArrayList<>(getBiosamples());
@@ -468,11 +487,11 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 					return o1.getPos()-o2.getPos();
 				}
 			});
-			List<Container> containers = Biosample.getContainers(biosamples, true);						
+			List<Container> containers = Biosample.getContainers(biosamples, true);
 			int index = 0;
 			for (Container c : containers) {
-				res.put(index++, c);				
-			}			
+				res.put(index++, c);
+			}
 		} else if(getBiosamples()!=null) {
 			for (Biosample b : getBiosamples()) {
 				if(b.getPos()>=0) {
@@ -488,7 +507,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		}
 		return res;
 	}
-	
+
 	@Override
 	public Location clone()  {
 		try {
@@ -499,7 +518,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-	
+
 	public String getCreUser() {
 		return creUser;
 	}
@@ -515,7 +534,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 	public void setCreDate(Date creDate) {
 		this.creDate = creDate;
 	}
-	
+
 	public String formatPosition(int pos) {
 		return getLabeling().formatPosition(this, pos);
 	}
@@ -531,16 +550,16 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	
-	
-	
+
+
+
 	public int getOccupancy() {
 		return getBiosamples().size();
 	}
-	
+
 
 	/**
-	 * To propagate the persist/merge location when a biosample is saved, one must set this flag, otherwise there will be no update 
+	 * To propagate the persist/merge location when a biosample is saved, one must set this flag, otherwise there will be no update
 	 * @param wasUpdated
 	 */
 	public void setWasUpdated(boolean wasUpdated) {
@@ -553,7 +572,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 	 */
 	public boolean wasUpdated() {
 		return wasUpdated;
-	}	
+	}
 
 	public boolean isEmpty() {
 		return getBiosamples().isEmpty();
@@ -571,12 +590,23 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		if(locations==null) return res;
 		for (Location loc : locations) {
 			if(loc.getParent()!=null) {
-				res.add(loc.getParent());			
+				res.add(loc.getParent());
 			}
 		}
 		return res;
 	}
-		
+
+	public static Set<LocationType> getLocationTypes(Collection<Location> locations) {
+		Set<LocationType> res = new HashSet<>();
+		if(locations==null) return res;
+		for (Location loc : locations) {
+			if(loc.getLocationType()!=null) {
+				res.add(loc.getLocationType());
+			}
+		}
+		return res;
+	}
+
 	public static Set<Biosample> getBiosamples(Collection<Location> locations) {
 		Set<Biosample> res = new HashSet<>();
 		if(locations==null) return res;
@@ -608,7 +638,7 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 
 		location.locationType = locationType;
 		location.name = name;
-		
+
 		location.privacy = privacy;
 		location.employeeGroup = employeeGroup;
 
@@ -616,16 +646,16 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 		location.rows = rows;
 		location.cols = cols;
 		return location;
-		
-	}	
-	
-	
+
+	}
+
+
 	public static List<Location> duplicate(List<Location> locations) {
-		
+
 		//Sort the location to have them in hierarchy already (parents come before their children)
 		locations = new ArrayList<>(locations);
 		Collections.sort(locations);
-		
+
 		//Duplicate each location
 		List<Location> res = new ArrayList<>();
 		IdentityHashMap<Location, Location> old2new = new IdentityHashMap<>();
@@ -633,13 +663,13 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 			Location clone = l.duplicate();
 			boolean changeName;
 			if(l.getParent()!=null) {
-				 if(old2new.get(l.getParent())!=null) {
-					 changeName = false;
-					 clone.setParent(old2new.get(l.getParent()));					 
-				 } else {
-					 changeName = true;
-					 clone.setParent(l.getParent());
-				 }
+				if(old2new.get(l.getParent())!=null) {
+					changeName = false;
+					clone.setParent(old2new.get(l.getParent()));
+				} else {
+					changeName = true;
+					clone.setParent(l.getParent());
+				}
 			} else {
 				changeName = true;
 			}
@@ -648,14 +678,66 @@ public class Location implements IEntity, Serializable, Comparable<Location>, Cl
 				String name = l.getName();
 				if(name.indexOf(" (Copy ")>0) name = name.substring(0, name.indexOf(" (Copy "));
 				int n = 1;
-				while(DAOLocation.getLocation(l.getParent(), name + " (Copy "+n+")")!=null) n++;			
+				while(DAOLocation.getLocation(l.getParent(), name + " (Copy "+n+")")!=null) n++;
 				clone.setName(name + " (Copy "+n+")");
 			}
-			
+
 			res.add(clone);
 			old2new.put(l, clone);
 		}
 		return res;
+	}
+
+	@Override
+	/**
+	 * Returns a map containing the differences between 2 locations (usually 2 different versions).
+	 * The result is an empty string if there are no differences or if b is null
+	 * @param b
+	 * @return
+	 */
+	public String getDifference(IAuditable l) {
+		if(l==null) l = new Location();
+		if(!(l instanceof Location)) return "";
+		return MiscUtils.flatten(getDifferenceMap((Location)l));
+	}
+
+	/**
+	 * Returns a map containing the differences between 2 locations (usually 2 different versions).
+	 * The result is an empty string if there are no differences or if b is null
+	 * @param b
+	 * @return
+	 */
+	public Map<String, String> getDifferenceMap(Location l) {
+
+		Map<String, String> map = new LinkedHashMap<>();
+		if(l==null) return map;
+
+		if(CompareUtils.compare(l.getName(), l.getName())!=0) {
+			map.put("Name", l.getName());
+		}
+		if(CompareUtils.compare(l.getDescription(), l.getDescription())!=0) {
+			map.put("Description", l.getDescription());
+		}
+		if(CompareUtils.compare(l.getParent(), l.getParent())!=0) {
+			map.put("Parent", l.getParent()==null?"NA":l.getParent().getHierarchyFull());
+		}
+		if(CompareUtils.compare(l.getLocationType(), l.getLocationType())!=0) {
+			map.put("LocationType", l.getLocationType()==null?"NA":l.getLocationType().getName());
+		}
+		if(CompareUtils.compare(l.getCols(), l.getCols())!=0) {
+			map.put("Cols", ""+l.getCols());
+		}
+		if(CompareUtils.compare(l.getRows(), l.getRows())!=0) {
+			map.put("Rows", ""+l.getRows());
+		}
+		if(CompareUtils.compare(l.getPrivacy(), l.getPrivacy())!=0 || CompareUtils.compare(l.getEmployeeGroup(), l.getEmployeeGroup())!=0) {
+			map.put("Privacy", ""+l.getPrivacy() + (l.getEmployeeGroup()==null?"": " to "+l.getEmployeeGroup().getName()));
+		}
+		if(CompareUtils.compare(l.getCreUser(), l.getCreUser())!=0) {
+			map.put("Owner", l.getCreUser());
+		}
+
+		return map;
 	}
 }
 

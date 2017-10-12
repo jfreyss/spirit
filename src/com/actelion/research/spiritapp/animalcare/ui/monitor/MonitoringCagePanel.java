@@ -57,40 +57,41 @@ import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
 
 public class MonitoringCagePanel extends JPanel {
 
-	private JCustomLabel foodIntervalLabel = new JCustomLabel("", FastFont.SMALL, Color.BLACK); 
-	private JCustomLabel waterIntervalLabel = new JCustomLabel("", FastFont.SMALL, Color.BLACK); 
-	private JCustomLabel foodConsumptionLabel = new JCustomLabel("", FastFont.SMALL, Color.BLUE); 
-	private JCustomLabel waterConsumptionLabel = new JCustomLabel("", FastFont.SMALL, Color.BLUE); 
-	private JCustomLabel foodFormulaLabel = new JCustomLabel("", FastFont.SMALLER, Color.BLACK); 
+	private JCustomLabel foodIntervalLabel = new JCustomLabel("", FastFont.SMALL, Color.BLACK);
+	private JCustomLabel waterIntervalLabel = new JCustomLabel("", FastFont.SMALL, Color.BLACK);
+	private JCustomLabel foodConsumptionLabel = new JCustomLabel("", FastFont.SMALL, Color.BLUE);
+	private JCustomLabel waterConsumptionLabel = new JCustomLabel("", FastFont.SMALL, Color.BLUE);
+	private JCustomLabel foodFormulaLabel = new JCustomLabel("", FastFont.SMALLER, Color.BLACK);
 	private JCustomLabel waterFormulaLabel = new JCustomLabel("", FastFont.SMALLER, Color.BLACK);
-	
-	private JCustomLabel nextFoodIntervalLabel = new JCustomLabel("", FastFont.SMALL, Color.BLACK); 
-	private JCustomLabel nextWaterIntervalLabel = new JCustomLabel("", FastFont.SMALL, Color.BLACK); 
-	private JCustomLabel nextFoodConsumptionLabel = new JCustomLabel("", FastFont.SMALL, Color.BLUE); 
-	private JCustomLabel nextWaterConsumptionLabel = new JCustomLabel("", FastFont.SMALL, Color.BLUE); 
-	private JCustomLabel nextFoodFormulaLabel = new JCustomLabel("", FastFont.SMALLER, Color.BLACK); 
-	private JCustomLabel nextWaterFormulaLabel = new JCustomLabel("", FastFont.SMALLER, Color.BLACK);
-	
-	
-	private final Phase phase;
-	private final List<JTextComponent> requiredComponents = new ArrayList<JTextComponent>();
 
-	
+	private JCustomLabel nextFoodIntervalLabel = new JCustomLabel("", FastFont.SMALL, Color.BLACK);
+	private JCustomLabel nextWaterIntervalLabel = new JCustomLabel("", FastFont.SMALL, Color.BLACK);
+	private JCustomLabel nextFoodConsumptionLabel = new JCustomLabel("", FastFont.SMALL, Color.BLUE);
+	private JCustomLabel nextWaterConsumptionLabel = new JCustomLabel("", FastFont.SMALL, Color.BLUE);
+	private JCustomLabel nextFoodFormulaLabel = new JCustomLabel("", FastFont.SMALLER, Color.BLACK);
+	private JCustomLabel nextWaterFormulaLabel = new JCustomLabel("", FastFont.SMALLER, Color.BLACK);
+
+
+	private final Phase phase;
+	private final List<JTextComponent> requiredComponents = new ArrayList<>();
+
+
 	public MonitoringCagePanel(final MonitoringDlg dlg, final int no, final Container container, final Phase phase, final FoodWater currentFw, final List<FoodWater> allFws, boolean onlyShowRequired) {
 		super(new BorderLayout());
-		
+
 		assert container!=null;
 		assert currentFw!=null;
 		assert currentFw.getContainerId()!=null;
 		assert currentFw.getContainerId().equals(container.getContainerId());
 		assert currentFw.getPhase().equals(phase);
-		
+
 		int nAnimals;
 		if(currentFw.getNAnimals()==null) {
 			nAnimals = 0;
@@ -100,20 +101,20 @@ public class MonitoringCagePanel extends JPanel {
 		} else {
 			nAnimals = currentFw.getNAnimals();
 		}
-		
+
 		this.phase = phase;
 		boolean foodRequired = isRequired(currentFw, container, false);
 		boolean waterRequired = isRequired(currentFw, container, true);
-		
+
 		final FoodWater prevFood = currentFw.getPreviousFromList(allFws, false);
 		final FoodWater prevWater = currentFw.getPreviousFromList(allFws, true);
 		final Consumption prevFoodCons = currentFw.calculatePrevConsumptionFromList(allFws, false);
 		final Consumption prevWaterCons = currentFw.calculatePrevConsumptionFromList(allFws, true);
 		final Consumption nextFoodCons = currentFw.calculateNextConsumptionFromList(allFws, false);
 		final Consumption nextWaterCons = currentFw.calculateNextConsumptionFromList(allFws, true);
-		
 
-		final JCustomTextField foodMeasureTextField  = new JCustomTextField(JCustomTextField.DOUBLE);
+
+		final JCustomTextField foodMeasureTextField  = new JCustomTextField(CustomFieldType.DOUBLE);
 		foodMeasureTextField.addFocusListener(new AutoScrollFocusListener());
 		foodMeasureTextField.setWarningWhenEdited(true);
 		foodMeasureTextField.setTextDouble(currentFw.getFoodWeight());
@@ -121,7 +122,7 @@ public class MonitoringCagePanel extends JPanel {
 		if(foodRequired && prevFood!=null) foodMeasureTextField.setBackground(LF.BGCOLOR_REQUIRED);
 		if(foodRequired && prevFood!=null) requiredComponents.add(foodMeasureTextField);
 
-		final JCustomTextField waterMeasureTextField  = new JCustomTextField(JCustomTextField.DOUBLE);
+		final JCustomTextField waterMeasureTextField  = new JCustomTextField(CustomFieldType.DOUBLE);
 		waterMeasureTextField.addFocusListener(new AutoScrollFocusListener());
 		waterMeasureTextField.setEnabled(prevWater!=null);
 		waterMeasureTextField.setWarningWhenEdited(true);
@@ -130,8 +131,8 @@ public class MonitoringCagePanel extends JPanel {
 		if(waterRequired && prevWater!=null) waterMeasureTextField.setBackground(LF.BGCOLOR_REQUIRED);
 		if(waterRequired && prevWater!=null) requiredComponents.add(waterMeasureTextField);
 
-		
-		final JCustomTextField foodTareTextField  = new JCustomTextField(JCustomTextField.DOUBLE);
+
+		final JCustomTextField foodTareTextField  = new JCustomTextField(CustomFieldType.DOUBLE);
 		foodTareTextField.addFocusListener(new AutoScrollFocusListener());
 		foodTareTextField.setWarningWhenEdited(true);
 		foodTareTextField.setTextDouble(currentFw.getFoodTare());
@@ -139,7 +140,7 @@ public class MonitoringCagePanel extends JPanel {
 		if(foodRequired) foodTareTextField.setBackground(LF.BGCOLOR_REQUIRED);
 		if(foodRequired) requiredComponents.add(foodTareTextField);
 
-		final JCustomTextField waterTareTextField  = new JCustomTextField(JCustomTextField.DOUBLE);
+		final JCustomTextField waterTareTextField  = new JCustomTextField(CustomFieldType.DOUBLE);
 		waterTareTextField.addFocusListener(new AutoScrollFocusListener());
 		waterTareTextField.setWarningWhenEdited(true);
 		waterTareTextField.setTextDouble(currentFw.getWaterTare());
@@ -147,15 +148,15 @@ public class MonitoringCagePanel extends JPanel {
 		if(waterRequired) waterTareTextField.setBackground(LF.BGCOLOR_REQUIRED);
 		if(waterRequired) requiredComponents.add(waterTareTextField);
 
-		final JCustomTextField nAnimalsTextField = new JCustomTextField(JCustomTextField.INTEGER);
+		final JCustomTextField nAnimalsTextField = new JCustomTextField(CustomFieldType.INTEGER);
 		nAnimalsTextField.addFocusListener(new AutoScrollFocusListener());
 		nAnimalsTextField.setWarningWhenEdited(true);
 		nAnimalsTextField.setTextInteger(nAnimals);
 		nAnimalsTextField.setToolTipText("<html>Last Value: "+ formatTooltipText(currentFw.getWaterTare(), currentFw.getUpdUser(), currentFw.getUpdDate()));
 		nAnimalsTextField.setTextWhenEmpty("Number of animals");
-		
+
 		TextChangeListener tl = new TextChangeListener() {
-			
+
 			@Override
 			public void textChanged(JComponent src) {
 				currentFw.setFoodWeight(foodMeasureTextField.getTextDouble());
@@ -163,24 +164,24 @@ public class MonitoringCagePanel extends JPanel {
 				currentFw.setFoodTare(foodTareTextField.getTextDouble());
 				currentFw.setWaterTare(waterTareTextField.getTextDouble());
 				currentFw.setNAnimals(nAnimalsTextField.getTextInt());
-				
+
 				//if food is not empty:
-				// - calculate the food consumption from the last entry to this one  
-				// - calculate the food consumption from this entry to the next one  
+				// - calculate the food consumption from the last entry to this one
+				// - calculate the food consumption from this entry to the next one
 				//if food is empty:
 				// - delete this food consumption
 				// - calculate the food consumption from the last entry to the next one
-				
+
 				Consumption newFoodCons = currentFw.calculatePrevConsumptionFromList(allFws, false);
 				Consumption newWaterCons = currentFw.calculatePrevConsumptionFromList(allFws, true);
 				Consumption newNextFoodCons = currentFw.calculateNextConsumptionFromList(allFws, false);
 				Consumption newNextWaterCons = currentFw.calculateNextConsumptionFromList(allFws, true);
-				
+
 				Date now = JPAUtil.getCurrentDateFromDatabase();
-				
+
 				try {
 					List<Result> results = new ArrayList<Result>();
-					
+
 					//Update results of current phase (based on previous tare)
 					if(newFoodCons!=null) {
 						DAOResult.attachOrCreateStudyResultsToTops(phase.getStudy(), container.getBiosamples(), newFoodCons.toPhase, dlg.getElb());
@@ -202,37 +203,37 @@ public class MonitoringCagePanel extends JPanel {
 							if(!results.contains(r)) results.add(r);
 						}
 					}
-					
+
 					//Update results of next food phase (if needed, ie nextFood<>null)
 					if(newNextFoodCons!=null) {
 						DAOResult.attachOrCreateStudyResultsToTops(phase.getStudy(), container.getBiosamples(), newNextFoodCons.toPhase, dlg.getElb());
-						for (Biosample animal : container.getBiosamples()) {					
+						for (Biosample animal : container.getBiosamples()) {
 							Result r2 = animal.getAuxResult(DAOTest.getTest(DAOTest.FOODWATER_TESTNAME), newNextFoodCons.toPhase);
 							String valFood = newNextFoodCons.value==null? null: ""+newNextFoodCons.value;
 							r2.getOutputResultValues().get(0).setValue(valFood);
 							r2.setUpdDate(now);
 							r2.setUpdUser(SpiritFrame.getUser().getUsername());
-							if(!results.contains(r2)) results.add(r2);	
+							if(!results.contains(r2)) results.add(r2);
 						}
 					}
-					
+
 					//Update result of next water phase (if needed, ie nextWater<>null)
 					if(newNextWaterCons!=null) {
-						DAOResult.attachOrCreateStudyResultsToTops(phase.getStudy(), container.getBiosamples(), newNextWaterCons.toPhase, dlg.getElb());						
-						for (Biosample animal : container.getBiosamples()) {											
+						DAOResult.attachOrCreateStudyResultsToTops(phase.getStudy(), container.getBiosamples(), newNextWaterCons.toPhase, dlg.getElb());
+						for (Biosample animal : container.getBiosamples()) {
 							Result r2 = animal.getAuxResult(DAOTest.getTest(DAOTest.FOODWATER_TESTNAME), newNextWaterCons.toPhase);
 							String valWater = newNextWaterCons.value==null? null: ""+newNextWaterCons.value;
 							r2.getOutputResultValues().get(1).setValue(valWater);
 							r2.setUpdDate(new Date());
 							r2.setUpdUser(SpiritFrame.getUser().getUsername());
-							if(!results.contains(r2)) results.add(r2);	
+							if(!results.contains(r2)) results.add(r2);
 						}
 					}
-					
-				
+
+
 					currentFw.setUpdUser(SpiritFrame.getUser().getUsername());
 					currentFw.setUpdDate(now);
-					
+
 					updateLabels(newFoodCons, newWaterCons, newNextFoodCons, newNextWaterCons);
 
 					JPAUtil.pushEditableContext(SpiritFrame.getUser());
@@ -248,14 +249,14 @@ public class MonitoringCagePanel extends JPanel {
 				} finally {
 					JPAUtil.popEditableContext();
 				}
-				
-				
-				
+
+
+
 				if(src==foodMeasureTextField || src==waterMeasureTextField) {
 					//Update FW of animals
 					dlg.updateFW(container);
 				}
-				
+
 			}
 		};
 		foodMeasureTextField.setEnabled(prevFood!=null && prevFood.getFoodTare()!=null);
@@ -265,14 +266,14 @@ public class MonitoringCagePanel extends JPanel {
 		foodTareTextField.addTextChangeListener(tl);
 		waterTareTextField.addTextChangeListener(tl);
 		nAnimalsTextField.addTextChangeListener(tl);
-				
+
 		JPanel centerPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = GridBagConstraints.WEST;
-		c.weightx = 0; c.weighty = 0; 
+		c.weightx = 0; c.weighty = 0;
 		c.ipadx = 5; c.ipady = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		
+
 		//Prepare headers
 		c.weightx=1; c.gridx = 100; c.gridy = 0; centerPanel.add(Box.createHorizontalGlue(), c); c.weightx=0;
 
@@ -280,61 +281,61 @@ public class MonitoringCagePanel extends JPanel {
 		c.gridx = 1; c.gridy = 0; centerPanel.add(new JCustomLabel("Old Tare ", FastFont.BOLD), c);
 		c.gridx = 5; c.gridy = 0; centerPanel.add(new JCustomLabel("Measure ", FastFont.BOLD), c);
 		c.gridx = 6; c.gridy = 0; centerPanel.add(new JCustomLabel("New Tare ", FastFont.BOLD), c);
-		c.gridx = 8; c.gridy = 0; centerPanel.add(Box.createHorizontalStrut(10), c);		
+		c.gridx = 8; c.gridy = 0; centerPanel.add(Box.createHorizontalStrut(10), c);
 		c.gridx = 9; c.gridy = 0; centerPanel.add(new JCustomLabel("Calc. Cons. [/day/animal]", FastFont.BOLD), c);
 
-		
-		c.gridheight = 1; 
+
+		c.gridheight = 1;
 		c.gridx = 10; c.gridy = 0; centerPanel.add(UIUtils.createHorizontalBox(new JCustomLabel("N=", FastFont.SMALLER), nAnimalsTextField, Box.createGlue()), c);
-		c.gridheight = 1; c.weightx = 0; 
-		
-		
-		JCustomTextField foodOldTareLabel = new JCustomTextField(JCustomTextField.DOUBLE);
+		c.gridheight = 1; c.weightx = 0;
+
+
+		JCustomTextField foodOldTareLabel = new JCustomTextField(CustomFieldType.DOUBLE);
 		foodOldTareLabel.setTextDouble(prevFood==null? null: prevFood.getFoodTare());
 		foodOldTareLabel.setEnabled(false);
 		foodOldTareLabel.setForeground(Color.BLUE);
 
-		JCustomTextField waterOldTareLabel = new JCustomTextField(JCustomTextField.DOUBLE);
+		JCustomTextField waterOldTareLabel = new JCustomTextField(CustomFieldType.DOUBLE);
 		waterOldTareLabel.setTextDouble(prevWater==null? null: prevWater.getWaterTare());
 		waterOldTareLabel.setEnabled(false);
 		waterOldTareLabel.setForeground(Color.BLUE);
-		
+
 		if(!onlyShowRequired || foodRequired) {
 
 			c.gridx = 0; c.gridy = 2; centerPanel.add(new JCustomLabel("  Food [g]: ", FastFont.BOLD), c);
 			c.gridx = 1; c.gridy = 2; centerPanel.add(UIUtils.createHorizontalBox(new JCustomLabel(prevFoodCons==null?"": prevFoodCons.fromPhase.getShortName()+": ", FastFont.SMALL), foodOldTareLabel), c);
 			c.gridx = 5; c.gridy = 2; centerPanel.add(UIUtils.createHorizontalBox(new JCustomLabel(currentFw.getPhase().getShortName()+": ", FastFont.SMALL), foodMeasureTextField), c);
 			c.gridx = 6; c.gridy = 2; centerPanel.add(UIUtils.createHorizontalBox(new JCustomLabel(currentFw.getPhase().getShortName()+": ", FastFont.SMALL), foodTareTextField), c);
-			c.gridx = 9; c.gridy = 2; centerPanel.add(UIUtils.createVerticalBox(UIUtils.createHorizontalBox(foodIntervalLabel, foodConsumptionLabel), foodFormulaLabel), c);			
-			c.gridx = 10; c.gridy = 2; centerPanel.add(UIUtils.createVerticalBox(UIUtils.createHorizontalBox(nextFoodIntervalLabel, nextFoodConsumptionLabel), nextFoodFormulaLabel, Box.createHorizontalGlue()), c);			
+			c.gridx = 9; c.gridy = 2; centerPanel.add(UIUtils.createVerticalBox(UIUtils.createHorizontalBox(foodIntervalLabel, foodConsumptionLabel), foodFormulaLabel), c);
+			c.gridx = 10; c.gridy = 2; centerPanel.add(UIUtils.createVerticalBox(UIUtils.createHorizontalBox(nextFoodIntervalLabel, nextFoodConsumptionLabel), nextFoodFormulaLabel, Box.createHorizontalGlue()), c);
 		}
 		if(!onlyShowRequired || waterRequired) {
 			c.gridx = 0; c.gridy = 3; centerPanel.add(new JCustomLabel("  Water [ml]: ", FastFont.BOLD), c);
 			c.gridx = 1; c.gridy = 3; centerPanel.add(UIUtils.createHorizontalBox(new JCustomLabel(prevWaterCons==null?"": prevWaterCons.fromPhase.getShortName()+": ", FastFont.SMALL), waterOldTareLabel), c);
 			c.gridx = 5; c.gridy = 3; centerPanel.add(UIUtils.createHorizontalBox(new JCustomLabel(currentFw.getPhase().getShortName()+": ", FastFont.SMALL), waterMeasureTextField), c);
-			c.gridx = 6; c.gridy = 3; centerPanel.add(UIUtils.createHorizontalBox(new JCustomLabel(currentFw.getPhase().getShortName()+": ", FastFont.SMALL), waterTareTextField), c);			
+			c.gridx = 6; c.gridy = 3; centerPanel.add(UIUtils.createHorizontalBox(new JCustomLabel(currentFw.getPhase().getShortName()+": ", FastFont.SMALL), waterTareTextField), c);
 			c.gridx = 9; c.gridy = 3; centerPanel.add(UIUtils.createVerticalBox(UIUtils.createHorizontalBox(waterIntervalLabel, waterConsumptionLabel), waterFormulaLabel), c);
 			c.gridx = 10; c.gridy = 3; centerPanel.add(UIUtils.createVerticalBox(UIUtils.createHorizontalBox(nextWaterIntervalLabel, nextWaterConsumptionLabel), nextWaterFormulaLabel, Box.createHorizontalGlue()), c);
 		}
-		c.weighty=1; c.gridx = 10; c.gridy = 4; centerPanel.add(new JPanel(), c);	
-		
-		
-		
+		c.weighty=1; c.gridx = 10; c.gridy = 4; centerPanel.add(new JPanel(), c);
 
-		
+
+
+
+
 		updateLabels(prevFoodCons, prevWaterCons, nextFoodCons, nextWaterCons);
-		
+
 		StringBuilder groupLabel = new StringBuilder();
 		Set<Group> groups = container.getGroups();
 		if(groups.size()>3) {
 			groupLabel.append("###");
 		} else {
-			for (Group gr : groups) {				
+			for (Group gr : groups) {
 				groupLabel.append((groupLabel.length()>0? ",": "") + gr.getShortName());
 			}
 		}
 		Group group = container.getGroup();
-		
+
 		StringBuilder sb = new StringBuilder();
 		for(Biosample b: container.getBiosamples()) {
 			boolean dead = b.isDeadAt(phase);
@@ -345,26 +346,26 @@ public class MonitoringCagePanel extends JPanel {
 		content.setFont(FastFont.SMALLER);
 		content.setOpaque(true);
 		content.setBackground(UIUtils.getDilutedColor(Color.LIGHT_GRAY, group==null? Color.LIGHT_GRAY: group.getBlindedColor(SpiritFrame.getUsername())));
-		
+
 		ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.CONTAINERID, container);
 		JPanel westPanel = UIUtils.createVerticalBox(
-				containerLabel, 
-				new JLabel(groupLabel.toString()), 
-				content, 
+				containerLabel,
+				new JLabel(groupLabel.toString()),
+				content,
 				Box.createVerticalGlue());
-		
+
 		westPanel.setOpaque(true);
 		westPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, Color.LIGHT_GRAY));
 		if(group!=null) westPanel.setBackground(group.getBlindedColor(SpiritFrame.getUsername()));
-		
+
 		add(BorderLayout.WEST, westPanel);
 		add(BorderLayout.CENTER, centerPanel);
-		
+
 		setBorder(BorderFactory.createEtchedBorder());
 	}
-	
+
 	private void updateLabels(Consumption prevFood, Consumption prevWater,  Consumption nextFood, Consumption nextWater) {
-		
+
 		//Current
 		if(prevFood!=null && prevFood.toPhase!=null && prevFood.toPhase.equals(phase)) {
 			foodIntervalLabel.setForeground(Color.BLACK);
@@ -372,12 +373,12 @@ public class MonitoringCagePanel extends JPanel {
 		} else {
 			foodIntervalLabel.setForeground(Color.LIGHT_GRAY);
 			foodFormulaLabel.setForeground(Color.LIGHT_GRAY);
-		}		
+		}
 		foodIntervalLabel.setText(prevFood==null?"": prevFood.fromPhase.getShortName()+" -> "+prevFood.toPhase.getShortName()+": ");
 		foodConsumptionLabel.setText(prevFood==null || prevFood.value==null?"": prevFood.value+"g  ");
 		foodFormulaLabel.setText(prevFood==null || prevFood.formula==null? null: "("+prevFood.formula+")");
-		
-		
+
+
 		if(prevWater!=null && prevWater.toPhase!=null && prevWater.toPhase.equals(phase)) {
 			waterIntervalLabel.setForeground(Color.BLACK);
 			waterFormulaLabel.setForeground(Color.BLACK);
@@ -385,10 +386,10 @@ public class MonitoringCagePanel extends JPanel {
 			waterIntervalLabel.setForeground(Color.LIGHT_GRAY);
 			waterFormulaLabel.setForeground(Color.LIGHT_GRAY);
 		}
-		waterIntervalLabel.setText(prevWater==null?"": prevWater.fromPhase.getShortName()+" -> "+prevWater.toPhase.getShortName()+": ");		
-		waterConsumptionLabel.setText(prevWater==null || prevWater.value==null?"": prevWater.value+"ml  ");		
+		waterIntervalLabel.setText(prevWater==null?"": prevWater.fromPhase.getShortName()+" -> "+prevWater.toPhase.getShortName()+": ");
+		waterConsumptionLabel.setText(prevWater==null || prevWater.value==null?"": prevWater.value+"ml  ");
 		waterFormulaLabel.setText(prevWater==null || prevWater.formula==null? null: "("+prevWater.formula+")");
-		
+
 		//Next
 		if(nextFood!=null && nextFood.fromPhase!=null && nextFood.fromPhase.equals(phase)) {
 			nextFoodIntervalLabel.setForeground(Color.BLACK);
@@ -396,7 +397,7 @@ public class MonitoringCagePanel extends JPanel {
 		} else {
 			nextFoodIntervalLabel.setForeground(Color.LIGHT_GRAY);
 			nextFoodFormulaLabel.setForeground(Color.LIGHT_GRAY);
-		}		
+		}
 		nextFoodIntervalLabel.setText(nextFood==null?"": nextFood.fromPhase.getShortName()+" -> "+nextFood.toPhase.getShortName()+": ");
 		nextFoodConsumptionLabel.setText(nextFood==null || nextFood.value==null?"": nextFood.value+"g  ");
 		nextFoodFormulaLabel.setText(nextFood==null || nextFood.formula==null? null: "("+nextFood.formula+")");
@@ -409,19 +410,19 @@ public class MonitoringCagePanel extends JPanel {
 			nextWaterFormulaLabel.setForeground(Color.LIGHT_GRAY);
 		}
 		nextWaterIntervalLabel.setText(nextWater==null?"": nextWater.fromPhase.getShortName()+" -> "+nextWater.toPhase.getShortName()+": ");
-		nextWaterConsumptionLabel.setText(nextWater==null || nextWater.value==null?"": nextWater.value+"ml  ");		
+		nextWaterConsumptionLabel.setText(nextWater==null || nextWater.value==null?"": nextWater.value+"ml  ");
 		nextWaterFormulaLabel.setText(nextWater==null || nextWater.formula==null? null: "("+nextWater.formula+")");
-		
+
 	}
-	
+
 	public static String formatTooltipText(Object val, String user, java.util.Date date) {
 		return (val==null?"NA":val + " - "+user+" "+FormatterUtils.formatDateTime(date));
 	}
-	
+
 	public List<JTextComponent> getRequiredComponents() {
 		return requiredComponents;
 	}
-	
+
 	public boolean isRequired(FoodWater fw, Container container, boolean water) {
 		if(container==null || phase==null) return false; //Should not happen
 		for(Biosample b: container.getBiosamples()) {

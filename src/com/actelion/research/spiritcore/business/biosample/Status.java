@@ -24,53 +24,53 @@ package com.actelion.research.spiritcore.business.biosample;
 import java.awt.Color;
 
 public enum Status {
-	
+
 	//Default status
 	INLAB("Available", true, Color.BLACK, null),
-	
+
 	//Normal status
 	USEDUP("Used Up", true, new Color(120, 70, 0), new Color(255, 180, 255)),
 	LOWVOL("Low Volume", true, new Color(120, 70, 0), new Color(160, 160, 80)),
 	STORED("Stored", true, Color.BLACK, null),
-	
+
 	//no more available status
-	TRASHED ("Trashed", false, new Color(180, 0, 0), new Color(255, 0, 0)),
+	TRASHED ("Trashed", false, new Color(180, 0, 0), new Color(255, 80, 80)),
 	NECROPSY("Necropsied", false, new Color(100, 70, 0), new Color(255, 225, 225)),
-	
+
 	//problematic status
 	DEAD("Found Dead", false, new Color(100, 0, 0), new Color(255, 100, 100)),
 	KILLED("Killed", false, new Color(100, 0, 0), new Color(255, 100, 100)),
 	;
-	
+
 	private final String name;
 	private final boolean available;
 	private final Color foreground;
 	private final Color background;
-	
+
 	private Status(String name, boolean available, Color foreground, Color background) {
 		this.name = name;
 		this.available = available;
 		this.foreground = foreground;
 		this.background = background;
-		
+
 	}
-	
+
 	public boolean isAvailable() {
 		return available;
 	}
-	
+
 	public String getName() {
-		return name;		
+		return name;
 	}
-	
+
 	public Color getForeground() {
 		return foreground;
 	}
-	
+
 	public Color getBackground() {
 		return background;
 	}
-	
+
 	@Override
 	public String toString() {
 		return name;

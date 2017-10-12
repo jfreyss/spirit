@@ -437,6 +437,11 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 	}
 
 
+	/**
+	 * Gives a description to the phase, which says what needs to be done.
+	 * Returns an empty string if there is nothing to be done at this phase (from the study design)
+	 * @return
+	 */
 	public String getDescription() {
 		StringBuilder description = new StringBuilder();
 		Set<NamedSampling> nss = study.getNamedSamplings(this);

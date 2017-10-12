@@ -51,6 +51,7 @@ import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
@@ -58,13 +59,13 @@ import com.actelion.research.util.ui.UIUtils;
 public class EditAttributesDlg extends JEscapeDialog {
 
 	private final Sampling d;
-	private BiotypeComboBox typeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
+	private BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
 	private JPanel contentPanel = new JPanel(new GridBagLayout());
 	private boolean success = false;
 
-	private List<JComponent> components = new ArrayList<JComponent>();
-	private JCustomTextField amountTextField = new JCustomTextField(JCustomTextField.DOUBLE);
-	private JCustomTextField commentsTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 30);
+	private List<JComponent> components = new ArrayList<>();
+	private JCustomTextField amountTextField = new JCustomTextField(CustomFieldType.DOUBLE);
+	private JCustomTextField commentsTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 30);
 	private ContainerTypeComboBox containerTypeComboBox = new ContainerTypeComboBox(ContainerType.valuesOfRackable());
 
 
@@ -72,14 +73,14 @@ public class EditAttributesDlg extends JEscapeDialog {
 		super(UIUtils.getMainFrame(), "Edit Metadata", true);
 		this.d = sampling;
 
-		typeComboBox.addTextChangeListener(e-> {
+		biotypeComboBox.setMemorization(true);
+		biotypeComboBox.addTextChangeListener(e-> {
 			refresh();
 		});
 		containerTypeComboBox.setTextWhenEmpty("");
 
-
 		//TopPanel
-		JPanel topPanel = UIUtils.createHorizontalBox(new JLabel("Sample Type: "), typeComboBox, Box.createHorizontalGlue());
+		JPanel topPanel = UIUtils.createHorizontalBox(new JLabel("Sample Type: "), biotypeComboBox, Box.createHorizontalGlue());
 
 		//containerPanel
 		JPanel containerPanel = new JPanel(new GridBagLayout());
@@ -101,7 +102,7 @@ public class EditAttributesDlg extends JEscapeDialog {
 		centerPanel.add(BorderLayout.CENTER, contentPanel);
 		centerPanel.add(BorderLayout.SOUTH, containerPanel);
 
-		typeComboBox.setSelection(d.getBiotype());
+		biotypeComboBox.setSelection(d.getBiotype());
 		refresh();
 
 		//Buttons
@@ -166,7 +167,7 @@ public class EditAttributesDlg extends JEscapeDialog {
 	public void refresh() {
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = GridBagConstraints.WEST;
-		Biotype type = typeComboBox.getSelection();
+		Biotype type = biotypeComboBox.getSelection();
 		components.clear();
 		contentPanel.removeAll();
 		if(type!=null) {
@@ -207,7 +208,7 @@ public class EditAttributesDlg extends JEscapeDialog {
 	}
 
 	public Sampling updateModel() {
-		Biotype type = typeComboBox.getSelection();
+		Biotype type = biotypeComboBox.getSelection();
 
 		d.setBiotype(type);
 		if(type!=null) {

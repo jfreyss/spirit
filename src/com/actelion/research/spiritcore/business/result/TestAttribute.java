@@ -21,6 +21,8 @@
 
 package com.actelion.research.spiritcore.business.result;
 
+import java.util.Comparator;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -40,6 +42,7 @@ import org.hibernate.envers.Audited;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.CompareUtils;
 
 @Entity
 @Table(name="assay_attribute", indexes = {
@@ -286,4 +289,31 @@ public class TestAttribute implements Comparable<TestAttribute>, IObject {
 		return res;
 	}
 
+	/**
+	 * Comparator that compare all fields, to check if a modification occured
+	 */
+	public static Comparator<TestAttribute> EXACT_COMPARATOR = new Comparator<TestAttribute>() {
+		@Override
+		public int compare(TestAttribute o1, TestAttribute o2) {
+			int c = (o1.getName()==null?"":o1.getName()).compareTo(o2.getName()==null?"":o2.getName());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.getParameters(), o2.getParameters());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.getDataType(), o2.getDataType());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.isRequired(), o2.isRequired());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.getOutputType(), o2.getOutputType());
+			if(c!=0) return c;
+
+			c = CompareUtils.compare(o1.getParameters(), o2.getParameters());
+			if(c!=0) return c;
+
+			return 0;
+		}
+	};
 }

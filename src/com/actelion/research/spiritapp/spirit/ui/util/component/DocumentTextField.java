@@ -25,8 +25,6 @@ import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -55,35 +53,32 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class DocumentTextField extends JCustomTextField {
-	
+
 	private JButton button = new JButton(".");
 	private Document document;
-	
+
 	public DocumentTextField() {
-		super(JCustomTextField.ALPHANUMERIC, 18);
+		super(CustomFieldType.ALPHANUMERIC, 18);
 		setTextWhenEmpty("Document");
-		setLayout(null);		
+		setLayout(null);
 		button.setBorder(null);
 		button.setToolTipText("Upload a file");
 		setFocusable(true);
 		setEditable(false);
-		
+
 		button.setFont(FastFont.SMALLER);
 		add(button);
-		
-		button.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				openFileBrowser();
-			}
+
+		button.addActionListener(e-> {
+			openFileBrowser();
 		});
-		addKeyListener(new KeyAdapter() {		
+		addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyTyped(KeyEvent e) {
 				openFileBrowser();
 			}
-		});			
-		addMouseListener(new MouseAdapter() {			
+		});
+		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(hasFocus() || e.getClickCount()>=2) {
@@ -91,10 +86,10 @@ public class DocumentTextField extends JCustomTextField {
 				}
 			}
 		});
-		
+
 		super.setForeground(Color.BLUE);
 	}
-	
+
 	public void openFileBrowser() {
 		if(!hasFocus() && !button.hasFocus()) return;
 		JCustomLabel currentLabel = new JCustomLabel(document==null?" ": document.getFileName(), Color.BLUE);
@@ -108,27 +103,24 @@ public class DocumentTextField extends JCustomTextField {
 				}
 			}
 		});
-		
+
 		final JFileChooser chooser = new JFileChooser();
 		chooser.setSelectedFile(Spirit.getConfig().getProperty("document.uploadDir", new File(System.getProperty("user.home"))));
 		JButton deleteExisting = new JIconButton(IconType.TRASH, "Remove Current");
 		deleteExisting.setEnabled(document!=null);
-		deleteExisting.addActionListener(new ActionListener() {					
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				setSelectedDocument(null);
-				chooser.cancelSelection();						
-			}
+		deleteExisting.addActionListener(e-> {
+			setSelectedDocument(null);
+			chooser.cancelSelection();
 		});
-		
+
 		chooser.setApproveButtonText("Upload");
 		chooser.setPreferredSize(new Dimension(800,640));
 		chooser.setAccessory(UIUtils.createVerticalBox(new JCustomLabel("Current Document:", Font.BOLD), currentLabel, Box.createVerticalGlue(), deleteExisting));
-		
+
 		int res = chooser.showOpenDialog(button);
 		if(res==JFileChooser.APPROVE_OPTION) {
 			File f = chooser.getSelectedFile();
-			
+
 			Spirit.getConfig().setProperty("document.uploadDir", f);
 			try {
 				int maxKilo = SpiritProperties.getInstance().getValueInt(PropertyKey.FILE_SIZE) * 1000;
@@ -141,22 +133,25 @@ public class DocumentTextField extends JCustomTextField {
 				setSelectedDocument(document);
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
-			} 
-		}		
+			}
+		}
 	}
-	
+
 	@Override
 	public void setForeground(Color foreground) {
 		//Not allowed
 	}
-	
+
 	public static void open(Document document) {
 		if(document==null) return;
 		try {
 			File f = new File(System.getProperty("java.io.tmpdir"), document.getFileName());
 			if(f.exists()) {
-				f.renameTo(new File(System.getProperty("java.io.tmpdir"), "del_"+System.currentTimeMillis()+"_"+document.getFileName()));
+
+				boolean ok = f.renameTo(new File(System.getProperty("java.io.tmpdir"), "del_"+System.currentTimeMillis()+"_"+document.getFileName()));
+				if(!ok) throw new Exception("The file "+f+" is already open");
 				f.deleteOnExit();
+				f = new File(System.getProperty("java.io.tmpdir"), document.getFileName());
 			}
 			IOUtils.bytesToFile(document.getBytes(), f);
 			f.deleteOnExit();
@@ -165,26 +160,26 @@ public class DocumentTextField extends JCustomTextField {
 			JExceptionDialog.showError(ex);
 		}
 	}
-	
+
 	public void setSelectedDocument(Document document) {
 		this.document = document;
-		if(document==null) {		
-			setText("");			
+		if(document==null) {
+			setText("");
 		} else {
 			setText(document.getFileName());
 		}
 	}
-	
+
 	public Document getSelectedDocument() {
 		return document;
 	}
-	
+
 	@Override
 	public void doLayout() {
 		Dimension size = getSize();
 		if(button.isVisible()) button.setBounds(size.width-18, 1, 18, size.height-2);
 	}
-	
+
 	@Override
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
@@ -194,7 +189,7 @@ public class DocumentTextField extends JCustomTextField {
 	@Override
 	public void setBorder(Border border) {
 		if(border==null) return;
-		super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 12)));			
+		super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 12)));
 	}
 
 }

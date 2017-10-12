@@ -60,34 +60,34 @@ import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 
 public class DocumentZipTextField extends JCustomTextField {
-	
+
 	private JButton button = new JButton(".");
 	private Document document;
-	
+
 	public DocumentZipTextField() {
-		super(JCustomTextField.ALPHANUMERIC, 18);
+		super(CustomFieldType.ALPHANUMERIC, 18);
 		setTextWhenEmpty("Documents");
 		setEditable(false);
 		button.setBorder(null);
 		button.setToolTipText("Upload files");
 		setFocusable(true);
 		add(button);
-		
+
 		button.setFont(FastFont.SMALLER);
-		
+
 		button.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				openDocumentList();
 			}
 		});
-		addKeyListener(new KeyAdapter() {		
+		addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyTyped(KeyEvent e) {
 				openDocumentList();
 			}
-		});			
-		addMouseListener(new MouseAdapter() {			
+		});
+		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(hasFocus() || e.getClickCount()>=2) {
@@ -95,16 +95,16 @@ public class DocumentZipTextField extends JCustomTextField {
 				}
 			}
 		});
-		
+
 		super.setForeground(Color.BLUE);
 	}
-	
+
 	public void openDocumentList() {
 		Window window = SwingUtilities.getWindowAncestor(this);
 		JEscapeDialog dlg = new JEscapeDialog((window instanceof JDialog)? (JDialog) window: null, "Multiple Documents");
 		ImageEditorPane editorPane = new ImageEditorPane();
 		editorPane.setEditable(false);
-		editorPane.addHyperlinkListener(new HyperlinkListener() {			
+		editorPane.addHyperlinkListener(new HyperlinkListener() {
 			@Override
 			public void hyperlinkUpdate(HyperlinkEvent e) {
 				if(e.getEventType()!=HyperlinkEvent.EventType.ACTIVATED) return;
@@ -116,38 +116,38 @@ public class DocumentZipTextField extends JCustomTextField {
 						chooser.setPreferredSize(new Dimension(800, 600));
 						int res = chooser.showOpenDialog(dlg);
 						if(res!=JFileChooser.APPROVE_OPTION) return;
-						
+
 						File f = chooser.getSelectedFile();
 						Spirit.getConfig().setProperty("study.wizard.path", f.getParent());
 
 						int maxKilo = SpiritProperties.getInstance().getValueInt(PropertyKey.FILE_SIZE) * 1000;
 						if(f.length()>maxKilo*1000) throw new Exception("The file is too large: Max: "+maxKilo+"kb");
 
-						
+
 						if(document==null) {
 							document = new Document(DocumentType.ZIP);
 						}
 						document.addZipEntry(f);
 						setSelectedDocument(document);
 						updateDocPane(editorPane);
-	
+
 					} else if(e.getDescription().startsWith("view:")) {
 						int index = Integer.parseInt(e.getDescription().substring(5));
 						Document doc = document.getZipEntry(index);
-						if(doc==null) return;						
+						if(doc==null) return;
 						DocumentTextField.open(doc);
-						
+
 					} else if(e.getDescription().startsWith("del:")) {
 						int index = Integer.parseInt(e.getDescription().substring(4));
 						document.removeZipEntry(index);
 						setSelectedDocument(document);
 						updateDocPane(editorPane);
-						
+
 					}
 				} catch (Exception e2) {
 					JExceptionDialog.showError(e2);
 				}
-				
+
 			}
 		});
 		updateDocPane(editorPane);
@@ -159,7 +159,7 @@ public class DocumentZipTextField extends JCustomTextField {
 		UIUtils.adaptSize(dlg, 400, 200);
 		dlg.setVisible(true);
 	}
-	
+
 	private void updateDocPane(JEditorPane editorPane) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<table>");
@@ -173,20 +173,20 @@ public class DocumentZipTextField extends JCustomTextField {
 				} catch(Exception e) {
 					e.printStackTrace();
 					sb.append("<tr><td>" + e.getMessage() + "</td></tr>");
-				} 
-				
+				}
+
 			}
 		}
-		sb.append("<tr><td width=80%><a href='add:'>Add Document</td></tr>");		
+		sb.append("<tr><td width=80%><a href='add:'>Add Document</td></tr>");
 		sb.append("</table>");
 		editorPane.setText(sb.toString());
-	}	
-	
+	}
+
 	@Override
 	public void setForeground(Color foreground) {
 		//Not allowed
 	}
-	
+
 	public static void open(Document document) {
 		if(document==null) return;
 		try {
@@ -202,26 +202,26 @@ public class DocumentZipTextField extends JCustomTextField {
 			JExceptionDialog.showError(ex);
 		}
 	}
-	
+
 	public void setSelectedDocument(Document document) {
 		this.document = document;
-		if(document==null) {		
-			setText("");			
+		if(document==null) {
+			setText("");
 		} else {
 			setText(document.getFileName());
 		}
 	}
-	
+
 	public Document getSelectedDocument() {
 		return document;
 	}
-	
+
 	@Override
 	public void doLayout() {
 		Dimension size = getSize();
 		if(button.isVisible()) button.setBounds(size.width-18, 1, 18, size.height-2);
 	}
-	
+
 	@Override
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
@@ -231,7 +231,7 @@ public class DocumentZipTextField extends JCustomTextField {
 	@Override
 	public void setBorder(Border border) {
 		if(border==null) return;
-		super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 12)));			
+		super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 12)));
 	}
 
 }

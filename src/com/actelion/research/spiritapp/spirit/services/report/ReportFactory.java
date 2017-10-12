@@ -23,11 +23,8 @@ package com.actelion.research.spiritapp.spirit.services.report;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.io.File;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 
 import javax.swing.Box;
@@ -41,12 +38,6 @@ import javax.swing.JScrollPane;
 import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritapp.spirit.services.report.AbstractReport.ReportCategory;
-import com.actelion.research.spiritapp.spirit.services.report.custom.FoodWaterReport;
-import com.actelion.research.spiritapp.spirit.services.report.custom.SampleMeasurementPerGroupReport;
-import com.actelion.research.spiritapp.spirit.services.report.custom.SampleMeasurementReport;
-import com.actelion.research.spiritapp.spirit.services.report.custom.StatusReport;
-import com.actelion.research.spiritapp.spirit.services.report.custom.WeighingAllReport;
-import com.actelion.research.spiritapp.spirit.services.report.custom.WeighingPerPhaseReport;
 import com.actelion.research.spiritapp.spirit.ui.util.editor.ImageEditorPane;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -69,7 +60,6 @@ public class ReportFactory {
 		reports.add(new StudyDesignReport());
 		reports.add(new StudyGroupAssignmentReport());
 		reports.add(new SamplesLocationReport());
-		reports.add(new SamplesMeasurementReport());
 		try {
 			reports.addAll(getAbstractReports());
 		} catch(Exception e) {
@@ -155,58 +145,14 @@ public class ReportFactory {
 
 	private static List<AbstractReport> getAbstractReports() throws Exception {
 		List<AbstractReport> res = new ArrayList<>();
-		if(DBAdapter.getAdapter().isInActelionDomain()) {
-			res.add(new SampleMeasurementReport());
-			res.add(new SampleMeasurementPerGroupReport());
-			res.add(new FoodWaterReport());
-			res.add(new StatusReport());
-			res.add(new WeighingAllReport());
-			res.add(new WeighingPerPhaseReport());
-		} else {
-			res.addAll(getAbstractReports("com.actelion.research.spiritapp.spirit.services.report.custom"));
-		}
-		return res;
-
-	}
-
-
-	private static List<AbstractReport> getAbstractReports(String packageName) throws Exception {
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		assert classLoader != null;
-		String path = packageName.replace('.', '/');
-		Enumeration<URL> resources = classLoader.getResources(path);
-		List<File> dirs = new ArrayList<>();
-		while (resources.hasMoreElements()) {
-			URL resource = resources.nextElement();
-			dirs.add(new File(resource.getFile()));
-		}
-		List<AbstractReport> res = new ArrayList<>();
-		for (File directory : dirs) {
-			for(Class<?> claz: findClasses(directory, packageName)) {
-				if(AbstractReport.class.isAssignableFrom(claz)) {
-					res.add((AbstractReport) claz.newInstance());
-				}
+		for (Object rep : DBAdapter.getInstance().getReports()) {
+			if(!(rep instanceof AbstractReport)) {
+				LoggerFactory.getLogger(ReportFactory.class).error(rep +" does not extend AbstractReport");
+			} else {
+				res.add((AbstractReport)rep);
 			}
 		}
-		LoggerFactory.getLogger(ReportFactory.class).info("Loaded "+res.size()+" custom reports.");
 		return res;
-	}
-
-	private static List<Class<?>> findClasses(File directory, String packageName) throws ClassNotFoundException {
-		List<Class<?>> classes = new ArrayList<>();
-		if (!directory.exists()) {
-			return classes;
-		}
-		File[] files = directory.listFiles();
-		for (File file : files) {
-			if (file.isDirectory()) {
-				assert !file.getName().contains(".");
-				classes.addAll(findClasses(file, packageName + "." + file.getName()));
-			} else if (file.getName().endsWith(".class")) {
-				classes.add(Class.forName(packageName + '.' + file.getName().substring(0, file.getName().length() - 6)));
-			}
-		}
-		return classes;
 	}
 
 }

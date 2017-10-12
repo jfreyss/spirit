@@ -41,7 +41,7 @@ import com.actelion.research.spiritapp.spirit.ui.admin.database.DatabaseSettings
 import com.actelion.research.spiritapp.spirit.ui.admin.user.UserAdminDlg;
 import com.actelion.research.spiritapp.spirit.ui.util.SpiritAction;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
+import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
 import com.actelion.research.spiritcore.adapter.HSQLFileAdapter;
 import com.actelion.research.spiritcore.adapter.SchemaCreator;
 import com.actelion.research.spiritcore.business.employee.Employee;
@@ -63,61 +63,61 @@ import com.actelion.research.util.ui.UIUtils;
  *
  */
 public class SpiritDB {
-	
+
 	public static void checkAndLogin() {
 		//Check DB Version
 		LoggerFactory.getLogger(Spirit.class).debug("check dbVersion");
 		try {
 			String dbVersion = MigrationScript.getDBVersion();
 			if(dbVersion==null) {
-				SchemaCreator.recreateTables(DBAdapter.getAdapter());
-			} else if(!dbVersion.equals(MigrationScript.getExpectedDBVersion())) {
-				new DatabaseMigrationDlg();			
+				SchemaCreator.recreateTables(DBAdapter.getInstance());
+			} else if(dbVersion.compareTo(MigrationScript.getExpectedDBVersion())<0) {
+				new DatabaseMigrationDlg();
 			}
 		} catch(Exception e) {
 			JExceptionDialog.showError(e);
 			new DatabaseSettingsDlg(false);
 		}
-		
+
 		SpiritUser user;
-		
+
 		//Login
 		final StringBuilder msg = new StringBuilder();
-		try {						
+		try {
 			LoggerFactory.getLogger(Spirit.class).debug("check Users");
-			if(DBAdapter.getAdapter().isInActelionDomain()) {
-				//Login freyssj automatically 
+			if(DBAdapter.getInstance().isInActelionDomain()) {
+				//Login freyssj automatically
 				if(System.getProperty("user.name").equals("freyssj") && InetAddress.getLocalHost().getHostAddress().equals("10.100.227.35") ) {
 					try {
 						user = DAOSpiritUser.loadUser("freyssj");
 						if(user==null) throw new Exception("Could not load user freyssj");
-						SpiritFrame.setUser(user);									
+						SpiritFrame.setUser(user);
 					} catch (Exception e) {
 						System.err.println(e);
 					}
 				}
-			} else if(DBAdapter.getAdapter().getUserManagedMode()==UserAdministrationMode.READ_WRITE) {
-				List<Employee> employees = DBAdapter.getAdapter().getEmployees();
+			} else if(DBAdapter.getInstance().getUserManagedMode()==UserManagedMode.WRITE_PWD) {
+				List<Employee> employees = DBAdapter.getInstance().getEmployees();
 				boolean admins = false;
-				
+
 				for (Employee emp : employees) {
 					if(emp.getRoles().contains(SpiritUser.ROLE_ADMIN)) {admins=true; continue;}
 				}
-				if(!admins) {						
+				if(!admins) {
 					JOptionPane.showMessageDialog(null, "There are no admins in the system, you must create some users and give them admin rights", "User Admin Error", JOptionPane.ERROR_MESSAGE);
 					new UserAdminDlg();
 				} else if(employees.size()==1 && employees.get(0).getUserName().equals("admin")) {
-					msg.append("Note: To connect use 'admin' without any password");
+					msg.append("<span style='font-size:105%;color:red'>To connect use 'admin' without any password (until you create users)</span>");
 				}
-			} else if(DBAdapter.getAdapter().getUserManagedMode()==UserAdministrationMode.UNIQUE_USER) {
+			} else if(DBAdapter.getInstance().getUserManagedMode()==UserManagedMode.UNIQUE_USER) {
 				//Log the system user
 				user = new SpiritUser(System.getProperty("user.name"));
 				user.setRole(SpiritUser.ROLE_ADMIN, true);
-				SpiritFrame.setUser(user);				
-			} 
+				SpiritFrame.setUser(user);
+			}
 		} catch(Throwable e) {
 			e.printStackTrace();
-			StringWriter w = new StringWriter(); 
+			StringWriter w = new StringWriter();
 			e.printStackTrace(new PrintWriter(w));
 			JTextArea ta = new JTextArea(w.getBuffer().toString());
 			ta.setEditable(false);
@@ -126,12 +126,12 @@ public class SpiritDB {
 			JOptionPane.showMessageDialog(UIUtils.getMainFrame(), UIUtils.createBox(sp, new JLabel("<html><b>Database Error</b><br>The tables may not be up to dates, please contact support with the following trace!"), null, null, null), "DB Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		
+
 		if(SpiritFrame.getUser()==null) {
-			SwingUtilities.invokeLater(new Runnable() {				
+			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-					new SpiritAction.Action_Relogin(UIUtils.getMainFrame(), "Spirit", msg.toString()).actionPerformed(null);
+					new SpiritAction.Action_Relogin(UIUtils.getMainFrame(), "Spirit", "<html>"+msg.toString()).actionPerformed(null);
 					if(SpiritFrame.getUser()==null) System.exit(1);
 					checkImportExamples(false);
 				}
@@ -140,33 +140,33 @@ public class SpiritDB {
 			checkImportExamples(false);
 		}
 	}
-	
-	
+
+
 	public static void checkImportExamples(boolean force) {
 		//Check emptyness?
 		SpiritUser user = SpiritFrame.getUser();
-		if(DBAdapter.getAdapter().isInActelionDomain() || (user!=null && !SpiritRights.isSuperAdmin(user))) return;
+		if(DBAdapter.getInstance().isInActelionDomain() || (user!=null && !SpiritRights.isSuperAdmin(user))) return;
 		try {
-			
+
 			List<Study> exampleStudies = DAOStudy.queryStudies(StudyQuery.createForState("EXAMPLE"), null);
 			if(exampleStudies.size()==0) exampleStudies = DAOStudy.queryStudies(StudyQuery.createForState("TEST"), null);
-			
+
 			boolean importDemo;
 			if(force || DAOTest.getTests().size()==0) {
 				importDemo = true;
-			} else if(DBAdapter.getAdapter().getClass()==HSQLFileAdapter.class && exampleStudies.size()<3) {
+			} else if(DBAdapter.getInstance().getClass()==HSQLFileAdapter.class && exampleStudies.size()<3) {
 				int res = JOptionPane.showConfirmDialog(UIUtils.getMainFrame(), "There are new examples available!\nDo you want to update the current examples with the new ones?", "Examples", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 				importDemo = res==JOptionPane.YES_OPTION;
 			} else {
 				importDemo = false;
 			}
-			if(importDemo) {				
+			if(importDemo) {
 				try {
 					JPAUtil.pushEditableContext(user);
 					if(force) {
 						SchemaCreator.clearExamples(user);
 					}
-					SchemaCreator.createExamples(user);			
+					SchemaCreator.createExamples(user);
 				} finally {
 					JPAUtil.popEditableContext();
 				}
@@ -175,5 +175,5 @@ public class SpiritDB {
 			JExceptionDialog.showError(UIUtils.getMainFrame(), e);
 		}
 	}
-	
+
 }

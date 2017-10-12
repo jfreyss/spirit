@@ -40,7 +40,6 @@ public class ParentBiosampleColumn extends Column<Biosample, Biosample> {
 	private EditBiosampleTableModel model;
 	private static SampleIdLabel sampleIdLabel = new SampleIdLabel();
 
-
 	public ParentBiosampleColumn(EditBiosampleTableModel model) {
 		super((model==null || model.getBiotype()==null || model.getBiotype().getCategory()!=BiotypeCategory.PURIFIED || model.getBiotype().getParent()==null?"": model.getBiotype().getParent().getName()) + "\nParentId", Biosample.class, 90, 200);
 		this.model = model;
@@ -58,24 +57,36 @@ public class ParentBiosampleColumn extends Column<Biosample, Biosample> {
 	public void setValue(Biosample row, Biosample value) {
 		assert model!=null;
 
-		//Empty?
 		if(value==null || value.getSampleId()==null || value.getSampleId().length()==0) {
+			//Set Parent to null if value is null
 			row.setParent(null);
-			return;
-		}
-
-		//Find parent in current rows
-		for (Biosample b : model.getRows()) {
-			if(b.getSampleId().equals(value.getSampleId())) {
-				row.setParent(b);
-				return;
+		} else if(value.getId()>0) {
+			row.setParent(value);
+		} else {
+			Biosample parent = null;
+			//Find if the parent in present in an other row
+			for (Biosample r : model.getRows()) {
+				if(r.getSampleId().equals(value.getSampleId())) {
+					parent = r;
+					break;
+				}
 			}
-		}
 
-		//Otherwise load the sample from the DB
-		Biosample b = DAOBiosample.getBiosample(value.getSampleId());
-		if(b!=null) value = b;
-		row.setParent(value);
+			//Otherwise load the sample from the DB by sampleId or then by study/name
+			if(parent==null) {
+				parent = DAOBiosample.getBiosample(value.getSampleId());
+			}
+			if(parent==null) {
+				parent = DAOBiosample.getBiosample(row.getInheritedStudy(), value.getSampleId());
+			}
+			if(parent==null) {
+				parent = value;
+			}
+			row.setParent(parent);
+		}
+		if(row.getParent()!=null && row.getParent().getInheritedStudy()!=null) {
+			row.setAttachedStudy(null);
+		}
 	}
 
 	@Override
@@ -106,6 +117,7 @@ public class ParentBiosampleColumn extends Column<Biosample, Biosample> {
 		if(model!=null && model.getBiotype()!=null && model.getBiotype().getCategory()==BiotypeCategory.PURIFIED && model.getBiotype().getParent()!=null) {
 			forced = model.getBiotype().getParent();
 		}
+
 		return new BiosampleCellEditor(forced);
 	}
 }

@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.actelion.research.spiritcore.adapter.DBAdapter;
-import com.actelion.research.spiritcore.adapter.DBAdapter.UserAdministrationMode;
+import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
@@ -84,8 +84,7 @@ public class WorkflowHelper {
 		}
 		sb.append("</tr>");
 
-		boolean specificRights = DBAdapter.getAdapter().getUserManagedMode()!=UserAdministrationMode.UNIQUE_USER && !SpiritProperties.getInstance().isChecked(PropertyKey.RIGHT_ROLEONLY);
-
+		boolean specificRights = DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER && SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS);
 		for (String state : states) {
 			String read = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_READ, state);
 			if(read.length()==0) read = "NONE";
@@ -98,7 +97,6 @@ public class WorkflowHelper {
 
 			admin = admin.replace("ALL", "<span style='color:green'>ALL</span>").replace("NONE", "<span style='color:red'>NONE</span>");
 			expert = expert.replace("ALL", "<span style='color:green'>ALL</span>").replace("NONE", "<span style='color:red'>NONE</span>");
-			if(read.equals("NONE") && SpiritProperties.getInstance().isOpen()) read = "<span style='color:orange'>DESIGN ONLY</span";
 			read = read.replace("ALL", "<span style='color:green'>ALL</span>").replace("NONE", "<span style='color:red'>NONE</span>");
 			sb.append("<tr><td style='background:#EAEAEF'><b>" + state + "</b></td>");
 			sb.append("<td style='background:#EAEAEF'>" + admin + "</td>");

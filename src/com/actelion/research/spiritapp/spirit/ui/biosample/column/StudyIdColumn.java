@@ -53,6 +53,7 @@ public class StudyIdColumn extends Column<Biosample, String> {
 			//nothing
 		}
 		Study study = DAOStudy.getStudyByStudyId(value);
+		System.out.println("StudyIdColumn.setValue() "+study);
 		row.setAttachedStudy(study);
 	}
 

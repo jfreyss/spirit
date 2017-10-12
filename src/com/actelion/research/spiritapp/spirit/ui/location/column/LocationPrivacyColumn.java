@@ -27,6 +27,7 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.location.edit.LocationEditTable;
@@ -52,8 +53,8 @@ public class LocationPrivacyColumn extends Column<Location, String> {
 
 		public LocationPrivacyCellEditor() {
 			privacyComboBox.setColumns(15);
-			//			deptComboBox.setColumns(20);
 			privacyComboBox.addTextChangeListener(e-> onChange());
+			privacyComboBox.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 		}
 
 		private void onChange() {
@@ -83,6 +84,7 @@ public class LocationPrivacyColumn extends Column<Location, String> {
 
 	public LocationPrivacyColumn() {
 		super("Privacy", String.class, 140);
+		setHideable(true);
 	}
 
 	@Override

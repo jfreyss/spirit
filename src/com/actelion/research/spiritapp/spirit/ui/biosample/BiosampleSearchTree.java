@@ -36,6 +36,14 @@ import com.actelion.research.spiritapp.spirit.ui.location.ContainerTypeComboBox;
 import com.actelion.research.spiritapp.spirit.ui.location.LocationFormNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode;
 import com.actelion.research.spiritapp.spirit.ui.util.formtree.AbstractNode.FieldType;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.CheckboxNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.InputNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.LabelNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.MultiNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.ObjectComboBoxNode;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
+import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxNode;
 import com.actelion.research.spiritapp.spirit.ui.util.icons.ImageFactory;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeNode;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.BiotypeToggleNode;
@@ -48,15 +56,6 @@ import com.actelion.research.spiritapp.spirit.ui.util.lf.QualityComboBox;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.StudyNode;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.UpdDateNode;
 import com.actelion.research.spiritapp.spirit.ui.util.lf.UpdUserNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.CheckboxNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.ComboBoxNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.FormTree;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.InputNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.LabelNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.MultiNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.ObjectComboBoxNode;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.Strategy;
-import com.actelion.research.spiritapp.spirit.ui.util.formtree.TextComboBoxNode;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.RightLevel;
@@ -171,12 +170,12 @@ public class BiosampleSearchTree extends FormTree {
 		}
 	});
 
-	private final ComboBoxNode<Quality> minQualityNode = new ComboBoxNode<Quality>(this, new QualityComboBox(), "Min Quality", new Strategy<Quality>() {
+	private final ObjectComboBoxNode<Quality> minQualityNode = new ObjectComboBoxNode<Quality>(this, "Min Quality", new QualityComboBox(), new Strategy<Quality>() {
 		@Override public Quality getModel() {return query.getMinQuality();}
 		@Override public void setModel(Quality modelValue) {query.setMinQuality(modelValue);}
 	});
 
-	private final ComboBoxNode<Quality> maxQualityNode = new ComboBoxNode<Quality>(this, new QualityComboBox(), "Max Quality", new Strategy<Quality>() {
+	private final ObjectComboBoxNode<Quality> maxQualityNode = new ObjectComboBoxNode<Quality>(this, "Max Quality", new QualityComboBox(), new Strategy<Quality>() {
 		@Override public Quality getModel() {return query.getMaxQuality();}
 		@Override public void setModel(Quality modelValue) {query.setMaxQuality(modelValue);}
 	});
@@ -407,16 +406,12 @@ public class BiosampleSearchTree extends FormTree {
 			}
 		}));
 		advancedNode.add(catSelectOneNode);
+		advancedNode.add(minQualityNode);
+		advancedNode.add(maxQualityNode);
 		advancedNode.add(onlyContainerCheckbox);
 		advancedNode.add(onlyLocationCheckbox);
 
-		//Quality
-		minQualityNode.getComboBox().setEditable(false);
-		maxQualityNode.getComboBox().setEditable(false);
-
-
 		//Trashed
-
 		moreNode.setCanExpand(false);
 		if(selectableBiotypes!=null && selectableBiotypes.length>0) {
 			stuNode.setVisible(selectableBiotypes.length==1 && (selectableBiotypes[0].getCategory()==BiotypeCategory.LIVING || selectableBiotypes[0].getCategory()==BiotypeCategory.SOLID || selectableBiotypes[0].getCategory()==BiotypeCategory.LIQUID));

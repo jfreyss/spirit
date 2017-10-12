@@ -53,19 +53,23 @@ import com.actelion.research.util.FormatterUtils;
 
 public class JCustomTextField extends JTextField {
 
+	public static enum CustomFieldType {
+		ALPHANUMERIC,
+		DOUBLE,
+		INTEGER,
+		DATE
+	}
+
 	/**
 	 * PROPERTY_TEXTCHANGED is fired whenever the user selected an item on the list, typed enter, or changed the data AND this data has been changed
 	 * an eventaction is fired even if the data has not been changed
 	 */
 	public static final String PROPERTY_TEXTCHANGED = "text_changed";
-	public static final int ALPHANUMERIC = 1;
-	public static final int DOUBLE = 2;
-	public static final int INTEGER = 3;
-	public static final int DATE = 4;
 
-	protected static final Color LABEL_COLOR = new Color(120, 120, 160, 180);
-	protected static final Color LABEL_COLOR_DISABLED = new Color(180, 180, 200, 180);
+	protected static final Color LABEL_COLOR = new Color(120, 120, 160, 150);
+	protected static final Color LABEL_COLOR_DISABLED = new Color(180, 180, 200, 150);
 
+	private CustomFieldType type;
 	private Icon icon = null;
 	private int maxChars;
 	private String textWhenEmpty;
@@ -90,35 +94,34 @@ public class JCustomTextField extends JTextField {
 	}
 
 	public JCustomTextField() {
-		this(ALPHANUMERIC);
+		this(CustomFieldType.ALPHANUMERIC);
 	}
 
-	public JCustomTextField(int type) {
+	public JCustomTextField(CustomFieldType type) {
 		setType(type);
 		init();
-		if(type==DOUBLE || type==INTEGER) setMaxChars(10);
 	}
 
 	public JCustomTextField(int columns, String initial, String textWhenEmpty) {
-		this(ALPHANUMERIC, initial, columns);
+		this(CustomFieldType.ALPHANUMERIC, initial, columns);
 		setTextWhenEmpty(textWhenEmpty);
 	}
 
-	public JCustomTextField(int type, int columns) {
+	public JCustomTextField(CustomFieldType type, int columns) {
 		this(type);
 		setType(type);
 		setColumns(columns);
 		init();
 	}
 
-	public JCustomTextField(int type, String initial) {
+	public JCustomTextField(CustomFieldType type, String initial) {
 		super();
 		setType(type);
 		init();
 		super.setText(initial);
 	}
 
-	public JCustomTextField(int type, String initial, int columns) {
+	public JCustomTextField(CustomFieldType type, String initial, int columns) {
 		this(type, initial);
 		setColumns(columns);
 	}
@@ -135,9 +138,19 @@ public class JCustomTextField extends JTextField {
 		return icon;
 	}
 
-	public void setType(int type) {
-		setHorizontalAlignment(type==DOUBLE || type==INTEGER? JTextField.RIGHT: JTextField.LEFT);
-		setColumns(type==INTEGER? 3: type==DOUBLE? 5: type==DATE? 8: 14);
+	public void setType(CustomFieldType type) {
+		this.type = type;
+		setHorizontalAlignment(type==CustomFieldType.DOUBLE || type==CustomFieldType.INTEGER? JTextField.RIGHT: JTextField.LEFT);
+		setColumns(type==CustomFieldType.INTEGER? 3: type==CustomFieldType.DOUBLE? 5: type==CustomFieldType.DATE? 8: 14);
+		if(type==CustomFieldType.DOUBLE || type==CustomFieldType.INTEGER) setMaxChars(10);
+		if(type==CustomFieldType.DATE) {
+			setTextWhenEmpty(FormatterUtils.getLocaleFormat().getLocaleDateFormat());
+			//			setToolTipText("Date: yyyy, MM.yyyy, dd.MM.yyyy or Time: dd.MM.yyyy HH:mm:ss");
+		}
+	}
+
+	public CustomFieldType getType() {
+		return type;
 	}
 
 	@Override
@@ -178,7 +191,7 @@ public class JCustomTextField extends JTextField {
 	 * @throws Exception if the text is not empty and the date is not well formatted
 	 */
 	public Date getTextDate() throws Exception {
-		Date parsed = FormatterUtils.parseDate(getText());
+		Date parsed = FormatterUtils.parseDateTime(getText());
 		if(parsed==null && getText().length()>0) throw new Exception("The date not well formatted");
 		return parsed;
 	}
@@ -221,7 +234,12 @@ public class JCustomTextField extends JTextField {
 		addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				setText(getText().trim());
+				if(getType()==CustomFieldType.DATE) {
+					String s = FormatterUtils.cleanDateTime(getText());
+					if(s!=null && !s.equals(getText())) setText(s);
+				} else {
+					setText(getText().trim());
+				}
 				fireTextChanged();
 			}
 		});

@@ -22,7 +22,6 @@
 package com.actelion.research.spiritapp.spirit.ui.print;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -51,10 +50,8 @@ public class PrintingDlg extends JEscapeDialog {
 		super(UIUtils.getMainFrame(), "Label Printer");
 
 		this.biosamples = JPAUtil.reattach(colBiosamples);
-		//		Collections.sort(this.biosamples);
 
 		List<Container> containers = Biosample.getContainers(biosamples, true);
-
 
 		//Find biosamples without a ContainerType
 		if(missingType==null) {
@@ -70,7 +67,6 @@ public class PrintingDlg extends JEscapeDialog {
 				if(missingType==null) return;
 			}
 		}
-
 
 		//TabbedPane
 		//Filters and Splits locations by ContainerType
@@ -102,22 +98,15 @@ public class PrintingDlg extends JEscapeDialog {
 					"</div></html>";
 
 			PrintingTab tab = new PrintingTab(this, containerType);
-
 			tabbedPane.add(tabName, tab);
 			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, new ImageIcon(containerType.getImage(22)));
-			Collections.sort(list);
 			tab.setRows(list);
-
 		}
-
 
 		//ContentPane
 		setContentPane(tabbedPane);
-
 		UIUtils.adaptSize(this, 1150, 800);
 		setVisible(true);
-
-
 	}
 
 

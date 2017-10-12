@@ -21,9 +21,15 @@
 
 package com.actelion.research.spiritcore.business;
 
-import java.util.Date;
+public interface IAuditable  {
 
-public interface IEntity extends IObject {
-	public Date getUpdDate();	
-	public String getUpdUser();	
+	/**
+	 * Returns a string containing the differences between 2 samples (usually 2 different versions).
+	 * The result is an empty string if there are no differences or if b is null
+	 * @param previous
+	 * @return
+	 */
+	public String getDifference(IAuditable previous);
+
+
 }

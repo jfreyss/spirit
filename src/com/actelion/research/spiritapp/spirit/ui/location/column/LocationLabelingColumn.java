@@ -25,6 +25,7 @@ import java.awt.Component;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritcore.business.location.Location;
@@ -40,6 +41,9 @@ public class LocationLabelingColumn extends Column<Location, LocationLabeling> {
 
 		private JGenericComboBox<LocationLabeling> comboBox = new JGenericComboBox<LocationLabeling>(LocationLabeling.values(), false);
 
+		public LocationLabelingCellEditor() {
+			comboBox.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
+		}
 		@Override
 		public Object getCellEditorValue() {
 			return comboBox.getSelection();

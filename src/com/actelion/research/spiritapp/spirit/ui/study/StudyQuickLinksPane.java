@@ -46,13 +46,13 @@ import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.IOUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
 
-public class StudyQuickViewPane extends ImageEditorPane {
+public class StudyQuickLinksPane extends ImageEditorPane {
 
 	private Study study;
 
 	private final String NIOBE_LINK = "\\\\actelch02\\PGM\\ActelionResearch\\Niobe\\Niobe.lnk";
 
-	public StudyQuickViewPane() {
+	public StudyQuickLinksPane() {
 		super();
 		setEditable(false);
 		setOpaque(true);
@@ -134,6 +134,7 @@ public class StudyQuickViewPane extends ImageEditorPane {
 
 			try {
 				sb.append("<table style='white-space:nowrap;width:100%;padding-top:5px;padding-bottom:5px;font-size:98%'><tr><td valign=top>");
+
 				//Count Biosamples
 				Map<Study, Map<Biotype, Triple<Integer, String, Date>>> countBio = DAOStudy.countSamplesByStudyBiotype(Collections.singletonList(study));
 				formatNumberBiosamples(sb, study, countBio.get(study));
@@ -143,6 +144,7 @@ public class StudyQuickViewPane extends ImageEditorPane {
 				//Count Results
 				Map<Study, Map<Test, Triple<Integer, String, Date>>> countRes = DAOStudy.countResultsByStudyTest(Collections.singletonList(study));
 				formatNumberResults(sb, study, countRes.get(study));
+
 				sb.append("</td></tr></table>");
 			} catch(Exception e) {
 				e.printStackTrace();
@@ -182,9 +184,7 @@ public class StudyQuickViewPane extends ImageEditorPane {
 				count+=m2.get(test).getFirst();
 			}
 			sb.append("<table><tr><td colspan=2>");
-			sb.append("<a style='font-weight:bold' href='test:" + study.getStudyId() + "'>Results:</a>&nbsp;(" + count + ") "
-					//					+ ">> <a href='analyze:" + study.getId() + "'>Analyze</a>"
-					);
+			sb.append("<a style='font-weight:bold' href='test:" + study.getStudyId() + "'>Results:</a>&nbsp;(" + count + ") ");
 			sb.append("</td></tr>");
 			for (Test t: m2.keySet()) {
 				sb.append("<tr><td><a href='test:" + study.getStudyId() + ":" + t.getId() + "'>" + t.getName() + "</a>&nbsp;<span style='font-size:90%'>(" + m2.get(t).getFirst() + ")</span>");

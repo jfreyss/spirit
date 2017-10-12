@@ -28,6 +28,5 @@ public class EmployeeGroupTable extends ExtendTable<EmployeeGroup> {
 
 	public EmployeeGroupTable() {
 		super(new EmployeeGroupTableModel());
-		setRowHeight(22);
 	}
 }

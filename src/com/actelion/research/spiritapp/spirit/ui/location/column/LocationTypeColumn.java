@@ -27,6 +27,7 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.location.LocationTypeComboBox;
@@ -37,12 +38,15 @@ import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 
 public class LocationTypeColumn extends Column<Location, LocationType> {
-	
-	
+
+
 	private class LocationTypeCellEditor extends AbstractCellEditor implements  TableCellEditor {
 
 		private LocationTypeComboBox locationTypeComboBox = new LocationTypeComboBox();
 
+		public LocationTypeCellEditor() {
+			locationTypeComboBox.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
+		}
 		@Override
 		public Object getCellEditorValue() {
 			return locationTypeComboBox.getSelection();
@@ -53,11 +57,11 @@ public class LocationTypeColumn extends Column<Location, LocationType> {
 			locationTypeComboBox.setSelection((LocationType) value);
 			return locationTypeComboBox;
 		}
-		
+
 	}
-	
+
 	public LocationTypeColumn() {
-		super("Type", LocationType.class, 70);				
+		super("Type", LocationType.class, 70);
 	}
 	@Override
 	public LocationType getValue(Location row) {
@@ -86,12 +90,12 @@ public class LocationTypeColumn extends Column<Location, LocationType> {
 		}
 		setValue(row, null);
 	}
-	
+
 	@Override
 	public TableCellEditor getCellEditor(AbstractExtendTable<Location> table) {
 		return new LocationTypeCellEditor();
 	}
-	
+
 	@Override
 	public boolean isHideable() {
 		return true;

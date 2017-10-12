@@ -175,11 +175,8 @@ public class FormTree extends JPanel {
 
 		initLayout();
 		if(toFocus!=null) {
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					toFocus.requestFocusInWindow();
-				}
+			SwingUtilities.invokeLater(()-> {
+				toFocus.requestFocusInWindow();
 			});
 		}
 	}
@@ -252,12 +249,7 @@ public class FormTree extends JPanel {
 	}
 	public synchronized void setFocus(final AbstractNode<?> n) {
 		if(n==null || n.getFocusable()==null) return;
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				n.getFocusable().requestFocusInWindow();
-			}
-		});
+		SwingUtilities.invokeLater(()->n.getFocusable().requestFocusInWindow());
 	}
 
 	public synchronized void setSelectionRow(int row) {
@@ -278,13 +270,14 @@ public class FormTree extends JPanel {
 	}
 
 	public static void main(String[] args) {
-		try {
-			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
-
-			UIManager.put("nimbusSelectionBackground", Color.LIGHT_GRAY);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		SwingUtilities.invokeLater(()->{
+			try {
+				UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+				UIManager.put("nimbusSelectionBackground", Color.LIGHT_GRAY);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
 
 
 		FormTree tree = new FormTree();

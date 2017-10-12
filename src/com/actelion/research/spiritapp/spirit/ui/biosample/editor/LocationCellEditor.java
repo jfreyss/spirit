@@ -26,6 +26,7 @@ import java.awt.Component;
 import javax.swing.AbstractCellEditor;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.spirit.ui.location.LocationPosTextField;
@@ -38,9 +39,11 @@ import com.actelion.research.util.ui.exceltable.ExtendTableModel;
  *
  */
 public class LocationCellEditor extends AbstractCellEditor implements TableCellEditor {
+
 	private LocationPosTextField locationTextField = new LocationPosTextField();
 
 	public LocationCellEditor() {
+		locationTextField.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -50,11 +53,9 @@ public class LocationCellEditor extends AbstractCellEditor implements TableCellE
 		Biosample b = row<model.getRows().size()? model.getRows().get(row): null;
 
 		locationTextField.setBiosample(b);
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				locationTextField.setCaretPosition(locationTextField.getText().length());
-			}
+
+		SwingUtilities.invokeLater(()-> {
+			locationTextField.setCaretPosition(locationTextField.getText().length());
 		});
 		return locationTextField;
 	}

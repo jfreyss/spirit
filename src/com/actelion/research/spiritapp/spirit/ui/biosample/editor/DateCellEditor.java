@@ -56,7 +56,7 @@ public class DateCellEditor extends AbstractCellEditor implements TableCellEdito
 	 */
 	@Override		
 	public Date getCellEditorValue() {
-		Date t = FormatterUtils.parseDate(tf.getData());
+		Date t = FormatterUtils.parseDateTime(tf.getData());
 		return t;
 	}				
 }

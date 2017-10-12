@@ -25,9 +25,11 @@ import java.awt.Component;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 
 /**
  * IntegerCellEditor (value=integer)
@@ -35,10 +37,12 @@ import com.actelion.research.util.ui.JCustomTextField;
  *
  */
 public class IntegerCellEditor extends AbstractCellEditor implements TableCellEditor {
-	private JCustomTextField alphaTextField = new JCustomTextField(JCustomTextField.INTEGER);
-	
+	private JCustomTextField alphaTextField = new JCustomTextField(CustomFieldType.INTEGER);
+
 	public IntegerCellEditor() {
+		alphaTextField.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
+
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 		alphaTextField.setText(value==null?"": value.toString());
@@ -49,5 +53,5 @@ public class IntegerCellEditor extends AbstractCellEditor implements TableCellEd
 	@Override
 	public Object getCellEditorValue() {
 		return alphaTextField.getTextInt();
-	}						
+	}
 }

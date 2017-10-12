@@ -26,22 +26,27 @@ import java.awt.Component;
 import javax.swing.AbstractCellEditor;
 import javax.swing.JLabel;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.util.ui.JGenericComboBox;
 
 public class QualityCellEditor extends AbstractCellEditor implements TableCellEditor {
-	JGenericComboBox<Quality> qualityComboBox = new JGenericComboBox<Quality>(Quality.values(), false) {
+
+	private JGenericComboBox<Quality> qualityComboBox = new JGenericComboBox<Quality>(Quality.values(), false) {
 		@Override
 		public Component processCellRenderer(JLabel comp, Quality value, int index) {
-			
+
 			if(value!=null) setBackground(value.getBackground());
 			return super.processCellRenderer(comp, value, index);
-			
 		}
 	};
-	
+
+	public QualityCellEditor() {
+		qualityComboBox.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
+	}
+
 	@Override
 	public Quality getCellEditorValue() {
 		return qualityComboBox.getSelection();
@@ -51,5 +56,5 @@ public class QualityCellEditor extends AbstractCellEditor implements TableCellEd
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 		qualityComboBox.setSelection((Quality)value);
 		return qualityComboBox;
-	}		
+	}
 }

@@ -50,6 +50,7 @@ import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
+import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JTextComboBox;
 import com.actelion.research.util.ui.TextChangeListener;
 import com.itextpdf.text.Font;
@@ -68,16 +69,16 @@ public class MetadataFormPanel extends JPanel {
 
 
 	private final GroupLabel groupLabel = new GroupLabel();
-	private final JCustomTextField elbTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 10);
+	private final JCustomTextField elbTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 10);
 
 	private final SampleIdGenerateField<Biosample> sampleIdTextField = new SampleIdGenerateField<>();
 	private final ContainerTypeComboBox containerTypeComboBox = new ContainerTypeComboBox();
 	private final ContainerTextField containerIdTextField = new ContainerTextField();
-	private final JCustomTextField amountTextField = new JCustomTextField(JCustomTextField.DOUBLE, 5);
+	private final JCustomTextField amountTextField = new JCustomTextField(CustomFieldType.DOUBLE, 5);
 	private final LocationPosTextField locationTextField = new LocationPosTextField();
 	private JCustomTextField nameTextField = null;
 	private final List<JComponent> components = new ArrayList<>();
-	private final JCustomTextField commentsTextField = new JCustomTextField(JCustomTextField.ALPHANUMERIC, 18);
+	private final JCustomTextField commentsTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 18);
 
 	private boolean editable = true;
 

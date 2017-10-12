@@ -54,8 +54,8 @@ public class HSQLServerAdapter extends HSQLFileAdapter {
 	
 	
 	@Override
-	public UserAdministrationMode getUserManagedMode() {
-		return UserAdministrationMode.READ_WRITE;
+	public UserManagedMode getUserManagedMode() {
+		return UserManagedMode.WRITE_PWD;
 	}
 	
 	

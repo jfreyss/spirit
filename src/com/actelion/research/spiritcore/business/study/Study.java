@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,7 +66,8 @@ import org.hibernate.envers.RevisionNumber;
 
 import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.Document.DocumentType;
-import com.actelion.research.spiritcore.business.IEntity;
+import com.actelion.research.spiritcore.business.IAuditable;
+import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.util.MiscUtils;
@@ -87,7 +87,7 @@ import com.actelion.research.util.FormatterUtils;
 })
 @SequenceGenerator(name="study_sequence", sequenceName="study_sequence", allocationSize=1)
 @BatchSize(size=8)
-public class Study implements Serializable, IEntity, Comparable<Study> {
+public class Study implements Serializable, Comparable<Study>, IObject, IAuditable {
 
 	@Id
 	@RevisionNumber
@@ -95,7 +95,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	private int id = 0;
 
 	/**
-	 * Unique Id, system wise, given by the system
+	 * Unique Id, given by the user/system
 	 */
 	@Column(name="studyId", nullable=false, unique=true)
 	private String studyId = "";
@@ -124,7 +124,10 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	@Column(name="metadata", length=4000)
 	private String serializedMetadata;
 
+	@Column(name="updUser", length=32)
 	private String updUser = "";
+
+	@Column(name="creUser", length=32)
 	private String creUser = "";
 
 	@Temporal(TemporalType.TIMESTAMP)
@@ -135,17 +138,14 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 
 	@OneToMany(cascade = CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="study")
 	@SortNatural
-	//	@BatchSize(size=4)
 	private Set<Group> groups = new TreeSet<>();
 
 	@OneToMany(cascade = CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="study")
 	@SortNatural
-	//	@BatchSize(size=4)
 	private Set<Phase> phases = new TreeSet<>();
 
 	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="study")
 	@SortNatural
-	//	@BatchSize(size=4)
 	private Set<NamedTreatment> namedTreatments = new TreeSet<>();
 
 	/**
@@ -154,7 +154,6 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	 */
 	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, mappedBy="study")
 	@SortNatural
-	@BatchSize(size=4)
 	private Set<NamedSampling> namedSamplings = new TreeSet<>();
 
 	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="study")
@@ -166,7 +165,10 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	@Column(name="startingdate", nullable=true)
 	private Date startingDate = null;
 
-	@Column(name="status", nullable=true, length=24)
+	@Column(name="studyType", nullable=true, length=32)
+	private String type = null;
+
+	@Column(name="status", nullable=true, length=32)
 	private String state = null;
 
 	@ManyToOne(cascade=CascadeType.REFRESH, fetch=FetchType.LAZY)
@@ -184,11 +186,9 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	@Column(name="synchrosamples")
 	private Boolean synchronizeSamples = Boolean.TRUE;
 
-
 	@Enumerated(EnumType.STRING)
 	@Column(name="phaseFormat", nullable=true)
 	private PhaseFormat phaseFormat = PhaseFormat.DAY_MINUTES;
-
 
 	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.LAZY, orphanRemoval=true)
 	@Audited(targetAuditMode=RelationTargetAuditMode.AUDITED)
@@ -200,10 +200,10 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	 */
 	@OneToMany(cascade={}, fetch=FetchType.LAZY, mappedBy="attachedStudy")
 	@Audited(targetAuditMode=RelationTargetAuditMode.NOT_AUDITED)
-	@BatchSize(size=4)
-	private Set<Biosample> attachedBiosamples = new TreeSet<>();
+	private Set<Biosample> participants = new TreeSet<>();
 
-	/** Helpful function for faster access groupId_groupName_subgroup->phaseName->action */
+	////////////////////////////////////////////////////////////////////////////////////////////
+	/* Helpful function for faster access groupId_groupName_subgroup->phaseName->action */
 	private transient Map<Pair<Group, Integer>, Map<Phase, StudyAction>> mapGroupPhase2Action = null;
 	private transient Map<String, String> metadataMap = null;
 	private transient Set<String> adminUsersSet;
@@ -225,9 +225,16 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 
 	@Override
 	public String toString() {
-		return getLocalIdOrStudyId();
+		return getStudyId();
 	}
 
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
 
 	@Override
 	public int getId() {
@@ -268,12 +275,10 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		return notes;
 	}
 
-	@Override
 	public String getUpdUser() {
 		return updUser;
 	}
 
-	@Override
 	public Date getUpdDate() {
 		return updDate;
 	}
@@ -328,7 +333,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	public List<Group> getGroupsHierarchical() {
 		List<Group> res = new ArrayList<>();
 		for (Group group : getGroups()) {
-			if (group.getFromGroup() == null) {
+			if (group.getFromGroup() == null || !getGroups().contains(group.getFromGroup())) {
 				res.addAll(getGroupsHierarchicalRec(group));
 			}
 		}
@@ -339,14 +344,9 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		List<Group> res = new ArrayList<>();
 		res.add(group);
 		List<Group> childrenGroups = new ArrayList<>();
-		childrenGroups.addAll(group.getDividingGroups());
+		//		childrenGroups.addAll(group.getDividingGroups());
 		childrenGroups.addAll(group.getToGroups());
-		Collections.sort(childrenGroups, new Comparator<Group>() {
-			@Override
-			public int compare(Group o1, Group o2) {
-				return -CompareUtils.compare(o1.getFromPhase(), o2.getFromPhase());
-			}
-		});
+		Collections.sort(childrenGroups);
 		for (Group child : childrenGroups) {
 			res.addAll(getGroupsHierarchicalRec(child));
 		}
@@ -502,15 +502,32 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	}
 
 	public Study duplicate() {
-		Study study = clone();
+		Study study = this.clone();
 		study.id = 0;
-		study.localId = null;
-		study.setAttachedBiosamples(new TreeSet<Biosample>());
-		study.setNotes("Duplicated from "+getStudyId());
+		study.studyId = "";
 		study.updDate = null;
 		study.updUser = null;
 		study.creDate = null;
 		study.creUser = null;
+
+		for (Phase a : study.phases) {
+			a.setId(0);
+		}
+		for (Group a : study.groups) {
+			a.setId(0);
+		}
+		for (NamedTreatment a : study.namedTreatments) {
+			a.setId(0);
+		}
+		for (NamedSampling a : study.namedSamplings) {
+			a.setId(0);
+			for (Sampling s : a.getAllSamplings()) {
+				s.setId(0);
+			}
+		}
+		for (StudyAction a : study.actions) {
+			a.setId(0);
+		}
 		return study;
 	}
 
@@ -518,6 +535,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	public Study clone() {
 		Study study = new Study();
 		study.id = id;
+		study.setStudyId(getStudyId());
 		study.setState(getState());
 		study.setDayOneDate(getDayOneDate());
 		study.setLocalId(getLocalId());
@@ -535,11 +553,13 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		study.creDate = creDate;
 		study.creUser = creUser;
 
+
 		//Clone Phases
 		IdentityHashMap<Phase, Phase> phaseClones = new IdentityHashMap<>();
 		study.setPhases(new TreeSet<Phase>());
 		for (Phase o : getPhases()) {
 			Phase oc = new Phase(o.getName());
+			oc.setId(o.getId());
 			oc.setStudy(study);
 			study.getPhases().add(oc);
 			phaseClones.put(o, oc);
@@ -548,24 +568,27 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		//Clone Groups
 		IdentityHashMap<Group, Group> groupClones = new IdentityHashMap<>();
 		study.setGroups(new TreeSet<Group>());
-		for (Group o : getGroups()) {
+		for (Group o : getGroupsHierarchical()) {
 			Group oc = new Group();
+			oc.setId(o.getId());
 			oc.setName(o.getName());
 			oc.setStudy(study);
 			oc.setColorRgb(o.getColorRgb());
 			oc.setSubgroupSizes(o.getSubgroupSizes());
 			oc.setFromGroup(groupClones.get(o.getFromGroup()));
 			oc.setFromPhase(phaseClones.get(o.getFromPhase()));
-			oc.setDividingSampling(o.getDividingSampling()==null? null: o.getDividingSampling().clone());
+			//			oc.setDividingSampling(o.getDividingSampling()==null? null: o.getDividingSampling().clone());
 			study.getGroups().add(oc);
 			groupClones.put(o, oc);
 		}
+
 
 		//Clone Treatments
 		IdentityHashMap<NamedTreatment, NamedTreatment> treatmentClones = new IdentityHashMap<>();
 		study.setNamedTreatments(new TreeSet<NamedTreatment>());
 		for (NamedTreatment o : getNamedTreatments()) {
 			NamedTreatment oc = new NamedTreatment();
+			oc.setId(o.getId());
 			oc.setStudy(study);
 			oc.setName(o.getName());
 			oc.setColorRgb(o.getColorRgb());
@@ -587,7 +610,8 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		study.setNamedSamplings(new TreeSet<NamedSampling>());
 
 		for (NamedSampling o : getNamedSamplings()) {
-			NamedSampling oc = o.duplicate();
+			NamedSampling oc = o.clone();
+			oc.setId(o.getId());
 			oc.setStudy(study);
 			study.getNamedSamplings().add(oc);
 			samplingClones.put(o, oc);
@@ -596,6 +620,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		study.setStudyActions(new TreeSet<StudyAction>());
 		for (StudyAction o : getStudyActions()) {
 			StudyAction oc = new StudyAction(o);
+			oc.setId(o.getId());
 			oc.setStudy(study);
 			oc.setGroup(groupClones.get(o.getGroup()));
 			oc.setSubGroup(o.getSubGroup());
@@ -861,7 +886,10 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	@Override
 	public int compareTo(Study s) {
 		if(s==null) return -1;
-		return -(getStudyId()==null?"":getStudyId()).compareTo(s.getStudyId()==null?"":s.getStudyId());
+		int c = -(getCreDate()==null?new Date():getCreDate()).compareTo(s.getCreDate()==null?new Date():s.getCreDate());
+		if(c!=0) return c;
+		c = -(getStudyId()==null?"":getStudyId()).compareTo(s.getStudyId()==null?"":s.getStudyId());
+		return c;
 	}
 
 
@@ -1093,30 +1121,31 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 	}
 
 	/**
-	 * @param attachedBiosamples the attachedBiosamples to set
+	 * Sets the participants of the study
+	 * @param attachedBiosamples
 	 */
-	public void setAttachedBiosamples(Set<Biosample> attachedBiosamples) {
-		this.attachedBiosamples = attachedBiosamples;
+	public void setParticipants(Set<Biosample> attachedBiosamples) {
+		this.participants = attachedBiosamples;
 	}
 
 	/**
-	 * Returns the attached biosamples (ie those belonging to a group and no phases)
+	 * Returns the participants of the study
 	 * @return the attachedBiosamples
 	 */
-	public Set<Biosample> getAttachedBiosamples() {
-		return attachedBiosamples;
+	public Set<Biosample> getParticipants() {
+		return participants;
 	}
 
 	/**
-	 * This method is in most case identical to getAttachedBiosamples except when we use the dividing feature,
+	 * This method is in most case identical to getParticipants except when we use the dividing feature,
 	 * where animals can be divided into tissues, which are still attached to the study
 	 * In that case we only return the top biosamples in study, sorted by group/sampleName/sampleId
 	 * @return the attachedBiosamples
 	 */
-	public List<Biosample> getTopAttachedBiosamples() {
+	public List<Biosample> getTopParticipants() {
 		List<Biosample> res = new ArrayList<>();
-		for(Biosample b: getAttachedBiosamples()) {
-			if(b.getInheritedPhase()!=null) continue; //dividing sample
+		for(Biosample b: getParticipants()) {
+			//			if(b.getInheritedPhase()!=null) continue; //dividing sample
 			res.add(b);
 		}
 		Collections.sort(res, Biosample.COMPARATOR_GROUP_SAMPLENAME);
@@ -1125,15 +1154,15 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 
 
 	/**
-	 * Same as getTopAttachedBiosample, but with an imposed filter on the group
-	 * (if group==null, it means returns all samples with goup == null)(
+	 * Same as getTopParticipants, but with an imposed filter on the group
+	 * (if group==null, it means returns all samples with group == null)(
 	 * @param group
 	 * @return
 	 */
-	public List<Biosample> getTopAttachedBiosamples(Group group) {
+	public List<Biosample> getTopParticipants(Group group) {
 		List<Biosample> res = new ArrayList<>();
-		for (Biosample b : getAttachedBiosamples()) {
-			if(b.getInheritedPhase()!=null) continue; //dividing sample
+		for (Biosample b : getParticipants()) {
+			//			if(b.getInheritedPhase()!=null) continue; //dividing sample
 			if(group!=null && !group.equals(b.getInheritedGroup())) continue;
 			if(group==null && b.getInheritedGroup()!=null) continue;
 			res.add(b);
@@ -1142,10 +1171,16 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		return res;
 	}
 
-	public List<Biosample> getTopAttachedBiosamples(Group group, int subgroup) {
+	/**
+	 * Same as getTopParticipants, but with an imposed filter on the group and subgroup
+	 * (if group==null, it means returns all samples with group == null)(
+	 * @param group
+	 * @return
+	 */
+	public List<Biosample> getTopParticipants(Group group, int subgroup) {
 		List<Biosample> res = new ArrayList<>();
-		for (Biosample b : getAttachedBiosamples()) {
-			if(b.getInheritedPhase()!=null) continue; //dividing sample
+		for (Biosample b : getParticipants()) {
+			//			if(b.getInheritedPhase()!=null) continue; //dividing sample
 			if(group!=null && !group.equals(b.getInheritedGroup())) continue;
 			if(group==null && b.getInheritedGroup()!=null) continue;
 			if(b.getInheritedSubGroup()!=subgroup && group.getNSubgroups()>1) continue;
@@ -1160,7 +1195,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 
 		//Iterate through the groups to find the randophases
 		for (Group g : getGroups()) {
-			if(g.getFromPhase()==null || g.getDividingSampling()!=null) continue;
+			if(g.getFromPhase()==null /*|| g.getDividingSampling()!=null*/) continue;
 			res.add(g.getFromPhase());
 		}
 		return res;
@@ -1265,26 +1300,6 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		return res;
 	}
 
-	public Set<Phase> getEmptyPhases(){
-		return new HashSet<>();
-		//		Set<Phase> res = new HashSet<>(getPhases());
-
-		//		for (StudyAction a: getStudyActions()) {
-		//			if(!a.isEmpty()) {
-		//				res.remove(a.getPhase());
-		//			}
-		//		}
-		//
-		//		for (Group group : getGroups()) {
-		//			res.remove(group.getFromPhase());
-		//		}
-		//
-		//		for(Phase p: getPhases()) {
-		//			if(p.getLabel()!=null && p.getLabel().length()>0) res.remove(p);
-		//		}
-		//		return res;
-	}
-
 	public PhaseFormat getPhaseFormat() {
 		if(phaseFormat==null) phaseFormat = PhaseFormat.DAY_MINUTES;
 		return phaseFormat;
@@ -1362,28 +1377,29 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		return res;
 	}
 
-	public Map<String, String> getMetadata() {
+	public Map<String, String> getMetadataMap() {
 		if(metadataMap==null) {
 			metadataMap = MiscUtils.deserializeStringMap(this.serializedMetadata);
 		}
 		return metadataMap;
 	}
 
-	public  void setMetadata(Map<String, String> metadataMap) {
+	public  void setMetadataMap(Map<String, String> metadataMap) {
 		this.metadataMap = metadataMap;
 	}
 
+	public String getMetadata(String metadata) {
+		return getMetadataMap().get(metadata);
+	}
+	public void setMetadata(String metadata, String value) {
+		getMetadataMap().put(metadata, value);
+	}
+
 	/**
-	 * PreSave serializes the data. However this function must be called from within the DAO because setters do not call this function
+	 * PreSave serializes the data. However this function must be called from within the DAO
 	 */
 	public void preSave() {
 		mapGroupPhase2Action = null;
-		//Fix documents without docType (Spirit v<=1.9)
-		for (Document doc : getDocuments()) {
-			if(doc.getType()==null) {
-				doc.setType(DocumentType.DESIGN);
-			}
-		}
 
 		//Serialize Metadata
 		if(metadataMap!=null) {
@@ -1406,7 +1422,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		}
 	}
 
-	public boolean isMentioned(String user) {
+	public boolean isMember(String user) {
 		if(getAdminUsersAsSet().contains(user)) return true;
 		if(getBlindAllUsersAsSet().contains(user)) return true;
 		if(getExpertUsersAsSet().contains(user)) return true;
@@ -1415,40 +1431,17 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		return false;
 	}
 
-	public void resetIds() {
-		for (Phase a : phases) {
-			a.setId(0);
-		}
-		for (Group a : groups) {
-			a.setId(0);
-		}
-		for (Group a : groups) {
-			a.setId(0);
-		}
-		for (NamedTreatment a : namedTreatments) {
-			a.setId(0);
-		}
-		for (NamedSampling a : namedSamplings) {
-			a.setId(0);
-			for (Sampling s : a.getAllSamplings()) {
-				s.setId(0);
-			}
-		}
-		for (StudyAction a : actions) {
-			a.setId(0);
-		}
-		id = 0;
-	}
-
-
 	/**
 	 * Returns a map containing the differences between 2 samples (usually 2 different versions).
 	 * The result is an empty string if there are no differences or if b is null
 	 * @param b
 	 * @return
 	 */
-	public String getDifference(Study s) {
-		return MiscUtils.flatten(getDifferenceMap(s));
+	@Override
+	public String getDifference(IAuditable s) {
+		if(s==null) s = new Study();
+		if(!(s instanceof Study)) return "";
+		return MiscUtils.flatten(getDifferenceMap((Study) s));
 	}
 
 	/**
@@ -1477,7 +1470,7 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 			map.put("InternalId", getLocalId());
 		}
 		if(!CompareUtils.equals(getNotes(), s.getNotes())) {
-			map.put("Notes", ""+(getNotes()==null?0:getNotes().length()));
+			map.put("Notes", "updated");
 		}
 		if(!CompareUtils.equals(getState(), s.getState())) {
 			map.put("State", getState());
@@ -1494,9 +1487,9 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		if(!CompareUtils.equals(getFirstDate(), s.getFirstDate())) {
 			map.put("FirstDate", getFirstDate()==null?"": FormatterUtils.formatDate(getFirstDate()));
 		}
-		for(String key: MiscUtils.setOf(getMetadata().keySet(), s.getMetadata().keySet())) {
-			if(!CompareUtils.equals(getMetadata().get(key), s.getMetadata().get(key))) {
-				map.put(key, getMetadata().get(key));
+		for(String key: MiscUtils.setOf(getMetadataMap().keySet(), s.getMetadataMap().keySet())) {
+			if(!CompareUtils.equals(getMetadataMap().get(key), s.getMetadataMap().get(key))) {
+				map.put(key, getMetadataMap().get(key));
 			}
 		}
 		if(!CompareUtils.equals(getCreUser(), s.getCreUser())) {
@@ -1504,34 +1497,59 @@ public class Study implements Serializable, IEntity, Comparable<Study> {
 		}
 
 		//Compare Dept
-		String empgroupCompare = MiscUtils.diffCollectionsSummary(getEmployeeGroups(), s.getEmployeeGroups(), null);
-		if(empgroupCompare!=null) map.put("Departments", empgroupCompare);
-
+		try {
+			String empgroupCompare = MiscUtils.diffCollectionsSummary(getEmployeeGroups(), s.getEmployeeGroups(), null);
+			if(empgroupCompare!=null) map.put("Departments", empgroupCompare);
+		} catch (Exception e) {
+			e.printStackTrace(); //Safety guard. This can happen due to lazy loading (deletion from the audit tables by an admin)
+		}
 
 		//Compare documents
-		String documentCompare = MiscUtils.diffCollectionsSummary(getDocuments(), s.getDocuments(), null);
-		if(documentCompare!=null) map.put("Documents", documentCompare);
+		try {
+			String documentCompare = MiscUtils.diffCollectionsSummary(getDocuments(), s.getDocuments(), null);
+			if(documentCompare!=null) map.put("Documents", documentCompare);
+		} catch (Exception e) {
+			e.printStackTrace(); //Safety guard. This can happen due to lazy loading (deletion from the audit tables by an admin)
+		}
 
 		//Compare groups
-		String groupCompare = MiscUtils.diffCollectionsSummary(getGroups(), s.getGroups(), Group.EXACT_COMPARATOR);
-		if(groupCompare!=null) map.put("Groups", groupCompare);
+		try {
+			String groupCompare = MiscUtils.diffCollectionsSummary(getGroups(), s.getGroups(), Group.EXACT_COMPARATOR);
+			if(groupCompare!=null) map.put("Groups", groupCompare);
+		} catch (Exception e) {
+			e.printStackTrace(); //Safety guard. This can happen due to lazy loading (deletion from the audit tables by an admin)
+		}
 
 		//Compare phases
-		String phaseCompare = MiscUtils.diffCollectionsSummary(getPhases(), s.getPhases(), Phase.EXACT_COMPARATOR);
-		if(phaseCompare!=null) map.put("Phases", phaseCompare);
+		try {
+			String phaseCompare = MiscUtils.diffCollectionsSummary(getPhases(), s.getPhases(), Phase.EXACT_COMPARATOR);
+			if(phaseCompare!=null) map.put("Phases", phaseCompare);
+		} catch (Exception e) {
+			e.printStackTrace(); //Safety guard. This can happen due to lazy loading (deletion from the audit tables by an admin)
+		}
 
 		//Compare treatment
-		String treatmentCompare = MiscUtils.diffCollectionsSummary(getNamedTreatments(), s.getNamedTreatments(), NamedTreatment.EXACT_COMPARATOR);
-		if(treatmentCompare!=null) map.put("Treatments", treatmentCompare);
+		try {
+			String treatmentCompare = MiscUtils.diffCollectionsSummary(getNamedTreatments(), s.getNamedTreatments(), NamedTreatment.EXACT_COMPARATOR);
+			if(treatmentCompare!=null) map.put("Treatments", treatmentCompare);
+		} catch (Exception e) {
+			e.printStackTrace(); //Safety guard. This can happen due to lazy loading (deletion from the audit tables by an admin)
+		}
 
 		//Compare samplings
-		String samplingCompare = MiscUtils.diffCollectionsSummary(getNamedSamplings(), s.getNamedSamplings(), NamedSampling.EXACT_COMPARATOR);
-		if(samplingCompare!=null) map.put("Samplings", samplingCompare);
-
+		try {
+			String samplingCompare = MiscUtils.diffCollectionsSummary(getNamedSamplings(), s.getNamedSamplings(), NamedSampling.EXACT_COMPARATOR);
+			if(samplingCompare!=null) map.put("Samplings", samplingCompare);
+		} catch (Exception e) {
+			e.printStackTrace(); //Safety guard. This can happen due to lazy loading (deletion from the audit tables by an admin)
+		}
 		//Compare actions
-		String actionCompare = MiscUtils.diffCollectionsSummary(getStudyActions(), s.getStudyActions(), StudyAction.EXACT_COMPARATOR);
-		if(actionCompare!=null) map.put("Actions", actionCompare);
-
+		try {
+			String actionCompare = MiscUtils.diffCollectionsSummary(getStudyActions(), s.getStudyActions(), StudyAction.EXACT_COMPARATOR);
+			if(actionCompare!=null) map.put("Actions", actionCompare);
+		} catch (Exception e) {
+			e.printStackTrace(); //Safety guard. This can happen due to lazy loading (deletion from the audit tables by an admin)
+		}
 
 		return map;
 	}

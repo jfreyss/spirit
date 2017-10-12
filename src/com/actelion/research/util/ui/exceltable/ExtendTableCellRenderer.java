@@ -58,7 +58,7 @@ import com.actelion.research.util.ui.exceltable.ExtendTableModel.Node;
 
 public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Serializable {
 
-	private static final Color highlightBackground = new Color(170, 188, 240);
+	private static final Color highlightBackground = new Color(240, 240, 200);
 	private static final Border SAFE_NO_FOCUS_BORDER = new EmptyBorder(0, 1, 0, 1);
 	private static final Border SAFE_FOCUS_BORDER = BorderFactory.createLineBorder(new Color(57,105,138));
 
@@ -199,10 +199,8 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 					}
 				}
 			}
-			if(myTable.isHighlightRows()) {
-				if(table.isRowSelected(row) && !table.isColumnSelected(column)) {
-					highlight = true;
-				}
+			if(myTable.getHighlightRows()!=null && myTable.getHighlightRows().contains(object)) {
+				highlight = true;
 			}
 			if(highlight) {
 				c.setBackground(UIUtils.getDilutedColor(c.getBackground(), highlightBackground, .7));

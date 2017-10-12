@@ -115,7 +115,7 @@ public class MetadataComponentFactory {
 
 	public static class AlphaNumericalComponent extends JCustomTextField implements MetadataComponent {
 		public AlphaNumericalComponent() {
-			super(JCustomTextField.ALPHANUMERIC);
+			super(CustomFieldType.ALPHANUMERIC);
 			setMaxChars(255);
 			setColumns(28);
 		}
@@ -366,7 +366,7 @@ public class MetadataComponentFactory {
 
 	public static class NumericalComponent extends JCustomTextField implements MetadataComponent {
 		public NumericalComponent() {
-			super(JCustomTextField.DOUBLE, 4);
+			super(CustomFieldType.DOUBLE, 4);
 		}
 		@Override
 		public String getData() {

@@ -165,7 +165,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		if(getContainerId()!=null && getContainerId().length()>0) return getContainerId();
 		if(getBiosamples().size()==0) return "";
 		Biosample b = getBiosamples().iterator().next();
-		if(b==null || b.getBiotype()==null || b.getBiotype().isHideSampleId()) return "";
+		//		if(b==null || b.getBiotype()==null || b.getBiotype().isHideSampleId()) return "";
 		return b.getSampleId()==null?"": b.getSampleId();
 	}
 
@@ -230,6 +230,9 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 	}
 
 
+	/**
+	 * Compare per containerType, ContainerId, SampleId
+	 */
 	@Override
 	public int compareTo(Container c) {
 		if(c==null) return -1;
@@ -258,7 +261,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 
 	@Override
 	public String toString() {
-		return "[Container:" + containerType + " " + containerId + "]";
+		return getContainerOrBiosampleId();
 	}
 
 	public String getType() {
@@ -399,6 +402,10 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 
 	public Study getStudy() {
 		return Biosample.getStudy(getBiosamples());
+	}
+
+	public Status getStatus() {
+		return Biosample.getStatus(getBiosamples());
 	}
 
 	public String getTopParents() {

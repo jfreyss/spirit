@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -36,14 +37,14 @@ import com.actelion.research.util.ui.JTextComboBox;
 
 public class ContainerCageCellEditor extends AbstractCellEditor implements TableCellEditor {
 	private final JTextComboBox cageComboBox = new JTextComboBox();
-	
+
 	public ContainerCageCellEditor() {
+		cageComboBox.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
 	}
-	
+
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 		Biosample b = (Biosample) value;
-//		Study study = ((EditBiosampleTableModel)table.getModel()).getStudy();
 		Study study = b.getInheritedStudy();
 		List<String> cageNames = new ArrayList<String>();
 		if(study!=null) {
@@ -52,7 +53,6 @@ public class ContainerCageCellEditor extends AbstractCellEditor implements Table
 			}
 		}
 		cageComboBox.setChoices(cageNames);
-		cageComboBox.setBorder(null);
 		cageComboBox.setText((String)value);
 		return cageComboBox;
 	}
@@ -60,5 +60,5 @@ public class ContainerCageCellEditor extends AbstractCellEditor implements Table
 	@Override
 	public String getCellEditorValue() {
 		return cageComboBox.getText();
-	}		
+	}
 }

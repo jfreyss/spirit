@@ -46,29 +46,29 @@ import com.actelion.research.util.ui.exceltable.Column;
 public final class SampleIdColumn extends Column<Result, String> {
 	private SampleIdLabel sampleIdLabel = new SampleIdLabel();
 	private Map<String, Biosample> id2sampleCache = new HashMap<String, Biosample>();
-	
+
 	public SampleIdColumn() {
 		super("SampleId", String.class);
 	}
-	
+
 	@Override
 	public float getSortingKey() {
 		return 3.0f;
 	}
-	
+
 	@Override
 	public String getValue(Result row) {
 		return row.getBiosample()==null? "": row.getBiosample().getSampleId();
-	}		
+	}
 	@Override
 	public void setValue(Result row, String value) {
 		try {
 			paste(row, value);
 		} catch(Exception e) {
-			
-		}		
+
+		}
 	}
-	
+
 	@Override
 	public void paste(Result row, String value) throws Exception {
 		if(value==null) {
@@ -78,10 +78,10 @@ public final class SampleIdColumn extends Column<Result, String> {
 			Biosample b = id2sampleCache.get(value);
 			if(b==null) {
 				if(id2sampleCache.size()>1000) id2sampleCache.clear();
-				//Load the bisoamples from the sampleId, if the value is longer than 3  
+				//Load the bisoamples from the sampleId, if the value is longer than 3
 				if(value.length()>3) {
-					b = DAOBiosample.getBiosample(value);					
-				} 
+					b = DAOBiosample.getBiosample(value);
+				}
 				if(b==null) {
 					//If not found, create a fake biosample
 					b = new Biosample(value);
@@ -91,7 +91,7 @@ public final class SampleIdColumn extends Column<Result, String> {
 						//OK
 					} else if(b.getInheritedStudy()!=null && SpiritRights.canBlind(b.getInheritedStudy(), SpiritFrame.getUser())) {
 						//OK
-					} else {						
+					} else {
 						throw new Exception("You cannot add results on "+b+" because you have no rights on this sample.\n "+(b.getInheritedStudy()==null?"":" Please contact someone from study "+b.getInheritedStudy()));
 					}
 				}
@@ -100,18 +100,29 @@ public final class SampleIdColumn extends Column<Result, String> {
 			row.setBiosample(b);
 		}
 	}
-	
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
 		sampleIdLabel.setBiosample(row==null?null: row.getBiosample());
 		return sampleIdLabel;
 	}
-	
+
 	@Override
 	public void populateHeaderPopup(final AbstractExtendTable<Result> table, JPopupMenu popupMenu) {
 		popupMenu.add(new JSeparator());
 		popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
-		
+
+		popupMenu.add(new AbstractAction("Sort by Group/SampleId") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				table.sortBy(SampleIdColumn.this, 1, new Comparator<Result>() {
+					@Override
+					public int compare(Result o1, Result o2) {
+						return CompareUtils.compare(o1.getBiosample(), o2.getBiosample());
+					}
+				});
+			}
+		});
 		popupMenu.add(new AbstractAction("Sort by SampleId") {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -130,17 +141,6 @@ public final class SampleIdColumn extends Column<Result, String> {
 					@Override
 					public int compare(Result o1, Result o2) {
 						return CompareUtils.compare(o1.getBiosample()==null?"": o1.getBiosample().getSampleName(), o2.getBiosample()==null?"": o2.getBiosample().getSampleName());
-					}
-				});
-			}
-		});
-		popupMenu.add(new AbstractAction("Sort by Group") {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				table.sortBy(SampleIdColumn.this, 1, new Comparator<Result>() {
-					@Override
-					public int compare(Result o1, Result o2) {
-						return CompareUtils.compare(o1.getBiosample(), o2.getBiosample());
 					}
 				});
 			}

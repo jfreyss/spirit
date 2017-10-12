@@ -81,7 +81,7 @@ import com.actelion.research.spiritlib.pojo.TestPojo;
 import com.owlike.genson.Genson;
 
 /**
- * 
+ *
  * @author freyssj
  *
  */
@@ -90,22 +90,22 @@ public class Exporter {
 	/**
 	 * Export studies, biosamples, locations, and results mentioned in the exchange object.
 	 * The file must contain all references to other entities. If the exchange object is invalid (ie. importing cannot be done after export), an exception will be thrown.
-	 *  
+	 *
 	 * @param biosamples
 	 * @param user
 	 * @param writer
 	 * @throws Exception
 	 */
 	public static void write(Exchange exchange, Writer writer) throws Exception {
-		
-		ExchangePojo res = convertExchange(exchange);		
-		
+
+		ExchangePojo res = convertExchange(exchange);
+
 		Genson gson = new Genson();
 		writer.write(gson.serialize(res));
 		writer.close();
 	}
 
-	public static ExchangePojo convertExchange(Exchange c) {		
+	public static ExchangePojo convertExchange(Exchange c) {
 		long s = System.currentTimeMillis();
 
 		ExchangePojo res = new ExchangePojo();
@@ -127,10 +127,10 @@ public class Exporter {
 			throw new RuntimeException("The exported exchange format is invalid", ex);
 		}
 		System.out.println("Exporter.convertExchange() tested in "+(System.currentTimeMillis()-s)+"ms");
-		
+
 		return res;
 	}
-	
+
 
 	//////////////////////////////////////////////////////////////////////////////
 	public static StudyPojo convertStudy(Study s) {
@@ -138,7 +138,7 @@ public class Exporter {
 		Set<StudyPojo> res = convertStudies(Collections.singleton(s));
 		return res.size()==1? res.iterator().next(): null;
 	}
-	
+
 	public static Set<StudyPojo> convertStudies(Collection<Study> list) {
 		if(list==null) return null;
 		Set<StudyPojo> res = new HashSet<>();
@@ -149,7 +149,7 @@ public class Exporter {
 			r.setStudyId(s.getStudyId());
 			r.setLocalId(s.getLocalId());
 			r.setTitle(s.getTitle());
-			r.setAttachedSampleIds(Biosample.getSampleIds(s.getAttachedBiosamples()));
+			r.setAttachedSampleIds(Biosample.getSampleIds(s.getParticipants()));
 			r.setBlindAllUsers(s.getBlindAllUsers());
 			r.setBlindDetailsUsers(s.getBlindDetailsUsers());
 			r.setCreDate(s.getCreDate());
@@ -163,25 +163,25 @@ public class Exporter {
 			r.setPhases(convertPhases(s.getPhases()));
 			r.setExpertUsers(s.getExpertUsers());
 			r.setState(s.getState());
-			r.setMetadata(s.getMetadata());
+			r.setMetadata(s.getMetadataMap());
 			r.setStudyActions(convertStudyActions(s.getStudyActions()));
 			r.setSynchronizeSamples(s.isSynchronizeSamples());
 			r.setUpdDate(s.getUpdDate());
 			r.setUpdUser(s.getUpdUser());
-			r.setAdminUsers(s.getAdminUsers());			
+			r.setAdminUsers(s.getAdminUsers());
 			res.add(r);
 		}
 		return res;
 	}
-	
+
 	public static List<GroupPojo> convertGroups(Collection<Group> list) {
 		List<GroupPojo> res = new ArrayList<>();
 		for (Group g : list) {
-			GroupPojo p = new GroupPojo();			
+			GroupPojo p = new GroupPojo();
 			p.setId(g.getId());
 			p.setName(g.getName());
 			p.setColorRgb(g.getColorRgb());
-			p.setDividingSampling(g.getDividingSampling()==null? null: convertSamplings(Collections.singleton(g.getDividingSampling())).iterator().next());
+			//			p.setDividingSampling(g.getDividingSampling()==null? null: convertSamplings(Collections.singleton(g.getDividingSampling())).iterator().next());
 			p.setFromGroup(g.getFromGroup()==null?"": g.getFromGroup().getName());
 			p.setFromPhase(g.getFromPhase()==null?"": g.getFromPhase().getShortName());
 			p.setSubgroupSizes(g.getSubgroupSizes());
@@ -189,26 +189,26 @@ public class Exporter {
 		}
 		return res;
 	}
-	
+
 	public static List<PhasePojo> convertPhases(Collection<Phase> list) {
 		List<PhasePojo> res = new ArrayList<>();
 		for (Phase g : list) {
-			PhasePojo p = new PhasePojo();			
+			PhasePojo p = new PhasePojo();
 			p.setId(g.getId());
 			p.setName(g.getName());
 			p.setRando(g.getSerializedRandomization());
-//			p.setLabel(g.getLabel());
-//			p.setSerializedRandomization(g.getSerializedRandomization());
+			//			p.setLabel(g.getLabel());
+			//			p.setSerializedRandomization(g.getSerializedRandomization());
 			res.add(p);
 		}
-		
+
 		return res;
 	}
 
 	public static List<NamedTreatmentPojo> convertNamedTreatments(Collection<NamedTreatment> list) {
 		List<NamedTreatmentPojo> res = new ArrayList<>();
 		for (NamedTreatment g : list) {
-			NamedTreatmentPojo p = new NamedTreatmentPojo();			
+			NamedTreatmentPojo p = new NamedTreatmentPojo();
 			p.setId(g.getId());
 			p.setName(g.getName());
 			p.setApplication1(g.getApplication1());
@@ -222,7 +222,7 @@ public class Exporter {
 			p.setUnit2(g.getUnit2()==null?"":g.getUnit2().name());
 			res.add(p);
 		}
-		
+
 		return res;
 	}
 
@@ -230,23 +230,23 @@ public class Exporter {
 	public static List<NamedSamplingPojo> convertNamedSamplings(Collection<NamedSampling> list) {
 		List<NamedSamplingPojo> res = new ArrayList<>();
 		for (NamedSampling g : list) {
-			NamedSamplingPojo p = new NamedSamplingPojo();			
+			NamedSamplingPojo p = new NamedSamplingPojo();
 			p.setId(g.getId());
 			p.setName(g.getName());
 			p.setNecropsy(g.isNecropsy());
 			p.setSamplings(convertSamplings(g.getTopSamplings()));
 			res.add(p);
 		}
-		
+
 		return res;
 	}
-	
+
 	public static Set<SamplingPojo> convertSamplings(Collection<Sampling> list) {
 		Map<Integer, Test> id2test = JPAUtil.mapIds(DAOTest.getTests(Measurement.getTestIds(Sampling.getMeasurements(list))));
-		
+
 		Set<SamplingPojo> res = new LinkedHashSet<>();
 		for (Sampling g : list) {
-			SamplingPojo p = new SamplingPojo();			
+			SamplingPojo p = new SamplingPojo();
 			p.setAmount(g.getAmount());
 			p.setBiotype(g.getBiotype()==null?"": g.getBiotype().getName());
 			p.setBlocNo(g.getBlocNo()==null?null: g.getBlocNo());
@@ -256,20 +256,20 @@ public class Exporter {
 			p.setContainerType(g.getContainerType()==null?"": g.getContainerType().name());
 			p.setId(g.getId());
 			p.setLengthRequired(g.isLengthRequired());
-			
+
 			p.setSampleName(g.getSampleName());
 			p.setWeighingRequired(g.isWeighingRequired());
-			
+
 			//Metadata
 			Map<String, String> map = new HashMap<>();
 			for(Map.Entry<BiotypeMetadata, String> e: g.getMetadataMap().entrySet()) {
-				assert e.getKey().getName()!=null; 
+				assert e.getKey().getName()!=null;
 				map.put(e.getKey().getName(), e.getValue());
 			}
 			p.setMetadata(map);
-			
+
 			//Measurements
-			List<MeasurementPojo> mps = new ArrayList<>();			
+			List<MeasurementPojo> mps = new ArrayList<>();
 			for(Measurement m: g.getMeasurements()) {
 				Test t = id2test.get(m.getTestId());
 				if(t==null) continue;
@@ -278,14 +278,14 @@ public class Exporter {
 				mp.setParameters(m.getParameters());
 				mps.add(mp);
 			}
-			p.setMeasurements(mps.toArray(new MeasurementPojo[mps.size()]));			
-			
+			p.setMeasurements(mps.toArray(new MeasurementPojo[mps.size()]));
+
 			res.add(p);
 		}
-		
+
 		return res;
 	}
-	
+
 	public static List<StudyActionPojo> convertStudyActions(Collection<StudyAction> list) {
 		Map<Integer, Test> id2test = JPAUtil.mapIds(DAOTest.getTests(Measurement.getTestIds(StudyAction.getMeasurements(list))));
 		List<StudyActionPojo> res = new ArrayList<>();
@@ -302,9 +302,9 @@ public class Exporter {
 			p.setMeasureFood(g.isMeasureFood());
 			p.setMeasureWater(g.isMeasureWater());
 			p.setMeasureWeight(g.isMeasureWeight());
-			
+
 			//Measurements
-			List<MeasurementPojo> mps = new ArrayList<>();			
+			List<MeasurementPojo> mps = new ArrayList<>();
 			for(Measurement m: g.getMeasurements()) {
 				Test t = id2test.get(m.getTestId());
 				if(t==null) continue;
@@ -314,14 +314,14 @@ public class Exporter {
 				mps.add(mp);
 			}
 			p.setMeasurements(mps.toArray(new MeasurementPojo[mps.size()]));
-			
+
 			res.add(p);
 		}
-		
+
 		return res;
 	}
 
-	
+
 	//////////////////////////////////////////////////////////////////////////////
 	public static Set<BiotypePojo> convertBiotype(Collection<Biotype> list) {
 		if(list==null) return null;
@@ -335,17 +335,17 @@ public class Exporter {
 			biotype.setCategory(b.getCategory().name());
 			biotype.setPrefix(b.getPrefix());
 			biotype.setAmountUnit(b.getAmountUnit()==null?"":b.getAmountUnit().name());
-			
+
 			for(BiotypeMetadata m: b.getMetadata()) {
 				biotype.getMetadata().add(convertBiotypeMetadata(m));
 			}
 			biotype.setContainerType(b.getContainerType()==null?"":b.getContainerType().name());
 			biotype.setParentBiotype(b.getParent()==null?"":b.getParent().getName());
-//			biotype.setDescription(b.getDescription());
-			
+			//			biotype.setDescription(b.getDescription());
+
 			biotype.setAbstract(b.isAbstract());
 			biotype.setHidden(b.isHidden());
-			biotype.setHideContainer(b.isHideContainer());		
+			biotype.setHideContainer(b.isHideContainer());
 			biotype.setHideSampleId(b.isHideSampleId());
 			biotype.setNameAutocomplete(b.isNameAutocomplete());
 			biotype.setNameRequired(b.isNameRequired());
@@ -353,7 +353,7 @@ public class Exporter {
 		}
 		return res;
 	}
-	
+
 
 	private static BiotypeMetadataPojo convertBiotypeMetadata(BiotypeMetadata m) {
 		BiotypeMetadataPojo res = new BiotypeMetadataPojo();
@@ -375,26 +375,26 @@ public class Exporter {
 			biosample.setId(b.getId());
 			biosample.setSampleId(b.getSampleId());
 			biosample.setSampleName(b.getSampleName());
-			
+
 			biosample.setParentSampleId(b.getParent()==null?"": b.getParent().getSampleId());
 			biosample.setTopSampleId(b.getTopParent()==null?"": b.getTopParent().getSampleId());
-			
+
 			biosample.setContainerId(b.getContainerId());
 			biosample.setContainerType(b.getContainerType()==null?"": b.getContainerType().name());
 			biosample.setBiotype(b.getBiotype().getName());
-			
+
 			biosample.setAttached(b.getAttachedStudy()!=null);
 			biosample.setStudyId(b.getInheritedStudy()==null? "": b.getInheritedStudy().getStudyId());
 			biosample.setStudyGroup(b.getInheritedGroup()==null? "": b.getInheritedGroup().getName());
 			biosample.setStudySubGroup(b.getInheritedSubGroup());
 			biosample.setStudyPhase(b.getInheritedPhase()==null? "": b.getInheritedPhase().getShortName());
 			biosample.setAttachedSamplingId(b.getAttachedSampling()==null? 0: b.getAttachedSampling().getId());
-			
+
 			for(BiotypeMetadata bm: b.getBiotype().getMetadata()) {
 				String s = b.getMetadataValue(bm);
 				biosample.getMetadata().put(bm.getName(), s==null? "": s);
 			}
-			
+
 			biosample.setFullLocation(b.getLocationString(LocationFormat.FULL_POS, null));
 			biosample.setAmount(b.getAmount()==null?"":""+b.getAmount());
 			biosample.setStatus(b.getStatus()==null?"":b.getStatus().name());
@@ -420,7 +420,7 @@ public class Exporter {
 			test.setId(t.getId());
 			test.setName(t.getName());
 			test.setCategory(t.getCategory());
-			
+
 			for(TestAttribute ta: t.getAttributes()) {
 				test.getAttributes().add(convertTestAttribute(ta));
 			}
@@ -428,7 +428,7 @@ public class Exporter {
 		}
 		return res;
 	}
-	
+
 
 	private static TestAttributePojo convertTestAttribute(TestAttribute m) {
 		TestAttributePojo res = new TestAttributePojo();
@@ -441,7 +441,7 @@ public class Exporter {
 		return res;
 	}
 
-	
+
 	public static Set<ResultPojo> convertResults(Collection<Result> list) {
 		if(list==null) return null;
 		Set<ResultPojo> res = new HashSet<>();
@@ -465,7 +465,7 @@ public class Exporter {
 			result.setCreDate(r.getCreDate());
 			result.setCreUser(r.getCreUser());
 			res.add(result);
-			
+
 		}
 		return res;
 	}
@@ -492,7 +492,7 @@ public class Exporter {
 		}
 		return res;
 	}
-	
+
 	//////////////////////////////////////////////////////////////////////////////////
 	public static BiosampleQueryPojo convertBiosampleQuery(BiosampleQuery q) {
 		BiosampleQueryPojo res = new BiosampleQueryPojo();
@@ -517,13 +517,13 @@ public class Exporter {
 
 	public static void main(String[] args) throws Exception {
 		SpiritUser user = DAOSpiritUser.loadUser("freyssj");
-//		List<Biosample> biosamples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForStudyIds("S-00085"), user);
+		//		List<Biosample> biosamples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForStudyIds("S-00085"), user);
 		List<Biosample> biosamples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForBiotype(DAOBiotype.getBiotype("Bacteria")), user);
 		Exchange exchange = new Exchange("actelion.bacteria");
 		exchange.addBiosamples(biosamples);
 		Exporter.write(exchange, new FileWriter("c:/tmp/bacteria.spirit"));
-		
-		
+
+
 		Study study = DAOStudy.getStudyByStudyId("S-00085");
 		exchange = new Exchange("actelion.s-00085");
 		exchange.addStudies(Collections.singletonList(study));

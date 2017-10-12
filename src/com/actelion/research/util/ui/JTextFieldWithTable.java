@@ -49,28 +49,28 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
 /**
- * 
+ *
  * A textfield that provides suggestion in a table (works like jcombobox)
- * 
+ *
  * @author freyssj
- * @since  29.08.2012 
+ * @since  29.08.2012
  *
  */
 public abstract class JTextFieldWithTable extends JCustomTextField {
 
 	private String[] headers;
-	
+
 	/**
-	 * 
+	 *
 	 */
 	public JTextFieldWithTable(String[] headers) {
-		super(JCustomTextField.ALPHANUMERIC, 14);
+		super(CustomFieldType.ALPHANUMERIC, 14);
 		if(headers==null || headers.length==0) throw new IllegalArgumentException("You must give the table headers");
 		this.headers = headers;
 		initTextFieldWithTable();
 	}
-	
-	private void initTextFieldWithTable() {		
+
+	private void initTextFieldWithTable() {
 		addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
@@ -83,13 +83,13 @@ public abstract class JTextFieldWithTable extends JCustomTextField {
 				showPopup();
 			}
 		});
-		
+
 		setEditable(true);
 	}
-	
+
 	public int getValueColumn() {return 0;}
 	public abstract List<String[]> getSuggestions(String txt);
-	
+
 	private JDialog lastDialog = null;
 	public void showPopup() {
 		if(!isShowing()) return;
@@ -99,11 +99,11 @@ public abstract class JTextFieldWithTable extends JCustomTextField {
 		Component top = JTextFieldWithTable.this.getTopLevelAncestor();
 		final JDialog f = (top instanceof JDialog)? new JDialog( (JDialog) top, false):  new JDialog( (JFrame) top, false);
 		final Point p = JTextFieldWithTable.this.getLocationOnScreen();
-		
-		
+
+
 		int selRow = -1;
 		final List<String[]> items = getSuggestions(getText());
-				
+
 		final String[][] data = new String[items.size()][headers.length];
 		for (int i = 0; i < data.length; i++) {
 			for (int j = 0; j < data[i].length; j++) {
@@ -122,12 +122,12 @@ public abstract class JTextFieldWithTable extends JCustomTextField {
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		table.setFont(FastFont.SMALL);
 		final JScrollPane panel = new JScrollPane(table);
-		
+
 		//Resize columns to fit all data
 		FontMetrics fm = getFontMetrics(table.getFont());
 		int totalWidth = 0;
 		for(int columnIndex = 0; columnIndex < table.getColumnCount(); columnIndex++) {
-			int maxWidth = 30;			
+			int maxWidth = 30;
 			for (int rowIndex = 0; rowIndex < data.length && rowIndex<10; rowIndex++) {
 				Object value = table.getModel().getValueAt(rowIndex, columnIndex);
 				if(value==null) continue;
@@ -135,18 +135,18 @@ public abstract class JTextFieldWithTable extends JCustomTextField {
 			}
 			totalWidth+=maxWidth+3;
 			table.getColumnModel().getColumn(columnIndex).setPreferredWidth(maxWidth);
-        }
+		}
 		table.setFocusable(false);
-		
 
-		
+
+
 		//Set renderer
-		TableCellRenderer renderer = new DefaultTableCellRenderer() {			
+		TableCellRenderer renderer = new DefaultTableCellRenderer() {
 			@Override
 			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 				super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 				if(value==null) {
-					
+
 				} else {
 					String match = JTextFieldWithTable.this.getText();
 					String text = getText();
@@ -158,8 +158,8 @@ public abstract class JTextFieldWithTable extends JCustomTextField {
 			}
 		};
 		table.setDefaultRenderer(Object.class, renderer);
-		
-				
+
+
 		//Table Listeners
 		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
@@ -178,7 +178,7 @@ public abstract class JTextFieldWithTable extends JCustomTextField {
 				if(e.getClickCount()>=2) f.dispose();
 			}
 		});
-		
+
 		f.addWindowFocusListener(new WindowFocusListener() {
 			@Override
 			public void windowGainedFocus(WindowEvent e) {
@@ -194,7 +194,7 @@ public abstract class JTextFieldWithTable extends JCustomTextField {
 				f.dispose();
 			}
 		});
-		
+
 		panel.setOpaque(false);
 		f.setFocusableWindowState(false);
 		f.setFocusable(false);
@@ -205,7 +205,7 @@ public abstract class JTextFieldWithTable extends JCustomTextField {
 
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
-			public void run() {				
+			public void run() {
 				int x = p.x;
 				int y = p.y+getBounds().height;
 				if(y+f.getHeight()>Toolkit.getDefaultToolkit().getScreenSize().height) {
@@ -217,14 +217,14 @@ public abstract class JTextFieldWithTable extends JCustomTextField {
 				lastDialog=f;
 				f.setVisible(true);
 				JTextFieldWithTable.this.requestFocusInWindow();
-				
+
 			}
 		});
-		
+
 	}
-	
+
 	private static String highlightMatch(String text, String matchString) {
-//		text = text.replaceAll("(?i)"+match, "<span style='background:#FFFFCC;color:black'>" + match + "</span>");
+		//		text = text.replaceAll("(?i)"+match, "<span style='background:#FFFFCC;color:black'>" + match + "</span>");
 		for(String match: matchString.split("\\s+")) {
 			StringBuilder sb = new StringBuilder();
 			boolean inBrace = false;
@@ -240,19 +240,19 @@ public abstract class JTextFieldWithTable extends JCustomTextField {
 					i+=match.length();
 				} else {
 					sb.append(text.charAt(i++));
-				}				
+				}
 			}
 			text = sb.toString();
 		}
 		return text;
 	}
-		
+
 	private String extractKey(String v) {
 		if(v.indexOf(" - ")>0) v = v.substring(0, v.indexOf(" - "));
 		return v.trim();
 	}
 	public String[] getCheckedItems() {
-		String sel = (String) getText();
+		String sel = getText();
 		String[] res = sel.split(";");
 		for (int i = 0; i < res.length; i++) {
 			res[i] = res[i].trim();
@@ -267,5 +267,5 @@ public abstract class JTextFieldWithTable extends JCustomTextField {
 		}
 		return false;
 	}
-	
+
 }

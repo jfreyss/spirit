@@ -26,19 +26,24 @@ import java.awt.Component;
 import javax.swing.JLabel;
 
 import com.actelion.research.spiritcore.business.Quality;
-import com.actelion.research.util.ui.JGenericComboBox;
+import com.actelion.research.util.ui.JObjectComboBox;
 
-public class QualityComboBox extends JGenericComboBox<Quality> {
+public class QualityComboBox extends JObjectComboBox<Quality> {
 
 	public QualityComboBox() {
-		super(Quality.values(), true);
+		super(Quality.values());
 		setTextWhenEmpty("Quality");
-		setPreferredWidth(140);
 	}
-	
+
 	@Override
-	public Component processCellRenderer(JLabel comp, Quality value, int index) {
-		comp.setText(">=" + comp.getText());
+	public Component processCellRenderer(JLabel comp, String value, int index) {
+		Quality quality = getMap().get(value);
+		if(quality==null) {
+			comp.setBackground(null);
+		} else {
+			comp.setBackground(quality.getBackground());
+		}
 		return comp;
 	}
+
 }

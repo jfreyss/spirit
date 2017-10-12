@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -87,22 +88,10 @@ public class CagePrinterPDF {
 			animals.addAll(cage.getBiosamples());
 
 			//Find the treatments applied to this group
-			String treatmentDescription = null;
-			Set<NamedTreatment> allTreatments = new TreeSet<>();
+			Set<NamedTreatment> allTreatments = new LinkedHashSet<>();
 			for(Group gr: groups) {
-				if(gr==null) {
-					treatmentDescription = "";
-				} else {
-					allTreatments.addAll(gr.getAllTreatments(-1));
-					String s = gr.getTreatmentDescription(-1, printTreatmentDesc);
-					if(treatmentDescription==null) {
-						treatmentDescription = s;
-					} else if(!treatmentDescription.equals(s)) {
-						treatmentDescription = "";
-					}
-				}
+				allTreatments.addAll(gr.getAllTreatments(-1));
 			}
-
 
 			//Draw
 			if(i%8==0) {
@@ -146,17 +135,20 @@ public class CagePrinterPDF {
 				canvas.restoreState();
 			}
 			BaseColor treatmentColor = BaseColor.BLACK;
-			if(allTreatments.size()==1 && !study.isBlind() && printGroupsTreatments) {
-				NamedTreatment t = allTreatments.iterator().next();
-				if(t.getColor()!=null) {
-					treatmentColor = new BaseColor(t.getColor().getRed()/2, t.getColor().getGreen()/2, t.getColor().getBlue()/2);
-					canvas.saveState();
-					canvas.setColorStroke(BaseColor.BLACK);
-					canvas.setRGBColorFill(t.getColor().getRed(), t.getColor().getGreen(), t.getColor().getBlue());
-					y = baseY+42+15+86+13+22+14+23+28;
-					canvas.rectangle(x+24, doc.getPageSize().getHeight() - y, 22, 22);
-					canvas.fillStroke();
-					canvas.restoreState();
+			if(allTreatments.size()>0 && !study.isBlind() && printGroupsTreatments) {
+				int offset = 0;
+				for (NamedTreatment t : allTreatments) {
+					if(t.getColor()!=null) {
+						if(allTreatments.size()==1) treatmentColor = new BaseColor(t.getColor().getRed()/2, t.getColor().getGreen()/2, t.getColor().getBlue()/2);
+						canvas.saveState();
+						canvas.setColorStroke(BaseColor.BLACK);
+						canvas.setRGBColorFill(t.getColor().getRed(), t.getColor().getGreen(), t.getColor().getBlue());
+						y = baseY+42+15+86+13+22+14+23+28;
+						canvas.rectangle(x+20 + offset*5, doc.getPageSize().getHeight() - y - (offset%2)*4, 22, 22);
+						canvas.fillStroke();
+						canvas.restoreState();
+						offset++;
+					}
 				}
 			}
 
@@ -207,9 +199,9 @@ public class CagePrinterPDF {
 			y+=13; print(canvas, getMetadata(animals, "PO Number"), x+75, doc.getPageSize().getHeight() - y, x2, 0, 10, FontFactory.HELVETICA, BaseColor.BLACK, 10f);
 			y+=22; print(canvas, study.getStudyIdAndInternalId(), x+40, doc.getPageSize().getHeight() - y, x2, 0, 11, BaseFont.HELVETICA_BOLD, BaseColor.BLACK, 11f);
 			y+=14; if(!study.isBlind() && printGroupsTreatments) print(canvas, getGroups(animals), x+40, doc.getPageSize().getHeight() - y, x2, 22, 11, BaseFont.HELVETICA_BOLD, BaseColor.BLACK, 11f);
-			y+=23; if(!study.isBlind() && printGroupsTreatments) print(canvas, treatmentDescription, x+62, doc.getPageSize().getHeight() - y, x2, 50, printTreatmentDesc?9: 12, FontFactory.HELVETICA, treatmentColor, printTreatmentDesc?9f: 10f);
-			y+=50; print(canvas, study.getMetadata().get("LICENSENO"), x+74, doc.getPageSize().getHeight() - y, x2, 15, 10, FontFactory.HELVETICA, BaseColor.BLACK, 10f);
-			y+=13; print(canvas, study.getMetadata().get("EXPERIMENTER"), x+74, doc.getPageSize().getHeight() - y, x2, 20, 10, FontFactory.HELVETICA, BaseColor.BLACK, 10f);
+			y+=23; if(!study.isBlind() && printGroupsTreatments) print(canvas, getTreatments(animals, printTreatmentDesc), x+62, doc.getPageSize().getHeight() - y, x2, 50, printTreatmentDesc?9: 12, FontFactory.HELVETICA, treatmentColor, printTreatmentDesc?9f: 10f);
+			y+=50; print(canvas, study.getMetadataMap().get("LICENSENO"), x+74, doc.getPageSize().getHeight() - y, x2, 15, 10, FontFactory.HELVETICA, BaseColor.BLACK, 10f);
+			y+=13; print(canvas, study.getMetadataMap().get("EXPERIMENTER"), x+74, doc.getPageSize().getHeight() - y, x2, 20, 10, FontFactory.HELVETICA, BaseColor.BLACK, 10f);
 		}
 
 		doc.close();
@@ -246,13 +238,21 @@ public class CagePrinterPDF {
 	}
 
 	private static String getGroups(Collection<Biosample> animals) {
-
-		String res = "";
+		Set<String> res = new LinkedHashSet<>();
 		for (Group g : Biosample.getGroups(animals)) {
-			String m = g==null? "N/A": g.getName();
-			res += (res.length()>0? ", ": "") + m;
+			res.add(g==null? "N/A": g.getName());
 		}
-		return res;
+		return MiscUtils.flatten(res);
+	}
+
+	private static String getTreatments(Collection<Biosample> animals, boolean printTreatmentDesc) {
+		Set<String> res = new LinkedHashSet<>();
+		Set<Group> groups = Biosample.getGroups(animals);
+		for(Group gr: groups) {
+			String s = gr==null? "": gr.getTreatmentDescription(-1, groups.size()>1? false: printTreatmentDesc);
+			res.add(s==null || s.length()==0? "N/A": s);
+		}
+		return MiscUtils.flatten(res);
 	}
 
 	private static String getMetadata(Collection<Biosample> animals, String metadata) {

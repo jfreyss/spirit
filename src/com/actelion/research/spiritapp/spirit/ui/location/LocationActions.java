@@ -40,13 +40,14 @@ import com.actelion.research.spiritapp.spirit.services.print.PrintLabel;
 import com.actelion.research.spiritapp.spirit.ui.SpiritFrame;
 import com.actelion.research.spiritapp.spirit.ui.audit.LocationHistoryDlg;
 import com.actelion.research.spiritapp.spirit.ui.location.edit.LocationEditDlg;
+import com.actelion.research.spiritapp.spirit.ui.location.edit.SetLocationFlagDlg;
 import com.actelion.research.spiritapp.spirit.ui.print.BrotherLabelsDlg;
 import com.actelion.research.spiritcore.business.location.Location;
+import com.actelion.research.spiritcore.business.location.LocationFlag;
 import com.actelion.research.spiritcore.business.location.Privacy;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAORevision.Revision;
-import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
@@ -119,16 +120,16 @@ public class LocationActions {
 	public static class Action_History extends AbstractAction {
 		private final Collection<Location> locations;
 		public Action_History(Collection<Location> locations) {
-			super("View Change History");
+			super("Audit Trail");
 			this.locations = locations;
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('h'));
+			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
 			putValue(Action.SMALL_ICON, IconType.HISTORY.getIcon());
 			setEnabled(locations.size()==1);
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				List<Revision> revisions = DAORevision.getRevisions(locations.iterator().next());
+				List<Revision> revisions = DAORevision.getLastRevisions(locations.iterator().next());
 				new LocationHistoryDlg(revisions);
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
@@ -232,38 +233,26 @@ public class LocationActions {
 		}
 	}
 
-	public static class Action_Move extends AbstractAction {
-		private List<Location> locations;
-		public Action_Move(Location location) {
-			super("Move Location");
-			this.locations = Collections.singletonList(location);
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('m'));
-			setEnabled(SpiritRights.canEdit(location, SpiritFrame.getUser()));
-		}
-		public Action_Move(List<Location> locations) {
-			super("Move");
+	public static class Action_SetStatus extends AbstractAction {
+		private final List<Location> locations;
+		private LocationFlag flag;
+
+		public Action_SetStatus(List<Location> locations, LocationFlag flag) {
+			super(flag==null?"none":flag.getName());
 			this.locations = locations;
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('m'));
-			if(locations.size()==0) {
-				setEnabled(false);
-			} else {
-				boolean enabled = true;
-				Location parent = locations.get(0).getParent();
-				for (Location l : locations) {
-					if(!SpiritRights.canEdit(l, SpiritFrame.getUser()) || CompareUtils.compare(parent, l.getParent())!=0) {
-						enabled = false;
-					}
-				}
-				setEnabled(enabled);
+			this.flag = flag;
+			putValue(AbstractAction.SMALL_ICON, flag==null? null: flag.getIcon());
+			for (Location l : locations) {
+				if(!SpiritRights.canEdit(l, SpiritFrame.getUser())) setEnabled(false);
 			}
+
 		}
-
-
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			new MoveLocationDialog(locations);
+			new SetLocationFlagDlg(locations, flag);
 		}
 	}
+
 
 	//	public static class Action_ScanUpdate extends AbstractAction {
 	//		public Action_ScanUpdate(Location loc) {
@@ -279,6 +268,7 @@ public class LocationActions {
 	//	}
 
 	public static JPopupMenu createPopup(List<Location> locations) {
+
 		JPopupMenu menu = new JPopupMenu();
 
 		String s = locations.size()==1? locations.get(0).getName(): locations.size()+" selected";
@@ -291,18 +281,34 @@ public class LocationActions {
 		newMenu.add(new JMenuItem(new Action_New(locations)));
 		newMenu.add(new JMenuItem(new Action_Duplicate(locations)));
 
-		menu.add(new JMenuItem(new Action_EditBatch(locations)));
+
+		JMenu editMenu = new JMenu("Edit");
+		editMenu.setMnemonic('e');
+		editMenu.setIcon(IconType.EDIT.getIcon());
+		menu.add(editMenu);
+		editMenu.add(new JMenuItem(new Action_EditBatch(locations)));
+
+
+		//SetStatus for samples
+		JMenu statusMenu = new JMenu("Set Flag");
+		statusMenu.setIcon(IconType.STATUS.getIcon());
+		statusMenu.add(new Action_SetStatus(locations, null));
+		for(LocationFlag flag: LocationFlag.values()) {
+			statusMenu.add(new Action_SetStatus(locations, flag));
+		}
+		editMenu.add(statusMenu);
+
 		menu.add(new JSeparator());
 		menu.add(new JMenuItem(new Action_Print(locations)));
 		menu.add(new JSeparator());
 
+		menu.add(new JMenuItem(new Action_History(locations)));
 		JMenu advancedMenu = new JMenu("Advanced");
 		advancedMenu.setMnemonic('n');
 		advancedMenu.setIcon(IconType.ADMIN.getIcon());
 		menu.add(advancedMenu);
 		advancedMenu.add(new JMenuItem(new Action_Delete(locations)));
 		advancedMenu.add(new JSeparator());
-		advancedMenu.add(new JMenuItem(new Action_History(locations)));
 
 		return menu;
 	}

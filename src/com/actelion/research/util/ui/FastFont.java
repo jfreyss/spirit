@@ -43,6 +43,7 @@ public class FastFont extends Font {
 	public static Map<String, FastFont> fonts = new HashMap<>();
 	public static FastFont BIGGEST;
 	public static FastFont BIGGER;
+	public static FastFont BIG;
 	public static FastFont REGULAR;
 	public static FastFont BOLD;
 	public static FastFont MONO;
@@ -58,6 +59,7 @@ public class FastFont extends Font {
 	private static void init() {
 		BIGGEST = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize*16/12);
 		BIGGER = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize*14/12);
+		BIG = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize*13/12);
 		BOLD = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize);
 		REGULAR = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize);
 		MONO = FastFont.getFont(Font.DIALOG_INPUT, Font.PLAIN, defaultFontSize);
@@ -72,9 +74,9 @@ public class FastFont extends Font {
 			if (key != null && key.toString().toLowerCase().contains("font")) {
 				Font font = UIManager.getDefaults().getFont(key);
 				if (font != null) {
-					font = new Font(defaultFontFamily, font.getStyle(), defaultFontSize);
+					//					font = new Font(defaultFontFamily, font.getStyle(), defaultFontSize);
+					font = new Font(defaultFontFamily, Font.PLAIN, defaultFontSize);
 					UIManager.put(key, font);
-					//                    System.out.println("FastFont.init() "+key+" > "+font);
 				}
 			}
 		}

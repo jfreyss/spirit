@@ -128,9 +128,7 @@ public class AttachedBiosampleTableModel extends ExtendTableModel<AttachedBiosam
 			}
 			//Load biosample from db if possible
 			Biosample b = DAOBiosample.getBiosample(value);
-
 			if(b!=null) {
-
 				//check the biotype
 				if(biotype!=null && b.getBiotype()!=null && !biotype.equals(b.getBiotype())) {
 					biotype = null;
@@ -147,9 +145,9 @@ public class AttachedBiosampleTableModel extends ExtendTableModel<AttachedBiosam
 			row.setBiosample(b);
 			row.setSampleId(b.getSampleId());
 
-			//The populate the rest of the data from external DB
+			//Then populate the rest of the data from external DB
 			try {
-				DBAdapter.getAdapter().populateFromExternalDB(b);
+				DBAdapter.getInstance().populateFromExternalDB(b);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

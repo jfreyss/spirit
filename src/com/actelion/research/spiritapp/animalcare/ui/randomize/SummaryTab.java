@@ -175,7 +175,7 @@ public class SummaryTab extends WizardPanel {
 	 */
 	public int suggestFirstNumber() {
 		int max = 0;
-		for(Biosample b: study.getTopAttachedBiosamples()) {
+		for(Biosample b: study.getTopParticipants()) {
 			try {
 				max = Math.max(max, Integer.parseInt(b.getSampleName()));
 			} catch(Exception e) {

@@ -42,7 +42,7 @@ public class DAOSpiritUser {
 	 * @throws Exception
 	 */
 	public static void authenticateUser(String username, char[] password) throws Exception {
-		DBAdapter.getAdapter().authenticateUser(username, password);
+		DBAdapter.getInstance().authenticateUser(username, password);
 	}
 
 	/**
@@ -52,7 +52,7 @@ public class DAOSpiritUser {
 	 * @throws Exception
 	 */
 	public static SpiritUser loadUser(String username) throws Exception {
-		return DBAdapter.getAdapter().loadUser(username);
+		return DBAdapter.getInstance().loadUser(username);
 	}
 
 
