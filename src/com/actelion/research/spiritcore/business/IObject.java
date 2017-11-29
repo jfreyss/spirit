@@ -21,7 +21,18 @@
 
 package com.actelion.research.spiritcore.business;
 
+/**
+ * Interface to describe a unique object in the DB
+ * @author Joel Freyss
+ *
+ */
 public interface IObject extends Cloneable {
-	public int getId();	
+	/**
+	 * Returns the id of the object.
+	 * >0 means the object is persisted
+	 * ==0 means the object is not yet persisted
+	 * @return
+	 */
+	public int getId();
 	public void setId(int id);
 }

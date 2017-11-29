@@ -377,7 +377,7 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 	 * @return
 	 */
 	public Collection<ROW> getTreeChildren(ROW row) {
-		throw new IllegalArgumentException("getTreeParent or getTreeChildren must be implemented if treeColumn!=null");
+		throw new IllegalArgumentException("getTreeChildren must be implemented if treeColumn!=null");
 	}
 
 	/**
@@ -400,11 +400,7 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 
 
 	protected void reorderTree() {
-		//		if(push>0) return;
 		if(isTreeViewActive()) {
-			//			push++;
-
-			//			try {
 			//Create tree
 			Set<Node> roots = computeTreeRoots();
 
@@ -413,10 +409,6 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 			for(Node root: roots) {
 				index = createRows(index, "", root);
 			}
-
-			//			} finally {
-			//				push--;
-			//			}
 		}
 	}
 
@@ -466,7 +458,6 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 					parentNode.children.add(childNode);
 					parentNode.leaf = false;
 					parentNode.expanded = useChildren? rows.containsAll(getTreeChildren(parent)): true;
-					System.out.println("ExtendTableModel.computeTreeRoots() "+parent+" > "+useChildren+"/"+rows.containsAll(getTreeChildren(parent)));
 				}
 			}
 		} else if(useChildren) {

@@ -26,7 +26,11 @@ import java.io.Serializable;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 
-
+/**
+ * The LocationQuery is used to perform queries on Locations
+ *
+ * @author Joel Freyss
+ */
 public class LocationQuery implements Serializable {
 
 	private String studyId;
@@ -39,9 +43,18 @@ public class LocationQuery implements Serializable {
 
 	public LocationQuery() {}
 
+	/**
+	 * Query by location Name
+	 * @return
+	 */
 	public String getName() {
 		return name;
 	}
+
+	/**
+	 * Query by location Name
+	 * @param name
+	 */
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -75,12 +88,13 @@ public class LocationQuery implements Serializable {
 	}
 
 	public boolean isEmpty() {
-		return onlyOccupied==null && (getStudyId()==null || getStudyId().length()==0)
+		return getOnlyOccupied()==null && (getStudyId()==null || getStudyId().length()==0)
 				&& getEmployeeGroup()==null && getBiotype()==null
 				&& getLocationType()==null && (getName()==null || getName().length()==0);
 	}
 
 	/**
+	 * Query location restristed to the given group
 	 * @param employeeGroup the employeeGroup to set
 	 */
 	public void setEmployeeGroup(EmployeeGroup employeeGroup) {
@@ -88,6 +102,7 @@ public class LocationQuery implements Serializable {
 	}
 
 	/**
+	 * Query location restristed to the given group
 	 * @return the employeeGroup
 	 */
 	public EmployeeGroup getEmployeeGroup() {
@@ -95,6 +110,7 @@ public class LocationQuery implements Serializable {
 	}
 
 	/**
+	 * Query location containing the give biotype
 	 * @return the biotype
 	 */
 	public Biotype getBiotype() {
@@ -102,22 +118,40 @@ public class LocationQuery implements Serializable {
 	}
 
 	/**
+	 * Query location containing the give biotype
 	 * @param biotype the biotype to set
 	 */
 	public void setBiotype(Biotype biotype) {
 		this.biotype = biotype;
 	}
 
+	/**
+	 * Do we query only occupied boxes (true), empty boxes (false) or all (null)
+	 * @param onlyOccupied
+	 */
 	public void setOnlyOccupied(Boolean onlyOccupied) {
 		this.onlyOccupied = onlyOccupied;
 	}
+
+	/**
+	 * Do we query only occupied boxes (true), empty boxes (false) or all (null)
+	 * @return
+	 */
 	public Boolean getOnlyOccupied() {
 		return onlyOccupied;
 	}
 
+	/**
+	 * Do we query only pure location (building, freezer)
+	 * @return
+	 */
 	public boolean isFilterAdminLocation() {
 		return filterAdminLocation;
 	}
+	/**
+	 * Set to true to return only pure location (building, freezer)
+	 * @param filterAdminLocation
+	 */
 	public void setFilterAdminLocation(boolean filterAdminLocation) {
 		this.filterAdminLocation = filterAdminLocation;
 	}

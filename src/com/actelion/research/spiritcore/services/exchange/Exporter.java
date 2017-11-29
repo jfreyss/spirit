@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritcore.services.exchange;
 
-import java.io.FileWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,31 +52,26 @@ import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
-import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.DAOBiosample;
-import com.actelion.research.spiritcore.services.dao.DAOBiotype;
-import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
-import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritlib.pojo.BiosamplePojo;
-import com.actelion.research.spiritlib.pojo.BiosampleQueryPojo;
-import com.actelion.research.spiritlib.pojo.BiotypeMetadataPojo;
-import com.actelion.research.spiritlib.pojo.BiotypePojo;
-import com.actelion.research.spiritlib.pojo.ExchangePojo;
-import com.actelion.research.spiritlib.pojo.GroupPojo;
-import com.actelion.research.spiritlib.pojo.LocationPojo;
-import com.actelion.research.spiritlib.pojo.MeasurementPojo;
-import com.actelion.research.spiritlib.pojo.NamedSamplingPojo;
-import com.actelion.research.spiritlib.pojo.NamedTreatmentPojo;
-import com.actelion.research.spiritlib.pojo.PhasePojo;
-import com.actelion.research.spiritlib.pojo.ResultPojo;
-import com.actelion.research.spiritlib.pojo.ResultQueryPojo;
-import com.actelion.research.spiritlib.pojo.SamplingPojo;
-import com.actelion.research.spiritlib.pojo.StudyActionPojo;
-import com.actelion.research.spiritlib.pojo.StudyPojo;
-import com.actelion.research.spiritlib.pojo.TestAttributePojo;
-import com.actelion.research.spiritlib.pojo.TestPojo;
+import com.actelion.research.spiritlib.BiosamplePojo;
+import com.actelion.research.spiritlib.BiosampleQueryPojo;
+import com.actelion.research.spiritlib.BiotypeMetadataPojo;
+import com.actelion.research.spiritlib.BiotypePojo;
+import com.actelion.research.spiritlib.ExchangePojo;
+import com.actelion.research.spiritlib.GroupPojo;
+import com.actelion.research.spiritlib.LocationPojo;
+import com.actelion.research.spiritlib.MeasurementPojo;
+import com.actelion.research.spiritlib.NamedSamplingPojo;
+import com.actelion.research.spiritlib.NamedTreatmentPojo;
+import com.actelion.research.spiritlib.PhasePojo;
+import com.actelion.research.spiritlib.ResultPojo;
+import com.actelion.research.spiritlib.ResultQueryPojo;
+import com.actelion.research.spiritlib.SamplingPojo;
+import com.actelion.research.spiritlib.StudyActionPojo;
+import com.actelion.research.spiritlib.StudyPojo;
+import com.actelion.research.spiritlib.TestAttributePojo;
+import com.actelion.research.spiritlib.TestPojo;
 import com.owlike.genson.Genson;
 
 /**
@@ -513,21 +507,5 @@ public class Exporter {
 		res.setTopSampleIds(q.getTopSampleIds());
 		res.setKeywords(q.getKeywords());
 		return res;
-	}
-
-	public static void main(String[] args) throws Exception {
-		SpiritUser user = DAOSpiritUser.loadUser("freyssj");
-		//		List<Biosample> biosamples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForStudyIds("S-00085"), user);
-		List<Biosample> biosamples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForBiotype(DAOBiotype.getBiotype("Bacteria")), user);
-		Exchange exchange = new Exchange("actelion.bacteria");
-		exchange.addBiosamples(biosamples);
-		Exporter.write(exchange, new FileWriter("c:/tmp/bacteria.spirit"));
-
-
-		Study study = DAOStudy.getStudyByStudyId("S-00085");
-		exchange = new Exchange("actelion.s-00085");
-		exchange.addStudies(Collections.singletonList(study));
-		Exporter.write(exchange, new FileWriter("c:/tmp/s85.spirit"));
-
 	}
 }

@@ -29,7 +29,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
 
-import com.actelion.research.spiritcore.business.LogEntry;
+import com.actelion.research.spiritcore.business.audit.LogEntry;
 import com.actelion.research.spiritcore.util.QueryTokenizer;
 
 /**

@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -251,7 +252,6 @@ public class JTextComboBox extends JCustomTextField {
 							selectedChoice = s;
 						}
 					}
-					System.out.println("JTextComboBox.JTextComboBox(...).new MyCustomDocument() {...}.selectWithPrefix() "+selectedChoice);
 					if (selectedChoice != null) {
 						// Found a match
 						super.remove(0, super.getLength());
@@ -534,6 +534,13 @@ public class JTextComboBox extends JCustomTextField {
 	private Collection<String> getCachedChoices() {
 		if (cachedChoices == null) {
 			cachedChoices = getChoices();
+
+			//Remove null
+			for (Iterator<String> iterator = cachedChoices.iterator(); iterator.hasNext();) {
+				if(iterator.next()==null) iterator.remove();
+			}
+
+			//FOr multichoices, find appropriate separators (ie, don't use space if a space is in the choices)
 			if (multiChoices && cachedChoices != null && cachedChoices.size() > 0) {
 				separators = DEFAULT_SEPARATORS;
 				for (String string : cachedChoices) {
@@ -574,7 +581,7 @@ public class JTextComboBox extends JCustomTextField {
 
 	public void hidePopup() {
 		if (popup != null && popup.isVisible()) {
-			fireTextChanged();
+			//			fireTextChanged();
 			popup.dispose();
 			repaint();
 		}

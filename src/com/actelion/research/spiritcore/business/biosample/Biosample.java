@@ -553,13 +553,6 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 * @param value
 	 */
 	public void setMetadataValue(String metadataName, String value) {
-		//		for (BiotypeMetadata mType : biotype.getMetadata()) {
-		//			assert mType.getBiotype().getId()==biotype.getId(): "Id mismatch in "+mType+" > "+mType.getBiotype()+":"+mType.getBiotype().getId()+" <> "+ biotype+":"+biotype.getId();
-		//			if(mType.getName().equals(metadataName)) {
-		//				setMetadataValue(mType, value);
-		//				return;
-		//			}
-		//		}
 		BiotypeMetadata bType = getBiotype().getMetadata(metadataName);
 		if(bType==null) throw new IllegalArgumentException("Invalid metadatatype: " + metadataName+" not in " + biotype.getMetadata());
 		setMetadataValue(bType, value);
@@ -784,11 +777,11 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			return;
 		}
 
-		if(getInheritedGroup()!=null && inheritedPhase!=null) {
+		if(inheritedStudy!=null && inheritedPhase!=null) {
 			if(inheritedPhase.getStudy() ==null ) {
-				inheritedPhase.setStudy(getInheritedGroup().getStudy());
-			} else if(!inheritedPhase.getStudy().equals(getInheritedGroup().getStudy())) {
-				throw new IllegalArgumentException("The phase should come from the study "+getInheritedGroup().getStudy()+" not "+inheritedPhase.getStudy());
+				inheritedPhase.setStudy(getInheritedStudy());
+			} else if(!inheritedPhase.getStudy().equals(inheritedStudy)) {
+				throw new IllegalArgumentException("The phase of " +this + " should come from the study "+inheritedStudy+" not "+inheritedPhase.getStudy());
 			}
 		}
 
@@ -966,7 +959,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		int c;
 
 		//Compare study
-		c = -(getInheritedStudy()==null?"": getInheritedStudy().getStudyId()).compareTo((o2.getInheritedStudy()==null?"": o2.getInheritedStudy().getStudyId()));
+		c = -(getInheritedStudy()==null || getInheritedStudy().getStudyId()==null?"": getInheritedStudy().getStudyId()).compareTo((o2.getInheritedStudy()==null || o2.getInheritedStudy().getStudyId()==null?"": o2.getInheritedStudy().getStudyId()));
 		if(c!=0) return c;
 
 		if(getInheritedStudy()!=null && !getInheritedStudy().isBlindAll()) {
@@ -1458,16 +1451,6 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		if(container!=null) {
 			container.addBiosample(this);
 		}
-
-		//		//Adds an action if this is a multiple container
-		//		if(container!=null && container.getContainerType()!=null /*&& container.getContainerType().isMultiple()*/) {
-		//			//Set a multiple container
-		//			if(getContainerId()==null || !getContainerId().equals(container.getContainerId())) {
-		//				addAction(new ActionContainer(this, container.getContainerId()));
-		//			}
-		//		} else if(container==null && this.container!=null) {
-		//			addAction(new ActionContainer(this, null));
-		//		}
 
 		//Update the container
 		this.container = container;
@@ -2054,7 +2037,6 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			if(c==null || c.getContainerType()==null) {
 				if(createFakeContainerForEmptyOnes) {
 					//Create a container with a one-way relationship container->biosample
-					//(biosample->container is not kept because we don't want it to become persistant)
 					c = new Container();
 					b.setContainer(c);
 					res.add(c);
@@ -2311,6 +2293,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 
 
 	public void addAuxResult(Result r) {
+		@SuppressWarnings("unchecked")
 		List<Result> results = (List<Result>) getAuxiliaryInfos().get(AUX_RESULT_ALL);
 		if(results==null) {
 			results = new ArrayList<Result>();
@@ -2325,6 +2308,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 */
 	public void clearAuxResults(Phase phase) {
 		assert phase!=null;
+		@SuppressWarnings("unchecked")
 		List<Result> results = (List<Result>) getAuxiliaryInfos().get(AUX_RESULT_ALL);
 		if(results!=null) {
 			List<Result> cleaned = new ArrayList<>();
@@ -2339,6 +2323,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 
 
 	public List<Result> getAuxResults() {
+		@SuppressWarnings("unchecked")
 		List<Result> results = (List<Result>) getAuxiliaryInfos().get(AUX_RESULT_ALL);
 		return results==null? new ArrayList<Result>(): results;
 	}
@@ -2349,6 +2334,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 * @return
 	 */
 	public List<Result> getAuxResults(Test t, Phase p) {
+		@SuppressWarnings("unchecked")
 		List<Result> results = (List<Result>) getAuxiliaryInfos().get(AUX_RESULT_ALL);
 		List<Result> tmp = new ArrayList<Result>();
 		if(results==null) return tmp;
@@ -2361,6 +2347,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	}
 
 	public List<Result> getAuxResults(String testName, Phase p) {
+		@SuppressWarnings("unchecked")
 		List<Result> results = (List<Result>) getAuxiliaryInfos().get(AUX_RESULT_ALL);
 		List<Result> tmp = new ArrayList<Result>();
 		if(results==null) return tmp;
@@ -2392,6 +2379,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 */
 	public Result getAuxResult(Test test, Phase p, String[] inputParams) {
 		assert test!=null;
+		@SuppressWarnings("unchecked")
 		List<Result> results = (List<Result>) getAuxiliaryInfos().get(AUX_RESULT_ALL);
 		if(results==null) return null;
 		Result sel = null;
@@ -2406,7 +2394,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 					if(CompareUtils.compare(v==null? "": v, inputParams[j])!=0) continue loop;
 				}
 			}
-			if(sel!=null && sel.getUpdDate().after(result.getUpdDate())) continue;
+			if(sel!=null && sel.getUpdDate()!=null && sel.getUpdDate().after(result.getUpdDate())) continue;
 			sel = result;
 		}
 		return sel;
@@ -2583,24 +2571,6 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 				this.serializedMetadata2 = "";
 			}
 		}
-	}
-
-	/**
-	 * Increment the sampleId by appending .1,.2,3,... if needed
-	 * @param sampleId
-	 * @return
-	 */
-	public static String incrementSampleId(String sampleId) {
-		if(sampleId.indexOf('.')>0) {
-			try {
-				int suffix = Integer.parseInt(sampleId.substring(sampleId.indexOf('.')+1));
-				return sampleId.substring(0, sampleId.indexOf('.')+1) + String.valueOf(suffix+1);
-			} catch(Exception e) {
-				//Switch to normal mode
-			}
-
-		}
-		return sampleId+".1";
 	}
 
 	public static Map<Biotype, List<Biosample>> mapBiotype(Collection<Biosample> col) {

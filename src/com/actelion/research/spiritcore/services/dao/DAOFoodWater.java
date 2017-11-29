@@ -42,7 +42,6 @@ import com.actelion.research.spiritcore.services.SpiritUser;
 public class DAOFoodWater {
 
 
-	@SuppressWarnings("unchecked")
 	public static List<FoodWater> getFoodWater(Study study, Phase phase) {
 		if(study==null) throw new IllegalArgumentException("You must give a study");
 		EntityManager session = JPAUtil.getManager();

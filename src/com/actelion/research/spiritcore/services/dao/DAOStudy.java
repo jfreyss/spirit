@@ -48,7 +48,6 @@ import org.slf4j.LoggerFactory;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
@@ -428,16 +427,15 @@ public class DAOStudy {
 		testConcurrentModification(session, studies);
 
 		//Check rights
+		Date now = JPAUtil.getCurrentDateFromDatabase();
 		for (Study study : studies) {
-
-
 			if(!SpiritRights.canAdmin(study, user) && !SpiritRights.canBlind(study, user)) throw new Exception("You are not allowed to edit this study");
-
 			Study existing = DAOStudy.getStudyByStudyId(study.getStudyId());
 			if(existing!=null && existing.getId()!=study.getId()) throw new Exception("The studyId "+study.getStudyId()+" is not unique");
+		}
 
-
-			Date now = JPAUtil.getCurrentDateFromDatabase();
+		//Update studies
+		for (Study study : studies) {
 			study.setUpdUser(user.getUsername());
 			study.setUpdDate(now);
 
@@ -475,17 +473,19 @@ public class DAOStudy {
 		return res;
 	}
 
+
 	/**
-	 * Delete the study without cascading results, biosamples
-	 * @param study
+	 * Delete the studies.
+	 * If forceCascade is true, this will also delete all the related results/biosamples
+	 * If forceCascade is false, this method will throw an exception if there are still results available
+	 *
+	 * @param studies
+	 * @param forceCascade
 	 * @param user
 	 * @throws Exception
 	 */
-	public static void deleteStudy(Study study, SpiritUser user) throws Exception {
-		deleteStudies(Collections.singleton(study), false, user);
-	}
-
 	public static void deleteStudies(Collection<Study> studies, boolean forceCascade, SpiritUser user) throws Exception {
+
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {
@@ -501,6 +501,17 @@ public class DAOStudy {
 		}
 	}
 
+	/**
+	 * Delete the studies.
+	 * If forceCascade is true, this will also delete all the related results/biosamples
+	 * If forceCascade is false, this method will throw an exception if there are still results available
+	 *
+	 * @param session
+	 * @param studies
+	 * @param forceCascade
+	 * @param user
+	 * @throws Exception
+	 */
 	public static void deleteStudies(EntityManager session, Collection<Study> studies, boolean forceCascade, SpiritUser user) throws Exception {
 		assert session!=null;
 		assert session.getTransaction().isActive();
@@ -519,7 +530,6 @@ public class DAOStudy {
 			if(l.size()>0) {
 				if(forceCascade) {
 					DAOResult.deleteResults(session, l, user);
-					//					session.flush();
 				} else {
 					throw new Exception("You cannot delete a study if there are " + l.size() + " results linked to it");
 				}
@@ -531,7 +541,6 @@ public class DAOStudy {
 			if(l2.size()>0) {
 				if(forceCascade) {
 					DAOBiosample.deleteBiosamples(session, l2, user);
-					//					session.flush();
 				} else {
 					throw new Exception("You cannot delete this study because there are " + l2.size() +" biosamples linked to it");
 				}
@@ -627,141 +636,6 @@ public class DAOStudy {
 		}
 	}
 
-
-
-	/**
-	 * To allow animals to belong to 2 studies, we perform the following trick:
-	 *            881234
-	 *            S-00001 (inherited only)
-	 *          /         \
-	 *  881234A             881234B
-	 *  S-00001 (attached)  S-00002 (attached)
-	 *  GrA (old)           GrB (new)
-	 *
-	 *  - We keep a topAnimal with no attached study
-	 *  - From this topAnimal, we derive all the other animals belonging to studies
-	 *
-	 *
-	 *  If an animal is reused more than twice, we continue the naming 'C', 'D', ...
-	 *
-	 *  Doing so, the results are still attached to the same topAnimal, and to the group matching the given study (what we want)
-	 *
-	 *
-	 * This function is supposed to be used exceptionally
-	 *
-	 * @param samples
-	 * @param study1
-	 * @param study2
-	 * @param user
-	 * @return a map of animal (given as input) to a new animal (the duplicated)
-	 */
-	public static Map<Biosample, Biosample> cloneParticipants(List<Biosample> samples, Study newStudy, SpiritUser user) throws Exception {
-		EntityManager session = JPAUtil.getManager();
-		EntityTransaction txn = null;
-		Map<Biosample, Biosample> old2new = new HashMap<>();
-		try {
-			if(!SpiritRights.canAdmin(newStudy, user)) throw new Exception("You are not allowed to edit "+newStudy);
-			for (Biosample animal : samples) {
-				if(animal.getId()<=0) throw new Exception("The animal "+animal+" is not persistant");
-				if(animal.getParent()!=null) throw new Exception("The animal "+animal+" has already a parent");
-			}
-
-			txn = session.getTransaction();
-			txn.begin();
-			Date now = JPAUtil.getCurrentDateFromDatabase();
-
-			for (Biosample animal : samples) {
-				String sampleId = animal.getSampleId();
-				if(animal.getAttachedStudy()!=null) {
-					//
-					//Creates a Top animal belonging to study1 but not attached(assigned) to it
-					Biosample topAnimal = animal.clone();
-					topAnimal.setId(0);
-					topAnimal.setSampleId(sampleId+"_"); //new name to allow persistence
-					topAnimal.setSampleName("");
-					topAnimal.setAttachedStudy(null);
-					topAnimal.setInheritedStudy(null);
-					topAnimal.setInheritedGroup(null);
-					topAnimal.setUpdDate(now);
-					topAnimal.setUpdUser(user.getUsername());
-					topAnimal.setContainer(null);
-					topAnimal.setTopParent(topAnimal);
-					session.persist(topAnimal);
-
-					//The animal1 belongs to (as before)
-					animal.setSampleId(sampleId+"A");
-					animal.setParent(topAnimal);
-					animal.setUpdDate(now);
-					animal.setUpdUser(user.getUsername());
-					animal.setTopParent(topAnimal);
-					session.merge(topAnimal);
-
-					//update the topparent from all animal1's children
-					for (Biosample b : animal.getHierarchy(HierarchyMode.ALL)) {
-						b.setTopParent(topAnimal);
-					}
-
-					//The animal2 belong to study2 / NoGroup
-					Biosample animal2 = animal.clone();
-					animal2.setId(0);
-					animal2.setSampleId(sampleId+"B");
-					animal2.setAttachedStudy(newStudy);
-					animal2.setInheritedStudy(newStudy);
-					animal2.setInheritedGroup(null); //to be given later by the programmer
-					animal2.setParent(topAnimal);
-					animal2.setUpdDate(now);
-					animal2.setUpdUser(user.getUsername());
-					animal2.setContainer(null);
-					animal2.setTopParent(topAnimal);
-					session.persist(animal2);
-
-					//reupdate sampleid
-					topAnimal.setSampleId(sampleId);
-					old2new.put(animal, animal2);
-
-				} else {
-					//The TopAnimal was already cloned, check the next available letter
-					Biosample topAnimal = animal.getTopParent();
-					char availableLetter = 'A';
-					for (Biosample b : topAnimal.getChildren()) {
-						if(b.getSampleId().startsWith(sampleId) && b.getSampleId().length()==sampleId.length()+1) {
-							availableLetter = (char) Math.max(availableLetter, b.getSampleId().charAt(b.getSampleId().length()-1)+1);
-						}
-					}
-
-
-
-					Biosample animal2 = animal.clone();
-					animal2.setId(0);
-					animal2.setSampleId(sampleId+availableLetter);
-					animal2.setAttachedStudy(newStudy);
-					animal2.setInheritedStudy(newStudy);
-					animal2.setInheritedGroup(null); //to be given later by the programmer
-					animal2.setParent(topAnimal);
-					animal2.setUpdDate(now);
-					animal2.setUpdUser(user.getUsername());
-					animal2.setContainer(null);
-					animal2.setTopParent(topAnimal);
-					session.persist(animal2);
-
-
-					old2new.put(animal, animal2);
-				}
-
-
-			}
-
-
-
-
-			txn.commit();
-			txn = null;
-		} finally {
-			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {}
-		}
-		return old2new;
-
-	}
 
 
 	/**
@@ -1168,9 +1042,11 @@ public class DAOStudy {
 				g.getFromGroup();
 				g.getFromPhase();
 			}
-			for(Phase p: study.getPhases()) {
 
+			for(Phase p: study.getPhases()) {
+				p.getRandomization();
 			}
+
 			for(NamedTreatment ns: study.getNamedTreatments()) {}
 			for(NamedSampling ns: study.getNamedSamplings()) {}
 			for(StudyAction a: study.getStudyActions()) {}

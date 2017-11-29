@@ -32,6 +32,7 @@ import com.actelion.research.spiritcore.business.Document;
  */
 
 public class DAODocument {
+
 	public static Document getDocument(int docId) {
 		EntityManager em = JPAUtil.getManager();
 		return em.find(Document.class, docId);

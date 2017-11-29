@@ -77,7 +77,7 @@ public class GridInputTable extends JTable {
 		public void keyPressed(KeyEvent e) {
 			if(e.getKeyCode()==86 && (e.getModifiersEx()&KeyEvent.CTRL_DOWN_MASK)>0) {
 				String clipboard = EasyClipboard.getClipboard();
-				if(clipboard.indexOf('\r')>=0 || clipboard.indexOf('\n')>=0 || clipboard.indexOf('\t')>=0) {
+				if(clipboard!=null && clipboard.indexOf('\r')>=0 || clipboard.indexOf('\n')>=0 || clipboard.indexOf('\t')>=0) {
 					editingStopped(new ChangeEvent(this));
 					try {
 						pasteSelection();

@@ -48,7 +48,9 @@ import com.actelion.research.util.Counter;
 import com.actelion.research.util.PriorityQueue;
 
 /**
- * Class used to analyze the results
+ * Class used to analyze the results and suggest a list of graphes.
+ * Each graph is a columnn according to the ColumnAnalyser template
+ *
  * @author Joel Freyss
  */
 public class Analyzer {
@@ -102,6 +104,7 @@ public class Analyzer {
 		columnAnalysis = new LinkedHashMap<>();
 		int colNo = 0;
 		for(PivotColumn col: table.getPivotColumns()) {
+			System.out.println("Analyzer.compute() "+col);
 			List<SimpleResult> groupValues = new ArrayList<>();
 			List<Result> results = col.getResults();
 			Collections.sort(results);
@@ -122,11 +125,11 @@ public class Analyzer {
 					}
 				}
 			}
-			if(groupValues.size()>0) {
-				Collections.sort(groupValues);
-				ColumnAnalyser analysis = new ColumnAnalyser(colNo, groupValues);
-				columnAnalysis.put(col, analysis);
-			}
+			//			if(groupValues.size()>0) {
+			Collections.sort(groupValues);
+			ColumnAnalyser analysis = new ColumnAnalyser(colNo, groupValues);
+			columnAnalysis.put(col, analysis);
+			//			}
 			colNo++;
 		}
 	}

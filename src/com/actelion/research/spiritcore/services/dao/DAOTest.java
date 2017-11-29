@@ -77,6 +77,7 @@ public class DAOTest {
 
 
 	private static Map<Integer, Test> getId2TestMap() {
+		@SuppressWarnings("unchecked")
 		Map<Integer, Test> id2Test = (Map<Integer, Test>) Cache.getInstance().get("id2test"+JPAUtil.getManager());
 		if(id2Test==null) {
 

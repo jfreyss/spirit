@@ -197,6 +197,9 @@ public class ExchangeMapping {
 	 */
 	public List<Study> getMappedStudies() throws Exception {
 		computeMapped();
+		for (Study s : mappedStudies) {
+			s.setStudyId(null);
+		}
 		return mappedStudies;
 	}
 	/**
@@ -295,19 +298,34 @@ public class ExchangeMapping {
 
 		//Study
 		Set<String> ids = Study.getLocalIdOrStudyIds(exchange.getStudies());
-		Map<String, List<Study>> id2existingStudy = Study.mapIvvAndStudyId(DAOStudy.getStudyByLocalIdOrStudyIds(MiscUtils.flatten(ids, " ")));
+		Map<String, List<Study>> id2existingStudy = Study.mapLocalIdAndStudyId(DAOStudy.getStudyByLocalIdOrStudyIds(MiscUtils.flatten(ids, " ")));
+		System.out.println("ExchangeMapping.initializeMappingFromDb() ids="+ids + " id2existingStudy="+id2existingStudy+" "+DAOStudy.getStudies()+" "+Study.getLocalIdOrStudyIds(DAOStudy.getStudies()));
 		for (Study s : exchange.getStudies()) {
+			//			List<Study> l = id2existingStudy.get(s.getLocalId());
+			//			if(l==null || l.size()!=1 || l.get(0).getGroups().size()!=s.getGroups().size() || l.get(0).getPhases().size()!=s.getPhases().size()) {
+			//				l = id2existingStudy.get(s.getStudyId());
+			//			}
+			//
+			//			if(l==null || l.size()!=1 || l.get(0).getGroups().size()!=s.getGroups().size() || l.get(0).getPhases().size()!=s.getPhases().size()) {
+			//				logger.debug("initializeMappingFromDb: Create study "+s.getStudyId());
+			//				studyId2mappedStudy.put(s.getStudyId(), s);
+			//				studyId2action.put(s.getStudyId(), EntityAction.CREATE);
+			//			} else {
+			//				logger.debug("initializeMappingFromDb: Match study "+s.getStudyId()+" to "+l+"> "+l.get(0));
+			//				studyId2mappedStudy.put(s.getStudyId(), l.get(0));
+			//				studyId2action.put(s.getStudyId(), defaultEntityAction);
+			//			}
+
 			List<Study> l = id2existingStudy.get(s.getLocalId());
-			if(l==null || l.size()!=1 || l.get(0).getGroups().size()!=s.getGroups().size() || l.get(0).getPhases().size()!=s.getPhases().size()) {
+			if(l==null || l.size()==0) {
 				l = id2existingStudy.get(s.getStudyId());
 			}
 
-			if(l==null || l.size()!=1 || l.get(0).getGroups().size()!=s.getGroups().size() || l.get(0).getPhases().size()!=s.getPhases().size()) {
-				logger.debug("initializeMappingFromDb: Create study "+s.getStudyId());
-				studyId2mappedStudy.put(s.getStudyId(), s);
+			if(l==null || l.size()==0 || l.get(0).getGroups().size()!=s.getGroups().size() || l.get(0).getPhases().size()!=s.getPhases().size()) {
+				l = id2existingStudy.get(s.getStudyId());
 				studyId2action.put(s.getStudyId(), EntityAction.CREATE);
 			} else {
-				logger.debug("initializeMappingFromDb: Match study "+s.getStudyId()+" to "+l+"> "+l.get(0));
+				logger.debug("initializeMappingFromDb: Match study "+s.getStudyId()+" to "+l);
 				studyId2mappedStudy.put(s.getStudyId(), l.get(0));
 				studyId2action.put(s.getStudyId(), defaultEntityAction);
 			}
@@ -332,7 +350,7 @@ public class ExchangeMapping {
 		}
 
 
-		logger.debug("initializeMappingFromDb("+defaultEntityAction+")");
+		logger.debug("initializeMappingFromDb("+defaultAdminAction+","+defaultEntityAction+")");
 		logger.debug("test2action="+test2action);
 		logger.debug("test2mappedTest="+test2mappedTest);
 		logger.debug("testAttribute2action="+testAttribute2action);
@@ -520,11 +538,16 @@ public class ExchangeMapping {
 
 			Study existingStudy = studyId2mappedStudy.get(inputStudy.getStudyId());
 			EntityAction existingAction = studyId2action.get(inputStudy.getStudyId());
+			System.out.println("ExchangeMapping.computeMappedStudies() "+inputStudy+" mapped to "+existingStudy+" "+existingAction);
 			if(existingStudy==null || existingAction==EntityAction.CREATE) {
+				String initial = inputStudy.getStudyId();
+				while(DAOStudy.getStudyByStudyId(inputStudy.getStudyId())!=null) {
+					inputStudy.setStudyId(MiscUtils.incrementId(inputStudy.getStudyId()));
+				}
 
 				//Create the studies, while fixing links to existing relations: namedSampling.sampling.biotype, action.measurement.test
 				mappedStudies.add(inputStudy);
-				studyId2mappedStudy.put(inputStudy.getStudyId(), inputStudy);
+				studyId2mappedStudy.put(initial, inputStudy);
 
 				//Map sampling.biotypes and metadata
 				for (NamedSampling ns : inputStudy.getNamedSamplings()) {
@@ -556,14 +579,14 @@ public class ExchangeMapping {
 					assert m.getTest()!=null && m.getTest().getName()!=null;
 					Test t = test2mappedTest.get(m.getTest().getName());
 					if(t==null) t = Test.mapName(mappedTests).get(m.getTest().getName());
-					assert t!=null: m.getTest().getName() + " was not present in "+test2mappedTest+ " nor "+mappedTests;
+					//					assert t!=null: m.getTest().getName() + " was not present in "+test2mappedTest+ " nor "+mappedTests;
 					m.setTest(t);
 				}
 				for(Measurement m: inputStudy.getAllMeasurementsFromSamplings()) {
 					assert m.getTest()!=null && m.getTest().getName()!=null;
 					Test t = test2mappedTest.get(m.getTest().getName());
 					if(t==null) t = Test.mapName(mappedTests).get(m.getTest().getName());
-					assert t!=null: m.getTest().getName() + " was not present in "+test2mappedTest+ " nor "+mappedTests;
+					//					assert t!=null: m.getTest().getName() + " was not present in "+test2mappedTest+ " nor "+mappedTests;
 					m.setTest(t);
 				}
 			} else if(existingAction==EntityAction.MAP_REPLACE) {
@@ -635,6 +658,7 @@ public class ExchangeMapping {
 		logger.info("Map " +exchange.getBiosamples().size() + " biosamples" );
 
 		mappedBiosamples = new ArrayList<>();
+		Map<String, String> containerId2mappedContainerId = new HashMap<>();
 		if(exchange.getBiosamples()==null || exchange.getBiosamples().size()==0) return;
 
 		//reset ids
@@ -663,6 +687,7 @@ public class ExchangeMapping {
 
 			//Remap the Study/Group/Phase/Sampling
 			if(inputBiosample.getInheritedStudy()!=null) {
+				//				System.err.println("studyId2mappedStudy="+studyId2mappedStudy);
 				Study mappedStudy = studyId2mappedStudy.get(inputBiosample.getInheritedStudy().getStudyId());
 				if(mappedStudy==null) {
 					throw new Exception("You cannot import the sample "+inputBiosample+" without mapping the study for: "+inputBiosample.getInheritedStudy().getStudyId()+ " studyId2mappedStudy="+studyId2mappedStudy);
@@ -679,7 +704,9 @@ public class ExchangeMapping {
 				if(inputBiosample.getInheritedGroup()!=null) {
 					Group mappedGroup = mappedStudy.getGroup(inputBiosample.getInheritedGroup().getName());
 					if(mappedGroup==null) throw new Exception("Could not find group "+inputBiosample.getInheritedGroup().getName()+" in "+mappedStudy+" for "+inputBiosample+" (available:"+mappedStudy.getGroups()+") studyId2mappedStudy="+studyId2mappedStudy);
+					if(mappedGroup.getStudy()!=mappedStudy) throw new Exception("Mapping error "+mappedGroup.getStudy()+"<>"+mappedStudy);
 					inputBiosample.setInheritedGroup(mappedGroup);
+
 					if(inputBiosample.getInheritedSubGroup()<0 || inputBiosample.getInheritedSubGroup()>=mappedGroup.getNSubgroups()) {
 						throw new Exception("The subgroup is invalid for "+inputBiosample);
 					}
@@ -687,9 +714,8 @@ public class ExchangeMapping {
 				}
 				if(inputBiosample.getInheritedPhase()!=null) {
 					Phase mappedPhase = mappedStudy.getPhase(inputBiosample.getInheritedPhase().getShortName());
-					if(mappedPhase==null) {
-						throw new Exception("The phase "+inputBiosample.getInheritedPhase().getShortName()+" does not exist for the study "+mappedStudy);
-					}
+					if(mappedPhase==null) throw new Exception("The phase "+inputBiosample.getInheritedPhase().getShortName()+" does not exist for the study "+mappedStudy);
+					if(mappedPhase.getStudy()!=mappedStudy) throw new Exception("Mapping error "+mappedPhase.getStudy()+"<>"+mappedStudy);
 					logger.debug("Map "+inputBiosample+" to phase "+mappedPhase+" "+JPAUtil.getManager().contains(mappedPhase));
 
 					inputBiosample.setInheritedPhase(mappedPhase);
@@ -705,7 +731,6 @@ public class ExchangeMapping {
 								+ "_" + (inputBiosample.getInheritedPhase()==null?"":inputBiosample.getInheritedPhase().getName())
 								+ "_" + i;
 						if(seenSamplingParentPhase.contains(key)) continue;
-						System.out.println("ExchangeMapping.computeMappedBiosamples() OK for "+inputBiosample+">"+key);
 						mappedSampling = s;
 						seenSamplingParentPhase.add(key);
 						break;
@@ -764,7 +789,20 @@ public class ExchangeMapping {
 
 				} else if(existingAction==EntityAction.CREATE) {
 					while(DAOBiosample.getBiosample(inputBiosample.getSampleId())!=null) {
-						inputBiosample.setSampleId(Biosample.incrementSampleId(inputBiosample.getSampleId()));
+						inputBiosample.setSampleId(MiscUtils.incrementId(inputBiosample.getSampleId()));
+					}
+					if(inputBiosample.getContainerId()!=null && inputBiosample.getContainerId().length()>0) {
+						String oldContainerId = inputBiosample.getContainerId();
+						String newContainerId = containerId2mappedContainerId.get(oldContainerId);
+						while(newContainerId==null) {
+							String test = oldContainerId;
+							while(DAOBiosample.getContainer(test)!=null) {
+								test = MiscUtils.incrementId(test);
+							}
+							newContainerId = test;
+							containerId2mappedContainerId.put(oldContainerId, newContainerId);
+						}
+						inputBiosample.setContainerId(newContainerId);
 					}
 					inputBiosample.setUpdDate(null);//Force replacing without looking at existing date
 					logger.debug("Create copy "+inputSampleId+"->"+inputBiosample);
@@ -839,24 +877,16 @@ public class ExchangeMapping {
 				inputResult.setTest(test);
 
 				//Map the resultvalues
+				Map<TestAttribute, ResultValue> map = new HashMap<>();
 				for (TestAttribute ta : inputTest.getAttributes()) {
 					ResultValue rv = inputMap.get(ta);
-					//					MappingAction action2 = testAttribute2action.get(new Pair<String, String>(inputTest.getName(), ta.getName()));
-					//					if(action2==null || action2==MappingAction.SKIP) {
-					//						//ignore this metadata
-					//						inputResult.getResultValueMap().remove(ta);
-					//					} else if(action2==MappingAction.CREATE) {
-					//						//will be done in persistBiosample
-					//						TestAttribute mappedTa = test.getAttribute(ta.getName());
-					//						if(mappedTa==null) throw new RuntimeException(inputTest.getName()+"."+ ta.getName()+" could not be created");
-					//						inputResult.setValue(mappedTa, rv==null?"": rv.getValue());
-					//					} else if(action2==MappingAction.MAP_REPLACE) {
+					rv.setId(0);
 					TestAttribute mappedTa = testAttribute2mappedTestAttribute.get(new Pair<String, String>(inputTest.getName(), ta.getName()));
-					if(mappedTa!=null) {
-						inputResult.setValue(mappedTa, rv==null?"": rv.getValue());
-					}
-					//					}
+					if(mappedTa==null) throw new Exception("You cannot map a testattribute without specifying the mapped testattribute");
+					map.put(mappedTa, rv);
+					//					inputResult.setValue(mappedTa, rv==null?"": rv.getValue());
 				}
+				inputResult.setResultValueMap(map);
 			}
 
 			//Result overlap?

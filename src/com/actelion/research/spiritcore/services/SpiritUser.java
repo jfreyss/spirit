@@ -47,8 +47,6 @@ public class SpiritUser {
 	private EmployeeGroup mainGroup;
 	private Set<EmployeeGroup> groups = new HashSet<>();
 
-	public SpiritUser() {}
-
 	public SpiritUser(String username) {
 		this.username = username;
 		this.managedUsers.add(username);
@@ -130,14 +128,6 @@ public class SpiritUser {
 	 */
 	public boolean isMember(EmployeeGroup gr) {
 		return getGroups().contains(gr);
-
-		//		EmployeeGroup g = gr;
-		//		int testCycles = 0;
-		//		while(g!=null && testCycles++<10) {
-		//			if(getGroups().contains(g)) return true;
-		//			g = g.getParent();
-		//		}
-		//		return false;
 	}
 
 	public boolean isReadall() {
@@ -170,6 +160,7 @@ public class SpiritUser {
 	}
 
 	public void setMainGroup(EmployeeGroup mainGroup) {
+		if(mainGroup!=null && !groups.contains(mainGroup)) groups.add(mainGroup);
 		this.mainGroup = mainGroup;
 	}
 

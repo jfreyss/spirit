@@ -54,7 +54,7 @@ public class SpiritProperties {
 			properties = getProperties();
 		} catch (Exception e) {
 			e.printStackTrace();
-			properties = new HashMap<>();
+			throw new RuntimeException(e);
 		}
 	}
 

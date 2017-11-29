@@ -549,9 +549,10 @@ public class JPAUtil {
 			if(claz.getName().contains("_$$_")) claz = claz.getSuperclass();
 
 			//Reload detached objects
-			String jpql = "select o from " + claz.getSimpleName() +" o where " + QueryTokenizer.expandForIn("o.id", toBeReloadedIds);
+			String jpql = "from " + claz.getSimpleName() +" o where " + QueryTokenizer.expandForIn("o.id", toBeReloadedIds);
 			List<T> reloaded = entityManager.createQuery(jpql).getResultList();
 			for (T o : reloaded) {
+				toBeReloadedIds.remove((Integer)o.getId());
 				int index = id2index.get(o.getId());
 				if(o instanceof Biosample) {
 					copyProperties((Biosample)o, (Biosample)res.get(index));
@@ -559,6 +560,12 @@ public class JPAUtil {
 					DAOStudy.postLoad(Collections.singleton(((Study) o)));
 				}
 				res.set(index, o);
+			}
+
+			//Unset Ids of invalid objects
+			for (Integer id : toBeReloadedIds) {
+				T obj = res.get(id2index.get(id));
+				obj.setId(0);
 			}
 		}
 
@@ -583,6 +590,7 @@ public class JPAUtil {
 		if(res.size()==1) return res.get(0);
 		return null;
 	}
+
 	public static void setRequestMode() {
 		if(jpaMode==JPAMode.REQUEST) return;
 		assert factory==null: "setRequestMode must be called before accessing the session";

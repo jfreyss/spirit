@@ -317,7 +317,7 @@ public class StudyAction implements Cloneable, Comparable<StudyAction> {
 
 	@Override
 	public String toString() {
-		return "[Action:"+getGroup().getShortName()+"'"+getSubGroup()+"/"+getPhase()+"]";
+		return "[Action:"+(getGroup()==null?"":getGroup().getShortName())+"'"+getSubGroup()+"/"+getPhase()+"]";
 	}
 	public boolean isMeasureWeight() {
 		return measureWeight == Boolean.TRUE;

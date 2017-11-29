@@ -273,7 +273,6 @@ public class FormatterUtils {
 
 		for (DateFormat dateFormat : dateTimeParsers) {
 			try {
-				System.out.println("FormatterUtils.parseDateTime() "+s+">");
 				Date res = dateFormat.parse(s);
 				return res;
 			} catch (Exception e) {

@@ -967,7 +967,6 @@ public class DAOResult {
 	 * @throws Exception
 	 */
 	private static void attachOrCreateStudyResults(Study study, boolean skipEmptyPhase, Collection<Biosample> biosamples, Collection<Test> tests, Phase phaseFilter, String elbForCreatingMissingOnes) throws Exception  {
-		System.out.println("DAOResult.attachOrCreateStudyResults() "+study+" "+skipEmptyPhase+" "+biosamples+" "+tests+" "+phaseFilter+" "+elbForCreatingMissingOnes);
 		Set<Biosample> allBiosamples = new HashSet<>(biosamples);
 		//Clean previous data
 		if(phaseFilter!=null) {
@@ -1004,21 +1003,16 @@ public class DAOResult {
 			for (Biosample biosample : allBiosamples) {
 				Phase p = biosample.getAttachedStudy()==null? biosample.getInheritedPhase(): phaseFilter;
 
-				System.out.println("DAOResult.attachOrCreateStudyResults() "+biosample+">"+p+"<>"+phaseFilter+" ("+biosample.getAttachedStudy()+")");
-
 				if(phaseFilter==null && skipEmptyPhase && biosample.getInheritedPhase()==null) continue; //if no phase filter -> returns only samples
 				if(phaseFilter!=null && !phaseFilter.equals(p)) continue; //if phase filter -> returns only results with samples and animals at this phase
 
-				System.out.println("DAOResult.attachOrCreateStudyResults() "+biosample+">"+p);
 				for(Test test: tests) {
-					System.out.println("DAOResult.attachOrCreateStudyResults() "+biosample+">"+p+","+test+">"+biosample.getAuxResult(test, p));
 					if(biosample.getAuxResult(test, p)==null) {
 						Result r = new Result(test);
 						r.setElb(elbForCreatingMissingOnes);
 						r.setBiosample(biosample);
 						r.setPhase(biosample.getAttachedStudy()==null? null: phaseFilter);
 						biosample.addAuxResult(r);
-						System.out.println("DAOResult.attachOrCreateStudyResults() create "+r);
 					}
 				}
 			}

@@ -34,7 +34,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-import javax.persistence.LockModeType;
 import javax.persistence.Query;
 
 import org.slf4j.Logger;
@@ -57,8 +56,8 @@ import com.actelion.research.spiritcore.util.QueryTokenizer;
  *
  * @author Joel Freyss
  */
-@SuppressWarnings("unchecked")
 public class DAOLocation {
+
 	private static Logger logger = LoggerFactory.getLogger(DAOLocation.class);
 
 	public static void persistLocations(Collection<Location> locations, SpiritUser user) throws Exception {
@@ -116,6 +115,8 @@ public class DAOLocation {
 		List<Location> sorted = new ArrayList<>(locations);
 		Collections.sort(sorted);
 
+
+
 		for (Location location : sorted) {
 
 			if(location.getId()<=0 && (location.getName()==null || location.getName().length()==0) && location.getParent()==null) continue;
@@ -125,6 +126,23 @@ public class DAOLocation {
 			//Name is required
 			location.setName(location.getName()==null? "": location.getName().trim());
 			if(location.getName().length()==0) throw new Exception("The location's name is required");
+
+			//Name is unique for each parent
+			List<Location> sieblings;
+			if(location.getParent()==null) {
+				sieblings = session.createQuery("from Location l where l.parent is null").getResultList();
+			} else {
+				sieblings = new ArrayList<>(location.getParent().getChildren());
+			}
+			System.out.println("DAOLocation.persistLocations() "+location+" among "+sieblings);
+			for (Location siebling : sieblings) {
+				if(siebling!=location && siebling.getId()!=location.getId() && location.getName().equals(siebling.getName())) {
+					System.out.println("DAOLocation.persistLocations() "+location+" "+siebling+ "   "+location.getId()+" "+siebling.getId());
+					throw new Exception("The location's name is not unique: " + location.getHierarchyFull());
+				}
+			}
+
+
 
 			location.setDescription(location.getDescription()==null? "": location.getDescription().trim());
 
@@ -182,14 +200,10 @@ public class DAOLocation {
 				location.setPrivacy(Privacy.INHERITED);
 			}
 
-
-
-
 			//Persist/Merge the location
 			int oldId = location.getId();
 			location.setUpdUser(user.getUsername());
 			location.setUpdDate(now);
-
 
 			LoggerFactory.getLogger(DAOLocation.class).debug("persist "+location.getName() + "("+location.getId()+") - parent "+(location.getParent()==null?"NA": location.getParent() + "("+location.getParent().getId()+")"));
 
@@ -197,15 +211,21 @@ public class DAOLocation {
 			if(location.getId()<=0) {
 				location.setCreDate(location.getUpdDate());
 				location.setCreUser(location.getUpdUser());
-
 				session.persist(location);
 				map.put(location, location);
 			} else if(!session.contains(location)) {
 				Location mergedLocation = session.merge(location);
-
 				map.put(location, mergedLocation);
 			} else {
 				map.put(location, location);
+			}
+
+			//Update all samples in the location
+			if(map.get(location).getBiosamples().size()>0) {
+				for (Biosample b : location.getBiosamples()) {
+					b.setUpdUser(user.getUsername());
+					b.setUpdDate(now);
+				}
 			}
 
 
@@ -218,7 +238,7 @@ public class DAOLocation {
 				if(oldLocation!=null && (location.getCols()!=oldCols || location.getRows()!=oldRows)) {
 					if(location.getCols()<=0 || location.getRows()<=0) {  //The new location does not have a size
 						//Reset new positions to -1
-						for (Biosample b : new ArrayList<Biosample>(oldLocation.getBiosamples())) {
+						for (Biosample b : new ArrayList<>(oldLocation.getBiosamples())) {
 							if(b.getPos()!=-1) {
 								b.setPos(-1);
 								b.setUpdDate(location.getUpdDate());
@@ -287,32 +307,32 @@ public class DAOLocation {
 	 * @return
 	 */
 	public static List<Location> getLocationRoots() {
-		String key = "locationRoots_"+JPAUtil.getManager();
-		List<Location> res = (List<Location>) Cache.getInstance().get(key);
-		if(res==null || (res.size()>0 && !JPAUtil.getManager().contains(res.get(0)))) {
+		//		String key = "locationRoots_"+JPAUtil.getManager();
+		List<Location> res = null; //(List<Location>) Cache.getInstance().get(key);
+		//		if(res==null || (res.size()>0 && !JPAUtil.getManager().contains(res.get(0)))) {
 
-			StringBuilder sb = new StringBuilder();
-			for (LocationType t : LocationType.getPossibleRoots()) {
-				sb.append((sb.length()>0?",":"") + "'" + t.name() + "'");
-			}
-
-			EntityManager session = JPAUtil.getManager();
-			Query query = session.createQuery(
-					" select location  " +
-							" from Location location " +
-							" where location.parent is null and location.locationType in (" + sb + ")");
-			query.setLockMode(LockModeType.NONE);
-			res = query.getResultList();
-			Collections.sort(res);
-			Cache.getInstance().add(key, res, 120);
+		StringBuilder sb = new StringBuilder();
+		for (LocationType t : LocationType.getPossibleRoots()) {
+			sb.append((sb.length()>0?",":"") + "'" + t.name() + "'");
 		}
+
+		EntityManager session = JPAUtil.getManager();
+		Query query = session.createQuery(
+				" select location  " +
+						" from Location location " +
+						" where location.parent is null and location.locationType in (" + sb + ")");
+		//			query.setLockMode(LockModeType.NONE);
+		res = query.getResultList();
+		Collections.sort(res);
+		//			Cache.getInstance().add(key, res, 120);
+		//		}
 
 		return res;
 	}
 
 
 	public static List<Location> getLocationRoots(SpiritUser user) {
-		List<Location> res = new ArrayList<Location>();
+		List<Location> res = new ArrayList<>();
 		for(Location l: getLocationRoots()) {
 			if(SpiritRights.canRead(l, user)) {
 				res.add(l);
@@ -338,7 +358,7 @@ public class DAOLocation {
 						" from Location location " +
 						" where 1 = 1";
 
-		List<Object> parameters = new ArrayList<Object>();
+		List<Object> parameters = new ArrayList<>();
 
 		if(q.getStudyId()!=null && q.getStudyId().length()>0) {
 			jpql += " and exists(select b from Biosample b Where b.inheritedStudy.studyId = ? and b.location = location)";
@@ -346,7 +366,8 @@ public class DAOLocation {
 		}
 
 		if(q.getEmployeeGroup()!=null) {
-			jpql += " and location.id in (select distinct b.location.id from Biosample b where b.group = ?)";
+			//			jpql += " and location.id in (select distinct b.location.id from Biosample b where b.group = ?)";
+			jpql += " and location.employeeGroup = ?";
 			parameters.add(q.getEmployeeGroup());
 		}
 
@@ -400,7 +421,8 @@ public class DAOLocation {
 		}
 		Collections.sort(res);
 
-		//Remove non admin location if needed
+		//
+		//Remove moveable location if needed (and keep the first non-moveable parent)
 		if(q.isFilterAdminLocation()) {
 			List<Location> filtered = new ArrayList<>();
 			for (Location l : res) {

@@ -51,7 +51,6 @@ public class DAONamedSampling {
 	 * @param orStudy
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
 	public static List<NamedSampling> getNamedSamplings(SpiritUser user, Study study) {
 		assert user!=null;
 

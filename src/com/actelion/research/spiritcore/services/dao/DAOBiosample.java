@@ -79,21 +79,15 @@ import net.objecthunter.exp4j.Expression;
  *
  * @author Joel Freyss
  */
-@SuppressWarnings("unchecked")
 public class DAOBiosample {
 
 	private static Logger logger = LoggerFactory.getLogger(DAOBiosample.class);
 
-	public static Biosample getBiosamplesById(int id) {
-		Map<Integer, Biosample> res = getBiosamplesByIds(Collections.singleton(id));
-		return res.get(id);
-	}
-
-	public static Map<Integer, Biosample> getBiosamplesByIds(Collection<Integer> ids) {
-		String hql = "select b from Biosample b where " + QueryTokenizer.expandForIn("b.id", ids);
+	public static Biosample getBiosampleById(int id) {
+		String hql = "select b from Biosample b where b.id = id";
 		EntityManager session = JPAUtil.getManager();
 		List<Biosample> l = session.createQuery(hql).getResultList();
-		return JPAUtil.mapIds(l);
+		return l.size()==1? l.get(0): null;
 	}
 
 	/**
@@ -1044,15 +1038,26 @@ public class DAOBiosample {
 
 		for (Biosample biosample : res) {
 			if(biosample.getContainerType()==null) {
+				//If there is no containerType, there should be no containerId
 				biosample.setContainerId(null);
-			} else {
+			} else /*containerType!=null*/ {
 				String containerId = biosample.getContainerId();
 				if (containerId!=null && containerId.length()>0) {
 					Container c = cid2container.get(containerId);
-					if(c!=null && c.getContainerType().isMultiple() && !SpiritRights.canEdit(c, user)) throw new Exception("You are not allowed to edit the container " + containerId);
-					if(c!=null && c.getContainerType().isMultiple() && c.getContainerType()!=biosample.getContainerType()) throw new Exception("The container's type of " + biosample.getSampleId() + ": " + containerId+" is " + c.getContainerType());
-					if(c!=null && !c.getContainerType().isMultiple() && c.getBiosamples().size()>0 && !c.getBiosamples().contains(biosample)) throw new Exception("The container " + containerId + " of " + biosample + " is already used by "+c.getBiosamples());
-					if(c==null) cid2container.put(containerId, biosample.getContainer());
+					if(c!=null) {
+						//If the containerType is multiple and not unique, make sure the user can add to it
+						if(c.getContainerType().isMultiple() && !SpiritRights.canEdit(c, user)) throw new Exception("You are not allowed to edit the container " + containerId);
+						if(c.getContainerType().isMultiple() && c.getContainerType()!=biosample.getContainerType()) throw new Exception("The container's type of " + biosample.getSampleId() + ": " + containerId+" is " + c.getContainerType());
+						if(c.getContainerType().isMultiple() && c.getStudy()!=biosample.getInheritedStudy()) throw new Exception("You cannot mix studies on the same container "+containerId+" ( "+c.getBiosamples()+" on "+c.getStudy()+")<>"+biosample.getInheritedStudy());
+						//If the containerType is not multiple, make sure it is unique
+						if(!c.getContainerType().isMultiple() && c.getBiosamples().size()>0 && !c.getBiosamples().contains(biosample)) throw new Exception("The container " + containerId + " of " + biosample + " is already used by "+c.getBiosamples());
+					} else {
+						cid2container.put(containerId, biosample.getContainer());
+					}
+				}
+
+				if(biosample.getContainerType().isMultiple() &&(biosample.getContainerIndex()==null || biosample.getContainerIndex()<1)) {
+					biosample.setContainerIndex(1);
 				}
 
 				//Remove container of abstract samples
@@ -1062,12 +1067,18 @@ public class DAOBiosample {
 			}
 		}
 
+		// Propagate the study information to children
 		for (Biosample b : res) {
 			List<Biosample> toCheck = new LinkedList<>();
 			toCheck.addAll(b.getChildren());
 			while(!toCheck.isEmpty()) {
 				Biosample tmp = toCheck.remove(0);
-				if(tmp.getAttachedStudy()!=null) continue; //skip at dividing children
+
+				// Stop at samples attached to study
+				if(tmp.getAttachedStudy()!=null) continue;
+
+				// Update the study of child
+				tmp.setInheritedStudy(b.getInheritedStudy());
 
 				// Update the group/phase of child
 				boolean modified = false;
@@ -1109,24 +1120,6 @@ public class DAOBiosample {
 		}
 		return res;
 	}
-
-	public static int countRelations(Biotype biotype) {
-		if (biotype == null || biotype.getId() <= 0) return 0;
-		int id = biotype.getId();
-		EntityManager session = JPAUtil.getManager();
-		return ((Long) session.createQuery("select count(*) from Biosample b where b.biotype.id = "+id).getSingleResult()).intValue();
-	}
-
-	public static int countRelations(Biotype biotype, BiotypeMetadata biotypeMetadata) {
-		if (biotypeMetadata == null || biotypeMetadata.getId() <= 0) return 0;
-		int id = biotypeMetadata.getId();
-		EntityManager session = JPAUtil.getManager();
-		return ((Long) session.createQuery("select count(*) from Biosample b where "
-				+ "         concat(';', b.serializedMetadata, ';') like '%;"+id+"=%'"
-				+ " and not concat(';', b.serializedMetadata, ';') like '%;"+id+"=;%'"
-				+ " and b.biotype.id = " + biotype.getId()).getSingleResult()).intValue();
-	}
-
 
 	public static enum AmountOp {
 		ADD, SUBSTRACT, SET

@@ -43,7 +43,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-
+/**
+ * Different utility classes, which have no obvious other places
+ *
+ * @author Joel Freyss
+ *
+ */
+@SuppressWarnings("unchecked")
 public class MiscUtils {
 
 	public static final String SPLIT_SEPARATORS = ",;\n\t";
@@ -911,5 +917,23 @@ public class MiscUtils {
 		}
 
 		return sb.reverse().toString();
+	}
+
+	/**
+	 * Increment the sampleId/containerId by appending .1,.2,3,... if needed
+	 * @param sampleId
+	 * @return
+	 */
+	public static String incrementId(String sampleId) {
+		if(sampleId.indexOf('.')>0) {
+			try {
+				int suffix = Integer.parseInt(sampleId.substring(sampleId.indexOf('.')+1));
+				return sampleId.substring(0, sampleId.indexOf('.')+1) + String.valueOf(suffix+1);
+			} catch(Exception e) {
+				//Switch to normal mode
+			}
+	
+		}
+		return sampleId+".1";
 	}
 }

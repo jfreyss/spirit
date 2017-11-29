@@ -40,8 +40,8 @@ import com.actelion.research.util.CompareUtils;
  *
  */
 @Entity
-@Audited
 @Table(name="spirit_property")
+@Audited
 public class SpiritProperty implements Comparable<SpiritProperty>, IAuditable {
 
 	@Id
@@ -58,15 +58,26 @@ public class SpiritProperty implements Comparable<SpiritProperty>, IAuditable {
 		this.value = value;
 	}
 
+	/**
+	 * The Key of the property such as "format.date"
+	 * @return
+	 */
 	public String getKey() {
 		return key;
 	}
+
+	/**
+	 * The configured Value
+	 * @return
+	 */
 	public String getValue() {
 		return value;
 	}
+
 	public void setKey(String key) {
 		this.key = key;
 	}
+
 	public void setValue(String value) {
 		this.value = value;
 	}

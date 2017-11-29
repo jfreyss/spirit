@@ -60,13 +60,13 @@ import com.actelion.research.util.Counter;
 @BatchSize(size=16)
 public class Group implements Comparable<Group>, Cloneable, IObject {
 
-	public static final String DISEASE_NAIVE = "Naive";
-	public static final String DISEASE_SHAM =  "Sham";
-	public static final String DISEASE_DISEASED = "Diseased";
-
-	public static final String TREATMENT_NONTREATED = "Non Treated";
-	public static final String TREATMENT_VEHICLE =  "Vehicle";
-	public static final String TREATMENT_COMPOUND = "Compound";
+	//	public static final String DISEASE_NAIVE = "Naive";
+	//	public static final String DISEASE_SHAM =  "Sham";
+	//	public static final String DISEASE_DISEASED = "Diseased";
+	//
+	//	public static final String TREATMENT_NONTREATED = "Non Treated";
+	//	public static final String TREATMENT_VEHICLE =  "Vehicle";
+	//	public static final String TREATMENT_COMPOUND = "Compound";
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="group_sequence")
@@ -596,20 +596,6 @@ public class Group implements Comparable<Group>, Cloneable, IObject {
 		return sizes[subgroupno];
 	}
 
-	//	@Deprecated
-	//	public Sampling getDividingSampling() {
-	//		System.out.println("Group.getDividingSampling() "+dividingSampling);
-	//		return null;
-	//		//			return dividingSampling;
-	//	}
-	//
-	//	@Deprecated
-	//	public void setDividingSampling(Sampling dividingSample) {
-	//		System.out.println("Group.setDividingSampling() "+dividingSampling);
-	//		if(dividingSample!=null) throw new IllegalArgumentException("Deprecated");
-	//		//		this.dividingSampling = dividingSample;
-	//	}
-
 	/**
 	 * Gets all groups g where g.getFromGroup()==this
 	 * @return
@@ -624,22 +610,6 @@ public class Group implements Comparable<Group>, Cloneable, IObject {
 		}
 		return res;
 	}
-
-	//	/**
-	//	 * Gets all dividing SubGroups g such as g.getFromGroup()==this and g.getDividingSampling()!=null
-	//	 * @return
-	//	 */
-	//	@Deprecated
-	//	public List<Group> getDividingGroups() {
-	//		List<Group> res = new ArrayList<>();
-	//		//			if(getStudy()==null) return res;
-	//		//			for (Group g : getStudy().getGroups()) {
-	//		//				if(this.equals(g.getFromGroup())) {
-	//		//					if(g.getDividingSampling()!=null) res.add(g);
-	//		//				}
-	//		//			}
-	//		return res;
-	//	}
 
 	/**
 	 * Copy the animals, the fromgroup/phase, subgroups, color, dividingsample from the given group.
@@ -760,7 +730,7 @@ public class Group implements Comparable<Group>, Cloneable, IObject {
 		int[] sizes = getSubgroupSizes();
 		if(subgroup<0 || subgroup>=sizes.length) throw new IllegalArgumentException("Invalid subgroup: "+subgroup);
 
-		if(study.getTopParticipants(this, subgroup).size()>0) throw new Exception("The group " + this +"'"+(1+subgroup) + " has "+study.getTopParticipants(this, subgroup).size()+" attached samples");
+		if(study.getParticipants(this, subgroup).size()>0) throw new Exception("The group " + this +"'"+(1+subgroup) + " has "+study.getParticipants(this, subgroup).size()+" attached samples");
 
 		int[] newSizes = new int[sizes.length-1];
 		for (int i = 0; i < newSizes.length; i++) {
@@ -781,7 +751,7 @@ public class Group implements Comparable<Group>, Cloneable, IObject {
 		}
 
 		//Move biosamples
-		for (Biosample top : study.getTopParticipants(this)) {
+		for (Biosample top : study.getParticipants(this)) {
 			if(top.getInheritedSubGroup()>subgroup) {
 				System.out.println("Group.removeSubgroup() b="+top);
 				for(Biosample b: top.getHierarchy(HierarchyMode.ATTACHED_SAMPLES)) {
@@ -815,7 +785,7 @@ public class Group implements Comparable<Group>, Cloneable, IObject {
 		}
 
 		//Move biosamples
-		for (Biosample top : study.getTopParticipants(this)) {
+		for (Biosample top : study.getParticipants(this)) {
 			if(top.getInheritedSubGroup()==subgroup) {
 				for(Biosample b: top.getHierarchy(HierarchyMode.ATTACHED_SAMPLES)) {
 					b.setInheritedSubGroup(subgroup-1);

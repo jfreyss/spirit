@@ -25,7 +25,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -481,12 +480,7 @@ public class Location implements Serializable, Comparable<Location>, Cloneable, 
 		Map<Integer, Container> res = new HashMap<>();
 		if(getLabeling()==LocationLabeling.NONE) {
 			List<Biosample> biosamples = new ArrayList<>(getBiosamples());
-			Collections.sort(biosamples, new Comparator<Biosample>() {
-				@Override
-				public int compare(Biosample o1, Biosample o2) {
-					return o1.getPos()-o2.getPos();
-				}
-			});
+			Collections.sort(biosamples, (o1,o2) -> o1.getPos()-o2.getPos());
 			List<Container> containers = Biosample.getContainers(biosamples, true);
 			int index = 0;
 			for (Container c : containers) {

@@ -24,7 +24,6 @@ package com.actelion.research.spiritcore.business.biosample;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -165,7 +164,6 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		if(getContainerId()!=null && getContainerId().length()>0) return getContainerId();
 		if(getBiosamples().size()==0) return "";
 		Biosample b = getBiosamples().iterator().next();
-		//		if(b==null || b.getBiotype()==null || b.getBiotype().isHideSampleId()) return "";
 		return b.getSampleId()==null?"": b.getSampleId();
 	}
 
@@ -176,20 +174,20 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 	public ContainerType getContainerType() {
 		return containerType;
 	}
+
 	public void setContainerType(ContainerType containerType) {
 		this.containerType = containerType;
 	}
 
-
 	public Set<Biosample> getBiosamples() {
 		if(biosamples==null) {
-			biosamples = new TreeSet<Biosample>(new Comparator<Biosample>() {
-				@Override
-				public int compare(Biosample o1, Biosample o2) {
-					int c = CompareUtils.compare(o1.getContainerIndex(), o2.getContainerIndex());
-					if(c!=0) return c;
-					return CompareUtils.compare(o1.getSampleId(), o2.getSampleId());
-				}
+			biosamples = new TreeSet<Biosample>((o1,o2)-> {
+				if(o1==null && o2==null) return 0;
+				if(o1==null) return 1; //Null at the end
+				if(o2==null) return -1;
+				int c = CompareUtils.compare(o1.getContainerIndex(), o2.getContainerIndex());
+				if(c!=0) return c;
+				return CompareUtils.compare(o1.getSampleId(), o2.getSampleId());
 			});
 			if(containerId!=null && containerId.length()>0 && (containerType==null || containerType.isMultiple())) {
 				biosamples.addAll(JPAUtil.getManager().createQuery("from Biosample b where b.container.containerId = ?1").setParameter(1, containerId).getResultList());
@@ -205,6 +203,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		if(biosamples==null) return;
 		biosamples.remove(b);
 	}
+
 	public void addBiosample(Biosample b) {
 		if(biosamples==null) return;
 		biosamples.add(b);
@@ -228,7 +227,6 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 	public int hashCode() {
 		return (containerId==null?0:containerId.hashCode());
 	}
-
 
 	/**
 	 * Compare per containerType, ContainerId, SampleId
@@ -340,23 +338,17 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		ContainerType containerType = getContainerType();
 		if(containerType==ContainerType.BOTTLE) {
 			//Bottle
-			res = Biosample.getInfos(getBiosamples(), EnumSet.of(
-					InfoFormat.TOPIDNAMES), infoSize)+"\n";
+			res = Biosample.getInfos(getBiosamples(), EnumSet.of(InfoFormat.TOPIDNAMES), infoSize)+"\n";
 			Integer blocNo = getBlocNo();
 			if(blocNo!=null && containerType.getBlocNoPrefix()!=null) res += containerType.getBlocNoPrefix() + blocNo;
 		} else if(containerType==ContainerType.CAGE) {
 			//Cage
-			res = Biosample.getInfos(getBiosamples(), EnumSet.of(
-					InfoFormat.SAMPLEID,
-					InfoFormat.SAMPLENAME), infoSize)+"\n";
+			res = Biosample.getInfos(getBiosamples(), EnumSet.of(InfoFormat.SAMPLEID, InfoFormat.SAMPLENAME), infoSize)+"\n";
 		} else if(containerType!=null && containerType.isMultiple()) {
 			//Slide, Cassette
-			res = Biosample.getInfos(getBiosamples(), EnumSet.of(
-					InfoFormat.TOPIDNAMES), infoSize)+"\n";
+			res = Biosample.getInfos(getBiosamples(), EnumSet.of(InfoFormat.TOPIDNAMES), infoSize)+"\n";
 
-			String info = Biosample.getInfos(getBiosamples(), EnumSet.of(
-					InfoFormat.SAMPLENAME,
-					InfoFormat.PARENT_SAMPLENAME), infoSize);
+			String info = Biosample.getInfos(getBiosamples(), EnumSet.of(InfoFormat.SAMPLENAME, InfoFormat.PARENT_SAMPLENAME), infoSize);
 			if(info.length()>0) {
 				res+= info + "\n";
 			}

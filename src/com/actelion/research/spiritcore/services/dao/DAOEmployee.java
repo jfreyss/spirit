@@ -65,6 +65,7 @@ public class DAOEmployee {
 	 * @return
 	 */
 	public static List<EmployeeGroup> getEmployeeGroups(String root) {
+		@SuppressWarnings("unchecked")
 		List<EmployeeGroup> groups = (List<EmployeeGroup>) Cache.getInstance().get("departments");
 		if(groups==null) {
 			EntityManager session = JPAUtil.getManager();
@@ -139,7 +140,6 @@ public class DAOEmployee {
 		return res;
 	}
 
-	@SuppressWarnings("unchecked")
 	public static Employee getEmployee(String username) {
 		EntityManager session = JPAUtil.getManager();
 		List<Employee> res = session.createQuery("from Employee e where e.userName = ?1").setParameter(1, username).getResultList();
@@ -173,10 +173,11 @@ public class DAOEmployee {
 				//validate manager
 				if(employee.getChildrenRec(7).contains(employee.getManager())) throw new Exception(employee.getManager()+" cannot be the manager of "+employee.getUserName());
 
-				if(employee.getId()>0) {
-					if(!session.contains(employee)) employee = session.merge(employee);
-				} else {
+				if(employee.getId()<=0) {
+
 					session.persist(employee);
+				} else if(!session.contains(employee)) {
+					employee = session.merge(employee);
 				}
 			}
 

@@ -83,6 +83,7 @@ public abstract class DBAdapter {
 
 	public static final String KEY = new String("adjlkdada8d0uah9d9j238jsad0a");
 
+	@SuppressWarnings("unchecked")
 	public static PropertyDescriptor ADAPTER_PROPERTY = new PropertyDescriptor(
 			"jnlp.adapter", "DB Adapter",
 			new Pair[] {
@@ -229,8 +230,7 @@ public abstract class DBAdapter {
 
 		if(emp==null) throw new Exception("Invalid Username");
 		if(emp.getPassword()!=null && emp.getPassword().length()>0 &&
-				!new StringEncrypter(KEY).encrypt(password).equals(emp.getPassword()) &&
-				!new StringEncrypter(KEY, false).encrypt(password).equals(emp.getPassword())) {
+				!new StringEncrypter(KEY).encrypt(password).equals(emp.getPassword())) {
 			throw new Exception("Check your user name and password.");
 		} else if((emp.getPassword()==null || emp.getPassword().length()==0) && password.length!=0) {
 			throw new Exception("Check your user name and password.");

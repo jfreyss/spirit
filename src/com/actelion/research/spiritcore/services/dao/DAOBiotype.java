@@ -462,7 +462,27 @@ public class DAOBiotype {
 		} finally {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
 		}
-
 	}
+
+
+	public static int countRelations(Biotype biotype) {
+		if (biotype == null || biotype.getId() <= 0) return 0;
+		int id = biotype.getId();
+		EntityManager session = JPAUtil.getManager();
+		return ((Long) session.createQuery("select count(*) from Biosample b where b.biotype.id = "+id).getSingleResult()).intValue();
+	}
+
+	public static int countRelations(BiotypeMetadata biotypeMetadata) {
+		if (biotypeMetadata == null || biotypeMetadata.getId() <= 0) return 0;
+		int id = biotypeMetadata.getId();
+		EntityManager session = JPAUtil.getManager();
+		return ((Long) session.createQuery("select count(*) from Biosample b where "
+				+ "         concat(';', b.serializedMetadata, ';') like '%;"+id+"=%'"
+				+ " and not concat(';', b.serializedMetadata, ';') like '%;"+id+"=;%'"
+				+ " and b.biotype.id = " + biotypeMetadata.getBiotype().getId()).getSingleResult()).intValue();
+	}
+
+
+
 
 }

@@ -175,12 +175,16 @@ public class Employee implements Comparable<Employee>, IObject {
 		this.employeeGroups = employeeGroups;
 	}
 
+	/**
+	 * Returns the encrypted password (base64)
+	 * @return
+	 */
 	public String getPassword() {
 		return password;
 	}
 
 	/**
-	 * Sets the encrypted password
+	 * Sets the encrypted password (base64)
 	 * @param password
 	 */
 	public void setPassword(String password) {

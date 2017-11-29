@@ -24,6 +24,7 @@ package com.actelion.research.spiritcore.services.dao;
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.RevisionListener;
 
+import com.actelion.research.spiritcore.services.SpiritRevisionEntity;
 import com.actelion.research.spiritcore.services.SpiritUser;
 
 /**

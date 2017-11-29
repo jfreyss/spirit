@@ -32,51 +32,52 @@ import com.actelion.research.spiritcore.util.Pair;
 /**
  * The LocalAdapter is responsible for file-based local DB, through HSQL.
  * It is not necessary to start a server for this, but this will only work locally.
- * 
+ *
  * @author freyssj
  *
  */
 public class HSQLServerAdapter extends HSQLFileAdapter {
-	
+
+	@SuppressWarnings("unchecked")
 	public static PropertyDescriptor DBMODE_PROPERTY = new PropertyDescriptor("jnlp.hsqlServerAdapter.mode", "Mode", new Pair[] {new Pair<String, String>("server", "Server"), new Pair<String, String>("client", "Client")});
 	public static PropertyDescriptor DBPATH_PROPERTY = new PropertyDescriptor("jnlp.hsqlServerAdapter.path", "Path [if Server mode]", new File(System.getProperty("user.home"), ".spirit/db").getPath());
 	public static PropertyDescriptor DBSERVER_PROPERTY = new PropertyDescriptor("jnlp.hsqlServerAdapter.server", "Server", "localhost");
-	
+
 	public HSQLServerAdapter() {
 		super();
 	}
-	
+
 	@Override
 	public PropertyDescriptor[] getSpecificProperties() {
 		return new PropertyDescriptor[]{DBMODE_PROPERTY, DBPATH_PROPERTY, DBSERVER_PROPERTY};
 	}
-	
-	
-	
+
+
+
 	@Override
 	public UserManagedMode getUserManagedMode() {
 		return UserManagedMode.WRITE_PWD;
 	}
-	
-	
+
+
 	@Override
-	public void preInit() throws Exception {		
+	public void preInit() throws Exception {
 		super.preInit();
-		
+
 		if(!"client".equals(getDBProperty(DBMODE_PROPERTY))) {
-	        
-	        if(server!=null) {
+
+			if(server!=null) {
 				LoggerFactory.getLogger(getClass()).info("Stop HSQL Server");
-	        	server.shutdown();
-	        }
-	        
+				server.shutdown();
+			}
+
 			LoggerFactory.getLogger(getClass()).info("Start HSQL Server");
-	        server = new Server();
-	        server.setDatabaseName(0, "spirit");
-	        server.setDatabasePath(0, "file:" + getDBProperty(DBPATH_PROPERTY));
-	        server.setDaemon(true);
-	        server.start();
-		}        
+			server = new Server();
+			server.setDatabaseName(0, "spirit");
+			server.setDatabasePath(0, "file:" + getDBProperty(DBPATH_PROPERTY));
+			server.setDaemon(true);
+			server.start();
+		}
 	}
 
 	@Override

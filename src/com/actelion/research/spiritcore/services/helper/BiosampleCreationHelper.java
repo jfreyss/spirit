@@ -23,6 +23,7 @@ package com.actelion.research.spiritcore.services.helper;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -176,30 +177,23 @@ public class BiosampleCreationHelper {
 			}
 		}
 
-		//Filter Samples
-		List<Biosample> res = new ArrayList<>();
+		//Filter Samples by container and sort them
+		List<Biosample> sortedSamples = new ArrayList<>();
 		for (Biosample biosample : biosamples) {
-			if(containerFilter!=null && !containerFilter.equals(biosample.getContainerType())) {
-				//Don't add
-			} else {
-				//Add this biosample and its parents
-				Biosample b = biosample;//
-				while(b!=null && biosamples.contains(b)) {
-					if(!res.contains(b)) res.add(b);
-					b = b.getParent();
-				}
-			}
+			if(containerFilter!=null && !containerFilter.equals(biosample.getContainerType())) continue;
+			sortedSamples.add(biosample);
 		}
-		//generateContainers
-		List<Biosample> filtered = new ArrayList<>();
-		for (Biosample b : res) {
-			if(b.getContainerType()==null) continue;
-			filtered.add(b);
-		}
-		LoggerFactory.getLogger(BiosampleCreationHelper.class).debug("processTemplateInStudy for "+study+" n="+res.size()+" containers="+filtered.size());
-		assignContainers(biosamples, filtered);
+		Collections.sort(sortedSamples);
 
-		return res;
+		//Assign Containers
+		List<Biosample> sampleToAssignContainers = new ArrayList<>();
+		for (Biosample b : sortedSamples) {
+			if(b.getContainerType()!=null) sampleToAssignContainers.add(b);
+		}
+		LoggerFactory.getLogger(BiosampleCreationHelper.class).debug("processTemplateInStudy for "+study+" n="+sortedSamples.size()+" sampleToAssignContainers="+sampleToAssignContainers.size());
+		assignContainers(biosamples, sampleToAssignContainers);
+
+		return sortedSamples;
 	}
 
 
@@ -251,7 +245,7 @@ public class BiosampleCreationHelper {
 
 			if(b.getContainer()!=null && b.getContainerId()!=null && b.getContainerType()!=null && b.getContainerType().isMultiple() /*&& b.getContainer().getId()>0*/) {
 				//The container is already saved, map it in order to potentially reuse it
-				String key = b.getInheritedPhase() + "_" + b.getTopParent().getSampleId() + "_"+ s.getContainerType() + "_" + s.getBlocNo();
+				String key = b.getInheritedPhase() + "_" + b.getTopParentInSameStudy().getSampleId() + "_"+ s.getContainerType() + "_" + s.getBlocNo();
 				key2Containers.put(key, b.getContainer());
 			}
 		}
@@ -266,27 +260,22 @@ public class BiosampleCreationHelper {
 				b.setContainer(null);
 			} else if(!s.getContainerType().isMultiple() || s.getBlocNo()==null) {
 				//Container but no bloc, assign a new container type
-				if(b.getContainerType()==s.getContainerType()) {
-					continue; //Already done
-				} else {
+				if(b.getContainerType()!=s.getContainerType()) {
 					b.setContainer(new Container(s.getContainerType()));
 				}
+			} else if(b.getContainer()!=null && b.getContainerType()==s.getContainerType() && b.getContainer().getBlocNo()==s.getBlocNo()) {
+				//Already done
 			} else {
 				//The container is a new multiple container, check if we have a container already to add it into.
 				//If there is a container, we add it
 				//If not, we create it, and add it into
 
-				if(b.getContainer()!=null && b.getContainerType()==s.getContainerType() && b.getContainer().getBlocNo()==s.getBlocNo()) {
-					continue; //Already done
-				}
-
-
-				String key = b.getInheritedPhase() + "_" + b.getTopParent().getSampleId() + "_"+ s.getContainerType() + "_" + s.getBlocNo();
+				String key = b.getInheritedPhase() + "_" + b.getTopParentInSameStudy().getSampleId() + "_"+ s.getContainerType() + "_" + s.getBlocNo();
 				Container container = key2Containers.get(key);
 				if(container==null) {
 					String prefix;
 					if(s.getContainerType().getBarcodeType()==BarcodeType.GENERATE) {
-						String key2 = b.getTopParent().getSampleId() + "_" + s.getContainerType();
+						String key2 = b.getTopParentInSameStudy().getSampleId() + "_" + s.getContainerType();
 						prefix = map2prefix.get(key2);
 						if(prefix==null) {
 							prefix = DAOBarcode.getNextId(s.getContainerType());

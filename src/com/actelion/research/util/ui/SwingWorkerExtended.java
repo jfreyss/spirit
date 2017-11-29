@@ -189,8 +189,12 @@ public class SwingWorkerExtended  {
 								SwingWorkerExtended.this.doInBackground();
 							} catch (final Throwable thrown) {
 								thrown.printStackTrace();
-								if(!isCancelled() && !isInterrupted() && !sw.isInterrupted() && currentThreads.get(comp).containsValue(sw)) {
-									if(SHOW_EXCEPTION && (thrown.getClass().getName().startsWith("com") || (thrown.getCause()!=null && thrown.getCause().getClass().getName().startsWith("java")) || thrown.getClass()==Exception.class)) {
+								System.out.println("SwingWorkerExtended isCancelled="+isCancelled());
+								System.out.println("SwingWorkerExtended isInterrupted="+isInterrupted()+"/"+sw.isInterrupted());
+								System.out.println("SwingWorkerExtended contains="+(comp==null || currentThreads.get(comp)==null?"NA":currentThreads.get(comp).containsValue(sw)));
+								if(!isCancelled() && !isInterrupted() && !sw.isInterrupted() && (comp==null || currentThreads.get(comp).containsValue(sw))) {
+									//									if(SHOW_EXCEPTION && !thrown.getClass().getName().contains("hibernate") && (thrown.getCause()==null || !thrown.getCause().getClass().getName().contains("hibernate"))) {
+									if(SHOW_EXCEPTION) {
 										JExceptionDialog.showError(comp, thrown);
 									} else {
 										if(thrown.getClass()==Exception.class) throw new RuntimeException(thrown);

@@ -916,6 +916,7 @@ public class Study implements Serializable, Comparable<Study>, IObject, IAuditab
 			blindAllUsersSet = new TreeSet<>();
 			blindDetailsUsersSet = new TreeSet<>();
 			for(String u: MiscUtils.split(blindUsers, MiscUtils.SPLIT_SEPARATORS_WITH_SPACE)) {
+				System.out.println("Study.populateUserSets() "+u);
 				if(u.startsWith("0#")) {
 					//all
 					blindAllUsersSet.add(u.substring(2));
@@ -1137,32 +1138,29 @@ public class Study implements Serializable, Comparable<Study>, IObject, IAuditab
 	}
 
 	/**
-	 * This method is in most case identical to getParticipants except when we use the dividing feature,
-	 * where animals can be divided into tissues, which are still attached to the study
-	 * In that case we only return the top biosamples in study, sorted by group/sampleName/sampleId
+<<<<<<< HEAD
+	 * Returns the participants of the study, sorted by group/sampleName/sampleId
+=======
+	 * Returns the participants sorted by group and sampleName
+>>>>>>> 623d5900c4aae88e14d94fef7369e5b463d60ebe
 	 * @return the attachedBiosamples
 	 */
-	public List<Biosample> getTopParticipants() {
-		List<Biosample> res = new ArrayList<>();
-		for(Biosample b: getParticipants()) {
-			//			if(b.getInheritedPhase()!=null) continue; //dividing sample
-			res.add(b);
-		}
+	public List<Biosample> getParticipantsSorted() {
+		List<Biosample> res = new ArrayList<>(getParticipants());
 		Collections.sort(res, Biosample.COMPARATOR_GROUP_SAMPLENAME);
 		return res;
 	}
 
 
 	/**
-	 * Same as getTopParticipants, but with an imposed filter on the group
+	 * Same as getParticipants, but with an imposed filter on the group
 	 * (if group==null, it means returns all samples with group == null)(
 	 * @param group
 	 * @return
 	 */
-	public List<Biosample> getTopParticipants(Group group) {
+	public List<Biosample> getParticipants(Group group) {
 		List<Biosample> res = new ArrayList<>();
 		for (Biosample b : getParticipants()) {
-			//			if(b.getInheritedPhase()!=null) continue; //dividing sample
 			if(group!=null && !group.equals(b.getInheritedGroup())) continue;
 			if(group==null && b.getInheritedGroup()!=null) continue;
 			res.add(b);
@@ -1172,15 +1170,14 @@ public class Study implements Serializable, Comparable<Study>, IObject, IAuditab
 	}
 
 	/**
-	 * Same as getTopParticipants, but with an imposed filter on the group and subgroup
+	 * Same as getParticipants, but with an imposed filter on the group and subgroup
 	 * (if group==null, it means returns all samples with group == null)(
 	 * @param group
 	 * @return
 	 */
-	public List<Biosample> getTopParticipants(Group group, int subgroup) {
+	public List<Biosample> getParticipants(Group group, int subgroup) {
 		List<Biosample> res = new ArrayList<>();
 		for (Biosample b : getParticipants()) {
-			//			if(b.getInheritedPhase()!=null) continue; //dividing sample
 			if(group!=null && !group.equals(b.getInheritedGroup())) continue;
 			if(group==null && b.getInheritedGroup()!=null) continue;
 			if(b.getInheritedSubGroup()!=subgroup && group.getNSubgroups()>1) continue;
@@ -1190,17 +1187,24 @@ public class Study implements Serializable, Comparable<Study>, IObject, IAuditab
 		return res;
 	}
 
+	/**
+	 * Returns the phases where the user is expected to do some assignments
+	 * @return
+	 */
 	public SortedSet<Phase> getPhasesWithGroupAssignments() {
-		SortedSet<Phase> res = new TreeSet<>();
-
 		//Iterate through the groups to find the randophases
+		SortedSet<Phase> res = new TreeSet<>();
 		for (Group g : getGroups()) {
-			if(g.getFromPhase()==null /*|| g.getDividingSampling()!=null*/) continue;
+			if(g.getFromPhase()==null) continue;
 			res.add(g.getFromPhase());
 		}
 		return res;
 	}
 
+	/**
+	 * The study is blind if there are some users defined as blind
+	 * @return
+	 */
 	public boolean isBlind() {
 		return getBlindAllUsersAsSet().size()>0 || getBlindDetailsUsersAsSet().size()>0;
 	}
@@ -1217,31 +1221,61 @@ public class Study implements Serializable, Comparable<Study>, IObject, IAuditab
 		return MiscUtils.flatten(getBlindDetailsUsersAsSet(), ", ");
 	}
 
-	public void setBlindUsers(Collection<String> all, Collection<String> group) {
+	/**
+	 * Sets the blind users in one method.
+	 * The UI must insure those rights
+	 * @param blindAll
+	 * @param blindDetails
+	 */
+	public void setBlindUsers(Collection<String> blindAll, Collection<String> blindDetails) {
+		//Serializes the users such as '0#blindAll-user1 0#blindAll-user2  1#blindDetails-user2'
 		StringBuilder sb = new StringBuilder();
-		for (String u : all) {
-			if(sb.length()>0) sb.append(" ");
-			sb.append("0#"+u);
-		}
-		for (String u : group) {
-			if(sb.length()>0) sb.append(" ");
-			sb.append("1#"+u);
+		if(blindAll!=null){
+			for (String u : blindAll) {
+				if(sb.length()>0) sb.append(" ");
+				sb.append("0#"+u);
+			}
 		}
 
+		if(blindDetails!=null) {
+			for (String u : blindDetails) {
+				if(sb.length()>0) sb.append(" ");
+				sb.append("1#"+u);
+			}
+		}
 		this.blindUsers = sb.toString();
+
+		//Reset set of users
+		adminUsersSet = null;
 	}
 
+	/**
+	 * The blind-all users should not be able to view anything from groups (shortName, description).
+	 * They should not even see if a participant belongs to a group or not, nor if they got a treatment.
+	 *
+	 * The UI must insure those rights
+	 * @param set
+	 */
 	public void setBlindAllUsers(Collection<String> set) {
 		setBlindUsers(set, getBlindDetailsUsersAsSet());
 	}
 
+	/**
+	 * The blind-details users should only see the shortName of the group, but hey should not see the description nor the treatments.
+	 *
+	 * The UI must insure those rights
+	 * @param set
+	 */
 	public void setBlindDetailsUsers(Collection<String> set) {
 		setBlindUsers(getBlindAllUsersAsSet(), set);
 	}
 
+	/**
+	 * Returns the document, defined as content_Form
+	 * @return
+	 */
 	public Document getConsentForm() {
-		for(Iterator<Document> iter = getDocuments().iterator(); iter.hasNext(); ) {
-			Document d = iter.next();
+		for(Document d: getDocuments()) {
 			if(d.getType()==DocumentType.CONSENT_FORM) {
 				return d;
 			}
@@ -1336,7 +1370,7 @@ public class Study implements Serializable, Comparable<Study>, IObject, IAuditab
 		return res;
 	}
 
-	public static Map<String, List<Study>> mapIvvAndStudyId(Collection<Study> studies){
+	public static Map<String, List<Study>> mapLocalIdAndStudyId(Collection<Study> studies){
 		Map<String, List<Study>> res = new HashMap<>();
 		if(studies==null) return res;
 		for (Study s : studies) {
@@ -1450,6 +1484,7 @@ public class Study implements Serializable, Comparable<Study>, IObject, IAuditab
 	 * @param b
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public Map<String, String> getDifferenceMap(Study s) {
 		Map<String, String> map = new LinkedHashMap<>();
 

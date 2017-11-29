@@ -37,48 +37,48 @@ import com.actelion.research.util.CompareUtils;
  *
  */
 public class Measurement implements Comparable<Measurement> {
-	
+
 	/**
-	 * testId>0 except when writing the exchange file and then test!=null 
+	 * testId>0 except when writing the exchange file and then test!=null
 	 */
 	private int testId;
-	
-	
+
+
 	private String[] parameters;
 
 	/**
 	 * The test is loaded at runtime. Could be empty in case of errors
 	 */
 	private transient Test test;
-	
-	public Measurement(int testId, String[] parameters) {		
+
+	public Measurement(int testId, String[] parameters) {
 		assert testId>0;
 		this.testId = testId;
 		this.parameters = parameters;
 	}
-	
-	public Measurement(Test test, String[] parameters) {		
+
+	public Measurement(Test test, String[] parameters) {
 		assert test!=null;
 		this.test = test;
 		this.testId = test.getId();
 		this.parameters = parameters;
 	}
-	
+
 	public String getDescription() {
 		return (test==null?"?": test.getName()) +  (getParametersString()!=null || getParametersString().length()==0? "": " (" + getParametersString() +")" );
 	}
-	
+
 	public int getTestId() {
 		return testId;
 	}
-	
+
 	public String[] getParameters() {
 		return parameters;
 	}
 	public String getParametersString() {
 		return MiscUtils.unsplit(getParameters(), ", ");
 	}
-	
+
 	public Test getTest() {
 		return test;
 	}
@@ -90,45 +90,45 @@ public class Measurement implements Comparable<Measurement> {
 	public int hashCode() {
 		return testId;
 	}
-	@SuppressWarnings("unchecked")
+
 	@Override
 	public boolean equals(Object obj) {
 		Measurement p = (Measurement) obj;
 		if(testId>0 && testId!=p.testId) return false;
-		if(testId<=0 && test!=null && !test.equals(p.test)) return false;		
+		if(testId<=0 && test!=null && !test.equals(p.test)) return false;
 		return CompareUtils.compare(parameters, p.parameters)==0;
 	}
-	
+
 	@Override
 	public int compareTo(Measurement o) {
 		if(o==null) return -1;
-		
+
 		int c = CompareUtils.compare(testId, o.testId);
 		if(c!=0) return c;
 		return CompareUtils.compare(parameters, o.parameters);
 	}
-	
+
 	@Override
 	public String toString() {
 		return ("EM"+getTestId()) + (getParameters()!=null && getParameters().length>0? ": "+MiscUtils.unsplit(getParameters(), ", "): "");
 	}
-	
+
 	public static Set<Integer> getTestIds(Collection<Measurement> col) {
 		Set<Integer> ids = new HashSet<>();
 		for (Measurement m : col) {
 			ids.add(m.getTestId());
 		}
-		return ids;		
+		return ids;
 	}
-	
+
 	public static Set<Test> getTests(Collection<Measurement> col) {
 		Set<Test> ids = new HashSet<>();
 		for (Measurement m : col) {
 			if(m.getTest()!=null) ids.add(m.getTest());
 		}
-		return ids;		
+		return ids;
 	}
-	
+
 	public static List<Measurement> deserialize(String measurementString) {
 		//Deserializes measurements
 		List<Measurement> res = new ArrayList<>();
@@ -143,13 +143,13 @@ public class Measurement implements Comparable<Measurement> {
 					res.add(new Measurement(testId, array));
 				} catch(Exception e) {
 					System.err.println("Invalid measurement: "+measurementString);
-				}			
+				}
 			}
 		}
-		
-		return res;		
+
+		return res;
 	}
-	
+
 	public static String serialize(List<Measurement> extraMeasurementList) {
 		String extraMeasurement;
 		if(extraMeasurementList==null) {
@@ -166,5 +166,5 @@ public class Measurement implements Comparable<Measurement> {
 		}
 		return extraMeasurement;
 	}
-	
+
 }

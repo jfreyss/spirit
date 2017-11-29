@@ -176,7 +176,7 @@ public class TestAttribute implements Comparable<TestAttribute>, IObject {
 		if(this==obj) return true;
 		TestAttribute a2 = (TestAttribute) obj;
 
-		if(getId()>0) return getId()==a2.getId();
+		if(getId()>0 && a2.getId()>0) return getId()==a2.getId();
 		return this.compareTo(a2)==0;
 	}
 

@@ -21,6 +21,8 @@
 
 package com.actelion.research.spiritcore.adapter;
 
+import org.slf4j.LoggerFactory;
+
 import com.actelion.research.spiritcore.business.property.PropertyDescriptor;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.Pair;
@@ -32,6 +34,7 @@ import com.actelion.research.spiritcore.util.Pair;
  */
 class CustomAdapter extends DBAdapter {
 
+	@SuppressWarnings("unchecked")
 	private PropertyDescriptor DBVENDOR_PROPERTY = new PropertyDescriptor("jnlp.custom.vendor", "Connection Vendor", new Pair[] {
 			new Pair<String, String>("mysql", "MySQL 5.6+ InnoDB"),
 			new Pair<String, String>("oracle", "Oracle 10+")});
@@ -53,14 +56,14 @@ class CustomAdapter extends DBAdapter {
 	@Override
 	public String getDBConnectionURL() {
 		String url = getDBProperty(DBURL_PROPERTY);
-		if(url==null) throw new RuntimeException(DBURL_PROPERTY + " is null");
+		if(url==null) LoggerFactory.getLogger(CustomAdapter.class).error(DBURL_PROPERTY + " is null");
 		return url;
 	}
 
 	@Override
 	public String getDBUsername() {
 		String username = getDBProperty(DBNAME_PROPERTY);
-		if(username==null || username.length()==0) throw new IllegalArgumentException(DBNAME_PROPERTY + " is null");
+		if(username==null || username.length()==0) LoggerFactory.getLogger(CustomAdapter.class).error(DBNAME_PROPERTY + " is null");
 		return username;
 	}
 
@@ -78,7 +81,8 @@ class CustomAdapter extends DBAdapter {
 		} else if("oracle".equals(s)) {
 			return "org.hibernate.dialect.Oracle10gDialect";
 		} else {
-			throw new RuntimeException(DBVENDOR_PROPERTY + " is null or not valid ("+s+")");
+			LoggerFactory.getLogger(CustomAdapter.class).error(DBVENDOR_PROPERTY + " is null or not valid ("+s+")");
+			return "org.hibernate.dialect.MySQLDialect";
 		}
 	}
 
@@ -90,7 +94,8 @@ class CustomAdapter extends DBAdapter {
 		} else if("oracle".equals(s)) {
 			return "oracle.jdbc.driver.OracleDriver";
 		} else {
-			throw new RuntimeException(DBVENDOR_PROPERTY + " is null or not valid ("+s+")");
+			LoggerFactory.getLogger(CustomAdapter.class).error(DBVENDOR_PROPERTY + " is null or not valid ("+s+")");
+			return "com.mysql.jdbc.Driver";
 		}
 	}
 

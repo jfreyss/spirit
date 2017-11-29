@@ -132,8 +132,6 @@ public class Test implements Comparable<Test>, IObject, IAuditable {
 	public Test duplicate() {
 		Test test = new Test();
 		test.setName(name);
-		//		test.setProjectName(projectName);
-		//		test.setDescription(description);
 		test.setCategory(category);
 
 		for (TestAttribute attribute : attributes) {
@@ -252,7 +250,7 @@ public class Test implements Comparable<Test>, IObject, IAuditable {
 	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof Test)) return false;
-		if(getId()>0) return ((Test) obj).getId()==getId();
+		if(((Test) obj).getId()>0 && getId()>0) return ((Test) obj).getId()==getId();
 		return ((Test) obj).getName().equals(getName());
 	}
 	@Override
@@ -265,9 +263,7 @@ public class Test implements Comparable<Test>, IObject, IAuditable {
 		if(c!=0) return c;
 
 		c = getName()==null? (t.getName()==null?0:-1): getName().compareToIgnoreCase(t.getName());
-		if(c!=0) return c;
-
-		return 0;//(int)((getId()-t.getId())%Integer.MAX_VALUE);
+		return c;
 	}
 
 

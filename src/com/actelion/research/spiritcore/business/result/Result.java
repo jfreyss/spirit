@@ -156,22 +156,34 @@ public class Result implements Comparable<Result>, Cloneable, IObject, IAuditabl
 		if(biosample==null) throw new Exception("Biosample is required");
 		if(test==null) throw new Exception("The test cannot be null");
 
+		assert getResultValues().size()<=getTest().getAttributes().size(): "Too many results for "+this+":"+getResultValues();
+
+		//Relink Id if needed (this can happen in importing exchange)
+		for (ResultValue v : getResultValues()) {
+			if(v.getAttribute().getId()<=0) {
+				TestAttribute ta = getTest().getAttribute(v.getAttribute().getName());
+				assert ta.getId()>0;
+				v.setAttribute(ta);
+			}
+		}
+
+
 		//Check if values have an appropriate id
-		Set<Integer> attIds = new TreeSet<Integer>();
+		Set<Integer> attIds = new TreeSet<>();
 		for (TestAttribute att : test.getAttributes()) {
 			attIds.add(att.getId());
 		}
 
-		Set<Integer> seen = new TreeSet<Integer>();
+		Set<Integer> seen = new TreeSet<>();
 		for (ResultValue v : getResultValues()) {
 			if(!attIds.contains(v.getAttribute().getId())) {
-				throw new Exception("The attribute "+v.getAttribute()+" is not attached to the test "+test+": "+test.getAttributes()+ "!!");
+				throw new Exception("The attribute " + v.getAttribute() + "(" + v.getAttribute().getId() + ") is not attached to the test "+test+": "+test.getAttributes() + "(" + attIds + ")");
 			}
 			if(seen.contains(v.getAttribute().getId())) {
-				throw new Exception("The attribute "+v.getAttribute()+" is present 2 times!!");
+				throw new Exception("The attribute " + v.getAttribute() + "(" + v.getAttribute().getId() + ") is present 2 times!!");
 			}
+			seen.add(v.getAttribute().getId());
 		}
-
 	}
 
 	@Override
@@ -291,17 +303,23 @@ public class Result implements Comparable<Result>, Cloneable, IObject, IAuditabl
 
 
 	public ResultValue getResultValue(TestAttribute att) {
+		assert test!=null;
+		assert att!=null;
+		assert test.equals(att.getTest());
 		if(test==null) return null;
 		if(att==null) return null;
 		if(!test.equals(att.getTest())) return null;
 
 		ResultValue v = getResultValueMap().get(att);
 		if(v==null) {
-			//hack, check if id (hashcode) has been changed
+			//hack, check if id has been changed
 			for (TestAttribute ta : values.keySet()) {
-				if(ta!=null && ta.equals(att)) {
+				if(ta!=null && ta.getName().equals(att.getName())) {
+					ta.setId(att.getId());
 					values = new HashMap<>(values);
-					return values.get(ta);
+					v = values.get(ta);
+					assert v!=null;
+					return v;
 				}
 			}
 			//end-hack
@@ -321,7 +339,6 @@ public class Result implements Comparable<Result>, Cloneable, IObject, IAuditabl
 
 		//Check that the attribute is valid
 		for (TestAttribute a : test.getAttributes()) {
-			System.err.println("Recreate resultvalue for "+attName);
 			if(a.getName().equals(attName)) {
 				ResultValue v = new ResultValue(this, a, "");
 				values.put(a, v);
@@ -340,7 +357,9 @@ public class Result implements Comparable<Result>, Cloneable, IObject, IAuditabl
 	}
 
 	public void setValue(String attName, String val) {
-		setValue(getTest().getAttribute(attName), val);
+		TestAttribute ta = getTest().getAttribute(attName);
+		assert ta!=null;
+		setValue(ta, val);
 	}
 
 	public List<ResultValue> getResultValues(OutputType outputType){
@@ -532,6 +551,7 @@ public class Result implements Comparable<Result>, Cloneable, IObject, IAuditabl
 	public String toString() {
 		return  "[Result:"
 				+ " biosample=" + biosample
+				+ " test=" + test
 				+ " phase=" + phase
 				+ " input=" + getInputResultValuesAsString()
 				+ " output=" + getOutputResultValuesAsString()
