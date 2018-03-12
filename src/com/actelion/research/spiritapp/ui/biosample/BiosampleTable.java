@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -53,8 +53,8 @@ import com.actelion.research.spiritapp.ui.biosample.edit.EditBiosampleTableModel
 import com.actelion.research.spiritapp.ui.biosample.linker.AbstractLinkerColumn;
 import com.actelion.research.spiritapp.ui.biosample.linker.LinkerColumnFactory;
 import com.actelion.research.spiritapp.ui.biosample.linker.SampleIdColumn;
-import com.actelion.research.spiritapp.ui.util.lf.LF;
-import com.actelion.research.spiritapp.ui.util.lf.SpiritExtendTable;
+import com.actelion.research.spiritapp.ui.util.component.LF;
+import com.actelion.research.spiritapp.ui.util.component.SpiritExtendTable;
 import com.actelion.research.spiritcore.business.biosample.BarcodeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
@@ -218,9 +218,10 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 				} else if(col instanceof AbstractLinkerColumn) {
 					BiosampleLinker linker = ((AbstractLinkerColumn<?>)col).getLinker();
 					Biosample linked = ((AbstractLinkerColumn<?>) col).getLinker().getLinked(row);
-					if(linked!=null && linked.getContainer()!=null && ((col instanceof ContainerIdColumn) || (col instanceof ContainerTypeColumn) || (col instanceof ContainerLocationPosColumn))) {
-						res.addAll(linked.getContainer().getBiosamples());
-					} else if(linked!=null && (col instanceof SampleIdColumn)) {
+					//					if(linked!=null && linked.getContainer()!=null && ((col instanceof ContainerIdColumn) || (col instanceof ContainerTypeColumn) || (col instanceof ContainerLocationPosColumn))) {
+					//						res.addAll(linked.getContainer().getBiosamples());
+					//					} else
+					if(linked!=null && (col instanceof SampleIdColumn)) {
 						res.add(linked);
 					} else if(!linker.isLinked()) {
 						res.add(row);
@@ -476,6 +477,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 				if(biotypeName==null) continue;
 
 				biotypeName2linkers.add(biotypeName, linker);
+				System.out.println("BiosampleTable.populateExpandPopup() "+biotypeName+">"+linker+">"+presentLinkers.contains(linker));
 				if(!presentLinkers.contains(linker)) {
 					toExpand.add(biotypeName);
 				}
@@ -484,7 +486,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 
 		////////////////////////////////////////
 		//Show Expand menu if there is one linker or if there is a container column
-		if(biotypeName2linkers.size()>0 || (hasContainer && (biotype==null || !biotype.isHideContainer()))) {
+		if(toExpand.size()>0 || (hasContainer && (biotype==null || !biotype.isHideContainer()))) {
 			menu.add(new JSeparator());
 			menu.add(new JCustomLabel("Expand Columns", Font.BOLD));
 
@@ -499,7 +501,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 
 
 			//Expand-Biotype menu
-			for (final String key : biotypeName2linkers.keySet()) {
+			for (final String key : toExpand) {
 				final JCheckBox m = new JCheckBox(key, !toExpand.contains(key));
 				m.addActionListener(e-> {
 					expandBiotype(table, key, m.isSelected());

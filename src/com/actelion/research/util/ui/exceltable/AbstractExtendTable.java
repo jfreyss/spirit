@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -26,6 +26,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -457,7 +458,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 		}
 		if(maxWidth<=0) {
 			maxWidth = UIUtils.getMainFrame()!=null? UIUtils.getMainFrame().getWidth()-400: Toolkit.getDefaultToolkit().getScreenSize().width-400;
-			System.err.println("Could not find the parent of " + getClass()+ " ( in "+(getParent()==null?"":getParent().getClass())+") - make sure you add it to the window before setting the rows: use default: "+maxWidth+ " / parent="+getParent()+" width="+getWidth());
+			//			System.err.println("Could not find the parent of " + getClass()+ " ( in "+(getParent()==null?"":getParent().getClass())+") - make sure you add it to the window before setting the rows: use default: "+maxWidth+ " / parent="+getParent()+" width="+getWidth());
 		}
 
 
@@ -631,7 +632,6 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 
 
 	private int[] getWidthsForColumn(int col, Collection<Integer> explore) {
-		//		TableColumn column = getColumnModel().getColumn(col);
 		Column<ROW, ?> co = getModel().getColumn(convertColumnIndexToModel(col));
 		int colMinWidth;
 		int colPrefWidth;
@@ -652,11 +652,13 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 			colMaxWidth = co.getMinWidth();
 
 			//Check Header width
-			//			if(column.getHeaderRenderer()!=null) {
-			//				Component c = column.getHeaderRenderer().getTableCellRendererComponent(this, column.getHeaderValue(), true, true, -1, col);
-			//				int cellPrefWidth = c.getPreferredSize().width;
-			//				colMaxWidth = Math.max(colMaxWidth, cellPrefWidth);
-			//			}
+			TableColumn column = getColumnModel().getColumn(col);
+			if(column.getHeaderRenderer()!=null) {
+				Component c = column.getHeaderRenderer().getTableCellRendererComponent(this, column.getHeaderValue(), true, true, -1, col);
+				int cellPrefWidth = c.getPreferredSize().width;
+				colPrefWidth = Math.max(colPrefWidth, cellPrefWidth);
+				colMaxWidth = Math.max(colMaxWidth, cellPrefWidth);
+			}
 
 			//Check Data width
 			int colAvgWidth = 0;
@@ -824,14 +826,9 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 				}
 			}
 			if(lastR>=0) {
-				scrollRectToVisible(getCellRect(lastR, 0, true));
-				if(getModel().getTreeColumn()!=null) {
-					int selCol = getModel().getColumns().indexOf(getModel().getTreeColumn());
-					selCol = convertColumnIndexToView(selCol);
-					setColumnSelectionInterval(selCol, selCol);
-				} else if(getColumnCount()>0) {
-					setColumnSelectionInterval(0, getColumnCount()-1);
-				}
+				getColumnModel().getSelectionModel().setSelectionInterval(0, getColumnModel().getColumnCount()-1);
+				Rectangle rect = getCellRect(lastR, 0, true);
+				scrollRectToVisible(rect);
 			}
 		} finally {
 			getSelectionModel().setValueIsAdjusting(false);

@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -27,6 +27,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Formatter Utilidy class to format numbers and date/time
@@ -34,44 +35,57 @@ import java.util.Date;
  */
 public class FormatterUtils {
 
+	/**
+	 * Format used to parse/format the date.
+	 * The format can be set statically by setLocaleFormat
+	 * @author Joel Freyss
+	 *
+	 */
 	public static enum DateTimeFormat {
-		AMERICAN("MM/dd/yy", "HH:mm"),
-		EUROPEAN("dd/MM/yy", "HH:mm"),
-		SWISS("dd.MM.yy", "HH:mm"),
-		INTL("yy-mm-dd", "HH:mm");
+		AMERICAN("MM/dd/yy"),
+		EUROPEAN("dd/MM/yy"),
+		SWISS("dd.MM.yy"),
+		YYYYMMDD("yyyy-MM-dd"),
+		DDMMMYYYY("dd-MMM-yyyy");
 
 		private String localeDateFormat;
-		private String localeTimeFormat;
-		private DateTimeFormat(String localeDateFormat, String localeTimeFormat) {
+
+		private DateTimeFormat(String localeDateFormat) {
 			this.localeDateFormat = localeDateFormat;
-			this.localeTimeFormat = localeTimeFormat;
 		}
 		public String getLocaleDateFormat() {
 			return localeDateFormat;
 		}
-		public String getLocaleTimeFormat() {
-			return localeTimeFormat;
-		}
+
+		/**
+		 * Returns a string representation of the format.
+		 * Must starts with name()
+		 */
 		@Override
 		public String toString() {
-			return name() + " (" + localeDateFormat+" "+localeTimeFormat+")";
+			String res = name()  + " (" + localeDateFormat + ")";
+			assert res.startsWith(name());
+			return res;
 		}
 		public static DateTimeFormat get(String name) {
-			for (DateTimeFormat lf : values()) {
-				if(name.toLowerCase().startsWith(lf.name().toLowerCase())) return lf;
+			for (DateTimeFormat dtf : values()) {
+				if(name.toLowerCase().startsWith(dtf.name().toLowerCase())) return dtf;
 			}
 			return null;
 		}
 	}
 
+	/**
+	 * The DateTimeFormat used by the formatted. It can be modified by the developer
+	 */
 	private static DateTimeFormat localeFormat = DateTimeFormat.SWISS;
 
-	private static DateFormat yyyyFormat = new SimpleDateFormat("yyyyMMdd");
 
+	//	private static final DateFormat dateFormatFull = new SimpleDateFormat("dd-MMM-yyyy");
+	private static DateFormat yyyymmddFormat = new SimpleDateFormat("yyyyMMdd");
 	private static DateFormat dateFormat;
 	private static DateFormat dateFormatYYYY;
 	private static DateFormat timeFormat;
-	public static final DateFormat dateFormatFull = new SimpleDateFormat("MMM dd, yyyy");
 
 	/**
 	 * List of datetime parsers:
@@ -123,37 +137,43 @@ public class FormatterUtils {
 		assert localeFormat!=null;
 		FormatterUtils.localeFormat = localeFormat;
 		dateFormat = new SimpleDateFormat(localeFormat.getLocaleDateFormat());
-		timeFormat = new SimpleDateFormat(localeFormat.getLocaleTimeFormat());
+		timeFormat = new SimpleDateFormat("HH:mm");
 
 		String format = localeFormat.getLocaleDateFormat();
 		String alternateFormat = localeFormat.getLocaleDateFormat().indexOf('/')>=0? localeFormat.getLocaleDateFormat().replace("/", "."): localeFormat.getLocaleDateFormat().replace(".", "/");
-		if(localeFormat==DateTimeFormat.INTL) {
+		if(localeFormat==DateTimeFormat.YYYYMMDD) {
 			dateFormatYYYY = new SimpleDateFormat("yyyy-MM-dd");
 			dateTimeParsers = new SimpleDateFormat[] {
 					new SimpleDateFormat("yy-MM-dd HH:mm:ss"),
 					new SimpleDateFormat("yy-MM-dd HH:mm"),
-					new SimpleDateFormat("yy-MM-dd"),
-					new SimpleDateFormat("yy-MM"),
-					new SimpleDateFormat("yy")};
+					new SimpleDateFormat("yy-MM-dd")};
 			dateTimeFormatters = new SimpleDateFormat[] {
 					new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
 					new SimpleDateFormat("yyyy-MM-dd HH:mm"),
 					new SimpleDateFormat("yyyy-MM-dd")};
+		} else if(localeFormat==DateTimeFormat.DDMMMYYYY) {
+			dateFormatYYYY = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
+			dateTimeParsers = new SimpleDateFormat[] {
+					new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss", Locale.US),
+					new SimpleDateFormat("dd-MMM-yyyy HH:mm", Locale.US),
+					new SimpleDateFormat("dd-MMM-yyyy", Locale.US)};
+			dateTimeFormatters = new SimpleDateFormat[] {
+					new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss", Locale.US),
+					new SimpleDateFormat("dd-MMM-yyyy HH:mm", Locale.US),
+					new SimpleDateFormat("dd-MMM-yyyy", Locale.US)};
 		} else {
+			assert localeFormat==DateTimeFormat.AMERICAN || localeFormat==DateTimeFormat.SWISS || localeFormat==DateTimeFormat.EUROPEAN;
 			dateFormatYYYY = new SimpleDateFormat(format+"yy");
 			dateTimeParsers = new SimpleDateFormat[] {
-					new SimpleDateFormat(format + " " + localeFormat.getLocaleTimeFormat() + ":ss"),
-					new SimpleDateFormat(format + " " + localeFormat.getLocaleTimeFormat()),
+					new SimpleDateFormat(format + " " + "HH:mm" + ":ss"),
+					new SimpleDateFormat(format + " " + "HH:mm"),
 					new SimpleDateFormat(format),
-					new SimpleDateFormat(alternateFormat + " " + localeFormat.getLocaleTimeFormat() + ":ss"),
-					new SimpleDateFormat(alternateFormat + " " + localeFormat.getLocaleTimeFormat()),
-					new SimpleDateFormat(alternateFormat),
-					new SimpleDateFormat("MM.yy"),
-					new SimpleDateFormat("MM/yy"),
-					new SimpleDateFormat("yy")};
+					new SimpleDateFormat(alternateFormat + " " + "HH:mm" + ":ss"),
+					new SimpleDateFormat(alternateFormat + " " + "HH:mm"),
+					new SimpleDateFormat(alternateFormat)};
 			dateTimeFormatters = new SimpleDateFormat[] {
-					new SimpleDateFormat(format + "yy " + localeFormat.getLocaleTimeFormat() + ":ss"),
-					new SimpleDateFormat(format + "yy " + localeFormat.getLocaleTimeFormat()),
+					new SimpleDateFormat(format + "yy " + "HH:mm" + ":ss"),
+					new SimpleDateFormat(format + "yy " + "HH:mm"),
 					new SimpleDateFormat(format + "yy")};
 		}
 
@@ -223,19 +243,27 @@ public class FormatterUtils {
 
 
 	public static final String formatDate(Date d) {
-		return d == null ? "" : dateFormat.format(d);
+		synchronized(FormatterUtils.dateFormat) {
+			return d == null ? "" : FormatterUtils.dateFormat.format(d);
+		}
 	}
 
 	public static final String formatDateFull(Date d) {
-		return d == null ? "" : dateFormatFull.format(d);
+		synchronized(FormatterUtils.dateFormatYYYY) {
+			return d == null ? "" : FormatterUtils.dateFormatYYYY.format(d);
+		}
 	}
 
 	public static final String formatDateYyyy(Date d) {
-		return d == null ? "" : dateFormatYYYY.format(d);
+		synchronized(FormatterUtils.dateFormatYYYY) {
+			return d == null ? "" : FormatterUtils.dateFormatYYYY.format(d);
+		}
 	}
 
 	public static final String formatTime(Date d) {
-		return d == null ? "" : timeFormat.format(d);
+		synchronized(FormatterUtils.timeFormat) {
+			return d == null ? "" : FormatterUtils.timeFormat.format(d);
+		}
 	}
 
 	public static final String formatDateTime(Date d) {
@@ -252,11 +280,13 @@ public class FormatterUtils {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(d);
 
-		String s = dateFormat.format(d);
-		if(s.equals(dateFormat.format(new Date()))) {
-			return timeFormat.format(d);
-		} else {
-			return s;
+		synchronized(FormatterUtils.dateFormat) {
+			String s = FormatterUtils.dateFormat.format(d);
+			if(s.equals(FormatterUtils.dateFormat.format(new Date()))) {
+				return FormatterUtils.timeFormat.format(d);
+			} else {
+				return s;
+			}
 		}
 	}
 
@@ -267,9 +297,6 @@ public class FormatterUtils {
 
 	public static final Date parseDateTime(String s) {
 		if(s==null || s.length()==0) return null;
-
-
-
 
 		for (DateFormat dateFormat : dateTimeParsers) {
 			try {
@@ -292,32 +319,44 @@ public class FormatterUtils {
 		if(s==null || s.length()==0) return "";
 
 		for (int i = 0; i < s.length(); i++) {
-			if(Character.isDigit(s.charAt(i))) continue;
-			if(localeFormat==DateTimeFormat.INTL && s.charAt(i)=='-') continue;
-			if(localeFormat!=DateTimeFormat.INTL && (s.charAt(i)=='.' || s.charAt(i)=='/')) continue;
+			if(Character.isDigit(s.charAt(i))) continue; //OK
+			if(localeFormat==DateTimeFormat.YYYYMMDD) {
+				if(s.charAt(i)=='-') continue; //OK
+			} else if(localeFormat==DateTimeFormat.DDMMMYYYY) {
+				if(Character.isLetter(s.charAt(i)) || s.charAt(i)=='-') continue; //OK
+			} else if(localeFormat!=DateTimeFormat.YYYYMMDD) {
+				if(s.charAt(i)=='.' || s.charAt(i)=='/') continue; //OK
+			}
 			return null;
 		}
 
 		try {
-			return formatDateYyyy(parseDateTime(s));
+			Date date = parseDateTime(s);
+			if(date==null) return null;
+			return formatDateYyyy(date);
 		} catch (Exception e) {
+			e.printStackTrace();
 			return null;
 		}
-
 	}
 
 	public static final String cleanDateTime(String s) {
 		if(s==null || s.length()==0) return s;
 		Date d = parseDateTime(s);
-		if(d==null) return "";
+		if(d==null) return null;
 		return formatDateTime(d);
 	}
 
 	public static final String formatYYYYMMDD(Date date) {
-		return yyyyFormat.format(date);
+		synchronized(FormatterUtils.yyyymmddFormat) {
+			return FormatterUtils.yyyymmddFormat.format(date);
+		}
 	}
+
 	public static final String formatYYYYMMDD() {
-		return yyyyFormat.format(new Date());
+		synchronized(FormatterUtils.yyyymmddFormat) {
+			return FormatterUtils.yyyymmddFormat.format(new Date());
+		}
 	}
 
 	public static void main(String[] args) {

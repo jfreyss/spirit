@@ -31,7 +31,7 @@ import com.actelion.research.spiritcore.business.Document.DocumentType;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
-import com.actelion.research.spiritcore.util.IOUtils;
+import com.actelion.research.util.IOUtils;
 
 /**
  * Test functions from the business package

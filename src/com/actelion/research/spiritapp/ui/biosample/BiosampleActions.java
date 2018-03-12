@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -32,10 +32,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -43,7 +41,6 @@ import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -69,20 +66,16 @@ import com.actelion.research.spiritapp.ui.location.CheckoutDlg;
 import com.actelion.research.spiritapp.ui.pivot.PivotTable;
 import com.actelion.research.spiritapp.ui.print.PrintingDlg;
 import com.actelion.research.spiritapp.ui.result.edit.EditResultDlg;
-import com.actelion.research.spiritapp.ui.study.SetLivingStatusDlg;
-import com.actelion.research.spiritapp.ui.util.SpiritAction;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
+import com.actelion.research.spiritapp.ui.util.component.UserIdComboBox;
 import com.actelion.research.spiritapp.ui.util.icons.ImageFactory;
-import com.actelion.research.spiritapp.ui.util.lf.UserIdComboBox;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
-import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
@@ -91,7 +84,6 @@ import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.ListHashMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.FastFont;
@@ -111,6 +103,7 @@ public class BiosampleActions {
 			super("New "+biotype.getName());
 			this.biotype = biotype;
 			putValue(AbstractAction.SMALL_ICON, new ImageIcon(ImageFactory.getImage(biotype, FastFont.getAdaptedSize(24))));
+			setEnabled(SpiritRights.canEdit(new Biosample(), Spirit.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -132,6 +125,7 @@ public class BiosampleActions {
 		public void setParent(Biosample parent) {
 			this.parent = parent;
 			setEnabled(parent!=null);
+			setEnabled(SpiritRights.canEdit(new Biosample(), Spirit.getUser()));
 		}
 
 		@Override
@@ -157,7 +151,10 @@ public class BiosampleActions {
 				String biotype = Spirit.getConfig().getProperty("biosample.type", "");
 				Biosample biosample = new Biosample();
 				biosample.setBiotype(DAOBiotype.getBiotype(biotype));
-				EditBiosampleDlg.createDialogForEditInTransactionMode(Collections.singletonList(biosample)).setVisible(true);
+				biosample.setInheritedStudy(SpiritFrame.getStudy());
+				EditBiosampleDlg dlg = EditBiosampleDlg.createDialogForEditInTransactionMode(Collections.singletonList(biosample));
+				dlg.setParticipatingStudy(SpiritFrame.getStudy());
+				dlg.setVisible(true);
 			} catch (Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
@@ -318,7 +315,7 @@ public class BiosampleActions {
 	public static class Action_Delete extends AbstractAction {
 		private final List<Biosample> biosamples;
 		public Action_Delete(List<Biosample> biosamples) {
-			super("Delete Batch (owner only)");
+			super("Delete Batch");
 			this.biosamples = biosamples;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			putValue(Action.SMALL_ICON, IconType.DELETE.getIcon());
@@ -387,7 +384,7 @@ public class BiosampleActions {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				JPAUtil.pushEditableContext(Spirit.getUser());
+				//				JPAUtil.pushEditableContext(Spirit.getUser());
 				List<Biosample> biosamples = getBiosamples();
 				if(biosamples==null || biosamples.size()==0) throw new Exception("There are no samples to edit");
 
@@ -402,53 +399,13 @@ public class BiosampleActions {
 				} else {
 					//Open the batch edit dialog
 					EditBiosampleDlg dlg = EditBiosampleDlg.createDialogForEditInTransactionMode(biosamples);
-					dlg.setParticipatingStudy(participatingStudy);
+					dlg.setParticipatingStudy(participatingStudy!=null? participatingStudy: SpiritFrame.getStudy());
 					dlg.setVisible(true);
 				}
 
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
-			} finally {
-				JPAUtil.popEditableContext();
 			}
-		}
-	}
-
-	public static class Action_SetLivingStatus extends AbstractAction {
-
-		private List<Biosample> biosamples;
-		private final Study study;
-
-		public Action_SetLivingStatus(Study study) {
-			this(study==null? new ArrayList<Biosample>(): new ArrayList<>(study.getParticipantsSorted()));
-		}
-
-		public Action_SetLivingStatus(List<Biosample> biosamples) {
-			super("Set Living Status");
-			this.biosamples = biosamples;
-
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
-			putValue(Action.SMALL_ICON, IconType.STUDY.getIcon());
-
-			Set<Study> studies = new HashSet<>();
-			boolean canEdit = true;
-			for (Biosample b : biosamples) {
-				canEdit = canEdit && SpiritRights.canEdit(b, SpiritFrame.getUser());
-				studies.add(b.getAttachedStudy());
-			}
-			study = studies.size()==1? studies.iterator().next(): null;
-			setEnabled(study!=null && canEdit);
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			if(study==null) return;
-			try {
-				new SetLivingStatusDlg(study, biosamples);
-			} catch (Exception ex) {
-				JExceptionDialog.showError(ex);
-			}
-
 		}
 	}
 
@@ -582,7 +539,7 @@ public class BiosampleActions {
 		private Status status;
 
 		public Action_SetStatus(List<Biosample> biosamples, Status status) {
-			super(status.getName());
+			super(status==null? "No Status": status.getName());
 			this.biosamples = biosamples;
 			this.status = status;
 			for (Biosample b : biosamples) {
@@ -624,7 +581,7 @@ public class BiosampleActions {
 	public static class Action_AssignTo extends AbstractAction {
 		private List<Biosample> biosamples;
 		public Action_AssignTo(List<Biosample> biosamples) {
-			super("Change Ownership");
+			super("Change Ownership (CreatedBy)");
 			this.biosamples = biosamples;
 
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
@@ -788,6 +745,7 @@ public class BiosampleActions {
 			}
 		});
 	}
+
 	public static void attachRevisionPopup(final BiosampleTable table) {
 		table.addMouseListener(new PopupAdapter(table) {
 			@Override
@@ -849,127 +807,7 @@ public class BiosampleActions {
 	 * @return
 	 */
 	public static JPopupMenu createPopup(List<Biosample> biosamples) {
-
-		JPopupMenu menu = new JPopupMenu();
-
-		if(biosamples==null || biosamples.size()==0) {
-			return menu;
-		}
-		if(SpiritFrame.getUser()==null) {
-			menu.add(new SpiritAction.Action_Relogin(null, null));
-			return menu;
-		}
-
-		Set<Biotype> types = Biosample.getBiotypes(biosamples);
-		boolean hasLiving = false;
-		boolean hasCompositeOrComponents= false;
-		boolean hasUnknown = false;
-		for (Biotype biotype : types) {
-			if(Biotype.ANIMAL.equals(biotype.getName())) hasLiving = true;
-			else if(!biotype.isAbstract() && biotype.getCategory()!=BiotypeCategory.LIVING) hasCompositeOrComponents = true;
-			else hasUnknown = true;
-		}
-
-
-
-
-
-
-		String s = biosamples.size()==1? biosamples.get(0).getSampleIdName(): biosamples.size()+" selected";
-		menu.add(new JCustomLabel("   Biosample: " + s, Font.BOLD));
-
-		//New
-		JMenu newMenu = new JMenu("New");
-		newMenu.setIcon(IconType.NEW.getIcon());
-		newMenu.setMnemonic('n');
-		menu.add(newMenu);
-		newMenu.add(new Action_NewBatch());
-		newMenu.add(new Action_Duplicate(biosamples));
-		newMenu.add(new JSeparator());
-		newMenu.add(new Action_NewChildren(biosamples));
-		if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
-			newMenu.add(new Action_NewResults(biosamples));
-		}
-
-		//Edit
-		JMenu editMenu = new JMenu("Edit");
-		editMenu.setIcon(IconType.EDIT.getIcon());
-		editMenu.setMnemonic('e');
-		menu.add(editMenu);
-		editMenu.add(new Action_BatchEdit(biosamples));
-		editMenu.add(new JSeparator());
-		editMenu.add(new Action_Amount(biosamples));
-
-		//Status
-		if(hasUnknown) {
-			//SetStatus is disabled
-			JMenu statusMenu = new JMenu("Trash / Set Status");
-			statusMenu.setIcon(IconType.STATUS.getIcon());
-			statusMenu.setEnabled(false);
-			editMenu.add(statusMenu);
-		} else if(hasLiving) {
-			//SetStatus for living
-			editMenu.add(new Action_SetLivingStatus(biosamples));
-		} else if(hasCompositeOrComponents) {
-			//SetStatus for samples
-			JMenu statusMenu = new JMenu("Trash / Set Status");
-			statusMenu.setIcon(IconType.STATUS.getIcon());
-			statusMenu.add(new Action_SetStatus(biosamples, Status.INLAB));
-			statusMenu.add(new JSeparator());
-			statusMenu.add(new Action_SetStatus(biosamples, Status.LOWVOL));
-			statusMenu.add(new Action_SetStatus(biosamples, Status.USEDUP));
-			statusMenu.add(new Action_SetStatus(biosamples, Status.TRASHED));
-			editMenu.add(statusMenu);
-		} else {
-			JMenu statusMenu = new JMenu("Trash / Set Status");
-			statusMenu.setIcon(IconType.STATUS.getIcon());
-			statusMenu.setEnabled(false);
-			editMenu.add(statusMenu);
-		}
-
-
-		JMenu qualityMenu = new JMenu("Set Quality");
-		qualityMenu.setIcon(IconType.QUALITY.getIcon());
-		for (Quality quality : Quality.values()) {
-			qualityMenu.add(new Action_SetQuality(biosamples, quality));
-		}
-		editMenu.add(qualityMenu);
-		JMenuItem expiryMenu = new JMenuItem(new Action_SetExpiryDate(biosamples));
-		expiryMenu.setEnabled(hasCompositeOrComponents);
-		editMenu.add(expiryMenu);
-
-		//Checkin/Checkout
-		menu.add(new JSeparator());
-		menu.add(new JMenuItem(new BiosampleActions.Action_Checkin(biosamples)));
-		menu.add(new JMenuItem(new BiosampleActions.Action_Checkout(biosamples)));
-
-
-
-
-		//Print
-		menu.add(new JSeparator());
-		menu.add(new Action_Print(biosamples));
-		menu.add(new JSeparator());
-
-		//Order from storage??
-		if(DBAdapter.getInstance().getAutomaticStores()!=null && DBAdapter.getInstance().getAutomaticStores().size()>0) {
-			menu.add(new Action_Order(biosamples));
-		}
-
-		//Advanced
-		menu.add(new Action_History(biosamples));
-		JMenu systemMenu = new JMenu("Advanced");
-		systemMenu.setIcon(IconType.ADMIN.getIcon());
-		systemMenu.add(new Action_Delete(biosamples));
-		systemMenu.add(new JSeparator());
-		systemMenu.add(new Action_SelectWithDiscriminator(biosamples));
-		systemMenu.add(new JSeparator());
-		systemMenu.add(new Action_AssignTo(biosamples));
-		systemMenu.add(new JSeparator());
-		menu.add(systemMenu);
-
-
-		return menu;
+		return SpiritFrame.getInstance().getPopupHelper().createBiosamplePopup(biosamples);
 	}
 
 

@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -55,6 +55,7 @@ import org.hibernate.envers.RelationTargetAuditMode;
 import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
+import com.actelion.research.spiritcore.util.DifferenceMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 
@@ -351,7 +352,7 @@ public class Test implements Comparable<Test>, IObject, IAuditable {
 	@Override
 	public String getDifference(IAuditable t) {
 		if(!(t instanceof Test)) return "";
-		return MiscUtils.flatten(getDifferenceMap((Test)t));
+		return getDifferenceMap((Test)t).flatten();
 	}
 
 	/**
@@ -360,19 +361,19 @@ public class Test implements Comparable<Test>, IObject, IAuditable {
 	 * @param b
 	 * @return
 	 */
-	public Map<String, String> getDifferenceMap(Test b) {
-		Map<String, String> map = new LinkedHashMap<>();
+	public DifferenceMap getDifferenceMap(Test b) {
+		DifferenceMap map = new DifferenceMap();
 		if(b==null) return map;
 		if(!CompareUtils.equals(getName(), b.getName())) {
-			map.put("Name", getName()==null?"NA":getName());
+			map.put("Name", getName(), b.getName());
 		}
 		if(!CompareUtils.equals(getCategory(), b.getCategory())) {
-			map.put("Category", getCategory()==null?"NA":getCategory());
+			map.put("Category", getCategory(), b.getCategory());
 		}
 
 		//Compare attributes
 		String metadataCompare = MiscUtils.diffCollectionsSummary(getAttributes(), b.getAttributes(), TestAttribute.EXACT_COMPARATOR);
-		if(metadataCompare!=null) map.put("Attributes", metadataCompare);
+		if(metadataCompare!=null) map.put("Attributes", metadataCompare, null);
 
 		return map;
 	}

@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -826,6 +826,7 @@ public class MiscUtils {
 	/**
 	 * Returns a summary message with the differences between the 2 collections in max ca.20 characters.
 	 * If the 2 sets are equals returns null.
+	 *
 	 * @param c1
 	 * @param c2
 	 * @param customComparator
@@ -932,8 +933,25 @@ public class MiscUtils {
 			} catch(Exception e) {
 				//Switch to normal mode
 			}
-	
+
 		}
 		return sampleId+".1";
+	}
+
+
+	/**
+	 * Map the objects to their respective class
+	 * @param objects
+	 * @return
+	 */
+	public static Map<Class, List<Object>> mapClasses(List<? extends Object> objects) {
+		Map<Class, List<Object>> res = new LinkedHashMap<>();
+		for (Object object : objects) {
+			List<Object> l = res.get(object.getClass());
+			if(l==null) res.put(object.getClass(), l = new ArrayList<>());
+			l.add(object);
+		}
+		return res;
+
 	}
 }

@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -56,11 +56,8 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 	private PivotPanel pivotCardPanel;
 
 	private BiosampleOrRackTab tableOrRackTab;
-
 	private BiosampleSearchPane searchPane;
-	private BiosampleTabbedPane biosampleDetailPanel;
-	private JSplitPane westPane;
-	private JSplitPane contentPane;
+	private BiosampleTabbedPane biosampleDetailPanel = new BiosampleTabbedPane();
 	private boolean first = true;
 
 	public BiosampleTab(SpiritFrame frame) {
@@ -79,11 +76,17 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 	 * @param forcedBiotypes
 	 */
 	public BiosampleTab(SpiritFrame frame, Biotype[] forcedBiotypes) {
-		super(frame,
-				forcedBiotypes==null || forcedBiotypes.length==0? "Biosamples": forcedBiotypes[0].getName(),
-						forcedBiotypes==null || forcedBiotypes.length==0? IconType.BIOSAMPLE.getIcon(): new ImageIcon(ImageFactory.getImageThumbnail(forcedBiotypes[0])));
+		super(frame, forcedBiotypes==null || forcedBiotypes.length==0? "Biosamples": forcedBiotypes[0].getName(),
+				forcedBiotypes==null || forcedBiotypes.length==0? IconType.BIOSAMPLE.getIcon(): new ImageIcon(ImageFactory.getImageThumbnail(forcedBiotypes[0])));
 
-		biosampleDetailPanel = new BiosampleTabbedPane();
+		searchPane = new BiosampleSearchPane(this, forcedBiotypes);
+		JSplitPane westPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, searchPane, biosampleDetailPanel);
+		westPane.setDividerLocation(1500);
+
+		JPanel eastPanel = new JPanel(new BorderLayout());
+
+		JSplitPane contentPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, westPane, eastPanel);
+		contentPane.setDividerLocation(260);
 
 		//TableTab
 		tableOrRackTab = new BiosampleOrRackTab();
@@ -91,7 +94,7 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 		tableOrRackTab.addListSelectionListener(e-> {
 			if(e.getValueIsAdjusting()) return;
 			if(!biosampleDetailPanel.isVisible()) return;
-			Collection<Biosample> sel = tableOrRackTab.getSelection(Biosample.class);
+			Collection<Biosample> sel = tableOrRackTab.getSelectedBiosamples();
 			if(sel.size()>0) {
 				if(westPane.getDividerLocation()>westPane.getHeight()-20) westPane.setDividerLocation(500);
 			} else {
@@ -123,19 +126,12 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 		pivotCardPanel.getPivotTable().getColumnModel().getSelectionModel().addListSelectionListener(listener);
 
 
-		//SearchPane
-		searchPane = new BiosampleSearchPane(this, forcedBiotypes);
 
-		JPanel eastPanel = new JPanel(new BorderLayout());
 		eastPanel.add(BorderLayout.CENTER, pivotCardPanel);
 
 		JPanel buttonsPanel = createButtonsPanel();
 		if(buttonsPanel!=null) eastPanel.add(BorderLayout.SOUTH, buttonsPanel);
 
-		westPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, searchPane, biosampleDetailPanel);
-		westPane.setDividerLocation(1500);
-		contentPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, westPane, eastPanel);
-		contentPane.setDividerLocation(300);
 
 
 		searchPane.addPropertyChangeListener(evt-> {
@@ -153,7 +149,7 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 	public<T> void fireModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
 		if(!isShowing()) return;
 		if(what==Biosample.class) {
-			List<Biosample> biosamples = (List<Biosample>) details;
+			List<Biosample> biosamples = new ArrayList<>((Collection<Biosample>) details);
 			Biosample.clearAuxInfos(biosamples);
 			if(action==SpiritChangeType.MODEL_ADDED) {
 				biosamples = JPAUtil.reattach(biosamples);
@@ -299,7 +295,7 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 
 	@Override
 	public void onStudySelect() {
-		if(getFrame()!=null && getFrame().getStudyId().length()>0) {
+		if(SpiritFrame.getStudyId()!=null && SpiritFrame.getStudyId().length()>0) {
 			query(searchPane.getSearchTree().getQuery());
 		} else {
 			tableOrRackTab.setBiosamples(new ArrayList<>());

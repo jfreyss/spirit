@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -23,10 +23,7 @@ package com.actelion.research.spiritapp.ui.audit;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
@@ -57,7 +54,7 @@ public class ResultHistoryDlg extends JEscapeDialog {
 		super(UIUtils.getMainFrame(), "Result History", true);
 
 		try {
-			final RevisionTable revisionList = new RevisionTable(false);
+			final RevisionTable revisionList = new RevisionTable();
 			final ResultTable resultTable = new ResultTable();
 
 
@@ -93,11 +90,11 @@ public class ResultHistoryDlg extends JEscapeDialog {
 			//Load revisions in background
 			new SwingWorkerExtended(revisionList, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 				private List<Revision> revisions;
-				private Map<Revision, String> changeMap;
+				//				private Map<Revision, String> changeMap;
 				@Override
 				protected void doInBackground() throws Exception {
 					revisions = DAORevision.getLastRevisions(result);
-					changeMap = getChangeMap(revisions);
+					//					changeMap = getChangeMap(revisions);
 				}
 
 				@Override
@@ -105,7 +102,8 @@ public class ResultHistoryDlg extends JEscapeDialog {
 					if(revisions.size()==0) {
 						JExceptionDialog.showError("There are no revisions saved");
 					}
-					revisionList.setRows(revisions, changeMap);
+					//					revisionList.setRows(revisions, changeMap);
+					revisionList.setRows(revisions);
 				}
 			};
 
@@ -119,28 +117,28 @@ public class ResultHistoryDlg extends JEscapeDialog {
 		}
 
 	}
-
-	private Map<Revision, String> getChangeMap(List<Revision> revisions ) {
-		Map<Revision, String> changeMap = new HashMap<>();
-		List<Revision> revs = new ArrayList<>();
-		for (int i = 0; i < revisions.size(); i++) {
-			Result b1 = revisions.get(i).getResults().get(0);
-			String diff;
-			if(i+1<revisions.size()) {
-				Result b2 = revisions.get(i+1).getResults().get(0);
-				diff = b1.getDifference(b2);
-			} else {
-				Result b2 = revisions.get(0).getResults().get(0);
-				diff = b1.getDifference(b2);
-				if(diff.length()==0) diff = "First version";
-			}
-
-			revs.add(revisions.get(i));
-			changeMap.put(revisions.get(i), diff);
-		}
-		return changeMap;
-
-	}
+	//
+	//	private Map<Revision, String> getChangeMap(List<Revision> revisions ) {
+	//		Map<Revision, String> changeMap = new HashMap<>();
+	//		List<Revision> revs = new ArrayList<>();
+	//		for (int i = 0; i < revisions.size(); i++) {
+	//			Result b1 = revisions.get(i).getResults().get(0);
+	//			String diff;
+	//			if(i+1<revisions.size()) {
+	//				Result b2 = revisions.get(i+1).getResults().get(0);
+	//				diff = b1.getDifference(b2);
+	//			} else {
+	//				Result b2 = revisions.get(0).getResults().get(0);
+	//				diff = b1.getDifference(b2);
+	//				if(diff.length()==0) diff = "First version";
+	//			}
+	//
+	//			revs.add(revisions.get(i));
+	//			changeMap.put(revisions.get(i), diff);
+	//		}
+	//		return changeMap;
+	//
+	//	}
 
 	private class RestoreAction extends AbstractAction {
 		private List<Result> results;

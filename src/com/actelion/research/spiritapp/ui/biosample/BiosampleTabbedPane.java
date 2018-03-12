@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -45,11 +45,13 @@ import com.actelion.research.spiritapp.ui.result.ResultActions;
 import com.actelion.research.spiritapp.ui.result.ResultTable;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.SwingWorkerExtended;
@@ -67,7 +69,6 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 	public static final String HISTORY_TITLE = "History";
 	//	public static final String HIERARCHY_TITLE = "Hierarchy";
 	public static final String RESULT_TITLE = "Results";
-	public static final String ORBIT_TITLE = "Raw";
 
 	private JComponent biosampleTab;
 	//	private JComponent hierarchyTab;
@@ -164,21 +165,14 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 			tabbedPane.add("", historyTab);
 			tabbedPane.setToolTipTextAt(tabbedPane.getTabCount()-1, "History");
 			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.HISTORY.getIcon());
-			//			tabbedPane.setEnabledAt(tabbedPane.getTabCount()-1, !forRevision);
 
-			if(!forRevision) {
-				tabbedPane.add("", resultTab);
-				tabbedPane.setToolTipTextAt(tabbedPane.getTabCount()-1, "Results");
-				tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.RESULT.getIcon());
+			if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+				if(!forRevision) {
+					tabbedPane.add("", resultTab);
+					tabbedPane.setToolTipTextAt(tabbedPane.getTabCount()-1, "Results");
+					tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.RESULT.getIcon());
+				}
 			}
-			//			tabbedPane.setEnabledAt(tabbedPane.getTabCount()-1, !forRevision);
-
-			//			if(orbitTab!=null) {
-			//				tabbedPane.add("", orbitTab);
-			//				tabbedPane.setToolTipTextAt(tabbedPane.getTabCount()-1, "Orbit Raw Data");
-			//				tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.ORBIT.getIcon());
-			//				tabbedPane.setEnabledAt(tabbedPane.getTabCount()-1, !forRevision);
-			//			}
 
 			tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
 			c.weighty = 1; c.gridy = 1; add(tabbedPane, c);
@@ -187,9 +181,6 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 			cardPanel.add(BIOSAMPLE_TITLE, metadataPanel);
 			cardPanel.add(HISTORY_TITLE, historyPanel);
 			cardPanel.add(RESULT_TITLE, resultTab);
-			//			if(orbitTab!=null) {
-			//				cardPanel.add(ORBIT_TITLE, orbitTab);
-			//			}
 			c.weighty = 1; c.gridy = 1; add(cardPanel, c);
 		}
 

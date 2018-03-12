@@ -1,12 +1,9 @@
 package com.actelion.research.spirit.test;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -34,8 +31,9 @@ import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.IOUtils;
+import com.actelion.research.spiritcore.util.DifferenceMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.IOUtils;
 
 import junit.framework.AssertionFailedError;
 
@@ -45,6 +43,59 @@ public class BiosampleTest extends AbstractSpiritTest {
 	public static void init() throws Exception {
 		initDemoExamples(user);
 	}
+
+	@Test
+	public void testContainer() throws Exception {
+		// Persist biotype
+		Biotype biotype = new Biotype();
+		biotype.setCategory(BiotypeCategory.PURIFIED);
+		biotype.setName("BioTest2");
+		biotype.setPrefix("test2-");
+		DAOBiotype.persistBiotype(biotype, user);
+
+
+		Biosample b1 = new Biosample(biotype);
+		b1.setContainerType(ContainerType.TUBE_1PP);
+		b1.setContainerId("000001");
+		Biosample b2 = new Biosample(biotype);
+		b2.setContainerId("000002");
+
+		Assert.assertEquals("000002", b2.getContainerId());
+
+		//Test Containers are saved
+		DAOBiosample.persistBiosamples(MiscUtils.listOf(b1,b2), user);
+
+		b1 = DAOBiosample.getBiosampleById(b1.getId());
+		Assert.assertEquals(ContainerType.TUBE_1PP, b1.getContainerType());
+		Assert.assertEquals("000001", b1.getContainerId());
+
+		b2 = DAOBiosample.getBiosampleById(b2.getId());
+		Assert.assertEquals("000002", b2.getContainerId());
+
+		//Test creation of an other container with same id-> exception
+		Biosample b3 = new Biosample(biotype);
+		b3.setContainerId("000002");
+		try {
+			DAOBiosample.persistBiosamples(Collections.singleton(b3), user);
+			throw new AssertionFailedError("Exception expected when containerId reused");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		//Test creation of 2 containers with same id-> exception
+		Biosample b4 = new Biosample(biotype);
+		b4.setContainerId("000004");
+		Biosample b5 = new Biosample(biotype);
+		b5.setContainerId("000004");
+		try {
+			DAOBiosample.persistBiosamples(MiscUtils.listOf(b4,b5), user);
+			throw new AssertionFailedError("Exception expected when containerId reused");
+		} catch (Exception e) {
+			//OK
+			e.printStackTrace();
+		}
+	}
+
 
 	@Test
 	public void testMetadata() throws Exception {
@@ -64,12 +115,7 @@ public class BiosampleTest extends AbstractSpiritTest {
 		// Persist biosamples
 		Biosample b1 = new Biosample(biotype);
 		Biosample b2 = new Biosample(biotype);
-
-		List<Biosample> list = new ArrayList<>();
-		list.add(b1);
-		list.add(b2);
-
-		DAOBiosample.persistBiosamples(list, user);
+		DAOBiosample.persistBiosamples(MiscUtils.listOf(b1,b2), user);
 
 		// Update
 		b1.setSampleName("CD4");
@@ -85,7 +131,7 @@ public class BiosampleTest extends AbstractSpiritTest {
 		b2.setSampleName("CD6");
 		b2.setMetadataValue("meta1", "ALPHA1 ALPHA2");
 
-		DAOBiosample.persistBiosamples(list, user);
+		DAOBiosample.persistBiosamples(MiscUtils.listOf(b1,b2), user);
 
 
 		JPAUtil.clearAll();
@@ -133,7 +179,7 @@ public class BiosampleTest extends AbstractSpiritTest {
 		}
 
 		// Delete biosamples
-		DAOBiosample.deleteBiosamples(list, user);
+		DAOBiosample.deleteBiosamples(MiscUtils.listOf(b1,b2), user);
 
 		// Delete biotype
 		DAOBiotype.deleteBiotype(biotype, user);
@@ -514,12 +560,12 @@ public class BiosampleTest extends AbstractSpiritTest {
 		b2.setContainerId("Cage1");
 		b2.setSampleId("Hum1");
 
-		Map<String, String> map = b1.getDifferenceMap(b2);
+		DifferenceMap map = b1.getDifferenceMap(b2);
 		Assert.assertEquals(2, map.size());
 		Assert.assertNotNull(map.get("Container"));
 		Assert.assertNotNull(map.get("Biotype"));
-		Assert.assertEquals("SampleId=Hum1; Biotype=Human", b1.getDifference(null));
-		Assert.assertEquals("Container=NA; Biotype=Human", b1.getDifference(b2));
+		Assert.assertEquals("SampleId=Hum1\nBiotype=Human", b1.getDifference(null));
+		Assert.assertEquals("Container= replacing Cage Cage1\nBiotype=Human replacing Animal", b1.getDifference(b2));
 
 
 		b1 = new Biosample(DAOBiotype.getBiotype("Animal"));
@@ -538,13 +584,13 @@ public class BiosampleTest extends AbstractSpiritTest {
 		b2.setMetadataValue("Sex", "M");
 		b2.setComments("Animal2");
 
-		Assert.assertEquals("No=No1; Type=Rat; Comments=Animal1", b1.getDifference(b2));
-		Assert.assertEquals("No=No2; Type=Mice; Comments=Animal2", b2.getDifference(b1));
+		Assert.assertEquals("No=No1 replacing No2\nType=Rat replacing Mice\nComments=Animal1 replacing Animal2", b1.getDifference(b2));
+		Assert.assertEquals("No=No2 replacing No1\nType=Mice replacing Rat\nComments=Animal2 replacing Animal1", b2.getDifference(b1));
 
 		b1 = new Biosample(DAOBiotype.getBiotype("Animal"), "ANL1");
 		b2 = new Biosample("ANL2");
-		Assert.assertEquals("SampleId=ANL1; Biotype=Animal", b1.getDifference(b2));
-		Assert.assertEquals("SampleId=ANL2; Biotype=", b2.getDifference(b1));
+		Assert.assertEquals("SampleId=ANL1 replacing ANL2\nBiotype=Animal", b1.getDifference(b2));
+		Assert.assertEquals("SampleId=ANL2 replacing ANL1\nBiotype= replacing Animal", b2.getDifference(b1));
 	}
 
 
@@ -562,8 +608,7 @@ public class BiosampleTest extends AbstractSpiritTest {
 		b2.setContainerType(ContainerType.BOTTLE);
 		b2.getMetadata().add(new BiotypeMetadata("M2", DataType.ALPHA));
 
-
-		Assert.assertEquals("ContainerType=Bottle; SampleName=B1; Metadata=added M2", b2.getDifference(b1));
+		Assert.assertEquals("ContainerType=Bottle\nSampleName=Main2 replacing Main\nMetadata=added M2", b2.getDifference(b1));
 	}
 
 	/**
@@ -573,10 +618,13 @@ public class BiosampleTest extends AbstractSpiritTest {
 	 */
 	@Test
 	public void testCompareBiosample1() {
-		Biosample b1 = new Biosample(DAOBiotype.getBiotype("Animal"));
-		Biosample b2 = new Biosample(DAOBiotype.getBiotype("Animal"));
-		Biosample b3 = new Biosample(DAOBiotype.getBiotype("Animal"));
-		Biosample b4 = new Biosample(DAOBiotype.getBiotype("Animal"));
+		Biotype biotype = DAOBiotype.getBiotype("Animal");
+		Assert.assertNotNull(biotype);
+
+		Biosample b1 = new Biosample(biotype);
+		Biosample b2 = new Biosample(biotype);
+		Biosample b3 = new Biosample(biotype);
+		Biosample b4 = new Biosample(biotype);
 
 		b1.setInheritedStudy(DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-2").get(0));
 		b2.setInheritedStudy(DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0));
@@ -598,4 +646,23 @@ public class BiosampleTest extends AbstractSpiritTest {
 
 	}
 
+	/**
+	 * Count the number of samples per biotype, or metadata
+	 */
+	@Test
+	public void testCountRelations() {
+		Biotype biotype = DAOBiotype.getBiotype("Animal");
+		Assert.assertNotNull(biotype);
+		Assert.assertNotNull(biotype.getMetadata("Type"));
+		Assert.assertTrue(DAOBiotype.countRelations(biotype)>0);
+		Assert.assertTrue(DAOBiotype.countRelations(biotype.getMetadata("Type"))>0);
+	}
+
+	/**
+	 * Import a biosample list (usually from a csv file)
+	 */
+	@Test
+	public void testImportSampleList() {
+
+	}
 }

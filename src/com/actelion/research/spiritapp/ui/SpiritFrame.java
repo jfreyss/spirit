@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleTab;
-import com.actelion.research.spiritapp.ui.exchange.ExchangeActions;
 import com.actelion.research.spiritapp.ui.location.LocationActions;
 import com.actelion.research.spiritapp.ui.location.LocationTab;
 import com.actelion.research.spiritapp.ui.result.ResultActions;
@@ -90,23 +89,29 @@ import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 
 /**
- * Frame used to build all Spirit based application. when the application consists of SpiritTab, each tab being responsible for one type of perspective.
- * The SpiritFrame is responsible for handling and dispatching the event to the appropriate tab.
+ * Frame used as the top frame for all Spirit based application.
+ * When the application consists of SpiritTab, each tab being responsible for one type of perspective.
+ * The SpiritFrame is responsible:
+ * - for handling and dispatching the event to the appropriate tab.
+ * - for all specific UI events (popups)
  *
  * @author Joel Freyss
  */
 public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserver, ISpiritContextObserver {
 
-	protected static SplashConfig splashConfig = new SplashScreen.SplashConfig(Spirit.class.getResource("spirit.jpg"), "Spirit", "Spirit v." + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Actelion - J.Freyss");
-	protected String copyright;
-	private SpiritTabbedPane tabbedPane;
+	protected static SplashConfig splashConfig = new SplashScreen.SplashConfig(Spirit.class.getResource("spirit.jpg"), "Spirit", "Spirit v." + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Idorsia - J.Freyss");
+	protected static SpiritFrame _instance = null;;
 
+	protected String copyright;
+	protected PopupHelper popupHelper = new PopupHelper();
+
+	private SpiritTabbedPane tabbedPane = new SpiritTabbedPane();
 	private JStatusBar statusBar;
+
 	private Runnable afterLoginAction = null;
 	private RightLevel studyLevel = RightLevel.READ;
 	private boolean multipleChoices = true;
 
-	protected static SpiritFrame _instance = null;;
 
 	public SpiritFrame(String title, String copyright) {
 		this(title, copyright, null);
@@ -116,6 +121,7 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		super(title);
 		this.copyright = copyright;
 		this.afterLoginAction = afterLoginAction;
+		assert SpiritFrame._instance==null;
 		SpiritFrame._instance = this;
 
 		SpiritChangeListener.register(this);
@@ -134,6 +140,18 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		toFront();
 	}
 
+	/**
+	 * Returns the unique instance of SpiritFrame (if any)
+	 * @return
+	 */
+	public static SpiritFrame getInstance() {
+		return _instance;
+	}
+
+	/**
+	 * Gets the tabs associated to the SpiritFrame context
+	 * @return
+	 */
 	public abstract List<SpiritTab> getTabs();
 
 
@@ -186,16 +204,19 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 			if(getUser()!=null) {
 				//Add the tabs
 				tabbedPane.setFont(FastFont.BIGGER);
-				for (SpiritTab tab : getTabs()) {
-					tabbedPane.addTab(tab.getName(), tab);
-					tabbedPane.setIconAt(tabbedPane.getTabCount()-1, tab.getIcon());
+				List<SpiritTab> tabs = getTabs();
+				if(tabs!=null) {
+					for (SpiritTab tab : getTabs()) {
+						tabbedPane.addTab(tab.getName(), tab);
+						tabbedPane.setIconAt(tabbedPane.getTabCount()-1, tab.getIcon());
+					}
 				}
 
 				//Apply actions after login
-				if(afterLoginAction!=null && getUser()!=null) {
-					new SwingWorkerExtended(tabbedPane, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
-						@Override
-						protected void doInBackground() throws Exception {
+				new SwingWorkerExtended(tabbedPane, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
+					@Override
+					protected void doInBackground() throws Exception {
+						if(afterLoginAction!=null) {
 							try {
 								afterLoginAction.run();
 								afterLoginAction = null;
@@ -203,9 +224,14 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 								ex.printStackTrace();
 							}
 						}
-					};
-
-				}
+					}
+					@Override
+					protected void done() {
+						if(getSelectedTab()!=null) {
+							getSelectedTab().onTabSelect();
+						}
+					}
+				};
 			}
 		} catch(Exception e) {
 			JExceptionDialog.showError(e);
@@ -230,11 +256,8 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 			editMenu.add(new ResultActions.Action_New());
 		}
 		editMenu.add(new JSeparator());
-		editMenu.add(new ExchangeActions.Action_ExportExchange(this));
-		editMenu.add(new ExchangeActions.Action_ImportExchange());
-		editMenu.add(new JSeparator());
 
-		SpiritMenu.addEditMenuItems(editMenu, this);
+		SpiritMenu.addEditMenuItems(editMenu);
 
 		menuBar.add(SpiritMenu.getDevicesMenu());
 
@@ -249,16 +272,18 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 
 	}
 
+	/**
+	 * Generic function to initaiate L&F (Numbus)
+	 */
 	public static void initUI() {
-
 		//ToolTop binder
 		ToolTipManager.sharedInstance().setInitialDelay(750);
 		ToolTipManager.sharedInstance().setDismissDelay(20000);
 		ToolTipManager.sharedInstance().setReshowDelay(300);
 
-		//Error log for Actelion
-		ApplicationErrorLog.setApplication("Spirit v" + Spirit.class.getPackage().getImplementationVersion());
+		//Error log for Actelion/Idorsia
 		try {
+			ApplicationErrorLog.setApplication(DBAdapter.getInstance().getSoftwareName() + " v" + Spirit.class.getPackage().getImplementationVersion());
 			ApplicationErrorLog.setActivated(DBAdapter.getInstance().isInActelionDomain());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -323,7 +348,7 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		try {
 			tabbedPane.push();
 			ResultTab tab = (ResultTab) tabbedPane.getTab(ResultTab.class);
-			if(q==null || tab==null || tabbedPane==null) return;
+			if(q==null || tab==null) return;
 			System.out.println("SpiritFrame.query() set "+q.getStudyIds());
 			tab.setSelectedStudyId(q.getStudyIds());
 			tabbedPane.setStudyId(q.getStudyIds());
@@ -339,7 +364,7 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		try {
 			tabbedPane.push();
 			ResultTab tab = (ResultTab) tabbedPane.getTab(ResultTab.class);
-			if(tab==null || tabbedPane==null) return;
+			if(tab==null) return;
 			tab.setSelectedStudyId(tabbedPane.getStudyId());
 			tabbedPane.setSelectedComponent(tab);
 			tab.setResults(results);
@@ -353,16 +378,16 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 	public void setBiosamples(List<Biosample> biosamples) {
 		try {
 			tabbedPane.push();
-			IBiosampleTab tab = (IBiosampleTab) tabbedPane.getTab(IBiosampleTab.class);
-			if(tab==null || tabbedPane==null) return;
-			((SpiritTab)tab).setSelectedStudyId(tabbedPane.getStudyId());
+			IBiosampleTab tab = (IBiosampleTab) getTabbedPane().getTab(IBiosampleTab.class);
+			if(tab==null) return;
+			((SpiritTab)tab).setSelectedStudyId(getTabbedPane().getStudyId());
 
 			Set<Location> locations = Biosample.getLocations(biosamples);
 			Location loc = locations.size()==1? locations.iterator().next(): null;
 
 			if(tab instanceof SpiritTab) {
 				//Avoid firing studyEvent
-				((SpiritTab)tab).setSelectedStudyId(tabbedPane.getStudyId());
+				((SpiritTab)tab).setSelectedStudyId(getTabbedPane().getStudyId());
 			}
 
 			tabbedPane.setSelectedComponent((Component)tab);
@@ -378,7 +403,7 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 				}
 				tab.setSelectedBiosamples(biosamples);
 			}
-			if(biosamples!=null) statusBar.setInfos(biosamples.size()+ " biosamples");
+			statusBar.setInfos(biosamples.size()+ " biosamples");
 		} finally {
 			tabbedPane.pop();
 		}
@@ -387,12 +412,12 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 	@Override
 	public void setRack(Location loc) {
 		try {
-			tabbedPane.push();
-			IBiosampleTab tab = (IBiosampleTab) tabbedPane.getTab(IBiosampleTab.class);
-			if(tab==null || tabbedPane==null) return;
-			((SpiritTab)tab).setSelectedStudyId(tabbedPane.getStudyId());
+			getTabbedPane().push();
+			IBiosampleTab tab = (IBiosampleTab) getTabbedPane().getTab(IBiosampleTab.class);
+			if(tab==null) return;
+			((SpiritTab)tab).setSelectedStudyId(getTabbedPane().getStudyId());
 
-			tabbedPane.setSelectedComponent((Component)tab);
+			getTabbedPane().setSelectedComponent((Component)tab);
 			tab.setRack(loc);
 			if(loc!=null) statusBar.setInfos("Rack "+loc + ": "+loc.getBiosamples().size());
 		} finally {
@@ -404,13 +429,12 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 	@Override
 	public void setLocation(final Location location, final int pos) {
 		try {
-			tabbedPane.push();
-			LocationTab tab = (LocationTab) tabbedPane.getTab(LocationTab.class);
-			if(tab==null || tabbedPane==null) return;
-			tab.setSelectedStudyId(tabbedPane.getStudyId());
+			getTabbedPane().push();
+			LocationTab tab = (LocationTab) getTabbedPane().getTab(LocationTab.class);
+			if(tab==null) return;
+			tab.setSelectedStudyId(getTabbedPane().getStudyId());
 
-			if(tabbedPane==null) return;
-			tabbedPane.setSelectedComponent(tab);
+			getTabbedPane().setSelectedComponent(tab);
 			tab.setBioLocation(location, pos);
 			if(location!=null) statusBar.setInfos(location + " selected");
 		} finally {
@@ -421,15 +445,11 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 	@Override
 	public void setStudy(final Study study) {
 		try {
-			System.out.println("SpiritFrame.setStudy()");
 			getTabbedPane().push();
-			System.out.println("SpiritFrame.setStudy(0) " );
-			System.out.println("SpiritFrame.setStudy(0) "+study.getStudyId() );
-			tabbedPane.setStudyId(study==null?"": study.getStudyId());
-			System.out.println("SpiritFrame.setStudy(1)");
-			IStudyTab tab = (IStudyTab) tabbedPane.getTab(IStudyTab.class);
-			if(tab==null || tabbedPane==null) return;
-			((SpiritTab)tab).setSelectedStudyId(tabbedPane.getStudyId());
+			getTabbedPane().setStudyId(study==null?"": study.getStudyId());
+			IStudyTab tab = (IStudyTab) getTabbedPane().getTab(IStudyTab.class);
+			if(tab==null) return;
+			((SpiritTab)tab).setSelectedStudyId(getTabbedPane().getStudyId());
 			tabbedPane.setSelectedComponent((Component) tab);
 			tab.setStudy(study);
 			if(study!=null) statusBar.setInfos(study + " selected");
@@ -438,10 +458,17 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		}
 	}
 
+	/**
+	 * Return the local config options
+	 * @return
+	 */
 	public static final Config getConfig() {
 		return Config.getInstance(".spirit");
 	}
 
+	/**
+	 * Fired when the model changed, and somethings needs to be refreshed
+	 */
 	@Override
 	public <T> void actionModelChanged(final SpiritChangeType action, final Class<T> w, final Collection<T> details) {
 		LoggerFactory.getLogger(getClass()).debug("changed " + action + " " + (w==null?"":w.getName()) + " n="+(details==null? 0: details.size()));
@@ -459,18 +486,6 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 					}
 				} else {
 					SpiritTab tab = getSelectedTab();
-					//Switch to appropriate tab
-					//					SpiritTab tab = null;
-					//					if(w==Study.class) {
-					//						tab = tabbedPane.getTab(IStudyTab.class);
-					//					} else if(w==Biosample.class) {
-					//						tab = tabbedPane.getTab(IBiosampleTab.class);
-					//					} else if(w==Location.class) {
-					//						tab = tabbedPane.getTab(LocationTab.class);
-					//					} else if(w==Result.class) {
-					//						tab = tabbedPane.getTab(ResultTab.class);
-					//					}
-
 					if(tab!=null) {
 						//Prevent the event onStudyTab to be fired
 						tab.setSelectedStudyId(tabbedPane.getStudyId());
@@ -489,26 +504,24 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 	 * Builds the Exchange file, based on the active view (study, biosamples, locations, results)
 	 * @return
 	 */
-	public Exchange getExchange() {
+	public Exchange getExchange() throws Exception {
 		Exchange exchange = new Exchange();
 		if(tabbedPane==null) return exchange;
 		SpiritTab tab = (SpiritTab) tabbedPane.getSelectedComponent();
 		if(tab instanceof IStudyTab) {
-			Study study = ((IStudyTab)tab).getStudy();
-			if(study!=null) {
-				List<Study> studies = JPAUtil.reattach(Collections.singletonList(study));
-				exchange.addStudies(studies);
+			List<Study> studies = JPAUtil.reattach(((IStudyTab)tab).getStudies());
+			if(studies.size()>20) studies = JPAUtil.reattach(Collections.singleton(((IStudyTab)tab).getStudy()));
+			exchange.addStudies(studies);
 
-				try {
-					BiosampleQuery q = BiosampleQuery.createQueryForStudyIds(MiscUtils.flatten(Study.mapStudyId(studies).keySet(), " "));
-					exchange.addBiosamples(DAOBiosample.queryBiosamples(q, getUser()));
+			try {
+				BiosampleQuery q = BiosampleQuery.createQueryForStudyIds(MiscUtils.flatten(Study.mapStudyId(studies).keySet(), " "));
+				exchange.addBiosamples(DAOBiosample.queryBiosamples(q, getUser()));
 
-					ResultQuery q2 = ResultQuery.createQueryForStudyIds(MiscUtils.flatten(Study.mapStudyId(studies).keySet(), " "));
-					exchange.addResults(DAOResult.queryResults(q2, getUser()));
-				} catch(Exception e) {
-					//Should not happen
-					throw new RuntimeException(e);
-				}
+				ResultQuery q2 = ResultQuery.createQueryForStudyIds(MiscUtils.flatten(Study.mapStudyId(studies).keySet(), " "));
+				exchange.addResults(DAOResult.queryResults(q2, getUser()));
+			} catch(Exception e) {
+				//Should not happen
+				throw new RuntimeException(e);
 			}
 		} else if(tab instanceof IBiosampleTab) {
 			exchange.addBiosamples(JPAUtil.reattach(((IBiosampleTab)tab).getBiosamples()));
@@ -523,11 +536,18 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 	}
 
 
+	/**
+	 * Returns the username
+	 * @return
+	 */
 	public static String getUsername() {
 		return getUser()==null? null: getUser().getUsername();
 	}
 
-
+	/**
+	 * Returns the current logged in user (only one can be logged per instance)
+	 * @return
+	 */
 	public static SpiritUser getUser() {
 		return JPAUtil.getSpiritUser();
 	}
@@ -550,12 +570,12 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		}
 	}
 
-	public String getStudyId() {
-		return tabbedPane.getStudyId();
+	public final static String getStudyId() {
+		return getStudy()==null? null: getStudy().getStudyId();
 	}
 
-	public Study getStudy() {
-		return DAOStudy.getStudyByStudyId(tabbedPane.getStudyId());
+	public final static Study getStudy() {
+		return _instance==null? null: DAOStudy.getStudyByStudyId(_instance.getTabbedPane().getStudyId());
 	}
 
 	public static void clearAll() {
@@ -564,5 +584,7 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		Cache.getInstance().clear();
 	}
 
-
+	public PopupHelper getPopupHelper() {
+		return popupHelper;
+	}
 }

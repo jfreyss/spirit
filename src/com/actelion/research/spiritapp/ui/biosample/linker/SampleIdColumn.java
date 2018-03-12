@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -31,7 +31,7 @@ import javax.swing.JSeparator;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.ui.biosample.SampleIdLabel;
-import com.actelion.research.spiritapp.ui.util.lf.LF;
+import com.actelion.research.spiritapp.ui.util.component.LF;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
@@ -85,9 +85,9 @@ public class SampleIdColumn extends AbstractLinkerColumn<String> {
 
 	@Override
 	public String getValue(Biosample row) {
-		if(row==null) return null;
 		row = linker.getLinked(row);
 
+		if(row==null) return null;
 		if(isDisplayName() && (row.getBiotype()==null || row.getBiotype().getSampleNameLabel()!=null)) {
 			String s =  row.getSampleId()==null? "": row.getSampleId();
 			s+="\t";
@@ -177,8 +177,6 @@ public class SampleIdColumn extends AbstractLinkerColumn<String> {
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		super.postProcess(table, row, rowNo, value, comp);
-
-		row = linker.getLinked(row);
 
 		if(table.isEditable() && !linker.isLinked()) {
 			comp.setBackground(LF.BGCOLOR_REQUIRED);

@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -73,6 +73,7 @@ public abstract class MigrationScript {
 		scripts.add(new MigrationScript2_0());
 		scripts.add(new MigrationScript2_1());
 		scripts.add(new MigrationScript2_2());
+		scripts.add(new MigrationScript2_3());
 		return scripts;
 	}
 
@@ -105,7 +106,6 @@ public abstract class MigrationScript {
 		for (MigrationScript script : getScripts()) {
 			if(version==null || version.compareTo(script.getToVersion())<0) {
 				sb.append("\r\n");
-				sb.append("/* Migration to " + script.getToVersion() + " */;\r\n");
 				sb.append(script.getMigrationSql(vendor));
 				sb.append("update spirit.spirit_property set value = '" + script.getToVersion() + "' where id = '" + PropertyKey.DB_VERSION.getKey() + "' and value < '" + script.getToVersion() + "';");
 			}
@@ -132,11 +132,10 @@ public abstract class MigrationScript {
 		Connection conn = DBAdapter.getInstance().getConnection();
 		try {
 			executeScript(conn, sql, false, logger);
-			conn.commit();
 		} catch(Exception e) {
-			conn.rollback();
-			throw e;
+			e.printStackTrace();
 		} finally {
+			conn.commit();
 			conn.close();
 		}
 	}
@@ -165,9 +164,7 @@ public abstract class MigrationScript {
 	 * @return the DB version
 	 */
 	public static String getDBVersion() throws Exception {
-		Connection conn = null;
-		try {
-			conn = DBAdapter.getInstance().getConnection();
+		try (Connection conn = DBAdapter.getInstance().getConnection()) {
 
 			Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery("select max(value) from spirit.spirit_property where id = '" + PropertyKey.DB_VERSION.getKey() + "'");
@@ -186,21 +183,21 @@ public abstract class MigrationScript {
 
 			LoggerFactory.getLogger(MigrationScript.class).warn(ex.getMessage());
 			return null;
-		} finally {
-			try{conn.close();}catch(Exception ex){}
 		}
 	}
 
 	/**
-	 * Util function to execute a script (in batch)
+	 * Util function to execute a sequence of scripts
+	 * If failImmediatelyOnError==true, the sequence stops at the first exception
 	 * @param conn
 	 * @param scripts
-	 * @param failOnError
+	 * @param failImmediatelyOnError
 	 * @param logger
 	 * @throws Exception
 	 */
-	public static void executeScript(Connection conn, String scripts, boolean failOnError, ILogger logger) throws Exception {
+	public static void executeScript(Connection conn, String scripts, boolean failImmediatelyOnError, ILogger logger) throws Exception {
 
+		Exception e = null;
 		for (String script : split(scripts)) {
 			if(script.trim().length()==0) continue;
 
@@ -208,14 +205,19 @@ public abstract class MigrationScript {
 				LoggerFactory.getLogger(MigrationScript.class).info("execute:  "+script+"");
 				stmt.setQueryTimeout(180);
 				int n = stmt.executeUpdate(script);
-				LoggerFactory.getLogger(MigrationScript.class).info("executed: "+script+": OK ("+ n + " rows updated)");
-				if(logger!=null) logger.info(script, " rows updated");
+				if(logger!=null) logger.info(script, n + " rows updated");
 			} catch(Exception ex) {
 				LoggerFactory.getLogger(MigrationScript.class).error("error: "+script, ex);
-				if(failOnError) throw ex;
-				if(logger!=null) logger.error(script, ex);
+				if(failImmediatelyOnError) {
+					throw ex;
+				} else {
+					if(logger!=null) logger.error(script, ex);
+					e = ex;
+				}
 			}
 		}
+		if(e!=null) throw e;
+
 	}
 
 	private static List<String> split(String string){

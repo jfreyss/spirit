@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -77,10 +77,6 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 
 
 	public Container() {
-	}
-
-	protected void setCreatedFor(Biosample createdFor) {
-		this.createdFor = createdFor;
 	}
 
 	public Container(ContainerType type) {
@@ -212,20 +208,19 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 	public Biosample getFirstBiosample() {
 		return getBiosamples().size()>0? getBiosamples().iterator().next(): null;
 	}
+
 	@Override
 	protected Container clone()  {
 		try {
 			return (Container) super.clone();
 		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+			throw new RuntimeException(e);
 		}
 	}
 
-
 	@Override
 	public int hashCode() {
-		return (containerId==null?0:containerId.hashCode());
+		return (containerId==null? 0: containerId.hashCode());
 	}
 
 	/**
@@ -245,16 +240,21 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 
 	}
 
+	/**
+	 * 2 containers are equals if they have the same type and the same not-null id.
+	 * Ie. 2 containers without Id will always be different
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof Container)) return false;
 		if(this==obj) return true;
-		Container c2 = (Container) obj;
-		if(getContainerId()!=null && getContainerId().length()>0) {
-			return getContainerId().equals(c2.getContainerId());
-		}
 
-		return false;
+		Container c2 = (Container) obj;
+		int cmp = CompareUtils.compare(getContainerType(), c2.getContainerType());
+		if(cmp!=0) return false;
+
+		cmp = CompareUtils.compare(getContainerId(), c2.getContainerId());
+		return cmp==0 && getContainerId()!=null && getContainerId().length()>0;
 	}
 
 	@Override
@@ -423,7 +423,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 
 	public static Set<Location> getLocations(Collection<Container> containers) {
 		if(containers==null) return null;
-		Set<Location> res = new java.util.HashSet<Location>();
+		Set<Location> res = new java.util.HashSet<>();
 		for (Container c : containers) {
 			if(c!=null) res.add(c.getLocation());
 		}
@@ -432,7 +432,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 
 	public static Set<Integer> getPoses(Collection<Container> containers) {
 		if(containers==null) return null;
-		Set<Integer> res = new java.util.HashSet<Integer>();
+		Set<Integer> res = new java.util.HashSet<>();
 		for (Container c : containers) {
 			if(c.getLocation()!=null && c.getPos()>=0) res.add(c.getPos());
 		}
@@ -520,7 +520,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 	}
 
 	public static Map<String, Container> mapContainerId(Collection<Container> containers){
-		Map<String, Container> res = new HashMap<String, Container>();
+		Map<String, Container> res = new HashMap<>();
 
 		for (Container container : containers) {
 			if(container.getContainerId()!=null) res.put(container.getContainerId(), container);
@@ -570,5 +570,13 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		return b==null? null: b.getScannedPosition();
 	}
 
+
+	/**
+	 * Utility function to be able to retrieve later the samples of a multiple container
+	 * @param createdFor
+	 */
+	protected void setCreatedFor(Biosample createdFor) {
+		this.createdFor = createdFor;
+	}
 
 }

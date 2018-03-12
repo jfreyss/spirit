@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -21,9 +21,7 @@
 
 package com.actelion.research.spiritapp.ui.home;
 
-import java.awt.Component;
 import java.awt.Image;
-import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -32,22 +30,17 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.event.HyperlinkEvent.EventType;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
 
 import com.actelion.research.spiritapp.ui.SpiritFrame;
-import com.actelion.research.spiritapp.ui.study.StudyActions;
 import com.actelion.research.spiritapp.ui.study.StudyEditorPane;
 import com.actelion.research.spiritapp.ui.study.depictor.StudyDepictor;
+import com.actelion.research.spiritapp.ui.util.component.SpiritHyperlinkListener;
 import com.actelion.research.spiritapp.ui.util.editor.ImageEditorPane;
-import com.actelion.research.spiritapp.ui.util.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.HSQLFileAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -83,40 +76,39 @@ public class LastActivityEditorPane extends ImageEditorPane {
 		days = SpiritProperties.getInstance().getValueInt(PropertyKey.SYSTEM_HOMEDAYS);
 		final JPopupMenu popupMenu = new JPopupMenu();
 		popupMenu.add(new JLabel("TEST"));
-		popupMenu.addPopupMenuListener(new PopupMenuListener() {
-			@Override
-			public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-				popupMenu.removeAll();
-				Point pt = getMousePosition();
-				int pos = viewToModel(pt);
-				try {
-					String s = getDocument().getText(Math.max(0, pos-30), 60);
-					//Find study
-					Matcher m = Pattern.compile("S-\\d{5}").matcher(s);
-					if(m.find()) {
-						String studyId = m.group();
-						Study study = DAOStudy.getStudyByStudyId(studyId);
-						if(study!=null) {
-							JPopupMenu menu = StudyActions.createPopup(study);
-							System.out.println("LastActivityEditorPane "+studyId);
-							for(Component comp : menu.getComponents()) {
-								System.out.println(comp);
-								popupMenu.add(comp);
-							}
-						}
-					}
-				} catch(Exception ex) {
-					//Ignore
-				}
-			}
-
-			@Override
-			public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {}
-
-			@Override
-			public void popupMenuCanceled(PopupMenuEvent e) {}
-		});
-		setComponentPopupMenu(popupMenu);
+		//		popupMenu.addPopupMenuListener(new PopupMenuListener() {
+		//			@Override
+		//			public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+		//				popupMenu.removeAll();
+		//				Point pt = getMousePosition();
+		//				int pos = viewToModel(pt);
+		//				try {
+		//					String s = getDocument().getText(Math.max(0, pos-30), 60);
+		//					//Find study
+		//					Matcher m = Pattern.compile("S-\\d{5}").matcher(s);
+		//					if(m.find()) {
+		//						String studyId = m.group();
+		//						Study study = DAOStudy.getStudyByStudyId(studyId);
+		//						if(study!=null) {
+		//							JPopupMenu menu = StudyActions.createPopup(study);
+		//							for(Component comp : menu.getComponents()) {
+		//								System.out.println(comp);
+		//								popupMenu.add(comp);
+		//							}
+		//						}
+		//					}
+		//				} catch(Exception ex) {
+		//					//Ignore
+		//				}
+		//			}
+		//
+		//			@Override
+		//			public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {}
+		//
+		//			@Override
+		//			public void popupMenuCanceled(PopupMenuEvent e) {}
+		//		});
+		//		setComponentPopupMenu(popupMenu);
 		addHyperlinkListener(new SpiritHyperlinkListener());
 		addHyperlinkListener(e-> {
 			if(e.getEventType()==EventType.ACTIVATED) {

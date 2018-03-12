@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -28,13 +28,13 @@ import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.border.Border;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
 
-import com.actelion.research.spiritcore.business.biosample.BarcodeSequence.Category;
+import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.study.AttachedBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBarcode;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomTextField;
@@ -100,7 +100,8 @@ public class SampleIdGenerateField<UNDERLYING> extends JCustomTextField {
 					}
 
 					//Find the suffix
-					String suffix = DAOBarcode.getNextId(Category.BIOSAMPLE, prefix/*, false*/);
+					Biosample b = (currentObject instanceof Biosample)? ((Biosample)currentObject): (currentObject instanceof AttachedBiosample)? ((AttachedBiosample)currentObject).getBiosample(): null;
+					String suffix = DAOBarcode.getNextId(b);
 					if(suffix.length()<prefix.length()) return;
 					suffix = suffix.substring(prefix.length());
 
@@ -146,7 +147,8 @@ public class SampleIdGenerateField<UNDERLYING> extends JCustomTextField {
 
 		//Generate a new barcode
 		try {
-			String id = DAOBarcode.getNextId(Category.BIOSAMPLE, prefix);
+			Biosample b = (object instanceof Biosample)? ((Biosample)object): (object instanceof AttachedBiosample)? ((AttachedBiosample)object).getBiosample(): null;
+			String id = DAOBarcode.getNextId(b);
 			object2sampleId.put(object, id);
 			return id;
 		} catch (Exception e) {
@@ -195,19 +197,10 @@ public class SampleIdGenerateField<UNDERLYING> extends JCustomTextField {
 		super.setEnabled(enabled);
 	}
 
-
 	@Override
 	public void setBorder(Border border) {
 		if(border==null) return;
 		super.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0, 0, 0, 12)));
-	}
-
-	public static void main(String[] args) {
-		JFrame f = new JFrame("");
-		f.setContentPane(new SampleIdGenerateField<>());
-		f.pack();
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.setVisible(true);
 	}
 
 }

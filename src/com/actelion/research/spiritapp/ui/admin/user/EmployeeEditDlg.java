@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -21,10 +21,11 @@
 
 package com.actelion.research.spiritapp.ui.admin.user;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.TreeSet;
 
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -34,9 +35,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import com.actelion.research.spiritapp.ui.SpiritFrame;
+import com.actelion.research.spiritapp.ui.util.component.EmployeeGroupComboBox;
 import com.actelion.research.spiritapp.ui.util.component.JSpiritEscapeDialog;
-import com.actelion.research.spiritapp.ui.util.lf.EmployeeGroupComboBox;
-import com.actelion.research.spiritapp.ui.util.lf.UserIdComboBox;
+import com.actelion.research.spiritapp.ui.util.component.UserIdComboBox;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
 import com.actelion.research.spiritcore.business.employee.Employee;
@@ -45,10 +46,10 @@ import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
+import com.actelion.research.util.ui.JComboCheckBox;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JExceptionDialog;
-import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
@@ -66,10 +67,7 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 	private EmployeeGroupComboBox group3Box = new EmployeeGroupComboBox(false);
 	private EmployeeGroupComboBox group4Box = new EmployeeGroupComboBox(false);
 
-	private JGenericComboBox<String> role1Box;
-	private JGenericComboBox<String> role2Box;
-	private JGenericComboBox<String> role3Box;
-	private JGenericComboBox<String> role4Box;
+	private JComboCheckBox rolesBox;
 
 	private final Employee emp;
 
@@ -78,10 +76,9 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 		emp = JPAUtil.reattach(myEmp);
 
 
-		role1Box = new JGenericComboBox<>(SpiritProperties.getInstance().getUserRoles(), true);
-		role2Box = new JGenericComboBox<>(SpiritProperties.getInstance().getUserRoles(), true);
-		role3Box = new JGenericComboBox<>(SpiritProperties.getInstance().getUserRoles(), true);
-		role4Box = new JGenericComboBox<>(SpiritProperties.getInstance().getUserRoles(), true);
+		rolesBox = new JComboCheckBox(SpiritProperties.getInstance().getUserRoles());
+		rolesBox.setColumns(25);
+		rolesBox.setAllowTyping(false);
 
 		generateButton.addActionListener(e-> {
 			char[] symbols = "aeoiubcdfghjklmnprstvxyz".toCharArray();
@@ -115,11 +112,8 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 		if(iter.hasNext()) group4Box.setSelection(iter.next());
 		disabledCheckBox.setSelected(emp.isDisabled());
 
-		Iterator<String> iter2 = emp.getRoles().iterator();
-		if(iter2.hasNext()) role1Box.setSelection(iter2.next());
-		if(iter2.hasNext()) role2Box.setSelection(iter2.next());
-		if(iter2.hasNext()) role3Box.setSelection(iter2.next());
-		if(iter2.hasNext()) role4Box.setSelection(iter2.next());
+
+		rolesBox.setCheckedItems(new ArrayList<>(emp.getRoles()).toArray(new String[0]));
 
 
 		UserManagedMode mode = DBAdapter.getInstance().getUserManagedMode();
@@ -132,18 +126,17 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 							+ "All the members of a group can read/edit those samples.")));
 		}
 
+		boolean useGroups = SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS);
+
 		JPanel centerPane = UIUtils.createVerticalBox(
 				UIUtils.createTitleBox("User", UIUtils.createTable(
 						new JLabel("Username: "), UIUtils.createHorizontalBox(usernameField, new JInfoLabel("unique")),
 						(mode==UserManagedMode.WRITE_PWD? new JLabel("Password: "): null), (mode==UserManagedMode.WRITE_PWD? UIUtils.createHorizontalBox(passwordField, generateButton): null),
-						new JLabel("Manager: "), managerField,
-						null, disabledCheckBox)),
+						useGroups? new JLabel("Manager: "): null, useGroups? managerField: null,
+								null, disabledCheckBox)),
 				groupPanel,
 				UIUtils.createTitleBox("Roles", UIUtils.createTable(
-						Box.createHorizontalStrut(20), role1Box,
-						null, role2Box,
-						null, role3Box,
-						null, role4Box)));
+						Box.createHorizontalStrut(20), rolesBox)));
 
 
 		JButton saveButton = new JIconButton(IconType.SAVE, emp.getId()<=0? "Add Employee": "Update");
@@ -158,11 +151,13 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 					emp.setManager(null);
 				}
 
-				if(passwordField.getText().length()>0) {
-					emp.setPassword(DBAdapter.getInstance().encryptPassword(passwordField.getText().toCharArray()));
-				} else if(emp.getPassword()==null || emp.getPassword().length()==0) {
-					int res =JOptionPane.showConfirmDialog(EmployeeEditDlg.this, "You didn't enter any password. Are you sure?", "No Password", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-					if(res!=JOptionPane.YES_OPTION) return;
+				if(mode==UserManagedMode.WRITE_PWD) {
+					if(passwordField.getText().length()>0) {
+						emp.setPassword(DBAdapter.getInstance().encryptPassword(passwordField.getText().toCharArray()));
+					} else if(emp.getPassword()==null || emp.getPassword().length()==0) {
+						int res =JOptionPane.showConfirmDialog(EmployeeEditDlg.this, "You didn't enter any password. Are you sure?", "No Password", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+						if(res!=JOptionPane.YES_OPTION) return;
+					}
 				}
 
 				emp.getEmployeeGroups().clear();
@@ -171,13 +166,8 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 				if(group3Box.getSelection()!=null) emp.getEmployeeGroups().add(group3Box.getSelection());
 				if(group4Box.getSelection()!=null) emp.getEmployeeGroups().add(group4Box.getSelection());
 
-				Set<String> roles = new HashSet<>();
-				if(role1Box.getSelection()!=null) roles.add(role1Box.getSelection());
-				if(role2Box.getSelection()!=null) roles.add(role2Box.getSelection());
-				if(role3Box.getSelection()!=null) roles.add(role3Box.getSelection());
-				if(role4Box.getSelection()!=null) roles.add(role4Box.getSelection());
 
-				emp.setRoles(roles);
+				emp.setRoles(new TreeSet<>(Arrays.asList(rolesBox.getCheckedItems())));
 
 				emp.setDisabled(disabledCheckBox.isSelected());
 

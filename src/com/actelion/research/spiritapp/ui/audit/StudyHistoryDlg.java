@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -23,7 +23,6 @@ package com.actelion.research.spiritapp.ui.audit;
 
 import java.awt.event.MouseEvent;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.JCheckBox;
@@ -34,8 +33,10 @@ import javax.swing.JSplitPane;
 import com.actelion.research.spiritapp.ui.admin.AdminActions;
 import com.actelion.research.spiritcore.business.audit.Revision;
 import com.actelion.research.spiritcore.business.audit.RevisionQuery;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
@@ -53,9 +54,9 @@ public class StudyHistoryDlg extends JEscapeDialog {
 
 
 	private Study study;
-	private RevisionTable revisionTable = new RevisionTable(true);
+	private RevisionTable revisionTable = new RevisionTable();
 	private JCheckBox studyCheckbox = new JCheckBox("Study", true);
-	private JCheckBox samplesCheckbox = new JCheckBox("Biosamples");
+	private JCheckBox samplesCheckbox = new JCheckBox("Biosamples", true);
 	private JCheckBox resultsCheckbox = new JCheckBox("Results");
 
 	public StudyHistoryDlg(Study study) {
@@ -86,6 +87,10 @@ public class StudyHistoryDlg extends JEscapeDialog {
 		samplesCheckbox.addActionListener(e->refreshInThread());
 		resultsCheckbox.addActionListener(e->refreshInThread());
 
+		if(!SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+			resultsCheckbox.setVisible(false);
+		}
+
 		//Create layout
 		JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT,
 				UIUtils.createBox(
@@ -108,7 +113,7 @@ public class StudyHistoryDlg extends JEscapeDialog {
 		revisionTable.clear();
 		new SwingWorkerExtended(getContentPane(), SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			private List<Revision> revisions;
-			private Map<Revision, String> changeMap;
+			//			private Map<Revision, String> changeMap;
 			@Override
 			protected void doInBackground() throws Exception {
 
@@ -118,7 +123,6 @@ public class StudyHistoryDlg extends JEscapeDialog {
 				query.setSamples(samplesCheckbox.isSelected());
 				query.setResults(resultsCheckbox.isSelected());
 				revisions = DAORevision.queryRevisions(query);
-				changeMap = DAORevision.getLastChanges(revisions);
 			}
 
 			@Override
@@ -126,7 +130,8 @@ public class StudyHistoryDlg extends JEscapeDialog {
 				if(revisions.size()==0) {
 					JExceptionDialog.showError("There are no revisions saved");
 				}
-				revisionTable.setRows(revisions, changeMap);
+				//				revisionTable.setRows(revisions, changeMap);
+				revisionTable.setRows(revisions);
 			}
 		};
 	}

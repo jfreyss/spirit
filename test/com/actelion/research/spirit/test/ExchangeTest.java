@@ -64,34 +64,45 @@ public class ExchangeTest extends AbstractSpiritTest {
 	@Test
 	public void testImportTst() throws Exception {
 		JPAUtil.closeFactory();
-
-		initDemoExamples(user);
-		String file = "S-00085.spirit";
+		SchemaCreator.clearExamples(user);
+		//		initDemoExamples(user);
+		//		String file = "S-00085.spirit";
 
 		int n = DAOStudy.getStudies().size();
 
+		System.out.println("ExchangeTest.testImportTst() INITIAL1="+DAOStudy.getStudies());
 		//Try first import
 		System.out.println("ExchangeTest.testImportTst() CREATE IMPORT");
-		Exchange e = Importer.read(new InputStreamReader(getClass().getResourceAsStream(file)));
+		//		Exchange e = Importer.read(new InputStreamReader(getClass().getResourceAsStream(file)));
+		Exchange e = Importer.read(new InputStreamReader(SchemaCreator.class.getResourceAsStream("demo.spirit")));
+
+		Assert.assertEquals("S-00001", e.getStudies().iterator().next().getStudyId());
 		ExchangeMapping mapping = new ExchangeMapping(e, EntityAction.CREATE, EntityAction.CREATE);
+		Assert.assertEquals(3, mapping.getMappedStudies().size());
 		DAOExchange.persist(mapping, user);
-		Assert.assertEquals(n+1, DAOStudy.getStudies().size());
+		Assert.assertEquals(n+3, DAOStudy.getStudies().size());
 
 		//Try skip import
+		System.out.println("ExchangeTest.testImportTst() INITIAL2="+DAOStudy.getStudies());
 		System.out.println("ExchangeTest.testImportTst() SKIP IMPORT");
-		e = Importer.read(new InputStreamReader(getClass().getResourceAsStream(file)));
+		e = Importer.read(new InputStreamReader(SchemaCreator.class.getResourceAsStream("demo.spirit")));
 		mapping = new ExchangeMapping(e, EntityAction.SKIP, EntityAction.SKIP);
+		Assert.assertEquals(EntityAction.SKIP, mapping.getStudyId2action().get("S-00001"));
 		DAOExchange.persist(mapping, user);
-		Assert.assertEquals(n+1, DAOStudy.getStudies().size());
+		Assert.assertEquals(n+3, DAOStudy.getStudies().size());
 
 		System.out.println("ExchangeTest.testImportTst() "+DAOStudy.getStudies());
 		//Try replace import
 		System.out.println("ExchangeTest.testImportTst() COPY IMPORT");
-		e = Importer.read(new InputStreamReader(getClass().getResourceAsStream(file)));
+		e = Importer.read(new InputStreamReader(SchemaCreator.class.getResourceAsStream("demo.spirit")));
 		mapping = new ExchangeMapping(e, EntityAction.SKIP, EntityAction.CREATE);
-		DAOExchange.persist(mapping, user);
-		Assert.assertEquals(n+2, DAOStudy.getStudies().size());
 
+		for (Biosample b : mapping.getMappedBiosamples()) {
+			b.setLocation(null);
+		}
+
+		DAOExchange.persist(mapping, user);
+		Assert.assertEquals(n+6, DAOStudy.getStudies().size());
 	}
 
 	@Test
@@ -191,14 +202,13 @@ public class ExchangeTest extends AbstractSpiritTest {
 
 		//Reset
 		JPAUtil.closeFactory();
-		EntityManager session = null;
+		EntityManager session = JPAUtil.createManager();
 		try {
-			session = JPAUtil.createManager();
 			session.getTransaction().begin();
 			DAOStudy.deleteStudies(session, DAOStudy.getStudies(), true, user);
 			session.getTransaction().commit();
 		} catch(Throwable e3) {
-			if(session!=null && session.getTransaction().isActive()) session.getTransaction().rollback();
+			if(session.getTransaction().isActive()) session.getTransaction().rollback();
 			throw e3;
 		} finally {
 			session.close();
@@ -247,6 +257,7 @@ public class ExchangeTest extends AbstractSpiritTest {
 		}
 
 	}
+
 
 	@Test
 	public void testExportExchange() throws Exception {

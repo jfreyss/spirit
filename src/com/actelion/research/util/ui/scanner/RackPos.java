@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -21,6 +21,7 @@
 
 package com.actelion.research.util.ui.scanner;
 
+import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,41 +31,41 @@ import java.util.List;
 /**
  * Encapsulation of a position and tubeId.
  * For scanner, which can scan more than one plate, we use rackNo to distinguish those
- * 
+ *
  * @author freyssj
  *
  */
-public class RackPos {
+public class RackPos implements Serializable {
 
 	public static final String NOREAD = "No Read";
-	
+
 	private int rackNo;
 	private String position;
 	private String tubeId;
-	private Object object; 
-	
+	private Object object;
+
 	public RackPos(String tubeId) {
 		this(null, tubeId);
-	}	
-	
+	}
+
 	public RackPos(String position, String tubeId) {
 		this(-1, position, tubeId);
 	}
-	
+
 	public RackPos(int rackNo, String position, String tubeId) {
 		this.rackNo = rackNo;
 		this.position = position;
 		this.tubeId = tubeId;
 	}
-	
+
 	public RackPos(int row, int col) {
 		this(-1, row, col, null);
 	}
-	
+
 	public RackPos(int rackNo, int row, int col) {
 		this(rackNo, row, col, null);
 	}
-	
+
 	public RackPos(int rackNo, int row, int col, String tubeId) {
 		this(rackNo, getPosition(row, col), tubeId);
 	}
@@ -75,39 +76,39 @@ public class RackPos {
 	public void setRackNo(int rackNo) {
 		this.rackNo = rackNo;
 	}
-	
+
 	public Object getObject() {
 		return object;
-	}	
-	
+	}
+
 	public void setObject(Object object) {
 		this.object = object;
 	}
-	
+
 	public String getTubeId() {
 		return tubeId;
 	}
 	public void setTubeId(String tubeId) {
 		this.tubeId = tubeId;
 	}
-	
+
 	public String getPosition() {
 		return position;
 	}
 	public void setPosition(String position) {
 		this.position = position;
 	}
-	
+
 	public int getCol() {
 		return getCol(position);
 	}
-	
+
 	public int getRow() {
 		return getRow(position);
 	}
-	
+
 	/**
-	 * Get the column from the position as string. Index is 0-based 
+	 * Get the column from the position as string. Index is 0-based
 	 * (A/01 -> 0, A/02 -> 1)
 	 */
 	public static int getCol(String position) {
@@ -118,9 +119,9 @@ public class RackPos {
 			return -1;
 		}
 	}
-	
+
 	/**
-	 * Get the row from the position as string. Index is 0-based 
+	 * Get the row from the position as string. Index is 0-based
 	 * (A/01 -> 0, A/02 -> 0)
 	 */
 	public static int getRow(String position) {
@@ -129,16 +130,16 @@ public class RackPos {
 			return position.toUpperCase().charAt(0)-'A';
 		} catch (Exception e) {
 			return -1;
-		}		
+		}
 	}
-	
+
 	public static String getPosition(int row, int col) {
 		if(row<0 || col<0) return "";
 		String pos = (char)('A'+row) + "/" + new DecimalFormat("00").format(col+1);
 		return pos;
-		
+
 	}
-	
+
 	public static String getNormalizedPosition(String pos) {
 		if(pos==null || pos.length()<2) return null;
 		if(pos.indexOf("_")>=0) pos = pos.substring(pos.indexOf("_")+1);
@@ -146,9 +147,9 @@ public class RackPos {
 		int row = pos.charAt(0)-'A';
 		int col;
 		try {
-			col = Integer.parseInt(pos.substring(1))-1; 
+			col = Integer.parseInt(pos.substring(1))-1;
 		} catch (Exception e) {
-			col = Integer.parseInt(pos.substring(2))-1; 
+			col = Integer.parseInt(pos.substring(2))-1;
 		}
 		return getPosition(row, col);
 	}
@@ -159,7 +160,7 @@ public class RackPos {
 		}
 		return res;
 	}
-	
+
 
 	public static final Comparator<RackPos> ROW_FIRST_COMPARATOR = new Comparator<RackPos>() {
 		@Override
@@ -169,7 +170,7 @@ public class RackPos {
 			return cmpRow!=0? cmpRow: cmpCol;
 		}
 	};
-	
+
 	public static final Comparator<RackPos> COL_FIRST_COMPARATOR = new Comparator<RackPos>() {
 		@Override
 		public int compare(RackPos o1, RackPos o2) {
@@ -177,9 +178,9 @@ public class RackPos {
 			int cmpCol = o1.getCol() - o2.getCol();
 			return cmpCol!=0? cmpCol: cmpRow;
 		}
-	};	
-	
-	
+	};
+
+
 	public RackPos getNext(boolean toLeft, final int rows, final int cols) {
 		int rackNo2 = rackNo;
 		int row2 = getRow();
@@ -191,7 +192,7 @@ public class RackPos {
 		} else {
 			row2++;
 			if(row2>=rows) {row2=0; col2++;}
-			if(col2>=cols) {col2=0; rackNo2++;}			
+			if(col2>=cols) {col2=0; rackNo2++;}
 		}
 		return new RackPos(rackNo2, row2, col2);
 	}
@@ -211,14 +212,14 @@ public class RackPos {
 		if (this == obj) return true;
 		if (obj == null) return false;
 		if (getClass() != obj.getClass()) return false;
-		
+
 		RackPos other = (RackPos) obj;
 		if (getCol() != other.getCol()) return false;
 		if (rackNo != other.rackNo) return false;
 		if (getRow() != other.getRow()) return false;
 		return true;
 	}
-	
+
 	public static List<String> getTubeIds(Collection<RackPos> scannedTubes) {
 		List<String> res = new ArrayList<String>();
 		for (RackPos sc : scannedTubes) {
@@ -226,7 +227,7 @@ public class RackPos {
 		}
 		return res;
 	}
-		
+
 	@Override
 	public String toString() {
 		return "Rack"+rackNo+"_"+getRow()+"x"+getCol()+": "+tubeId;

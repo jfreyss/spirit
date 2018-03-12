@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -69,7 +69,7 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 /**
- * Class responsible for setting/testing the connection (ie. dbadapter.testConnection should be successful)
+ * Class responsible for setting/testing the connection (ie. DBAapter.testConnection should be successful)
  *
  * @author freyssj
  *
@@ -81,13 +81,9 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 
 	private DBAdapter adapter;
 	private final DBAdapter initialAdapter;
-	//	private Map<String, String> propertyMap;
 
 	private final Map<PropertyDescriptor, JComponent> dbproperty2comp = new HashMap<>();
 	private final JLabel label = new JLabel();
-	//	private JPanel systemPanel = new JPanel(new GridLayout());
-	//	private JPanel userPanel = new JPanel(new GridLayout());
-	//	private JPanel studyPanel = new JPanel(new GridLayout());
 
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -228,7 +224,7 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 				UIUtils.createHorizontalBox(label, Box.createHorizontalGlue(), testConnectionButton, testSchemaButton, examplesButton, okButton)));
 
 		//contentpane
-		UIUtils.adaptSize(this, 840, 750);
+		UIUtils.adaptSize(this, 900, 750);
 		setVisible(true);
 
 		if(testImmediately) {
@@ -239,143 +235,6 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 			}
 		}
 	}
-
-	//	private void refreshConfigPanels() {
-	//		createPropertyPanel(systemPanel, "", "", PropertyKey.getPropertyKeys(Tab.SYSTEM), new String[0]);
-	//		createPropertyPanel(userPanel, "", "", PropertyKey.getPropertyKeys(Tab.USER), new String[0]);
-	//		createPropertyPanel(studyPanel, "", "", PropertyKey.getPropertyKeys(Tab.STUDY), new String[0]);
-	//	}
-	//
-	//	private Map<PropertyKey, JComponent> prop2editor = new HashMap<>();
-	//	private void createPropertyPanel(final JPanel panel, final String propertyPrefix, final String labelPrefix, final List<PropertyKey> properties, final String[] nestedValues) {
-	//		List<JComponent> tableComps = new ArrayList<>();
-	//		List<Component> panels = new ArrayList<>();
-	//		JTabbedPane nestedPanes = new JCustomTabbedPane(JTabbedPane.LEFT);
-	//
-	//		//Loop through properties
-	//		for (final PropertyKey p : properties) {
-	//
-	//			//Create editor for the property
-	//			String val = propertyMap.get(propertyPrefix + p.getKey())==null? p.getDefaultValue(nestedValues): propertyMap.get(propertyPrefix + p.getKey());
-	//			final JComponent editorComp;
-	//			if("true,false".equals(p.getOptions()) || "true, false".equals(p.getOptions())) {
-	//				final JCheckBox c = new JCheckBox();
-	//				editorComp = c;
-	//				c.setSelected("true".equals(val));
-	//				c.addActionListener(e -> propertyMap.put(propertyPrefix + p.getKey(), c.isSelected()?"true":"false"));
-	//			} else if(p.getOptions()!=null) {
-	//				final JComboBox<String> c = new JComboBox<>(p.getChoices());
-	//				editorComp = c;
-	//				c.setSelectedItem(val);
-	//				c.addActionListener(e-> propertyMap.put(propertyPrefix + p.getKey(), (String) c.getSelectedItem()));
-	//			} else if(p.getLinkedOptions()!=null) {
-	//				String parentVal = propertyMap.get(p.getLinkedOptions().getKey());
-	//				if(parentVal==null) parentVal = p.getLinkedOptions().getDefaultValue(nestedValues);
-	//
-	//				final JComboCheckBox c = new JComboCheckBox(p.getChoices(parentVal));
-	//				c.setEditable(false);
-	//				c.setSeparator(", ");
-	//				editorComp = c;
-	//				c.setText(val);
-	//				c.addTextChangeListener(comp -> propertyMap.put(propertyPrefix + p.getKey(), c.getText()));
-	//			} else {
-	//				final JCustomTextField c = new JCustomTextField(CustomFieldType.ALPHANUMERIC, p.getNestedProperties().size()>0? 38: 16);
-	//				editorComp = c;
-	//				c.setText(val);
-	//				c.addTextChangeListener(comp -> propertyMap.put(propertyPrefix + p.getKey(), c.getText()));
-	//			}
-	//			prop2editor.put(p, editorComp);
-	//
-	//			if(p.getLinkedOptions()!=null && prop2editor.get(p.getLinkedOptions())!=null) {
-	//				prop2editor.get(p.getLinkedOptions()).addFocusListener(new FocusAdapter() {
-	//					private String t;
-	//					@Override
-	//					public void focusLost(FocusEvent e) {
-	//						if(!t.equals(getValue(prop2editor.get(p.getLinkedOptions())))) {
-	//							refreshConfigPanels();
-	//						}
-	//					}
-	//					@Override
-	//					public void focusGained(FocusEvent e) {
-	//						t = getValue(prop2editor.get(p.getLinkedOptions()));
-	//					}
-	//				});
-	//			}
-	//
-	//			//Add a label and a tooltip
-	//			JLabel labelComp = new JLabel(" " + p.getLabel() + ": ");
-	//			JLabel tooltipComp = p.getTooltip()==null? new JLabel(): new JLabel(IconType.HELP.getIcon());
-	//			labelComp.setToolTipText(p.getTooltip()==null? null: "<html>" + p.getTooltip());
-	//			editorComp.setToolTipText(p.getTooltip()==null? null: "<html>" + p.getTooltip());
-	//			tooltipComp.setToolTipText(p.getTooltip()==null? null: "<html>" + p.getTooltip());
-	//
-	//			tableComps.add(tooltipComp);
-	//			tableComps.add(labelComp);
-	//			tableComps.add(editorComp);
-	//
-	//			if(p.getNestedProperties().size()>0) {
-	//				//If there ares nested properties, add them to a nested panel
-	//				editorComp.addFocusListener(new FocusAdapter() {
-	//					private String t;
-	//					@Override
-	//					public void focusLost(FocusEvent e) {
-	//						if(!t.equals(getValue(editorComp))) {
-	//							createPropertyPanel(panel, propertyPrefix, labelPrefix, properties, nestedValues);
-	//						}
-	//					}
-	//					@Override
-	//					public void focusGained(FocusEvent e) {
-	//						t = getValue(editorComp);
-	//					}
-	//				});
-	//				List<Component> nestedPanels = new ArrayList<>();
-	//				for(String token: MiscUtils.split(getValue(editorComp), ",")) {
-	//					//Add the nested value to our stack
-	//					final String[] nestedValues2 = new String[nestedValues.length+1];
-	//					System.arraycopy(nestedValues, 0, nestedValues2, 0, nestedValues.length);
-	//					nestedValues2[nestedValues.length] = token;
-	//
-	//					//create a nested panel
-	//					JPanel nestedPanel = new JPanel();
-	//					nestedPanel.setOpaque(false);
-	//					createPropertyPanel(nestedPanel, propertyPrefix + p.getKey() + "." + token +".", token, p.getNestedProperties(), nestedValues2);
-	//					nestedPanels.add(nestedPanel);
-	//				}
-	//				nestedPanels.add(Box.createVerticalGlue());
-	//				nestedPanes.add(p.getLabel(), UIUtils.createTitleBox(p.getLabel(), UIUtils.createVerticalBox(nestedPanels)));
-	//			}
-	//		}
-	//
-	//		if(tableComps.size()>0) {
-	//			if(labelPrefix.length()>0) {
-	//				//Nested panel
-	//				JPanel nestedPanel;
-	//				if(tableComps.size()>=3*6) {
-	//					int n = (tableComps.size()/3+1)/2;
-	//
-	//					nestedPanel =  UIUtils.createGrid(
-	//							UIUtils.createTable(3, 5, 0, tableComps.subList(0, n*3)),
-	//							UIUtils.createTable(3, 5, 0, tableComps.subList(n*3, tableComps.size())));
-	//				} else {
-	//					nestedPanel = UIUtils.createTable(3, 5, 0, tableComps);
-	//				}
-	//				panels.add(UIUtils.createBox(UIUtils.createBox(nestedPanel, null, null, Box.createHorizontalStrut(10), Box.createHorizontalGlue()),
-	//						new JCustomLabel(labelPrefix, FastFont.BOLD)));
-	//			} else {
-	//				//Main Panel
-	//				panels.add(UIUtils.createTitleBox(UIUtils.createTable(3, 5, 3, tableComps)));
-	//			}
-	//		}
-	//		if(nestedPanes.getTabCount()>0) {
-	//			panels.add(nestedPanes);
-	//		}
-	//		panels.add(Box.createVerticalGlue());
-	//
-	//		panel.removeAll();
-	//		panel.add(UIUtils.createVerticalBox(panels));
-	//		panel.validate();
-	//	}
-
 	private void initUISpecificProperties() {
 		List<JComponent> comps = new ArrayList<>();
 		if(adapter!=null) {
@@ -472,16 +331,6 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 		DBAdapter.setAdapter(null);
 	}
 
-	//	private String getValue(JComponent c) {
-	//		if(c instanceof JComboBox) {
-	//			return (String) ((JComboBox<?>)c).getSelectedItem();
-	//		} else if(c instanceof JTextComponent) {
-	//			return ((JTextComponent)c).getText();
-	//		} else {
-	//			throw new RuntimeException("Invalid component: "+c);
-	//		}
-	//	}
-
 	private void testConnection() throws Exception {
 		if(adapter==null) throw new Exception("You must select an adapter");
 		updateDBProperties();
@@ -525,9 +374,6 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 			DBAdapter.saveDBProperties();
 		}
 
-		//ConfigProperties in DB
-		//		SpiritProperties.getInstance().setValues(propertyMap);
-		//		SpiritProperties.getInstance().saveValues();
 		dispose();
 		SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
 

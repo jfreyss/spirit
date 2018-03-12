@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -37,8 +37,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
+import com.actelion.research.spiritapp.ui.util.component.LF;
 import com.actelion.research.spiritapp.ui.util.editor.ImageEditorPane;
-import com.actelion.research.spiritapp.ui.util.lf.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -106,7 +106,6 @@ public class PivotDlg extends JEscapeDialog {
 		gridTable.selectAll();
 		SwingUtilities.invokeLater(()->gridTable.requestFocus());
 
-
 		JEditorPane helpPane = new ImageEditorPane("<html><body>" +
 				"<div style='margin-left-10px'> Copy and Paste your data in the table below here. The data should be formatted like this:<br>" +
 				" <li> First column: the list of <b>SampleId</b>s.<br>" +
@@ -123,8 +122,7 @@ public class PivotDlg extends JEscapeDialog {
 		setContentPane(UIUtils.createBox(new JScrollPane(gridTable),
 				helpPane,
 				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), importButton)));
-		setSize(1150, 650);
-		setLocationRelativeTo(owner);
+		UIUtils.adaptSize(this, 1150, 650);
 		setVisible(true);
 
 	}
@@ -187,9 +185,6 @@ public class PivotDlg extends JEscapeDialog {
 			} else if(table[0][j].equalsIgnoreCase("metadata")) {
 				if(metadataIndex>=0) throw new Exception("'Metadata' is present 2 times in the header");
 				else metadataIndex = j;
-				//			} else if(table[0][j].equalsIgnoreCase("eln")) {
-				//				if(elnIndex>=0) throw new Exception("'ELN' is present 2 times in the header");
-				//				else elnIndex = j;
 			} else if(table[0][j].equalsIgnoreCase("group")) {
 				if(groupIndex>=0) throw new Exception("'Group' is present 2 times in the header");
 				else groupIndex = j;
@@ -343,12 +338,8 @@ public class PivotDlg extends JEscapeDialog {
 			}
 		}
 
-
-		//Create the pivoted table
+		//Create an example for the pivoted table
 		if(export.size()<=0) {
-			//
-			//Create Example
-			//
 			export.clear();
 			List<Phase> phases = new ArrayList<>();
 			phases.add(new Phase("d0"));
@@ -373,11 +364,8 @@ public class PivotDlg extends JEscapeDialog {
 				export.add(r);
 			}
 		}
-		System.out.println("PivotDlg.populateTextArea() "+export);
-
 
 		PivotHelper helper = new PivotHelper(export);
-
 		String[][] table = new String[0][0];
 		if(pivotMode==PivotMode.ANIMAL_INPUT && test.getAttributes(OutputType.INPUT).size()>0) {
 			table = helper.pivot(test.getAttributes(OutputType.INPUT).get(0).getName());

@@ -2,6 +2,7 @@ package com.actelion.research.spirit.test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -41,7 +42,7 @@ import com.actelion.research.util.CompareUtils;
 import junit.framework.AssertionFailedError;
 
 /**
- * Elaborate Tests on study (import demo)
+ * Advanced Tests on study (import demo)
  * @author Joel Freyss
  *
  */
@@ -657,7 +658,7 @@ public class StudyTest extends AbstractSpiritTest {
 		s2.getMetadataMap().put("Experimenter", "Employee1");
 		s2.getMetadataMap().put("Old", "previous");
 
-		Assert.assertEquals("Title=My Title 1; Experimenter=Employee2; Old=", s1.getDifference(s2));
+		Assert.assertEquals("Title=My Title 1 replacing My Title 2\nExperimenter=Employee2 replacing Employee1\nOld= replacing previous", s1.getDifference(s2));
 
 
 
@@ -716,10 +717,21 @@ public class StudyTest extends AbstractSpiritTest {
 
 		s2.setStudyId(null);
 		DAOStudy.persistStudies(MiscUtils.listOf(s1, s2), user);
-
-
-
 	}
 
+
+	@Test
+	public void testNextStudyId() throws Exception {
+		SpiritProperties.getInstance().setValue(PropertyKey.STUDY_STUDYID_PATTERN, "SS-##");
+		Assert.assertEquals("SS-01", DAOStudy.getNextStudyId());
+
+		SpiritProperties.getInstance().setValue(PropertyKey.STUDY_STUDYID_PATTERN, "{YY}-##");
+		Calendar cal = Calendar.getInstance();
+		Assert.assertEquals( (cal.get(Calendar.YEAR)%100) + "-01", DAOStudy.getNextStudyId());
+
+
+
+		SpiritProperties.getInstance().setValue(PropertyKey.STUDY_STUDYID_PATTERN, "S-#####");
+	}
 
 }

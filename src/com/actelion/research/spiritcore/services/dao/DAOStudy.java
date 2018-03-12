@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -41,7 +41,6 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;
 import javax.persistence.Query;
 
-import org.hibernate.jpa.QueryHints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +50,7 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.result.Test;
@@ -119,11 +119,11 @@ public class DAOStudy {
 			if(user!=null) {
 				for (Study study : res) {
 					if(level==RightLevel.ADMIN) {
-						if(SpiritRights.canAdmin(study, user)) studies.add(study);
+						if(SpiritRights.canEdit(study, user)) studies.add(study);
 					} else if(level==RightLevel.BLIND) {
-						if(SpiritRights.canBlind(study, user)) studies.add(study);
+						if(SpiritRights.isBlind(study, user) || SpiritRights.canEditBiosamples(study, user)) studies.add(study);
 					} else if(level==RightLevel.WRITE) {
-						if(SpiritRights.canExpert(study, user)) studies.add(study);
+						if(SpiritRights.canEditBiosamples(study, user)) studies.add(study);
 					} else if(level==RightLevel.READ) {
 						if(SpiritRights.canRead(study, user)) studies.add(study);
 					}
@@ -240,98 +240,99 @@ public class DAOStudy {
 	}
 
 	public static List<Study> queryStudies(StudyQuery q, SpiritUser user) throws Exception {
+		assert q!=null;
 		EntityManager session = JPAUtil.getManager();
 		long s = System.currentTimeMillis();
 
 		String jpql = "SELECT s FROM Study s where 1=1 ";
 		StringBuilder clause = new StringBuilder();
-		List<Object> parameters = new ArrayList<Object>();
-		if(q!=null) {
+		List<Object> parameters = new ArrayList<>();
 
-			if(q.getStudyIds()!=null && q.getStudyIds().length()>0) {
-				clause.append(" and (" + QueryTokenizer.expandOrQuery("s.studyId = ?", q.getStudyIds()) + ")");
-			}
-
-			if(q.getLocalIds()!=null && q.getLocalIds().length()>0) {
-				clause.append(" and (" + QueryTokenizer.expandOrQuery("s.localId = ?", q.getLocalIds()) + ")");
-			}
-
-			if(q.getKeywords()!=null && q.getKeywords().length()>0) {
-				String expr = "lower(s.studyId) like lower(?)" +
-						" or lower(s.localId) like lower(?)" +
-						" or lower(s.serializedMetadata) like lower(?)" +
-						" or lower(s.title) like lower(?)" +
-						" or lower(s.adminUsers) like lower(?)" +
-						" or lower(s.expertUsers) like lower(?)" +
-						" or lower(s.blindUsers) like lower(?)" +
-						" or lower(s.state) like lower(?)" +
-						" or s.id in (select nt.study.id from NamedTreatment nt where lower(nt.name) like lower(?) or lower(nt.compoundName) like lower(?) or lower(nt.compoundName2) like lower(?))";
-				clause.append(" and (" + QueryTokenizer.expandQuery(expr, q.getKeywords(), true, true) + ")");
-			}
-
-			if(q.getState()!=null && q.getState().length()>0) {
-				clause.append(" and s.state = ?");
-				parameters.add(q.getState());
-			}
-
-			if(q.getType()!=null && q.getType().length()>0) {
-				clause.append(" and s.type = ?");
-				parameters.add(q.getType());
-			}
-
-			if(q.getMetadataMap().size()>0) {
-				for (Map.Entry<String, String> e : q.getMetadataMap().entrySet()) {
-					if(e.getValue().length()>0) {
-						clause.append(" and s.serializedMetadata like ?");
-						parameters.add("%" + e.getValue() + "%");
-					}
-				}
-			}
-
-			if(q.getUser()!=null && q.getUser().length()>0) {
-				clause.append(" and (lower(s.adminUsers) like lower(?) or lower(s.expertUsers) like lower(?) or lower(s.creUser) like lower(?))");
-				parameters.add("%"+q.getUser()+"%");
-				parameters.add("%"+q.getUser()+"%");
-				parameters.add("%"+q.getUser()+"%");
-			}
-
-
-			if(q.getUpdDays()!=null && q.getUpdDays().length()>0) {
-				String digits = MiscUtils.extractStartDigits(q.getUpdDays());
-				if(digits.length()>0) {
-					try {
-						clause.append(" and s.updDate > ?");
-						Calendar cal = Calendar.getInstance();
-						cal.setTime(new Date());
-						cal.add(Calendar.DAY_OF_YEAR, -Integer.parseInt(digits));
-						parameters.add(cal.getTime());
-					} catch (Exception e) {
-					}
-				}
-			}
-			if(q.getCreDays()!=null && q.getCreDays().length()>0) {
-				String digits = MiscUtils.extractStartDigits(q.getCreDays());
-				if(digits.length()>0) {
-					try {
-						clause.append(" and s.creDate > ?");
-						Calendar cal = Calendar.getInstance();
-						cal.setTime(new Date());
-						cal.add(Calendar.DAY_OF_YEAR, -Integer.parseInt(digits));
-						parameters.add(cal.getTime());
-					} catch (Exception e) {
-					}
-				}
-			}
-			if(q.getRecentStartDays()>0) {
-				Calendar cal = Calendar.getInstance();
-				cal.setTime(new Date());
-				cal.add(Calendar.DAY_OF_YEAR, -q.getRecentStartDays());
-				clause.append(" and s.startingDate > ?");
-				parameters.add(cal.getTime());
-			}
-
-			if(clause.length()>0) jpql += clause;
+		if(q.getStudyIds()!=null && q.getStudyIds().length()>0) {
+			clause.append(" and (" + QueryTokenizer.expandOrQuery("s.studyId = ?", q.getStudyIds()) + ")");
 		}
+
+		if(q.getLocalIds()!=null && q.getLocalIds().length()>0) {
+			clause.append(" and (" + QueryTokenizer.expandOrQuery("s.localId = ?", q.getLocalIds()) + ")");
+		}
+
+		if(q.getKeywords()!=null && q.getKeywords().length()>0) {
+			String expr = "lower(s.studyId) like lower(?)" +
+					" or lower(s.localId) like lower(?)" +
+					" or lower(s.serializedMetadata) like lower(?)" +
+					" or lower(s.title) like lower(?)" +
+					" or lower(s.adminUsers) like lower(?)" +
+					" or lower(s.expertUsers) like lower(?)" +
+					" or lower(s.blindUsers) like lower(?)" +
+					" or lower(s.state) like lower(?)" +
+					" or lower(s.creUser) like lower(?)" +
+					" or lower(s.updUser) like lower(?)" +
+					" or s.id in (select nt.study.id from NamedTreatment nt where lower(nt.name) like lower(?) or lower(nt.compoundName) like lower(?) or lower(nt.compoundName2) like lower(?))";
+			clause.append(" and (" + QueryTokenizer.expandQuery(expr, q.getKeywords(), true, true) + ")");
+		}
+
+		if(q.getState()!=null && q.getState().length()>0) {
+			clause.append(" and s.state = ?");
+			parameters.add(q.getState());
+		}
+
+		if(q.getType()!=null && q.getType().length()>0) {
+			clause.append(" and s.type = ?");
+			parameters.add(q.getType());
+		}
+
+		if(q.getMetadataMap().size()>0) {
+			for (Map.Entry<String, String> e : q.getMetadataMap().entrySet()) {
+				if(e.getValue().length()>0) {
+					clause.append(" and s.serializedMetadata like ?");
+					parameters.add("%" + e.getValue() + "%");
+				}
+			}
+		}
+
+		if(q.getUser()!=null && q.getUser().length()>0) {
+			clause.append(" and (lower(s.adminUsers) like lower(?) or lower(s.expertUsers) like lower(?) or lower(s.creUser) like lower(?))");
+			parameters.add("%"+q.getUser()+"%");
+			parameters.add("%"+q.getUser()+"%");
+			parameters.add("%"+q.getUser()+"%");
+		}
+
+
+		if(q.getUpdDays()!=null && q.getUpdDays().length()>0) {
+			String digits = MiscUtils.extractStartDigits(q.getUpdDays());
+			if(digits.length()>0) {
+				try {
+					clause.append(" and s.updDate > ?");
+					Calendar cal = Calendar.getInstance();
+					cal.setTime(new Date());
+					cal.add(Calendar.DAY_OF_YEAR, -Integer.parseInt(digits));
+					parameters.add(cal.getTime());
+				} catch (Exception e) {
+				}
+			}
+		}
+		if(q.getCreDays()!=null && q.getCreDays().length()>0) {
+			String digits = MiscUtils.extractStartDigits(q.getCreDays());
+			if(digits.length()>0) {
+				try {
+					clause.append(" and s.creDate > ?");
+					Calendar cal = Calendar.getInstance();
+					cal.setTime(new Date());
+					cal.add(Calendar.DAY_OF_YEAR, -Integer.parseInt(digits));
+					parameters.add(cal.getTime());
+				} catch (Exception e) {
+				}
+			}
+		}
+		if(q.getRecentStartDays()>0) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(new Date());
+			cal.add(Calendar.DAY_OF_YEAR, -q.getRecentStartDays());
+			clause.append(" and s.startingDate > ?");
+			parameters.add(cal.getTime());
+		}
+
+		if(clause.length()>0) jpql += clause;
 
 		//Query the DB
 		jpql = JPAUtil.makeQueryJPLCompatible(jpql);
@@ -346,7 +347,7 @@ public class DAOStudy {
 			List<Study> filtered = new ArrayList<>();
 			loop: for (Study study : studies) {
 				for (Map.Entry<String, String> e : q.getMetadataMap().entrySet()) {
-					if(e.getValue().length()>0 && !e.getValue().equalsIgnoreCase(study.getMetadata(e.getKey()))) continue loop;
+					if(e.getValue().length()>0 && !study.getMetadata(e.getKey()).toLowerCase().contains(e.getValue().toLowerCase())) continue loop;
 				}
 				filtered.add(study);
 			}
@@ -398,7 +399,7 @@ public class DAOStudy {
 				String lastUser = (String) lastUpdate[1];
 				logger.info("last update of " + study + " was " + lastDate + " by " + lastUser + " attached object: "+study.getUpdDate());
 
-				if(lastDate!=null && study.getUpdDate()!=null /*lastUser!=null && !lastUser.equals(user.getUsername())*/) {
+				if(lastDate!=null && study.getUpdDate()!=null) {
 					int diffSeconds = (int) (lastDate.getTime() - study.getUpdDate().getTime());
 					if(diffSeconds>0) throw new Exception("The study "+study+" has just been updated by "+lastUser+" [" + diffSeconds + "seconds ago].\nYou cannot overwrite those changes unless you reopen the newest version.");
 				}
@@ -429,7 +430,7 @@ public class DAOStudy {
 		//Check rights
 		Date now = JPAUtil.getCurrentDateFromDatabase();
 		for (Study study : studies) {
-			if(!SpiritRights.canAdmin(study, user) && !SpiritRights.canBlind(study, user)) throw new Exception("You are not allowed to edit this study");
+			//			if(!SpiritRights.canEdit(study, user) && !SpiritRights.canBlind(study, user)) throw new Exception("You are not allowed to edit this study");
 			Study existing = DAOStudy.getStudyByStudyId(study.getStudyId());
 			if(existing!=null && existing.getId()!=study.getId()) throw new Exception("The studyId "+study.getStudyId()+" is not unique");
 		}
@@ -438,6 +439,11 @@ public class DAOStudy {
 		for (Study study : studies) {
 			study.setUpdUser(user.getUsername());
 			study.setUpdDate(now);
+
+
+			if(study.getState()==null || study.getState().length()==0) {
+				study.setState(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_DEFAULTSTATE));
+			}
 
 			for (StudyAction a : new ArrayList<>(study.getStudyActions())) {
 				if(a.isEmpty() || a.getSubGroup()<0 || a.getSubGroup()>=a.getGroup().getNSubgroups()) {
@@ -497,7 +503,7 @@ public class DAOStudy {
 			txn.commit();
 			txn = null;
 		} finally {
-			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {}
+			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {e2.printStackTrace();}
 		}
 	}
 
@@ -561,19 +567,28 @@ public class DAOStudy {
 	}
 
 	public static String getNextStudyId(EntityManager session) {
-		String s = (String) session.createQuery("select max(s.studyId) from Study s where s.studyId like ('S-%')")
-				.setHint(QueryHints.HINT_READONLY, true)
-				.getSingleResult();
+
+		String pattern = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STUDYID_PATTERN);
+		String formattedPattern = DAOBarcode.formatPattern(pattern, null);
+		int prefLength = formattedPattern.indexOf("#");
+		int incrementLength = formattedPattern.lastIndexOf("#")-formattedPattern.indexOf("#")+1;
+		int suffLength = formattedPattern.length()-formattedPattern.lastIndexOf("#")-1;
+
+		String hql = "select max(s.studyId) from Study s where s.studyId like ('" +
+				formattedPattern.substring(0, prefLength) + "%" + formattedPattern.substring(formattedPattern.length()-suffLength) + "')";
+		String s = (String) session.createQuery(hql).getSingleResult();
+		int lastNo;
 		if(s==null) {
-			return "S-00001";
+			lastNo = 0;
+			return formattedPattern.substring(0, prefLength) + new DecimalFormat(MiscUtils.repeat("0", incrementLength)).format(1) + formattedPattern.substring(formattedPattern.length()-suffLength);
 		} else {
 			try {
-				int lastNumber = Integer.parseInt(s.substring(2));
-				return "S-" + new DecimalFormat("00000").format(lastNumber+1);
+				lastNo = Integer.parseInt(s.substring(prefLength, formattedPattern.length()-suffLength));
 			} catch (Exception e) {
-				throw new RuntimeException(e);
+				throw new RuntimeException("Invalid Last studyNo: "+s+" for pattern:"+formattedPattern);
 			}
 		}
+		return formattedPattern.substring(0, prefLength) + new DecimalFormat(MiscUtils.repeat("0", incrementLength)).format(lastNo+1) + formattedPattern.substring(formattedPattern.length()-suffLength);
 	}
 
 	public static void changeOwnership(Study study, SpiritUser toUser, SpiritUser updater) {
@@ -595,7 +610,7 @@ public class DAOStudy {
 			txn.commit();
 			txn = null;
 		} finally {
-			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
+			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
 		}
 	}
 

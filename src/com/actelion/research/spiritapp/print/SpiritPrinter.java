@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -22,6 +22,7 @@
 package com.actelion.research.spiritapp.print;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -31,7 +32,7 @@ import javax.print.PrintServiceLookup;
 import javax.print.attribute.standard.Media;
 
 /**
- * The SpiritPrinter util class is responsible for the printer and media's discovery through the Spirit application 
+ * The SpiritPrinter util class is responsible for the printer and media's discovery through the Spirit application
  * @author freyssj
  *
  */
@@ -50,7 +51,7 @@ public class SpiritPrinter {
 					if(preferred!=null) {
 						if(o1.toString().toUpperCase().contains(preferred.toUpperCase())) return 1;
 						if(o2.toString().toUpperCase().contains(preferred.toUpperCase())) return -1;
-					} 					
+					}
 					return o1.toString().compareToIgnoreCase(o2.toString());
 				}
 			});
@@ -59,35 +60,39 @@ public class SpiritPrinter {
 	}
 
 	public static PrintService[] getBrotherPrintServices() {
-		List<PrintService> printServices = new ArrayList<PrintService>();
-		PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
-		for (PrintService p : services) {
-			if(p.getName().toLowerCase().contains("brother") || p.getName().toLowerCase().contains("-br") ) {
-				printServices.add(p);
-			}
-		}
+		List<PrintService> printServices = Arrays.asList(PrintServiceLookup.lookupPrintServices(null, null));
+
 		Collections.sort(printServices, new Comparator<PrintService>() {
 			@Override
 			public int compare(PrintService o1, PrintService o2) {
-				
+
+				boolean brother1 = o1.getName().toLowerCase().contains("brother") || o1.getName().toLowerCase().contains("-br") || o1.getName().toLowerCase().contains("ipbl");
+				boolean brother2 = o2.getName().toLowerCase().contains("brother") || o2.getName().toLowerCase().contains("-br") || o2.getName().toLowerCase().contains("ipbl");
+
+				if(brother1 && !brother2) {
+					return -1; //Brother printer first
+				} else if(!brother1 && brother2) {
+					return 1;
+				}
+
 				if(o1.getName().startsWith("\\\\") && !o2.getName().startsWith("\\\\")) {
 					return 1; //Network printer last
-				} 
+				}
 				if(!o1.getName().startsWith("\\\\") && o2.getName().startsWith("\\\\")) {
 					return -1;
-				} 
-				
+				}
+
 				return o1.getName().compareToIgnoreCase(o2.getName());
 			}
 		});
 		return printServices.toArray(new PrintService[0]);
-		
+
 	}
-	
+
 	public static PrintService[] getPrintServices() {
 		return getPrintServices(null, null);
 	}
-	
+
 	public static PrintService[] getPrintServices(String name, String media) {
 		List<PrintService> printServices = new ArrayList<>();
 		PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
@@ -109,18 +114,18 @@ public class SpiritPrinter {
 		Collections.sort(printServices, new Comparator<PrintService>() {
 			@Override
 			public int compare(PrintService o1, PrintService o2) {
-				
+
 				if(o1.getName().startsWith("\\\\") && !o2.getName().startsWith("\\\\")) {
 					return 1; //Network printer last
-				} 
+				}
 				if(!o1.getName().startsWith("\\\\") && o2.getName().startsWith("\\\\")) {
 					return -1;
-				} 				
+				}
 				return o1.getName().compareToIgnoreCase(o2.getName());
 			}
 		});
 		return printServices.toArray(new PrintService[printServices.size()]);
-		
+
 	}
 
 	public static PrintService getPrintService(String printer) {
@@ -130,12 +135,12 @@ public class SpiritPrinter {
 				return p;
 			}
 		}
-		return null;		
+		return null;
 	}
 
 	public static Media getMedia(PrintService p, String media) {
 		Media foundMedia = null;
-		Media[] mps = (Media[]) SpiritPrinter.getMedia(p);
+		Media[] mps = SpiritPrinter.getMedia(p);
 		if(mps==null) return null;
 		for (Media m : mps) {
 			if(m.toString().contains(media)) foundMedia = m;
@@ -146,8 +151,8 @@ public class SpiritPrinter {
 	public static Media[] getMedia(PrintService p) {
 		if(p==null) return null;
 		Media[] mps = (Media[]) p.getSupportedAttributeValues(Media.class, null, null);
-		return mps;		
+		return mps;
 	}
 
-	
+
 }

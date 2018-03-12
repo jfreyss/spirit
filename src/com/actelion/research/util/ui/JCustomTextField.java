@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -26,8 +26,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Insets;
-import java.awt.Rectangle;
-import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -40,6 +38,7 @@ import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
@@ -140,12 +139,14 @@ public class JCustomTextField extends JTextField {
 
 	public void setType(CustomFieldType type) {
 		this.type = type;
-		setHorizontalAlignment(type==CustomFieldType.DOUBLE || type==CustomFieldType.INTEGER? JTextField.RIGHT: JTextField.LEFT);
-		setColumns(type==CustomFieldType.INTEGER? 3: type==CustomFieldType.DOUBLE? 5: type==CustomFieldType.DATE? 8: 14);
-		if(type==CustomFieldType.DOUBLE || type==CustomFieldType.INTEGER) setMaxChars(10);
+		//		setHorizontalAlignment(type==CustomFieldType.DOUBLE || type==CustomFieldType.INTEGER? JTextField.RIGHT: JTextField.LEFT);
+		setColumns(type==CustomFieldType.INTEGER? 3: type==CustomFieldType.DOUBLE? 5: type==CustomFieldType.DATE? 10: 14);
+		if(type==CustomFieldType.DOUBLE || type==CustomFieldType.INTEGER) {
+			setMaxChars(10);
+			setTextWhenEmpty(type==CustomFieldType.DOUBLE ? "double": "number");
+		}
 		if(type==CustomFieldType.DATE) {
 			setTextWhenEmpty(FormatterUtils.getLocaleFormat().getLocaleDateFormat());
-			//			setToolTipText("Date: yyyy, MM.yyyy, dd.MM.yyyy or Time: dd.MM.yyyy HH:mm:ss");
 		}
 	}
 
@@ -190,9 +191,9 @@ public class JCustomTextField extends JTextField {
 	 * @return
 	 * @throws Exception if the text is not empty and the date is not well formatted
 	 */
-	public Date getTextDate() throws Exception {
+	public Date getTextDate() {
 		Date parsed = FormatterUtils.parseDateTime(getText());
-		if(parsed==null && getText().length()>0) throw new Exception("The date not well formatted");
+		if(parsed==null && getText().length()>0) return null; //throw new Exception("The date is not well formatted");
 		return parsed;
 	}
 
@@ -221,6 +222,13 @@ public class JCustomTextField extends JTextField {
 	@Override
 	public void setText(String t) {
 		super.setText(t);
+
+		if(!isValidFormat()) {
+			setForeground(Color.RED);
+		} else {
+			setForeground(Color.BLACK);
+		}
+
 		fireTextChanged();
 
 		if(warningWhenEdited) {
@@ -233,14 +241,16 @@ public class JCustomTextField extends JTextField {
 
 		addFocusListener(new FocusAdapter() {
 			@Override
+			public void focusGained(FocusEvent e) {
+				setForeground(Color.BLACK);
+			}
+			@Override
 			public void focusLost(FocusEvent e) {
-				if(getType()==CustomFieldType.DATE) {
-					String s = FormatterUtils.cleanDateTime(getText());
-					if(s!=null && !s.equals(getText())) setText(s);
-				} else {
-					setText(getText().trim());
-				}
-				fireTextChanged();
+				String t = getText();
+				//				if(!t.trim().equals(t)) {
+				setText(t.trim());
+				//				}
+				//				fireTextChanged();
 			}
 		});
 
@@ -266,7 +276,6 @@ public class JCustomTextField extends JTextField {
 		});
 
 		addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				JCustomTextField.this.fireTextChanged();
@@ -317,14 +326,14 @@ public class JCustomTextField extends JTextField {
 		if(getText().length()==0 && textWhenEmpty!=null) {
 			g.setColor(isEnabled()? LABEL_COLOR: LABEL_COLOR_DISABLED);
 			g.setFont(getFont());
-			Shape clip = g.getClip();
-			g.setClip(new Rectangle(textX, 2, getWidth()-textX-16, getHeight()-4));
+			//			Shape clip = g.getClip();
+			//			g.setClip(new Rectangle(textX, 2, getWidth()-textX-16, getHeight()-4));
 			if(getHorizontalAlignment()==SwingConstants.RIGHT) {
 				g.drawString(textWhenEmpty, getWidth() - g.getFontMetrics().stringWidth(textWhenEmpty)- 5, getHeight()/2+5);
 			} else {
 				g.drawString(textWhenEmpty, textX, getHeight()/2+5);
 			}
-			g.setClip(clip);
+			//			g.setClip(clip);
 		}
 	}
 
@@ -358,6 +367,49 @@ public class JCustomTextField extends JTextField {
 
 	public void setBorderColor(Color color) {
 		setBorder(BorderFactory.createCompoundBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(2,2,2,2), BorderFactory.createLineBorder(color)), BorderFactory.createEmptyBorder(2,2,2,2)));
+	}
+
+	public boolean isValidFormat() {
+		if(getText()==null || getText().length()==0) return true;
+
+		switch (type) {
+		case ALPHANUMERIC:
+			return true;
+		case INTEGER:
+			return getTextInt()!=null;
+		case DOUBLE:
+			return getTextDouble()!=null;
+		case DATE:
+			return getTextDate()!=null;
+		default:
+			assert false;
+			return false;
+		}
+	}
+
+	@Override
+	public Dimension getPreferredSize() {
+		Dimension size = super.getPreferredSize();
+		if (getColumns() != 0) {
+			Insets insets = getInsets();
+			size.width = getColumns() * getColumnWidth(); //+ insets.left + insets.right;
+		}
+		return size;
+	}
+
+	public static void main(String[] args) {
+
+		JFrame f = new JFrame("Example of CustomTexField");
+		f.setContentPane(UIUtils.createBox(
+				UIUtils.createGrid(
+						UIUtils.createTitleBox("Alpha", UIUtils.createHorizontalBox(new JCustomTextField(CustomFieldType.ALPHANUMERIC))),
+						UIUtils.createTitleBox("Double", UIUtils.createHorizontalBox(new JCustomTextField(CustomFieldType.DOUBLE))),
+						UIUtils.createTitleBox("Integer", UIUtils.createHorizontalBox(new JCustomTextField(CustomFieldType.INTEGER))),
+						UIUtils.createTitleBox("Date", UIUtils.createHorizontalBox(new JCustomTextField(CustomFieldType.DATE)))
+						), null, UIUtils.createHorizontalBox()));
+		UIUtils.adaptSize(f, -1, -1);
+		f.setVisible(true);
+
 	}
 
 }

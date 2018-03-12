@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -44,7 +44,7 @@ import com.actelion.research.spiritapp.ui.biosample.linker.LinkedBiosampleColumn
 import com.actelion.research.spiritapp.ui.biosample.linker.MetadataColumn;
 import com.actelion.research.spiritapp.ui.biosample.linker.SampleIdColumn;
 import com.actelion.research.spiritapp.ui.biosample.linker.SampleNameColumn;
-import com.actelion.research.spiritapp.ui.util.lf.SpiritExcelTable;
+import com.actelion.research.spiritapp.ui.util.component.SpiritExcelTable;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -168,34 +168,16 @@ public class EditBiosampleTable extends SpiritExcelTable<Biosample> {
 		public void actionPerformed(ActionEvent e) {
 			try {
 				for (Biosample b : getRows()) {
-					Biotype type = DAOBiotype.getBiotype(Biotype.ANIMAL);
 					if(b.getId()>0 || (b.getSampleId()!=null && b.getSampleId().length()>0)) continue;
-					String id = DAOBarcode.getNextId(type);
-					b.setSampleId(id);
-					b.setBiotype(type);
+					b.setBiotype(DAOBiotype.getBiotype(Biotype.ANIMAL));
+					b.setSampleId(DAOBarcode.getNextId(b));
 				}
 				repaint();
 			} catch (Exception ex) {
-				ex.printStackTrace();
 				JExceptionDialog.showError(ex);
 			}
 		}
 	}
-
-	//	public class PrintAction extends AbstractAction {
-	//		public PrintAction() {
-	//			super("Print Labels for selected biosamples");
-	//		}
-	//		@Override
-	//		public void actionPerformed(ActionEvent e) {
-	//			List<Biosample> biosamples = new ArrayList<Biosample>();
-	//			for (int r: getSelectedRows()) {
-	//				biosamples.add(getModel().getRows().get(r));
-	//			}
-	//
-	//			PrinterDlg.createForBiosamples(biosamples);
-	//		}
-	//	}
 
 	@Override
 	protected void populateHeaderPopup(JPopupMenu popupMenu, Column<Biosample, ?> column) {

@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -23,7 +23,6 @@ package com.actelion.research.spiritapp.ui.study;
 
 import java.awt.Desktop;
 import java.io.File;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -37,9 +36,9 @@ import java.util.Set;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkEvent.EventType;
 
+import com.actelion.research.spiritapp.ui.util.component.LF;
+import com.actelion.research.spiritapp.ui.util.component.SpiritHyperlinkListener;
 import com.actelion.research.spiritapp.ui.util.editor.ImageEditorPane;
-import com.actelion.research.spiritapp.ui.util.lf.LF;
-import com.actelion.research.spiritapp.ui.util.lf.SpiritHyperlinkListener;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.Document.DocumentType;
@@ -153,6 +152,10 @@ public class StudyEditorPane extends ImageEditorPane {
 		setStudy(study);
 	}
 
+	public Study getStudy() {
+		return study;
+	}
+
 	public void setStudy(final Study study) {
 		this.study = study;
 		//Set the editor pane text
@@ -182,9 +185,8 @@ public class StudyEditorPane extends ImageEditorPane {
 				}
 				for(Entry<String, String> entry: study.getMetadataMap().entrySet()) {
 					String name = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, entry.getKey());
-					if(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_TYPES).length>0 && !MiscUtils.contains(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_TYPES), study.getType())) {
-						continue;
-					}
+					if(name.length()==0) continue;
+					if(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_TYPES).length>0 && !MiscUtils.contains(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_TYPES), study.getType())) continue;
 					sb.append("<tr><td style='white-space:nowrap'>" + MiscUtils.removeHtml(name) + ":</td><td style='white-space:nowrap'>" + MiscUtils.removeHtml(entry.getValue()) + "</td></tr>");
 				}
 				sb.append("</table>");
@@ -196,12 +198,12 @@ public class StudyEditorPane extends ImageEditorPane {
 
 				if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
 					Set<String> adminSet = new LinkedHashSet<>();
-					adminSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, study.getState())));
+					//					adminSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, study.getState())));
 					adminSet.addAll(study.getAdminUsersAsSet());
 					sb.append("<tr><td>Admin:</td><td>" + (adminSet.size()==0?"-": MiscUtils.flatten(adminSet, ", ")) + "</td></tr>");
 
 					Set<String> expertSet = new LinkedHashSet<>();
-					expertSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, study.getState())));
+					//					expertSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, study.getState())));
 					expertSet.addAll(study.getExpertUsersAsSet());
 					expertSet.addAll(EmployeeGroup.getNames(study.getEmployeeGroups()));
 					if(expertSet.size()>0) {
@@ -209,7 +211,7 @@ public class StudyEditorPane extends ImageEditorPane {
 					}
 
 					Set<String> viewSet = new LinkedHashSet<>();
-					viewSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState())));
+					//					viewSet.addAll(Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState())));
 					if(viewSet.size()>0) {
 						sb.append("<tr><td>Read:</td><td>" + (viewSet.size()==0? "-": MiscUtils.flatten(viewSet, ", ")) + "</td></tr>");
 					}
@@ -228,31 +230,30 @@ public class StudyEditorPane extends ImageEditorPane {
 			}
 
 			if(!simplified) {
-				if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)) {
-					//Add the treatment info
-					if(study.getNamedTreatments().size()>0) {
-						sb.append("<h2 style='font-size:12px; color:#990000'>Treatments</h2>");
-						sb.append("<table style='white-space:nowrap>");
-						for (NamedTreatment nt : study.getNamedTreatments()) {
-							sb.append("<tr><td style='color:" + UIUtils.getHtmlColor(nt.getColor()) + "'>" + nt.getName() + "</td><td>" + nt.getCompoundAndUnits() + "</td></tr>");
-						}
-						sb.append("</table>");
+				//Add the treatment info
+				if(study.getNamedTreatments().size()>0) {
+					sb.append("<h2 style='font-size:12px; color:#990000'>Treatments</h2>");
+					sb.append("<table style='white-space:nowrap>");
+					for (NamedTreatment nt : study.getNamedTreatments()) {
+						sb.append("<tr><td style='color:" + UIUtils.getHtmlColor(nt.getColor()) + "'>" + nt.getName() + "</td><td>" + nt.getCompoundAndUnits() + "</td></tr>");
 					}
-
-					//Add the sampling info
-					if(study.getNamedSamplings().size()>0) {
-						sb.append("<h2 style='font-size:12px; color:#990000'>Samplings</h2>");
-						sb.append("<table>");
-						for (NamedSampling ns : study.getNamedSamplings()) {
-							sb.append("<tr><td valign=top style='white-space:nowrap;margin:1px'>");
-							if(ns.getName()!=null) sb.append("<b style='font-size:11px'><u>" + ns.getName() + "</u></b><br>");
-
-							sb.append(ns.getHtmlBySampling());
-							sb.append("</td></td>");
-						}
-						sb.append("</tr></table>");
-					}
+					sb.append("</table>");
 				}
+
+				//Add the sampling info
+				if(study.getNamedSamplings().size()>0) {
+					sb.append("<h2 style='font-size:12px; color:#990000'>Samplings</h2>");
+					sb.append("<table>");
+					for (NamedSampling ns : study.getNamedSamplings()) {
+						sb.append("<tr><td valign=top style='white-space:nowrap;margin:1px'>");
+						if(ns.getName()!=null) sb.append("<b style='font-size:11px'><u>" + ns.getName() + "</u></b><br>");
+
+						sb.append(ns.getHtmlBySampling());
+						sb.append("</td></td>");
+					}
+					sb.append("</tr></table>");
+				}
+
 				//Display Documents
 				Map<DocumentType, List<Document>> docs = Document.mapDocumentTypes(study.getDocuments());
 				if(study.getDocuments().size()>0) {

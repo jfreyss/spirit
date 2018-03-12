@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -52,7 +52,7 @@ import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.biosample.SampleIdLabel;
 import com.actelion.research.spiritapp.ui.location.ContainerLabel;
 import com.actelion.research.spiritapp.ui.location.ContainerLabel.ContainerDisplayMode;
-import com.actelion.research.spiritapp.ui.util.lf.LF;
+import com.actelion.research.spiritapp.ui.util.component.LF;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.ActionTreatment;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -120,7 +120,7 @@ public class MonitoringAnimalPanel extends JPanel {
 			Result prevWeighResult = weighResult==null? null: SpiritRights.isBlind(phase.getStudy(), SpiritFrame.getUser())? null: Result.getPrevious(weighResult, dlg.getAllPreviousResults());
 			lastWeightLabel.setPreferredSize(new Dimension(80, 22));
 			lastWeightLabel.setForeground(Color.DARK_GRAY);
-			lastWeightLabel.setText(prevWeighResult==null?"": (prevWeighResult.getPhase().getShortName()+ ": " + (prevWeighResult.getFirstAsDouble()==null?"NA": prevWeighResult.getFirstAsDouble()) + "g"));
+			lastWeightLabel.setText(prevWeighResult==null?"": (prevWeighResult.getInheritedPhase().getShortName()+ ": " + (prevWeighResult.getFirstAsDouble()==null?"NA": prevWeighResult.getFirstAsDouble()) + "g"));
 
 			//Init field
 			boolean required = (a!=null && a.isMeasureWeight()) || (a!=null && a.getNamedTreatment()!=null);
@@ -155,7 +155,7 @@ public class MonitoringAnimalPanel extends JPanel {
 			//Find previousObservation
 			Result prevObsResult = SpiritRights.isBlind(phase.getStudy(), SpiritFrame.getUser())? null: Result.getPrevious(obsResult, dlg.getAllPreviousResults());
 			lastObsLabel.setForeground(Color.DARK_GRAY);
-			lastObsLabel.setText( prevObsResult==null?"": (prevObsResult.getPhase().getShortName()+ ": " + prevObsResult.getFirstValue()));
+			lastObsLabel.setText( prevObsResult==null?"": (prevObsResult.getInheritedPhase().getShortName()+ ": " + prevObsResult.getFirstValue()));
 
 			//Init field
 			obsTextField = new MonitorTextComboBox(animal.getAuxResult(DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME), phase), 0, false);
@@ -183,7 +183,7 @@ public class MonitoringAnimalPanel extends JPanel {
 					lastMeasurementLabel.setPreferredSize(new Dimension(80, 22));
 					lastMeasurementLabel.setForeground(Color.DARK_GRAY);
 					Result prevResult = SpiritRights.isBlind(phase.getStudy(), SpiritFrame.getUser())? null: Result.getPrevious(result, dlg.getAllPreviousResults());
-					lastMeasurementLabel.setText( prevResult==null || prevResult.getResultValue(ta)==null? "": (prevResult.getPhase().getShortName()+ ": " + prevResult.getResultValue(ta).getValue()));
+					lastMeasurementLabel.setText( prevResult==null || prevResult.getResultValue(ta)==null? "": (prevResult.getInheritedPhase().getShortName()+ ": " + prevResult.getResultValue(ta).getValue()));
 
 					MonitorTextField tf = new MonitorTextField(result, i, required);
 					measurementComps.add(new JLabel(em.getDescription() + (tas.size()>1?"."+tas.get(i).getName():"")));
@@ -405,7 +405,7 @@ public class MonitoringAnimalPanel extends JPanel {
 			calculated2Label.setText("<html><b>" + FormatterUtils.format3(dose2) + "</b>" + unit2 + eff);
 		}
 
-		updateWeightIncreaseLabel(prevWeighResult==null? null: prevWeighResult.getOutputResultValues().get(0).getDoubleValue(), weight, weightIncLabel, prevWeighResult==null?"": "since " +prevWeighResult.getPhase().getShortName());
+		updateWeightIncreaseLabel(prevWeighResult==null? null: prevWeighResult.getOutputResultValues().get(0).getDoubleValue(), weight, weightIncLabel, prevWeighResult==null?"": "since " +prevWeighResult.getInheritedPhase().getShortName());
 	}
 
 	private Double updateWeightIncreaseLabel(Double prevWeight, Double curWeight, JLabel weighIncreaseLabel, String suffix) {
@@ -480,13 +480,13 @@ public class MonitoringAnimalPanel extends JPanel {
 
 			JLabel weightIncreaseLabelFromPrevious = new JLabel();
 			JLabel weightIncreaseLabelFromStart = new JLabel();
-			Double inc = updateWeightIncreaseLabel(prevResult==null? null: prevResult.getFirstAsDouble(),  weight, weightIncreaseLabelFromPrevious, prevResult==null? "": "since "+prevResult.getPhase().getShortName());
+			Double inc = updateWeightIncreaseLabel(prevResult==null? null: prevResult.getFirstAsDouble(),  weight, weightIncreaseLabelFromPrevious, prevResult==null? "": "since "+prevResult.getInheritedPhase().getShortName());
 			if(inc!=null && Math.abs(inc)>10) {
 				weightIncreaseLabelFromPrevious.setOpaque(true);
 				weightIncreaseLabelFromPrevious.setBackground(UIUtils.getDilutedColor(Color.RED, Color.WHITE));
 			}
 			if(firstResult!=prevResult) {
-				inc = updateWeightIncreaseLabel(firstResult==null? null: firstResult.getFirstAsDouble(),  weight, weightIncreaseLabelFromStart, firstResult==null? "": "since "+firstResult.getPhase().getShortName());
+				inc = updateWeightIncreaseLabel(firstResult==null? null: firstResult.getFirstAsDouble(),  weight, weightIncreaseLabelFromStart, firstResult==null? "": "since "+firstResult.getInheritedPhase().getShortName());
 				if(inc!=null && inc<-20) {
 					weightIncreaseLabelFromStart.setOpaque(true);
 					weightIncreaseLabelFromStart.setBackground(UIUtils.getDilutedColor(Color.RED, Color.WHITE));

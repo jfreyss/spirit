@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -49,7 +49,6 @@ import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
-import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JCustomTabbedPane;
@@ -127,7 +126,13 @@ public class StudyDetailPanel extends JPanel {
 		});
 
 		setLayout(new BorderLayout());
-		add(BorderLayout.CENTER, studySplitPane);
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_STUDYDESIGN)) {
+			add(BorderLayout.CENTER, studySplitPane);
+		} else {
+			add(BorderLayout.CENTER, infoTabbedPane);
+		}
+
+
 		setOpaque(true);
 		setPreferredSize(new Dimension(orientation==JSplitPane.HORIZONTAL_SPLIT? 800: 320, orientation==JSplitPane.HORIZONTAL_SPLIT? 350: 700));
 
@@ -184,14 +189,11 @@ public class StudyDetailPanel extends JPanel {
 			new SwingWorkerExtended("Loading Study", this, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 				@Override
 				protected void doInBackground() throws Exception {
-					if(!forRevision) {
-						study = JPAUtil.reattach(study);
-						DAOStudy.fullLoad(study);
-					}
+
 				}
 				@Override
 				protected void done() {
-					studyDepictor.setStudy(study);
+					studyDepictor.setStudy(forRevision? study: JPAUtil.reattach(study));
 				}
 			}.afterDone(() -> {
 				refreshTabbedPane();
@@ -205,7 +207,7 @@ public class StudyDetailPanel extends JPanel {
 			new SwingWorkerExtended("Loading Details", editorPane, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 				@Override
 				protected void done() {
-					editorPane.setStudy(JPAUtil.reattach(study));
+					editorPane.setStudy(forRevision? study: JPAUtil.reattach(study));
 				}
 			};
 		} else if(infoTabbedPane.getSelectedIndex()==1) {
@@ -231,19 +233,18 @@ public class StudyDetailPanel extends JPanel {
 			}.afterDone(() -> {
 				new SwingWorkerExtended("Loading Results", graphPanel, forRevision? SwingWorkerExtended.FLAG_SYNCHRONOUS: SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 					private List<Result> results = null;
-					private int maxResults = 4000;
 					@Override
 					protected void doInBackground() throws Exception {
 						if(study==null) return;
 						ResultQuery q = ResultQuery.createQueryForSids(Collections.singleton(study.getId()));
-						q.setMaxResults(maxResults);
+						q.setMaxResults(4000);
 						results = DAOResult.queryResults(q, SpiritFrame.getUser());
 					}
 
 					@Override
 					protected void done() {
-						if(results!=null && results.size()>=maxResults) {
-							graphPanel.setErrorText("There are too many results to be displayed (>" + maxResults + ")");
+						if(results!=null && results.size()>=4000) {
+							graphPanel.setErrorText("There are too many results to be displayed (>4000)");
 						} else {
 							graphPanel.setResults(results);
 						}

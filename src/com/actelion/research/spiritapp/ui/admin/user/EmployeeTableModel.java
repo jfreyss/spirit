@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -26,6 +26,7 @@ import java.util.List;
 
 import javax.swing.JComponent;
 
+import com.actelion.research.spiritapp.ui.util.component.SpiritExtendTableModel;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
@@ -33,14 +34,13 @@ import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
-import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
-public class EmployeeTableModel extends ExtendTableModel<Employee> {
+public class EmployeeTableModel extends SpiritExtendTableModel<Employee> {
 
 	public static final Column<Employee, String> COLUMN_ACTIVE = new Column<Employee, String>("Status", String.class, 40) {
 		@Override
 		public String getValue(Employee row) {
-			return row.isDisabled()?"Disabled": null;
+			return row.isDisabled()?"Disabled": "Active";
 		}
 	};
 	public static final Column<Employee, String> COLUMN_NAME = new Column<Employee, String>("Username", String.class, 110) {
@@ -62,7 +62,7 @@ public class EmployeeTableModel extends ExtendTableModel<Employee> {
 	public static final Column<Employee, String> COLUMN_ROLES = new Column<Employee, String>("Roles", String.class, 120) {
 		@Override
 		public String getValue(Employee row) {
-			return MiscUtils.flatten(row.getRoles(), " ");
+			return MiscUtils.flatten(row.getRoles(), ", ");
 		}
 	};
 	public static final Column<Employee, String> COLUMN_GROUPS = new Column<Employee, String>("Group", String.class, 120) {
@@ -97,7 +97,9 @@ public class EmployeeTableModel extends ExtendTableModel<Employee> {
 		List<Column<Employee,?>> columns = new ArrayList<>();
 		columns.add(COLUMN_ROWNO);
 		columns.add(COLUMN_ACTIVE);
-		columns.add(COLUMN_MANAGER);
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			columns.add(COLUMN_MANAGER);
+		}
 		columns.add(COLUMN_NAME);
 		columns.add(COLUMN_ROLES);
 		if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {

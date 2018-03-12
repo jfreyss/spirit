@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -56,75 +56,8 @@ import com.actelion.research.util.ui.UIUtils;
 
 public class BiosampleDiscardDlg {
 
-	//	public static void createDialogForSynchro(List<Biosample> biosamples) throws Exception {
-	//		final SpiritUser user = Spirit.askForAuthentication();
-	//
-	//		try {
-	//			JPAUtil.pushEditableContext();
-	//			biosamples = JPAUtil.reload(biosamples);
-	//
-	//			//Analyze samples
-	//			final List<Biosample> toFix = new ArrayList<Biosample>();
-	//			for(Biosample b: biosamples) {
-	//				Biosample top = b;
-	//				int count = 0;
-	//				while(top.getParent()!=null && !top.getParent().equals(top)) {
-	//					if(count++>10) break;
-	//					top = top.getParent();
-	//				}
-	//				if(!b.getTopParent().equals(top)) toFix.add(b);
-	//				else if(b.getParent()!=null && b.getParent().getInheritedGroup()!=null && !b.getParent().getInheritedGroup().equals(b.getInheritedGroup())) toFix.add(b);
-	//				else if(b.getParent()!=null && b.getParent().getInheritedSubGroup()!=b.getInheritedSubGroup()) toFix.add(b);
-	//			}
-	//
-	//			if(toFix.size()==0) throw new Exception("Those samples are already synchronized");
-	//
-	//			//Show dlg
-	//			BiosampleTable table = new BiosampleTable();
-	//			table.getModel().setCanExpand(false);
-	//			table.getModel().setCompressed(true);
-	//			table.setRows(toFix);
-	//			JScrollPane sp = new JScrollPane(table);
-	//			sp.setPreferredSize(new Dimension(700, 400));
-	//
-	//			JPanel msgPanel = new JPanel(new BorderLayout());
-	//			msgPanel.add(BorderLayout.NORTH, new JCustomLabel("Are you sure you want to synchronize (inherited group/subgroup, topparent) of " + (biosamples.size()>1? "those " + biosamples.size() + " samples": " this biosample"), FastFont.BOLD));
-	//			msgPanel.add(BorderLayout.CENTER, sp);
-	//
-	//			int res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(), msgPanel, "Synchronizes Biosamples", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {"Synchronize", "Cancel"}, "Cancel");
-	//			if(res!=0) return;
-	//
-	//
-	//			for(Biosample b: toFix) {
-	//				Biosample top = b;
-	//				int count = 0;
-	//				while(top.getParent()!=null && !top.getParent().equals(top)) {
-	//					if(count++>10) break;
-	//					top = top.getParent();
-	//				}
-	//				b.setTopParent(top);
-	//				if(b.getParent()!=null && b.getParent().getInheritedGroup()!=null) {
-	//					b.setInheritedGroup(b.getParent().getInheritedGroup());
-	//					b.setInheritedSubGroup(b.getParent().getInheritedSubGroup());
-	//				}
-	//			}
-	//			new LongTaskDlg("Deleting Biosamples") {
-	//				@Override
-	//				public void longTask() throws Exception {
-	//					DAOBiosample.persistBiosamples(toFix, user);
-	//				}
-	//			};
-	//
-	//		} finally {
-	//			JPAUtil.popEditableContext();
-	//		}
-	//		SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, biosamples);
-	//
-	//	}
-
 
 	public static void createDialogForDelete(List<Biosample> bios) throws Exception {
-		//this.biosamples = biosamples;
 
 		final SpiritUser user = Spirit.askForAuthentication();
 
@@ -197,7 +130,7 @@ public class BiosampleDiscardDlg {
 					txn.commit();
 					txn = null;
 				} catch (Exception e) {
-					if (txn != null)try {txn.rollback();} catch (Exception e2) {}
+					if (txn != null)try {txn.rollback();} catch (Exception e2) {e2.printStackTrace();}
 					throw e;
 				} finally {
 					JPAUtil.popEditableContext();

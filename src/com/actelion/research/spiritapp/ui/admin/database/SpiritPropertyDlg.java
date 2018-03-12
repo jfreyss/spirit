@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -22,6 +22,8 @@
 package com.actelion.research.spiritapp.ui.admin.database;
 
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -29,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -36,9 +39,11 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.text.JTextComponent;
 
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
@@ -47,6 +52,9 @@ import com.actelion.research.spiritapp.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.property.PropertyKey.Tab;
+import com.actelion.research.spiritcore.services.SpiritRights;
+import com.actelion.research.spiritcore.services.SpiritRights.ActionType;
+import com.actelion.research.spiritcore.services.SpiritRights.UserType;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.MiscUtils;
@@ -79,6 +87,8 @@ public class SpiritPropertyDlg extends JSpiritEscapeDialog {
 	private JPanel systemPanel = new JPanel(new GridLayout());
 	private JPanel userPanel = new JPanel(new GridLayout());
 	private JPanel studyPanel = new JPanel(new GridLayout());
+	private JPanel biosamplePanel = new JPanel(new GridLayout());
+	private JPanel userRightsPanel = new JPanel(new GridLayout());
 
 
 	public SpiritPropertyDlg() {
@@ -107,17 +117,38 @@ public class SpiritPropertyDlg extends JSpiritEscapeDialog {
 			};
 		});
 
-
 		refreshConfigPanels();
 
 		//TabbedPane
 		tabbedPane.setFont(FastFont.BOLD);
-		tabbedPane.add("System Settings", new JScrollPane(systemPanel));
-		tabbedPane.add("User Settings", new JScrollPane(userPanel));
-		tabbedPane.add("Study Settings", new JScrollPane(studyPanel));
+		tabbedPane.add("General", new JScrollPane(systemPanel));
+		//		tabbedPane.add("User", new JScrollPane(userPanel));
+		tabbedPane.add("Study", new JScrollPane(studyPanel));
+		tabbedPane.add("Biosample", new JScrollPane(biosamplePanel));
+		tabbedPane.add("User Rights", UIUtils.createBox(new JScrollPane(userRightsPanel), userPanel));
+
+		JButton button = new JButton("View Properties");
+		button.addActionListener(e -> {
+			StringBuilder sb = new StringBuilder();
+			for (String key : new TreeSet<String>(propertyMap.keySet())) {
+				if(key.equals(PropertyKey.DB_VERSION)) continue;
+				sb.append(key + "=" + propertyMap.get(key) + "\n");
+			}
+			JTextArea editorPane = new JTextArea();
+			editorPane.setText(sb.toString());
+			editorPane.setLineWrap(false);
+			editorPane.setEditable(false);
+			JScrollPane sp = new JScrollPane(editorPane);
+			sp.setPreferredSize(new Dimension(400, 300));
+
+			JOptionPane.showOptionDialog(SpiritPropertyDlg.this, sp, "Spirit Properties", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
+		});
+
 
 		//contentpane
-		setContentPane(UIUtils.createBox(tabbedPane, UIUtils.createTitleBox(new JInfoLabel("<html>The configuration settings have no impact on the user's data (samples. results).<br>IE. If you remove one study's metadata, it will actually only be removed from the display and not from the DB. You can always go back.")), UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton)));
+		setContentPane(UIUtils.createBox(tabbedPane,
+				UIUtils.createTitleBox(new JInfoLabel("<html>The configuration settings have no impact on the user's data (samples. results).<br>IE. If you remove one study's metadata, it will actually only be removed from the display and not from the DB. You can always go back.")),
+				UIUtils.createHorizontalBox(button, Box.createHorizontalGlue(), okButton)));
 		UIUtils.adaptSize(this, 840, 750);
 		setVisible(true);
 	}
@@ -126,6 +157,8 @@ public class SpiritPropertyDlg extends JSpiritEscapeDialog {
 		createPropertyPanel(systemPanel, "", "", PropertyKey.getPropertyKeys(Tab.SYSTEM), new String[0]);
 		createPropertyPanel(userPanel, "", "", PropertyKey.getPropertyKeys(Tab.USER), new String[0]);
 		createPropertyPanel(studyPanel, "", "", PropertyKey.getPropertyKeys(Tab.STUDY), new String[0]);
+		createPropertyPanel(biosamplePanel, "", "", PropertyKey.getPropertyKeys(Tab.BIOSAMPLE), new String[0]);
+		createUserRightsPanel(userRightsPanel);
 	}
 
 	private Map<PropertyKey, JComponent> prop2editor = new HashMap<>();
@@ -148,6 +181,7 @@ public class SpiritPropertyDlg extends JSpiritEscapeDialog {
 			} else if(p.getOptions()!=null) {
 				final JComboBox<String> c = new JComboBox<>(p.getChoices());
 				editorComp = c;
+
 				c.setSelectedItem(val);
 				c.addActionListener(e-> propertyMap.put(propertyPrefix + p.getKey(), (String) c.getSelectedItem()));
 			} else if(p.getLinkedOptions()!=null) {
@@ -182,6 +216,15 @@ public class SpiritPropertyDlg extends JSpiritEscapeDialog {
 						t = getValue(prop2editor.get(p.getLinkedOptions()));
 					}
 				});
+			}
+
+			//Disable the component if the value is already fixed by the adapter
+			if(DBAdapter.getInstance().getProperties().containsKey(propertyPrefix + p.getKey())) {
+				editorComp.setEnabled(false);
+			} else {
+				editorComp.setEnabled(true);
+				System.out.println(propertyPrefix + p.getKey()+"="+val);
+
 			}
 
 			//Add a label and a tooltip
@@ -239,13 +282,14 @@ public class SpiritPropertyDlg extends JSpiritEscapeDialog {
 							UIUtils.createTable(3, 5, 0, tableComps.subList(0, n*3)),
 							UIUtils.createTable(3, 5, 0, tableComps.subList(n*3, tableComps.size())));
 				} else {
-					nestedPanel = UIUtils.createTable(3, 5, 0, tableComps);
+					nestedPanel =
+							UIUtils.createTable(3, 5, 0, tableComps);
 				}
 				panels.add(UIUtils.createBox(UIUtils.createBox(nestedPanel, null, null, Box.createHorizontalStrut(10), Box.createHorizontalGlue()),
 						new JCustomLabel(labelPrefix, FastFont.BOLD)));
 			} else {
 				//Main Panel
-				panels.add(UIUtils.createTitleBox(UIUtils.createTable(3, 5, 3, tableComps)));
+				panels.add(UIUtils.createTitleBox(UIUtils.createBox(null, null, UIUtils.createTable(3, 5, 3, tableComps), null)));
 			}
 		}
 		if(nestedPanes.getTabCount()>0) {
@@ -258,6 +302,71 @@ public class SpiritPropertyDlg extends JSpiritEscapeDialog {
 		panel.validate();
 	}
 
+	private void createUserRightsPanel(JPanel panel) {
+
+		//Create panel for roles
+		String[] roles = SpiritProperties.getInstance().getUserRoles();
+
+		List<Component> comps = new ArrayList<>();
+
+		//User roles Headers
+		comps.add(null);
+		for (String role : roles) {
+			comps.add(new JCustomLabel(role.toString(), Font.ITALIC));
+		}
+		comps.add(Box.createHorizontalStrut(10));
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			for (UserType userType : SpiritRights.UserType.values()) {
+				comps.add(new JLabel(userType.toString()));
+			}
+		}
+		int nCols = comps.size();
+
+		//User roles data
+		ActionType last = null;
+		for (ActionType actionType : SpiritRights.ActionType.values()) {
+			//Draws a separator if we have a new type
+			if(last!=null && actionType.name().startsWith("READ")) {
+				for (int i = 0; i < nCols; i++) {
+					comps.add(Box.createVerticalStrut(6));
+				}
+			}
+			last = actionType;
+
+
+			//Write the label for the actionType
+			JLabel actionLabel = new JLabel(actionType.getDisplay());
+			actionLabel.setToolTipText(actionType.getTooltip());
+			comps.add(actionLabel);
+
+			//Shows the checkboxes
+			for (String role : roles) {
+				final JCheckBox cb = new JCheckBox();
+				cb.setSelected(SpiritProperties.getInstance().isChecked(actionType, role));
+				cb.setEnabled(DBAdapter.getInstance().getProperties().get(SpiritProperties.getKey(actionType, null, role))==null);
+				cb.addActionListener(e-> {
+					propertyMap.put(SpiritProperties.getKey(actionType, null, role), cb.isSelected()?"true":"false");
+				});
+				comps.add(cb);
+			}
+			comps.add(Box.createHorizontalStrut(10));
+			if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+				for (UserType userType : SpiritRights.UserType.values()) {
+					final JCheckBox cb = new JCheckBox();
+					cb.setSelected(SpiritProperties.getInstance().isChecked(actionType, userType));
+					cb.setEnabled(DBAdapter.getInstance().getProperties().get(SpiritProperties.getKey(actionType, userType, null))==null);
+					cb.addActionListener(e-> {
+						propertyMap.put(SpiritProperties.getKey(actionType, userType, null), cb.isSelected()?"true":"false");
+					});
+					comps.add(cb);
+				}
+			}
+		}
+		panel.removeAll();
+		panel.add(UIUtils.createVerticalBox(UIUtils.createTable(nCols, 5, 2, comps), Box.createVerticalGlue()));
+		panel.validate();
+	}
+
 	private String getValue(JComponent c) {
 		if(c instanceof JComboBox) {
 			return (String) ((JComboBox<?>)c).getSelectedItem();
@@ -267,8 +376,6 @@ public class SpiritPropertyDlg extends JSpiritEscapeDialog {
 			throw new RuntimeException("Invalid component: "+c);
 		}
 	}
-
-
 
 	private void save() throws Exception {
 		if(adapter==null) throw new Exception("You must select an adapter");
@@ -286,7 +393,6 @@ public class SpiritPropertyDlg extends JSpiritEscapeDialog {
 		SpiritProperties.getInstance().setValues(propertyMap);
 		SpiritProperties.getInstance().saveValues();
 		dispose();
-		SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
 
 		//Reset Spirit
 		DBAdapter.setAdapter(null);

@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -32,7 +32,7 @@ import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleTableModel;
-import com.actelion.research.spiritapp.ui.util.lf.CreationLabel;
+import com.actelion.research.spiritapp.ui.util.component.CreationLabel;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.services.SpiritRights;
@@ -47,48 +47,48 @@ public class CreationColumn extends Column<Result, String> {
 	public CreationColumn(boolean creation) {
 		super(creation?"CreDate": "LastUpdate", String.class, 45);
 		setHideable(!creation);
-		this.creation = creation;	
+		this.creation = creation;
 	}
-	
+
 	@Override
 	public String getCategory() {
 		return "Cre";
 	}
-	
+
 	@Override
 	public String getToolTipText() {
-		return creation? "Creation Date + Owner": "Last Update";
+		return creation? "CreatedBy": "UpdatedBy";
 	}
-	
+
 	@Override
 	public float getSortingKey() {return 10.1f;}
-	
+
 	@Override
 	public String getValue(Result row) {
-		return creation? row.getCreUser() + "\t" + FormatterUtils.formatDate(row.getCreDate()): 
+		return creation? row.getCreUser() + "\t" + FormatterUtils.formatDate(row.getCreDate()):
 			row.getUpdUser()  + "\t" + FormatterUtils.formatDate(row.getUpdDate());
-	}	
-	
+	}
+
 	@Override
 	public boolean isEditable(Result row) {return false;}
-	
+
 	private CreationLabel ownerLabel = new CreationLabel();
-	
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Result> table, Result row, int rowNo, Object value) {
-		ownerLabel.setValue(creation? row.getCreUser(): row.getUpdUser(), null, creation? row.getCreDate(): row.getUpdDate(), 
-				SpiritRights.canEdit(row, SpiritFrame.getUser())? 
-					RightLevel.WRITE: 
-					RightLevel.READ);
-		return ownerLabel;	
+		ownerLabel.setValue(creation? row.getCreUser(): row.getUpdUser(), null, creation? row.getCreDate(): row.getUpdDate(),
+				SpiritRights.canEdit(row, SpiritFrame.getUser())?
+						RightLevel.WRITE:
+							RightLevel.READ);
+		return ownerLabel;
 	}
-	
+
 	@Override
 	public void populateHeaderPopup(final AbstractExtendTable<Result> table, JPopupMenu popupMenu) {
 		popupMenu.add(new JSeparator());
 		popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
-		
-		popupMenu.add(new AbstractAction("Sort by " + (creation?"CreUser": "UpdUser")) {
+
+		popupMenu.add(new AbstractAction("Sort by " + (creation?"CreatedBy": "UpdatedBy")) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				table.sortBy(CreationColumn.this, 1, new Comparator<Result>() {
@@ -99,7 +99,7 @@ public class CreationColumn extends Column<Result, String> {
 				});
 			}
 		});
-		popupMenu.add(new AbstractAction("Sort by " + (creation?"CreDate": "UpdDate")) {
+		popupMenu.add(new AbstractAction("Sort by " + (creation?"CreatedDate": "UpdatedDate")) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				table.sortBy(CreationColumn.this, 1, new Comparator<Result>() {
@@ -111,10 +111,10 @@ public class CreationColumn extends Column<Result, String> {
 			}
 		});
 	}
-		
+
 	@Override
 	public void postProcess(AbstractExtendTable<Result> table, Result row, int rowNo, Object value, JComponent comp) {
 		comp.setBackground(BiosampleTableModel.COLOR_NONEDIT);
-	}		
-	
+	}
+
 }

@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -38,8 +38,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.ui.SpiritFrame;
-import com.actelion.research.spiritapp.ui.util.lf.BiotypeComboBox;
-import com.actelion.research.spiritapp.ui.util.lf.JBGScrollPane;
+import com.actelion.research.spiritapp.ui.util.component.BiotypeComboBox;
+import com.actelion.research.spiritapp.ui.util.component.JBGScrollPane;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationQuery;
@@ -115,7 +115,7 @@ public class LocationSearchPane extends JPanel {
 		//Create a standard query
 		LocationQuery query = new LocationQuery();
 
-		query.setStudyId(frame==null? null: frame.getStudyId());
+		query.setStudyId(SpiritFrame.getStudyId());
 		query.setName(keywordsTextField.getText());
 		query.setBiotype(biotypeComboBox.getSelection());
 		query.setOnlyOccupied(emptyCheckbox.isSelected() && !nonEmptyCheckbox.isSelected()? Boolean.FALSE:

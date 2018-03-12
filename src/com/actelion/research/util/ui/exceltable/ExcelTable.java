@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -100,7 +100,7 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 		setFillsViewportHeight(true);
 
 		if(model.getRowCount()==0) {
-			ROW t = getModel().createRecord();
+			ROW t = getModel().createRecord(null);
 			if(t!=null && canAddRow) model.add(t);
 		}
 
@@ -390,12 +390,12 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			int selRow = getSelectedRow();
-			ROW t = getModel().createRecord();
-			if(t==null) return;
+			if(getModel().createRecord(null)==null) return;
 
 			if(selRow<0) {
 				if(getRowCount()==0) {
-					getModel().getRows().add(selRow, getModel().createRecord());
+					ROW model = getRowCount()==0? null: getModel().getRows().get(getRowCount()-1);
+					getModel().getRows().add(selRow, getModel().createRecord(model));
 					getModel().fireTableDataChanged();
 				}
 				return;
@@ -405,16 +405,18 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 			try {
 				n = Integer.parseInt(res);
 			} catch (Exception ex) {
+				ex.printStackTrace();
 				return;
 			}
 			if(!before) selRow = selRow+1;
+			ROW model = getRowCount()==0? null: selRow>0 && selRow<getRowCount()? getModel().getRow(selRow-1): getModel().getRows().get(getRowCount()-1);
 			if(selRow>=getModel().getRows().size()) {
 				for (int i = 0; i < n; i++) {
-					getModel().getRows().add(getModel().createRecord());
+					getModel().getRows().add(getModel().createRecord(model));
 				}
 			} else {
 				for (int i = 0; i < n; i++) {
-					getModel().getRows().add(selRow, getModel().createRecord());
+					getModel().getRows().add(selRow, getModel().createRecord(model));
 				}
 			}
 			getModel().fireTableDataChanged();
@@ -762,7 +764,8 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 				for (String token : tokens) {
 					if(row>=getRowCount()) {
 						if(canAddRow) {
-							getModel().getRows().add(getModel().createRecord());
+							ROW model = getRowCount()==0? null: selRow>0 && selRow<getRowCount()? getModel().getRow(selRow-1): getModel().getRows().get(getRowCount()-1);
+							getModel().getRows().add(getModel().createRecord(model));
 						} else {
 							continue;
 						}
@@ -937,7 +940,8 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 	}
 
 	protected void addRow(int index) {
-		ROW r = getModel().createRecord();
+		ROW model = getRowCount()==0? null: index>0? getModel().getRow(index-1): getModel().getRows().get(getRowCount()-1);
+		ROW r = getModel().createRecord(model);
 		if(r!=null && canAddRow) {
 			if(index<0) {
 				getModel().getRows().add(r);

@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -38,7 +38,6 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -51,9 +50,9 @@ import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.util.HelpBinder;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
-import com.actelion.research.spiritapp.ui.util.lf.EmployeeGroupComboBox;
-import com.actelion.research.spiritapp.ui.util.lf.LF;
-import com.actelion.research.spiritapp.ui.util.lf.UserIdTextArea;
+import com.actelion.research.spiritapp.ui.util.component.EmployeeGroupComboBox;
+import com.actelion.research.spiritapp.ui.util.component.LF;
+import com.actelion.research.spiritapp.ui.util.component.UserIdTextArea;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
 import com.actelion.research.spiritcore.business.DataType;
@@ -65,7 +64,6 @@ import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
-import com.actelion.research.spiritcore.services.helper.WorkflowHelper;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
@@ -96,7 +94,6 @@ public class StudyInfoDlg extends JEscapeDialog {
 	private EmployeeGroupComboBox eg1ComboBox = new EmployeeGroupComboBox(false);
 	private EmployeeGroupComboBox eg2ComboBox = new EmployeeGroupComboBox(false);
 
-
 	private UserIdTextArea adminUsersTextArea = new UserIdTextArea(5, 22);
 	private UserIdTextArea expertUsersTextArea = new UserIdTextArea(5, 22);
 	private JTextArea blindAllUsersField = new JTextArea(2, 20);
@@ -107,38 +104,42 @@ public class StudyInfoDlg extends JEscapeDialog {
 	private JTextArea notesTextArea = new JTextArea(8, 25);
 
 	private boolean cancel = true;
-	private final boolean autoGenerateId;
-	private final boolean advancedMode;
+	private final boolean studyIdEditable;
+	private final String studyIdPattern;
+	private final boolean designMode;
 	private String[] studyTypes;
 
 
-	public StudyInfoDlg(Study s, boolean inTransaction) {
+	public static void editStudy(Study s) {
+		new StudyInfoDlg(s, true);
+	}
+
+	protected StudyInfoDlg(Study s, boolean inTransaction) {
 		super(UIUtils.getMainFrame(), "Study - Infos");
 		if(inTransaction) this.study = JPAUtil.reattach(s);
 		else this.study = s;
 		this.inTransaction = inTransaction;
 
-		autoGenerateId = SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_AUTOGENERATEID);
-		advancedMode = SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE);
+		studyIdEditable = SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_STUDYID_EDITABLE);
+		studyIdPattern = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STUDYID_PATTERN);
+		designMode = SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_STUDYDESIGN);
 		studyTypes = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_TYPES);
 
 		//Definition
-		studyIdField.setEnabled(!autoGenerateId && (SpiritRights.isSuperAdmin(Spirit.getUser()) || (study.getId()<=0)));
-		studyIdField.setToolTipText("Unique " + (autoGenerateId?" automatically generated": "only editable by an admin or at study creation"));
+		studyIdField.setEnabled(studyIdEditable && (SpiritRights.isSuperAdmin(Spirit.getUser()) || (study.getId()<=0)));
+		studyIdField.setToolTipText("Unique, " + (studyIdEditable?" automatically generated": "only editable by an admin or at study creation"));
 
 		typeComboBox = new JTextComboBox(studyTypes, false);
+		typeComboBox.setColumns(25);
 
 		JPanel studyDescPanel = UIUtils.createTitleBox("Definition", UIUtils.createTable(
-				new JLabel("StudyId*: "), UIUtils.createHorizontalBox(studyIdField, new JInfoLabel("Unique")),
-				(autoGenerateId? new JLabel("InternalId:"): null), (autoGenerateId? UIUtils.createHorizontalBox(ivvField, new JInfoLabel("Your own identifier (unique)")): null),
-				(studyTypes.length>0? new JLabel("Type*: "): null), (studyTypes.length>0? typeComboBox: null),
+				new JLabel("StudyId*: "), UIUtils.createHorizontalBox(studyIdField),
+				(!studyIdEditable? new JLabel("InternalId:"): null), (!studyIdEditable? UIUtils.createHorizontalBox(ivvField, new JInfoLabel("Your own identifier (unique)")): null),
 				new JLabel("Title*: "), titleField,
-				null, advancedMode? synchroCheckbox: null));
+				null, designMode? synchroCheckbox: null));
 
 
-
-
-		//States / Rights
+		//Rights Panel
 		JPanel studyRightsPanel = new JPanel();
 		if(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER && SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
 			blindNamesUsersField.setToolTipText("The group's name and the treatment's compounds are hidden. Those users can still see the group no (1A) and the treatment's name (blue) in AnimalCare");
@@ -169,25 +170,37 @@ public class StudyInfoDlg extends JEscapeDialog {
 					new JInfoLabel("(cannot view the groups/treatments)"),
 					UIUtils.createHorizontalBox(Box.createHorizontalStrut(10), blindAllUsersField, Box.createHorizontalGlue()),
 					Box.createVerticalGlue());
-			blindPanel.setVisible(advancedMode);
+			blindPanel.setVisible(designMode);
 
 			studyRightsPanel = UIUtils.createHorizontalBox(
 					editUsersPanel,
 					readUsersPanel,
 					blindPanel,
 					Box.createHorizontalGlue());
+		} else {
+			studyRightsPanel.setVisible(false);
 		}
 
-		List<String> possibleStates = WorkflowHelper.getNextStates(study, SpiritFrame.getUser());
-		stateComboBox = new JGenericComboBox<String>(possibleStates, false);
+		//Status Panel
+		JPanel statesRightsPanel = new JPanel();
+		List<String> possibleStates = Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES));
+		stateComboBox = new JGenericComboBox<>(possibleStates, false);
+		if(possibleStates.size()>0) {
+			statesRightsPanel = UIUtils.createTitleBox("Status" + (studyRightsPanel.isVisible()?" / User Rights":""), UIUtils.createVerticalBox(
+					UIUtils.createHorizontalBox(new JLabel("Status: "), stateComboBox, Box.createHorizontalGlue()),
+					studyRightsPanel));
+			stateComboBox.setEnabled(SpiritRights.canPromote(study, SpiritFrame.getUser()));
 
-		JPanel statesRightsPanel = UIUtils.createTitleBox("State / User Rights", UIUtils.createVerticalBox(
-				UIUtils.createHorizontalBox(
-						UIUtils.createVerticalBox(Box.createVerticalStrut(10), UIUtils.createHorizontalBox(new JLabel(" State: "), stateComboBox), Box.createVerticalGlue()),
-						Box.createHorizontalGlue(),
-						new JLabel(WorkflowHelper.getStateDescriptions())
-						),
-				studyRightsPanel));
+		} else {
+			stateComboBox.setEnabled(false);
+		}
+
+		//Documents Panel
+
+		StudyDocumentEditorPane documentEditorPane = new StudyDocumentEditorPane();
+		documentEditorPane.setStudy(study);
+		JPanel documentPanel = UIUtils.createTitleBox("Documents", new JScrollPane(documentEditorPane));
+		documentPanel.setVisible(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_DOCUMENTS));
 
 		//NotesPanel
 		JPanel studyNotesPanel = UIUtils.createTitleBox("Notes", new JScrollPane(notesTextArea));
@@ -211,7 +224,7 @@ public class StudyInfoDlg extends JEscapeDialog {
 		});
 
 		//Update View
-		if(autoGenerateId && study.getId()<=0) {
+		if(studyIdPattern.length()>0 && study.getId()<=0) {
 			study.setStudyId(DAOStudy.getNextStudyId());
 		}
 
@@ -237,40 +250,51 @@ public class StudyInfoDlg extends JEscapeDialog {
 		commentsTextArea.setText(study.getNotes());
 
 		setLayout(new BorderLayout());
-		add(BorderLayout.CENTER, UIUtils.createVerticalBox(studyDescPanel, metadataPanel, statesRightsPanel, studyNotesPanel));
+		add(BorderLayout.CENTER, UIUtils.createVerticalBox(studyDescPanel, metadataPanel, statesRightsPanel, documentPanel, studyNotesPanel));
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue(), okButton));
 
-		stateComboBox.addActionListener(e-> eventStudyStatusChanged());
-		typeComboBox.addTextChangeListener(e-> updateMetadataPanel());
+		//		stateComboBox.addActionListener(e-> {
+		//			eventStudyStatusChanged();
+		//			stateComboBox.requestFocusInWindow();
+		//		});
+		typeComboBox.addTextChangeListener(e-> {
+			updateMetadataPanel();
+			typeComboBox.requestFocusInWindow();
+		});
 
-		eventStudyStatusChanged();
+		//		eventStudyStatusChanged();
 		updateMetadataPanel();
 
 		//Set visible
-		pack();
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setLocationRelativeTo(UIUtils.getMainFrame());
+		UIUtils.adaptSize(this, -1, -1);
 		setVisible(true);
 
 	}
 
 
 
-	private void eventStudyStatusChanged() {
-		String state =  stateComboBox.getSelection();
-		String[] adminRoles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, state);
-		String[] expertRoles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, state);
-
-
-		adminUsersTextArea.setEnabled(!MiscUtils.contains(adminRoles, "ALL") && !MiscUtils.contains(adminRoles, "NONE"));
-		expertUsersTextArea.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
-		eg1ComboBox.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
-		eg2ComboBox.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
-		blindAllUsersField.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
-		blindNamesUsersField.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
-	}
+	//	private void eventStudyStatusChanged() {
+	//		String state =  stateComboBox.getSelection();
+	//		String[] adminRoles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, state);
+	//		String[] expertRoles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, state);
+	//
+	//
+	//		adminUsersTextArea.setEnabled(!MiscUtils.contains(adminRoles, "ALL") && !MiscUtils.contains(adminRoles, "NONE"));
+	//		expertUsersTextArea.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
+	//		eg1ComboBox.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
+	//		eg2ComboBox.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
+	//		blindAllUsersField.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
+	//		blindNamesUsersField.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
+	//	}
 
 	private void updateMetadataPanel() {
+		//Study Type
+		JPanel typePanel = null;
+		if(studyTypes.length>0) {
+			typePanel = UIUtils.createHorizontalBox(new JCustomLabel("Type*: ", FastFont.BOLD), typeComboBox, Box.createHorizontalGlue());
+			typeComboBox.setBackground(LF.BGCOLOR_REQUIRED);
+		}
+
 		//Metadata
 		List<JComponent> comps = new ArrayList<>();
 		for (String metadataKey : SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA)) {
@@ -281,8 +305,8 @@ public class StudyInfoDlg extends JEscapeDialog {
 			String[] states = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA_STATES, metadataKey);
 			String[] types = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA_TYPES, metadataKey);
 			boolean req = SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_METADATA_REQUIRED, metadataKey);
-			boolean visible = types.length==0 || MiscUtils.contains(types, typeComboBox.getText());
-			if(!visible) continue;
+
+			//Create the component
 			JComponent comp = metadataKey2comp.get(metadataKey);
 			if(comp==null) {
 				if(DataType.LIST.name().equals(datatype)) {
@@ -303,28 +327,40 @@ public class StudyInfoDlg extends JEscapeDialog {
 					textField.setText(study.getMetadataMap().get(metadataKey));
 					comp = textField;
 				}
+				metadataKey2comp.put(metadataKey, comp);
+			}
+
+			comp.setToolTipText("");
+			comp.setEnabled(true);
+
+			if(types.length>0 && !MiscUtils.contains(types, typeComboBox.getText())) {
+				comp.setToolTipText("Disabled because study's type: "+typeComboBox.getText()+" not in "+MiscUtils.flatten(types));
+				comp.setEnabled(false);
 			}
 			if(states.length>0 && !MiscUtils.contains(states, study.getState())) {
-				comp.setToolTipText("Disabled "+name+" because study's state: "+study.getState()+" not in "+Arrays.toString(states));
+				comp.setToolTipText("Disabled because study's state: "+study.getState()+" not in "+MiscUtils.flatten(states));
 				comp.setEnabled(false);
 			}
 			if(roles.length>0 && !MiscUtils.contains(roles, SpiritFrame.getUser().getRoles())) {
-				comp.setToolTipText("Disabled "+name+" because user's roles: "+SpiritFrame.getUser().getRoles()+" not in "+Arrays.toString(roles));
+				comp.setToolTipText("Disabled because user's roles: "+SpiritFrame.getUser().getRoles()+" not in "+MiscUtils.flatten(roles));
 				comp.setEnabled(false);
 			}
 			if(req) comp.setBackground(LF.BGCOLOR_REQUIRED);
 
-			comps.add(new JLabel(name+": " + (req?"*":"")));
+			comps.add(new JLabel(name + ": " + (req?"*":"")));
 			comps.add(comp);
-			metadataKey2comp.put(metadataKey, comp);
 		}
 		metadataPanel.removeAll();
 		if(comps.size()>0) {
 			if(comps.size()>=4) {
 				int med = (((comps.size()/2)+1)/2)*2;
-				metadataPanel.add(UIUtils.createTitleBox("Metadata", UIUtils.createHorizontalBox(UIUtils.createTable(comps.subList(0, med)), Box.createHorizontalStrut(30), UIUtils.createTable(comps.subList(med, comps.size())), Box.createHorizontalGlue())));
+				metadataPanel.add(UIUtils.createTitleBox("Metadata", UIUtils.createBox(
+						UIUtils.createHorizontalBox(UIUtils.createTable(comps.subList(0, med)), Box.createHorizontalStrut(30), UIUtils.createTable(comps.subList(med, comps.size())), Box.createHorizontalGlue()),
+						typePanel)));
 			} else {
-				metadataPanel.add(UIUtils.createTitleBox("Metadata", UIUtils.createTable(comps)));
+				metadataPanel.add(UIUtils.createTitleBox("Metadata", UIUtils.createBox(
+						UIUtils.createTable(comps),
+						typePanel)));
 			}
 		}
 		metadataPanel.validate();
@@ -335,7 +371,6 @@ public class StudyInfoDlg extends JEscapeDialog {
 	public void ok() throws Exception {
 
 		if(studyIdField.getText().length()==0) throw new Exception("You must enter a unique studyId");
-		if(stateComboBox.getSelection()==null) throw new Exception("You must select a status");
 		SpiritUser user = Spirit.askForAuthentication();
 
 		//Update Model
@@ -345,9 +380,13 @@ public class StudyInfoDlg extends JEscapeDialog {
 		study.setState(stateComboBox.getSelection());
 		study.setLocalId(ivvField.getText());
 		study.setTitle(titleField.getText());
-		study.setState(stateComboBox.getSelection());
 		study.setSynchronizeSamples(synchroCheckbox.isSelected());
 		study.setType(typeComboBox.getText());
+
+		if(stateComboBox.isEnabled()) {
+			if(stateComboBox.getSelection()==null) throw new Exception("You must select a status");
+			study.setState(stateComboBox.getSelection());
+		}
 
 		//Users
 		if(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER && SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
@@ -403,19 +442,23 @@ public class StudyInfoDlg extends JEscapeDialog {
 			String name = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metadataKey);
 			boolean req = SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_METADATA_REQUIRED, metadataKey);
 			JComponent comp = metadataKey2comp.get(metadataKey);
-			if(comp==null || !comp.isEnabled() || !comp.isVisible()) continue;
+			String val = "";
+			if(comp!=null && comp.isEnabled() && comp.isVisible()) {
 
-			String val = null;
-			if(comp instanceof JGenericComboBox) {
-				val = ((JGenericComboBox<String>)comp).getSelection();
-			} else if(comp instanceof JTextField) {
-				val = ((JTextField)comp).getText();
-			} else if(comp instanceof JCheckBox) {
-				val = ((JCheckBox)comp).isSelected()?"true":"false";
+				if(comp instanceof JGenericComboBox) {
+					val = ((JGenericComboBox<String>)comp).getSelection();
+				} else if(comp instanceof JCustomTextField) {
+					if(!((JCustomTextField)comp).isValidFormat()) throw new Exception("The format of '" + name + "' is invalid");
+					val = ((JTextField)comp).getText();
+				} else if(comp instanceof JTextField) {
+					val = ((JTextField)comp).getText();
+				} else if(comp instanceof JCheckBox) {
+					val = ((JCheckBox)comp).isSelected()?"true":"false";
+				}
+				if(val==null) val = "";
+
+				if(req && val.length()==0) throw new Exception(name + " is required");
 			}
-			if(val==null) val = "";
-
-			if(req && val.length()==0) throw new Exception(name + " is required");
 			metaMap.put(metadataKey, val);
 		}
 		study.setMetadataMap(metaMap);

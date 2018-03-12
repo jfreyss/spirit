@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -57,9 +57,6 @@ public class ReportFactory {
 	private List<AbstractReport> reports = new ArrayList<>();
 
 	public ReportFactory() {
-		reports.add(new StudyDesignReport());
-		reports.add(new StudyGroupAssignmentReport());
-		reports.add(new SamplesLocationReport());
 		try {
 			reports.addAll(getAbstractReports());
 		} catch(Exception e) {
@@ -145,11 +142,13 @@ public class ReportFactory {
 
 	private static List<AbstractReport> getAbstractReports() throws Exception {
 		List<AbstractReport> res = new ArrayList<>();
-		for (Object rep : DBAdapter.getInstance().getReports()) {
-			if(!(rep instanceof AbstractReport)) {
-				LoggerFactory.getLogger(ReportFactory.class).error(rep +" does not extend AbstractReport");
-			} else {
-				res.add((AbstractReport)rep);
+		if(DBAdapter.getInstance().getReports()!=null) {
+			for (Object rep : DBAdapter.getInstance().getReports()) {
+				if(!(rep instanceof AbstractReport)) {
+					LoggerFactory.getLogger(ReportFactory.class).error(rep +" does not extend AbstractReport");
+				} else {
+					res.add((AbstractReport)rep);
+				}
 			}
 		}
 		return res;

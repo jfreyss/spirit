@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -52,7 +52,7 @@ import com.actelion.research.spiritapp.ui.biosample.column.StudyTreatmentColumn;
 import com.actelion.research.spiritapp.ui.biosample.linker.AbstractLinkerColumn;
 import com.actelion.research.spiritapp.ui.biosample.linker.LinkerColumnFactory;
 import com.actelion.research.spiritapp.ui.biosample.linker.SampleIdColumn;
-import com.actelion.research.spiritapp.ui.util.lf.SpiritExtendTableModel;
+import com.actelion.research.spiritapp.ui.util.component.SpiritExtendTableModel;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
@@ -61,9 +61,11 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.exceltable.Column;
 
@@ -119,13 +121,6 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 		} else {
 			this.type = null;
 		}
-		boolean someAbstractComponent = false;
-		for (Biotype biotype : types) {
-			if(biotype.isAbstract()) {
-				someAbstractComponent = true; break;
-			}
-		}
-
 		boolean someLiving = false;
 		for (Biotype biotype : types) {
 			if(biotype.getCategory()==BiotypeCategory.LIVING) {
@@ -177,15 +172,17 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 			}
 		}
 
-		// Study Info
+		// Study columns
 		if (mode==Mode.FULL && (studies.size()>0 || someLiving)) {
 			columns.add(new StudyIdColumn());
-			columns.add(new StudyGroupColumn());
-			columns.add(new StudySubGroupColumn());
+			if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_STUDYDESIGN)) {
+				columns.add(new StudyGroupColumn());
+				columns.add(new StudySubGroupColumn());
+			}
 		}
 
 		// Top
-		if (hasDifferentTop) {
+		if (hasDifferentTop && SpiritProperties.getInstance().isAdvancedMode()) {
 			if(studies.size()>0) {
 				columns.add(new StudyParticipantIdColumn());
 			} else if (topBiotypes.size() == 1) {
@@ -207,7 +204,6 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 				columns.add(new StudyParticipantIdColumn());
 			}
 		}
-
 		// Parent? only if parent <> topparent and parent.type <> this.type and parentType not in types
 		if (parentTypes.size() == 1) {
 			Biotype parentType = parentTypes.iterator().next();
@@ -220,7 +216,6 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 			}
 		}
 
-		// Phase
 		if (mode!=Mode.SHORT && hasPhases) {
 			columns.add(new StudyPhaseColumn());
 		}
@@ -253,12 +248,9 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 			columns.add(LinkerColumnFactory.create(new BiosampleLinker(LinkerType.COMMENTS, type)));
 		}
 
-		//Sampling
-		columns.add(new StudySamplingColumn());
-
-		// children
-		if (type!=null && someAbstractComponent) {
-			columns.add(new ChildrenColumn());
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_STUDYDESIGN)) {
+			//Sampling
+			columns.add(new StudySamplingColumn());
 		}
 
 		//Expiry
@@ -268,7 +260,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 			columns.add(col);
 		}
 
-		// owner
+		// CreatedBy
 		CreationColumn col = new CreationColumn(true);
 		col.setHideable(mode!=Mode.FULL);
 		columns.add(col);
@@ -276,11 +268,17 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 
 		//Optional columns
 		columns.add(new LastChangeColumn(revId));
-		columns.add(new StudyTreatmentColumn());
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_STUDYDESIGN)) {
+			columns.add(new StudyTreatmentColumn());
+		}
 		columns.add(new BiosampleQualityColumn());
 		columns.add(new StatusColumn());
-		columns.add(new ChildrenColumn());
-		columns.add(new ResultColumn());
+		if(SpiritProperties.getInstance().isAdvancedMode()) {
+			columns.add(new ChildrenColumn());
+		}
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+			columns.add(new ResultColumn());
+		}
 		columns.add(new CreationColumn(false));
 
 		columns = removeEmptyColumns(columns);
@@ -320,7 +318,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 				Set<Biosample> children = row.getChildren();
 				List<Biosample> res = new ArrayList<>();
 				for (Biosample b : children) {
-					if(!filterTrashed || b.getStatus().isAvailable()) res.add(b);
+					if(!filterTrashed || b.getStatus()==null || b.getStatus().isAvailable()) res.add(b);
 				}
 				return res;
 
@@ -331,7 +329,7 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 				try {
 					List<Biosample> res = new ArrayList<>();
 					for (Biosample b : row.getChildren()) {
-						if(!filterTrashed || b.getStatus().isAvailable()) res.add(b);
+						if(!filterTrashed || b.getStatus()==null || b.getStatus().isAvailable()) res.add(b);
 					}
 					return res;
 				} catch(Exception ex) {
@@ -352,6 +350,8 @@ public class BiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 
 	@Override
 	public Column<Biosample, ?> getTreeColumn() {
+		if(!SpiritProperties.getInstance().isAdvancedMode()) return null;
+
 		for (Column<Biosample, ?> c : getColumns()) {
 			if ((c instanceof SampleIdColumn) && !((SampleIdColumn) c).getLinker().isLinked()) {
 				return c;

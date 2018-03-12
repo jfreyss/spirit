@@ -31,9 +31,9 @@ import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.SchemaCreator;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.audit.LogEntry;
+import com.actelion.research.spiritcore.business.audit.LogEntry.Action;
 import com.actelion.research.spiritcore.business.audit.Revision;
 import com.actelion.research.spiritcore.business.audit.RevisionQuery;
-import com.actelion.research.spiritcore.business.audit.LogEntry.Action;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.services.dao.DAOLog;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
@@ -81,16 +81,16 @@ public class DatabaseTest extends AbstractSpiritTest {
 		Assert.assertNotNull(version);
 
 		//Test we can retrieve the rights
-		String value = SpiritProperties.getInstance().getValue(PropertyKey.USER_OPEN);
-		Assert.assertEquals(PropertyKey.USER_OPEN.getDefaultValue(), value);
+		String value = SpiritProperties.getInstance().getValue(PropertyKey.USER_OPENBYDEFAULT);
+		Assert.assertEquals(PropertyKey.USER_OPENBYDEFAULT.getDefaultValue(), value);
 
 		//Test we can save
 		SpiritProperties.reset();
-		SpiritProperties.getInstance().setValue(PropertyKey.USER_OPEN, "test");
+		SpiritProperties.getInstance().setValue(PropertyKey.USER_OPENBYDEFAULT, "test");
 		SpiritProperties.getInstance().saveValues();
 
 		SpiritProperties.reset();
-		Assert.assertEquals("test", SpiritProperties.getInstance().getValue(PropertyKey.USER_OPEN));
+		Assert.assertEquals("test", SpiritProperties.getInstance().getValue(PropertyKey.USER_OPENBYDEFAULT));
 
 		//Test versioning
 		RevisionQuery q = new RevisionQuery(null, null, null, null, false, false, false, false, true);
@@ -98,7 +98,7 @@ public class DatabaseTest extends AbstractSpiritTest {
 		Assert.assertEquals(1, rev.getSpiritProperties().size());
 		Assert.assertEquals("rights.mode", rev.getSpiritProperties().get(0).getKey());
 		Assert.assertEquals("test", rev.getSpiritProperties().get(0).getValue());
-		Assert.assertEquals("FAKE", rev.getUser());
+		Assert.assertEquals("######", rev.getUser());
 		System.out.println("DatabaseTest.testProperties() "+rev.getSpiritProperties());
 
 	}

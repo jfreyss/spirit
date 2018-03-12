@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -71,7 +71,7 @@ import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
-import com.actelion.research.spiritcore.util.IOUtils;
+import com.actelion.research.util.IOUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.UIUtils;
@@ -89,8 +89,6 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 	private JRadioButton overlapNoCheckBox = new JRadioButton("No Overlap", model.getOverlapPosition() == 0);
 	private JRadioButton overlapLeftCheckBox = new JRadioButton("Left Overlap", model.getOverlapPosition() == 1);
 	private JRadioButton overlapRightCheckBox = new JRadioButton("Right Overlap", model.getOverlapPosition() == -1);
-	// private JCheckBox showBarcode = new JCheckBox("Show SampleId/Barcode",
-	// model.isShowBarcode());
 	private JCheckBox showParentCheckbox = new JCheckBox("Show Parent", model.isShowParent());
 	private JCheckBox showMetadataCheckbox = new JCheckBox("Show Metadata", model.isShowMetadata());
 	private JCheckBox showCommentsCheckbox = new JCheckBox("Show Amount/Comments", model.isShowComments());
@@ -98,7 +96,7 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 	public BrotherPrinterAdapter(final PrintingTab tab, final ContainerType containerType) {
 		super(tab);
 		PrintService[] services = SpiritPrinter.getBrotherPrintServices();
-		printerComboBox = new JGenericComboBox<PrintService>(services, true);
+		printerComboBox = new JGenericComboBox<>(services, true);
 		printerComboBox.setPreferredWidth(200);
 
 		ButtonGroup group = new ButtonGroup();

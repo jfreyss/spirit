@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -46,13 +46,19 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.envers.Audited;
+
+import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.IObject;
+import com.actelion.research.spiritcore.util.DifferenceMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.CompareUtils;
 
 @Entity
 @Table(name="employee", indexes= {@Index(name="employeegroup_username_index", columnList="user_name")})
+@Audited
 @SequenceGenerator(name="employee_sequence", sequenceName="employee_sequence", allocationSize=1)
-public class Employee implements Comparable<Employee>, IObject {
+public class Employee implements Comparable<Employee>, IObject, IAuditable {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="employee_sequence")
@@ -141,11 +147,22 @@ public class Employee implements Comparable<Employee>, IObject {
 		if(this.manager!=null) {
 			this.manager.getChildren().add(this);
 		}
-
 	}
 
+	/**
+	 * Gets the list of group membership
+	 * @return
+	 */
 	public Set<EmployeeGroup> getEmployeeGroups() {
 		return employeeGroups;
+	}
+
+	/**
+	 * Sets the list of group membership
+	 * @param employeeGroups
+	 */
+	public void setEmployeeGroups(Set<EmployeeGroup> employeeGroups) {
+		this.employeeGroups = employeeGroups;
 	}
 
 	/**
@@ -160,6 +177,9 @@ public class Employee implements Comparable<Employee>, IObject {
 		} else {
 			for (EmployeeGroup gr : getEmployeeGroups()) {
 
+				//Skip groups, which are disabled
+				if(gr.isDisabled()) continue;
+
 				//Skip groups, whose parent is FUNCTIONAL (all uppercase)
 				if(gr.getParent()!=null && gr.getParent().getName().toUpperCase().equals(gr.getParent().getName())) continue;
 
@@ -169,10 +189,6 @@ public class Employee implements Comparable<Employee>, IObject {
 			}
 			return getEmployeeGroups().iterator().next();
 		}
-	}
-
-	public void setEmployeeGroups(Set<EmployeeGroup> employeeGroups) {
-		this.employeeGroups = employeeGroups;
 	}
 
 	/**
@@ -203,17 +219,19 @@ public class Employee implements Comparable<Employee>, IObject {
 	@Override
 	public int compareTo(Employee o) {
 		if(o==null) return 1;
-		return (userName==null?"":userName).compareToIgnoreCase(o.getUserName());
+		return (userName==null?"":userName).compareTo(o.getUserName());
 	}
 
 	/**
-	 * @param disabled the disabled to set
+	 * Sets the disabled status (a disabled employee cannot login anymore)
+	 * @param disabled
 	 */
 	public void setDisabled(boolean disabled) {
 		this.disabled = disabled;
 	}
 
 	/**
+	 * Is the employee disabled (not allowed to login again)
 	 * @return the disabled
 	 */
 	public boolean isDisabled() {
@@ -250,6 +268,10 @@ public class Employee implements Comparable<Employee>, IObject {
 		return id;
 	}
 
+	/**
+	 * Gets the list of children, ie. employees who are managed by this
+	 * @return
+	 */
 	public Set<Employee> getChildren() {
 		return children;
 	}
@@ -281,4 +303,45 @@ public class Employee implements Comparable<Employee>, IObject {
 		return Arrays.asList(getRoles()).contains(role);
 	}
 
+
+	@Override
+	public String getDifference(IAuditable r) {
+		if(r==null) r = new Employee();
+		if(!(r instanceof Employee)) return "";
+		return getDifferenceMap((Employee)r).flatten();
+	}
+
+	/**
+	 * Returns a map containing the differences between 2 results (usually 2 different versions).
+	 * The result is an empty string if there are no differences or if b is null
+	 * @param b
+	 * @return
+	 */
+	public DifferenceMap getDifferenceMap(Employee r) {
+		DifferenceMap map = new DifferenceMap();
+		if(r==null) return map;
+		if(!CompareUtils.equals(getUserName(), r.getUserName())) {
+			map.put("Username", getUserName(), r.getUserName());
+		}
+
+		if(!CompareUtils.equals(getManager(), r.getManager())) {
+			map.put("Manager", getManager()==null || getManager().getUserName()==null? "": getManager().getUserName(), r.getManager()==null || r.getManager().getUserName()==null? "": r.getManager().getUserName());
+		}
+
+		if(isDisabled()!=r.isDisabled()) {
+			map.put("Disabled", Boolean.toString(isDisabled()), Boolean.toString(r.isDisabled()));
+		}
+
+		if(!CompareUtils.equals(this.roles, r.roles)) {
+			map.put("Roles", this.roles, r.roles);
+		}
+		try {
+			String actionCompare = MiscUtils.diffCollectionsSummary(getEmployeeGroups(), r.getEmployeeGroups(), null);
+			if(actionCompare!=null) map.put("Groups", actionCompare, null);
+		} catch (Exception e) {
+			e.printStackTrace(); //Should not happen
+		}
+
+		return map;
+	}
 }

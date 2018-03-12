@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -278,6 +278,7 @@ public final class UIUtils {
 			@Override
 			protected void paintBorder(Graphics graphics) {
 				Graphics2D g = (Graphics2D) graphics;
+				if(getHeight()<=1 || getHeight()<=1) return;
 				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 				g.setColor(Color.WHITE);
 				g.drawRoundRect(1, topBorder-1, getWidth()-4, getHeight()-topBorder-1, radius, radius);
@@ -653,7 +654,7 @@ public final class UIUtils {
 	public static void adaptSize(JFrame frame, int preferredWidth, int preferredHeight) {
 		java.awt.Toolkit toolkit = frame.getToolkit();
 		Dimension sSize = toolkit.getScreenSize();
-		if(preferredWidth>0 && preferredWidth>0) {
+		if(preferredWidth>0 && preferredHeight>0) {
 			frame.setSize(Math.min(preferredWidth, sSize.width-30), Math.min(preferredHeight, sSize.height-30));
 			if(preferredWidth>sSize.width && preferredHeight>sSize.height) {
 				frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -674,7 +675,7 @@ public final class UIUtils {
 	public static void adaptSize(JDialog frame, int preferredWidth, int preferredHeight) {
 		java.awt.Toolkit toolkit = frame.getToolkit();
 		Dimension sSize = toolkit.getScreenSize();
-		if(preferredWidth>0 && preferredWidth>0) {
+		if(preferredWidth>0 && preferredHeight>0) {
 			frame.setSize(Math.min(preferredWidth, sSize.width-30), Math.min(preferredHeight, sSize.height-30));
 		} else {
 			frame.pack();

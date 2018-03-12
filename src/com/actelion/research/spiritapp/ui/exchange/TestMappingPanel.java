@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -23,10 +23,6 @@ package com.actelion.research.spiritapp.ui.exchange;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,23 +38,23 @@ import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.EntityAction;
+import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.UIUtils;
 
 public class TestMappingPanel extends JPanel implements IMappingPanel {
 	private Test test;
-	
+
 	private ImporterDlg dlg;
-	
+
 	private final MappingPanel testMappingPanel;
 	private final JGenericComboBox<Test> testComboBox;
-	
-	//
+
 	private final JPanel centerPanel = new JPanel();
 	private final List<MappingPanel> attributeMappingPanels = new ArrayList<>();
 	private final List<JGenericComboBox<TestAttribute>> attributeComboboxes = new ArrayList<>();
 	private List<TestAttribute> attributes = new ArrayList<>();
-	
+
 	public TestMappingPanel(ImporterDlg dlg, Test fromTest) {
 		super(new BorderLayout());
 		this.dlg = dlg;
@@ -66,7 +62,7 @@ public class TestMappingPanel extends JPanel implements IMappingPanel {
 		setMinimumSize(new Dimension(200, 200));
 
 		List<Test> possibleMatches = DAOTest.getTests();
-		 
+
 		if(dlg.getExchange()!=null && dlg.getExchange().getResults().size()>0) {
 			//Find attribute to be skipped
 			attribute: for (TestAttribute ta : test.getAttributes()) {
@@ -77,7 +73,7 @@ public class TestMappingPanel extends JPanel implements IMappingPanel {
 						//Don't skip this attribute, because one value is not empty
 						attributes.add(ta);
 						continue attribute;
-					}					
+					}
 				}
 			}
 		} else {
@@ -88,42 +84,33 @@ public class TestMappingPanel extends JPanel implements IMappingPanel {
 		//Init components
 		testComboBox = new JGenericComboBox<Test> (possibleMatches, "Map to...");
 		testMappingPanel = new MappingPanel(testComboBox);
-		testMappingPanel.addPropertyChangeListener(MappingPanel.PROPERTY_ACTION, new PropertyChangeListener() {			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				updateLayout();
-			}
-		});
+		testMappingPanel.addPropertyChangeListener(MappingPanel.PROPERTY_ACTION, evt -> updateLayout());
 		if(possibleMatches.size()==0) testMappingPanel.setMappingAction(EntityAction.CREATE);
 
-		testComboBox.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Test toTest = testComboBox.getSelection();
-				for (int index = 0; index < attributes.size(); index++) {
-					TestAttribute ta = attributes.get(index);
-					JGenericComboBox<TestAttribute> comboBox = null;
-					if(toTest!=null) {
-						comboBox = new JGenericComboBox<>(toTest.getAttributes(), "Map to...");						
-						comboBox.setSelectionString(ta.getName());
-					}
-					attributeMappingPanels.get(index).setMappingComponent(comboBox);
-					if(comboBox!=null && comboBox.getSelectedIndex()>0) {
-						attributeMappingPanels.get(index).setMappingAction(EntityAction.MAP_REPLACE);
-						attributeMappingPanels.get(index).setCreationEnabled(false);
-					} else {
-						attributeMappingPanels.get(index).setCreationEnabled(true);
-					}
+		testComboBox.addActionListener(e-> {
+			Test toTest = testComboBox.getSelection();
+			for (int index = 0; index < attributes.size(); index++) {
+				TestAttribute ta = attributes.get(index);
+				JGenericComboBox<TestAttribute> comboBox = null;
+				if(toTest!=null) {
+					comboBox = new JGenericComboBox<>(toTest.getAttributes(), "Map to...");
+					comboBox.setSelectionString(ta.getName());
 				}
-
+				attributeMappingPanels.get(index).setMappingComponent(comboBox);
+				if(comboBox!=null && comboBox.getSelectedIndex()>0) {
+					attributeMappingPanels.get(index).setMappingAction(EntityAction.MAP_REPLACE);
+					attributeMappingPanels.get(index).setCreationEnabled(false);
+				} else {
+					attributeMappingPanels.get(index).setCreationEnabled(true);
+				}
 			}
 		});
-		
+
 		for (int index = 0; index < attributes.size(); index++) {
 			attributeMappingPanels.add(new MappingPanel(null));
 			attributeComboboxes.add(new JGenericComboBox<TestAttribute>());
 		}
-		
+
 		//Preselection
 		testComboBox.setSelectionString(test.getName());
 		if(testComboBox.getSelectedIndex()>0) {
@@ -132,7 +119,7 @@ public class TestMappingPanel extends JPanel implements IMappingPanel {
 		} else {
 			testMappingPanel.setCreationEnabled(true);
 		}
-		
+
 		//Init Layout
 		JPanel mapTestPanel = UIUtils.createHorizontalBox(testMappingPanel, Box.createHorizontalGlue());
 		mapTestPanel.setOpaque(false);
@@ -140,60 +127,67 @@ public class TestMappingPanel extends JPanel implements IMappingPanel {
 		JPanel panel = UIUtils.createHorizontalBox(centerPanel, Box.createGlue());
 		panel.setOpaque(true);
 		setOpaque(false);
-		
+
 		add(BorderLayout.CENTER, new JScrollPane(panel));
-		
+
 		updateView();
 	}
-	
+
 	private void updateLayout() {
-		
+		ExchangeMapping mapping = dlg.getMapping();
+
 		centerPanel.removeAll();
 		List<JComponent> formComponents = new ArrayList<>();
-		EntityAction action = testMappingPanel.getMappingAction();
+		EntityAction action = mapping.getTest2action().get(test.getName());
+		testMappingPanel.setMappingAction(action);
+
 		if(action!=EntityAction.SKIP) {
 			for (int index = 0; index < attributes.size(); index++) {
 				TestAttribute m = attributes.get(index);
+				EntityAction action2 = mapping.getTestAttribute2mappingAction().get(new Pair<String, String>(test.getName(), m.getName()));
 				formComponents.add(new JLabel("<html>Attribute '<b>"+m.getName()+"</b>': "));
 				formComponents.add(attributeMappingPanels.get(index));
+				attributeMappingPanels.get(index).setMappingAction(action2);
 				if(action==EntityAction.CREATE) {
 					attributeMappingPanels.get(index).setMappingAction(EntityAction.CREATE);
 					attributeMappingPanels.get(index).setMappingComponent(null);
 				}
 			}
 		}
-		
+
 		centerPanel.add(UIUtils.createHorizontalBox(UIUtils.createTable(formComponents), Box.createHorizontalGlue()));
-		
+
 		centerPanel.revalidate();
-		
+
 	}
-	
+
+	@Override
 	public void updateView() {
 		ExchangeMapping mapping = dlg.getMapping();
 		testMappingPanel.setMappingAction(mapping.getTest2action().get(test.getName()));
 		testComboBox.setSelection(mapping.getTest2mappedTest().get(test.getName()));
-		updateLayout();		
+		updateLayout();
 	}
-	
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public void updateMapping() {
 		ExchangeMapping mapping = dlg.getMapping();
 		mapping.getTest2action().put(test.getName(), testMappingPanel.getMappingAction());
 		mapping.getTest2mappedTest().put(test.getName(), testComboBox.getSelection());
-		
+
 		for (int i = 0; i < attributes.size(); i++) {
 			TestAttribute m = attributes.get(i);
 			MappingPanel mappingPanel = attributeMappingPanels.get(i);
-			mapping.getTestAttribute2mappingAction().put(new com.actelion.research.spiritcore.util.Pair<String, String>(test.getName(), m.getName()), mappingPanel.getMappingAction());
-			
+			mapping.getTestAttribute2mappingAction().put(new Pair<String, String>(test.getName(), m.getName()), mappingPanel.getMappingAction());
+
 			if(mappingPanel.getMappingComponent()!=null && mappingPanel.getMappingComponent() instanceof JGenericComboBox) {
 				JGenericComboBox<TestAttribute> combobox = ((JGenericComboBox<TestAttribute>) mappingPanel.getMappingComponent());
 				if(combobox.getSelection()!=null) {
-					mapping.getTestAttribute2mappedTestAttribute().put(new com.actelion.research.spiritcore.util.Pair<String, String>(test.getName(), m.getName()), combobox.getSelection());				
+					mapping.getTestAttribute2mappedTestAttribute().put(new com.actelion.research.spiritcore.util.Pair<String, String>(test.getName(), m.getName()), combobox.getSelection());
 				}
 			}
 		}
 	}
-	
+
 }

@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -45,14 +45,14 @@ public abstract class AutosaveDecorator {
 	private int increment = 0;
 	private int total = 0;
 	private JCheckBox autosaveCheckBox = new JCheckBox("Autosave");
-	
+
 	private class AutosaveThread extends Thread {
 		@Override
 		public void run() {
 			while(!isInterrupted()) {
-				try {Thread.sleep(lapseSeconds*1000);}catch(Exception e) {return;}
+				try {Thread.sleep(lapseSeconds*1000);}catch(Exception e) {e.printStackTrace(); return;}
 				if(!caller.isVisible()) return;
-				
+
 				autosaveCheckBox.setText("Saving");
 
 				for(int i=0; i<10; i++) {
@@ -60,9 +60,9 @@ public abstract class AutosaveDecorator {
 					autosaveCheckBox.setForeground(i%2==0?Color.GRAY: Color.LIGHT_GRAY);
 				}
 				autosaveCheckBox.setOpaque(true);
-				
+
 				if(!caller.isShowing()) return;
-				
+
 				//Autosave
 				SwingWorkerExecutor.execute(new Thread() {
 					@Override
@@ -88,13 +88,13 @@ public abstract class AutosaveDecorator {
 		}
 	}
 	private AutosaveThread autosaveThread;
-	
+
 	public AutosaveDecorator(JDialog caller) {
 		this(caller, "autosave");
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param caller
 	 * @param property (null to disable it upon start)
 	 */
@@ -106,10 +106,10 @@ public abstract class AutosaveDecorator {
 		if(started) {
 			startAutosave();
 		} else {
-			stopAutosave();			
+			stopAutosave();
 		}
-		
-		autosaveCheckBox.addActionListener(new ActionListener() {			
+
+		autosaveCheckBox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(property!=null) Spirit.getConfig().setProperty(property, autosaveCheckBox.isSelected());
@@ -121,16 +121,16 @@ public abstract class AutosaveDecorator {
 			}
 		});
 	}
-	
+
 	public abstract void autosave() throws Exception;
-	
+
 	public synchronized void startAutosave() {
 		autosaveCheckBox.setSelected(true);
 		autosaveCheckBox.setOpaque(true);
 		autosaveCheckBox.setBackground(Color.GREEN);
-		if(autosaveThread==null) {		
-			
-			//To avoid too many saving, we increase the lapse every 10 occurences 
+		if(autosaveThread==null) {
+
+			//To avoid too many saving, we increase the lapse every 10 occurences
 			increment++;
 			if(increment%10==0) lapseSeconds = lapseSeconds*2;
 			total += lapseSeconds;
@@ -139,13 +139,13 @@ public abstract class AutosaveDecorator {
 				stopAutosave();
 				return;
 			}
-			
+
 			autosaveThread = new AutosaveThread();
-			autosaveThread.setDaemon(true);			
-			autosaveThread.start();		
+			autosaveThread.setDaemon(true);
+			autosaveThread.start();
 		}
 	}
-	
+
 	public synchronized void stopAutosave() {
 		if(autosaveThread!=null) {
 			autosaveThread.interrupt();
@@ -155,16 +155,16 @@ public abstract class AutosaveDecorator {
 		autosaveCheckBox.setOpaque(false);
 	}
 
-	
+
 
 	/**
 	 * @return the balanceCheckBox
 	 */
 	public JPanel getAutosaveCheckBox() {
 		JPanel panel = new JPanel(new GridLayout(1,1));
-		panel.setMinimumSize(new Dimension(135, 24));	
-		panel.setPreferredSize(new Dimension(135, 24));	
-		panel.setMaximumSize(new Dimension(135, 24));		
+		panel.setMinimumSize(new Dimension(135, 24));
+		panel.setPreferredSize(new Dimension(135, 24));
+		panel.setMaximumSize(new Dimension(135, 24));
 
 		panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1,1,1,1), BorderFactory.createLineBorder(Color.GRAY)));
 		panel.add(autosaveCheckBox);

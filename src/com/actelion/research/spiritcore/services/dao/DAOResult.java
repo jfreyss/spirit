@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -91,7 +91,7 @@ public class DAOResult {
 
 	public static List<Result> getResults(Collection<Integer> ids) throws Exception  {
 		EntityManager session = JPAUtil.getManager();
-		List<Result> results = session.createQuery("SELECT r FROM Result r left join fetch r.biosample where " + QueryTokenizer.expandForIn("r.id", ids)).getResultList();
+		List<Result> results = session.createQuery("from Result r left join fetch r.biosample where " + QueryTokenizer.expandForIn("r.id", ids)).getResultList();
 		postLoad(results);
 		return results;
 	}
@@ -504,15 +504,13 @@ public class DAOResult {
 		for (Result r : results) {
 
 			//Check that if a phase is present, then there is a biosample without any phase. (or delete the phase, if there is a match)
+			if(r.getBiosample()==null) throw new Exception("The result has a no biosample");
 			if(r.getPhase()!=null) {
-				if(r.getBiosample()==null) throw new Exception("The result "+r+" has a phase but no biosample");
 				if(r.getBiosample().getInheritedPhase()!=null) {
-					if(!r.getBiosample().getInheritedPhase().equals(r.getPhase())) throw new Exception("The phase of the result "+r+" does not match the phase of the biosample");
-					r.setPhase(null);
-				} else if(!r.getPhase().getStudy().equals(r.getBiosample().getInheritedStudy())) {
-					throw new Exception("The phase.study of the result "+r+" does not match biosample.study");
+					if(r.getBiosample().getInheritedPhase().equals(r.getPhase())) {
+						r.setPhase(null);
+					}
 				}
-
 			}
 		}
 
@@ -578,11 +576,12 @@ public class DAOResult {
 				result.setCreDate(now);
 			}
 
+			System.out.println("DAOResult.persistResults() "+result+" "+result.getResultValueMap());
 			if(result.getId()<=0) {
-				logger.debug("Persist result: "+result+" / "+result.getId());
 				session.persist(result);
+				logger.debug("Persist result: "+result+" / "+result.getId());
 			} else if(!session.contains(result)) {
-				logger.debug("Merge result: "+result);
+				logger.debug("Merge result: "+result+" / "+result.getId());
 				session.merge(result);
 			} else {
 				logger.debug("Attached result: "+result);
@@ -862,9 +861,7 @@ public class DAOResult {
 			res = new ArrayList<>();
 
 			//Load elbs accessible in Niobe
-			Connection conn = null;
-			try {
-				conn = DBAdapter.getInstance().getConnection();
+			try (Connection conn = DBAdapter.getInstance().getConnection()) {
 				Statement stmt = conn.createStatement();
 				ResultSet rs = stmt.executeQuery("select displayname, labjournal, title, scientist, createdate, sealdate" +
 						" from niobe.references ref, niobe.documents doc" +
@@ -893,8 +890,6 @@ public class DAOResult {
 
 			} catch (Exception e) {
 				e.printStackTrace();
-			} finally {
-				if(conn!=null) try{conn.close();}catch (Exception e2) {}
 			}
 		}
 		Cache.getInstance().add("elb_links_"+study.getId(), res, 60);
@@ -1043,17 +1038,17 @@ public class DAOResult {
 			txn.commit();
 			txn = null;
 		} finally {
-			if(txn!=null) try{txn.rollback();}catch (Exception e) {}
+			if(txn!=null) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
 		}
 	}
 
 	public static Collection<Biotype> getBiotypes(String studyIds, Set<Integer> testIds) throws Exception {
 		EntityManager session = JPAUtil.getManager();
 
-		if(studyIds==null || studyIds.trim().length()==0) return new HashSet<Biotype>();
+		if(studyIds==null || studyIds.trim().length()==0) return new HashSet<>();
 
 		StringBuilder jpql = new StringBuilder();
-		jpql.append("SELECT distinct(r.biosample.biotype) FROM Result r " +
+		jpql.append("select distinct(r.biosample.biotype) from Result r " +
 				" where (" + QueryTokenizer.expandOrQuery("r.study.studyId = ?", studyIds) + ")");
 
 		if(testIds!=null && testIds.size()>0) {
@@ -1086,10 +1081,6 @@ public class DAOResult {
 		Set<Biosample> biosamples = Result.getBiosamples(results);
 		if(results.size()==0 || biosamples.size()==0) return mapKey2result;
 
-		//Build a query
-		ResultQuery q = new ResultQuery();
-		q.setSampleIds(MiscUtils.flatten(Biosample.getSampleIds(biosamples), " "));
-		//Note: don't test for test.ids because those can be different in different instances
 
 		//Find existing keys
 		Set<String> keys = new HashSet<>();
@@ -1097,7 +1088,10 @@ public class DAOResult {
 			keys.add(r.getTestBiosamplePhaseInputKey());
 		}
 
-		//Query results matching sampleIds, testIds (we will get a lot of results)
+		//Query results matching sampleIds (we will get a lot of results)
+		//Build a query - Note: don't test for test.ids because those can be different in different instances
+		ResultQuery q = new ResultQuery();
+		q.setSampleIds(MiscUtils.flatten(Biosample.getSampleIds(biosamples), " "));
 		List<Result> list;
 		try {
 			list = DAOResult.queryResults(q, null);
@@ -1110,9 +1104,6 @@ public class DAOResult {
 			String key = result.getTestBiosamplePhaseInputKey();
 			if(keys.contains(key)) {
 				mapKey2result.put(key, result);
-				logger.debug("Found "+key+" "+result);
-			} else {
-				logger.debug("Skip "+key+" "+result);
 			}
 		}
 

@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -68,7 +68,7 @@ import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.PhaseFormat;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.spiritcore.util.DifferenceMap;
 import com.actelion.research.spiritcore.util.SetHashMap;
 import com.actelion.research.util.CompareUtils;
 
@@ -156,13 +156,13 @@ public class Result implements Comparable<Result>, Cloneable, IObject, IAuditabl
 		if(biosample==null) throw new Exception("Biosample is required");
 		if(test==null) throw new Exception("The test cannot be null");
 
-		assert getResultValues().size()<=getTest().getAttributes().size(): "Too many results for "+this+":"+getResultValues();
+		assert getResultValues().size()<=getTest().getAttributes().size(): "Too many values for the test "+getTest()+" "+getResultValues().size()+">"+getTest().getAttributes().size()+" "+getResultValueMap()+" > "+getTest().getAttributes();
 
 		//Relink Id if needed (this can happen in importing exchange)
 		for (ResultValue v : getResultValues()) {
 			if(v.getAttribute().getId()<=0) {
 				TestAttribute ta = getTest().getAttribute(v.getAttribute().getName());
-				assert ta.getId()>0;
+				assert ta!=null;
 				v.setAttribute(ta);
 			}
 		}
@@ -303,9 +303,6 @@ public class Result implements Comparable<Result>, Cloneable, IObject, IAuditabl
 
 
 	public ResultValue getResultValue(TestAttribute att) {
-		assert test!=null;
-		assert att!=null;
-		assert test.equals(att.getTest());
 		if(test==null) return null;
 		if(att==null) return null;
 		if(!test.equals(att.getTest())) return null;
@@ -388,8 +385,8 @@ public class Result implements Comparable<Result>, Cloneable, IObject, IAuditabl
 		if(test==null) return "No test";
 		StringBuilder sb = new StringBuilder();
 		for (TestAttribute att : test.getInputAttributes()) {
-			if(sb.length()>0) sb.append(" ");
-			if(getResultValue(att).getValue()!=null) {
+			if(getResultValue(att).getValue()!=null && getResultValue(att).getValue().length()>0) {
+				if(sb.length()>0) sb.append(" ");
 				sb.append(getResultValue(att).getValue());
 			}
 		}
@@ -552,8 +549,8 @@ public class Result implements Comparable<Result>, Cloneable, IObject, IAuditabl
 		return  "[Result:"
 				+ " biosample=" + biosample
 				+ " test=" + test
-				+ " phase=" + phase
-				+ " input=" + getInputResultValuesAsString()
+				+ (phase!=null? " phase=" + phase: "")
+				+ (getInputResultValuesAsString().length()>0? " input=" + getInputResultValuesAsString(): "")
 				+ " output=" + getOutputResultValuesAsString()
 				+ "]"
 				;
@@ -860,7 +857,7 @@ public class Result implements Comparable<Result>, Cloneable, IObject, IAuditabl
 	public String getDifference(IAuditable r) {
 		if(r==null) r = new Result();
 		if(!(r instanceof Result)) return "";
-		return MiscUtils.flatten(getDifferenceMap((Result)r));
+		return getDifferenceMap((Result)r).flatten();
 	}
 
 	/**
@@ -869,32 +866,38 @@ public class Result implements Comparable<Result>, Cloneable, IObject, IAuditabl
 	 * @param b
 	 * @return
 	 */
-	public Map<String, String> getDifferenceMap(Result r) {
+	public DifferenceMap getDifferenceMap(Result r) {
 
-		Map<String, String> map = new LinkedHashMap<>();
+		DifferenceMap map = new DifferenceMap();
 		if(r==null) return map;
 		if(!CompareUtils.equals(getStudy(), r.getStudy())) {
-			map.put("Study", getStudy()==null?"NA":getStudy().getStudyId());
+			map.put("Study", getStudy()==null?"":getStudy().getStudyId(), r.getStudy()==null?"":r.getStudy().getStudyId());
 		}
 
 		if(!CompareUtils.equals(getTest(), r.getTest())) {
-			map.put("Test", getTest().getName());
+			map.put("Test", getTest().getName(), r.getTest().getName());
 		}
 
 		if(!CompareUtils.equals(getPhase(), r.getPhase())) {
-			map.put("Phase", getPhase()==null?"NA":getPhase().getName());
+			map.put("Phase", getPhase()==null?"":getPhase().getName(), r.getPhase()==null?"":r.getPhase().getName());
 		}
 
 		if(!CompareUtils.equals(getCreUser(), r.getCreUser())) {
-			map.put("Owner", getCreUser());
+			map.put("CreatedBy", getCreUser(), r.getCreUser());
 		}
 
 		for (TestAttribute ta : getTest().getAttributes()) {
 			if(!CompareUtils.equals(getResultValueString(ta), r.getResultValueString(ta))) {
-				map.put(ta.getName(), getResultValueString(ta));
+				map.put(ta.getName(), getResultValueString(ta), r.getResultValueString(ta));
 			}
 		}
 
 		return map;
 	}
+
+	@Override
+	public int getSid() {
+		return getStudy()==null? 0 : getStudy().getSid();
+	}
+
 }

@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -75,7 +75,7 @@ public class RackDropListener implements DropTargetListener, DragSourceListener,
 	public void dragGestureRecognized(DragGestureEvent dge) {
 		pos2Color.clear();
 		Set<Container> sel = this.rackPanel.getSelectedContainers();
-		if(sel.size()<0) return;
+		if(sel.size()==0) return;
 
 		boolean acceptDrag = false;
 		if(rackPanel.getDepictor()!=null && this.rackPanel.getDepictor().getRackDepictorListeners()!=null) {
@@ -110,6 +110,7 @@ public class RackDropListener implements DropTargetListener, DragSourceListener,
 	public void dragOver(DropTargetDragEvent dtde) {
 		DropTarget target = (DropTarget) dtde.getSource();
 		try {
+			if(!dtde.getTransferable().isDataFlavorSupported(ContainerTransferable.DATA_FLAVOR)) return;
 			List<Container> containers = (List<Container>) dtde.getTransferable().getTransferData(ContainerTransferable.DATA_FLAVOR);
 			if(containers.size()==0 || !(target.getComponent() instanceof RackDepictor)) return;
 
@@ -138,7 +139,6 @@ public class RackDropListener implements DropTargetListener, DragSourceListener,
 	@SuppressWarnings("unchecked")
 	@Override
 	public void drop(DropTargetDropEvent dtde) {
-
 		pos2Color.clear();
 
 		try {

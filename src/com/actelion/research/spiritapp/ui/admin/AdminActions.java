@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -52,7 +52,7 @@ public class AdminActions {
 
 	public static class Action_AdminBiotypes extends AbstractAction {
 		public Action_AdminBiotypes() {
-			super("Edit Biotypes (Admin)");
+			super("Edit Biotypes");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('t'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
 			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
@@ -65,7 +65,7 @@ public class AdminActions {
 
 	public static class Action_AdminTests extends AbstractAction {
 		public Action_AdminTests() {
-			super("Edit Tests (Admin)");
+			super("Edit Tests");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('t'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
 			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
@@ -135,7 +135,7 @@ public class AdminActions {
 	public static class Action_Revisions extends AbstractAction {
 		private String userId;
 		public Action_Revisions(String userId) {
-			super("Recent Changes (" + (userId==null?"Admin": userId==""?"NA": userId) + ")");
+			super("Recent Changes " + (userId==null || userId.length()==0? "": "(" + userId + ")"));
 			this.userId = userId;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
 			putValue(AbstractAction.SMALL_ICON, userId==null? IconType.ADMIN.getIcon(): IconType.HISTORY.getIcon());
@@ -148,7 +148,7 @@ public class AdminActions {
 
 	public static class Action_RenameElb extends AbstractAction {
 		public Action_RenameElb() {
-			super("Rename ELB (Admin)");
+			super("Rename ELB");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
 			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
@@ -161,7 +161,7 @@ public class AdminActions {
 
 	public static class Action_LastLogins extends AbstractAction {
 		public Action_LastLogins() {
-			super("Recent Connections (Admin)");
+			super("Recent Connections");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('c'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
 			setEnabled(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER && (SpiritFrame.getUser()==null || SpiritRights.isSuperAdmin(SpiritFrame.getUser())));
@@ -174,7 +174,7 @@ public class AdminActions {
 
 	public static class Action_ManageUsers extends AbstractAction {
 		public Action_ManageUsers() {
-			super("Edit Users/Groups (Admin)");
+			super("Edit Users");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
 			setEnabled(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER  && (SpiritFrame.getUser()==null || SpiritRights.isSuperAdmin(SpiritFrame.getUser())));

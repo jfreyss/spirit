@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -39,14 +39,14 @@ import com.actelion.research.util.ui.UIUtils;
 
 /**
  * Fast Label without the complex features of JLabel (html, repaint, DND)
- * to be used in tables for fast repaint in tables. 
- * 
+ * to be used in tables for fast repaint in tables.
+ *
  * Some of the extra features added by this component are:
  * - It can display text on multiple lines: '\n' is used as a newline separator
  * - It can wrap text automatically: setWrappingWidth(widthPx) has to be called to force the width (getPreferredSize will then return this width)
  * - It can set some style: the style is set for the entire line; <B> for bold, <I> for italic, <y> for yellow, <m> for magenta, <b> for blue, <c> for cyan, <r> for red, <g> for green.
- * - It can condense the text automatically to fit the component's width: iti is possible to call setCondenseText(Boolean) to force the automatic behaviour
- * 
+ * - It can condense the text automatically to fit the component's width: it is possible to call setCondenseText(Boolean) to force the automatic behaviour
+ *
  * By default, it is opaque.
  * @author freyssj
  *
@@ -54,78 +54,78 @@ import com.actelion.research.util.ui.UIUtils;
 public class JLabelNoRepaint extends JComponentNoRepaint {
 
 	private static String[] specialExtensions;
-	
+
 	private String text;
-    private int horizontalAlign = SwingConstants.LEFT;
-    private int verticalAlign = SwingConstants.CENTER; 
-    private int wrappingWidth = -1;
-    private Boolean condenseText; 
+	private int horizontalAlign = SwingConstants.LEFT;
+	private int verticalAlign = SwingConstants.CENTER;
+	private int wrappingWidth = -1;
+	private Boolean condenseText;
 
-	private String lines[] = new String[0];             
-    private Color background = Color.WHITE;
-    private Color foreground = Color.BLACK;
+	private String lines[] = new String[0];
+	private Color background = Color.WHITE;
+	private Color foreground = Color.BLACK;
 
-    private final Dimension preferredDim = new Dimension();
-    
-    private Icon icon;
-    private boolean useIconsForKnownExtensions = true;
-    private String extension = null;
+	private final Dimension preferredDim = new Dimension();
 
-    static {
-    	setSpecialExtensions(new String[] {"jpg", "png", "gif", "pdf", "doc", "xls", "xlsx", "docx", "html", "txt"});    	
-    }
-    
-    public JLabelNoRepaint() {
-		this("");
-		
+	private Icon icon;
+	private boolean useIconsForKnownExtensions = true;
+	private String extension = null;
+
+	static {
+		setSpecialExtensions(new String[] {"jpg", "png", "gif", "pdf", "doc", "xls", "xlsx", "docx", "html", "txt"});
 	}
-    
-    public JLabelNoRepaint(String text) {
-        setText(text);
-        setDoubleBuffered(false);
-        setFont(FastFont.REGULAR);
-    }
-    
+
+	public JLabelNoRepaint() {
+		this("");
+
+	}
+
+	public JLabelNoRepaint(String text) {
+		setText(text);
+		setDoubleBuffered(false);
+		setFont(FastFont.REGULAR);
+	}
+
 	public void setIcon(Icon icon) {
 		this.icon = icon;
 		preferredDim.width = -1;
 	}
-    public void setWrappingWidth(int wrappingWidth) {
+	public void setWrappingWidth(int wrappingWidth) {
 		this.wrappingWidth = wrappingWidth;
 		preferredDim.width = -1;
 	}
-    
-    public int getWrappingWidth() {
+
+	public int getWrappingWidth() {
 		return wrappingWidth;
 	}
-    
-    /**
-     * {@link SwingConstants}
-     */
-    public void setVerticalAlignment(int verticalAlign) {
-    	this.verticalAlign = verticalAlign;
-    }
-    
-    @Override
-    public Dimension getPreferredSize() {
-    	if(preferredDim.width<=0) calculateSize();
-    	return preferredDim;
-    }
-    
-    @Override
-    public Dimension getMinimumSize() {    	
-    	return super.getMinimumSize();
-    }
-    
+
+	/**
+	 * {@link SwingConstants}
+	 */
+	public void setVerticalAlignment(int verticalAlign) {
+		this.verticalAlign = verticalAlign;
+	}
+
+	@Override
+	public Dimension getPreferredSize() {
+		if(preferredDim.width<=0) calculateSize();
+		return preferredDim;
+	}
+
+	@Override
+	public Dimension getMinimumSize() {
+		return super.getMinimumSize();
+	}
+
 	public void setText(String text) {
 		if(text==null) text = "";
 		this.text = text;
-		lines = text.split("\n", 0);		
+		lines = text.split("\n", 0);
 		preferredDim.width = -1;
 
 		//extension?
 		extension = null;
-		if(useIconsForKnownExtensions && text.length()>4 && text.indexOf("\n")<0) {
+		if(useIconsForKnownExtensions && text.length()>4 && !text.contains("\n") && !text.contains(" = ")) {
 			if(text.startsWith("http://") || text.startsWith("https://")) {
 				extension = text;
 				if(text.length()>8) {
@@ -144,27 +144,26 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 				}
 			}
 		}
-		
+
 	}
+
 	public String getText() {
 		return text;
 	}
-	
-	
-		
+
 	private void calculateSize() {
 		//First test special cases
 		if(extension!=null) {
-			preferredDim.width = 34; 
+			preferredDim.width = 34;
 			preferredDim.height = 24;
 			return;
 		}
-		
+
 		//Then calculate normal size
 		Font font = getFont();
 		FontMetrics fm = getFontMetrics(font);
-		int offset = (icon==null?0: icon.getIconWidth()+2); 
-		
+		int offset = (icon==null?0: icon.getIconWidth()+2);
+
 		int lineHeight = font.getSize();//-1;
 		if(getWrappingWidth()<=0) {
 			int maxWidth = 0;
@@ -182,21 +181,21 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 			preferredDim.height = lines.length * lineHeight + (lineHeight<=1? 4: 4);
 		} else {
 			preferredDim.width = getWrappingWidth();
-			
+
 			int y = 0;
 			for (int i = 0; i < lines.length; i++) {
 				int lineWidth = fm.stringWidth(lines[i]);
 				int preferredLines = (lineWidth > getWrappingWidth()?2:1);
 				y += preferredLines * lineHeight;
 			}
-			
+
 			preferredDim.height = y-2;
 		}
 		if(preferredDim.height<18) preferredDim.height = 18;
-		
+
 	}
-	
-	public int getHorizontalAlignment() {		
+
+	public int getHorizontalAlignment() {
 		return horizontalAlign;
 	}
 
@@ -233,20 +232,20 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 		super.setFont(font);
 		preferredDim.width = -1;
 	}
-	
+
 	/**
 	 * Principle.
 	 * - If the text can be entirely seen: -> Perfect
 	 * - Otherwise if condense == null, can we condense it to make it fit on line: -> perfect
-	 * - Otherwise, can we make it on 2 lines: -> perfect 
-	 * - Otherwise, we condense it on 2 lines. 
+	 * - Otherwise, can we make it on 2 lines: -> perfect
+	 * - Otherwise, we condense it on 2 lines.
 	 */
 	@Override
 	protected void paintComponent(Graphics graphics) {
 		Graphics2D g = (Graphics2D) graphics;
 
 		super.paintComponent(g);
-		
+
 		int width = getWidth();
 		int height = getHeight();
 
@@ -254,12 +253,12 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 			g.setBackground(background);
 			g.clearRect(0, 0, width, height);
 		}
-				
+
 		if(lines==null || !isVisible()) return;
-		
+
 		Font font = getFont();
 		g.setFont(font);
-		
+
 		//First treat special cases
 		if(useIconsForKnownExtensions) {
 			if(extension!=null) {
@@ -271,19 +270,19 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 				g.setColor(Color.GRAY);
 				g.drawRect(3, y, w, 16);
 				g.drawLine(3+w-6, y, 3+w, y+5);
-				
+
 				g.setColor(UIUtils.getColor(50,50,150));
-				g.drawString(extension, 6, y+12);	
+				g.drawString(extension, 6, y+12);
 				paintChildren(g);
-				return;			
+				return;
 			}
 		}
 
-		//Wrapping? 
+		//Wrapping?
 		List<String> wrappedLines = new ArrayList<>();
-		for(int l=0; l<lines.length; l++) {	
+		for(int l=0; l<lines.length; l++) {
 			String line = lines[l];
-			
+
 			if(getWrappingWidth()>0 && line.length()>0) {
 
 
@@ -298,7 +297,7 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 					int cut = 0;
 					int testCut = 0;
 					while(testCut<left.length()) {
-						if(left.charAt(testCut)==' ' || left.charAt(testCut)==';' || left.charAt(testCut)==',' || left.charAt(testCut)==':' || left.charAt(testCut)=='/' ) {							
+						if(left.charAt(testCut)==' ' || left.charAt(testCut)==';' || left.charAt(testCut)==',' || left.charAt(testCut)==':' || left.charAt(testCut)=='/' ) {
 							int cutWidth = g.getFontMetrics(font).stringWidth(left.substring(0, testCut+1));
 							if(cutWidth<=maxWidth+2) {
 								cut = testCut;
@@ -307,7 +306,7 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 							}
 						}
 						testCut++;
-					}				
+					}
 					if(cut==0) cut = left.length()-1;
 					wrappedLines.add(left.substring(0, cut+1));
 					left = left.substring(cut+1);
@@ -316,9 +315,9 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 				wrappedLines.add(line);
 			}
 		}
-		
+
 		//Vertical Alignment
-		int y;		
+		int y;
 		int lineHeight = font.getSize();//-1;
 		int recommendedHeight = lineHeight * wrappedLines.size();
 
@@ -330,32 +329,32 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 		} else { //Bottom
 			y = lineHeight - 3 + (height - recommendedHeight);
 		}
-		
-//		//Make sure the top text is visible even if the top is clipped (bug)
-//		if(getHeight()>MIN_HEIGHT_FOR_REPAINT) {
-//			g.getClipBounds(rect);
-//			if(y < rect.y + font.getSize()-2 && wrappedLines.size() * lineHeight < rect.height) {
-//				y = rect.y + font.getSize()-2;
-//			}
-//		}
-		
-		
+
+		//		//Make sure the top text is visible even if the top is clipped (bug)
+		//		if(getHeight()>MIN_HEIGHT_FOR_REPAINT) {
+		//			g.getClipBounds(rect);
+		//			if(y < rect.y + font.getSize()-2 && wrappedLines.size() * lineHeight < rect.height) {
+		//				y = rect.y + font.getSize()-2;
+		//			}
+		//		}
+
+
 		int offset = 1;
 		if(icon!=null) {
 			icon.paintIcon(this, g, offset, Math.max(1, y-icon.getIconHeight()));
 			offset+=icon.getIconWidth()+1;
 		}
-		
-		
-		
-		
-		
+
+
+
+
+
 		//Draw the text line per line
 		for(int l=0; l<wrappedLines.size(); l++) {
 			String line = wrappedLines.get(l);
 
 			g.setColor(foreground);
-			
+
 			if(line.startsWith("<B>")) {
 				line = line.substring(3);
 				g.setFont(font.deriveFont(Font.BOLD));
@@ -383,7 +382,7 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 			} else {
 				g.setFont(font);
 			}
-			
+
 			//Draw the line
 			if(horizontalAlign==SwingConstants.TRAILING || horizontalAlign==SwingConstants.LEFT) {
 				g.drawString(line, offset, y);
@@ -392,11 +391,11 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 				g.drawString(line, Math.max(offset, (width - lineWidth)/2), y);
 			} else {
 				g.drawString(line, Math.max(offset, width - 6 - g.getFontMetrics().stringWidth(line)), y);
-			}				
+			}
 			y += lineHeight;
 		}
 	}
-	
+
 	@Override
 	public String getToolTipText() {
 		if(super.getToolTipText()!=null && super.getToolTipText().length()>0) {
@@ -409,22 +408,22 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 			return null;
 		}
 	}
-	
+
 	public Boolean getCondenseText() {
 		return condenseText;
 	}
-	
+
 	public void setCondenseText(Boolean condenseText) {
 		this.condenseText = condenseText;
 		preferredDim.width = -1;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "JLabelNoRepaint:text=" + getText() + ",wrapping=" + getWrappingWidth() + "," + getPreferredSize();
 	}
 
-	
+
 	public void setUseIconsForKnownExtensions(boolean useIconsForKnownExtensions) {
 		this.useIconsForKnownExtensions = useIconsForKnownExtensions;
 	}
@@ -432,12 +431,12 @@ public class JLabelNoRepaint extends JComponentNoRepaint {
 	public boolean isUseIconsForKnownExtensions() {
 		return useIconsForKnownExtensions;
 	}
-	
-	
+
+
 	public static void setSpecialExtensions(String[] specialExtensions) {
 		JLabelNoRepaint.specialExtensions = specialExtensions;
-    	if(JLabelNoRepaint.specialExtensions!=null) Arrays.sort(JLabelNoRepaint.specialExtensions);
+		if(JLabelNoRepaint.specialExtensions!=null) Arrays.sort(JLabelNoRepaint.specialExtensions);
 	}
-	
-	
+
+
 }

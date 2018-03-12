@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -27,105 +27,43 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 
 import org.slf4j.LoggerFactory;
 
+import com.actelion.research.spiritapp.ui.SpiritFrame;
+import com.actelion.research.spiritapp.ui.biosample.edit.EditBiosampleTable;
+import com.actelion.research.spiritapp.ui.util.correction.Correction;
+import com.actelion.research.spiritapp.ui.util.correction.CorrectionDlg;
+import com.actelion.research.spiritapp.ui.util.correction.CorrectionMap;
+import com.actelion.research.spiritcore.business.DataType;
+import com.actelion.research.spiritcore.business.ValidationException;
 import com.actelion.research.spiritcore.business.biosample.BarcodeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.Biotype;
+import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.business.biosample.Status;
+import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
+import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBarcode;
+import com.actelion.research.spiritcore.services.dao.DAOBiosample;
+import com.actelion.research.spiritcore.services.dao.DAOBiotype;
+import com.actelion.research.spiritcore.services.dao.DAOStudy;
+import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.CompareUtils;
 
 public class BiosampleCreationHelper {
-	//
-	//	/**
-	//	 * Return a list of samples that should be created to be consistent with the study design.
-	//	 * In parallel, populates the list of samples to remove
-	//	 * @param study
-	//	 * @return
-	//	 * @throws Exception
-	//	 */
-	//	public static List<Biosample> processDividingSamples(Study study, List<Biosample> dividingBiosamplesToRemove) throws Exception {
-	//
-	//		List<Biosample> toSave = new ArrayList<>();
-	//
-	//		///////////////////////////////////////////////
-	//		//Create or update dividing samples
-	//		List<Biosample> dividingBiosamplesToAdd = new ArrayList<>();
-	//		List<Biosample> dividingBiosamplesToUpdate = new ArrayList<>();
-	//		if(dividingBiosamplesToRemove==null) dividingBiosamplesToRemove = new ArrayList<>();
-	//
-	//		Map<Group, int[]> group2left = new HashMap<Group, int[]>();
-	//		for(Group g: study.getGroups()) {
-	//			if(g.getDividingSampling()==null) continue;
-	//			int[] left = new int[g.getNSubgroups()];
-	//			for (int i = 0; i < left.length; i++) {
-	//				left[i] = g.getSubgroupSize(i);
-	//			}
-	//			group2left.put(g, left);
-	//		}
-	//
-	//		for (Biosample b : study.getTopAttachedBiosamples()) {
-	//			if(b.getInheritedGroup()==null || b.getInheritedGroup().getDividingGroups()==null) continue;
-	//			for(Group dividingGroup: b.getInheritedGroup().getDividingGroups()) {
-	//				Sampling sampling = dividingGroup.getDividingSampling();
-	//				int[] left = group2left.get(dividingGroup);
-	//				int subgroup = 0;
-	//				while(subgroup<left.length && left[subgroup]==0) subgroup++;
-	//				if(subgroup>=left.length) subgroup = 0;
-	//
-	//				if(subgroup<left.length) left[subgroup]--;
-	//
-	//
-	//				//find compatible one?
-	//				Biosample found = null;
-	//				for(Biosample c: b.getChildren()) {
-	//					if(!study.equals(c.getAttachedStudy()) || !dividingGroup.equals(c.getInheritedGroup())) continue;
-	//
-	//					if(sampling.getMatchingScore(c)==1) {
-	//						found = c;
-	//						break;
-	//					} else if(sampling.getMatchingScore(c)>.8) {
-	//						found = c;
-	//					}
-	//				}
-	//
-	//				if(found!=null) {
-	//					//we update the found biosample
-	//					if(found.getInheritedSubGroup()!=subgroup) {
-	//						found.setInheritedSubGroup(subgroup);
-	//						dividingBiosamplesToUpdate.add(found);
-	//					}
-	//
-	//					//we remove all extra compatible (should always be empty, but we never know if they are created by hand)
-	//					for(Biosample c: b.getChildren()) {
-	//						if(!study.equals(c.getAttachedStudy()) || !dividingGroup.equals(c.getInheritedGroup())) continue;
-	//						if(!c.equals(found)) dividingBiosamplesToRemove.add(c);
-	//					}
-	//				} else {
-	//					//we add the missing biosample
-	//					Biosample child = sampling.createCompatibleBiosample();
-	//					child.setParent(b);
-	//					child.setInheritedStudy(study);
-	//					child.setAttachedStudy(study);
-	//					child.setAttached(study, dividingGroup, subgroup);
-	//					child.setSampleId(DAOBarcode.getNextId(child.getBiotype()));
-	//					dividingBiosamplesToAdd.add(child);
-	//				}
-	//			}
-	//		}
-	//
-	//		toSave.addAll(dividingBiosamplesToAdd);
-	//		toSave.addAll(dividingBiosamplesToUpdate);
-	//
-	//		return toSave;
-	//	}
 
 	/**
 	 * Retrieve or create biosamples matching the given criteria
@@ -263,7 +201,7 @@ public class BiosampleCreationHelper {
 				if(b.getContainerType()!=s.getContainerType()) {
 					b.setContainer(new Container(s.getContainerType()));
 				}
-			} else if(b.getContainer()!=null && b.getContainerType()==s.getContainerType() && b.getContainer().getBlocNo()==s.getBlocNo()) {
+			} else if(b.getContainer()!=null && b.getContainerType()==s.getContainerType() && CompareUtils.equals(b.getContainer().getBlocNo(), s.getBlocNo())) {
 				//Already done
 			} else {
 				//The container is a new multiple container, check if we have a container already to add it into.
@@ -354,6 +292,250 @@ public class BiosampleCreationHelper {
 			retrieveOrCreateSamplesRec(phase, b, s, res);
 		}
 
+	}
+
+
+	/**
+	 *
+	 * @param opener
+	 * @param biosamples -not null
+	 * @param editor -nullable
+	 * @param allowDialogs
+	 * @return
+	 * @throws Exception
+	 */
+	public static List<Biosample> validate(JDialog opener, List<Biosample> biosamples, EditBiosampleTable editor, boolean allowCloning, boolean allowDialogs) throws Exception {
+
+		if(allowDialogs) {
+
+			//
+			//Check generation of sampleIds
+			List<Biosample> toGenerateSampleId = new ArrayList<>();
+			for (Biosample b : biosamples) {
+				if(b==null) continue;
+				if(b.getSampleId()==null || b.getSampleId().length()==0) {
+					toGenerateSampleId.add(b);
+				}
+			}
+			if(toGenerateSampleId.size()>0) {
+				//Confirm generation of sampleIds
+				int res = JOptionPane.showConfirmDialog(opener, toGenerateSampleId.size() + " samples don't have a sampleId.\nDo you want SPIRIT to generate them?", "Generate SampleIds", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+				if(res!=JOptionPane.YES_OPTION) throw new ValidationException("The sampleId is required", toGenerateSampleId.get(0), "SampleId");
+
+				for (Biosample b : toGenerateSampleId) {
+					if(editor!=null) {
+						editor.generateSampleId(b);
+					} else {
+						b.setSampleId(DAOBarcode.getNextId(b));
+					}
+				}
+				opener.repaint();
+			}
+
+
+			//Check that all groups/phase exists
+			Set<Group> groupsToBeCreated = new TreeSet<>();
+			Set<Phase> phasesToBeCreated = new TreeSet<>();
+			for (Biosample b : biosamples) {
+				if(b==null) continue;
+				if(b.getInheritedGroup()!=null && b.getInheritedGroup().getId()<=0) {
+					groupsToBeCreated.add(b.getInheritedGroup());
+				}
+				if(b.getInheritedPhase()!=null && b.getInheritedPhase().getId()<=0) {
+					phasesToBeCreated.add(b.getInheritedPhase());
+				}
+			}
+			if(groupsToBeCreated.size()>0 || phasesToBeCreated.size()>0) {
+				//Confirm new groups to be created
+				String msg = "The following" + (groupsToBeCreated.size()>0? " groups: " + MiscUtils.flatten(groupsToBeCreated) + "\n": "")  + (phasesToBeCreated.size()>0? (groupsToBeCreated.size()>0? " and ":"") + " phases: " + MiscUtils.flatten(phasesToBeCreated) + "\n": "") + " will be added to the study";
+				int res = JOptionPane.showConfirmDialog(opener, msg, "New Groups/Phases", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+				if(res!=JOptionPane.YES_OPTION) throw new ValidationException("Please correct the groups", null, "SampleId");
+
+			}
+		}
+
+
+
+		//Validation
+		Map<String, Biosample> sampleId2sample = new HashMap<>();
+		boolean askValidChoice = true;
+		List<Biosample> toSave = new ArrayList<>();
+		Map<String, Integer> sampleId2Ids = DAOBiosample.getIdFromSampleIds(Biosample.getSampleIds(biosamples));
+		List<Biosample> toClones = new ArrayList<>();
+		List<Biosample> toCloneConflicts = new ArrayList<>();
+		for (Biosample b : biosamples) {
+
+			if(b==null || b.isEmpty()) continue;
+			if(editor!=null && editor.getModel().getReadOnlyRows().contains(b)) continue;
+
+			//Check that we have edit rights
+			boolean canEdit = SpiritRights.canEdit(b, SpiritFrame.getUser());
+			if(!canEdit) throw new ValidationException("You cannot allowed to update " + b, b, "SampleId");
+
+			//Validate
+			if(b.getSampleId()==null || b.getSampleId().length()==0) throw new ValidationException("The sampleId cannot be empty", b, "SampleId");
+			if(b.getBiotype()==null) throw new ValidationException("Biotype cannot be empty", b, "SampleId");
+
+			if(b.getBiotype().getSampleNameLabel()!=null && b.getBiotype().isNameRequired() && (b.getSampleName()==null || b.getSampleName().length()==0)){
+				throw new ValidationException("The field '" + b.getBiotype().getSampleNameLabel() + "' is required", b, "Name");
+			}
+
+			for (BiotypeMetadata metadataType : b.getBiotype().getMetadata()) {
+				String val = b.getMetadataValue(metadataType);
+				if(metadataType.isRequired() && (val==null || val.length()==0)) {
+					throw new ValidationException("The field '" +  metadataType.getName()+"' is required", b, metadataType.getName());
+				}
+				if(askValidChoice && metadataType.getDataType()==DataType.LIST) {
+					if(val!=null && val.length()>0 && !metadataType.extractChoices().contains(val)) {
+						int res = JOptionPane.showConfirmDialog(opener, val + " is not a valid "+metadataType.getName()+".\nWould you like to proceed anyways?", "Invalid Choice", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+						if(res!=JOptionPane.YES_OPTION) {
+							throw new ValidationException(val + " is not a valid "+metadataType.getName(), b, metadataType.getName());
+						}
+						askValidChoice = false;
+					}
+				}
+			}
+
+			//Check uniqueness
+			Integer existingId = sampleId2Ids.get(b.getSampleId());
+			if(allowCloning) {
+				if(sampleId2sample.get(b.getSampleId())!=null ) {
+					//There is a conflict among samples in the list
+					toClones.add(b);
+					toCloneConflicts.add(sampleId2sample.get(b.getSampleId()));
+				} else if(existingId!=null && existingId!=b.getId()) {
+					//There is a conflict among samples in the db
+					toClones.add(b);
+					toCloneConflicts.add(DAOBiosample.getBiosampleById(existingId));
+				}
+			} else {
+				assert !allowCloning;
+				if(sampleId2sample.get(b.getSampleId())!=null) {
+					throw new ValidationException("The sample with the id '"+b.getSampleId()+"' is duplicated", b, "SampleId");
+				}
+				if(existingId!=null && existingId!=b.getId()) {
+					throw new ValidationException("The sampleId "+b.getSampleId()+" exists already in Spirit", b, "SampleId");
+				}
+			}
+
+
+			if(!sampleId2sample.containsKey(b.getSampleId())) {
+				sampleId2sample.put(b.getSampleId(), b);
+			}
+			toSave.add(b);
+		}
+
+
+		//Relink parents (must be donebefore cloning)
+		for (Biosample b : toSave) {
+			if(b.getParent()!=null) {
+				Biosample parent = b.getParent();
+				if(parent.getId()<=0) {
+					Biosample ref = sampleId2sample.get(parent.getSampleId());
+					if(ref!=null) {
+						b.setParent(ref);
+					}
+				}
+			}
+		}
+
+		//Error message for duplicate samples or cloning?
+		if(toClones.size()>0) {
+			String msg = toClones.size()<6? "The participants "+ Biosample.getSampleIds(toClones): toClones.size() + " participants";
+			if(allowDialogs) {
+				int res = JOptionPane.showConfirmDialog(null, msg + " were used in a different study or group. Reusing them across study or groups requires (virtual) cloning.\nCloning means creating 2 identical vitual samples coming from the same physival sample.\n\nTo continue, you need to confirm the cloning of those samples?", "Reusing participants", JOptionPane.YES_NO_OPTION);
+				if(res!=JOptionPane.YES_OPTION) throw new Exception("Please fix the duplicate sampleIds");
+
+				//Clone the participants after confirmation from the user
+				List<Biosample> updated = DAOStudy.cloneParticipants(toClones, toCloneConflicts);
+				toSave.removeAll(updated);
+				toSave.addAll(0, updated);
+			} else {
+				throw new ValidationException("The participants are duplicated", toClones.get(0), "SampleId");
+			}
+		}
+
+
+		///////////////
+		//AutoCorrection: Check the autocompletion fields for approximate spelling
+		if(allowDialogs) {
+			CorrectionMap<Biotype, Biosample> correctionMap1 = new CorrectionMap<>();
+			for (Biosample b : toSave) {
+				if(b.getBiotype().getSampleNameLabel()!=null && b.getBiotype().isNameAutocomplete()) {
+					String value = b.getSampleName();
+					if(value==null || value.length()==0) continue;
+
+					Set<String> possibleValues = new TreeSet<>(DAOBiotype.getAutoCompletionFieldsForName(b.getBiotype(), null));
+					if(possibleValues.contains(value)) continue;
+
+					Correction<Biotype, Biosample> correction = correctionMap1.getCorrection(b.getBiotype(), value);
+					if(correction==null) correction = correctionMap1.addCorrection(b.getBiotype(), value, new ArrayList<>(possibleValues), false);
+					correction.getAffectedData().add(b);
+				}
+			}
+			//BiotypeName: Display Correction Dlg
+			if(correctionMap1.getItemsWithSuggestions()>0) {
+				CorrectionDlg<Biotype, Biosample> dlg = new CorrectionDlg<Biotype, Biosample>(opener, correctionMap1) {
+					@Override
+					public String getSuperCategory(Biotype att) {
+						return "";
+					}
+					@Override
+					protected String getName(Biotype att) {
+						return att.getName();
+					}
+					@Override
+					protected void performCorrection(Correction<Biotype, Biosample> correction, String newValue) {
+						for (Biosample b : correction.getAffectedData()) {
+							b.setSampleName(newValue);
+						}
+					}
+				};
+				if(dlg.getReturnCode()!=CorrectionDlg.OK) return null;
+			}
+		}
+
+		//BiotypeMetadata: Check the dictionary and autocompletion fields for approximate spelling
+		if(allowDialogs) {
+			CorrectionMap<BiotypeMetadata, Biosample> correctionMap2 = new CorrectionMap<>();
+			for (Biosample b : toSave) {
+				for (BiotypeMetadata att : b.getBiotype().getMetadata()) {
+					if(att.getDataType()==DataType.AUTO) {
+						String value = b.getMetadataValue(att);
+						if(value==null || value.length()==0) continue;
+
+						Set<String> possibleValues = DAOBiotype.getAutoCompletionFields(att, null);
+						if(possibleValues.contains(value)) continue;
+
+						Correction<BiotypeMetadata, Biosample> correction = correctionMap2.getCorrection(att, value);
+						if(correction==null) correction = correctionMap2.addCorrection(att, value, new ArrayList<String>( possibleValues), false);
+						correction.getAffectedData().add(b);
+					}
+				}
+			}
+
+			//BiotypeMetadata: Display Correction Dlg
+			if(correctionMap2.getItemsWithSuggestions()>0) {
+				CorrectionDlg<BiotypeMetadata, Biosample> dlg = new CorrectionDlg<BiotypeMetadata, Biosample>(opener, correctionMap2) {
+					@Override
+					public String getSuperCategory(BiotypeMetadata att) {
+						return att.getBiotype().getName() + " - " + att.getName();
+					}
+					@Override
+					protected String getName(BiotypeMetadata att) {
+						return att.getName();
+					}
+					@Override
+					protected void performCorrection(Correction<BiotypeMetadata, Biosample> correction, String newValue) {
+						for (Biosample b : correction.getAffectedData()) {
+							b.setMetadataValue(correction.getAttribute(), newValue);
+						}
+					}
+				};
+				if(dlg.getReturnCode()!=CorrectionDlg.OK) return null;
+			}
+		}
+		return toSave;
 	}
 
 }

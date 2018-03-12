@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -44,7 +44,6 @@ import com.actelion.research.spiritapp.ui.study.wizard.StudyDesignDlg;
 import com.actelion.research.spiritapp.ui.util.HelpBinder;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
-import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Phase;
@@ -54,7 +53,6 @@ import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
-import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.JCustomTextField;
@@ -113,6 +111,7 @@ public class PhaseDlg extends JEscapeDialog {
 		startingDayPicker.setTextDate(study.getFirstDate());
 		startingDayPicker.addTextChangeListener(e-> {
 			try {
+				if(!startingDayPicker.isValidFormat()) throw new Exception("The date is not well formatted");
 				study.setStartingDate(startingDayPicker.getTextDate());
 				dlg.refresh();
 			} catch(Exception e2) {
@@ -123,6 +122,7 @@ public class PhaseDlg extends JEscapeDialog {
 			@Override
 			public void focusLost(FocusEvent e) {
 				try {
+					if(!startingDayPicker.isValidFormat()) throw new Exception("The date is not well formatted");
 					study.setStartingDate(startingDayPicker.getTextDate());
 					dlg.refresh();
 				} catch(Exception e2) {
@@ -130,10 +130,9 @@ public class PhaseDlg extends JEscapeDialog {
 				}
 			}
 		});
-		boolean advanced = SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE);
 		JPanel formatPanel = UIUtils.createTable(
 				new JLabel("Phase Format: "), formatComboBox,
-				(advanced? new JLabel("Starting Date (opt.): "): null), (advanced? startingDayPicker: null));
+				new JLabel("Starting Date (opt.): "), startingDayPicker);
 
 
 
@@ -209,6 +208,7 @@ public class PhaseDlg extends JEscapeDialog {
 			removePhases(removePhases);
 
 			//Sort phases
+			if(!startingDayPicker.isValidFormat()) throw new Exception("The date is not well formatted");
 			study.setStartingDate(startingDayPicker.getTextDate());
 			study.resetCache();
 		} catch(Exception ex) {

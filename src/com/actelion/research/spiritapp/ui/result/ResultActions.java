@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -32,7 +32,6 @@ import javax.swing.Action;
 import javax.swing.Box;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -49,7 +48,7 @@ import com.actelion.research.spiritapp.ui.result.edit.EditResultDlg;
 import com.actelion.research.spiritapp.ui.result.edit.ResultDiscardDlg;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
-import com.actelion.research.spiritapp.ui.util.lf.UserIdComboBox;
+import com.actelion.research.spiritapp.ui.util.component.UserIdComboBox;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
@@ -143,7 +142,7 @@ public class ResultActions {
 		private final List<Result> results;
 
 		public Action_Delete_Results(List<Result> results) {
-			super("Delete Selected Results (Owner)");
+			super("Delete Selected Results");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			putValue(Action.SMALL_ICON, IconType.DELETE.getIcon());
 
@@ -326,54 +325,7 @@ public class ResultActions {
 	}
 
 	public static JPopupMenu createPopup(List<Result> results) {
-		JPopupMenu menu = new JPopupMenu();
-		if(results!=null && results.size()>0) {
-			menu.add(new JCustomLabel("   Results: " + (results.size()>1?" "+results.size()+" selected":""), Font.BOLD));
-			menu.add(new JSeparator());
-
-			String elb = null;
-			for (Result result : results) {
-				if(elb==null) {
-					elb = result.getElb();
-				} else if(!elb.equals(result.getElb())) {
-					elb = null;
-					break;
-				}
-			}
-
-			JMenu newMenu = new JMenu("New");
-			newMenu.setIcon(IconType.NEW.getIcon());
-			newMenu.setMnemonic('n');
-			menu.add(newMenu);
-			newMenu.add(new Action_New());
-
-			JMenu editMenu = new JMenu("Edit");
-			editMenu.setIcon(IconType.EDIT.getIcon());
-			editMenu.setMnemonic('e');
-			menu.add(editMenu);
-			editMenu.add(new Action_Edit_ELB(elb, results.get(0)));
-			editMenu.add(new Action_Edit_Results(results));
-			editMenu.add(new JSeparator());
-			JMenu markMenu = new JMenu("Set Quality");
-			markMenu.setIcon(IconType.QUALITY.getIcon());
-			for (Quality quality : Quality.values()) {
-				markMenu.add(new Action_SetQuality(results, quality));
-			}
-			editMenu.add(markMenu);
-
-			menu.add(new JSeparator());
-
-			menu.add(new Action_History(results.size()==1? results.get(0): null));
-			JMenu systemMenu = new JMenu("Advanced");
-			systemMenu.setIcon(IconType.ADMIN.getIcon());
-			systemMenu.add(new Action_Delete_Results(results));
-			systemMenu.add(new JSeparator());
-			systemMenu.add(new Action_AssignTo(results));
-			systemMenu.add(new JSeparator());
-			menu.add(systemMenu);
-
-		}
-		return menu;
+		return SpiritFrame.getInstance().getPopupHelper().createResultPopup(results);
 	}
 
 	public static void attachRevisionPopup(final ResultTable table) {

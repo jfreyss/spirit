@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +69,7 @@ import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
+import com.actelion.research.spiritcore.util.DifferenceMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.CompareUtils;
@@ -83,7 +83,8 @@ import com.actelion.research.util.FormatterUtils;
 @Entity
 @Audited
 @Table(name="study", indexes = {
-		@Index(name="study_id_index", columnList = "studyId"), @Index(name="study_ivv_index", columnList = "ivv"),
+		@Index(name="study_studyid_index", columnList = "studyId"),
+		@Index(name="study_ivv_index", columnList = "ivv"),
 })
 @SequenceGenerator(name="study_sequence", sequenceName="study_sequence", allocationSize=1)
 @BatchSize(size=8)
@@ -221,6 +222,10 @@ public class Study implements Serializable, Comparable<Study>, IObject, IAuditab
 
 	public Study(int id) {
 		this.id = id;
+	}
+
+	public Study(String studyId) {
+		this.studyId = studyId;
 	}
 
 	@Override
@@ -1475,7 +1480,7 @@ public class Study implements Serializable, Comparable<Study>, IObject, IAuditab
 	public String getDifference(IAuditable s) {
 		if(s==null) s = new Study();
 		if(!(s instanceof Study)) return "";
-		return MiscUtils.flatten(getDifferenceMap((Study) s));
+		return getDifferenceMap((Study) s).flatten();
 	}
 
 	/**
@@ -1485,56 +1490,59 @@ public class Study implements Serializable, Comparable<Study>, IObject, IAuditab
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public Map<String, String> getDifferenceMap(Study s) {
-		Map<String, String> map = new LinkedHashMap<>();
+	public DifferenceMap getDifferenceMap(Study s) {
+		DifferenceMap map = new DifferenceMap();
 
 		//Compare infos
 		if(!CompareUtils.equals(getAdminUsers(), s.getAdminUsers())) {
-			map.put("AdminUsers", getAdminUsers());
+			map.put("AdminUsers", getAdminUsers(), s.getAdminUsers());
 		}
 		if(!CompareUtils.equals(getBlindAllUsers(), s.getBlindAllUsers())) {
-			map.put("BlindAllUsers", getBlindAllUsers());
+			map.put("BlindAllUsers", getBlindAllUsers(), s.getBlindAllUsers());
 		}
 		if(!CompareUtils.equals(getBlindDetailsUsers(), s.getBlindDetailsUsers())) {
-			map.put("BlindDetailsUsers", getBlindDetailsUsers());
+			map.put("BlindDetailsUsers", getBlindDetailsUsers(), s.getBlindDetailsUsers());
 		}
 		if(!CompareUtils.equals(getExpertUsers(), s.getExpertUsers())) {
-			map.put("ExpertUsers", getExpertUsers());
+			map.put("ExpertUsers", getExpertUsers(), s.getExpertUsers());
 		}
 		if(!CompareUtils.equals(getLocalId(), s.getLocalId())) {
-			map.put("InternalId", getLocalId());
+			map.put("InternalId", getLocalId(), s.getLocalId());
 		}
 		if(!CompareUtils.equals(getNotes(), s.getNotes())) {
-			map.put("Notes", "updated");
+			map.put("Notes", (getNotes()==null?0:getNotes().length()) + "chars", (s.getNotes()==null?0:s.getNotes().length()) + "chars");
 		}
 		if(!CompareUtils.equals(getState(), s.getState())) {
-			map.put("State", getState());
+			map.put("State", getState(), s.getState());
 		}
 		if(!CompareUtils.equals(getStudyId(), s.getStudyId())) {
-			map.put("StudyId", getStudyId());
+			map.put("StudyId", getStudyId(), s.getStudyId());
+		}
+		if(!CompareUtils.equals(getType(), s.getType())) {
+			map.put("Type", getType(), s.getType());
 		}
 		if(!CompareUtils.equals(getTitle(), s.getTitle())) {
-			map.put("Title", getTitle());
+			map.put("Title", getTitle(), s.getTitle());
 		}
 		if(!CompareUtils.equals(getConsentForm(), s.getConsentForm())) {
-			map.put("ConsentForm", getConsentForm()==null?"": getConsentForm().getFileName());
+			map.put("ConsentForm", getConsentForm()==null?"": getConsentForm().getFileName(), s.getConsentForm()==null?"": s.getConsentForm().getFileName());
 		}
 		if(!CompareUtils.equals(getFirstDate(), s.getFirstDate())) {
-			map.put("FirstDate", getFirstDate()==null?"": FormatterUtils.formatDate(getFirstDate()));
+			map.put("FirstDate", FormatterUtils.formatDate(getFirstDate()), FormatterUtils.formatDate(s.getFirstDate()));
 		}
 		for(String key: MiscUtils.setOf(getMetadataMap().keySet(), s.getMetadataMap().keySet())) {
 			if(!CompareUtils.equals(getMetadataMap().get(key), s.getMetadataMap().get(key))) {
-				map.put(key, getMetadataMap().get(key));
+				map.put(key, getMetadataMap().get(key), s.getMetadataMap().get(key));
 			}
 		}
 		if(!CompareUtils.equals(getCreUser(), s.getCreUser())) {
-			map.put("Owner", getCreUser()==null?"NA":getCreUser());
+			map.put("CreatedBy", getCreUser(), s.getCreUser());
 		}
 
 		//Compare Dept
 		try {
 			String empgroupCompare = MiscUtils.diffCollectionsSummary(getEmployeeGroups(), s.getEmployeeGroups(), null);
-			if(empgroupCompare!=null) map.put("Departments", empgroupCompare);
+			if(empgroupCompare!=null) map.put("Departments", empgroupCompare, null);
 		} catch (Exception e) {
 			e.printStackTrace(); //Safety guard. This can happen due to lazy loading (deletion from the audit tables by an admin)
 		}
@@ -1542,51 +1550,56 @@ public class Study implements Serializable, Comparable<Study>, IObject, IAuditab
 		//Compare documents
 		try {
 			String documentCompare = MiscUtils.diffCollectionsSummary(getDocuments(), s.getDocuments(), null);
-			if(documentCompare!=null) map.put("Documents", documentCompare);
+			if(documentCompare!=null) map.put("Documents", documentCompare, null);
 		} catch (Exception e) {
-			e.printStackTrace(); //Safety guard. This can happen due to lazy loading (deletion from the audit tables by an admin)
+			e.printStackTrace(); //Safety guard
 		}
 
 		//Compare groups
 		try {
 			String groupCompare = MiscUtils.diffCollectionsSummary(getGroups(), s.getGroups(), Group.EXACT_COMPARATOR);
-			if(groupCompare!=null) map.put("Groups", groupCompare);
+			if(groupCompare!=null) map.put("Groups", groupCompare, null);
 		} catch (Exception e) {
-			e.printStackTrace(); //Safety guard. This can happen due to lazy loading (deletion from the audit tables by an admin)
+			e.printStackTrace(); //Safety guard
 		}
 
 		//Compare phases
 		try {
 			String phaseCompare = MiscUtils.diffCollectionsSummary(getPhases(), s.getPhases(), Phase.EXACT_COMPARATOR);
-			if(phaseCompare!=null) map.put("Phases", phaseCompare);
+			if(phaseCompare!=null) map.put("Phases", phaseCompare, null);
 		} catch (Exception e) {
-			e.printStackTrace(); //Safety guard. This can happen due to lazy loading (deletion from the audit tables by an admin)
+			e.printStackTrace(); //Safety guard
 		}
 
 		//Compare treatment
 		try {
 			String treatmentCompare = MiscUtils.diffCollectionsSummary(getNamedTreatments(), s.getNamedTreatments(), NamedTreatment.EXACT_COMPARATOR);
-			if(treatmentCompare!=null) map.put("Treatments", treatmentCompare);
+			if(treatmentCompare!=null) map.put("Treatments", treatmentCompare, null);
 		} catch (Exception e) {
-			e.printStackTrace(); //Safety guard. This can happen due to lazy loading (deletion from the audit tables by an admin)
+			e.printStackTrace(); //Safety guard
 		}
 
 		//Compare samplings
 		try {
 			String samplingCompare = MiscUtils.diffCollectionsSummary(getNamedSamplings(), s.getNamedSamplings(), NamedSampling.EXACT_COMPARATOR);
-			if(samplingCompare!=null) map.put("Samplings", samplingCompare);
+			if(samplingCompare!=null) map.put("Samplings", samplingCompare, null);
 		} catch (Exception e) {
-			e.printStackTrace(); //Safety guard. This can happen due to lazy loading (deletion from the audit tables by an admin)
+			e.printStackTrace(); //Safety guard
 		}
 		//Compare actions
 		try {
 			String actionCompare = MiscUtils.diffCollectionsSummary(getStudyActions(), s.getStudyActions(), StudyAction.EXACT_COMPARATOR);
-			if(actionCompare!=null) map.put("Actions", actionCompare);
+			if(actionCompare!=null) map.put("Actions", actionCompare, null);
 		} catch (Exception e) {
-			e.printStackTrace(); //Safety guard. This can happen due to lazy loading (deletion from the audit tables by an admin)
+			e.printStackTrace(); //Safety guard
 		}
 
 		return map;
+	}
+
+	@Override
+	public int getSid() {
+		return getId();
 	}
 
 }

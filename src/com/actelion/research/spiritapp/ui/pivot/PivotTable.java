@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -63,34 +63,34 @@ public class PivotTable extends ExtendTable<PivotRow> {
 
 
 	private PivotDataTable data;
-	
+
 	public PivotTable() {
 		super(new PivotTableModel());
-		
+
 		setBorderStrategy(BorderStrategy.WHEN_DIFFERENT_VALUE);
 		setUseSmartHeight(false);
 		setRowHeight(FastFont.getDefaultFontSize()+2);
 	}
-	
+
 	@Override
 	public PivotTableModel getModel() {
 		return (PivotTableModel) super.getModel();
 	}
 
-			
+
 	public void setPivotDataTable(PivotDataTable data) {
 		this.data = data;
-		
+
 		PivotTableModel model = getModel();
-		model.clear();	
-		
+		model.clear();
+
 		if(data.getResults().size()==0) {
 			model.fireTableStructureChanged();
 			return;
 		}
-		
+
 		//Set columns
-		List<Column<PivotRow, ?>> columns = new ArrayList<Column<PivotRow, ?>>();
+		List<Column<PivotRow, ?>> columns = new ArrayList<>();
 		for (PivotItem item : data.getTemplate().getPivotItems(Where.ASROW)) {
 			if(item==null) continue;
 			if(item==PivotItemFactory.STUDY_GROUP) {
@@ -107,16 +107,16 @@ public class PivotTable extends ExtendTable<PivotRow> {
 			columns.add(new PivotCellColumn(col));
 		}
 		model.setColumns(columns);
-		
+
 		//Set Rows
 		model.setRows(data.getPivotRows());
 
-		
-		//Reset Columns width+headers		
+
+		//Reset Columns width+headers
 		resetPreferredColumnWidth();
-		
+
 	}
-	
+
 	private boolean hasNestedCells() {
 		for(int rowNo = 0; rowNo<getRowCount(); rowNo++) {
 			for(int col = 0 ; col<getColumnCount(); col++) {
@@ -128,10 +128,10 @@ public class PivotTable extends ExtendTable<PivotRow> {
 					}
 				}
 			}
-		}			
+		}
 		return false;
 	}
-	
+
 	@Override
 	public String[][] getTabDelimitedTable() {
 		int[] cols = new int[getColumnCount()];
@@ -144,14 +144,14 @@ public class PivotTable extends ExtendTable<PivotRow> {
 		}
 		return getTabDelimitedTable(cols, rows);
 	}
-	
+
 	public String[][] getTabDelimitedTable(int[] cols, int[] rows) {
-		
+
 		List<List<String>> table = new ArrayList<List<String>>();
 
 		if(data==null) return new String[0][0];
 		PivotTemplate tpl = data.getTemplate();
-		
+
 		//Find if we have nested cells
 		boolean hasNestedCells = hasNestedCells();
 
@@ -163,17 +163,17 @@ public class PivotTable extends ExtendTable<PivotRow> {
 			int modelCol = convertColumnIndexToModel(col);
 			Column<PivotRow, ?> c = getModel().getColumn(modelCol);
 			if(c.getColumnClass()==PivotCell.class) {
-				row.add(MiscUtils.removeHtml(c.getName()));	
+				row.add(MiscUtils.removeHtml(c.getName()));
 				if(hasNestedCells && tpl.getAggregation()!=Aggregation.HIDE) row.add("");
 				if(tpl.getComputed()!=Computed.NONE) {
-					row.add(MiscUtils.removeHtml(c.getName() + "\n" + tpl.getComputed()));	
+					row.add(MiscUtils.removeHtml(c.getName() + "\n" + tpl.getComputed()));
 				}
 			} else {
 				row.add(MiscUtils.removeHtml(c.getName()));
 			}
 		}
 		table.add(row = new ArrayList<String>());
-		
+
 		//
 		//Then the rows
 		boolean hasData = true;
@@ -193,13 +193,13 @@ public class PivotTable extends ExtendTable<PivotRow> {
 						if(cellKey==null) {
 							row.add("");
 							if(hasNestedCells && tpl.getAggregation()!=Aggregation.HIDE) row.add("");
-							if(tpl.getComputed()!=Computed.NONE) row.add("");	
+							if(tpl.getComputed()!=Computed.NONE) row.add("");
 						} else {
 							hasData = true;
 							PivotCell subvl = cell.getNested(cellKey);
-							if(tpl.getAggregation()==Aggregation.HIDE || hasNestedCells) row.add(cellKey==null?"": cellKey.getKey());						
+							if(tpl.getAggregation()==Aggregation.HIDE || hasNestedCells) row.add(cellKey==null?"": cellKey.getKey());
 							if(tpl.getAggregation()!=Aggregation.HIDE) row.add(formatForTab(subvl.getValue()));
-							if(tpl.getComputed()!=Computed.NONE) row.add(formatForTab(subvl.getComputed()));									
+							if(tpl.getComputed()!=Computed.NONE) row.add(formatForTab(subvl.getComputed()));
 						}
 					} else {
 						if(subRow==0) {
@@ -219,13 +219,13 @@ public class PivotTable extends ExtendTable<PivotRow> {
 			for (int j = 0; j < res[i].length; j++) {
 				List<String> l = i<table.size()? table.get(i): null;
 				res[i][j] = l!=null && j<l.size()? l.get(j): "";
-			
+
 			}
 		}
-				
+
 		return res;
 	}
-	
+
 
 	public List<PivotCell> getSelectedPivotCells() {
 		List<PivotCell> res = new ArrayList<PivotCell>();
@@ -234,14 +234,14 @@ public class PivotTable extends ExtendTable<PivotRow> {
 				Object value = getValueAt(row, col);
 				if(value instanceof PivotCell) {
 					res.add( (PivotCell) value);
-				}						
+				}
 			}
 		}
 		return res;
 	}
 	public List<Result> getSelectedResults() {
-		final Set<Result> results = new LinkedHashSet<Result>(); 
-		
+		final Set<Result> results = new LinkedHashSet<Result>();
+
 		Collection<PivotCell> cells = getSelectedPivotCells();
 		if(cells.size()>0) {
 			for (PivotCell sel : cells) {
@@ -250,14 +250,14 @@ public class PivotTable extends ExtendTable<PivotRow> {
 		}
 		return new ArrayList<Result>(results);
 	}
-	
+
 	public Collection<Biosample> getSelectedBiosamples() {
 		Set<Biosample> res = new HashSet<Biosample>();
 		int[] selRows = getSelectedRows();
 		int[] selCols = getSelectedColumns();
 		for(int r=0; r<selRows.length; r++) {
 			for(int c=0; c<selCols.length; c++) {
-				PivotRow pivotRow = getModel().getRows().get(selRows[r]);			
+				PivotRow pivotRow = getModel().getRows().get(selRows[r]);
 				Column<PivotRow, ?> col = getModel().getColumn(convertColumnIndexToModel(selCols[c]));
 				if(col.getColumnClass()==Biosample.class) {
 					Biosample b = (Biosample) col.getValue(pivotRow);
@@ -272,14 +272,14 @@ public class PivotTable extends ExtendTable<PivotRow> {
 		}
 		return res;
 	}
-	
+
 	public Collection<Biosample> getHighlightedSamples() {
 		int[] selRows = getSelectedRows();
 		int[] selCols = getSelectedColumns();
 		if(selRows.length==1 && selCols.length==1) {
 			PivotRow b = getModel().getRows().get(selRows[0]);
 			Column<PivotRow, ?> col = getModel().getColumn(convertColumnIndexToModel(selCols[0]));
-			
+
 			if(col.getColumnClass()==Biosample.class) {
 				Biosample res = (Biosample) col.getValue(b);
 				return res==null? new HashSet<Biosample>(): Collections.singleton(res);
@@ -287,21 +287,21 @@ public class PivotTable extends ExtendTable<PivotRow> {
 		}
 		return new HashSet<Biosample>();
 	}
-	
+
 
 	public PivotDataTable getPivotDataTable() {
 		return data;
 	}
-	
-	
+
+
 	private final FastHeaderRenderer<PivotRow> renderer = new FastHeaderRenderer<PivotRow>() {
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 			JComponent comp = (JComponent) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-			
+
 			int col = convertColumnIndexToModel(column);
 			comp.setOpaque(true);
-			if(col<getModel().getColumns().size() && getModel().getColumns().get(col) instanceof PivotCellColumn) {				
+			if(col<getModel().getColumns().size() && getModel().getColumns().get(col) instanceof PivotCellColumn) {
 				comp.setBackground(PivotTemplateDlg.COLUMN_COLOR);
 				if(comp instanceof JLabelNoRepaint) {
 					((JLabelNoRepaint) comp).setVerticalAlignment(SwingConstants.TOP);
@@ -312,7 +312,7 @@ public class PivotTable extends ExtendTable<PivotRow> {
 			return comp;
 		}
 	};
-	
+
 	@Override
 	protected void setHeaderRenderers() {
 		for (int col = 0; col < getColumnModel().getColumnCount(); col++) {
@@ -320,6 +320,6 @@ public class PivotTable extends ExtendTable<PivotRow> {
 			if(column.getHeaderRenderer()!=renderer) {
 				column.setHeaderRenderer(renderer);
 			}
-		}			
+		}
 	}
 }

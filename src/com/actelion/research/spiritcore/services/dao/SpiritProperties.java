@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -22,19 +22,22 @@
 package com.actelion.research.spiritcore.services.dao;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
 import org.slf4j.LoggerFactory;
 
+import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.property.SpiritProperty;
+import com.actelion.research.spiritcore.services.SpiritRights;
+import com.actelion.research.spiritcore.services.SpiritRights.UserType;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
@@ -47,11 +50,11 @@ public class SpiritProperties {
 
 	private static SpiritProperties instance = null;
 	private Map<String, String> properties;
-	private Boolean hasWorkflow;
+	//	private Boolean hasWorkflow;
 
 	private SpiritProperties() {
 		try {
-			properties = getProperties();
+			properties = loadProperties();
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
@@ -80,7 +83,10 @@ public class SpiritProperties {
 	 */
 	public String getValue(PropertyKey p) {
 		assert p.getParentProperty()==null;
-		String v = properties.get(p.getKey());
+
+		//Retrieve the value first from the adapter, then from the DB
+		String key = p.getKey();
+		String v = properties.get(key);
 		if(v==null) v = p.getDefaultValue();
 		return v;
 	}
@@ -99,9 +105,6 @@ public class SpiritProperties {
 	 */
 	public String[] getValues(PropertyKey p) {
 		return MiscUtils.split(getValue(p), ",");
-	}
-	public boolean isChecked(PropertyKey p) {
-		return "true".equals(getValue(p));
 	}
 
 	public String getValue(PropertyKey p, String nestedValue) {
@@ -126,7 +129,10 @@ public class SpiritProperties {
 			sb.append("." + nestedValues[i]);
 		}
 		sb.append("." + p.getKey());
-		String v = properties.get(sb.toString());
+
+		//Retrieve the value first from the adapter, then from the DB
+		String key = sb.toString();
+		String v = properties.get(key);
 		if(v==null) v = p.getDefaultValue(nestedValues);
 		return v;
 	}
@@ -144,12 +150,37 @@ public class SpiritProperties {
 		return MiscUtils.split(getValue(p, nestedValues), ",");
 	}
 
+	/**
+	 * Returns true if the given property is checked
+	 */
+	public boolean isChecked(PropertyKey p) {
+		return "true".equals(getValue(p));
+	}
+
+	/**
+	 * Returns true if the given property is checked
+	 */
 	public boolean isChecked(PropertyKey p, String nestedValues) {
 		return "true".equals(getValue(p, nestedValues));
 	}
 
+	/**
+	 * Returns true if the given property is checked
+	 */
 	public boolean isChecked(PropertyKey p, String[] nestedValues) {
 		return "true".equals(getValue(p, nestedValues));
+	}
+
+	public boolean isSelected(PropertyKey p, String val) {
+		return MiscUtils.contains(getValues(p), val);
+	}
+
+	public boolean isSelected(PropertyKey p, String nestedValues, String val) {
+		return MiscUtils.contains(getValues(p, nestedValues), val);
+	}
+
+	public boolean isSelected(PropertyKey p, String[] nestedValues, String val) {
+		return MiscUtils.contains(getValues(p, nestedValues), val);
 	}
 
 
@@ -188,12 +219,23 @@ public class SpiritProperties {
 			c = c.getParentProperty();
 		}
 		assert c==null;
-		properties.put(propertyKey.toString(), v);
+
+		//Make sure the user is not allowed to update this property
+		String key = propertyKey.toString();
+		properties.put(key, v);
 	}
 
+	/**
+	 * Gets all values in a String map.
+	 * The returned values may be overidden by the adapter
+	 * @return
+	 */
 	public Map<String, String> getValues() {
+		Map<String, String> values = new HashMap<>();
+		values.putAll(properties);
+		values.putAll(DBAdapter.getInstance().getProperties());
 		LoggerFactory.getLogger(getClass()).debug("properties="+properties);
-		return properties;
+		return values;
 	}
 
 	public void setValues(Map<String, String> map) {
@@ -208,22 +250,28 @@ public class SpiritProperties {
 		saveProperties(properties);
 
 		//Force Reload
-		instance = null;
+		SpiritProperties.instance = null;
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
-	private static Map<String, String> getProperties() {
+	/**
+	 * Loads the properties from the DB in a Map<String, String>
+	 * @return
+	 */
+	private static Map<String, String> loadProperties() {
 		Map<String, String> keyValuePairs = new HashMap<>();
 		EntityManager em = null;
 		try {
 			em = JPAUtil.createManager();
-			for(SpiritProperty p: (List<SpiritProperty>) em.createQuery("from SpiritProperty").getResultList()) {
+			List<SpiritProperty> properties = em.createQuery("from SpiritProperty").getResultList();
+			for(SpiritProperty p: properties) {
 				if(p==null) continue;
 				keyValuePairs.put(p.getKey(), p.getValue());
 			}
+			keyValuePairs.putAll(DBAdapter.getInstance().getProperties());
 			LoggerFactory.getLogger(SpiritProperties.class).debug("properties="+keyValuePairs);
 		} finally {
-			if(em!=null) em.close();
+			if(em!=null) try {em.close();} catch (Exception e) {e.printStackTrace();}
 		}
 		return keyValuePairs;
 	}
@@ -234,7 +282,7 @@ public class SpiritProperties {
 	 */
 	private static void saveProperties(Map<String, String> keyValuePairs) {
 		LoggerFactory.getLogger(SpiritProperties.class).debug("properties="+keyValuePairs);
-		EntityManager em = JPAUtil.createManager();
+		EntityManager em = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {
 			txn = em.getTransaction();
@@ -247,11 +295,9 @@ public class SpiritProperties {
 			txn.commit();
 			txn = null;
 		} catch(Exception e) {
-			if (txn != null) try {txn.rollback();} catch (Exception e2) {}
+			if (txn != null) try {txn.rollback();} catch (Exception e2) {e2.printStackTrace();}
 			txn = null;
 			throw e;
-		} finally {
-			if(em!=null) em.close();
 		}
 	}
 
@@ -269,45 +315,123 @@ public class SpiritProperties {
 	}
 
 	public String[] getUserRoles() {
-		Set<String> roles = new TreeSet<>();
+		Set<String> roles = new LinkedHashSet<>();
+		roles.add(SpiritUser.ROLE_ADMIN);
 		for (String string : MiscUtils.split(getValue(PropertyKey.USER_ROLES), ",")) {
 			roles.add(string);
 		}
-		roles.add(SpiritUser.ROLE_ADMIN);
-		roles.add(SpiritUser.ROLE_READALL);
 		return roles.toArray(new String[roles.size()]);
 	}
 
 	public boolean isOpen() {
 		try {
-			return "open".equals(getValue(PropertyKey.USER_OPEN));
+			return "open".equals(getValue(PropertyKey.USER_OPENBYDEFAULT));
 		} catch (Exception e) {
-			return "true".equals(PropertyKey.USER_OPEN.getDefaultValue());
+			return "true".equals(PropertyKey.USER_OPENBYDEFAULT.getDefaultValue());
 		}
 	}
 
 	/**
-	 * Return true, if the system has been set to have a workflow.
-	 * IE: there are promoters (other than ALL), or states come from an other state
+	 * Is the software running in advanced mode. The advanced mode allows the following extra features:
+	 * - edit biosample in form mode
+	 *
 	 * @return
 	 */
-	public boolean hasStudyWorkflow() {
-		if(hasWorkflow==null) {
-			hasWorkflow = false;
-			for (String state : SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES)) {
-				if(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_FROM, state).length>0) {
-					hasWorkflow = true;
-					break;
-				}
-				if(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_PROMOTERS, state).length()>0 &&
-						!SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_PROMOTERS, state).equals("ALL")) {
-					hasWorkflow = true;
-					break;
-				}
-			}
-		}
-		return hasWorkflow;
+	public boolean isAdvancedMode() {
+		return SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_ADVANCED);
 	}
 
+
+	/**
+	 * Check the user rights for the given actionType and userType.
+	 */
+	public boolean isChecked(SpiritRights.ActionType action, SpiritRights.UserType userType) {
+		return isChecked(action, userType, null);
+	}
+
+	/**
+	 * Check the user rights for the given actionType and role.
+	 */
+	public boolean isChecked(SpiritRights.ActionType action, String role) {
+		return isChecked(action, null, role);
+	}
+
+	public static String getKey(SpiritRights.ActionType action, SpiritRights.UserType userType, String role) {
+		String key = "rights." + action + "_" + (userType==null? "role_" + role: userType);
+		return key;
+	}
+
+	/**
+	 * Check the user rights for the given actionType and userType.
+	 * If userType==null, then a proper role must be given
+	 *
+	 * By default:
+	 * - the admin can do everything
+	 * - the readall can read everything (and only read)
+	 * - everybody can create samples
+	 * - the owner, the updater have edit rights
+	 *
+	 * @param action
+	 * @param userType
+	 * @param role
+	 */
+	public boolean isChecked(SpiritRights.ActionType action, SpiritRights.UserType userType, String role) {
+		boolean defaultValue;
+		if(SpiritUser.ROLE_ADMIN.equals(role)) {
+			defaultValue = true;
+		} else if(action.name().contains("CREATE")) {
+			defaultValue = true;
+		} else if(action.name().contains("READ")) {
+			defaultValue = SpiritProperties.getInstance().isOpen() || userType==UserType.CREATOR || userType==UserType.UPDATER;
+		} else if(action.name().contains("EDIT")) {
+			defaultValue = userType==UserType.CREATOR || userType==UserType.UPDATER;
+		} else if(action.name().contains("CHANGE")) {
+			defaultValue = userType==UserType.CREATOR || userType==UserType.UPDATER;
+		} else if(action.name().contains("DELETE")) {
+			defaultValue = userType==UserType.CREATOR;
+		} else {
+			defaultValue = false;
+		}
+
+		return isChecked(action, userType, role, defaultValue);
+	}
+
+	/**
+	 * Check the user rights for the given actionType and userType.
+	 * If userType==null, then a proper role must be given
+	 * If the settings are not saved, returns the default value
+	 * @param action
+	 * @param userType
+	 * @param role
+	 * @param defaultValue
+	 * @return
+	 */
+	public boolean isChecked(SpiritRights.ActionType action, SpiritRights.UserType userType, String role, boolean defaultValue) {
+		String key = getKey(action, userType, role);// "rights." + action + "_" + (userType==null? "role_" + role: userType);
+		String v = properties.get(key);
+		if(v==null) return defaultValue;
+		return "true".equals(v);
+	}
+
+	public void setChecked(SpiritRights.ActionType action, SpiritRights.UserType userType, boolean val) {
+		setChecked(action, userType, null, val);
+	}
+
+	public void setChecked(SpiritRights.ActionType action, String role, boolean val) {
+		setChecked(action, null, role, val);
+	}
+	/**
+	 * Sets the user rights for the given actionType and userType.
+	 * If userType==null, then a proper role must be given
+	 * Calling this function does not save the properties. use "saveProperties" to save
+	 * @param action
+	 * @param userType
+	 * @param role
+	 * @param val
+	 */
+	public void setChecked(SpiritRights.ActionType action, SpiritRights.UserType userType, String role, boolean val) {
+		String key = getKey(action, userType, role);
+		properties.put(key, val?"true":"false");
+	}
 
 }

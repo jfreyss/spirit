@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -36,7 +36,7 @@ import java.util.List;
 
 /**
  * Class used to parse a WIKI page and extract a feed of news
- * 
+ *
  * Example of Wiki Formatting
  * <pre>
  * !25.2.2011: It is today
@@ -44,38 +44,36 @@ import java.util.List;
  *
  * !1.1.2011: Happy New Year
  * As the title says
- * 
+ *
  * !10.10.2010: A new feature is developped
  * Now you can use Unity to superimpose molecules
  * </pre>
  * @author freyssj
  */
 public class WikiNewsFeed {
-	
+
 	private static final String SERVER = "ares";
-	private static final SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
-	private static final SimpleDateFormat dateFormat2 = new SimpleDateFormat("d/M/yyyy");
 	private static String linkPrefix = "http://"+SERVER+":8080/portal/Wiki.jsp?page=";
 	private List<News> news;
-	
+
 	public static class News implements Comparable<News> {
 		private final Date date;
 		private final String title;
 		private final String content;
 		private final String link;
-		
+
 		News(Date date, String title,  String content){
 			this.date = date;
 			this.content = content;
-			
+
 			int index1 = title.indexOf("[");
 			int index2 = title.indexOf("|", index1);
 			if(index2<0) index2 = index1;
 			int index3 = title.indexOf("]", index2);
 			int index4 = title.lastIndexOf(".", index3);
-						
+
 			if(index1>=0 && index2>=0) {
-				this.link = linkPrefix + title.substring(index2+1, index3);				
+				this.link = linkPrefix + title.substring(index2+1, index3);
 				this.title = title.substring(0, index1) + (index2>index1? title.substring(index1+1, index2): index4>index1 && index4<index3? title.substring(index4+1, index3): title.substring(index1+1, index3)) + title.substring(index3+1);
 			} else {
 				this.title = title;
@@ -87,10 +85,11 @@ public class WikiNewsFeed {
 		public String getTitle() {return title;}
 		public String getContent() {return content;}
 		public String getLink() {return link;}
-	
+
 
 		@Override
 		public String toString() {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
 			return (date!=null? dateFormat.format(date)+": ": "") + title + "\n" + getContent()+"\n-------------";
 		}
 		@Override
@@ -100,9 +99,9 @@ public class WikiNewsFeed {
 		}
 
 	}
-	
+
 	private WikiNewsFeed() {}
-	
+
 	public WikiNewsFeed(String wikiPageName) throws Exception {
 		this(SERVER, wikiPageName);
 	}
@@ -111,32 +110,32 @@ public class WikiNewsFeed {
 		this();
 		news = getNews(wikiPageName);
 	}
-	
+
 	public List<News> getNews() {
 		return news;
 	}
-	
+
 	public static String getHtml(String wikiPage) {
 		InputStreamReader is = null;
 		try {
 			URL url = new URL("http://" + SERVER + ":8080/portal/Wiki.jsp?page=" + URLEncoder.encode(wikiPage, "UTF-8") + "&view=simple");
 
 			is = new InputStreamReader(url.openStream());
-			
-			String html = IOUtils.readerToString(is);			
-			int index1 = html.indexOf("<body"); 
-			int index2 = html.indexOf("</body>"); 
+
+			String html = IOUtils.readerToString(is);
+			int index1 = html.indexOf("<body");
+			int index2 = html.indexOf("</body>");
 			if(index1>=0 && index2>index1) {
 				html = html.substring(html.indexOf('>', index1+1)+1, index2);
 			}
 
-			
+
 			html = html.replace("\"/portal/", "http://" + SERVER + ":8080/portal/");
 			html = html.replace("\"attach/", "http://" + SERVER + ":8080/portal/attach/");
 			html = html.replace("\">#</a>", "\"></a>");
 			html = html.replace("<p />", "<br>");
 			html = html.replaceAll("<\\/?p>", "");
-			
+
 			is.close();
 			return "<html>"+html+"</html>";
 		} catch (Exception e) {
@@ -150,7 +149,9 @@ public class WikiNewsFeed {
 		return getNews(pageName, 14);
 	}
 	public static List<News> getNews(String pageName, int nDays) throws Exception {
-				
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
+		SimpleDateFormat dateFormat2 = new SimpleDateFormat("d/M/yyyy");
 		List<News> res = new ArrayList<>();
 		//Open the URL
 		LineNumberReader is = null;
@@ -163,7 +164,7 @@ public class WikiNewsFeed {
 			String title = null;
 			StringBuilder sb = new StringBuilder();
 			while((line = is.readLine())!=null) {
-				line = line.trim();								
+				line = line.trim();
 				line = line.replace("&gt;", ">");
 				line = line.replace("&lt;", "<");
 				line = line.replace("&quot;", "\"");
@@ -189,7 +190,7 @@ public class WikiNewsFeed {
 							e2.printStackTrace();
 							date = null;
 							title = line.substring(1);
-						}					
+						}
 					}
 				} else {
 					//We have a content
@@ -200,25 +201,25 @@ public class WikiNewsFeed {
 				if(nDays>0 && (System.currentTimeMillis()-date.getTime())/1000/3600/24<nDays) {
 					res.add(new News(date, title, sb.toString().trim()));
 				}
-				
+
 			}
 		} catch (Exception e) {
 			System.err.println("Problems reading: "+pageName);
-			throw e;		
-		} finally {			
+			throw e;
+		} finally {
 			if(is!=null) is.close();
 		}
-		
+
 		return res;
 	}
-		
+
 	public static void main(String[] args) throws IOException {
 		URL url = new URL("http://freyssj:8080/portal/Wiki.jsp?page=Documentation&view=simple");
-//		new URL("http://ares:8080/portal/Wiki.jsp?page=Documentation&view=simple")
+		//		new URL("http://ares:8080/portal/Wiki.jsp?page=Documentation&view=simple")
 		InputStreamReader is = new InputStreamReader(url.openStream());
 		String html = IOUtils.readerToString(is);
-		
+
 		System.out.println(html);
 	}
-	
+
 }

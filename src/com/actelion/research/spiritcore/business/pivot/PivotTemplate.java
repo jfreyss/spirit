@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -50,7 +50,7 @@ import com.actelion.research.spiritcore.services.SpiritUser;
  * @author freyssj
  *
  */
-public class PivotTemplate implements Serializable, Cloneable {
+public class PivotTemplate implements Serializable {
 
 	public static enum Where {
 		MERGE,
@@ -109,6 +109,15 @@ public class PivotTemplate implements Serializable, Cloneable {
 
 	public PivotTemplate() {}
 
+	public PivotTemplate(PivotTemplate toClone) {
+		item2where.putAll(toClone.item2where);
+		computed = toClone.computed;
+		aggregation = toClone.aggregation;
+		deviation = toClone.deviation;
+		showN = toClone.showN;
+	}
+
+
 	public PivotTemplate(String name, String thumbnailName) {
 		this.name = name;
 		this.thumbnailName = thumbnailName;
@@ -118,7 +127,7 @@ public class PivotTemplate implements Serializable, Cloneable {
 		this.name = name;
 	}
 
-	public synchronized void setWhere(PivotItem item, Where where) {
+	public void setWhere(PivotItem item, Where where) {
 		if(item==null) throw new IllegalArgumentException("item is null");
 		if(where==null) throw new IllegalArgumentException("where is null");
 
@@ -164,12 +173,13 @@ public class PivotTemplate implements Serializable, Cloneable {
 	}
 
 	public Where getWhere(PivotItemClassifier classifier) {
-		for(Where where: new Where[]{Where.ASCOL, Where.ASROW})
+		for(Where where: new Where[]{Where.ASCOL, Where.ASROW}) {
 			for(PivotItem item: where2items.get(where) ) {
 				if(item.getClassifier()==classifier) {
 					return where;
 				}
 			}
+		}
 		return Where.MERGE;
 	}
 
@@ -229,23 +239,17 @@ public class PivotTemplate implements Serializable, Cloneable {
 	public boolean equals(Object obj) {
 		return (obj instanceof PivotTemplate) && this.getName().equals(((PivotTemplate)obj).getName());
 	}
+	@Override
+	public int hashCode() {
+		return getName().hashCode();
+	}
 
 	public boolean isShowN() {
 		return showN && aggregation!=Aggregation.COUNT;
 	}
+
 	public void setShowN(boolean showN) {
 		this.showN = showN;
-	}
-
-	@Override
-	public PivotTemplate clone() {
-		PivotTemplate tpl = new PivotTemplate();
-		tpl.item2where.putAll(item2where);
-		tpl.computed = computed;
-		tpl.aggregation = aggregation;
-		tpl.deviation = deviation;
-		tpl.showN = showN;
-		return tpl;
 	}
 
 	/**
@@ -255,6 +259,10 @@ public class PivotTemplate implements Serializable, Cloneable {
 		return name;
 	}
 
+	/**
+	 * Gets the thumbnail associated to this template (can be null)
+	 * @return
+	 */
 	public Image getThumbnail() {
 		if(thumbnailName!=null && image==null) {
 			image = PivotTemplate.getThumbnail(thumbnailName);
@@ -301,14 +309,12 @@ public class PivotTemplate implements Serializable, Cloneable {
 		}
 	}
 
-
 	/**
 	 * Simplify is used to hide all items where discrimination of the given results is not possible (ie less than 2 different values)
 	 * @param results
 	 * @param forResults
 	 */
 	public void simplify(List<Result> results) {
-
 		if(results==null) return;
 		List<PivotItem> all = getPivotItems();
 

@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -21,8 +21,8 @@
 
 package com.actelion.research.util;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -35,12 +35,9 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Set;
-
 
 /**
+ * Utility methods on IO
  *
  * @author freyssj
  */
@@ -64,9 +61,7 @@ public class IOUtils {
 	public static String readerToString(Reader reader) throws IOException {
 		return  readerToString(reader, Integer.MAX_VALUE);
 	}
-
 	public static String readerToString(Reader reader, int maxSize) throws IOException {
-		if(maxSize<=0) maxSize = Integer.MAX_VALUE;
 		char[] buf = new char[512];
 		int c;
 		StringBuilder sb = new StringBuilder();
@@ -76,12 +71,22 @@ public class IOUtils {
 		return sb.toString();
 	}
 
+	/**
+	 * Converts the stream to a string, without the BOM (unicode start of file)
+	 * @param is
+	 * @return
+	 * @throws IOException
+	 */
 	public static String streamToString(InputStream is) throws IOException {
+		return streamToString(is, "UTF-8").replace("\uFEFF", "");
+	}
+
+	public static String streamToString(InputStream is, String encoding) throws IOException {
 		byte[] buf = new byte[512];
 		int c;
 		StringBuilder sb = new StringBuilder();
 		while(( c = is.read(buf)) > 0) {
-			sb.append(new String(buf, 0, c));
+			sb.append(new String(buf, 0, c, encoding));
 		}
 		return sb.toString();
 	}
@@ -89,15 +94,24 @@ public class IOUtils {
 	public static byte[] getBytes(File f) throws IOException {
 		FileInputStream is = new FileInputStream(f);
 		byte[] res = new byte[(int) f.length()];
-		is.read(res, 0, res.length);
+		is.read(res);
 		is.close();
 		return res;
 	}
 
+	public static byte[] getBytes(InputStream is) throws IOException {
+		try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+			redirect(is, os);
+			return os.toByteArray();
+		}
+	}
+
 	public static void bytesToFile(byte[] bytes, File f) throws IOException {
-		FileOutputStream os = new FileOutputStream(f);
-		os.write(bytes);
-		os.close();
+		try(ByteArrayInputStream is = new ByteArrayInputStream(bytes)) {
+			try(FileOutputStream os = new FileOutputStream(f)) {
+				redirect(is, os);
+			}
+		}
 	}
 
 	public static void stringToFile(String s, File f) throws IOException {
@@ -116,79 +130,49 @@ public class IOUtils {
 		}
 	}
 
-	/**
-	 * Redirects the streams, without closing them
-	 * @param is
-	 * @param os
-	 * @throws IOException
-	 */
+
+	public static void redirect(byte[] bytes, OutputStream os) throws IOException {
+		try(ByteArrayInputStream is = new ByteArrayInputStream(bytes)) {
+			redirect(is, os);
+		}
+	}
+
 	public static void redirect(InputStream is, OutputStream os) throws IOException {
 		byte[] buf = new byte[512];
 		int c;
 		while((c=is.read(buf))>0) {
 			os.write(buf, 0, c);
 		}
-		is.close();
 	}
 
-	/**
-	 * Redirects the reader to the writer, without closing them
-	 * @param is
-	 * @param os
-	 * @throws IOException
-	 */
 	public static void redirect(Reader is, Writer os) throws IOException {
 		char[] buf = new char[512];
 		int c;
 		while((c=is.read(buf))>0) {
 			os.write(buf, 0, c);
 		}
-		is.close();
+	}
+
+	public static byte[] serialize(Object o) throws IOException {
+		try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+			ObjectOutputStream s = new ObjectOutputStream(out);
+			s.writeObject(o);
+			return out.toByteArray();
+		}
+	}
+
+	public static Object deserialize(byte[] bytes) throws IOException, ClassNotFoundException {
+		try(ByteArrayInputStream out = new ByteArrayInputStream(bytes)) {
+			ObjectInputStream s = new ObjectInputStream(out);
+			return s.readObject();
+		}
 	}
 
 	public static void copy(File src, File dest) throws IOException {
-		InputStream is = null;
-		OutputStream os = null;
-		try {
-			is = new BufferedInputStream(new FileInputStream(src));
-			os = new BufferedOutputStream(new FileOutputStream(dest));
+		try(InputStream is = new FileInputStream(src); OutputStream os = new FileOutputStream(dest)) {
 			redirect(is, os);
-
-		} finally {
-			try {if(is!=null) is.close();}catch(Exception e){}
-			try {if(os!=null) os.close();}catch(Exception e){}
 		}
-	}
-
-	/**
-	 * Debug instruction to view the relevant stacktrace
-	 * @throws IOException
-	 */
-	public static void dumpStack() {
-		Exception e = new Exception("StackTrace");
-		Set<Throwable> dejaVu = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
-		dejaVu.add(e);
-
-		synchronized (System.err) {
-			StackTraceElement[] trace = e.getStackTrace();
-			System.err.println("Exception "+e.getMessage());
-			for (StackTraceElement traceElement : trace) {
-				if(traceElement.getClassName().contains("com.actelion.research.util.IOUtils")) continue;
-				if(traceElement.getClassName().contains("com.actelion")) {
-					System.err.println("\tat " + traceElement);
-				}
-			}
-			if(e.getCause()!=null) {
-				System.err.println("Caused by "+e.getCause());
-				for (StackTraceElement traceElement : trace) {
-					if(traceElement.getClassName().contains("com.actelion.research.util.IOUtils.dumpStack")) continue;
-					if(traceElement.getClassName().contains("com.actelion")) {
-						System.err.println("\tat " + traceElement);
-					}
-				}
-			}
-		}
-
 	}
 
 }
+

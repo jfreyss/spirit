@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -21,8 +21,10 @@
 
 package com.actelion.research.spiritcore.business.employee;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,11 +42,16 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SortNatural;
+import org.hibernate.envers.Audited;
 
+import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.IObject;
+import com.actelion.research.spiritcore.util.DifferenceMap;
 import com.actelion.research.util.CompareUtils;
 
 @Entity
@@ -52,8 +59,9 @@ import com.actelion.research.util.CompareUtils;
 		@Index(name="employeegroup_parent_index", columnList="group_parent"),
 		@Index(name="employeegroup_name_index", columnList="group_name")})
 @SequenceGenerator(name="employee_group_sequence", sequenceName="employee_group_sequence", allocationSize=1)
+@Audited
 @BatchSize(size=64)
-public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
+public class EmployeeGroup implements Comparable<EmployeeGroup>, Serializable, IObject, IAuditable {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="employee_group_sequence")
@@ -71,6 +79,15 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 	@SortNatural
 	private Set<EmployeeGroup> children = new TreeSet<>();
 
+
+	private boolean disabled;
+
+	@Column(name="upduser", length=20)
+	private String updUser;
+
+	@Column(name="upddate")
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date updDate;
 
 	public EmployeeGroup() {}
 
@@ -204,6 +221,30 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 		return getParent()!=null && getParent().getName().toUpperCase().contains("FUNCTIONAL");
 	}
 
+	public boolean isDisabled() {
+		return disabled;
+	}
+
+	public void setDisabled(boolean disabled) {
+		this.disabled = disabled;
+	}
+
+	public String getUpdUser() {
+		return updUser;
+	}
+
+	public void setUpdUser(String updUser) {
+		this.updUser = updUser;
+	}
+
+	public Date getUpdDate() {
+		return updDate;
+	}
+
+	public void setUpdDate(Date updDate) {
+		this.updDate = updDate;
+	}
+
 	public static List<Integer> getIds(Collection<EmployeeGroup> groups) {
 		List<Integer> res = new ArrayList<>();
 		for (EmployeeGroup eg : groups) {
@@ -218,5 +259,37 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, IObject {
 			res.add(eg.getNameShort());
 		}
 		return res;
+	}
+
+	@Override
+	public String getDifference(IAuditable r) {
+		if(r==null) r = new EmployeeGroup();
+		if(!(r instanceof EmployeeGroup)) return "";
+		return getDifferenceMap((EmployeeGroup)r).flatten();
+	}
+
+	/**
+	 * Returns a map containing the differences between 2 results (usually 2 different versions).
+	 * The result is an empty string if there are no differences or if b is null
+	 * @param b
+	 * @return
+	 */
+	public DifferenceMap getDifferenceMap(EmployeeGroup r) {
+
+		DifferenceMap map = new DifferenceMap();
+		if(r==null) return map;
+		if(!CompareUtils.equals(getName(), r.getName())) {
+			map.put("Name", getName(), r.getName());
+		}
+
+		if(!CompareUtils.equals(getParent(), r.getParent())) {
+			map.put("Parent", getParent()==null || getParent().getName()==null? "": getParent().getName(), r.getParent()==null || r.getParent().getName()==null? "": r.getParent().getName());
+		}
+
+		if(isDisabled()!=r.isDisabled()) {
+			map.put("Disabled", Boolean.toString(isDisabled()), Boolean.toString(r.isDisabled()));
+		}
+
+		return map;
 	}
 }

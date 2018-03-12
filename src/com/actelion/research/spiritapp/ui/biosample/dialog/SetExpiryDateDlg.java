@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -23,8 +23,6 @@ package com.actelion.research.spiritapp.ui.biosample.dialog;
 
 import java.awt.BorderLayout;
 import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Date;
 import java.util.List;
 
@@ -80,15 +78,11 @@ public class SetExpiryDateDlg extends JSpiritEscapeDialog {
 		centerPanel.add(BorderLayout.CENTER, sp);
 
 		JButton okButton = new JIconButton(IconType.SAVE, "Set Expiry Date");
-		okButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					eventOk();
-				} catch(Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
+		okButton.addActionListener(e->{
+			try {
+				eventOk();
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});
 
@@ -103,26 +97,19 @@ public class SetExpiryDateDlg extends JSpiritEscapeDialog {
 
 		expiryDateTextField.setTextDate(minDate);
 
-
-		JPanel southPanel = new JPanel(new BorderLayout());
-		southPanel.add(BorderLayout.CENTER, UIUtils.createVerticalBox(BorderFactory.createEtchedBorder(),
-				UIUtils.createHorizontalBox(new JLabel("Expiry Date: "), expiryDateTextField, Box.createGlue())));
+		JPanel southPanel = UIUtils.createVerticalBox(BorderFactory.createEtchedBorder(), UIUtils.createHorizontalBox(new JLabel("Expiry Date: "), expiryDateTextField, Box.createGlue()));
 		southPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));
 
-		JPanel contentPanel = new JPanel(new BorderLayout());
-		contentPanel.add(BorderLayout.CENTER, centerPanel);
-		contentPanel.add(BorderLayout.SOUTH, southPanel);
 
-		setContentPane(contentPanel);
+		setContentPane(UIUtils.createBox(centerPanel, null, southPanel));
 
-
-		setSize(900, 400);
-		setLocationRelativeTo(UIUtils.getMainFrame());
+		UIUtils.adaptSize(this, 900, 400);
 		setVisible(true);
 
 	}
 
 	private void eventOk() throws Exception {
+		if(!expiryDateTextField.isValidFormat()) throw new Exception("The date is not well formatted");
 		Date expiryDate = expiryDateTextField.getTextDate();
 		if(expiryDate==null) {
 			int res = JOptionPane.showConfirmDialog(this, "Are you sure you want to remove the expiry date?", "Set Expiry Date", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);

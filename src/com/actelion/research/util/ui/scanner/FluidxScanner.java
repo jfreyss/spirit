@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -32,15 +32,15 @@ import java.util.List;
 
 
 /**
- * Default Scanner, that should replace the former XTR96Pro and XTR96 in one 
- * 
+ * Default Scanner, that should replace the former XTR96Pro and XTR96 in one
+ *
  * @author freyssj
  *
  */
 public class FluidxScanner {
 
 	public static final String SCANNER_NAME = "fluidx";
-	
+
 
 	public static class InputListenerThread extends Thread {
 		private Socket sock;
@@ -56,7 +56,7 @@ public class FluidxScanner {
 				DataInputStream is = new DataInputStream(sock.getInputStream());
 				byte[] buf = new byte[2048];
 				while(!interrupted()) {
-					try {Thread.sleep(50);}catch (Exception e) {return;}
+					try {Thread.sleep(50);}catch (Exception e) {e.printStackTrace(); return;}
 					int read = is.read(buf);
 					if(read>=0) {
 						lastOutput = new String(buf, 0, read);
@@ -65,27 +65,26 @@ public class FluidxScanner {
 				}
 			} catch (Exception e) {
 				//Stream closed
-			}	
-		}		
+			}
+		}
 	}
-	
+
 	public FluidxScanner() {
 	}
-	
-	public List<RackPos> scanTubes(ScannerConfiguration config) throws IOException, NoReadException {
+
+	public List<RackPos> scanTubes(ScannerConfiguration config) throws Exception {
 		return scanPlate(config).getTubes();
 	}
-	
-	public static List<RackPos> getTestTubes() throws IOException, NoReadException {
-		List<RackPos> testTubes = new ArrayList<RackPos>();
-		testTubes.add(new RackPos("A/01", "TEST-1"));
-		testTubes.add(new RackPos("A/02", "TEST-4"));
-		testTubes.add(new RackPos("B/01", "TEST-3"));
-		testTubes.add(new RackPos("B/02", "TEST-2"));
+
+	public static List<RackPos> getTestTubes() throws Exception {
+		List<RackPos> testTubes = new ArrayList<>();
+		testTubes.add(new RackPos("A/01", "FB04948888"));
+		testTubes.add(new RackPos("A/02", "FB04948916"));
+		testTubes.add(new RackPos("B/01", "FB04948917"));
+		testTubes.add(new RackPos("B/02", "FB04948918"));
 		return testTubes;
 	}
-	
-	
+
 	/**
 	 * Scans a rack and returns the list of Positionable Tube (ids and positions).<br>
 	 * The tubes are not loaded from the DB
@@ -94,15 +93,15 @@ public class FluidxScanner {
 	 * @throws IOException
 	 * @throws NoReadException
 	 */
-	public Plate scanPlate(ScannerConfiguration config) throws IOException, NoReadException {
-		
+	public Plate scanPlate(ScannerConfiguration config) throws Exception {
+
 		//Check that we have write access on the current drive
 		if(!new File(".").canWrite()) throw new IOException("The working directory must be somewhere where you have write access.\n Currently it is: "+new File(".").getAbsolutePath());
-		
+
 		if("baerr".equals(System.getProperty("user.name")) || "freyssj".equals(System.getProperty("user.name"))) {
 			return new Plate(config.getRows(), config.getCols(), getTestTubes());
 		}
-		
+
 		//Run the Scanner
 		Socket sock = null;
 		OutputStream os = null;
@@ -112,7 +111,7 @@ public class FluidxScanner {
 			os = sock.getOutputStream();
 		} catch (Exception e) {
 			File directory = getDirectory();
-			if(directory==null) throw new IOException("Could not find XTR96 installation");
+			if(directory==null) throw new Exception("Could not find XTR96 installation");
 			p = Runtime.getRuntime().exec(new File(directory, "xtr-96.exe -s").getAbsolutePath());
 			//Wait until ready
 			long time = System.currentTimeMillis();
@@ -124,45 +123,45 @@ public class FluidxScanner {
 					break;
 				} catch (Exception ex) {
 					System.err.println("wait "+(System.currentTimeMillis()-time)+"ms "+p.getOutputStream());
-					
+
 					//Still not ready
 				}
 			}
 		}
 		if(os==null) {
-			throw new IOException("Scanner Winsock interface is not responding (port:201)");
+			throw new Exception("Scanner Winsock interface is not responding (port:201)");
 		}
-		
+
 		if(config.regEditConfig!=null) {
-			InputListenerThread thread = new InputListenerThread(sock);		
+			InputListenerThread thread = new InputListenerThread(sock);
 			thread.start();
 			os.write(("set tube = " + config.regEditConfig).getBytes());
 			int count = 0;
 			do {
-				try {Thread.sleep(500);}catch (Exception e) {}
+				try {Thread.sleep(500);}catch (Exception e) {e.printStackTrace();}
 				System.out.println("set tube = " + config.regEditConfig+" > "+thread.lastOutput);
 			} while(thread.lastOutput.indexOf("OK")<0 && count++<180);
 			System.out.println("set tube = " + config.regEditConfig+" > "+thread.lastOutput);
 			thread.interrupt();
 		}
 
-		
-		
-		
-		try {Thread.sleep(2000);}catch (Exception e) {}
-		final InputListenerThread thread = new InputListenerThread(sock);		
+
+
+
+		try {Thread.sleep(2000);}catch (Exception e) {e.printStackTrace();}
+		final InputListenerThread thread = new InputListenerThread(sock);
 		thread.start();
 		{
 			os.write("get".getBytes());
 			String last = config.last;
 			int count = 0;
 			do {
-				try {Thread.sleep(500);}catch (Exception e) {}
+				try {Thread.sleep(500);}catch (Exception e) {e.printStackTrace();}
 				System.out.println("decode-->"+thread.lastOutput);
 			} while(thread.lastOutput.indexOf(last)<0 && count++<180); //90seconds
 			System.out.println("decode-->"+thread.lastOutput);
 		}
-		
+
 		//Terminate in an independant thread (Fluidx needs his time, and we should not call terminate before it is really finished)
 		final OutputStream tmpOs = os;
 		final Process tmpProcess = p;
@@ -170,39 +169,39 @@ public class FluidxScanner {
 			@Override
 			public void run() {
 				try {
-					try {Thread.sleep(2000);}catch (Exception e) {}
+					try {Thread.sleep(2000);}catch (Exception e) {e.printStackTrace();}
 					tmpOs.write("terminate".getBytes());
-					
+
 					thread.interrupt();
-					try { thread.wait();}catch (Exception e) {}
+					try { thread.wait();}catch (Exception e) {e.printStackTrace();}
 					System.out.println("terminate-->"+thread.lastOutput);
-	
+
 					try {Thread.sleep(10000);}catch (Exception e) {}
-					
+
 					if(tmpProcess!=null) tmpProcess.destroy();
-					} catch(Exception e) {
+				} catch(Exception e) {
 					e.printStackTrace();
-				}				
+				}
 			}
 		}.start();
 		return new Plate(config.getRows(), config.getCols(), parseResults(thread.buffer));
-		
+
 	}
-	
+
 	private static List<RackPos> parseResults(String res) throws NoReadException {
 		int index = res.indexOf("...A01");
 		if(index>0) res = res.substring(index+3);
-		
-		List<RackPos> tubes = new ArrayList<RackPos>();		
-		List<RackPos> noread = new ArrayList<RackPos>();		
+
+		List<RackPos> tubes = new ArrayList<RackPos>();
+		List<RackPos> noread = new ArrayList<RackPos>();
 		String[] s = res.split("\n");
 		for(String t: s) {
 			String[] v = t.split(",");
 			if(v.length!=2) continue;
-			
+
 			String pos = v[0].trim();
 			String barcode = v[1].trim();
-			
+
 			//normalize position to look like L/dd
 			String normalPos;
 			try {
@@ -211,18 +210,18 @@ public class FluidxScanner {
 			} catch (Exception e) {
 				normalPos = "??";
 			}
-			
+
 			if(RackPos.NOREAD.equals(barcode)) {
 				noread.add(new RackPos(normalPos, barcode));
 			} else if(!"No Tube".equals(barcode)) {
-				tubes.add(new RackPos(normalPos, barcode));				
+				tubes.add(new RackPos(normalPos, barcode));
 			}
 		}
 
 		if(noread.size()>0) {
 			throw new NoReadException(noread);
 		}
-		
+
 		return tubes;
 	}
 

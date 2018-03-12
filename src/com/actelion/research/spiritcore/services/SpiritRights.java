@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -24,10 +24,8 @@ package com.actelion.research.spiritcore.services;
 import java.util.Collection;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.spiritcore.business.location.LocationType.LocationCategory;
 import com.actelion.research.spiritcore.business.location.Privacy;
 import com.actelion.research.spiritcore.business.order.Order;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
@@ -45,19 +43,287 @@ import com.actelion.research.spiritcore.util.MiscUtils;
  */
 public class SpiritRights {
 
-	/**
-	 * The user can view any location except the protected and private that are not under their department
-	 * @param location
-	 * @return
-	 */
-	public static boolean canRead(Location location, SpiritUser user) {
-		if(location==null) return true;
-		if(location.getInheritedPrivacy()==Privacy.PUBLIC) return true;
-		if(user==null) return false;
-		if(user.isSuperAdmin() || user.isReadall()) return true;
-		return user.isMember(location.getInheritedEmployeeGroup());
+	public enum ActionType {
+		READ_STUDY("Read Study", "Who is allowed to read a study (its samples and results are not necessarily readable)"),
+		CREATE_STUDY("Create Study", "Who is allowed to create a new study?"),
+		EDIT_STUDY("Edit Study", "Who is allowed to edit a study (its samples and results are not necessarily editable)"),
+		DELETE_STUDY("Delete Study", "Who is allowed to delete a study (its samples and results?"),
+		CHANGE_STATUS("Change Status", "Who is allowed to change the status of a study"),
+
+		READ_BIOSAMPLE("Read Biosample", "Who is allowed to read a biosample. Note: it is necessary to also have read rights on the study to read samples on a study."),
+		EDIT_BIOSAMPLE("Create/Edit Biosample", "Who is allowed to edit a biosample. Note: it is necessary to also have read rights on the study to edit samples on a study."),
+		DELETE_BIOSAMPLE("Delete Biosample", "Who is allowed to edit a biosample. Note: it is necessary to also have delete rights on the study to delete samples on a study."),
+
+		READ_LOCATION("Read Location", "Who is allowed to read a protected/private location. ('public' location are always readable)"),
+		EDIT_LOCATION("Edit Location", "Who is allowed to edit a location. ('public' location are always editable)"),
+		DELETE_LOCATION("Delete Location", "Who is allowed to edit a location. ('public' location are always editable)"),
+
+		READ_RESULT("Read Result", "Who is allowed to read a result. Note: it is necessary to also have read rights on the study to read results on a study."),
+		EDIT_RESULT("Edit Result", "Who is allowed to edit an admin location. Note: it is necessary to also have edit rights on the study to edit results on a study."),
+		DELETE_RESULT("Delete Result", "Who is allowed to edit an admin location. Note: it is necessary to also have edit rights on the study to delete results on a study.");
+
+
+		private final String display;
+		private final String tooltip;
+
+		private ActionType(String display, String tooltip) {
+			this.display = display;
+			this.tooltip = tooltip;
+		}
+
+		public String getDisplay() {
+			return display;
+		}
+
+		public String getTooltip() {
+			return tooltip;
+		}
+
 	}
 
+	public enum UserType {
+		CREATOR,
+		UPDATER
+	}
+
+	/**
+	 * Is the user blinded for this study (all groups are blinded)
+	 * @param study
+	 * @param user
+	 * @return
+	 */
+	public static boolean isBlindAll(Study study, SpiritUser user) {
+		if(study==null || user==null) return false;
+		return study.getBlindAllUsersAsSet().contains(user.getUsername());
+	}
+
+	/**
+	 * Is the user blinded for this study (only the treatments, and group names are blinded)
+	 * @param study
+	 * @param user
+	 * @return
+	 */
+	public static boolean isBlind(Study study, SpiritUser user) {
+		if(study==null || user==null) return false;
+		return study.getBlindDetailsUsersAsSet().contains(user.getUsername()) || study.getBlindAllUsersAsSet().contains(user.getUsername());
+	}
+
+	/**
+	 * Return true if the user can write or blind the study.
+	 * All write users can also work as blind, but not read is not enought to work as blind
+	 * @param study
+	 * @param user
+	 * @return
+	 */
+	public static boolean canBlind(Study study, SpiritUser user) {
+		return isBlind(study, user) || canEditBiosamples(study, user);
+	}
+
+	/**
+	 * Is the user allowed to read the study?
+	 *
+	 * @param study
+	 * @param user
+	 * @return
+	 */
+	public static boolean canCreateStudy(SpiritUser user) {
+		if(user==null) return false;
+
+		//Check generic roles
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.CREATE_STUDY, role)) return true;
+		}
+
+		//Return true by default if roles have not been defined
+		return SpiritProperties.getInstance().getUserRoles().length<=1;
+	}
+	/**
+	 * Is the user allowed to read the study?
+	 *
+	 * @param study
+	 * @param user
+	 * @return
+	 */
+	public static boolean canRead(Study study, SpiritUser user) {
+		if(user==null) return false;
+		if(study==null) return true;
+		if(study.getId()<=0) return true;
+
+		//Check states specific roles
+		String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState());
+		if(roles.length>0) {
+			if(MiscUtils.contains(roles, "NONE")) return false;
+			if(MiscUtils.contains(roles, "ALL")) return true;
+			if(MiscUtils.contains(roles, user.getRoles())) return true;
+			return false;
+		}
+
+		//Otherwise, check generic roles
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.READ_STUDY, null, role)) return true;
+		}
+
+		//Check groups
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			if(user.getUsername().equals(study.getCreUser()) && SpiritProperties.getInstance().isChecked(ActionType.READ_STUDY, UserType.CREATOR)) return true;
+			if(user.getUsername().equals(study.getUpdUser()) && SpiritProperties.getInstance().isChecked(ActionType.READ_STUDY, UserType.UPDATER)) return true;
+		}
+
+		//Return true by default if roles have not been defined and the system is open
+		return SpiritProperties.getInstance().getUserRoles().length<=1 && SpiritProperties.getInstance().isOpen();
+	}
+
+	/**
+	 * True if the user can not only read the study, but also add samples/results to it.
+	 * Note: This function is the same as canEdit(study) if groups are not used
+	 *
+	 * @param study
+	 * @param user
+	 * @return
+	 */
+	public static boolean canEditBiosamples(Study study, SpiritUser user) {
+		if(user==null) return false;
+		if(study==null) return true;
+
+		//Check if the study is sealed: then no rights
+		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
+			return false;
+		}
+
+		//Check specific study rights
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			for(EmployeeGroup eg: study.getEmployeeGroups()) {
+				if(user.isMember(eg)) return true;
+			}
+			for(String uid: user.getManagedUsers()) {
+				if(study.getExpertUsersAsSet().contains(uid)) return true;
+			}
+			return canEdit(study, user);
+		} else {
+			return canRead(study, user);
+		}
+
+	}
+
+	/**
+	 * True if the user can edit the study, (and also add samples/results to it)
+	 *
+	 * @param study
+	 * @param user
+	 * @return
+	 */
+	public static boolean canEdit(Study study, SpiritUser user) {
+		if(study==null) return true;
+		if(user==null) return false;
+
+		//Check if the study is sealed: then no rights
+		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
+			return false;
+		}
+
+		//Check states specific roles
+		String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EDIT, study.getState());
+		if(MiscUtils.contains(roles, "NONE")) return false;
+		if(MiscUtils.contains(roles, "ALL")) return true;
+		if(MiscUtils.contains(roles, user.getRoles())) return true;
+
+		//Check generic roles
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.EDIT_STUDY, null, role)) return true;
+		}
+
+		//Check group/hierarchy rights (if needed)
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			if(study.getCreUser().equals(user.getUsername()) && SpiritProperties.getInstance().isChecked(ActionType.EDIT_STUDY, UserType.CREATOR)) return true;
+			if(study.getUpdUser().equals(user.getUsername()) && SpiritProperties.getInstance().isChecked(ActionType.EDIT_STUDY, UserType.UPDATER)) return true;
+			for(String uid: user.getManagedUsers()) {
+				if(study.getAdminUsersAsSet().contains(uid)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * True if the user can delete the study
+	 * @param study
+	 * @param user
+	 * @return
+	 */
+	public static boolean canDelete(Study study, SpiritUser user) {
+		if(user==null) return false;
+		if(study==null) return false;
+
+		//Check if the study is sealed: then no rights
+		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
+			return false;
+		}
+		//Check generic roles
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			if(study.getCreUser().equals(user.getUsername()) && SpiritProperties.getInstance().isChecked(ActionType.DELETE_STUDY, UserType.CREATOR)) return true;
+			if(study.getUpdUser().equals(user.getUsername()) && SpiritProperties.getInstance().isChecked(ActionType.DELETE_STUDY, UserType.UPDATER)) return true;
+		}
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.DELETE_STUDY, role)) return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * True if the user can delete the study
+	 * @param study
+	 * @param user
+	 * @return
+	 */
+	public static boolean canPromote(Study study, SpiritUser user) {
+		if(user==null) return false;
+		if(study==null) return false;
+		if(study.getId()<=0) return true;
+
+		//Check if the study is sealed: then no rights
+		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
+			return false;
+		}
+
+		//Check generic roles
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			if(study.getCreUser().equals(user.getUsername()) && SpiritProperties.getInstance().isChecked(ActionType.CHANGE_STATUS, UserType.CREATOR)) return true;
+			if(study.getUpdUser().equals(user.getUsername()) && SpiritProperties.getInstance().isChecked(ActionType.CHANGE_STATUS, UserType.UPDATER)) return true;
+		}
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.CHANGE_STATUS, role)) return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * True if the user can edit the namedSampling, ie: he can edit the linked
+	 * @param ns
+	 * @param user
+	 * @return
+	 */
+	public static boolean canEdit(NamedSampling ns, SpiritUser user) {
+		if(user==null) return false;
+		if(ns==null) return false;
+		if(ns.getStudy()!=null) {
+			return canEdit(ns.getStudy(), user);
+		} else {
+			for(String uid: user.getManagedUsers()) {
+				if(uid.equals(ns.getCreUser())) return true;
+			}
+			return false;
+		}
+	}
+
+	/**
+	 * True if the user can read all biosamples
+	 * @param biosamples
+	 * @param user
+	 * @return
+	 */
 	public static boolean canReadBiosamples(Collection<Biosample> biosamples, SpiritUser user) {
 		if(biosamples==null) return true;
 		for (Biosample biosample : biosamples) {
@@ -66,35 +332,53 @@ public class SpiritRights {
 		return true;
 	}
 
+	/**
+	 * True if the user can read the biosample
+	 * @param biosamples
+	 * @param user
+	 * @return
+	 */
 	public static boolean canRead(Biosample biosample, SpiritUser user) {
 		if(user==null) return false;
 		if(biosample==null || biosample.getId()<=0) return true;
-		if(user.isSuperAdmin() || user.isReadall()) return true;
-		if(biosample.getCreUser()==null) return true;
 
-		if(biosample.getInheritedStudy()!=null) {
-			return canRead(biosample.getInheritedStudy(), user);
-		} else {
-			//The creator or the manager of the creator/updater has the rights
+		//Study right
+		if(biosample.getInheritedStudy()!=null && !canRead(biosample.getInheritedStudy(), user)) return false;
+
+		//Check generic roles
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.READ_BIOSAMPLE, role)) return true;
+		}
+
+		//Check group/hierarchy rights (if needed)
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			if(biosample.getCreUser().equals(user.getUsername()) && SpiritProperties.getInstance().isChecked(ActionType.READ_BIOSAMPLE, UserType.CREATOR)) return true;
+			if(biosample.getUpdUser().equals(user.getUsername()) && SpiritProperties.getInstance().isChecked(ActionType.READ_BIOSAMPLE, UserType.UPDATER)) return true;
 			for(String uid: user.getManagedUsers()) {
-				if(uid.equals(biosample.getCreUser()) || uid.equals(biosample.getUpdUser())) return true;
+				if(biosample.getCreUser().equals(uid) && SpiritProperties.getInstance().isChecked(ActionType.READ_BIOSAMPLE, UserType.CREATOR)) return true;
+				if(biosample.getUpdUser().equals(uid) && SpiritProperties.getInstance().isChecked(ActionType.READ_BIOSAMPLE, UserType.UPDATER)) return true;
 			}
 
 			//Everybody in the group has the rights
 			if(biosample.getEmployeeGroup()!=null && user.isMember(biosample.getEmployeeGroup())) return true;
-
-
-			//Otherwise it depends of the location: public, protected (biosample shown without location), or member of private location
-			Location location = biosample.getLocation();
-			if(location==null) return SpiritProperties.getInstance().isOpen();
-			else if(location.getInheritedPrivacy()==Privacy.PUBLIC) return true;
-			else if(location.getInheritedPrivacy()==Privacy.PROTECTED) return SpiritProperties.getInstance().isOpen();
-			else if(location.getInheritedPrivacy()==Privacy.PRIVATE && location.getInheritedEmployeeGroup()!=null && user.isMember(location.getInheritedEmployeeGroup())) return true;
 		}
-		return false;
+
+		//Otherwise it depends of the location: public, protected (biosample shown without location), or member of private location
+		Location location = biosample.getLocation();
+		if(location!=null && location.getInheritedPrivacy()==Privacy.PUBLIC) return true;
+		else if(location!=null && location.getInheritedPrivacy()==Privacy.PRIVATE && location.getInheritedEmployeeGroup()!=null && !user.isMember(location.getInheritedEmployeeGroup())) return false;
+
+		//Return true by default if roles have not been defined and the system is open
+		return SpiritProperties.getInstance().getUserRoles().length<=1 && SpiritProperties.getInstance().isOpen();
 
 	}
 
+	/**
+	 * True if the user can edit all biosamples
+	 * @param biosamples
+	 * @param user
+	 * @return
+	 */
 	public static boolean canEditBiosamples(Collection<Biosample> biosamples, SpiritUser user) {
 		if(biosamples==null) return true;
 		for (Biosample biosample : biosamples) {
@@ -102,15 +386,6 @@ public class SpiritRights {
 		}
 		return true;
 	}
-
-	public static boolean canEditResults(Collection<Result> results, SpiritUser user) {
-		if(results==null) return true;
-		for (Result result : results) {
-			if(!canEdit(result, user)) return false;
-		}
-		return true;
-	}
-
 
 	/**
 	 * A user can edit a biosample if:
@@ -124,72 +399,94 @@ public class SpiritRights {
 	 */
 	public static boolean canEdit(Biosample biosample, SpiritUser user) {
 		if(user==null) return false;
-		if(biosample==null || biosample.getId()<=0) return true;
-		if(user.isSuperAdmin()) return true;
-		if(biosample.getCreUser()==null) return true;
+		if(biosample==null) return true;
 
-		for(String uid: user.getManagedUsers()) {
-			if(uid.equals(biosample.getCreUser()) || uid.equals(biosample.getUpdUser())) return true;
-		}
-		if(biosample.getEmployeeGroup()!=null && user.isMember(biosample.getEmployeeGroup())) return true;
-
+		//Study rights
 		if(biosample.getInheritedStudy()!=null) {
-			return canAdmin(biosample.getInheritedStudy(), user)  || canBlind(biosample.getInheritedStudy(), user);
-		} else {
-			return false;
+			if(!canEditBiosamples(biosample.getInheritedStudy(), user) && !canBlind(biosample.getInheritedStudy(), user)) return false;
 		}
+
+		//Check generic roles
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.EDIT_BIOSAMPLE, role)) return true;
+		}
+
+		//Check group/hierarchy rights (if needed)
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			for(String uid: user.getManagedUsers()) {
+				if(uid.equals(biosample.getCreUser()) && SpiritProperties.getInstance().isChecked(ActionType.EDIT_BIOSAMPLE, UserType.CREATOR)) return true;
+				if(uid.equals(biosample.getUpdUser()) && SpiritProperties.getInstance().isChecked(ActionType.EDIT_BIOSAMPLE, UserType.UPDATER)) return true;
+			}
+			if(biosample.getEmployeeGroup()!=null && user.isMember(biosample.getEmployeeGroup())) return true;
+
+			//Check generic roles
+			for (String role : user.getRoles()) {
+				if(SpiritProperties.getInstance().isChecked(ActionType.EDIT_BIOSAMPLE, role)) return true;
+			}
+			return biosample.getId()<=0 || biosample.getInheritedStudy()!=null && (canEditBiosamples(biosample.getInheritedStudy(), user) || canBlind(biosample.getInheritedStudy(), user));
+		}
+
+		//Return true by default if roles have not been defined
+		return SpiritProperties.getInstance().getUserRoles().length<=1;
+
 	}
 
 	public static boolean canDelete(Biosample biosample, SpiritUser user) {
 		if(user==null) return false;
-		if(user.isSuperAdmin()) return true;
 
 		if(biosample==null) return false;
 		if(biosample.getId()<=0) return false;
-		if(biosample.getCreUser()==null) return true;
 		if(user.getUsername().equals(biosample.getCreUser())) return true;
 
-		for(String uid: user.getManagedUsers()) {
-			if(uid.equals(biosample.getCreUser()) || uid.equals(biosample.getUpdUser())) return true;
+		//Study rights
+		if(biosample.getInheritedStudy()!=null) {
+			if(!canEditBiosamples(biosample.getInheritedStudy(), user) && !canBlind(biosample.getInheritedStudy(), user)) return false;
+		}
+
+		//Check generic roles
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.EDIT_BIOSAMPLE, role)) return true;
+		}
+
+		//Check group/hierarchy rights (if needed)
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			for(String uid: user.getManagedUsers()) {
+				if(uid.equals(biosample.getCreUser()) && SpiritProperties.getInstance().isChecked(ActionType.DELETE_BIOSAMPLE, UserType.CREATOR)) return true;
+				if(uid.equals(biosample.getUpdUser()) && SpiritProperties.getInstance().isChecked(ActionType.DELETE_BIOSAMPLE, UserType.UPDATER)) return true;
+			}
 		}
 
 		//Allow the study admin to delete a sample when the study design is changed
-		if(biosample.getInheritedStudy()!=null && canAdmin(biosample.getInheritedStudy(), user)) return true;
+		if(biosample.getInheritedStudy()!=null && canEdit(biosample.getInheritedStudy(), user)) return true;
 
 		return false;
 	}
 
-	public static boolean canDelete(Study study, SpiritUser user) {
+	/**
+	 * The user can read any location except the protected and private that are not under their department
+	 * @param location
+	 * @return
+	 */
+	public static boolean canRead(Location location, SpiritUser user) {
+		if(location==null) return true;
 		if(user==null) return false;
-		if(user.isSuperAdmin()) return true;
+		if(location.getInheritedPrivacy()==Privacy.PUBLIC) return true;
 
-		if(study==null) return false;
-		if(study.getId()<=0) return false;
-		if(study.getCreUser()==null) return true;
-
-		//check for seal state?
-		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
-			return false;
+		//Check generic roles
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.READ_LOCATION, role)) return true;
 		}
-		if(user.getUsername().equals(study.getCreUser())) return true;
-		return false;
-	}
 
-	public static boolean canEdit(Container container, SpiritUser user) {
-		if(user==null) return false;
-		if(user.isSuperAdmin()) return true;
-		if(container==null) return true;
-		if(container.getBiosamples().size()>0) {
-			for (Biosample b : container.getBiosamples()) {
-				if(!canEdit(b, user)) return false;
+		//Check group/hierarchy rights (if needed)
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			if(user.isMember(location.getInheritedEmployeeGroup())) return true;
+			for(String uid: user.getManagedUsers()) {
+				if(uid.equals(location.getCreUser()) && SpiritProperties.getInstance().isChecked(ActionType.READ_LOCATION, UserType.CREATOR)) return true;
+				if(uid.equals(location.getUpdUser()) && SpiritProperties.getInstance().isChecked(ActionType.READ_LOCATION, UserType.UPDATER)) return true;
 			}
-			return true;
-		} else {
-			//An empty container can be edited by someone else... (important)
-			return true;
 		}
+		return false;
 	}
-
 
 	/**
 	 * - for a new location, the user must have update rights on the container
@@ -199,193 +496,76 @@ public class SpiritRights {
 	 */
 	public static boolean canEdit(Location location, SpiritUser user) {
 		if(user==null) return false;
-		if(user.isSuperAdmin()) return true;
 		if(location==null) return false;
-		if(location.getId()<=0) return true; //So that location without a type can be edited
-		for(String uid: user.getManagedUsers()) {
-			if(uid.equals(location.getCreUser())) return true;
-			if(uid.equals(location.getUpdUser())) return true;
-		}
-		if(location.getLocationType().getCategory()==LocationCategory.ADMIN) return false;
-		if(location.getInheritedPrivacy()==Privacy.PUBLIC) return true;
-		return location.getInheritedEmployeeGroup()!=null && user.isMember(location.getInheritedEmployeeGroup());
-	}
+		if(location.getId()<=0) return true;
 
-	public static boolean canAdmin(Study study, SpiritUser user) {
-		if(study==null) return true;
-		if(user==null) return false;
-		if(user.isSuperAdmin()) return true;
-		if(study.getId()<=0) return true;
-
-		//check for seal state?
-		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
-			return false;
+		//Check generic roles
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.EDIT_LOCATION, role)) return true;
 		}
 
-		//Check roles?
-		String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, study.getState());
-		if(MiscUtils.contains(roles, "NONE")) {
-			return false;
-		}
-		if(MiscUtils.contains(roles, "ALL")) {
-			return true;
-		}
-		if(MiscUtils.contains(roles, user.getRoles())) {
-			return true;
-		}
-
-		for(String uid: user.getManagedUsers()) {
-			if(uid.equals(study.getCreUser())) {
-				return true;
+		//Check group/hierarchy rights (if needed)
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			for(String uid: user.getManagedUsers()) {
+				if(uid.equals(location.getCreUser()) && SpiritProperties.getInstance().isChecked(ActionType.EDIT_LOCATION, UserType.CREATOR)) return true;
+				if(uid.equals(location.getUpdUser()) && SpiritProperties.getInstance().isChecked(ActionType.EDIT_LOCATION, UserType.UPDATER)) return true;
 			}
-			if(study.getAdminUsersAsSet().contains(uid)) {
-				return true;
+			if(location.getInheritedEmployeeGroup()!=null && user.isMember(location.getInheritedEmployeeGroup())) return true;
+			if(location.getInheritedPrivacy()==Privacy.PUBLIC) return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * - for a new location, the user must have update rights on the container
+	 * - for editing location, the user must have
+	 * @param location
+	 * @return
+	 */
+	public static boolean canDelete(Location location, SpiritUser user) {
+		if(user==null) return false;
+		if(location==null) return false;
+		if(location.getId()<=0) return true;
+
+		//Check generic roles
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.DELETE_LOCATION, role)) return true;
+		}
+
+		//Check group/hierarchy rights (if needed)
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			for(String uid: user.getManagedUsers()) {
+				if(uid.equals(location.getCreUser()) && SpiritProperties.getInstance().isChecked(ActionType.DELETE_LOCATION, UserType.CREATOR)) return true;
+				if(uid.equals(location.getUpdUser()) && SpiritProperties.getInstance().isChecked(ActionType.DELETE_LOCATION, UserType.UPDATER)) return true;
 			}
+			if(location.getInheritedEmployeeGroup()!=null && user.isMember(location.getInheritedEmployeeGroup())) return true;
+			if(location.getInheritedPrivacy()==Privacy.PUBLIC) return true;
 		}
 
 		return false;
 	}
 
-	public static boolean canPromote(Study study, SpiritUser user) {
-		if(study==null) return true;
-		if(user==null) return false;
-		if(user.isSuperAdmin()) return true;
-		if(study.getId()<=0) return true;
 
-		//check for seal state?
-		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
-			return false;
-		}
-
-		//Is there a workflow
-		if(!SpiritProperties.getInstance().hasStudyWorkflow()) return false;
-
-		//Check roles?
-		String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_PROMOTERS, study.getState());
-		if(MiscUtils.contains(roles, "NONE")) {
-			return false;
-		}
-		if(MiscUtils.contains(roles, "ALL")) {
-			return true;
-		}
-		if(MiscUtils.contains(roles, user.getRoles())) {
-			return true;
-		}
-
-		for(String uid: user.getManagedUsers()) {
-			if(uid.equals(study.getCreUser())) return true;
-			//			if(study.getOwner()!=null && study.getOwner().equals(uid)) return true;
-			if(study.getAdminUsersAsSet().contains(uid)) return true;
-		}
-
-		return false;
-	}
 
 	/**
-	 * Return true if the user can write or blind the study.
-	 * All write users can also work as blind, but not read is not enought to work as blind
-	 * @param study
+	 * True if the user can edit all results
+	 * @param results
 	 * @param user
 	 * @return
 	 */
-	public static boolean canBlind(Study study, SpiritUser user) {
-		if(study==null) return true;
-		if(user==null) return false;
-		if(user.isSuperAdmin()) return true;
-		if(study.getId()<=0) return true;
-
-		//		if(study.getCreUser()!=null && study.getCreUser().equals(user.getUsername())) return true;
-		//		if(study.getSetWriteUsers().contains(user.getUsername())) return true;
-		if(study.getBlindAllUsersAsSet().contains(user.getUsername())) return true;
-		if(study.getBlindDetailsUsersAsSet().contains(user.getUsername())) return true;
-
-		if(canExpert(study, user)) return true;
-
-		return false;
-	}
-	/**
-	 * True if the user can read the study.
-	 * Note: blind users CAN read the study, but the app has to restrict the group/treatment
-	 * @param study
-	 * @param user
-	 * @return
-	 */
-	public static boolean canExpert(Study study, SpiritUser user) {
-		if(user==null) return false;
-		if(user.isSuperAdmin()) return true;
-		if(study==null) return true;
-		if(study.getId()<=0) return true;
-
-
-		//Check seal?
-		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
-			return false;
+	public static boolean canEditResults(Collection<Result> results, SpiritUser user) {
+		if(results==null) return true;
+		for (Result result : results) {
+			if(!canEdit(result, user)) return false;
 		}
-
-		//Check roles?
-		String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, study.getState());
-		if(MiscUtils.contains(roles, "NONE")) {
-			return false;
-		}
-		if(MiscUtils.contains(roles, "ALL")) {
-			return true;
-		}
-		if(MiscUtils.contains(roles, user.getRoles())) {
-			return true;
-		}
-
-		//Check groups
-		for(EmployeeGroup eg: study.getEmployeeGroups()) {
-			if(user.isMember(eg)) return true;
-		}
-
-		for(String uid: user.getManagedUsers()) {
-			if(study.getExpertUsersAsSet().contains(uid)) return true;
-		}
-
-		if(canAdmin(study, user)) {
-			return true;
-		}
-
-		return false;
+		return true;
 	}
 
-	/**
-	 * All Osiris users can view all studies, except test studies from others
-	 * @param study
-	 * @param user
-	 * @return
-	 */
-	public static boolean canRead(Study study, SpiritUser user) {
-		if(user==null) return false;
-		if(user.isReadall()) return true;
-		if(study==null) return true;
-		if(study.getId()<=0) return true;
 
-		//		if(SpiritProperties.getInstance().isOpen()) return true;
-
-		String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_READ, study.getState());
-
-		if(MiscUtils.contains(roles, "NONE")) {
-			return false;
-		}
-		if(MiscUtils.contains(roles, "ALL")) {
-			return true;
-		}
-		if(MiscUtils.contains(roles, user.getRoles())) {
-			return true;
-		}
-		if(canExpert(study, user)) {
-			return true;
-		}
-		if(canBlind(study, user)) {
-			return true;
-		}
-		return false;
-	}
 
 	/**
-	 * Results can be read except if they are attached to a study without read rights
+	 * True if the user can read the study
 	 */
 	public static boolean canRead(Result result, SpiritUser user) {
 		if(user==null) return false;
@@ -393,41 +573,74 @@ public class SpiritRights {
 			Study study = result.getBiosample().getInheritedStudy();
 			if(study!=null && !canRead(study, user)) return false;
 		}
-		return true;
+
+		//Check generic roles
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.READ_RESULT, role)) return true;
+		}
+
+		//Return true by default if roles have not been defined
+		return SpiritProperties.getInstance().getUserRoles().length<=1;
 	}
 
 	/**
-	 * To edit a result, you must either be the creator or you must have write access on a biosample
+	 * To edit a result, the user need to have either:
+	 * - rights on the biosample
+	 * - rights on the study
+	 * - have a specific role
+	 * - be the owner/updater if given access
 	 */
 	public static boolean canEdit(Result result, SpiritUser user) {
 		if(user==null || result==null) return false;
-		if(user.isSuperAdmin()) return true;
 		if(result.getId()<=0) return true;
 
-		for(String uid: user.getManagedUsers()) {
-			if(uid.equals(result.getCreUser()) || uid.equals(result.getUpdUser())) return true;
+
+		//Check study rights first
+		if(result.getBiosample()!=null) {
+			if(!canRead(result.getBiosample(), user)) return false;
 		}
 
-		if(result.getBiosample()!=null && canEdit(result.getBiosample(), user)) return true;
-
-		//		if(result.getBiosample()!=null && result.getBiosample().getStudy()!=null && canBlind(result.getBiosample().getStudy(), user)) return true;
-		if(result.getBiosample()!=null && result.getBiosample().getInheritedStudy()!=null) {
-			Study study  = result.getBiosample().getInheritedStudy();
-			if(isBlind(study, user) || canAdmin(study, user)) return true;
+		//Check generic roles
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.EDIT_RESULT, role)) return true;
 		}
+
+		//Check group/hierarchy rights (if needed)
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			for(String uid: user.getManagedUsers()) {
+				if(uid.equals(result.getCreUser()) && SpiritProperties.getInstance().isChecked(ActionType.EDIT_RESULT, UserType.CREATOR)) return true;
+				if(uid.equals(result.getUpdUser()) && SpiritProperties.getInstance().isChecked(ActionType.EDIT_RESULT, UserType.UPDATER)) return true;
+			}
+			if(canEdit(result.getStudy(), user)) return true;
+		}
+
 
 		return false;
 	}
 
 	public static boolean canDelete(Result result, SpiritUser user) {
 		if(user==null) return false;
-		if(user.isSuperAdmin()) return true;
 
 		if(result==null) return false;
 		if(result.getId()<=0) return false;
 		if(result.getCreUser()==null) return true;
-		for(String uid: user.getManagedUsers()) {
-			if(uid.equals(result.getCreUser()) || uid.equals(result.getUpdUser())) return true;
+
+
+		//Check biosample rights first
+		if(result.getBiosample()!=null) {
+			if(!canRead(result.getBiosample(), user)) return false;
+		}
+
+		//Check generic roles
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.DELETE_RESULT, role)) return true;
+		}
+		//Check group/hierarchy rights (if needed)
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			for(String uid: user.getManagedUsers()) {
+				if(uid.equals(result.getCreUser()) && SpiritProperties.getInstance().isChecked(ActionType.DELETE_RESULT, UserType.CREATOR)) return true;
+				if(uid.equals(result.getUpdUser()) && SpiritProperties.getInstance().isChecked(ActionType.DELETE_RESULT, UserType.UPDATER)) return true;
+			}
 		}
 		return false;
 	}
@@ -436,19 +649,8 @@ public class SpiritRights {
 		return user!=null && user.isSuperAdmin();
 	}
 
-	public static boolean canEdit(NamedSampling ns, SpiritUser user) {
-		if(user!=null && (user.isSuperAdmin())) return true;
-		if(user==null || ns==null) return false;
-		for(String uid: user.getManagedUsers()) {
-			if(uid.equals(ns.getCreUser())) return true;
-		}
-		if(ns.getStudy()!=null && canAdmin(ns.getStudy(), user)) return true;
-		return false;
-	}
-
 	public static boolean canEdit(Order order, SpiritUser user) {
 		if(user==null || order==null) return false;
-		if(user.isSuperAdmin()) return true;
 		if(order.getId()<=0) return true;
 
 		for(String uid: user.getManagedUsers()) {
@@ -457,16 +659,5 @@ public class SpiritRights {
 		return false;
 	}
 
-	public static boolean isBlindAll(Study study, SpiritUser user) {
-		if(study==null || user==null) return false;
-		if(user.isSuperAdmin()) return false;
-		return study.getBlindAllUsersAsSet().contains(user.getUsername());
-	}
-
-	public static boolean isBlind(Study study, SpiritUser user) {
-		if(study==null || user==null) return false;
-		if(user.isSuperAdmin()) return false;
-		return study.getBlindDetailsUsersAsSet().contains(user.getUsername()) || study.getBlindAllUsersAsSet().contains(user.getUsername());
-	}
 
 }

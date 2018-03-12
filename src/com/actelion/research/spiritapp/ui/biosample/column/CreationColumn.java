@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -32,7 +32,7 @@ import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleTableModel;
-import com.actelion.research.spiritapp.ui.util.lf.CreationLabel;
+import com.actelion.research.spiritapp.ui.util.component.CreationLabel;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.services.SpiritRights;
@@ -49,7 +49,7 @@ public class CreationColumn extends Column<Biosample, String> {
 	private CreationLabel ownerLabel = new CreationLabel();
 
 	public CreationColumn(boolean creation) {
-		super(creation?"Sample\nOwner": "Sample\nLastUpdate", String.class, 45);
+		super(creation?"Sample\nCreatedBy": "Sample\nUpdatedBy", String.class, 45);
 		this.creation = creation;
 	}
 	@Override
@@ -89,7 +89,7 @@ public class CreationColumn extends Column<Biosample, String> {
 		popupMenu.add(new JSeparator());
 		popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
 
-		popupMenu.add(new AbstractAction("Sort by " + (creation?"CreUser": "UpdUser")) {
+		popupMenu.add(new AbstractAction("Sort by " + (creation?"CreatedBy": "UpdatedBy")) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				table.sortBy(CreationColumn.this, 1, new Comparator<Biosample>() {
@@ -100,7 +100,7 @@ public class CreationColumn extends Column<Biosample, String> {
 				});
 			}
 		});
-		popupMenu.add(new AbstractAction("Sort by " + (creation?"CreDate": "UpdDate")) {
+		popupMenu.add(new AbstractAction("Sort by " + (creation?"CreatedDate": "UpdatedDate")) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				table.sortBy(CreationColumn.this, 1, new Comparator<Biosample>() {

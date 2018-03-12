@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -54,13 +54,13 @@ import javax.persistence.TemporalType;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 
-import com.actelion.research.spiritcore.util.IOUtils;
+import com.actelion.research.util.IOUtils;
 
 /**
  * Document represents either:
  * - one single document (Datatype == File)
  * - a zip containing several documents (Datatype == Files && DocumentType == Zip)
- * 
+ *
  * @author Joel Freyss
  */
 @Entity
@@ -68,7 +68,7 @@ import com.actelion.research.spiritcore.util.IOUtils;
 @Audited
 @SequenceGenerator(name="document_sequence", sequenceName="document_sequence", allocationSize=1)
 public class Document {
-	
+
 	public enum DocumentType {
 		CONSENT_FORM,
 		DESIGN,
@@ -76,17 +76,17 @@ public class Document {
 		OTHER,
 		ZIP
 	}
-	
-	
+
+
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="document_sequence")
 	private int id;
-		
+
 	private String fileName;
-	
+
 	@Column(length=20)
 	@Enumerated(EnumType.STRING)
-	private DocumentType type;	
+	private DocumentType type;
 
 	@ManyToOne(fetch=FetchType.LAZY, optional=false, cascade=CascadeType.ALL)
 	@JoinColumn(name="document_bytes_id")
@@ -94,27 +94,27 @@ public class Document {
 	private DocumentBytes bytes = new DocumentBytes();
 
 	private String creUser;
-	
+
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date creDate = new Date();	
-	
+	private Date creDate = new Date();
+
 	public Document() {
 	}
-	
+
 	public Document(DocumentType type) {
 		this.type = type;
 	}
-	
+
 	public Document(String title, byte[] bytes) {
 		setFileName(title);
 		setBytes(bytes);
 	}
-	
+
 	public Document(File file) throws IOException {
 		setFileName(file.getName());
 		setBytes(IOUtils.getBytes(file));
 	}
-		
+
 	public int getId() {
 		return id;
 	}
@@ -154,12 +154,12 @@ public class Document {
 	public void setCreDate(Date creDate) {
 		this.creDate = creDate;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return id;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if(obj==this) return true;
@@ -170,7 +170,7 @@ public class Document {
 			return getType() == ((Document)obj).getType() && getFileName().equals(((Document)obj).getFileName());
 		}
 	}
-	
+
 	@Override
 	public String toString() {
 		return fileName;
@@ -189,7 +189,7 @@ public class Document {
 	public void setType(DocumentType type) {
 		this.type = type;
 	}
-		
+
 	public static Map<DocumentType, List<Document>> mapDocumentTypes(Collection<Document> documents) {
 		Map<DocumentType, List<Document>> res = new HashMap<>();
 		for (Document d : documents) {
@@ -200,15 +200,15 @@ public class Document {
 			docs.add(d);
 		}
 		return res;
-	}	
-	
+	}
+
 	public static Map<String, Document> mapFilenames(Collection<Document> documents) {
 		Map<String, Document> res = new HashMap<>();
 		for (Document d : documents) {
 			res.put(d.getFileName(), d);
 		}
 		return res;
-	}	
+	}
 
 	/**
 	 * Used to add 1 file if the document represents multiple files
@@ -218,7 +218,7 @@ public class Document {
 	public void addZipEntry(File f) throws Exception {
 		addZipEntry(new Document(f));
 	}
-	
+
 	public void addZipEntry(Document doc) throws Exception {
 		if(getType()!=DocumentType.ZIP) {
 			//Convert the existing document to a zip containing this doc
@@ -231,12 +231,12 @@ public class Document {
 			addZipEntry(doc);
 			return;
 		}
-		
+
 		try(ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 			int n = 0;
 			ZipOutputStream os = new ZipOutputStream(baos);
 			//Add existing entries
-			if(getBytes()!=null && getBytes().length>0) {				
+			if(getBytes()!=null && getBytes().length>0) {
 				try(ZipInputStream is = new ZipInputStream(new ByteArrayInputStream(getBytes()))) {
 					ZipEntry entry;
 					while((entry = is.getNextEntry())!=null) {
@@ -262,7 +262,7 @@ public class Document {
 			this.setBytes(baos.toByteArray());
 		}
 	}
-	
+
 	/**
 	 * Used to remove 1 file if the document represents multiple files
 	 * @param f
@@ -286,7 +286,7 @@ public class Document {
 					is.closeEntry();
 				}
 			}
-			
+
 			fileName = (n-1) + "_docs.zip";
 			os.close();
 			setBytes(baos.toByteArray());
@@ -308,16 +308,16 @@ public class Document {
 		int n = 0;
 		try(ZipInputStream is = new ZipInputStream(new ByteArrayInputStream(getBytes()))) {
 			ZipEntry entry;
-			while((entry = is.getNextEntry())!=null) {				
+			while((entry = is.getNextEntry())!=null) {
 				if(n++==index) {
 					return new Document(entry.getName(), IOUtils.getBytes(is));
 				}
 			}
-		}			
+		}
 		return null;
 	}
 
-	
-	
+
+
 }
 

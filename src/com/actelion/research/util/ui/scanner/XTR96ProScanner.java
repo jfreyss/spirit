@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -88,7 +88,7 @@ public class XTR96ProScanner {
 		Plate res = new Plate(8, 12);
 		//Check that we have write access on the current drive
 		boolean test = new File(".").canWrite() && !new File(".").getAbsolutePath().startsWith("P:") && !new File(".").getAbsolutePath().contains("actelch02") && !new File(".").getAbsolutePath().contains("ares");
-		if(!test) throw new IOException("The working directory must be somewhere where you have write access.\n Currently it is: "+new File(".").getAbsolutePath());
+		if(!test) throw new Exception("The working directory must be somewhere where you have write access.\n Currently it is: "+new File(".").getAbsolutePath());
 
 		if("baerr".equals(System.getProperty("user.name")) || "freyssj".equals(System.getProperty("user.name"))) {
 			return new Plate(config.getRows(), config.getCols(), XTR96Scanner.getTestTubes(1));
@@ -104,10 +104,10 @@ public class XTR96ProScanner {
 		} catch (Exception e) {
 			File directory = getDirectory();
 
-			if(directory==null) throw new IOException("Cannot find XTR PRO directory");
+			if(directory==null) throw new Exception("Cannot find XTR PRO directory");
 
 			Runtime.getRuntime().exec(new File(directory, "xtr-96 Pro.exe -s").getAbsolutePath());
-			try {Thread.sleep(10000);} catch (Exception e2) {}
+			try {Thread.sleep(10000);} catch (Exception e2) {e2.printStackTrace();}
 			sock = new Socket("127.0.0.1", 200);
 			os = sock.getOutputStream();
 		}
@@ -135,13 +135,13 @@ public class XTR96ProScanner {
 				} else if(config==ScannerConfiguration.SCANNER_CONFIGURATION_RACK24) {
 					setConfig = "set tube = Glass24";
 				} else {
-					throw new IOException("Invalid config for the scanner: "+ config);
+					throw new Exception("Invalid config for the scanner: "+ config);
 				}
 				int count = 0;
 				System.out.println("send "+setConfig);
 				os.write(setConfig.getBytes());
 				do {
-					try {Thread.sleep(500);}catch (Exception e) {}
+					try {Thread.sleep(500);}catch (Exception e) {e.printStackTrace();}
 					System.out.println("-->"+thread.lastOutput);
 				} while(thread.lastOutput.indexOf("OK")<0 && count++<120); //timeout of 1min
 				thread.interrupt();
@@ -161,7 +161,7 @@ public class XTR96ProScanner {
 				os.write("get".getBytes());
 				int count = 0;
 				do {
-					try {Thread.sleep(500);}catch (Exception e) {}
+					try {Thread.sleep(500);}catch (Exception e) {e.printStackTrace();}
 					System.out.println("-->"+thread.lastOutput);
 					if(thread.lastOutput.indexOf("OK")>=0) ok = true;
 					if(thread.lastOutput.indexOf("Error")>=0) error = true;
@@ -207,9 +207,9 @@ public class XTR96ProScanner {
 				}
 			}
 
-			try {Thread.sleep(100);}catch (Exception e) {}
+			try {Thread.sleep(100);}catch (Exception e) {e.printStackTrace();}
 
-			try { thread.wait();} catch (Exception e) {}
+			try { thread.wait();} catch (Exception e) {e.printStackTrace();}
 
 			List<RackPos> tubes = parseResults(scannedTubes);
 			res.setTubes(tubes);

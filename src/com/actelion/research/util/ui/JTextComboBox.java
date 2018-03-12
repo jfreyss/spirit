@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -104,6 +104,8 @@ public class JTextComboBox extends JCustomTextField {
 	private final JList<String> list = new JList<>(model);
 	private Icon comboIcon;
 
+	private Collection<String> cachedChoices;
+
 	private boolean allowTyping = true;
 	private boolean progressiveFiltering = true;
 	private int push = 0;
@@ -120,7 +122,7 @@ public class JTextComboBox extends JCustomTextField {
 			if (value == null || value.toString().length() == 0) {
 				emptyLabel.setBorder(getBorder());
 				emptyLabel.setIcon(getIcon());
-				emptyLabel.setText(getTextWhenEmpty());
+				emptyLabel.setText(getTextWhenEmpty()==null || getTextWhenEmpty().length()==0? " ": getTextWhenEmpty());
 				emptyLabel.setForeground(isEnabled()? LABEL_COLOR: LABEL_COLOR_DISABLED);
 				return emptyLabel;
 			} else {
@@ -523,8 +525,6 @@ public class JTextComboBox extends JCustomTextField {
 		return choices;
 	}
 
-	private Collection<String> cachedChoices;
-
 	/**
 	 * Gets the choices from Cache, the cache is reset everytime the component
 	 * loses its focus. Test the possible separators
@@ -536,11 +536,13 @@ public class JTextComboBox extends JCustomTextField {
 			cachedChoices = getChoices();
 
 			//Remove null
-			for (Iterator<String> iterator = cachedChoices.iterator(); iterator.hasNext();) {
-				if(iterator.next()==null) iterator.remove();
+			if(cachedChoices != null) {
+				for (Iterator<String> iterator = cachedChoices.iterator(); iterator.hasNext();) {
+					if(iterator.next()==null) iterator.remove();
+				}
 			}
 
-			//FOr multichoices, find appropriate separators (ie, don't use space if a space is in the choices)
+			//For multichoices, find appropriate separators (ie, don't use space if a space is in the choices)
 			if (multiChoices && cachedChoices != null && cachedChoices.size() > 0) {
 				separators = DEFAULT_SEPARATORS;
 				for (String string : cachedChoices) {

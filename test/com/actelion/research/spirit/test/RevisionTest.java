@@ -1,6 +1,7 @@
 package com.actelion.research.spirit.test;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -20,6 +21,7 @@ import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -31,7 +33,8 @@ import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.IOUtils;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
+import com.actelion.research.util.IOUtils;
 
 public class RevisionTest extends AbstractSpiritTest {
 
@@ -326,8 +329,12 @@ public class RevisionTest extends AbstractSpiritTest {
 	}
 
 
+	/**
+	 * Tests the RevisionQuery
+	 * @throws Exception
+	 */
 	@Test
-	public void testRecentChangesPerStudy() throws Exception {
+	public void testRevisionQuery() throws Exception {
 		Study study = DAOStudy.queryStudies(StudyQuery.createForLocalId("IVV2016-1"), user).get(0);
 
 		//Study changes
@@ -355,6 +362,121 @@ public class RevisionTest extends AbstractSpiritTest {
 		revs = DAORevision.queryRevisions(query);
 		Assert.assertTrue(revs.size()>0);
 		System.out.println("RevisionTest.testRecentChanges() "+revs);
+
+	}
+
+
+	/**
+	 * Tests that differences are computed, and the reason for change is saved
+	 * @throws Exception
+	 */
+	@Test
+	public void testAuditDifferenceOnSample() throws Exception {
+
+		JPAUtil.pushEditableContext(user);
+		Biosample b = new Biosample(DAOBiotype.getBiotype("Animal"));
+		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
+		JPAUtil.popEditableContext();
+
+		JPAUtil.pushEditableContext(user);
+		b.setMetadataValue("Type", "Rat");
+		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
+		JPAUtil.popEditableContext();
+
+		JPAUtil.pushEditableContext(user);
+		b.setMetadataValue("Type", "Mice");
+		JPAUtil.setReasonForChange("Error of type");
+		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
+		JPAUtil.popEditableContext();
+
+		JPAUtil.pushEditableContext(user);
+		b.setMetadataValue("Sex", "M");
+		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
+		JPAUtil.popEditableContext();
+
+		List<Revision> revs = DAORevision.getLastRevisions(b);
+		Assert.assertTrue(revs.size()==4);
+		Assert.assertTrue(revs.get(0).getDifference().contains("Sex=M"));
+		Assert.assertTrue(revs.get(1).getDifference().contains("Type=Mice"));
+		Assert.assertTrue(revs.get(2).getDifference().contains("Type=Rat"));
+		Assert.assertTrue(revs.get(3).getDifference().contains("Created"));
+
+		Assert.assertEquals("", revs.get(0).getReason());
+		Assert.assertEquals("Error of type", revs.get(1).getReason());
+		Assert.assertEquals("", revs.get(2).getReason());
+		Assert.assertEquals("", revs.get(3).getReason());
+
+	}
+
+	/**
+	 * Tests that differences are computed, and the reason for change is saved
+	 * @throws Exception
+	 */
+	@Test
+	public void testAuditDifferenceOnBatch() throws Exception {
+
+		Study s = DAOStudy.getStudies().get(0);
+
+		//initial save
+		List<Biosample> biosamples = new ArrayList<>();
+		for (int i=0;i<20;i++) {
+			Biosample b = new Biosample(DAOBiotype.getBiotype("Animal"));
+			biosamples.add(b);
+		}
+		DAOBiosample.persistBiosamples(biosamples, user);
+
+		//update
+		for (Biosample b : biosamples) {
+			b.setMetadataValue("Type", "Rat");
+			b.setMetadataValue("Sex", "M");
+			b.setAttachedStudy(s);
+		}
+		DAOBiosample.persistBiosamples(biosamples, user);
+
+		//delete
+		DAOBiosample.deleteBiosamples(biosamples, user);
+
+		List<Revision> revs = DAORevision.queryRevisions(new RevisionQuery());
+		Assert.assertEquals(20, revs.get(0).getBiosamples().size());
+		Assert.assertEquals(20, revs.get(1).getBiosamples().size());
+		Assert.assertEquals(20, revs.get(2).getBiosamples().size());
+
+		Assert.assertEquals(RevisionType.DEL, revs.get(0).getType());
+		Assert.assertEquals(RevisionType.MOD, revs.get(1).getType());
+		Assert.assertEquals(RevisionType.ADD, revs.get(2).getType());
+		Assert.assertEquals(s, revs.get(0).getStudy());
+		Assert.assertEquals(s, revs.get(1).getStudy());
+		Assert.assertEquals(null, revs.get(2).getStudy());
+
+		System.out.println("RevisionTest.testAuditDifferenceOnBatch() 0="+revs.get(0).getDifference());
+		System.out.println("RevisionTest.testAuditDifferenceOnBatch() 1="+revs.get(1).getDifference());
+		System.out.println("RevisionTest.testAuditDifferenceOnBatch() 2="+revs.get(2).getDifference());
+
+	}
+
+	@Test
+	public void testAuditDifferenceOnProperties() throws Exception {
+		JPAUtil.pushEditableContext(user);
+		JPAUtil.setReasonForChange("Changed config1");
+		SpiritProperties.getInstance().setValue(PropertyKey.SYSTEM_HOMEDAYS, "14");
+		SpiritProperties.getInstance().saveValues();
+		JPAUtil.popEditableContext();
+
+		JPAUtil.pushEditableContext(user);
+		JPAUtil.setReasonForChange("Changed config2");
+		SpiritProperties.getInstance().setValue(PropertyKey.SYSTEM_HOMEDAYS, "7");
+		SpiritProperties.getInstance().saveValues();
+		JPAUtil.popEditableContext();
+
+		RevisionQuery q = new RevisionQuery();
+		List<Revision> revs = DAORevision.queryRevisions(q);
+
+		Assert.assertEquals(1, revs.get(0).getSpiritProperties().size());
+		Assert.assertEquals("Changed config2", revs.get(0).getReason());
+		Assert.assertEquals("Changed config1", revs.get(1).getReason());
+
+		System.out.println("RevisionTest.testReasonForLastChangeOnProperties() "+revs.get(0).getDifference()+" / "+revs.get(1).getDifference());
+		Assert.assertEquals(PropertyKey.SYSTEM_HOMEDAYS.getKey()+"=7", revs.get(0).getDifference());
 
 	}
 

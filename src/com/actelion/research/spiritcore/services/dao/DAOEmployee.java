@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -186,7 +186,7 @@ public class DAOEmployee {
 
 			Cache.getInstance().remove("employees_all");
 		} catch (Exception e) {
-			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {}
+			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {e2.printStackTrace();}
 			throw e;
 		}
 	}
@@ -209,7 +209,7 @@ public class DAOEmployee {
 
 			Cache.getInstance().remove("employees_all");
 		} catch (Exception e) {
-			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {}
+			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {e2.printStackTrace();}
 			throw e;
 		}
 	}
@@ -223,6 +223,7 @@ public class DAOEmployee {
 			txn = session.getTransaction();
 			txn.begin();
 
+			Date now = JPAUtil.getCurrentDateFromDatabase();
 			for (EmployeeGroup group : groups) {
 				//Validate name
 				if(group.getName()==null || group.getName().length()==0) throw new Exception(group.getName()+" is not valid");
@@ -232,11 +233,13 @@ public class DAOEmployee {
 				//validate manager
 				if(group.getChildrenRec(7).contains(group.getParent())) throw new Exception(group.getParent()+" cannot be the parent of "+group.getName());
 
+				group.setUpdDate(now);
+				group.setUpdUser(user.getUsername());
 
-				if(group.getId()>0) {
-					if(!session.contains(group)) group = session.merge(group);
-				} else {
+				if(group.getId()<=0) {
 					session.persist(group);
+				} else if(!session.contains(group)) {
+					session.merge(group);
 				}
 			}
 
@@ -245,7 +248,7 @@ public class DAOEmployee {
 
 			Cache.getInstance().remove("departments");
 		} catch (Exception e) {
-			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {}
+			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {e2.printStackTrace();}
 			throw e;
 		}
 	}
@@ -276,7 +279,7 @@ public class DAOEmployee {
 
 			Cache.getInstance().remove("departments");
 		} catch (Exception e) {
-			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {}
+			if(txn!=null && txn.isActive()) try{ txn.rollback();} catch(Exception e2) {e2.printStackTrace();}
 			throw e;
 		}
 	}

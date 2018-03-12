@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -32,24 +32,24 @@ import java.util.List;
  *
  */
 public class Plate implements Serializable {
-	
+
 	private int rows;
 	private int cols;
 	private String plateId;
 	private List<RackPos> tubes = null;
-	
+
 	public Plate() {}
-	
+
 	public Plate(int rows, int cols) {
 		this(rows, cols, new ArrayList<RackPos>());
 	}
-	
+
 	public Plate(int rows, int cols, List<RackPos> tubes) {
 		this.rows = rows;
 		this.cols = cols;
 		this.tubes = tubes;
 	}
-	
+
 	public String getPlateId() {
 		return plateId;
 	}
@@ -65,14 +65,14 @@ public class Plate implements Serializable {
 		}
 		return null;
 	}
-	
+
 	public RackPos getRackPos(int row, int col) {
 		String pos = (char)('A'+row) + "/" + new DecimalFormat("00").format(col+1);
 		return getRackPos(pos);
-		
+
 	}
-	
-	
+
+
 	/**
 	 * Positions can be null if the positions are not loaded
 	 * @return
@@ -83,25 +83,25 @@ public class Plate implements Serializable {
 	public void setTubes(List<RackPos> positions) {
 		this.tubes = positions;
 	}
-	
+
 	@Override
 	public String toString() {
 		return plateId==null?"N/A": plateId;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
- 		return obj instanceof Plate && ((Plate)obj).getPlateId().equals(getPlateId());
+		return obj instanceof Plate && ((Plate)obj).getPlateId().equals(getPlateId());
 	}
 	@Override
 	public int hashCode() {
 		return getPlateId()==null? 0: getPlateId().hashCode();
 	}
-		
+
 	public int getRows() {
 		return rows;
 	}
-	
+
 	public int getCols() {
 		return cols;
 	}

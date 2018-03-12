@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -32,11 +32,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 
-import com.actelion.research.spiritapp.ui.admin.BioTypeDocumentPane;
+import com.actelion.research.spiritapp.ui.admin.BiotypeDocumentPane;
 import com.actelion.research.spiritapp.ui.admin.TestDocumentPane;
 import com.actelion.research.spiritapp.ui.admin.database.SpiritPropertyTable;
+import com.actelion.research.spiritapp.ui.admin.user.EmployeeGroupTable;
+import com.actelion.research.spiritapp.ui.admin.user.EmployeeTable;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleTable;
-import com.actelion.research.spiritapp.ui.biosample.column.LastChangeColumn;
 import com.actelion.research.spiritapp.ui.location.LocationTable;
 import com.actelion.research.spiritapp.ui.result.ResultActions;
 import com.actelion.research.spiritapp.ui.result.ResultTable;
@@ -45,6 +46,8 @@ import com.actelion.research.spiritapp.ui.study.StudyTable;
 import com.actelion.research.spiritcore.business.audit.Revision;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
+import com.actelion.research.spiritcore.business.employee.Employee;
+import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.property.SpiritProperty;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -67,8 +70,8 @@ public class RevisionDetailPanel extends JPanel {
 			return;
 		}
 
+		final JTabbedPane detailPanel = new JCustomTabbedPane();
 		new SwingWorkerExtended("Loading Revision", this, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
-			private JTabbedPane detailPanel = new JCustomTabbedPane();
 			@Override
 			protected void doInBackground() throws Exception {
 				Revision rev = DAORevision.getRevision(revTmp.getRevId());
@@ -82,7 +85,7 @@ public class RevisionDetailPanel extends JPanel {
 				if(rev.getBiotypes().size()>0) {
 					Box panel = Box.createVerticalBox();
 					for (Biotype t : rev.getBiotypes()) {
-						BioTypeDocumentPane doc = new BioTypeDocumentPane();
+						BiotypeDocumentPane doc = new BiotypeDocumentPane();
 						panel.add(doc);
 
 						doc.setSelection(t);
@@ -98,12 +101,31 @@ public class RevisionDetailPanel extends JPanel {
 					table.setRows(rows);
 				}
 
+				if(rev.getEmployees().size()>0) {
+					List<Employee> rows = new ArrayList<>(rev.getEmployees());
+					final EmployeeTable table = new EmployeeTable();
+					table.getModel().setCanExpand(false);
+					detailPanel.addTab(rows.size() + " Employees", new JScrollPane(table));
+					Collections.sort(rows);
+					table.setRows(rows);
+				}
+
+				if(rev.getEmployeeGroups().size()>0) {
+					List<EmployeeGroup> rows = new ArrayList<>(rev.getEmployeeGroups());
+					final EmployeeGroupTable table = new EmployeeGroupTable();
+					table.getModel().setCanExpand(false);
+					detailPanel.addTab(rows.size() + " Employees", new JScrollPane(table));
+					Collections.sort(rows);
+					table.setRows(rows);
+				}
+
+
 				if(rev.getBiosamples().size()>0) {
 					List<Biosample> rows = new ArrayList<>(rev.getBiosamples());
 					final BiosampleTable table = new BiosampleTable();
 					table.getModel().setRevId(rev.getRevId());
 					table.getModel().setCanExpand(false);
-					table.getModel().showHideable(new LastChangeColumn(rev.getRevId()), true);
+					//					table.getModel().showHideable(new LastChangeColumn(rev.getRevId()), true);
 					detailPanel.addTab(rows.size() + " Biosample", new JScrollPane(table));
 					Collections.sort(rows);
 					table.setRows(rows);

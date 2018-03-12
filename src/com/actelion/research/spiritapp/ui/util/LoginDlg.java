@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -29,7 +29,6 @@ import java.awt.LinearGradientPaint;
 import java.awt.RenderingHints;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,7 +47,6 @@ import javax.swing.SwingConstants;
 
 import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
-import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.audit.LogEntry;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
@@ -79,7 +77,7 @@ public class LoginDlg extends JEscapeDialog {
 	private boolean loginWithDepartment;
 	private JTextField userTextField = new JTextField(28);
 	private JPasswordField passwordTextField = new JPasswordField(28);
-	private JLabel roleLabel = new JLabel("Role");
+	private JLabel roleLabel = new JLabel("Role: ");
 	private JGenericComboBox<String> roleComboBox = new JGenericComboBox<>();
 	private JLabel errorLabel = new JLabel();
 
@@ -138,11 +136,11 @@ public class LoginDlg extends JEscapeDialog {
 				UIUtils.createVerticalBox(BorderFactory.createEmptyBorder(20,50,20,10),
 						msg==null? null: new JCustomLabel(msg, FastFont.BOLD),
 								UIUtils.createTable(3,
-										new JLabel("User Name"), Box.createHorizontalStrut(15), userTextField,
+										new JLabel("User Name: "), Box.createHorizontalStrut(20), userTextField,
 										Box.createVerticalStrut(10), null, null,
-										new JLabel("Password"), null, passwordTextField,
+										new JLabel("Password: "), null, passwordTextField,
 										Box.createVerticalStrut(10), null, null,
-										roleLabel, loginWithJustOneRole? Box.createVerticalStrut(26): null, roleComboBox),
+										roleLabel, null, roleComboBox),
 								Box.createVerticalStrut(10),
 								errorLabel),
 
@@ -166,7 +164,7 @@ public class LoginDlg extends JEscapeDialog {
 			if(userTextField.getText().length()>0) {
 				try {
 					Employee user = DAOEmployee.getEmployee(userTextField.getText());
-					roles = user.getRoles();
+					if(user!=null) roles = user.getRoles();
 				} catch(Exception e) {
 					e.printStackTrace();
 				}
@@ -174,7 +172,7 @@ public class LoginDlg extends JEscapeDialog {
 			if(roles.size()==0) {
 				roles.add("No Role");
 			}
-			roleComboBox.setValues(roles);
+			roleComboBox.setValues(roles, "Select a role");
 			roleComboBox.setEnabled(roles.size()!=1);
 		}
 	}
@@ -183,11 +181,11 @@ public class LoginDlg extends JEscapeDialog {
 		try {
 
 			//Validate username/password
-			if(DBAdapter.getInstance().isInActelionDomain() &&  "SEC4321".equals(new String(password)) && InetAddress.getLocalHost().getHostAddress().equals("10.100.227.35")) {
-				//always ok
-			} else {
-				DAOSpiritUser.authenticateUser(username, password);
-			}
+			//			if(DBAdapter.getInstance().isInActelionDomain() &&  "SEC4321".equals(new String(password)) && InetAddress.getLocalHost().getHostAddress().equals("10.100.227.35")) {
+			//				//always ok
+			//			} else {
+			DAOSpiritUser.authenticateUser(username, password);
+			//			}
 
 			//Load the user
 			SpiritUser user = DAOSpiritUser.loadUser(username);
@@ -195,12 +193,11 @@ public class LoginDlg extends JEscapeDialog {
 				throw new Exception(username+" is invalid");
 			}
 
-			System.out.println("LoginDlg.login() "+username+" / "+user.getRoles()+" / "+user.getGroups());
-
 			//If the property loginWithJustOneRole is true. The user could select its role upon login
 			if(loginWithJustOneRole) {
 				String role = roleComboBox.getSelection();
-				for (String r : user.getRoles()) {
+				if(role==null || role.length()==0) throw new Exception("Please select a role");
+				for (String r : new ArrayList<>(user.getRoles())) {
 					user.setRole(r, false);
 				}
 				user.setRole(role,  true);
@@ -227,7 +224,7 @@ public class LoginDlg extends JEscapeDialog {
 				} else {
 					user.setMainGroup(null);
 				}
-			} else /*if(!loginWithDepartment)*/ {
+			} else {
 				user.setMainGroup(null);
 			}
 
@@ -239,6 +236,7 @@ public class LoginDlg extends JEscapeDialog {
 
 			DAOLog.log(username, LogEntry.Action.LOGON_SUCCESS, ((user.getMainGroup()==null?"": user.getMainGroup().getName()) + " " + user.getRolesString()).trim());
 		} catch (Exception e) {
+			e.printStackTrace();
 			DAOLog.log(username, LogEntry.Action.LOGON_FAILED);
 			throw e;
 		} finally {

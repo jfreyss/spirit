@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -38,7 +38,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.ui.SpiritFrame;
-import com.actelion.research.spiritapp.ui.util.lf.CreationLabel;
+import com.actelion.research.spiritapp.ui.util.component.CreationLabel;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
@@ -76,7 +76,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		}
 	};
 
-	public final Column<Study, String> COLUMN_STATUS = new Column<Study, String>("Study\nState", String.class, 50, 80) {
+	public final Column<Study, String> COLUMN_STATUS = new Column<Study, String>("Study\nStatus", String.class, 50, 80) {
 		@Override
 		public String getValue(Study row) {
 			return row.getState();
@@ -84,14 +84,14 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 
 	};
 
-	public final Column<Study, String> COLUMN_IVV = new Column<Study, String>("Study\nInternalId", String.class, 50, 80) {
+	public final Column<Study, String> COLUMN_IVV = new Column<Study, String>("Study\nInternalId", String.class, 50, 100) {
 		@Override
 		public String getValue(Study row) {
 			return row.getLocalId();
 		}
 	};
 
-	public final Column<Study, String> COLUMN_TYPE = new Column<Study, String>("Study\nType", String.class, 50, 80) {
+	public final Column<Study, String> COLUMN_TYPE = new Column<Study, String>("Study\nType", String.class, 50, 100) {
 		@Override
 		public String getValue(Study row) {
 			return row.getType();
@@ -110,7 +110,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 	public final class MetadataColumn extends Column<Study, String> {
 		private String metaKey;
 		public MetadataColumn(String metaKey) {
-			super("Metadata\n" + SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metaKey), String.class, 40, 100);
+			super("Metadata\n" + SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metaKey), String.class, 40, 160);
 			this.metaKey = metaKey;
 		}
 		@Override
@@ -120,11 +120,6 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 			}
 			return row.getMetadataMap().get(metaKey);
 		}
-
-		//		@Override
-		//		public boolean isHideable() {
-		//			return true;
-		//		}
 	}
 
 	public final Column<Study, String> COLUMN_RESPONSIBLES = new Column<Study, String>("Study\nAdmins", String.class, 40, 120) {
@@ -265,10 +260,12 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 
 	public class StudyCreationColumn extends Column<Study, String> {
 
+		private CreationLabel creationLabel = new CreationLabel();
+
 		private final boolean creation;
 
 		public StudyCreationColumn(boolean creation) {
-			super(creation?"Study\nOwner": "Study\nLastUpdate", String.class);
+			super(creation?"Study\nCreatedBy": "Study\nUpdatedBy", String.class);
 			this.creation = creation;
 		}
 
@@ -284,15 +281,13 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		@Override
 		public boolean isEditable(Study row) {return false;}
 
-		private CreationLabel ownerLabel = new CreationLabel();
-
 		@Override
 		public JComponent getCellComponent(AbstractExtendTable<Study> table, Study row, int rowNo, Object value) {
-			ownerLabel.setValue(creation? row.getCreUser(): row.getUpdUser(), null, creation? row.getCreDate(): row.getUpdDate(),
-					SpiritRights.canAdmin(row, SpiritFrame.getUser())? RightLevel.ADMIN:
-						SpiritRights.canExpert(row, SpiritFrame.getUser())? RightLevel.WRITE:
+			creationLabel.setValue(creation? row.getCreUser(): row.getUpdUser(), null, creation? row.getCreDate(): row.getUpdDate(),
+					SpiritRights.canEdit(row, SpiritFrame.getUser())? RightLevel.ADMIN:
+						SpiritRights.canEditBiosamples(row, SpiritFrame.getUser())? RightLevel.WRITE:
 							RightLevel.READ);
-			return ownerLabel;
+			return creationLabel;
 		}
 
 		@Override
@@ -305,7 +300,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 			popupMenu.add(new JSeparator());
 			popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
 
-			popupMenu.add(new AbstractAction("Sort by " + (creation?"CreUser": "UpdUser")) {
+			popupMenu.add(new AbstractAction("Sort by " + (creation?"CreatedBy": "UpdatedBy")) {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					table.sortBy(StudyCreationColumn.this, 1, new Comparator<Study>() {
@@ -316,7 +311,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 					});
 				}
 			});
-			popupMenu.add(new AbstractAction("Sort by " + (creation?"CreDate": "UpdDate")) {
+			popupMenu.add(new AbstractAction("Sort by " + (creation?"CreatedDate": "UpdatedDate")) {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					table.sortBy(StudyCreationColumn.this, 1, new Comparator<Study>() {
@@ -343,7 +338,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		List<Column<Study, ?>> defaultColumns = new ArrayList<>();
 		defaultColumns.add(COLUMN_ROWNO);
 		defaultColumns.add(COLUMN_STATUS);
-		if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_AUTOGENERATEID)) {
+		if(!SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_STUDYID_EDITABLE)) {
 			defaultColumns.add(COLUMN_IVV);
 		}
 		defaultColumns.add(COLUMN_STUDYID);
@@ -355,7 +350,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 
 		defaultColumns.add(COLUMN_RESPONSIBLES);
 		defaultColumns.add(COLUMN_DEPT);
-		if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)) {
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_ADVANCED)) {
 			defaultColumns.add(COLUMN_STARTING_DATE);
 			defaultColumns.add(COLUMN_END_DATE);
 		}

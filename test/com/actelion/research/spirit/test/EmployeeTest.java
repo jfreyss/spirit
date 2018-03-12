@@ -1,12 +1,16 @@
 package com.actelion.research.spirit.test;
 
 import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.actelion.research.spiritcore.adapter.DBAdapter;
+import com.actelion.research.spiritcore.business.audit.Revision;
+import com.actelion.research.spiritcore.business.audit.RevisionQuery;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
@@ -17,6 +21,7 @@ import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
+import com.actelion.research.spiritcore.services.dao.DAORevision;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
@@ -206,6 +211,32 @@ public class EmployeeTest extends AbstractSpiritTest {
 		Assert.assertTrue(!SpiritRights.canDelete(b, new SpiritUser(emp1c)));
 		Assert.assertTrue(!SpiritRights.canDelete(b, new SpiritUser(emp2a)));
 
+	}
+
+	@Test
+	public void testRevision() throws Exception {
+		Employee emp3 = new Employee();
+		emp3.setUserName("TestRev2");
+		DAOEmployee.persistEmployees(Collections.singleton(emp3), user);
+
+
+		//Load the last revision
+		RevisionQuery q = new RevisionQuery();
+		q.setAdmin(true);
+		q.setFromDate(MiscUtils.addDays(new Date(), -1));
+		List<Revision> revs = DAORevision.queryRevisions(q);
+		Assert.assertTrue(revs.size()>0);
+		Assert.assertTrue(revs.get(0).getEmployees().size()>0);
+
+		//Load the history
+		List<Employee> history = DAORevision.getHistory(emp3);
+		Assert.assertTrue(history.size()==1);
+
+
+
+
+
 
 	}
+
 }

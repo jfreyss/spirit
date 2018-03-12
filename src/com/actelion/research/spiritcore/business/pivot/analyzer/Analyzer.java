@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -104,7 +104,6 @@ public class Analyzer {
 		columnAnalysis = new LinkedHashMap<>();
 		int colNo = 0;
 		for(PivotColumn col: table.getPivotColumns()) {
-			System.out.println("Analyzer.compute() "+col);
 			List<SimpleResult> groupValues = new ArrayList<>();
 			List<Result> results = col.getResults();
 			Collections.sort(results);
@@ -252,8 +251,7 @@ public class Analyzer {
 
 	private String fc(Double v) {
 		if(v==null) return "";
-		if(v==Double.NaN) return "<span style='color:gray'>NaN</span>";
-		//		int nDecimals = Integer.toString(Math.abs((int) (double) v)).length();
+		if(Double.isNaN(v)) return "<span style='color:gray'>NaN</span>";
 		String format = Math.abs(v)>=0.001? "0.000": "0.#E0";
 		String s = new DecimalFormat(format).format(v);
 		if(v<.01) return "<span style='color:#46C646'>" + s + "</span>";

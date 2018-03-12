@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -66,6 +66,12 @@ import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 
+
+/**
+ * Helper Class used to synchronize the samples based on a study design.
+ *
+ * @author Joel Freyss
+ */
 public class CreateSamplesHelper {
 
 
@@ -83,7 +89,7 @@ public class CreateSamplesHelper {
 	public static boolean synchronizeSamples(Study study) throws Exception {
 
 		if(study==null) return true;
-		if(!SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)) return true;
+		if(!SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_STUDYDESIGN)) return true;
 		if(!study.isSynchronizeSamples()) return true;
 
 		//Check user rights, read access is enough, because this function only mimics what is in the design.
@@ -125,7 +131,7 @@ public class CreateSamplesHelper {
 			//Create Barcodes
 			for (Biosample b : toAdd) {
 				if(b.getSampleId()==null || b.getSampleId().length()==0) {
-					b.setSampleId(DAOBarcode.getNextId(b.getBiotype()));
+					b.setSampleId(DAOBarcode.getNextId(b));
 				}
 			}
 
@@ -301,7 +307,7 @@ public class CreateSamplesHelper {
 							txn = null;
 
 						} catch (Exception e) {
-							if (txn != null)try {txn.rollback();} catch (Exception e2) {}
+							if (txn != null)try {txn.rollback();} catch (Exception e2) {e2.printStackTrace();}
 							throw e;
 						}
 					}

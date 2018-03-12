@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -76,22 +76,109 @@ public class JPAUtil {
 		WRITE,
 		REQUEST
 	}
+	//
+	//	private static class MyThreadLocal extends ThreadLocal<EntityManager> {
+	//
+	//		public long lastTestQuery = 0;
+	//		private List<EntityManager> all = Collections.synchronizedList(new ArrayList<EntityManager>());
+	//
+	//		/**
+	//		 * Rollback and Close all entityManagers
+	//		 */
+	//		public void close() {
+	//			for(final EntityManager em : new ArrayList<>(getAll())) {
+	//				if(em!=null && em.isOpen()) {
+	//					LoggerFactory.getLogger(JPAUtil.class).debug("Close EM: "+em+" active="+em.getTransaction().isActive());
+	//					if(em.getTransaction().isActive()) em.getTransaction().rollback();
+	//					em.close();
+	//				}
+	//			}
+	//		}
+	//
+	//		/**
+	//		 * Clear the cache of all entityManagers associated to all threads.
+	//		 * Make sure all related threads are stopped
+	//		 */
+	//		public void clear() {
+	//			for(final EntityManager em : new ArrayList<>(getAll())) {
+	//				if(em!=null && em.isOpen() ) {
+	//					LoggerFactory.getLogger(JPAUtil.class).debug("Clear EM: "+em+" active="+em.getTransaction().isActive());
+	//					if(em.getTransaction().isActive()) em.getTransaction().rollback();
+	//					em.clear();
+	//				}
+	//			}
+	//		}
+	//
+	//		@Override
+	//		public EntityManager get() {
+	//			EntityManager em = super.get();
+	//
+	//			//Check first if the connection is still alive, execute test query every 5s
+	//			boolean connected = false;
+	//			if(em!=null && em.isOpen()) {
+	//				try {
+	//					String testQuery =  DBAdapter.getInstance().getTestQuery() ;
+	//					if(testQuery!=null && testQuery.length()>0 && System.currentTimeMillis()-lastTestQuery>5000) {
+	//						em.createNativeQuery(testQuery).getSingleResult();
+	//						lastTestQuery = System.currentTimeMillis();
+	//					}
+	//					connected = true;
+	//				} catch(Exception e) {
+	//					connected = false;
+	//				}
+	//			}
+	//
+	//			//If not alive, recreate a connection
+	//			if(!connected) {
+	//				if(em!=null) all.remove(em);
+	//				em  = factory.createEntityManager();
+	//				em.setFlushMode(FlushModeType.AUTO);
+	//				LoggerFactory.getLogger(JPAUtil.class).debug("Create EntityManager");
+	//				all.add(em);
+	//				set(em);
+	//
+	//				if(Thread.currentThread().getName().equals("main")) {
+	//					LoggerFactory.getLogger(getClass()).warn("Spirit should not start a new JPA context on the main thread");
+	//				}
+	//			}
+	//			return em;
+	//		}
+	//
+	//		public List<EntityManager> getAll() {
+	//			if(all.size()>1) {
+	//				Thread.dumpStack();
+	//				System.out.println("JPAUtil.MyThreadLocal.getAll() "+all.size()+" "+all);
+	//				for (EntityManager entityManager : all) {
+	//					System.out.println("JPAUtil.MyThreadLocal.getAll() > "+entityManager.isOpen());
+	//
+	//				}
+	//			}
+	//			return all;
+	//		}
+	//
+	//		@Override
+	//		public void remove() {
+	//			all.remove(get());
+	//			super.remove();
+	//		}
+	//	}
+
+
+	private static List<EntityManager> all = new ArrayList<>();
 
 	private static class MyThreadLocal extends ThreadLocal<EntityManager> {
 
 		public long lastTestQuery = 0;
-		private List<EntityManager> all = Collections.synchronizedList(new ArrayList<EntityManager>());
 
 		/**
-		 * Not Thread-safe. Close all entityManagers
+		 * Rollback and Close all entityManagers
 		 */
 		public void close() {
-			for(final EntityManager em : new ArrayList<>(getAll())) {
-				LoggerFactory.getLogger(JPAUtil.class).debug("Close EM: "+em+" open="+em.isOpen());
-				if(em!=null && em.isOpen()) {
-					if(em.getTransaction().isActive()) em.getTransaction().rollback();
-					em.close();
-				}
+			EntityManager em = get();
+			LoggerFactory.getLogger(JPAUtil.class).debug("Close EM: "+em+" open="+em.isOpen()+" active="+em.getTransaction().isActive());
+			if(em!=null && em.isOpen()) {
+				if(em.getTransaction().isActive()) em.getTransaction().rollback();
+				em.close();
 			}
 		}
 
@@ -100,13 +187,21 @@ public class JPAUtil {
 		 * Make sure all related threads are stopped
 		 */
 		public void clear() {
-			for(final EntityManager em : new ArrayList<>(getAll())) {
-				if(em!=null && em.isOpen() ) {
-					LoggerFactory.getLogger(JPAUtil.class).debug("Clear EM: "+em+" active="+em.getTransaction().isActive());
-					if(em.getTransaction().isActive()) em.getTransaction().rollback();
-					em.clear();
-				}
+			EntityManager em = get();
+			if(em!=null && em.isOpen() ) {
+				LoggerFactory.getLogger(JPAUtil.class).debug("Clear EM: "+em+" active="+em.getTransaction().isActive());
+				if(em.getTransaction().isActive()) em.getTransaction().rollback();
+				em.clear();
 			}
+		}
+
+		@Override
+		protected EntityManager initialValue() {
+			EntityManager em = factory.createEntityManager();
+			em.setFlushMode(FlushModeType.AUTO);
+			LoggerFactory.getLogger(JPAUtil.class).debug("Create EntityManager");
+			all.add(em);
+			return em;
 		}
 
 		@Override
@@ -117,7 +212,7 @@ public class JPAUtil {
 			boolean connected = false;
 			if(em!=null && em.isOpen()) {
 				try {
-					String testQuery =  DBAdapter.getInstance().getTestQuery() ;
+					String testQuery = DBAdapter.getInstance().getTestQuery() ;
 					if(testQuery!=null && testQuery.length()>0 && System.currentTimeMillis()-lastTestQuery>5000) {
 						em.createNativeQuery(testQuery).getSingleResult();
 						lastTestQuery = System.currentTimeMillis();
@@ -128,14 +223,9 @@ public class JPAUtil {
 				}
 			}
 
-
 			//If not alive, recreate a connection
 			if(!connected) {
-				if(em!=null) all.remove(em);
-				em  = factory.createEntityManager();
-				em.setFlushMode(FlushModeType.AUTO);
-				LoggerFactory.getLogger(JPAUtil.class).debug("Create EntityManager");
-				all.add(em);
+				em  = initialValue();
 				set(em);
 
 				if(Thread.currentThread().getName().equals("main")) {
@@ -145,25 +235,24 @@ public class JPAUtil {
 			return em;
 		}
 
-		public List<EntityManager> getAll() {
-			return all;
-		}
-
 		@Override
 		public void remove() {
-			all.remove(get());
-			super.remove();
+			get().close();
 		}
 	}
 
-	private static Map<Thread, EntityManager> thread2entityManager = Collections.synchronizedMap(new HashMap<Thread, EntityManager>());
 
+	/**
+	 * Used for the web
+	 */
+	private static Map<Thread, EntityManager> thread2entityManager = Collections.synchronizedMap(new HashMap<Thread, EntityManager>());
 
 	/**
 	 * The currently logged in user (for auditing through Envers)
 	 */
 	private static Map<Thread, SpiritUser> thread2user = Collections.synchronizedMap(new HashMap<Thread, SpiritUser>());
 
+	private static Map<Thread, String> thread2ReasonForChange = Collections.synchronizedMap(new HashMap<Thread, String>());
 
 	private static EntityManagerFactory factory;
 
@@ -216,21 +305,42 @@ public class JPAUtil {
 	}
 
 	public static void closeFactory() {
-		try {
-			LoggerFactory.getLogger(JPAUtil.class).debug("close sessions");
-			if(readEntityManager!=null) {
-				readEntityManager.close();
-				readEntityManager = null;
+		if(jpaMode!=JPAMode.REQUEST) {
+			try {
+
+				LoggerFactory.getLogger(JPAUtil.class).debug("close sessions");
+				if(readEntityManager!=null) {
+					readEntityManager.close();
+					readEntityManager = null;
+				}
+				if(writeEntityManager!=null) {
+					writeEntityManager.close();
+					writeEntityManager = null;
+				}
+
+			} catch(Exception e) {
+				LoggerFactory.getLogger(JPAUtil.class).warn("Could not close session: ", e);
 			}
-			if(writeEntityManager!=null) {
-				writeEntityManager.close();
-				writeEntityManager = null;
+		} else {
+			for (EntityManager em : thread2entityManager.values()) {
+				try {
+					em.close();
+				} catch(Exception e) {
+					LoggerFactory.getLogger(JPAUtil.class).warn("Could not clear factory: ", e);
+				}
 			}
-		} catch(Exception e) {
-			LoggerFactory.getLogger(JPAUtil.class).warn("Could not clear factory: ", e);
+			thread2entityManager.clear();
 		}
+
+		for (EntityManager em : all) {
+			if(em.isOpen()) {
+				LoggerFactory.getLogger(JPAUtil.class).debug("Close session: "+em);
+				em.close();
+			}
+		}
+
 		if(factory!=null) {
-			LoggerFactory.getLogger(JPAUtil.class).debug("close factory");
+			LoggerFactory.getLogger(JPAUtil.class).debug("Close factory");
 			try {
 				factory.close();
 			} catch(Exception e) {
@@ -295,14 +405,6 @@ public class JPAUtil {
 
 	}
 
-	public static<T extends IObject> List<Integer> getIds(Collection<T> object) {
-		List<Integer> res = new ArrayList<>();
-		for (T o : object) {
-			if(o!=null) res.add(o.getId());
-		}
-		return res;
-	}
-
 	public static JPAMode getJpaMode() {
 		return jpaMode;
 	}
@@ -322,28 +424,35 @@ public class JPAUtil {
 		switch (jpaMode) {
 		case READ:
 			em = readEntityManager.get();
-			//			((HibernateEntityManager)em).getSession().setDefaultReadOnly(true);
 			return em;
 		case WRITE:
 			assert writeEntityManager!=null;
 			em = writeEntityManager.get();
-			//			((HibernateEntityManager)em).getSession().setDefaultReadOnly(false);
 			return em;
 		case REQUEST:
 			em = thread2entityManager.get(Thread.currentThread());
 			assert em!=null : "You must use this block: try {openRequest} finally {closeRequest}";
 			return em;
 		default:
-			assert false : "Invalid mode: "+jpaMode;
-		return readEntityManager.get();
+			throw new RuntimeException("Invalid Mode");
 		}
 	}
 
-	public static SpiritUser getSpiritUser() {
-		if(jpaMode==JPAMode.REQUEST) {
-			return thread2user.get(Thread.currentThread());
-		} else {
-			return thread2user.get(null);
+	/**
+	 *
+	 */
+	private static void initialize() {
+		LoggerFactory.getLogger(JPAUtil.class).debug("JPA Factory Initialized. version: "+Version.getVersionString());
+
+		assert factory == null;
+		try {
+			initFactory();
+			getCurrentDateFromDatabase();
+		} catch (RuntimeException ex) {
+			throw ex;
+		} catch (Throwable ex2) {
+			LoggerFactory.getLogger(JPAUtil.class).error("Spirit: Initial EntityManagerFactory creation failed.", ex2);
+			throw new RuntimeException(ex2);
 		}
 	}
 
@@ -393,21 +502,6 @@ public class JPAUtil {
 		}
 	}
 
-	private static void initialize() {
-		LoggerFactory.getLogger(JPAUtil.class).debug("JPA Factory Initialized. version: "+Version.getVersionString());
-
-		assert factory == null;
-		try {
-			initFactory();
-			getCurrentDateFromDatabase();
-		} catch (RuntimeException ex) {
-			throw ex;
-		} catch (Throwable ex2) {
-			LoggerFactory.getLogger(JPAUtil.class).error("Spirit: Initial EntityManagerFactory creation failed.", ex2);
-			throw new RuntimeException(ex2);
-		}
-	}
-
 
 	public static boolean isEditableContext() {
 		return jpaMode == JPAMode.WRITE || jpaMode == JPAMode.REQUEST;
@@ -437,6 +531,25 @@ public class JPAUtil {
 		return sb.toString();
 	}
 
+	/**
+	 * Gets the ids of the given objects
+	 * @param object
+	 * @return
+	 */
+	public static<T extends IObject> List<Integer> getIds(Collection<T> object) {
+		List<Integer> res = new ArrayList<>();
+		for (T o : object) {
+			if(o!=null) res.add(o.getId());
+		}
+		return res;
+	}
+
+
+	/**
+	 * Map the objects to their id
+	 * @param object
+	 * @return
+	 */
 	public static<T extends IObject> Map<Integer, T> mapIds(Collection<T> object) {
 		Map<Integer, T> res = new HashMap<>();
 		for (T o : object) {
@@ -445,12 +558,15 @@ public class JPAUtil {
 		return res;
 	}
 
+	/**
+	 * When jpaMode == JPAMode.REQUEST (web mode), creates a new EntityManager for the current thread
+	 * @return
+	 */
 	public static EntityManager openRequest() {
-		if(factory==null) {
-			initialize();
-		}
-
 		assert jpaMode == JPAMode.REQUEST;
+
+		if(factory==null) initialize();
+
 		Thread thread = Thread.currentThread();
 		EntityManager session = thread2entityManager.get(thread);
 		if(session==null || !session.isOpen()) {
@@ -460,30 +576,43 @@ public class JPAUtil {
 		}
 		return session;
 	}
+
+
 	/**
 	 * Pop and rollback the edit connection
 	 */
 	public static void popEditableContext() {
+		assert jpaMode!=JPAMode.REQUEST;
 		if(jpaMode==JPAMode.WRITE) {
 			jpaMode = JPAMode.READ;
+			setReasonForChange("");
 		}
 	}
 
+	/**
+	 * Push to the editable context.
+	 * This function is used to make sure we separate the read EntityManager from the write EntityManager.
+	 * The separation is used to make sure the read functions will not corrupt data to be updated, even in case of programming errors.
+	 * @param user
+	 */
 	public static void pushEditableContext(SpiritUser user) {
 		assert jpaMode!=JPAMode.REQUEST;
+		setSpiritUser(user);
+		setReasonForChange("");
 
-		if(readEntityManager==null) try {
-			initFactory();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		//		if(readEntityManager==null) {
+		//			try {
+		//				initFactory();
+		//			} catch (Exception e) {
+		//				e.printStackTrace();
+		//			}
+		//		}
 
 		jpaMode = JPAMode.WRITE;
 
 		if(writeEntityManager!=null) {
 			writeEntityManager.close();
 		}
-		setSpiritUser(user);
 		writeEntityManager = new MyThreadLocal();
 	}
 
@@ -573,6 +702,11 @@ public class JPAUtil {
 		return res;
 	}
 
+	/**
+	 * Check if the object is loaded
+	 * @param object
+	 * @return
+	 */
 	public static boolean isValid(IObject object) {
 		return Persistence.getPersistenceUtil().isLoaded(object);
 	}
@@ -597,11 +731,52 @@ public class JPAUtil {
 		jpaMode = JPAMode.REQUEST;
 	}
 
+
+	/**
+	 * Returns the logged in user, associated to the current context (thread)
+	 * @return
+	 */
+	public static SpiritUser getSpiritUser() {
+		if(jpaMode==JPAMode.REQUEST) {
+			return thread2user.get(Thread.currentThread());
+		} else {
+			return thread2user.get(null);
+		}
+	}
+
+
+	/**
+	 * Sets the current user, associated to the current context (thread)
+	 * @param user
+	 */
 	public static void setSpiritUser(SpiritUser user) {
 		if(jpaMode==JPAMode.REQUEST) {
 			thread2user.put(Thread.currentThread(), user);
 		} else {
 			thread2user.put(null, user);
+		}
+	}
+
+
+	/**
+	 * Gets the reasonForChange, associated to the current context (thread)
+	 */
+	public static String getReasonForChange() {
+		if(jpaMode==JPAMode.REQUEST) {
+			return thread2ReasonForChange.get(Thread.currentThread());
+		} else {
+			return thread2ReasonForChange.get(null);
+		}
+	}
+
+	/**
+	 * Sets the reasonForChange if needed, associated to the current context (thread)
+	 */
+	public static void setReasonForChange(String reason) {
+		if(jpaMode==JPAMode.REQUEST) {
+			thread2ReasonForChange.put(Thread.currentThread(), reason);
+		} else {
+			thread2ReasonForChange.put(null, reason);
 		}
 	}
 

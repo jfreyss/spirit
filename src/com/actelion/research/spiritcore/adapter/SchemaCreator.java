@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -57,7 +57,7 @@ public class SchemaCreator {
 			+ "create index aud_2_idx on spirit.assay_result_value_aud (assay_result_id);\n "
 			+ "create index aud_3_idx on spirit.biosample_aud (attachedstudy_id);\n "
 			+ "create index aud_4_idx on spirit.biosample_aud (parent_id);\n "
-			+ "create index aud_5_idx on spirit.biosample_action_aud (biosample_id);\n"
+			+ "create index aud_6_idx on spirit.biosample_aud (location_id);\n"
 			+ "";
 
 	public static void recreateTables(DBAdapter adapter) throws Exception {
@@ -89,7 +89,7 @@ public class SchemaCreator {
 			String version = MigrationScript.getExpectedDBVersion();
 			SpiritProperties.getInstance().setDBVersion(version);
 			SpiritProperties.getInstance().saveValues();
-			adapter.executeScripts(CREATE_AFTER, false);
+			adapter.executeScripts(CREATE_AFTER, true);
 			LoggerFactory.getLogger(SchemaCreator.class).debug("DB UPDATED");
 		} catch(Exception e2) {
 			LoggerFactory.getLogger(SchemaCreator.class).error("***Spirit.LocalFactory: Could not update DB", e2);
@@ -99,8 +99,7 @@ public class SchemaCreator {
 
 
 	public static void displayTables(DBAdapter adapter) {
-		try {
-			Connection conn = adapter.getConnection();
+		try (Connection conn = adapter.getConnection()) {
 			{
 				Statement stmt = conn.createStatement();
 				ResultSet rs =  stmt.executeQuery("SELECT * FROM INFORMATION_SCHEMA.SYSTEM_CROSSREFERENCE");

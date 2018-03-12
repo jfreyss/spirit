@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -43,7 +43,8 @@ public class PropertyKey {
 		INTERNAL,
 		SYSTEM,
 		USER,
-		STUDY
+		STUDY,
+		BIOSAMPLE
 	}
 
 
@@ -65,7 +66,7 @@ public class PropertyKey {
 				String pattern = ((SimpleDateFormat)formatter).toPattern();
 				if(pattern.startsWith("d/") || pattern.startsWith("dd/")) return FormatterUtils.DateTimeFormat.EUROPEAN.toString();
 				if(pattern.startsWith("d.") || pattern.startsWith("dd.")) return FormatterUtils.DateTimeFormat.SWISS.toString();
-				if(pattern.startsWith("yy") || pattern.startsWith("yyyy")) return FormatterUtils.DateTimeFormat.INTL.toString();
+				if(pattern.startsWith("yy") || pattern.startsWith("yyyy")) return FormatterUtils.DateTimeFormat.YYYYMMDD.toString();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -78,16 +79,22 @@ public class PropertyKey {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// USER PROPERTIES
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static final PropertyKey USER_ROLES = new PropertyKey(Tab.USER, "Roles", "comma separated list of roles (in addition to admin, readall)", "user.roles", "");
+	public static final PropertyKey USER_ROLES = new PropertyKey(Tab.USER, "Roles", "comma separated list of roles", "user.roles", "");
 	public static final PropertyKey USER_ONEROLE = new PropertyKey(Tab.USER, "Rights based on one role", "Are users requested to login with a specic role?<br>(if true, the user will be asked for a role upon login instead of having all roles simultaneously)", "user.login.role", "false", "true,false");
 	public static final PropertyKey USER_USEGROUPS = new PropertyKey(Tab.USER, "Rights based on groups", "Are the rights only role based??<br>(if true, the rights are purely role based and not user/dept specific)", "user.login.groups", "true", "true,false");
-	public static final PropertyKey USER_OPEN = new PropertyKey(Tab.USER, "User Rights", "open = study designs are visible by everyone, all biosamples (outside studies) and their results are readable.<br>restricted = biosamples and their results are limited to the departments of the owner", "rights.mode", "restricted", "open, restricted");
+	public static final PropertyKey USER_OPENBYDEFAULT = new PropertyKey(Tab.USER, "Default User Rights", "open = study and biosamples are readable by everyone<br>restricted = biosamples and their results are limited to the departments of the owner", "rights.mode", "restricted", "open, restricted");
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// BIOSAMPLE PROPERTIES
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public static final PropertyKey BIOSAMPLE_CONTAINERTYPES = new PropertyKey(Tab.BIOSAMPLE, "Use ContainerType", "allow", "biosample.containerType.allow", "true", "true, false");
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// STUDY PROPERTIES
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static final PropertyKey STUDY_AUTOGENERATEID = new PropertyKey(Tab.STUDY, "Autogenerate StudyId", "automatic generation of Id", "study.generateId", "true", "true,false");
-	public static final PropertyKey STUDY_ADVANCEDMODE = new PropertyKey(Tab.STUDY, "Advanced Mode (Animal studies)", "enable live monitoring, automatic group assignment, automatic sampling", "study.advancedMode", "true", "true,false");
+	public static final PropertyKey STUDY_STUDYID_PATTERN = new PropertyKey(Tab.STUDY, "StudyId Pattern", "Pattern for the studyId. ex: BA-{YY}.###, S-#####", "study.studyId.pattern", "S-#####");
+	public static final PropertyKey STUDY_STUDYID_EDITABLE = new PropertyKey(Tab.STUDY, "StudyId Editable", "Can the user enter his own studyId", "study.studyId.edit", "false", "true,false");
+	public static final PropertyKey STUDY_DOCUMENTS = new PropertyKey(Tab.STUDY, "Allow Documents", "allow documents to be attached to the study", "study.documents", "true", "true, false");
 	public static final PropertyKey STUDY_TYPES = new PropertyKey(Tab.STUDY, "Study Types (CSV)", "configurable study types allowed by the study (CSV)", "study.types", "");
 
 	/**
@@ -102,9 +109,7 @@ public class PropertyKey {
 	 */
 	public static final PropertyKey STUDY_METADATA = new PropertyKey(Tab.STUDY, "Metadata (CSV)", "Extra metadata used to configure the study (CSV)", "study.metadata", "CLINICAL, PROJECT, SITE, LICENSENO, EXPERIMENTER, DISEASEAREA");
 	public static final PropertyKey STUDY_STATES = new PropertyKey(Tab.STUDY, "States (CSV)", "configurable workflow states allowed by the study (CSV)", "study.states", "EXAMPLE, TEST, ONGOING, PUBLISHED, STOPPED");
-	public static final PropertyKey STUDY_DEFAULTSTATE = new PropertyKey(Tab.STUDY, "Default State", "when creating a new study", "study.state", "ONGOING", STUDY_STATES);
-
-
+	public static final PropertyKey STUDY_DEFAULTSTATE = new PropertyKey(Tab.STUDY, "Default State", "when creating a new study", "study.defaultstate", "ONGOING", STUDY_STATES);
 
 	public static final PropertyKey STUDY_METADATA_NAME = new PropertyKey(STUDY_METADATA, "Display Name", "Display for the end user", "name", "") {
 		@Override public String getDefaultValue(String nestedValue) {
@@ -127,35 +132,33 @@ public class PropertyKey {
 	public static final PropertyKey STUDY_METADATA_PARAMETERS = new PropertyKey(STUDY_METADATA, "Parameters", "list of choices if datatype is LIST", "parameters", "") {
 		@Override public String getDefaultValue(String nestedValue) {return "CLINICAL".equals(nestedValue)?"PRECLINICAL, CLINICAL": "";};
 	};
-	public static final PropertyKey STUDY_METADATA_TYPES = new PropertyKey(STUDY_METADATA, "Enabled in types", "In which study type, can we edit it?<br>(empty = always enabled)", "types", "", STUDY_TYPES);
-	public static final PropertyKey STUDY_METADATA_ROLES = new PropertyKey(STUDY_METADATA, "Editable by roles", "Who is allowed to edit it?<br>(empty = always editable)", "roles", "", USER_ROLES);
+	public static final PropertyKey STUDY_METADATA_TYPES = new PropertyKey(STUDY_METADATA, "Enabled in types", "In which study type, can we edit this metadata?<br>(empty = always enabled)", "types", "", STUDY_TYPES);
+	public static final PropertyKey STUDY_METADATA_ROLES = new PropertyKey(STUDY_METADATA, "Editable roles", "Who is allowed to edit it?<br>(empty = always editable)", "roles", "", USER_ROLES);
 	public static final PropertyKey STUDY_METADATA_STATES = new PropertyKey(STUDY_METADATA, "Editable in States", "In which states, can we edit it?<br>(empty = always editable)", "states", "", STUDY_STATES);
 	public static final PropertyKey STUDY_METADATA_REQUIRED = new PropertyKey(STUDY_METADATA, "Required", "", "required", "false", "true,false");
 
-	/**
-	 * study.states contains the list of configurable workflow states.
-	 */
-	public static final PropertyKey STUDY_STATES_FROM = new PropertyKey(STUDY_STATES, "Workflow From", "Previous workflow states<br>(if given, the study must be in one of the given state, before being promoted)", "from", "", STUDY_STATES);
-	public static final PropertyKey STUDY_STATES_PROMOTERS = new PropertyKey(STUDY_STATES, "Promoters", "Roles of users who can promote to this state (opt.)", 	"promoters", "ALL", USER_ROLES);
-	public static final PropertyKey STUDY_STATES_READ = new PropertyKey(STUDY_STATES, "Read", "Roles of readers (can query results/biosamples)", "read", "ALL", USER_ROLES) {
+	public static final PropertyKey STUDY_STATES_READ = new PropertyKey(STUDY_STATES, "Read roles", "(can query results/biosamples)", "read", "ALL", USER_ROLES) {
 		@Override public String getDefaultValue(String nestedValue) {
 			return SpiritProperties.getInstance().isOpen()?"ALL":
-				nestedValue.equalsIgnoreCase("STOPPED")?"NONE": "ALL";
+				nestedValue.equalsIgnoreCase("STOPPED")?"NONE": "";
 		}
-
 		@Override public String[] getSpecialChoices() {return new String[]{"ALL", "NONE"};}
 	};
-	public static final PropertyKey STUDY_STATES_EXPERT = new PropertyKey(STUDY_STATES, "Experimenter", "Roles of experimenters (can add biosamples/results)", "expert", "", USER_ROLES) {
-		@Override public String getDefaultValue(String nestedValue) {return nestedValue.equalsIgnoreCase("EXAMPLE")?"NONE": nestedValue.equalsIgnoreCase("PUBLISHED")?"ALL": nestedValue.equalsIgnoreCase("STOPPED")?"NONE": "";};
-		@Override public String[] getSpecialChoices() {return new String[]{"ALL", "NONE"};}
 
+	public static final PropertyKey STUDY_STATES_EDIT = new PropertyKey(STUDY_STATES, "Edit Roles", "Roles of administrators (can edit study design/rights)", "admin", "", USER_ROLES) {
+		@Override public String getDefaultValue(String nestedValue) {return "";};
+		@Override public String[] getSpecialChoices() {return new String[]{"ALL", "NONE"};}
 	};
-	public static final PropertyKey STUDY_STATES_ADMIN = new PropertyKey(STUDY_STATES, "Admin", "Roles of administrators (can edit study design/rights)", "admin", "",	USER_ROLES) {
-		@Override public String getDefaultValue(String nestedValue) {return nestedValue.equalsIgnoreCase("EXAMPLE")?"NONE": "";};
+	public static final PropertyKey STUDY_STATES_DELETE = new PropertyKey(STUDY_STATES, "Delete Roles", "Delete roles", "delete", "", USER_ROLES) {
+		@Override public String getDefaultValue(String nestedValue) {return "";};
 		@Override public String[] getSpecialChoices() {return new String[]{"ALL", "NONE"};}
 	};
 	public static final PropertyKey STUDY_STATES_SEALED = new PropertyKey(STUDY_STATES, "Sealed", "Should we seal the study in this state? (no more editable except by an admin)", "seal", "false", "true,false");
 
+
+	public static final PropertyKey STUDY_FEATURE_STUDYDESIGN = new PropertyKey(Tab.STUDY, "Feature: Study Design", "Allow complex design and generation of samples", "study.feature.design", "true", "true, false");
+	public static final PropertyKey STUDY_FEATURE_LIVEMONITORING = new PropertyKey(Tab.STUDY, "Feature: Live Monitoring", "Allow the live monitoring of participants", "study.feature.monitoring", "true", "true, false");
+	public static final PropertyKey STUDY_FEATURE_ADVANCED = new PropertyKey(Tab.STUDY, "Feature: Advanced Mode", "Allow parent relationships", "study.feature.advanced", "true", "true, false");
 
 
 	private static Map<Tab, List<PropertyKey>> tab2properties;
@@ -275,13 +278,15 @@ public class PropertyKey {
 
 	@Override
 	public boolean equals(Object obj) {
-		return key.equals(((PropertyKey)obj).getKey());
+		if(!(obj instanceof PropertyKey)) return false;
+		return key!=null && key.equals(((PropertyKey)obj).getKey());
 	}
 
 	//can be overriden
 	public String[] getSpecialChoices() {
 		return null;
 	}
+
 	//can be overriden
 	public String getDefaultValue(String nestedValue) {
 		return getDefaultValue();
@@ -290,6 +295,12 @@ public class PropertyKey {
 	public String getDefaultValue(String... nestedValues) {
 		return nestedValues.length==1? getDefaultValue(nestedValues[0]): getDefaultValue();
 	}
+
+	@Override
+	public int hashCode() {
+		return key.hashCode();
+	}
+
 	@Override
 	public String toString() {
 		return key;

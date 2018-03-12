@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -43,7 +43,6 @@ import com.actelion.research.spiritapp.ui.study.PhaseComboBox;
 import com.actelion.research.spiritapp.ui.study.depictor.Selection;
 import com.actelion.research.spiritapp.ui.study.depictor.StudyDepictor;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Measurement;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
@@ -51,7 +50,6 @@ import com.actelion.research.spiritcore.business.study.NamedTreatment;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
-import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
@@ -200,23 +198,21 @@ public class StudyDesignerPanel extends JPanel {
 
 		setLayout(new BorderLayout());
 		add(BorderLayout.CENTER, sp);
-		if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)) {
-			add(BorderLayout.NORTH, UIUtils.createVerticalBox(
-					new JCustomLabel("Select an action and click on the study design to add it.", Color.GRAY),
-					UIUtils.createHorizontalBox(
-							new JLabel("Add Measurement: "),
-							measurementCombobox,
-							Box.createHorizontalStrut(10),
-							new JLabel("Add Treatment: "),
-							treatmentCombobox,
-							Box.createHorizontalStrut(10),
-							new JLabel("Add Sampling: "),
-							samplingCombobox,
-							Box.createHorizontalStrut(10),
-							new JLabel("Add label: "),
-							labelCombobox,
-							Box.createHorizontalGlue())));
-		}
+		add(BorderLayout.NORTH, UIUtils.createVerticalBox(
+				new JCustomLabel("Select an action and click on the study design to add it.", Color.GRAY),
+				UIUtils.createHorizontalBox(
+						new JLabel("Add Measurement: "),
+						measurementCombobox,
+						Box.createHorizontalStrut(10),
+						new JLabel("Add Treatment: "),
+						treatmentCombobox,
+						Box.createHorizontalStrut(10),
+						new JLabel("Add Sampling: "),
+						samplingCombobox,
+						Box.createHorizontalStrut(10),
+						new JLabel("Add label: "),
+						labelCombobox,
+						Box.createHorizontalGlue())));
 	}
 
 	public void setSelectedNamedSampling(NamedSampling ns) {

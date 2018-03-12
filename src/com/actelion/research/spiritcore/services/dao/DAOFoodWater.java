@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -45,12 +45,7 @@ public class DAOFoodWater {
 	public static List<FoodWater> getFoodWater(Study study, Phase phase) {
 		if(study==null) throw new IllegalArgumentException("You must give a study");
 		EntityManager session = JPAUtil.getManager();
-		Query query = session.createQuery(
-				" SELECT fw  " +
-						" FROM FoodWater fw " +
-						" WHERE fw.phase.study = :study"
-				);
-
+		Query query = session.createQuery("from FoodWater fw where fw.phase.study = :study");
 		query.setParameter("study", study);
 		List<FoodWater> fws = query.getResultList();
 
@@ -78,7 +73,6 @@ public class DAOFoodWater {
 			txn.begin();
 			fw.setUpdDate(JPAUtil.getCurrentDateFromDatabase());
 			fw.setUpdUser(user.getUsername());
-			System.out.println("DAOFoodWater.persistFoodWater() "+fw.getContainerId()+" / "+fw.getPhase());
 			if(fw.getId()<=0) {
 				fw.setCreDate(fw.getUpdDate());
 				fw.setCreUser(fw.getUpdUser());
@@ -89,7 +83,7 @@ public class DAOFoodWater {
 
 			txn.commit();
 		} finally {
-			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
+			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
 		}
 	}
 

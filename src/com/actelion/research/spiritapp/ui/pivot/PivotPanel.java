@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -58,9 +58,9 @@ import com.actelion.research.spiritapp.ui.pivot.designer.PivotTemplateDlg;
 import com.actelion.research.spiritapp.ui.result.ResultActions;
 import com.actelion.research.spiritapp.ui.result.ResultTable;
 import com.actelion.research.spiritapp.ui.util.POIUtils;
-import com.actelion.research.spiritapp.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.ui.util.POIUtils.ExportMode;
-import com.actelion.research.spiritapp.ui.util.lf.JBGScrollPane;
+import com.actelion.research.spiritapp.ui.util.SpiritContextListener;
+import com.actelion.research.spiritapp.ui.util.component.JBGScrollPane;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.pivot.CompactPivotTemplate;
 import com.actelion.research.spiritcore.business.pivot.InventoryPivotTemplate;
@@ -74,9 +74,10 @@ import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorCo
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorConfig.ChartType;
 import com.actelion.research.spiritcore.business.pivot.datawarrior.DataWarriorExporter;
 import com.actelion.research.spiritcore.business.result.Result;
-import com.actelion.research.spiritcore.util.IOUtils;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CSVUtils;
+import com.actelion.research.util.IOUtils;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
@@ -101,14 +102,13 @@ public class PivotPanel extends JPanel {
 
 	// Views
 	private final JPanel viewPanel;
-	private PivotTemplate currentPivotTemplate = null;
+	private PivotTemplate pivotTemplate = null;
 
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	private final PivotTemplateButton setupButton = new PivotTemplateButton("Customize", IconType.SETUP.getIcon().getImage());
 
 	// Buttons
 	private final JCheckBox pivotButton = new JCheckBox("Pivot Data");
-	//	private final JButton reportButton = new JIconButton(IconType.STATS, "Report");
 	private final JButton dwButton = new JIconButton(IconType.DATAWARRIOR, "");
 	private final JButton csvButton = new JIconButton(IconType.CSV, "");
 	private final JButton excelButton = new JIconButton(IconType.EXCEL, "");
@@ -118,7 +118,7 @@ public class PivotPanel extends JPanel {
 	private BiosampleTable subBiosampleTable;
 	private BiosampleTabbedPane biosampleDetail;
 
-	// Unique cutomize dialog
+	// Unique customize dialog
 	private PivotTemplateDlg dlg;
 	private PivotTemplate[] defaultTemplates;
 
@@ -144,8 +144,9 @@ public class PivotPanel extends JPanel {
 
 			PivotPanel.this.firePropertyChange(PROPERTY_PIVOT_CHANGED, null, "");
 		});
+
 		final JSplitPane centerPane;
-		//		if(allDataMode) {
+
 		/////////////////////////////////
 		// Bottom
 		JBGScrollPane subTableSp;
@@ -232,7 +233,7 @@ public class PivotPanel extends JPanel {
 
 		// init templates
 		if (tableTab==null) {
-			defaultTemplates = new PivotTemplate[] { new CompactPivotTemplate(), /*new PerGroupPivotTemplate(),*/ new PerInputPivotTemplate() };
+			defaultTemplates = new PivotTemplate[] { new CompactPivotTemplate(), new PerInputPivotTemplate() };
 		} else {
 			defaultTemplates = new PivotTemplate[] { new InventoryPivotTemplate() };
 		}
@@ -249,11 +250,14 @@ public class PivotPanel extends JPanel {
 			csvButton.addActionListener(e-> exportToExcel(true));
 			excelButton.addActionListener(e -> exportToExcel(false));
 		}
-		add(BorderLayout.NORTH, UIUtils.createHorizontalBox(
-				(tableTab != null?pivotButton:null),
-				viewPanel,
-				Box.createHorizontalGlue(),
-				UIUtils.createTitleBoxSmall("Export", UIUtils.createHorizontalBox(dwButton, csvButton, excelButton))));
+
+		if(SpiritProperties.getInstance().isAdvancedMode()) {
+			add(BorderLayout.NORTH, UIUtils.createHorizontalBox(
+					(tableTab != null?pivotButton:null),
+					viewPanel,
+					Box.createHorizontalGlue(),
+					UIUtils.createTitleBoxSmall("Export", UIUtils.createHorizontalBox(dwButton, csvButton, excelButton))));
+		}
 		add(BorderLayout.CENTER, cardPanel);
 
 		// Add buttonlistener
@@ -281,7 +285,7 @@ public class PivotPanel extends JPanel {
 			templatePanel.add(button);
 			buttonGroup.add(button);
 
-			if (currentPivotTemplate == null) {
+			if (pivotTemplate == null) {
 				setPivotTemplate(button.getPivotTemplate());
 				button.setSelected(true);
 			}
@@ -430,7 +434,7 @@ public class PivotPanel extends JPanel {
 				}
 			}
 
-			this.currentPivotTemplate = template;
+			this.pivotTemplate = template;
 		}
 
 		// Update Data
@@ -444,24 +448,24 @@ public class PivotPanel extends JPanel {
 
 	private void refresh() {
 		if (results == null || results.size() == 0) {
-			pivotTable.setPivotDataTable(new PivotDataTable(results, currentPivotTemplate));
+			pivotTable.setPivotDataTable(new PivotDataTable(results, pivotTemplate));
 		} else {
 			// Make it asynchronous, but don't specify a time, because we can
 			// have more than 2 instances of this class (AnimalCare)
-			new SwingWorkerExtended("Pivoting", PivotPanel.this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+			new SwingWorkerExtended("Pivoting", PivotPanel.this, SwingWorkerExtended.FLAG_ASYNCHRONOUS) {
 				private PivotDataTable pivotDataTable;
 
 				@Override
 				protected void doInBackground() throws Exception {
-					if (currentPivotTemplate == null) return;
-					currentPivotTemplate.init(results);
-					currentPivotTemplate.removeBlindItems(results, SpiritFrame.getUser());
-					pivotDataTable = new PivotDataTable(results, currentPivotTemplate);
+					if (pivotTemplate == null) return;
+					pivotTemplate.init(results);
+					pivotTemplate.removeBlindItems(results, SpiritFrame.getUser());
+					pivotDataTable = new PivotDataTable(results, pivotTemplate);
 				}
 
 				@Override
 				protected void done() {
-					if (currentPivotTemplate == null) {
+					if (pivotTemplate == null) {
 						SpiritContextListener.setStatus("No Results");
 						return;
 					}
@@ -469,13 +473,13 @@ public class PivotPanel extends JPanel {
 					SpiritContextListener.setStatus(results.size() + " Results - " + pivotDataTable.getPivotRows().size() + " rows, " + pivotDataTable.getPivotColumns().size() + " columns");
 				}
 			};
-
 		}
 
-		setupButton.setEnabled(!pivotMode || (results != null && results.size() > 0));
-		excelButton.setEnabled(!pivotMode || (results != null && results.size() > 0));
-		csvButton.setEnabled(!pivotMode || (results != null && results.size() > 0));
-		dwButton.setEnabled(!pivotMode || (results != null && results.size() > 0));
+		boolean enabled = !pivotMode || (results != null && results.size() > 0);
+		setupButton.setEnabled(enabled);
+		excelButton.setEnabled(enabled);
+		csvButton.setEnabled(enabled);
+		dwButton.setEnabled(enabled);
 
 	}
 
@@ -489,12 +493,12 @@ public class PivotPanel extends JPanel {
 			dlg.dispose();
 		}
 		try {
-			currentPivotTemplate = currentPivotTemplate.clone();
+			pivotTemplate = new PivotTemplate(pivotTemplate);
 			Window top = SwingUtilities.getWindowAncestor(this);
 			if (top instanceof JFrame) {
-				dlg = new PivotTemplateDlg((JFrame) top, currentPivotTemplate, PivotItemFactory.getPossibleItems(results, SpiritFrame.getUser()), tableTab==null);
+				dlg = new PivotTemplateDlg((JFrame) top, pivotTemplate, PivotItemFactory.getPossibleItems(results, SpiritFrame.getUser()), tableTab==null);
 			} else if (top instanceof JDialog) {
-				dlg = new PivotTemplateDlg((JDialog) top, currentPivotTemplate, PivotItemFactory.getPossibleItems(results, SpiritFrame.getUser()), tableTab==null);
+				dlg = new PivotTemplateDlg((JDialog) top, pivotTemplate, PivotItemFactory.getPossibleItems(results, SpiritFrame.getUser()), tableTab==null);
 			}
 
 			dlg.addPropertyChangeListener(PivotTemplateDlg.PROPERTY_UPDATED, e-> {
@@ -506,15 +510,20 @@ public class PivotPanel extends JPanel {
 		}
 	}
 
+	/**
+	 * Sets the pivotTemplate to be used.
+	 * This function sets the new PivotTemplate, copy the current display settings (which are never changed), and select the appropriate template button.
+	 * @param pivotTemplate
+	 */
 	public void setPivotTemplate(PivotTemplate pivotTemplate) {
 		PivotTemplate newTemplate = pivotTemplate;
-		newTemplate.copyDisplaySettings(this.currentPivotTemplate);
-		this.currentPivotTemplate = newTemplate;
+		newTemplate.copyDisplaySettings(this.pivotTemplate);
+		this.pivotTemplate = newTemplate;
 
 		// Select appropriate button
 		setupButton.setSelected(true);
 		for (int i = 0; i < defaultTemplates.length; i++) {
-			if (defaultTemplates[i].equals(currentPivotTemplate)) {
+			if (defaultTemplates[i].equals(pivotTemplate)) {
 				Enumeration<AbstractButton> en = buttonGroup.getElements();
 				for (int j = 0; j < i && en.hasMoreElements(); j++)
 					en.nextElement();
@@ -525,8 +534,12 @@ public class PivotPanel extends JPanel {
 		refresh();
 	}
 
-	public PivotTemplate getCurrentPivotTemplate() {
-		return currentPivotTemplate;
+	/**
+	 * Gets the PivotTemplate, which is currently used for the display
+	 * @return
+	 */
+	public PivotTemplate getPivotTemplate() {
+		return pivotTemplate;
 	}
 
 	public PivotTemplate[] getDefaultTemplates() {
@@ -535,7 +548,7 @@ public class PivotPanel extends JPanel {
 
 	public void setDefaultTemplates(PivotTemplate[] defaultTemplates) {
 		this.defaultTemplates = defaultTemplates;
-		this.currentPivotTemplate = null;
+		this.pivotTemplate = null;
 		initTemplates();
 	}
 

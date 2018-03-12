@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritapp.ui.location;
 
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -31,10 +30,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.JSeparator;
 
 import com.actelion.research.spiritapp.print.PrintLabel;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
@@ -48,7 +44,6 @@ import com.actelion.research.spiritcore.business.location.LocationFlag;
 import com.actelion.research.spiritcore.business.location.Privacy;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
-import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.iconbutton.IconType;
@@ -104,7 +99,7 @@ public class LocationActions {
 			putValue(AbstractAction.SMALL_ICON, IconType.DELETE.getIcon());
 			boolean enabled = true;
 			for (Location l : locations) {
-				if(!SpiritRights.canEdit(l, SpiritFrame.getUser())) {
+				if(!SpiritRights.canDelete(l, SpiritFrame.getUser())) {
 					enabled = false;
 				}
 			}
@@ -254,68 +249,8 @@ public class LocationActions {
 	}
 
 
-	//	public static class Action_ScanUpdate extends AbstractAction {
-	//		public Action_ScanUpdate(Location loc) {
-	//			super("Scan & Update");
-	//			setEnabled(loc!=null && loc.getLocationType()==LocationType.RACK && SpiritRights.canEdit(loc, Spirit.getUser()));
-	//		}
-	//
-	//		@Override
-	//		public void actionPerformed(ActionEvent e) {
-	//
-	//		}
-	//
-	//	}
-
 	public static JPopupMenu createPopup(List<Location> locations) {
-
-		JPopupMenu menu = new JPopupMenu();
-
-		String s = locations.size()==1? locations.get(0).getName(): locations.size()+" selected";
-		menu.add(new JCustomLabel("   Location: "+s, Font.BOLD));
-
-		JMenu newMenu = new JMenu("New");
-		newMenu.setMnemonic('n');
-		newMenu.setIcon(IconType.NEW.getIcon());
-		menu.add(newMenu);
-		newMenu.add(new JMenuItem(new Action_New(locations)));
-		newMenu.add(new JMenuItem(new Action_Duplicate(locations)));
-
-
-		JMenu editMenu = new JMenu("Edit");
-		editMenu.setMnemonic('e');
-		editMenu.setIcon(IconType.EDIT.getIcon());
-		menu.add(editMenu);
-		editMenu.add(new JMenuItem(new Action_EditBatch(locations)));
-
-
-		//SetStatus for samples
-		JMenu statusMenu = new JMenu("Set Flag");
-		statusMenu.setIcon(IconType.STATUS.getIcon());
-		statusMenu.add(new Action_SetStatus(locations, null));
-		for(LocationFlag flag: LocationFlag.values()) {
-			statusMenu.add(new Action_SetStatus(locations, flag));
-		}
-		editMenu.add(statusMenu);
-
-		menu.add(new JSeparator());
-		menu.add(new JMenuItem(new Action_Print(locations)));
-		menu.add(new JSeparator());
-
-		menu.add(new JMenuItem(new Action_History(locations)));
-		JMenu advancedMenu = new JMenu("Advanced");
-		advancedMenu.setMnemonic('n');
-		advancedMenu.setIcon(IconType.ADMIN.getIcon());
-		menu.add(advancedMenu);
-		advancedMenu.add(new JMenuItem(new Action_Delete(locations)));
-		advancedMenu.add(new JSeparator());
-
-		return menu;
-	}
-
-
-	public static JPopupMenu createPopup(Location location) {
-		return createPopup(location==null? new ArrayList<Location>(): Collections.singletonList(location));
+		return SpiritFrame.getInstance().getPopupHelper().createLocationPopup(locations);
 	}
 
 	public static void attachPopup(final LocationTable table) {
@@ -323,10 +258,7 @@ public class LocationActions {
 			@Override
 			protected void showPopup(MouseEvent e) {
 
-				JPopupMenu popupMenu = LocationActions.createPopup(table.getSelection());
-				//				popupMenu.insert(table.new TreeViewExpandAll(true, true), 0);
-				//				popupMenu.insert(table.new TreeViewExpandAll(false, true), 1);
-				//				popupMenu.insert(new JSeparator(), 2);
+				JPopupMenu popupMenu = createPopup(table.getSelection());
 				popupMenu.show(table, e.getX(), e.getY());
 			}
 		});

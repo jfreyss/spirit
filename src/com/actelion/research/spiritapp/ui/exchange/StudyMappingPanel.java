@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -43,8 +43,8 @@ public class StudyMappingPanel extends JPanel implements IMappingPanel {
 	private Study fromStudy;
 	private Study mappedStudy;
 	private JLabel commentLabel = new JLabel();
-	private JRadioButton r1 = new JRadioButton("Ignore / Keep the existing study");
-	private JRadioButton r3 = new JRadioButton("Import / Create a copy");
+	private JRadioButton r1 = new JRadioButton("Ignore");
+	private JRadioButton r3 = new JRadioButton("Import / Create a copy (if existing)");
 
 	public StudyMappingPanel(ImporterDlg dlg, Study fromStudy) {
 		super(new BorderLayout());
@@ -74,11 +74,9 @@ public class StudyMappingPanel extends JPanel implements IMappingPanel {
 		mappedStudy = mapping.getStudyId2mappedStudy().get(fromStudy.getStudyId());
 		EntityAction action = mapping.getStudyId2action().get(fromStudy.getStudyId());
 		commentLabel.setFont(FastFont.BOLD);
-		System.out.println("StudyMappingPanel.updateView() "+fromStudy+" to "+mappedStudy);
 		if(mappedStudy==null || mappedStudy.getId()<=0) {
 			commentLabel.setText("This study is new");
 		} else {
-			System.out.println("StudyMappingPanel.updateView() "+fromStudy+": "+fromStudy.getId() +" to "+mappedStudy+": "+mappedStudy.getId());
 			commentLabel.setText("This study matches the existing study: " + mappedStudy.getStudyId() + (mappedStudy.getLocalId()==null?"": " ("+mappedStudy.getLocalId()+") "));
 			commentLabel.setForeground(Color.RED);
 			r3.setSelected(true);
@@ -89,7 +87,6 @@ public class StudyMappingPanel extends JPanel implements IMappingPanel {
 		} else {
 			r1.setSelected(true);
 		}
-
 	}
 
 	@Override

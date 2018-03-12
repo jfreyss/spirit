@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -37,15 +37,15 @@ import javax.swing.JRadioButton;
 
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.util.component.JFileBrowser;
-import com.actelion.research.spiritapp.ui.util.lf.StudyComboBox;
+import com.actelion.research.spiritapp.ui.util.component.StudyComboBox;
 import com.actelion.research.spiritcore.business.Exchange;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
 import com.actelion.research.spiritcore.business.location.LocationQuery;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
-import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
@@ -53,6 +53,7 @@ import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.exchange.Exporter;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.JEscapeDialog;
@@ -94,7 +95,6 @@ public class ExporterDlg extends JEscapeDialog {
 			}
 		});
 		fileBrowser.setExtension(".spirit");
-
 
 		ActionListener al = e-> {
 			eventButtonClicked();
@@ -170,7 +170,9 @@ public class ExporterDlg extends JEscapeDialog {
 					fileBrowser.setFile(new File(parent, System.currentTimeMillis()+".spirit").getAbsolutePath());
 					this.tmpExchange = new Exchange();
 					tmpExchange.addBiotypes(DAOBiotype.getBiotypes());
-					tmpExchange.addTests(DAOTest.getTests());
+					if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+						tmpExchange.addTests(DAOTest.getTests());
+					}
 				} else if(exportAllRadioButton.isSelected()) {
 					fileBrowser.setFile(new File(parent, System.currentTimeMillis()+".spirit").getAbsolutePath());
 					this.tmpExchange = new Exchange();
@@ -198,14 +200,6 @@ public class ExporterDlg extends JEscapeDialog {
 	private void export() throws Exception {
 		//Check non emptyness
 		if(exchange.isEmpty()) throw new Exception("The exchange file is empty");
-
-		//Check Rights
-		for(Study s: exchange.getStudies()) {
-			if(!SpiritRights.canAdmin(s, SpiritFrame.getUser())) {
-				throw new Exception("You must have admin rights on "+s+" to export it");
-			}
-		}
-
 
 		if(fileBrowser.getFile().length()==0) throw new Exception("You must enter a file");
 		Writer writer = new BufferedWriter(new FileWriter(fileBrowser.getFile()));

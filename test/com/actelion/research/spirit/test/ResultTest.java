@@ -31,7 +31,7 @@ import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.IOUtils;
+import com.actelion.research.util.IOUtils;
 
 public class ResultTest extends AbstractSpiritTest {
 
@@ -245,7 +245,7 @@ public class ResultTest extends AbstractSpiritTest {
 		PivotTemplate tpl = new CompactPivotTemplate();
 		tpl.init(results);
 		PivotDataTable table = new PivotDataTable(results, tpl);
-		Assert.assertEquals(8, table.getPivotColumns().size());
+		Assert.assertEquals(5, table.getPivotColumns().size());
 		Assert.assertEquals(17, table.getPivotRows().size());
 
 		//		tpl = new ColumnPivotTemplate();

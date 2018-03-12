@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -54,6 +54,7 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.MapKeyJoinColumn;
@@ -93,6 +94,7 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
+import com.actelion.research.spiritcore.util.DifferenceMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.spiritcore.util.SetHashMap;
@@ -103,7 +105,8 @@ import com.actelion.research.util.CompareUtils;
  * The biosample entity encapsultates the metadata, the main history action and the container.
  *
  *
- * Note: Eager loading and FetchMode=Join should not be done here. All optimizations have to be done through the DAO
+ * Note 1: Biosample must be serializable to allow D&D in SlideCare
+ * Note 2: Eager loading and FetchMode=Join should not be done here. All optimizations have to be done through the DAO
  *
  */
 @Entity
@@ -129,7 +132,7 @@ indexes = {
 		@Index(name="biosample_upddate_index", columnList = "updDate"),
 		@Index(name="biosample_elb_index", columnList = "elb")})
 @BatchSize(size=64)
-public class Biosample implements Serializable, Comparable<Biosample>, Cloneable, IObject, IAuditable {
+public class Biosample implements Comparable<Biosample>, Cloneable, IObject, IAuditable, Serializable {
 
 	public static final String AUX_RESULT_ALL = "AllResult";
 
@@ -187,7 +190,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	@Column(name="metadata2", length=4000)
 	private String serializedMetadata2;
 
-	@OneToMany(fetch=FetchType.LAZY, cascade=CascadeType.REFRESH)
+	@ManyToMany(fetch=FetchType.LAZY, cascade=CascadeType.REFRESH)
 	@JoinTable(name="biosample_biosample", joinColumns=@JoinColumn(name="biosample_id"), inverseJoinColumns=@JoinColumn(name="linkedbiosample_id"))
 	@MapKeyJoinColumn(name="biotypemetadata_id")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
@@ -233,7 +236,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	/**
 	 * The inheritedStudy
 	 */
-	@ManyToOne(fetch=FetchType.LAZY)
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.REFRESH)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@JoinColumn(name="study_id")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
@@ -244,7 +247,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 * if(attachedGroup!=null) inheritedGroup = attachedGroup
 	 * else if(parent.inheritedGroup!=null) inheritedGroup = parent.inheritedGroup
 	 */
-	@ManyToOne(fetch=FetchType.LAZY)
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.REFRESH)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@JoinColumn(name="inheritedgroup_id")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
@@ -259,7 +262,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	/**
 	 * The phase is null except if the sample was sampled at this given timepoint in the study
 	 */
-	@ManyToOne(fetch=FetchType.LAZY/*, cascade=CascadeType.PERSIST*/) //Cascade persist, because AddSampling can add a phase
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.REFRESH)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@JoinColumn(name="inheritedphase_id")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
@@ -269,7 +272,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 * The attached sampling (if the sampling was created from the study->sampling function
 	 * This is to ensure that modifying a sampling, will edit the related samples
 	 */
-	@ManyToOne(fetch=FetchType.LAZY)
+	@ManyToOne(fetch=FetchType.LAZY, cascade=CascadeType.REFRESH)
 	@JoinColumn(name="attachedsampling_id")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 	@OnDelete(action=OnDeleteAction.NO_ACTION)
@@ -285,7 +288,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 * Exceptional handling, if this biosample does not go through the whole lifetime of the study.
 	 * This allows to keep the sample in the group, while ignoring all future actions
 	 */
-	@ManyToOne(fetch=FetchType.LAZY/*, cascade=CascadeType.PERSIST*/) //Cascade persist, because AddSampling can add a phase
+	@ManyToOne(fetch=FetchType.LAZY)
 	@OnDelete(action=OnDeleteAction.CASCADE)
 	@JoinColumn(name="endphase_id")
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
@@ -477,19 +480,6 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		return children;
 	}
 
-	/**
-//	 * Returns the children that are still attached to this study, and to an other dividing group
-//	 * Should be called on a topbiosample only
-//	 * @return
-//	 */
-	//	public SortedSet<Biosample> getDividingChildren() {
-	//		SortedSet<Biosample> res = new TreeSet<>();
-	//		for (Biosample c : getChildren()) {
-	//			if(c.getAttachedStudy()!=null && c.getAttachedStudy().equals(getAttachedStudy())) res.add(c);
-	//		}
-	//		return res;
-	//	}
-
 	public void setChildren(Set<Biosample> children) {
 		this.children = children;
 	}
@@ -514,24 +504,25 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			this.parent.getChildren().remove(this);
 		}
 
+		//Set the parent
 		this.parent = parent;
-		if(parent!=null) {
-			if(parent.getAttachedStudy()!=null) {
-				this.attachedStudy = null;
-			}
-			if(parent.getInheritedStudy()!=null) {
-				this.inheritedStudy = parent.getInheritedStudy();
-			}
-			if(parent.getInheritedGroup()!=null) {
-				this.inheritedGroup = parent.getInheritedGroup();
-			}
-			if(parent.getInheritedPhase()!=null) {
-				this.inheritedPhase = parent.getInheritedPhase();
-			}
-		}
+
 
 		if(updateDoubleRelationship) {
 			if(this.parent!=null) {
+				if(parent.getAttachedStudy()!=null) {
+					this.attachedStudy = null;
+				}
+				if(parent.getInheritedStudy()!=null) {
+					this.inheritedStudy = parent.getInheritedStudy();
+				}
+				if(parent.getInheritedGroup()!=null) {
+					this.inheritedGroup = parent.getInheritedGroup();
+				}
+				if(parent.getInheritedPhase()!=null) {
+					this.inheritedPhase = parent.getInheritedPhase();
+				}
+
 				this.parent.getChildren().add(this);
 				setTopParent(this.parent.getTopParent());
 			} else {
@@ -624,13 +615,14 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		assert bType!=null;
 		assert biotype!=null;
 		assert biotype.equals(bType.getBiotype());
-		if(bType.getDataType()!=DataType.BIOSAMPLE) throw new IllegalArgumentException(bType+ " is not a document's type");
+		if(bType.getDataType()!=DataType.BIOSAMPLE) throw new IllegalArgumentException(bType + "'s type is not biosample");
 		if(bio==null) {
 			linkedBiosamples.remove(bType);
 		} else {
 			linkedBiosamples.put(bType, bio);
 		}
 		getMetadataValues().put(bType, bio==null? "": bio.getSampleId());
+		System.out.println("Biosample.setMetadataBiosample() "+bType+">"+bio+">"+linkedBiosamples);
 	}
 
 
@@ -693,7 +685,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		assert biotype!=null;
 		Biosample b = linkedBiosamples.get(bType);
 		if(b==null) {
-			if(getMetadataValue(bType)!=null) {
+			if(getMetadataValue(bType)!=null && getMetadataValue(bType).length()>0) {
 				b = new Biosample(getMetadataValue(bType));
 			}
 		}
@@ -781,7 +773,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			if(inheritedPhase.getStudy() ==null ) {
 				inheritedPhase.setStudy(getInheritedStudy());
 			} else if(!inheritedPhase.getStudy().equals(inheritedStudy)) {
-				throw new IllegalArgumentException("The phase of " +this + " should come from the study "+inheritedStudy+" not "+inheritedPhase.getStudy());
+				throw new IllegalArgumentException("The phase " + inheritedPhase + " of " + this + " should come from the study "+inheritedStudy+" not "+inheritedPhase.getStudy());
 			}
 		}
 
@@ -1384,11 +1376,11 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	}
 
 	public ContainerType getContainerType() {
-		return this.container==null? null:this.container.getContainerType();
+		return this.container==null? null: this.container.getContainerType();
 	}
 
 	public void setContainerType(ContainerType containerType) {
-		setContainer(containerType==null? null: new Container(containerType, getContainerId()));
+		setContainer(new Container(containerType, getContainerId()));
 	}
 
 	public void setContainerId(String containerId) {
@@ -1940,7 +1932,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		if(biosamples==null) return null;
 		SortedSet<NamedSampling> res = new TreeSet<>();
 		for (Biosample b : biosamples) {
-			if(b.getAttachedSampling()!=null) res.add(b.getAttachedSampling()==null? null: b.getAttachedSampling().getNamedSampling());
+			if(b.getAttachedSampling()!=null) res.add(b.getAttachedSampling().getNamedSampling());
 		}
 		return res;
 	}
@@ -2034,7 +2026,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		for (Biosample b : biosamples) {
 			if(b==null) continue;
 			Container c = b.getContainer();
-			if(c==null || c.getContainerType()==null) {
+			if(c==null) {
 				if(createFakeContainerForEmptyOnes) {
 					//Create a container with a one-way relationship container->biosample
 					c = new Container();
@@ -2157,11 +2149,10 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 
 	public void setInheritedSubGroup(int inheritedSubgroup) {
 		this.inheritedSubgroup = inheritedSubgroup;
-		//		addAction(new ActionMoveGroup(this, getInheritedPhase(), getInheritedGroup(), getInheritedSubGroup()));
 	}
 
 	public Status getStatus() {
-		return status==null? Status.INLAB: status;
+		return status;
 	}
 
 	public void setStatus(Status status) {
@@ -2226,8 +2217,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 			if(b.getContainerId()!=null) {
 				List<Biosample> l = res.get(b.getContainerId());
 				if(l==null) {
-					l = new ArrayList<Biosample>();
-					res.put(b.getContainerId(), l);
+					res.put(b.getContainerId(), l = new ArrayList<>());
 				}
 				l.add(b);
 			}
@@ -2612,7 +2602,12 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	public String getDifference(IAuditable b) {
 		if(b==null) b = new Biosample();
 		if(!(b instanceof Biosample)) return "";
-		return MiscUtils.flatten(getDifferenceMap((Biosample)b)).replace("ACTION=", "");
+		try {
+			return getDifferenceMap((Biosample)b).flatten();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "Err: " + e;
+		}
 	}
 
 	/**
@@ -2621,65 +2616,65 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	 * @param b
 	 * @return
 	 */
-	public Map<String, String> getDifferenceMap(Biosample b) {
+	public DifferenceMap getDifferenceMap(Biosample b) {
 
-		Map<String, String> map = new LinkedHashMap<>();
+		DifferenceMap map = new DifferenceMap();
 		if(b==null) return map;
 		if(!CompareUtils.equals(getInheritedStudy(), b.getInheritedStudy())) {
-			map.put("Study", getInheritedStudy()==null?"NA":getInheritedStudy().getStudyId());
+			map.put("Study", getInheritedStudy()==null?"":getInheritedStudy().getStudyId(), b.getInheritedStudy()==null?"":b.getInheritedStudy().getStudyId());
 		}
 		if(!CompareUtils.equals(getInheritedGroup(), b.getInheritedGroup())) {
-			map.put("Group", getInheritedGroup()==null?"": getInheritedGroup().getName());
+			map.put("Group", getInheritedGroup()==null?"": getInheritedGroup().getName(), b.getInheritedGroup()==null?"": b.getInheritedGroup().getName());
 		}
 		if(!CompareUtils.equals(getInheritedPhase(), b.getInheritedPhase())) {
-			map.put("Phase", getInheritedPhaseString());
+			map.put("Phase", getInheritedPhaseString(), b.getInheritedPhaseString());
 		}
 		if(!CompareUtils.equals(getContainerType(), b.getContainerType()) || !CompareUtils.equals(getContainerId(), b.getContainerId()) || !CompareUtils.equals(getContainerIndex(), b.getContainerIndex())) {
-			map.put("Container", (getContainerType()==null? "NA": getContainerType().getName()) + (getContainerId()!=null && getContainerId().length()>0? " " + getContainerId():"") + (getContainerIndex()!=null && getContainerIndex()>0? ":"+getContainerIndex():""));
+			map.put("Container", (getContainerType()==null? "": getContainerType().getName()) + (getContainerId()!=null && getContainerId().length()>0? " " + getContainerId():"") + (getContainerIndex()!=null && getContainerIndex()>0? ":"+getContainerIndex():"")
+					, (b.getContainerType()==null? "": b.getContainerType().getName()) + (b.getContainerId()!=null && b.getContainerId().length()>0? " " + b.getContainerId():"") + (b.getContainerIndex()!=null && b.getContainerIndex()>0? ":"+b.getContainerIndex():""));
 		}
 		if(!CompareUtils.equals(getAmount(), b.getAmount())) {
-			map.put("Amount", getAmount()==null?"NA": getAmount().toString());
+			map.put("Amount", getAmount()==null?"": getAmount().toString(), b.getAmount()==null?"": b.getAmount().toString());
 		}
-		if(!CompareUtils.equals(getLocation(), b.getLocation()) || getPos()!=b.getPos()) {
-			map.put("Location", getLocationString(LocationFormat.FULL_POS, null));
+		if(!CompareUtils.equals(getLocationString(LocationFormat.FULL_POS, null), b.getLocationString(LocationFormat.FULL_POS, null))) {
+			map.put("Location", getLocationString(LocationFormat.FULL_POS, null), b.getLocationString(LocationFormat.FULL_POS, null));
 		}
 		if(!CompareUtils.equals(getSampleId(), b.getSampleId())) {
-			map.put("SampleId", getSampleId());
+			map.put("SampleId", getSampleId(), b.getSampleId());
 		}
 		if(!CompareUtils.equals(getBiotype(), b.getBiotype())) {
-			map.put("Biotype", getBiotype()==null?"":getBiotype().getName());
+			map.put("Biotype", getBiotype()==null?"":getBiotype().getName(), b.getBiotype()==null?"":b.getBiotype().getName());
 		}
 		if(getBiotype()!=null) {
 			if(getBiotype().getSampleNameLabel()!=null && !CompareUtils.equals(getSampleName(), b.getSampleName())) {
-				map.put(getBiotype().getSampleNameLabel(), getSampleName());
+				map.put(getBiotype().getSampleNameLabel(), getSampleName(), b.getSampleName());
 			}
 			for (BiotypeMetadata bm : getBiotype().getMetadata()) {
 				if(!CompareUtils.equals(getMetadataValue(bm), b.getMetadataValue(bm))) {
-					map.put(bm.getName(), getMetadataValue(bm));
+					map.put(bm.getName(), getMetadataValue(bm), b.getMetadataValue(bm));
 				}
 			}
 		}
 		if(!CompareUtils.equals(getComments(), b.getComments())) {
-			map.put("Comments", getComments());
+			map.put("Comments", getComments(), b.getComments());
 		}
 		if(!CompareUtils.equals(getStatus(), b.getStatus()) || !CompareUtils.equals(getEndPhase(), b.getEndPhase()) ) {
-			map.put("Status", getStatus()==null?"NA":getStatus().getName() + (getEndPhase()==null?"": " at " + getEndPhase().getShortName()));
+			map.put("Status", getStatus()==null?"":getStatus().getName() + (getEndPhase()==null?"": " at " + getEndPhase().getShortName()),
+					b.getStatus()==null?"":b.getStatus().getName() + (b.getEndPhase()==null?"": " at " + b.getEndPhase().getShortName()));
 		}
 		if(!CompareUtils.equals(getQuality(), b.getQuality())) {
-			map.put("Quality", getQuality()==null?"NA":getQuality().getName());
+			map.put("Quality", getQuality()==null?"":getQuality().getName(), b.getQuality()==null?"":b.getQuality().getName());
 		}
 		if(!CompareUtils.equals(getCreUser(), b.getCreUser())) {
-			map.put("Owner", getCreUser()==null?"NA":getCreUser());
+			map.put("CreatedBy", getCreUser(), b.getCreUser());
 		}
 		if(!CompareUtils.equals(getLastAction(), b.getLastAction())) {
 			if(getLastAction()!=null) {
-				map.put("ACTION", getLastAction().getDetails());
+				map.put("ACTION", getLastAction().getDetails(), b.getLastAction().getDetails());
 			}
 		}
-
 		return map;
 	}
-
 
 	public String getLastActionSerialized() {
 		return lastAction;
@@ -2692,6 +2687,7 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 	public ActionBiosample getLastAction() {
 		return ActionBiosample.deserialize(getLastActionSerialized());
 	}
+
 	public void setLastAction(ActionBiosample lastAction) {
 		this.lastAction = lastAction==null? null: lastAction.serialize();
 	}
@@ -2716,4 +2712,10 @@ public class Biosample implements Serializable, Comparable<Biosample>, Cloneable
 		for(;i2>0 && !Character.isLetterOrDigit(s.charAt(i2-1)); i2--) {}
 		return s.substring(0, i2);
 	}
+
+	@Override
+	public int getSid() {
+		return getInheritedStudy()==null? 0 : getInheritedStudy().getSid();
+	}
+
 }

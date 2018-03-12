@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -26,7 +26,6 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Box;
@@ -46,8 +45,8 @@ import javax.swing.ListSelectionModel;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
-import com.actelion.research.spiritapp.ui.util.lf.StudyComboBox;
-import com.actelion.research.spiritapp.ui.util.lf.UserIdComboBox;
+import com.actelion.research.spiritapp.ui.util.component.StudyComboBox;
+import com.actelion.research.spiritapp.ui.util.component.UserIdComboBox;
 import com.actelion.research.spiritcore.business.audit.Revision;
 import com.actelion.research.spiritcore.business.audit.RevisionQuery;
 import com.actelion.research.spiritcore.services.SpiritRights;
@@ -56,6 +55,7 @@ import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
+import com.actelion.research.util.ui.JInfoLabel;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
@@ -66,7 +66,7 @@ import com.actelion.research.util.ui.iconbutton.JIconButton;
 public class RecentChancesDlg extends JEscapeDialog {
 
 
-	private final RevisionTable revisionTable = new RevisionTable(true);
+	private final RevisionTable revisionTable = new RevisionTable();
 
 	private UserIdComboBox userTextField = new UserIdComboBox();
 	private JCustomTextField fromTextField = new JCustomTextField(CustomFieldType.DATE);
@@ -89,9 +89,8 @@ public class RecentChancesDlg extends JEscapeDialog {
 			userTextField.setText("");
 			userTextField.setEnabled(true);
 		} else {
-			userTextField.setText(userId==""?"NA": userId);
+			userTextField.setText(userId.length()==0?"NA": userId);
 			userTextField.setEnabled(false);
-
 		}
 		userTextField.setTextWhenEmpty("UserId");
 
@@ -125,6 +124,7 @@ public class RecentChancesDlg extends JEscapeDialog {
 								new JSeparator(JSeparator.VERTICAL),
 								UIUtils.createVerticalBox(
 										UIUtils.createHorizontalBox(adminChanges),
+										new JInfoLabel("Config/Users/Biotypes/Tests"),
 										Box.createVerticalGlue()),
 								Box.createHorizontalGlue()),
 						UIUtils.createHorizontalBox(Box.createHorizontalGlue(), filterButton)));
@@ -163,6 +163,8 @@ public class RecentChancesDlg extends JEscapeDialog {
 		try {
 			final String userId = userTextField.getText();
 			final String studyId = studyComboBox.getText();
+			if(!fromTextField.isValidFormat()) throw new Exception("The date is not well formatted");
+			if(!toTextField.isValidFormat()) throw new Exception("The date is not well formatted");
 			final Date fromDate = fromTextField.getTextDate();
 			final Date toDate = toTextField.getTextDate();
 			if((userId==null || userId.length()==0) && (studyId==null || studyId.length()==0) && fromDate==null && toDate==null) {
@@ -183,7 +185,7 @@ public class RecentChancesDlg extends JEscapeDialog {
 
 			new SwingWorkerExtended("Loading revisions", revisionTable) {
 				List<Revision> revisions;
-				Map<Revision, String> changeMap;
+				//				Map<Revision, String> changeMap;
 				@Override
 				protected void doInBackground() throws Exception {
 					revisions = new ArrayList<>();
@@ -195,11 +197,12 @@ public class RecentChancesDlg extends JEscapeDialog {
 							revisions.add(r);
 						}
 					}
-					changeMap = DAORevision.getLastChanges(revisions);
+					//changeMap = DAORevision.getLastChanges(revisions);
 				}
 				@Override
 				protected void done() {
-					revisionTable.setRows(revisions, changeMap);
+					//					revisionTable.setRows(revisions, changeMap);
+					revisionTable.setRows(revisions);
 				}
 			};
 		} catch (Exception e) {

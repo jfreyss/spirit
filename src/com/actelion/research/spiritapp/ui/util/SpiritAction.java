@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -42,14 +42,16 @@ import com.actelion.research.spiritapp.ui.biosample.batchaliquot.BatchAliquotDlg
 import com.actelion.research.spiritapp.ui.biosample.batchassign.BatchAssignDlg;
 import com.actelion.research.spiritapp.ui.biosample.edit.EditBiosampleDlg;
 import com.actelion.research.spiritapp.ui.print.BrotherLabelsDlg;
-import com.actelion.research.spiritapp.ui.util.lf.PreferencesDlg;
+import com.actelion.research.spiritapp.ui.util.component.PreferencesDlg;
 import com.actelion.research.spiritapp.ui.util.scanner.SpiritScanner;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.location.Location;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.UsageLog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.iconbutton.IconType;
@@ -58,11 +60,11 @@ public class SpiritAction {
 
 	public static class Action_Refresh extends AbstractAction {
 		private AbstractAction nextAction;
-		public Action_Refresh(final SpiritFrame spirit) {
+		public Action_Refresh() {
 			this(new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					if(spirit!=null) spirit.recreateUI();
+					if(SpiritFrame.getInstance()!=null) SpiritFrame.getInstance().recreateUI();
 				}
 			});
 		}
@@ -143,7 +145,11 @@ public class SpiritAction {
 				System.exit(1);
 			} else {
 				SpiritContextListener.setStatus(SpiritFrame.getUser().getUsername() +" logged");
-				SpiritContextListener.setUser(user.getUsername() + " ("+ (user.getMainGroup()==null?"NoDept":user.getMainGroup().getName())+ ") " + (user.getRolesString().length()>0? " - " + user.getRolesString():""));
+
+				String userMsg = user.getUsername()
+						+ (SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)? " ("+ (user.getMainGroup()==null?"NoDept":user.getMainGroup().getName())+ ") ": "")
+						+ (user.getRolesString().length()>0? " - " + user.getRolesString():"");
+				SpiritContextListener.setUser(userMsg);
 			}
 		}
 	}
@@ -218,85 +224,11 @@ public class SpiritAction {
 		}
 	}
 
-	/*
-	public static class Action_OpenSpirit extends AbstractAction {
-		public Action_OpenSpirit() {
-			super("Open Spirit");
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('s'));
-		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			Spirit.open();
-		}
-	}
-
-	public static class Action_OpenAnimalCare extends AbstractAction {
-		public Action_OpenAnimalCare() {
-			super("Open AnimalCare");
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
-		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			AnimalCare.open();
-		}
-	}
-
-	public static class Action_OpenSlideCare extends AbstractAction {
-		public Action_OpenSlideCare() {
-			super("Open SlideCare");
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('l'));
-		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			SlideCare.open();
-		}
-	}
-
-	public static class Action_OpenStockCare extends AbstractAction {
-		public Action_OpenStockCare() {
-			super("Open StockCare");
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('s'));
-		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			StockCare.open();
-		}
-	}
-
-	public static class Action_OpenBioViewer extends AbstractAction {
-		public Action_OpenBioViewer() {
-			super("Open BioViewer");
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('s'));
-		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			BioViewer.open();
-		}
-	}
-	 */
-
-	//	public static class Action_Perspective extends AbstractAction {
-	//
-	//		private Class<? extends SpiritTab> tabClass;
-	//
-	//		public Action_Perspective(String name, Class<? extends SpiritTab> tabClass, boolean def) {
-	//			super("Show "+name);
-	//			this.tabClass = tabClass;
-	//			putValue(AbstractAction.SELECTED_KEY, Spirit.getConfig().getProperty("perspective." + tabClass, def));
-	//		}
-	//		@Override
-	//		public void actionPerformed(ActionEvent e) {
-	//			JCheckBoxMenuItem item = (JCheckBoxMenuItem) e.getSource();
-	//			Spirit.getConfig().setProperty("perspective." + tabClass, item.isSelected()?"true":"false");
-	//			SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
-	//		}
-	//	}
-
 	public static class Action_DatabaseConnection extends AbstractAction {
 		public Action_DatabaseConnection() {
 			super("Database connection");
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
-			putValue(AbstractAction.MNEMONIC_KEY, (int)('s'));
+			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
 		}
 		@Override
@@ -307,7 +239,7 @@ public class SpiritAction {
 
 	public static class Action_DatabaseProperties extends AbstractAction {
 		public Action_DatabaseProperties() {
-			super("Database properties");
+			super("Settings");
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('s'));
 			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));

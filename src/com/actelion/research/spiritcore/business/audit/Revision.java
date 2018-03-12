@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -30,6 +30,8 @@ import org.hibernate.envers.RevisionType;
 import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
+import com.actelion.research.spiritcore.business.employee.Employee;
+import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.property.SpiritProperty;
 import com.actelion.research.spiritcore.business.result.Result;
@@ -41,7 +43,10 @@ import com.actelion.research.util.FormatterUtils;
 public class Revision implements Comparable<Revision> {
 	private int revId;
 	private RevisionType type;
+	private String reason;
+	private String difference;
 	private String user;
+	private Study study;
 	private List<IAuditable> auditable = new ArrayList<>();
 	private Date date;
 
@@ -49,14 +54,20 @@ public class Revision implements Comparable<Revision> {
 	public Revision() {
 	}
 
-	public Revision(int revId, RevisionType type, String user, Date date) {
+	public Revision(int revId, RevisionType type, Study study, String reason, String difference, String user, Date date) {
 		super();
 		this.date = date;
 		this.revId = revId;
-		this.user = user;
 		this.type = type;
+		this.study = study;
+		this.reason = reason;
+		this.difference = difference;
+		this.user = user;
 	}
 
+	public Study getStudy() {
+		return study;
+	}
 
 	@Override
 	public int hashCode() {
@@ -82,18 +93,24 @@ public class Revision implements Comparable<Revision> {
 		List<Location> locations = getLocations();
 		List<Biotype> biotypes = getBiotypes();
 		List<SpiritProperty> properties = getSpiritProperties();
+		List<Employee> employees = getEmployees();
+		List<EmployeeGroup> employeeGroups = getEmployeeGroups();
 		String t = (type==RevisionType.ADD?"Add": type==RevisionType.DEL?"Del": "Upd") + " ";
 
 		List<String> desc = new ArrayList<>();
-		if(studies.size()>0) desc.add("Study (" + t + (studies.size()==1? studies.get(0).getStudyId(): studies.size()) + ")");
-		if(biosamples.size()>0) desc.add("Biosample (" + t + (biosamples.size()==1? biosamples.get(0).getSampleId(): biosamples.size()) + ")");
-		if(locations.size()>0) desc.add("Location (" + t + (locations.size()==1? locations.get(0).getName(): locations.size())  + ")");
-		if(results.size()>0) desc.add("Results (" + t + (results.size()==1? results.get(0).getTest().getName() + " " + results.get(0).getBiosample().getSampleId(): results.size()) + ")");
-		if(biotypes.size()>0) desc.add("Biotypes (" + t + (biotypes.size()==1? biotypes.get(0).getName(): biotypes.size()) + ")");
-		if(tests.size()>0) desc.add("Tests (" + t + (tests.size()==1? tests.get(0).getName(): tests.size()) + ")");
-		if(properties.size()>0) desc.add("Properties (" + t + (properties.size()==1? properties.get(0).getKey(): properties.size()) + ")");
+		desc.add(t);
+		if(results.size()>0) desc.add(results.size() + " result" + (results.size()>1?"s":""));
+		if(biosamples.size()>0) desc.add(biosamples.size() + " sample" + (biosamples.size()>1?"s":""));
+		if(locations.size()>0) desc.add(locations.size() + " location" + (locations.size()>1?"s":""));
+		if(studies.size()>0) desc.add(studies.size() + " stud" + (studies.size()>1?"ies":"y"));
 
-		return desc.size()>3? "Various": MiscUtils.flatten(desc);
+		if(biotypes.size()>0) desc.add(biotypes.size() + " biotypes");
+		if(tests.size()>0) desc.add(tests.size() + " tests");
+		if(properties.size()>0) desc.add(properties.size() + " properties");
+		if(employees.size()>0) desc.add(employees.size() + " employees");
+		if(employeeGroups.size()>0) desc.add(employeeGroups.size() + " groups");
+
+		return MiscUtils.flatten(desc, " ");
 	}
 
 	@Override
@@ -130,9 +147,16 @@ public class Revision implements Comparable<Revision> {
 		return extract(SpiritProperty.class);
 	}
 
-
 	public List<Biosample> getBiosamples() {
 		return extract(Biosample.class);
+	}
+
+	public List<Employee> getEmployees() {
+		return extract(Employee.class);
+	}
+
+	public List<EmployeeGroup> getEmployeeGroups() {
+		return extract(EmployeeGroup.class);
 	}
 
 	public List<Result> getResults() {
@@ -166,10 +190,20 @@ public class Revision implements Comparable<Revision> {
 	public void setAuditables(List<IAuditable> entities) {
 		this.auditable = entities;
 	}
+
 	public void setType(RevisionType type) {
 		this.type = type;
 	}
+
 	public RevisionType getType() {
 		return type;
+	}
+
+	public String getReason() {
+		return reason;
+	}
+
+	public String getDifference() {
+		return difference;
 	}
 }

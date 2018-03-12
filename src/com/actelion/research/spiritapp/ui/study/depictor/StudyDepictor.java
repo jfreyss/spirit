@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -56,7 +56,6 @@ import javax.swing.ToolTipManager;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Status;
-import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Measurement;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
@@ -67,7 +66,6 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.FormatterUtils;
@@ -270,7 +268,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 									for (Biosample b : study.getParticipants()) {
 										if(b.getInheritedGroup()==null) continue;
 										Pair<Status, Phase> lastStatus = b.getLastActionStatus();
-										if(lastStatus.getFirst()!=null && !lastStatus.getFirst().isAvailable()) {
+										if(lastStatus.getFirst()!=null && lastStatus.getFirst()!=null && !lastStatus.getFirst().isAvailable()) {
 											Phase p = lastStatus.getSecond();
 											int x = getX(p);
 											int y = getY(b.getInheritedGroup(), b.getInheritedSubGroup());
@@ -283,15 +281,13 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 
 
 								//Draw Actions
-								if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)) {
-									for (Group group : study.getGroups()) {
-										for (int subgroupNo = 0; subgroupNo < group.getNSubgroups(); subgroupNo++) {
-											for (Phase phase : study.getPhases()) {
-												StudyAction action = study.getStudyAction(group, subgroupNo, phase);
-												paintAction(g, action);
-											}
-											if(isBlind) break;
+								for (Group group : study.getGroups()) {
+									for (int subgroupNo = 0; subgroupNo < group.getNSubgroups(); subgroupNo++) {
+										for (Phase phase : study.getPhases()) {
+											StudyAction action = study.getStudyAction(group, subgroupNo, phase);
+											paintAction(g, action);
 										}
+										if(isBlind) break;
 									}
 								}
 
@@ -365,7 +361,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			if(biosamples.size()>0 && biosamples.size()<=10) {
 				for (Biosample b : biosamples) {
 					Pair<Status, Phase> p = b.getLastActionStatus();
-					sb.append(b.getSampleIdName() + (!p.getFirst().isAvailable()? " " + p.getFirst()+ "->" + p.getSecond().getShortName(): "") +  "<br>");
+					sb.append(b.getSampleIdName() + (p.getFirst()!=null &&  !p.getFirst().isAvailable()? " " + p.getFirst()+ "->" + p.getSecond().getShortName(): "") +  "<br>");
 				}
 			} else {
 				sb.append(biosamples.size() + " biosamples<br>");
@@ -384,47 +380,45 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 				if (sel.getPhase().equals(sel.getGroup().getFromPhase())) {
 					sb.append("Group Assignment<br>");
 				}
-				if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)) {
-					StudyAction action = study.getStudyAction(sel.getGroup(), sel.getSubGroup(), sel.getPhase());
-					if (action != null) {
-						String measurements = "";
-						if (action.isMeasureFood())
-							measurements += "Food<br>";
-						if (action.isMeasureWater())
-							measurements += "Water<br>";
-						if (action.isMeasureWeight())
-							measurements += "Weighing<br>";
-						for(Measurement em: action.getMeasurements()) {
-							measurements +=  (em.getTest()==null?"??":em.getTest().getName().replace("<", "&lt;").replace(">", "&gt;")) + (em.getParametersString().length()>0? ": " + em.getParametersString():"") + "<br>";
-						}
-						if (measurements.length() > 0) {
-							sb.append("<span style='color:blue'>" + measurements + "</span>");
-						}
-
-						//Treatment
-						if (action.getNamedTreatment() != null) {
-							NamedTreatment t = action.getNamedTreatment();
-							Color c = t.getColor() == null ? Color.BLACK : t.getColor();
-							sb.append("<b style='color:" + UIUtils.getHtmlColor(c) + "'>" + t.getName() + "</b><br>");
-						}
-
-						//Sampling
-						if (action.getNamedSampling1() != null) {
-							NamedSampling s = action.getNamedSampling1();
-							sb.append("<b style='color:#990000'>" + s.getName() + "</b><br>");
-						}
-						if (action.getNamedSampling2() != null) {
-							NamedSampling s = action.getNamedSampling2();
-							sb.append("<b style='color:#990000'>" + s.getName() + "</b><br>");
-						}
-
-						//Label
-						if(action.getLabel()!=null && action.getLabel().length()>0) {
-							sb.append("<u>"+action.getLabel()+"</u><br>");
-						}
+				StudyAction action = study.getStudyAction(sel.getGroup(), sel.getSubGroup(), sel.getPhase());
+				if (action != null) {
+					String measurements = "";
+					if (action.isMeasureFood())
+						measurements += "Food<br>";
+					if (action.isMeasureWater())
+						measurements += "Water<br>";
+					if (action.isMeasureWeight())
+						measurements += "Weighing<br>";
+					for(Measurement em: action.getMeasurements()) {
+						measurements +=  (em.getTest()==null?"??":em.getTest().getName().replace("<", "&lt;").replace(">", "&gt;")) + (em.getParametersString().length()>0? ": " + em.getParametersString():"") + "<br>";
+					}
+					if (measurements.length() > 0) {
+						sb.append("<span style='color:blue'>" + measurements + "</span>");
 					}
 
-					//Attached
+					//Treatment
+					if (action.getNamedTreatment() != null) {
+						NamedTreatment t = action.getNamedTreatment();
+						Color c = t.getColor() == null ? Color.BLACK : t.getColor();
+						sb.append("<b style='color:" + UIUtils.getHtmlColor(c) + "'>" + t.getName() + "</b><br>");
+					}
+
+					//Sampling
+					if (action.getNamedSampling1() != null) {
+						NamedSampling s = action.getNamedSampling1();
+						sb.append("<b style='color:#990000'>" + s.getName() + "</b><br>");
+					}
+					if (action.getNamedSampling2() != null) {
+						NamedSampling s = action.getNamedSampling2();
+						sb.append("<b style='color:#990000'>" + s.getName() + "</b><br>");
+					}
+
+					//Label
+					if(action.getLabel()!=null && action.getLabel().length()>0) {
+						sb.append("<u>"+action.getLabel()+"</u><br>");
+					}
+
+					//Participants
 					List<Biosample> samples =  study.getParticipants(sel.getGroup(), sel.getSubGroup());
 					if(samples.size()<10) {
 						for (Biosample b : samples) {
@@ -558,7 +552,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			int normalPhaseWidth = FastFont.getDefaultFontSize()*2+18;
 
 			if(adjustZoomFactor) {
-				//estimate zoomfactor so that nPhases*40*1.35^SF=800
+				//estimate zoom factor so that nPhases*40*1.35^SF=800
 				double SF = Math.log(Math.max(300.0, getWidth()-marginX-50)/(normalPhaseWidth*(nPhases+1)))/Math.log(1.2);
 				sizeFactor = (int)Math.round(SF-.3);
 			}
@@ -614,10 +608,8 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 
 
 						boolean hasSamplings2 = false;
-						if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)) {
-							for(StudyAction a: study.getStudyActions(group, subgroupNo)) {
-								if(a.getNamedSampling2()!=null) {hasSamplings2 = true; break;}
-							}
+						for(StudyAction a: study.getStudyActions(group, subgroupNo)) {
+							if(a.getNamedSampling2()!=null) {hasSamplings2 = true; break;}
 						}
 
 						int groupHeight = 2 + FastFont.getDefaultFontSize()*2 + (hasSamplings2?FastFont.SMALL.getSize()-1:0) + (subgroupNo==group.getNSubgroups()-1? FastFont.SMALL.getSize()-1:0);
@@ -693,30 +685,9 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 			g.fillRect(1, y1-offsetTop, marginX, y2-y1+getHeight(group, group.getNSubgroups()-1)-1 );
 
 			g.setColor(c2);
-			g.fillRect(marginX, y1-offsetTop, maxX-marginX, y2-y1+getHeight(group, group.getNSubgroups()-1)-1 );
-			g.fillPolygon(new int[]{maxX, maxX+20, maxX},
+			g.fillRect(marginX, y1-offsetTop, maxX+6-marginX, y2-y1+getHeight(group, group.getNSubgroups()-1)-1 );
+			g.fillPolygon(new int[]{maxX+6, maxX+28, maxX},
 					new int[]{y1-offsetTop, (y1-offsetTop + y2-offsetTop+getHeight(group, group.getNSubgroups()-1))/2-1, y2-offsetTop+getHeight(group, group.getNSubgroups()-1)-1}, 3);
-
-			//			//Paint model
-			//			Color col1 = null;
-			//			if(group.getDiseaseModel()!=null && group.getDiseaseModel().startsWith(Group.DISEASE_NAIVE)) col1 = Color.GRAY;
-			//			if(group.getDiseaseModel()!=null && group.getDiseaseModel().startsWith(Group.DISEASE_SHAM)) col1 = Color.GREEN;
-			//			if(group.getDiseaseModel()!=null && group.getDiseaseModel().startsWith(Group.DISEASE_DISEASED)) col1 = Color.ORANGE;
-			//
-			//			Color col2 = null;
-			//			if(group.getTreatmentModel()!=null && group.getTreatmentModel().startsWith(Group.TREATMENT_NONTREATED)) col2 = null;
-			//			if(group.getTreatmentModel()!=null && group.getTreatmentModel().startsWith(Group.TREATMENT_VEHICLE)) col2 = Color.CYAN;
-			//			if(group.getTreatmentModel()!=null && group.getTreatmentModel().startsWith(Group.TREATMENT_COMPOUND)) col2 = Color.BLUE;
-			//
-			//			if(col1!=null) {
-			//				g.setColor(col1);
-			//				g.fillRect(0, y1-offsetTop, 2, y2-y1+getHeight(group, group.getNSubgroups()-1)-1);
-			//			}
-			//			if(col2!=null) {
-			//				g.setColor(col1);
-			//				g.fillRect(2, y1-offsetTop, 2, y2-y1+getHeight(group, group.getNSubgroups()-1)-1);
-			//			}
-
 
 		}
 	}
@@ -744,19 +715,19 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 				g.setFont(FastFont.SMALLER);
 				UIUtils.drawString(g, desc, 2, y1+7, marginX-8, y2 + getHeight(group, group.getNSubgroups() - 1) - 24  - y1 , false);
 			}
+
 			for (int subgroupNo = 0; subgroupNo < group.getNSubgroups(); subgroupNo++) {
 				List<Phase> newGroupingPhases = group.getNewGroupingPhases();
-				Phase endPhase = SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_ADVANCEDMODE)? group.getEndPhase(subgroupNo): null;
+				Phase endPhase = group.getEndPhase(subgroupNo);
 				int y = getY(group, subgroupNo);
 				int x1 = group.getFromPhase() == null ? marginX+16 : getX(group.getFromPhase());
 				boolean endWithNecro = endPhase != null;
-
 
 				// Draw gray line from begin to start
 				g.setColor(Color.LIGHT_GRAY);
 				if (marginX < x1) g.drawLine(marginX, y, x1, y);
 
-				// Find how the group is splitted
+				// Find how the group is split
 				for (Phase phase : newGroupingPhases) {
 					int n = group.getNAnimals(phase);
 					if (n <= 0 && (endPhase == null || phase.compareTo(endPhase) < 0)) {
@@ -767,8 +738,6 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 
 				// Draw solid line from start to end
 				g.setColor(Color.BLACK);
-				//				Sampling sampling = group.getDividingSampling();
-				//				g.setColor(sampling == null ? Color.BLACK : Color.RED.darker());
 				if (endPhase != null) {
 					int x2 = getX(endPhase);
 					if (endWithNecro) { // Necropsy, draw horizontal line and cross
@@ -784,12 +753,6 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 				}
 
 				if (group.getFromGroup() != null) {
-					//					g.setColor(sampling == null ? Color.BLACK : Color.RED.darker());
-
-					//					// Draw Vertical Line
-					//					if (sampling!= null) {
-					//						if (sampling.getBiotype() != null) g.drawString(sampling.getBiotype().getName(), x1 - 18 - g.getFontMetrics().stringWidth(sampling.getBiotype().getName()), y);
-					//					}
 					int y0 = getY(group.getFromGroup(), 0);
 					g.drawLine(x1 - offset, y0, x1 - offset, y);
 					g.drawLine(x1 - offset, y, x1, y);
@@ -822,7 +785,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 					String s = "";
 					if(designerMode) {
 						s = study.getParticipants(group, subgroupNo).size() + (group.getSubgroupSize(subgroupNo)>0?"/" + group.getSubgroupSize(subgroupNo):"");
-					} else {
+					} else if(study.getParticipants(group, subgroupNo).size()>0) {
 						s = "" + study.getParticipants(group, subgroupNo).size();
 					}
 					g.setFont(FastFont.MEDIUM);

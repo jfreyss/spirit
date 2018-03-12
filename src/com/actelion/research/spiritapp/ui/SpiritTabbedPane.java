@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -27,16 +27,19 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.util.List;
 
+import javax.swing.Box;
 import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeListener;
 
 import com.actelion.research.spiritapp.ui.util.SpiritContextListener;
-import com.actelion.research.spiritapp.ui.util.lf.StudyComboBox;
+import com.actelion.research.spiritapp.ui.util.component.StudyComboBox;
 import com.actelion.research.spiritcore.business.RightLevel;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
+import com.actelion.research.util.ui.FastFont;
+import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.UIUtils;
 
@@ -52,19 +55,19 @@ import com.actelion.research.util.ui.UIUtils;
  */
 public class SpiritTabbedPane extends JComponent {
 
-	public static String STUDY_ACTION = "study_action";
 	private JCustomTabbedPane tabbedPane = new JCustomTabbedPane();
 	private Dimension dim;
 	private JPanel leadingPanel;
 
-	private StudyComboBox studyComboBox = new StudyComboBox();
+	private final StudyComboBox studyComboBox = new StudyComboBox();
 
 	private int push = 0;
 
 	public SpiritTabbedPane() {
-		studyComboBox.setColumns(14);
-		leadingPanel = UIUtils.createHorizontalBox(studyComboBox);
-		leadingPanel.setOpaque(true);
+		studyComboBox.setTextWhenEmpty("");
+		studyComboBox.setColumns(10);
+		leadingPanel = UIUtils.createHorizontalBox(Box.createHorizontalStrut(8), new JCustomLabel("StudyId:", FastFont.BOLD), studyComboBox);
+		leadingPanel.setOpaque(false);
 		leadingPanel.setBackground(Color.WHITE);
 		setBackground(Color.WHITE);
 		initLayout();
@@ -86,7 +89,7 @@ public class SpiritTabbedPane extends JComponent {
 				push--;
 			}
 		});
-		getStudyComboBox().addTextChangeListener(l-> {
+		studyComboBox.addTextChangeListener(l-> {
 			if(push>0) return;
 			try {
 				push++;

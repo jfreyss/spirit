@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -33,10 +33,11 @@ import com.actelion.research.spiritapp.ui.IStudyTab;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.SpiritTab;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
-import com.actelion.research.spiritapp.ui.util.lf.JBGScrollPane;
+import com.actelion.research.spiritapp.ui.util.component.JBGScrollPane;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
@@ -47,7 +48,7 @@ public class StudyTab extends SpiritTab implements IStudyTab {
 	private final StudyTable studyTable = new StudyTable();
 	private final StudySearchPane searchPane;
 
-	private final StudyDetailPanel studyDetailPanel = new StudyDetailPanel(JSplitPane.HORIZONTAL_SPLIT);
+	private final StudyDetailPanel detailPane = new StudyDetailPanel(JSplitPane.HORIZONTAL_SPLIT);
 
 	private boolean initialized = false;
 
@@ -60,23 +61,24 @@ public class StudyTab extends SpiritTab implements IStudyTab {
 		JSplitPane northPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, searchPane, studyScrollPane);
 		northPane.setDividerLocation(250);
 
-		JSplitPane contentPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, northPane, studyDetailPanel);
+		JSplitPane contentPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, northPane, detailPane);
 		contentPane.setDividerLocation(250);
 
-		studyDetailPanel.showInfos();
+		detailPane.showInfos();
 
 		studyTable.getSelectionModel().addListSelectionListener(e-> {
 			if(e.getValueIsAdjusting()) return;
 			final List<Study> sel = studyTable.getSelection();
-			studyDetailPanel.setStudy(sel.size()==1? sel.get(0): null);
-
+			Study study = sel.size()==1? sel.get(0): null;
+			study = JPAUtil.reattach(study);
+			detailPane.setStudy(study);
 			frame.setStudyId(MiscUtils.flatten(Study.getStudyIds(sel)));
 		});
 
 
 		StudyActions.attachPopup(studyTable);
 		StudyActions.attachPopup(studyScrollPane);
-		StudyActions.attachPopup(studyDetailPanel);
+		StudyActions.attachPopup(detailPane);
 
 		searchPane.addPropertyChangeListener(evt-> {
 			StudyTab.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
@@ -94,12 +96,16 @@ public class StudyTab extends SpiritTab implements IStudyTab {
 		if(action==SpiritChangeType.MODEL_DELETED && what==Study.class) {
 			studyTable.getModel().getRows().removeAll(details);
 			studyTable.getModel().fireTableDataChanged();
-			studyDetailPanel.setStudy(null);
+			detailPane.setStudy(null);
 		} else if((action==SpiritChangeType.MODEL_UPDATED || action==SpiritChangeType.MODEL_ADDED) && what==Study.class) {
 			getFrame().setStudyId(((Study)details.iterator().next()).getStudyId());
+			for (T study : details) {
+				Study s = (Study) study;
+				studyTable.getRows().replaceAll(r -> r.equals(s)? s: r);
+				studyTable.getModel().fireTableDataChanged();
+			}
 		}
 
-		studyTable.reload();
 	}
 
 	@Override
@@ -112,9 +118,16 @@ public class StudyTab extends SpiritTab implements IStudyTab {
 
 	@Override
 	public Study getStudy() {
-		return studyDetailPanel.getStudy()==null? null: studyDetailPanel.getStudy();
+		return detailPane.getStudy()==null? null: detailPane.getStudy();
 	}
 
+	/**
+	 * Gets either the selected studies (if >1 selected) or all retrieved studies
+	 */
+	@Override
+	public List<Study> getStudies() {
+		return studyTable.getSelection().size()>1? studyTable.getSelection(): studyTable.getRows();
+	}
 
 	@Override
 	public void onTabSelect() {

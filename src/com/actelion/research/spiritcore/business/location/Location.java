@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -29,7 +29,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -69,6 +68,7 @@ import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.LocationType.LocationCategory;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
+import com.actelion.research.spiritcore.util.DifferenceMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 
@@ -701,34 +701,34 @@ public class Location implements Serializable, Comparable<Location>, Cloneable, 
 	 * @param b
 	 * @return
 	 */
-	public Map<String, String> getDifferenceMap(Location l) {
+	public DifferenceMap getDifferenceMap(Location l) {
 
-		Map<String, String> map = new LinkedHashMap<>();
+		DifferenceMap map = new DifferenceMap();
 		if(l==null) return map;
 
-		if(CompareUtils.compare(l.getName(), l.getName())!=0) {
-			map.put("Name", l.getName());
+		if(CompareUtils.compare(getName(), l.getName())!=0) {
+			map.put("Name", getName(), l.getName());
 		}
-		if(CompareUtils.compare(l.getDescription(), l.getDescription())!=0) {
-			map.put("Description", l.getDescription());
+		if(CompareUtils.compare(getDescription(), l.getDescription())!=0) {
+			map.put("Description", getDescription(), l.getDescription());
 		}
-		if(CompareUtils.compare(l.getParent(), l.getParent())!=0) {
-			map.put("Parent", l.getParent()==null?"NA":l.getParent().getHierarchyFull());
+		if(CompareUtils.compare(getParent(), l.getParent())!=0) {
+			map.put("Parent", getParent()==null?"":getParent().getHierarchyFull(), l.getParent()==null?"":l.getParent().getHierarchyFull());
 		}
-		if(CompareUtils.compare(l.getLocationType(), l.getLocationType())!=0) {
-			map.put("LocationType", l.getLocationType()==null?"NA":l.getLocationType().getName());
+		if(CompareUtils.compare(getLocationType(), l.getLocationType())!=0) {
+			map.put("LocationType", getLocationType()==null?"":getLocationType().getName(), l.getLocationType()==null?"":l.getLocationType().getName());
 		}
-		if(CompareUtils.compare(l.getCols(), l.getCols())!=0) {
-			map.put("Cols", ""+l.getCols());
+		if(CompareUtils.compare(getCols(), l.getCols())!=0) {
+			map.put("Cols", ""+getCols(), ""+l.getCols());
 		}
-		if(CompareUtils.compare(l.getRows(), l.getRows())!=0) {
-			map.put("Rows", ""+l.getRows());
+		if(CompareUtils.compare(getRows(), l.getRows())!=0) {
+			map.put("Rows", ""+getRows(), ""+l.getRows());
 		}
-		if(CompareUtils.compare(l.getPrivacy(), l.getPrivacy())!=0 || CompareUtils.compare(l.getEmployeeGroup(), l.getEmployeeGroup())!=0) {
-			map.put("Privacy", ""+l.getPrivacy() + (l.getEmployeeGroup()==null?"": " to "+l.getEmployeeGroup().getName()));
+		if(CompareUtils.compare(getPrivacy(), l.getPrivacy())!=0 || CompareUtils.compare(getEmployeeGroup(), l.getEmployeeGroup())!=0) {
+			map.put("Privacy", getPrivacy() + (getEmployeeGroup()==null?"": " to "+getEmployeeGroup().getName()), l.getPrivacy() + (l.getEmployeeGroup()==null?"": " to "+l.getEmployeeGroup().getName()));
 		}
-		if(CompareUtils.compare(l.getCreUser(), l.getCreUser())!=0) {
-			map.put("Owner", l.getCreUser());
+		if(CompareUtils.compare(getCreUser(), l.getCreUser())!=0) {
+			map.put("CreatedBy", getCreUser(), l.getCreUser());
 		}
 
 		return map;

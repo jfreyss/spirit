@@ -14,7 +14,8 @@
 
 		<!-- NO Connection pool: no need as we use a fully managed connection model -->
 		<property name="hibernate.temp.use_jdbc_metadata_defaults"  value="true"/>
-		<property name="hibernate.connection.isolation" value="2"/> <!-- READ COMMITTED=2 -->
+		<!-- <property name="hibernate.connection.isolation" value="2"/> --> <!-- READ COMMITTED=2 -->
+		<property name="hibernate.connection.isolation" value="2"/>
         <property name="current_session_context_class" value="thread"/>         
        	<property name="hibernate.archive.autodetection" value="class"/> 
 		<property name="hibernate.connection.autocommit" value="false"/>
@@ -34,7 +35,7 @@
 		<property name="org.hibernate.envers.revision_field_name" value="REV" />
 		<property name="org.hibernate.envers.revision_type_field_name" value="REVTYPE" />   
 		<property name="org.hibernate.envers.audit_table_suffix" value="_aud" />
-		
+		<property name="org.hibernate.envers.track_entities_changed_in_revision" value="false" />
       </properties>
    </persistence-unit>
 </persistence>

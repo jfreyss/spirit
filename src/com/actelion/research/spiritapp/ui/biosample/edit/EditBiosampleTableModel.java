@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -53,11 +53,18 @@ import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.Linke
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
+/**
+ * Table used to edit a list of Biosamples
+ *
+ * @author Joel Freyss
+ */
 public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 
 	private Biotype type;
@@ -124,7 +131,9 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 			defaultColumns.add(new ContainerLocationPosColumn());
 			if(type.getAmountUnit()!=null) defaultColumns.add(new ContainerAmountColumn(type));
 		} else if(type!=null) {
-			defaultColumns.add(new ContainerTypeColumn());
+			if(SpiritProperties.getInstance().isChecked(PropertyKey.BIOSAMPLE_CONTAINERTYPES)) {
+				if(type.getContainerType()==null) defaultColumns.add(new ContainerTypeColumn());
+			}
 			if(type.getContainerType()==null || type.getContainerType().getBarcodeType()!=BarcodeType.NOBARCODE) defaultColumns.add(new ContainerIdColumn());
 			defaultColumns.add(new ContainerLocationPosColumn());
 			if(type.getAmountUnit()!=null) defaultColumns.add(new ContainerAmountColumn(type));
@@ -136,17 +145,21 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 		//Study Elements
 		if(type!=null && (type.getCategory()==BiotypeCategory.LIVING || type.getCategory()==BiotypeCategory.SOLID || type.getCategory()==BiotypeCategory.LIQUID) || hasAttachedSamples) {
 			defaultColumns.add(new StudyIdColumn());
-			defaultColumns.add(new StudyGroupColumn(this));
-			defaultColumns.add(new StudySubGroupColumn());
-			defaultColumns.add(new StudyPhaseColumn(this));
+			if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_STUDYDESIGN)) {
+				defaultColumns.add(new StudyGroupColumn(this));
+				defaultColumns.add(new StudySubGroupColumn());
+				defaultColumns.add(new StudyPhaseColumn(this));
+			}
 		}
 
-		if(type!=null && type.getCategory()==BiotypeCategory.PURIFIED && type.getParent()==null) {
-			//Don't add parents columns
-		} else if(!compactView) {
-			//Top
-			if(hasParents2) {
-				defaultColumns.add(new StudyParticipantIdColumn());
+		if(SpiritProperties.getInstance().isAdvancedMode()) {
+			if(type!=null && type.getCategory()==BiotypeCategory.PURIFIED && type.getParent()==null) {
+				//Don't add parents columns
+			} else if(!compactView) {
+				//Top
+				if(hasParents2) {
+					defaultColumns.add(new StudyParticipantIdColumn());
+				}
 			}
 
 			//Parent (must always be displayed except for living)
@@ -154,6 +167,7 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 				defaultColumns.add(new ParentBiosampleColumn(this));
 			}
 		}
+
 
 		Column<Biosample, String> sampleIdColumn = new SampleIdColumn(new BiosampleLinker(LinkerType.SAMPLEID, type), false, true);
 		defaultColumns.add(sampleIdColumn);
@@ -182,16 +196,22 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 	public List<Column<Biosample, ?>> getPossibleColumns() {
 		List<Column<Biosample, ?>> res = new ArrayList<>();
 		res.add(new BiosampleElbColumn());
-		res.add(new ContainerTypeColumn());
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.BIOSAMPLE_CONTAINERTYPES)) {
+			res.add(new ContainerTypeColumn());
+		}
 		res.add(new ContainerIdColumn());
 		res.add(new ContainerLocationPosColumn());
 		res.add(new ContainerAmountColumn(null));
 		res.add(new StudyIdColumn());
-		res.add(new StudyGroupColumn(this));
-		res.add(new StudySubGroupColumn());
-		res.add(new StudyPhaseColumn(this));
-		res.add(new StudyParticipantIdColumn());
-		res.add(new ParentBiosampleColumn(this));
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_STUDYDESIGN)) {
+			res.add(new StudyGroupColumn(this));
+			res.add(new StudySubGroupColumn());
+			res.add(new StudyPhaseColumn(this));
+		}
+		if(SpiritProperties.getInstance().isAdvancedMode()) {
+			res.add(new StudyParticipantIdColumn());
+			res.add(new ParentBiosampleColumn(this));
+		}
 		res.add(new BiosampleQualityColumn());
 		res.add(new ExpiryDateColumn());
 		res.add(new CreationColumn(false));
@@ -203,10 +223,15 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 	}
 
 	@Override
-	public Biosample createRecord() {
+	public Biosample createRecord(Biosample model) {
 		if(type==null) return null;
 		Biosample res = new Biosample(type);
-		res.setAttachedStudy(study);
+		res.setBiotype(model==null? null: model.getBiotype());
+		res.setAttachedStudy(model==null? study: model.getAttachedStudy());
+		res.setInheritedGroup(model==null? null: model.getInheritedGroup());
+		res.setInheritedPhase(model==null? null: model.getInheritedPhase());
+		res.setInheritedSubGroup(model==null? null: model.getInheritedSubGroup());
+		res.setContainerType(model==null? null: model.getContainerType());
 		return res;
 	}
 
@@ -234,6 +259,8 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 
 	@Override
 	public Column<Biosample, ?> getTreeColumn() {
+		if(!SpiritProperties.getInstance().isAdvancedMode()) return null;
+
 		Column<Biosample, ?> col = super.getTreeColumn();
 		if(col==null || !getColumns().contains(col)) {
 			for (Column<Biosample, ?> c : getColumns()) {

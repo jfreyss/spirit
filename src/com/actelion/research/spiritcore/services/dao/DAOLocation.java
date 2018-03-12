@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -71,7 +71,7 @@ public class DAOLocation {
 			txn.commit();
 			txn = null;
 		} finally {
-			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
+			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
 		}
 	}
 
@@ -134,15 +134,11 @@ public class DAOLocation {
 			} else {
 				sieblings = new ArrayList<>(location.getParent().getChildren());
 			}
-			System.out.println("DAOLocation.persistLocations() "+location+" among "+sieblings);
 			for (Location siebling : sieblings) {
 				if(siebling!=location && siebling.getId()!=location.getId() && location.getName().equals(siebling.getName())) {
-					System.out.println("DAOLocation.persistLocations() "+location+" "+siebling+ "   "+location.getId()+" "+siebling.getId());
 					throw new Exception("The location's name is not unique: " + location.getHierarchyFull());
 				}
 			}
-
-
 
 			location.setDescription(location.getDescription()==null? "": location.getDescription().trim());
 
@@ -164,7 +160,7 @@ public class DAOLocation {
 			//Check cycles
 			int depth = 0;
 			Location c = location;
-			Set<Location> seen = new HashSet<Location>();
+			Set<Location> seen = new HashSet<>();
 			while(c!=null && (++depth)<30) {
 				if(seen.contains(c)) throw new Exception("You cannot create cycles");
 				seen.add(c);
@@ -207,7 +203,6 @@ public class DAOLocation {
 
 			LoggerFactory.getLogger(DAOLocation.class).debug("persist "+location.getName() + "("+location.getId()+") - parent "+(location.getParent()==null?"NA": location.getParent() + "("+location.getParent().getId()+")"));
 
-
 			if(location.getId()<=0) {
 				location.setCreDate(location.getUpdDate());
 				location.setCreUser(location.getUpdUser());
@@ -220,12 +215,10 @@ public class DAOLocation {
 				map.put(location, location);
 			}
 
-			//Update all samples in the location
-			if(map.get(location).getBiosamples().size()>0) {
-				for (Biosample b : location.getBiosamples()) {
-					b.setUpdUser(user.getUsername());
-					b.setUpdDate(now);
-				}
+			//Update all samples in the updated location, and their children
+			for (Biosample b : map.get(location).getBiosamples()) {
+				b.setUpdUser(user.getUsername());
+				b.setUpdDate(now);
 			}
 
 
@@ -281,20 +274,19 @@ public class DAOLocation {
 
 	public static Location getLocation(int id) {
 		EntityManager session = JPAUtil.getManager();
-		List<Location> list = session.createQuery("SELECT l FROM Location l WHERE l.id = "+id)
-				.getResultList();
+		List<Location> list = session.createQuery("from Location l where l.id = "+id).getResultList();
 		return list.size()==1? list.get(0): null;
 	}
 
 	public static Location getLocation(Location parent, String name) {
 		EntityManager session = JPAUtil.getManager();
 		if(parent==null || parent.getId()<=0) {
-			List<Location> list = session.createQuery("SELECT l FROM Location l WHERE l.name = ?1 and l.parent is null")
+			List<Location> list = session.createQuery("from Location l where l.name = ?1 and l.parent is null")
 					.setParameter(1, name)
 					.getResultList();
 			return list.size()==1? list.get(0): null;
 		} else {
-			List<Location> list = session.createQuery("SELECT l FROM Location l WHERE l.name = ?1 and l.parent = ?2")
+			List<Location> list = session.createQuery("from Location l where l.name = ?1 and l.parent = ?2")
 					.setParameter(1, name)
 					.setParameter(2, parent)
 					.getResultList();
@@ -307,25 +299,16 @@ public class DAOLocation {
 	 * @return
 	 */
 	public static List<Location> getLocationRoots() {
-		//		String key = "locationRoots_"+JPAUtil.getManager();
-		List<Location> res = null; //(List<Location>) Cache.getInstance().get(key);
-		//		if(res==null || (res.size()>0 && !JPAUtil.getManager().contains(res.get(0)))) {
-
+		List<Location> res = null;
 		StringBuilder sb = new StringBuilder();
 		for (LocationType t : LocationType.getPossibleRoots()) {
 			sb.append((sb.length()>0?",":"") + "'" + t.name() + "'");
 		}
 
 		EntityManager session = JPAUtil.getManager();
-		Query query = session.createQuery(
-				" select location  " +
-						" from Location location " +
-						" where location.parent is null and location.locationType in (" + sb + ")");
-		//			query.setLockMode(LockModeType.NONE);
+		Query query = session.createQuery("from Location location where location.parent is null and location.locationType in (" + sb + ")");
 		res = query.getResultList();
 		Collections.sort(res);
-		//			Cache.getInstance().add(key, res, 120);
-		//		}
 
 		return res;
 	}
@@ -353,10 +336,7 @@ public class DAOLocation {
 	public static List<Location> queryLocation(LocationQuery q, SpiritUser user) throws Exception {
 
 		EntityManager session = JPAUtil.getManager();
-		String jpql =
-				" select location " +
-						" from Location location " +
-						" where 1 = 1";
+		String jpql = "from Location location where 1 = 1";
 
 		List<Object> parameters = new ArrayList<>();
 
@@ -366,7 +346,6 @@ public class DAOLocation {
 		}
 
 		if(q.getEmployeeGroup()!=null) {
-			//			jpql += " and location.id in (select distinct b.location.id from Biosample b where b.group = ?)";
 			jpql += " and location.employeeGroup = ?";
 			parameters.add(q.getEmployeeGroup());
 		}
@@ -450,7 +429,7 @@ public class DAOLocation {
 			txn.commit();
 
 		} finally {
-			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
+			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
 		}
 	}
 
@@ -460,7 +439,7 @@ public class DAOLocation {
 		for (Location location : locations) {
 			if(location.getId()<=0) throw new Exception("the location "+location.getName()+" is not persistant");
 			if(location.getBiosamples().size()>0) throw new Exception("You must first checkout all the biosamples in "+location.getName());
-			if(!SpiritRights.canEdit(location, user)) throw new Exception("You are not allowed to edit "+location);
+			if(!SpiritRights.canDelete(location, user)) throw new Exception("You are not allowed to edit "+location);
 			if(location.getChildren()!=null && !locations.containsAll(location.getChildren())) throw new Exception(location+" has children");
 		}
 
@@ -615,7 +594,7 @@ public class DAOLocation {
 			Cache.getInstance().remove("locationRoots");
 			Cache.getInstance().remove("locations");
 		} finally {
-			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
+			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
 		}
 
 	}

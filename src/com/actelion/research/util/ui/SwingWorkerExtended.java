@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -69,7 +69,7 @@ public class SwingWorkerExtended  {
 	public static boolean DEBUG = false;
 	public static boolean SHOW_EXCEPTION = true;
 
-	private static final ExecutorService bgPool = Executors.newFixedThreadPool(1);
+	private static ExecutorService bgPool = Executors.newSingleThreadExecutor();
 
 
 	public static final int FLAG_SYNCHRONOUS = 0;
@@ -187,6 +187,12 @@ public class SwingWorkerExtended  {
 								//In Background
 								if(DEBUG) System.out.println("SwingWorkerExtended " + name + " -BG- " + (System.currentTimeMillis()-started) + "ms - " + callingThread);
 								SwingWorkerExtended.this.doInBackground();
+
+								if( !(isCancelled() || isInterrupted() || sw.isInterrupted())) {
+									SwingUtilities.invokeLater(doneRunnable);
+									if(DEBUG) System.out.println("SwingWorkerExtended "+name+" -DONE- " + (System.currentTimeMillis()-started) + "ms - " +callingThread);
+								}
+
 							} catch (final Throwable thrown) {
 								thrown.printStackTrace();
 								System.out.println("SwingWorkerExtended isCancelled="+isCancelled());
@@ -206,14 +212,8 @@ public class SwingWorkerExtended  {
 								endBgProcess();
 							}
 
-							if(isCancelled() || isInterrupted() || sw.isInterrupted()) {
-								endBgProcess();
-								if(DEBUG) System.out.println("SwingWorkerExtended " + name + " -CANCEL- " + (System.currentTimeMillis()-started) + "ms - " + callingThread);
-								return;
-							} else {
-								SwingUtilities.invokeLater(doneRunnable);
-								if(DEBUG) System.out.println("SwingWorkerExtended "+name+" -DONE- " + (System.currentTimeMillis()-started) + "ms - " +callingThread);
-							}
+
+
 						}
 					};
 					bgPool.submit(bgRunnable);
@@ -237,7 +237,7 @@ public class SwingWorkerExtended  {
 			delayVisibleThread = new Thread("SwingWorkerExtended-GlassPane") {
 				@Override
 				public void run() {
-					try{Thread.sleep(Math.max(delayInMs, 200));} catch(Exception e) {return;}
+					try{Thread.sleep(Math.max(delayInMs, 200));} catch(Exception e) {e.printStackTrace(); return;}
 					startBgProcess(title, comp);
 				}
 			};
@@ -266,7 +266,7 @@ public class SwingWorkerExtended  {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				if(!comp.isShowing() || longTaskDone.get()) {
+				if(!comp.isShowing() || longTaskDone.get() || (sw!=null && sw.isInterrupted())) {
 					return;
 				}
 				bgTaskStarted.set(true);
@@ -424,8 +424,11 @@ public class SwingWorkerExtended  {
 
 	public static void awaitTermination() {
 		try {
+			bgPool.shutdown();
 			boolean success = bgPool.awaitTermination(1000, TimeUnit.MILLISECONDS);
 			if(!success) System.err.println("SwingWorker: tasks took more than 1s to complete");
+
+			bgPool = Executors.newSingleThreadExecutor();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -460,6 +463,4 @@ public class SwingWorkerExtended  {
 		};
 
 	}
-
-
 }

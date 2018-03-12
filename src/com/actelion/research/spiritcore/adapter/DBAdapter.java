@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -94,10 +94,15 @@ public abstract class DBAdapter {
 	private static final File configFile = new File(System.getProperty("user.home"), ".spirit/spirit.config");
 
 
-	/**Config File is db was not available at start*/
+	/**
+	 * Config File is db was not available at start
+	 */
 	private static DBAdapter instance;
 	private static boolean isConfigurable;
 
+	/**
+	 * Properties store the effective properties
+	 */
 	private static Map<String, String> properties = new HashMap<>();
 
 
@@ -106,7 +111,6 @@ public abstract class DBAdapter {
 	 * - The configuration is first looked upon the -Djnlp.adapter= properties
 	 * - If not available, the configuration is loaded through the config file in "home/.spirit/spirit.config"
 	 * - If not available, Spirit starts with a default HSQL DB
-	 *
 	 */
 	public static DBAdapter getInstance() {
 		if(instance==null) {
@@ -126,7 +130,6 @@ public abstract class DBAdapter {
 						isConfigurable = false;
 					}
 
-
 					try {
 						instance = getAdapter(className);
 					} catch (Exception ex) {
@@ -140,7 +143,7 @@ public abstract class DBAdapter {
 	}
 
 	/**
-	 * Sets the instance
+	 * Sets the adapter instance
 	 * @param myInstance
 	 */
 	public static void setAdapter(DBAdapter myInstance) {
@@ -174,6 +177,12 @@ public abstract class DBAdapter {
 		LoggerFactory.getLogger(DBAdapter.class).info("Saved "+configFile);
 	}
 
+	/**
+	 * Retrieve the adapter by its class name (can be given as a program parameter)
+	 * @param className
+	 * @return
+	 * @throws Exception
+	 */
 	public static DBAdapter getAdapter(String className) throws Exception {
 		Class<?> claz = Class.forName(className);
 		DBAdapter adapter = (DBAdapter) claz.newInstance();
@@ -325,11 +334,14 @@ public abstract class DBAdapter {
 		if(format.length()>0) {
 			DateTimeFormat localeFormat = DateTimeFormat.get(format);
 			if(localeFormat==null) {
-				System.err.println("Invalid LocaleFormat in spirit_property: " + PropertyKey.SYSTEM_DATEFORMAT + " = " + format);
-				FormatterUtils.setLocaleFormat(DateTimeFormat.INTL);
+				LoggerFactory.getLogger(DBAdapter.class).error("Invalid LocaleFormat: " + PropertyKey.SYSTEM_DATEFORMAT + " = " + format + " > " + FormatterUtils.getLocaleFormat());
+				FormatterUtils.setLocaleFormat(DateTimeFormat.YYYYMMDD);
 			} else {
+				LoggerFactory.getLogger(DBAdapter.class).info("set LocaleFormat to: " + PropertyKey.SYSTEM_DATEFORMAT + " = " + format + " > " + FormatterUtils.getLocaleFormat());
 				FormatterUtils.setLocaleFormat(localeFormat);
 			}
+		} else {
+			LoggerFactory.getLogger(DBAdapter.class).info("set LocaleFormat to: " + PropertyKey.SYSTEM_DATEFORMAT + " = " + format + " > " + FormatterUtils.getLocaleFormat());
 		}
 	}
 
@@ -433,5 +445,23 @@ public abstract class DBAdapter {
 		return null;
 	}
 
+	/**
+	 * Returns the db properties, which are set by the system and which cannot be overriden by a system admin
+	 * @return
+	 */
+	public Map<String, String> getProperties() {
+		return new HashMap<>();
+	}
 
+	/**
+	 * Do we record a simplified audit? ie. if a revision contains more than 4 changes, the audit contains the changed entities and not the difference
+	 * @return
+	 */
+	public boolean isAuditSimplified() {
+		return true;
+	}
+
+	public String getSoftwareName() {
+		return "Spirit";
+	}
 }

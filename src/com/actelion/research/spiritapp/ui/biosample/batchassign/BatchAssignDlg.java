@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -74,7 +74,7 @@ import com.actelion.research.spiritapp.ui.util.ISpiritChangeObserver;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.ui.util.component.JSpiritEscapeDialog;
-import com.actelion.research.spiritapp.ui.util.lf.LF;
+import com.actelion.research.spiritapp.ui.util.component.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
@@ -438,7 +438,7 @@ public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChange
 				if(rackNo==null || rackNo<0 || rackNo>=indexes.length) {
 					rackPos = null;
 				} else {
-					while(indexes[rackNo]<positions.size() && positions.get(indexes[rackNo]).getFirst()!=rackNo) {
+					while(indexes[rackNo]<positions.size() && positions.get(indexes[rackNo]).getFirst().intValue()!=rackNo.intValue()) {
 						indexes[rackNo]++;
 					}
 					rackPos = indexes[rackNo]<positions.size()? positions.get(indexes[rackNo]): null;

@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -23,8 +23,6 @@ package com.actelion.research.spiritapp.ui.location.edit;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -57,16 +55,27 @@ import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JExceptionDialog;
+import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 
+/**
+ * Dialog used to edit locations
+ *
+ * @author Joel Freyss
+ */
 public class LocationEditDlg extends JSpiritEscapeDialog {
 
 	private LocationEditTable table = new LocationEditTable();
 	private List<Location> savedLocations = null;
 
+	/**
+	 * Creates a dialog to duplicate studies
+	 * @param locations
+	 * @return
+	 */
 	public static LocationEditDlg duplicate(List<Location> locations) {
 		Set<Location> tree = new HashSet<>();
 		for (Location l : locations) {
@@ -87,14 +96,32 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 		return new LocationEditDlg(locations, true, true);
 	}
 
+	/**
+	 * Creates a dialog to edit locations (new or existing).
+	 * This function creates a new transaction
+	 * @param locations
+	 * @return
+	 */
 	public static LocationEditDlg edit(List<Location> locations) {
 		return new LocationEditDlg(locations, false, true);
 	}
 
+	/**
+	 * Creates a dialog to edit locations (new or existing).
+	 * This function does not create a new transaction. The edition is done within the same edit context
+	 * @param locations
+	 * @return
+	 */
 	public static LocationEditDlg editInSameTransaction(List<Location> locations) {
 		return new LocationEditDlg(locations, false, false);
 	}
 
+	/**
+	 * private constructor to start the edit Location dialog
+	 * @param myLocations
+	 * @param duplicate
+	 * @param newTransaction
+	 */
 	private LocationEditDlg(List<Location> myLocations, boolean duplicate, final boolean newTransaction) {
 		super(UIUtils.getMainFrame(), "Location - Edit", newTransaction? LocationEditDlg.class.getName(): null);
 		List<Location> locations = JPAUtil.reattach(myLocations);
@@ -117,26 +144,23 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 
 		//Create Save Button
 		JButton saveButton = new JIconButton(IconType.SAVE, newTransaction? "Save": "Ok");
-		saveButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					List<Location> locations = table.getRows();
-					for (Iterator<Location> iterator = locations.iterator(); iterator.hasNext();) {
-						Location location = iterator.next();
-						if((location.getName()==null || location.getName().length()==0) && location.getLocationType()==null) {
-							iterator.remove();
-						}
+		saveButton.addActionListener(e -> {
+			try {
+				List<Location> rows = table.getRows();
+				for (Iterator<Location> iterator = rows.iterator(); iterator.hasNext();) {
+					Location location = iterator.next();
+					if((location.getName()==null || location.getName().length()==0) && location.getLocationType()==null) {
+						iterator.remove();
 					}
-					if(newTransaction) {
-						save(locations);
-					} else {
-						savedLocations = locations;
-						dispose();
-					}
-				} catch(Exception ex) {
-					JExceptionDialog.showError(LocationEditDlg.this, ex);
 				}
+				if(newTransaction) {
+					save(rows);
+				} else {
+					savedLocations = rows;
+					dispose();
+				}
+			} catch(Exception ex) {
+				JExceptionDialog.showError(LocationEditDlg.this, ex);
 			}
 		});
 
@@ -147,11 +171,7 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 				UIUtils.createHorizontalBox(Box.createHorizontalGlue(), printButton, saveButton)));
 		UIUtils.adaptSize(this, 1140, 600);
 
-		//init
 		table.setRows(locations);
-
-
-
 		setVisible(true);
 	}
 
@@ -162,7 +182,7 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 			locations = JPAUtil.reattach(locations);
 			SpiritUser user = Spirit.askForAuthentication();
 			for (Location loc : locations) {
-				if (!SpiritRights.canEdit(loc, user)) {
+				if (!SpiritRights.canDelete(loc, user)) {
 					throw new Exception("You are not allowed to delete the location " + loc);
 				}
 			}
@@ -182,7 +202,7 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 		int res = JOptionPane.showConfirmDialog(UIUtils.getMainFrame(), "Are you sure you want to delete " + (locations.size() == 1 ? locations.get(0).getHierarchyFull() : locations.size() + " locations") + "?", "Delete Location", JOptionPane.YES_NO_OPTION);
 		if (res != JOptionPane.YES_OPTION) return;
 
-		List<Biosample> toCheckout = new ArrayList<Biosample>();
+		List<Biosample> toCheckout = new ArrayList<>();
 		for (Location l : locations) {
 			toCheckout.addAll(l.getBiosamples());
 		}
@@ -227,24 +247,35 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 			if(toCheckout.size()>0) DAOBiosample.persistBiosamples(session, toCheckout, SpiritFrame.getUser());
 			DAOLocation.deleteLocations(session, locations, SpiritFrame.getUser());
 
-
 			txn.commit();
 			txn = null;
 
 			SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_DELETED, Location.class, locations);
 
 		} finally {
-			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {}
+			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
 		}
 	}
 
 
-
+	/**
+	 * Save and dispose the dialog
+	 * @param locations
+	 * @throws Exception
+	 */
 	private void save(List<Location> locations) throws Exception {
-		DAOLocation.persistLocations(locations, Spirit.askForAuthentication());
-		SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Location.class, locations);
-		dispose();
-		this.savedLocations = locations;
+		new SwingWorkerExtended(this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+			@Override
+			protected void doInBackground() throws Exception {
+				DAOLocation.persistLocations(locations, Spirit.askForAuthentication());
+			}
+			@Override
+			protected void done() {
+				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Location.class, locations);
+				dispose();
+				savedLocations = locations;
+			}
+		};
 	}
 
 

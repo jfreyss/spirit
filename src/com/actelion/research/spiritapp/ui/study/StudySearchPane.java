@@ -1,18 +1,18 @@
 /*
  * Spirit, a study/biosample management tool for research.
- * Copyright (C) 2016 Actelion Pharmaceuticals Ltd., Gewerbestrasse 16,
+ * Copyright (C) 2018 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91,
  * CH-4123 Allschwil, Switzerland.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
@@ -62,7 +62,7 @@ public class StudySearchPane extends JPanel {
 
 
 		add(BorderLayout.CENTER, new JScrollPane(studySearchTree));
-		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(/*myStudiesButton,*/ Box.createHorizontalGlue(), resetButton, searchButton));
+		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), resetButton, searchButton));
 
 		studySearchTree.addPropertyChangeListener(FormTree.PROPERTY_SUBMIT_PERFORMED, e-> {
 			query(studySearchTree.getQuery());
@@ -88,18 +88,6 @@ public class StudySearchPane extends JPanel {
 		}
 	}
 
-	//	public class Action_MyStudies extends AbstractAction {
-	//		public Action_MyStudies() {
-	//			super("MyStudies");
-	//		}
-	//		@Override
-	//		public void actionPerformed(ActionEvent e) {
-	//			StudyQuery q = new StudyQuery();
-	//			q.setUser(SpiritFrame.getUser()==null? null: SpiritFrame.getUser().getUsername());
-	//			query(q);
-	//		}
-	//	}
-
 	public class Action_Reset extends AbstractAction {
 		public Action_Reset() {
 			super("");
@@ -118,6 +106,7 @@ public class StudySearchPane extends JPanel {
 		query(new StudyQuery());
 
 	}
+
 
 	public SwingWorkerExtended query() {
 		return query(studySearchTree.getQuery());
@@ -148,8 +137,4 @@ public class StudySearchPane extends JPanel {
 		return searchButton;
 	}
 
-
-	//	public void setStudyIds(String studyIds) {
-	//		studySearchTree.setStudyIds(studyIds);
-	//	}
 }

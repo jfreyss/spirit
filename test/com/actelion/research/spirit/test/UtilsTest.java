@@ -276,17 +276,25 @@ public class UtilsTest {
 		Assert.assertEquals("10/11/2017", FormatterUtils.cleanDate("10/11/17"));
 		Assert.assertEquals("10/11/2017", FormatterUtils.cleanDate("10/11/2017"));
 		Assert.assertEquals("10/11/2017", FormatterUtils.cleanDate("10.11.2017"));
-		Assert.assertEquals("01/01/2017", FormatterUtils.cleanDate("2017"));
-		Assert.assertEquals("01/05/2017", FormatterUtils.cleanDate("5/17"));
+		Assert.assertEquals("01/05/2017", FormatterUtils.cleanDate("1/5/17"));
+		Assert.assertEquals(null, FormatterUtils.cleanDate("2017"));
 		Assert.assertEquals(null, FormatterUtils.cleanDate("5-17"));
 
 		FormatterUtils.setLocaleFormat(DateTimeFormat.SWISS);
-		Assert.assertEquals("01.05.2017", FormatterUtils.cleanDate("5.17"));
+		Assert.assertEquals(null, FormatterUtils.cleanDate("5.17"));
 		Assert.assertEquals(null, FormatterUtils.cleanDate("5-17"));
+		Assert.assertEquals("01.05.2017", FormatterUtils.cleanDate("1/5/17"));
 
-		FormatterUtils.setLocaleFormat(DateTimeFormat.INTL);
+		FormatterUtils.setLocaleFormat(DateTimeFormat.YYYYMMDD);
 		Assert.assertEquals("2017-05-01", FormatterUtils.cleanDate("2017-5-1"));
-		Assert.assertEquals("2017-05-01", FormatterUtils.cleanDate("17-5"));
+		Assert.assertEquals("2017-05-01", FormatterUtils.cleanDate("17-5-1"));
+
+
+		FormatterUtils.setLocaleFormat(DateTimeFormat.DDMMMYYYY);
+		Assert.assertEquals("01-Jun-1990", FormatterUtils.cleanDate("1-JUN-1990"));
+		Assert.assertEquals("01-Feb-1990", FormatterUtils.cleanDate("1-FEB-1990"));
+		Assert.assertEquals("10-Apr-2001", FormatterUtils.cleanDate("10-Apr-2001"));
+		Assert.assertEquals(null, FormatterUtils.cleanDate("30-Feb-2001"));
 
 	}
 
