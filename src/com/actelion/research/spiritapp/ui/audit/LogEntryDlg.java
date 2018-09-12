@@ -36,11 +36,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
+import com.actelion.research.spiritapp.ui.util.component.UserIdComboBox;
 import com.actelion.research.spiritcore.business.audit.LogEntry;
 import com.actelion.research.spiritcore.business.audit.LogEntry.Action;
 import com.actelion.research.spiritcore.services.dao.DAOLog;
 import com.actelion.research.util.FormatterUtils;
-import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.SwingWorkerExtended;
@@ -53,11 +53,10 @@ import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
 
 public class LogEntryDlg extends JEscapeDialog {
 
-	private JCustomTextField userTextField = new JCustomTextField();
+	private UserIdComboBox userTextField = new UserIdComboBox();
 	private JGenericComboBox<LogEntry.Action> actionComboBox = new JGenericComboBox<LogEntry.Action>(LogEntry.Action.values(), true);
 	private JSpinner daysSpinner = new JSpinner(new SpinnerNumberModel(31, 0, null, 1));
 	private ExtendTable<LogEntry> table;
-
 
 	public LogEntryDlg() {
 		super(UIUtils.getMainFrame(), "Log Entries");

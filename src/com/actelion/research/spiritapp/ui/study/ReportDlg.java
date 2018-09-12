@@ -23,6 +23,8 @@ package com.actelion.research.spiritapp.ui.study;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.Box;
@@ -33,8 +35,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.report.AbstractReport;
 import com.actelion.research.spiritapp.report.MixedReport;
@@ -57,7 +57,9 @@ public class ReportDlg extends JEscapeDialog {
 	private final ReportFactory reportFactory = ReportFactory.getInstance();
 	private JList<AbstractReport> reportList;
 	private final JPanel detailPanel = new JPanel(new BorderLayout());
-	private final JButton createReportsButton = new JIconButton(IconType.EXCEL, "Create Report");
+	private final JButton excelButton = new JIconButton(IconType.EXCEL, "Excel Report");
+	private final JButton pdfButton = new JIconButton(IconType.PDF, "PDF Report");
+	private Map<AbstractReport, JPanel> rep2panel = new HashMap<>();
 
 	public ReportDlg(Study s) {
 		super(UIUtils.getMainFrame(), "Study Reports - " + (s==null?"":s.getStudyId()), true);
@@ -65,7 +67,7 @@ public class ReportDlg extends JEscapeDialog {
 		s = DAOStudy.getStudy(s.getId());
 		this.s = s;
 
-		if(!SpiritRights.canEditBiosamples(s, SpiritFrame.getUser())) {
+		if(!SpiritRights.canWork(s, SpiritFrame.getUser())) {
 			JExceptionDialog.showError("You must have read rights on the study to view the reports");
 			return;
 		}
@@ -75,15 +77,23 @@ public class ReportDlg extends JEscapeDialog {
 		}
 
 		//mixedReportsButton
-		createReportsButton.setEnabled(false);
-		createReportsButton.addActionListener(e-> {
+		excelButton.setEnabled(false);
+		excelButton.addActionListener(e-> {
 			try {
-				createReports();
+				createReports(false);
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ReportDlg.this, ex);
 			}
 		});
 
+		pdfButton.setEnabled(false);
+		pdfButton.addActionListener(e-> {
+			try {
+				createReports(true);
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ReportDlg.this, ex);
+			}
+		});
 
 		//Layout
 		reportList = new JList<>(new Vector<AbstractReport>(reportFactory.getReports()));
@@ -97,28 +107,22 @@ public class ReportDlg extends JEscapeDialog {
 			}
 		});
 		reportList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		reportList.addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				createReportsButton.setEnabled(reportList.getSelectedValuesList().size()>0);
-				refresh();
-			}
+		reportList.addListSelectionListener(e-> {
+			excelButton.setEnabled(reportList.getSelectedValuesList().size()>0);
+			pdfButton.setEnabled(reportList.getSelectedValuesList().size()>0);
+			refresh();
 		});
 		refresh();
 
-		JPanel contentPane = new JPanel(new BorderLayout());
 		JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT,
 				UIUtils.createTitleBox(UIUtils.createBox(
 						new JScrollPane(reportList),
 						new JInfoLabel("<html>Please select one or several reports from the list."))),
 				detailPanel);
 		splitPane.setDividerLocation(300);
-		contentPane.add(BorderLayout.CENTER, splitPane);
-		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), createReportsButton));
-		setContentPane(contentPane);
+		setContentPane(UIUtils.createBox(splitPane, null, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), excelButton, pdfButton)));
 
-		setSize(900, 700);
-		setLocationRelativeTo(UIUtils.getMainFrame());
+		UIUtils.adaptSize(this, 900, 700);
 		setVisible(true);
 	}
 
@@ -126,17 +130,25 @@ public class ReportDlg extends JEscapeDialog {
 		detailPanel.removeAll();
 		if(reportList.getSelectedValuesList().size()==1) {
 			AbstractReport rep = reportList.getSelectedValuesList().get(0);
-			detailPanel.add(ReportFactory.createReportPanel(rep, s));
+			JPanel reportPanel = rep2panel.get(rep);
+			if(reportPanel==null) {
+				rep2panel.put(rep, reportPanel = ReportFactory.createReportPanel(rep, s));
+			}
+			detailPanel.add(reportPanel);
 		} else {
 		}
 		detailPanel.validate();
-
+		detailPanel.repaint();
 	}
 
-	private void createReports() throws Exception {
+	private void createReports(boolean pdf) throws Exception {
 		MixedReport rep = new MixedReport(reportList.getSelectedValuesList());
 		rep.populateReport(s);
-		rep.export(null);
+		if(pdf) {
+			rep.exportPDF(null);
+		} else {
+			rep.export(null);
+		}
 	}
 
 }

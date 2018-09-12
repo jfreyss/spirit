@@ -35,7 +35,6 @@ import javax.swing.JSplitPane;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleTable;
-import com.actelion.research.spiritapp.ui.biosample.BiosampleTableModel.Mode;
 import com.actelion.research.spiritapp.ui.util.ISpiritChangeObserver;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
@@ -59,10 +58,10 @@ public class ExpiredSamplesDlg extends JEscapeDialog implements ISpiritChangeObs
 
 		SpiritChangeListener.register(this);
 		expiredTable.getModel().setCanExpand(false);
-		expiredTable.getModel().setMode(Mode.COMPACT);
+		//		expiredTable.getModel().setMode(Mode.COMPACT);
 
 		goingToExpireTable.getModel().setCanExpand(false);
-		goingToExpireTable.getModel().setMode(Mode.COMPACT);
+		//		goingToExpireTable.getModel().setMode(Mode.COMPACT);
 
 		centerPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT,
 				UIUtils.createTitleBox("Expired Biosamples", new JScrollPane(expiredTable)),

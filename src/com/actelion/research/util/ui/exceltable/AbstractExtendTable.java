@@ -98,10 +98,14 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 		WHEN_DIFFERENT_VALUE
 	}
 
-	public static enum HeaderClickingPolicy {
+	public static enum HeaderLeftClickingPolicy {
 		IGNORE,
 		SORT,
 		SELECT,
+		POPUP
+	}
+	public static enum HeaderRighClickingPolicy {
+		IGNORE,
 		POPUP
 	}
 
@@ -116,7 +120,8 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 	private boolean useAlphaForMergedCells = false;
 	private boolean tableChanged = true;
 
-	private HeaderClickingPolicy headerClickingPolicy = HeaderClickingPolicy.POPUP;
+	private HeaderLeftClickingPolicy headerLeftClickingPolicy = HeaderLeftClickingPolicy.POPUP;
+	private HeaderRighClickingPolicy headerRightClickingPolicy = HeaderRighClickingPolicy.POPUP;
 	private final FastHeaderRenderer<ROW> renderer = new FastHeaderRenderer<>();
 	private SwingWorkerExtended popupShowWorker = null;
 	private boolean canSort = true;
@@ -148,8 +153,8 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 	 * Constructor
 	 * @param model
 	 */
-	public AbstractExtendTable(final ExtendTableModel<ROW> model) {
-		super(model);
+	public AbstractExtendTable(final ExtendTableModel<ROW> myModel) {
+		super(myModel);
 		setRowHeight(FastFont.getDefaultFontSize()*2+1);
 
 
@@ -206,7 +211,7 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 			public void mouseClicked(final MouseEvent e) {
 				if (!SwingUtilities.isLeftMouseButton(e))  return;
 
-				switch(getHeaderClickingPolicy()) {
+				switch(getHeaderLeftClickingPolicy()) {
 				case SORT:
 					if (SwingUtilities.isLeftMouseButton(e)) {
 						final int col = columnAtPoint(e.getPoint());
@@ -249,99 +254,103 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 			 */
 			@Override
 			protected void showPopup(MouseEvent e) {
-				JPopupMenu popupMenu = new JPopupMenu();
+				switch(getHeaderRightClickingPolicy()) {
+				case POPUP:
+					JPopupMenu popupMenu = new JPopupMenu();
 
-				final int col = columnAtPoint(e.getPoint());
-				Column<ROW, ?> column = null;
-				if(col>=0) {
-					column = model.getColumn(convertColumnIndexToModel(col));
+					final int col = columnAtPoint(e.getPoint());
+					Column<ROW, ?> column = null;
+					if(col>=0) {
+						column = getModel().getColumn(convertColumnIndexToModel(col));
+						assert column!=null;
+						popupMenu.add(new JCustomLabel(column.getName().replace("\n", ".").replaceAll("<.>|^\\.|\\.$", ""), FastFont.BOLD));
+						popupMenu.add(new JSeparator());
 
-					popupMenu.add(new JCustomLabel(column.getName().replace("\n", ".").replaceAll("<.>|^\\.|\\.$", ""), Font.BOLD));
-					popupMenu.add(new JSeparator());
-
-					//Popup: Add sorting Columns
-					column.populateHeaderPopup(AbstractExtendTable.this, popupMenu);
-
-				}
-
-				populateHeaderPopup(popupMenu, column);
-
-				///////////////////////////
-				//Popup: Add possible columns
-				Set<Column<ROW, ?>> addableColumns = new LinkedHashSet<>();
-				for (Column<ROW, ?> c : model.getAllColumns()) {
-					if(c.isHideable()) {
-						addableColumns.add(c);
+						//Popup: Add sorting Columns
+						column.populateHeaderPopup(AbstractExtendTable.this, popupMenu);
 					}
-				}
-				if(model.getPossibleColumns()!=null) {
-					addableColumns.addAll(model.getPossibleColumns());
-				}
 
-				//Group extra columns by category
-				Map<String, List<Column<ROW, ?>>> cat2columns = new LinkedHashMap<>();
-				for (Column<ROW, ?> c : addableColumns) {
-					if(c==null) continue;
-					List<Column<ROW, ?>> l = cat2columns.get(c.getCategory());
-					if(l==null) {
-						cat2columns.put(c.getCategory(), l = new ArrayList<>());
-					}
-					l.add(c);
-				}
-				//Create the extra columns popup
-				if(cat2columns.size()>0) {
-					popupMenu.add(new JSeparator());
-					popupMenu.add(new JCustomLabel("Extra Columns", Font.BOLD));
-					if(cat2columns.size()<=1) {
-						//If there is one category, checkboxes are at the top
-						for (Column<ROW, ?> c : cat2columns.values().iterator().next()) {
-							popupMenu.add(new ColumnCheckbox(c));
+					populateHeaderPopup(popupMenu, column);
+
+					///////////////////////////
+					//Popup: Add possible columns
+					Set<Column<ROW, ?>> addableColumns = new LinkedHashSet<>();
+					for (Column<ROW, ?> c : getModel().getAllColumns()) {
+						if(c.isHideable()) {
+							addableColumns.add(c);
 						}
-					} else {
-						//If there are several category, checkboxes with no category are at the top, others are classified by category
-						if(cat2columns.get("")!=null) {
-							for (Column<ROW, ?> c : cat2columns.get("")) {
+					}
+					if(getModel().getPossibleColumns()!=null) {
+						addableColumns.addAll(getModel().getPossibleColumns());
+					}
+
+					//Group extra columns by category
+					Map<String, List<Column<ROW, ?>>> cat2columns = new LinkedHashMap<>();
+					for (Column<ROW, ?> c : addableColumns) {
+						if(c==null) continue;
+						List<Column<ROW, ?>> l = cat2columns.get(c.getCategory());
+						if(l==null) {
+							cat2columns.put(c.getCategory(), l = new ArrayList<>());
+						}
+						l.add(c);
+					}
+					//Create the extra columns popup
+					if(cat2columns.size()>0) {
+						popupMenu.add(new JSeparator());
+						popupMenu.add(new JCustomLabel("Extra Columns", FastFont.BOLD));
+						if(cat2columns.size()<=1) {
+							//If there is one category, checkboxes are at the top
+							for (Column<ROW, ?> c : cat2columns.values().iterator().next()) {
 								popupMenu.add(new ColumnCheckbox(c));
 							}
-						}
-						for(Map.Entry<String, List<Column<ROW, ?>>> entry: cat2columns.entrySet()) {
-							String key = entry.getKey();
-							if(key.length()==0) continue;
-							JComponent subMenu = new JMenu(entry.getKey());
-							popupMenu.add(subMenu);
-							for (Column<ROW, ?> c : entry.getValue()) {
-								subMenu.add(new ColumnCheckbox(c.getShortName(), c));
+						} else {
+							//If there are several category, checkboxes with no category are at the top, others are classified by category
+							if(cat2columns.get("")!=null) {
+								for (Column<ROW, ?> c : cat2columns.get("")) {
+									popupMenu.add(new ColumnCheckbox(c));
+								}
+							}
+							for(Map.Entry<String, List<Column<ROW, ?>>> entry: cat2columns.entrySet()) {
+								String key = entry.getKey();
+								if(key.length()==0) continue;
+								JComponent subMenu = new JMenu(entry.getKey());
+								popupMenu.add(subMenu);
+								for (Column<ROW, ?> c : entry.getValue()) {
+									subMenu.add(new ColumnCheckbox(c.getShortName(), c));
+								}
 							}
 						}
 					}
+
+					//Popup: Add Hierarchy menu
+					if(getModel().isTreeViewEnabled() && !getModel().isEditable()) {
+						popupMenu.add(new JSeparator());
+						popupMenu.add(new JCustomLabel("Hierarchy", FastFont.BOLD));
+
+						final JCheckBox treeViewCheckBox = new JCheckBox("Show Hierarchy", getModel().isTreeViewActive());
+						treeViewCheckBox.addActionListener(new ActionListener() {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								AbstractExtendTable.this.getModel().setTreeViewActive(treeViewCheckBox.isSelected());
+							}
+						});
+						popupMenu.add(treeViewCheckBox);
+						JMenu expandMenu = new JMenu("Expand/Collapse");
+						popupMenu.add(expandMenu);
+						expandMenu.add(new TreeViewExpandAll(true, false));
+						expandMenu.add(new TreeViewExpandAll(false, false));
+					}
+
+					//HeaderPopup
+
+					if(popupMenu.getComponentCount()==0) return;
+
+					popupMenu.show(e.getComponent(), e.getX(), e.getY());
+					return;
+				case IGNORE:
+					//Nothing
 				}
 
-				//Popup: Add Hierarchy menu
-				if(model.isTreeViewEnabled() && !model.isEditable()) {
-					popupMenu.add(new JSeparator());
-					popupMenu.add(new JCustomLabel("Hierarchy", Font.BOLD));
-
-					final JCheckBox treeViewCheckBox = new JCheckBox("Show Hierarchy", getModel().isTreeViewActive());
-					treeViewCheckBox.addActionListener(new ActionListener() {
-						@Override
-						public void actionPerformed(ActionEvent e) {
-							AbstractExtendTable.this.getModel().setTreeViewActive(treeViewCheckBox.isSelected());
-						}
-					});
-					popupMenu.add(treeViewCheckBox);
-					JMenu expandMenu = new JMenu("Expand/Collapse");
-					popupMenu.add(expandMenu);
-					//					expandMenu.add(new TreeViewExpandAll(true, true));
-					expandMenu.add(new TreeViewExpandAll(true, false));
-					//					expandMenu.add(new TreeViewExpandAll(false, true));
-					expandMenu.add(new TreeViewExpandAll(false, false));
-				}
-
-				//HeaderPopup
-
-				if(popupMenu.getComponentCount()==0) return;
-
-				popupMenu.show(e.getComponent(), e.getX(), e.getY());
 			}
 		});
 
@@ -350,12 +359,19 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 		setGridColor(new Color(255,255,255,0));
 	}
 
-	public HeaderClickingPolicy getHeaderClickingPolicy() {
-		return headerClickingPolicy;
+	public HeaderLeftClickingPolicy getHeaderLeftClickingPolicy() {
+		return headerLeftClickingPolicy;
 	}
 
-	public void setHeaderClickingPolicy(HeaderClickingPolicy headerClickingPolicy) {
-		this.headerClickingPolicy = headerClickingPolicy;
+	public void setHeaderLeftClickingPolicy(HeaderLeftClickingPolicy headerClickingPolicy) {
+		this.headerLeftClickingPolicy = headerClickingPolicy;
+	}
+
+	public HeaderRighClickingPolicy getHeaderRightClickingPolicy() {
+		return headerRightClickingPolicy;
+	}
+	public void setHeaderRightClickingPolicy(HeaderRighClickingPolicy headerRightClickingPolicy) {
+		this.headerRightClickingPolicy = headerRightClickingPolicy;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -458,7 +474,6 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 		}
 		if(maxWidth<=0) {
 			maxWidth = UIUtils.getMainFrame()!=null? UIUtils.getMainFrame().getWidth()-400: Toolkit.getDefaultToolkit().getScreenSize().width-400;
-			//			System.err.println("Could not find the parent of " + getClass()+ " ( in "+(getParent()==null?"":getParent().getClass())+") - make sure you add it to the window before setting the rows: use default: "+maxWidth+ " / parent="+getParent()+" width="+getWidth());
 		}
 
 
@@ -581,32 +596,6 @@ public abstract class AbstractExtendTable<ROW> extends JTable implements IExport
 						col2PrefWidth.put(col, newWidth);
 					}
 				}
-				//			} else if(sumPrefWidth>maxWidth) {
-				//				//reduce prefWidth if sumPrefWidth>maxWidth
-				//				int totalToReduce = sumPrefWidth-maxWidth;
-				//				int reducable = 0;
-				//				int n = 0;
-				//				for (int col = 0; col < nColumns; col++) {
-				//					int minWidth = col2MinWidth.get(col);
-				//					int prefWidth = col2PrefWidth.get(col);
-				//					if(minWidth>=0 && prefWidth>minWidth) {
-				//						n++;
-				//						reducable += prefWidth-minWidth;
-				//					}
-				//				}
-				//				totalToReduce = Math.min(reducable, totalToReduce);
-				//				if(totalToReduce>0 && n>0) {
-				//					for (int col = 0; n>0 && totalToReduce>0 && col < nColumns; col++) {
-				//						int minWidth = col2MinWidth.get(col);
-				//						int prefWidth = col2PrefWidth.get(col);
-				//						if(minWidth>=0 && prefWidth>minWidth) {
-				//							int toReduce = Math.min(prefWidth-minWidth, totalToReduce/n);
-				//							col2PrefWidth.put(col, prefWidth-toReduce);
-				//							totalToReduce -= toReduce;
-				//							n--;
-				//						}
-				//					}
-				//				}
 			}
 		}
 

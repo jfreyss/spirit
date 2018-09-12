@@ -21,6 +21,7 @@
 
 package com.actelion.research.spiritapp.ui.audit;
 
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +40,7 @@ import com.actelion.research.spiritapp.ui.admin.user.EmployeeGroupTable;
 import com.actelion.research.spiritapp.ui.admin.user.EmployeeTable;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleTable;
 import com.actelion.research.spiritapp.ui.location.LocationTable;
+import com.actelion.research.spiritapp.ui.location.depictor.LocationDepictor;
 import com.actelion.research.spiritapp.ui.result.ResultActions;
 import com.actelion.research.spiritapp.ui.result.ResultTable;
 import com.actelion.research.spiritapp.ui.study.StudyDetailPanel;
@@ -132,11 +134,28 @@ public class RevisionDetailPanel extends JPanel {
 				}
 
 				if(rev.getLocations().size()>0) {
+
+
+					final LocationTable locationTable = new LocationTable();
+					final LocationDepictor locationDepictor = new LocationDepictor();
+
+					locationDepictor.setForRevisions(true);
+					locationTable.getSelectionModel().addListSelectionListener(e-> {
+						if(e.getValueIsAdjusting()) return;
+						locationDepictor.setBioLocation(locationTable.getSelection().size()==1? locationTable.getSelection().get(0): null);
+					});
+
+					JScrollPane sp = new JScrollPane(locationTable);
+					sp.setPreferredSize(new Dimension(400, 180));
+
+					JSplitPane sp2 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, sp, locationDepictor);
+					sp2.setDividerLocation(200);
 					Box panel = Box.createVerticalBox();
 					LocationTable table = new LocationTable();
 					panel.add(new JScrollPane(table));
 					table.setRows(rev.getLocations());
-					detailPanel.addTab(rev.getLocations().size()+ " Locations", new JScrollPane(panel));
+					locationDepictor.setBioLocation(rev.getLocations().size()==1?rev.getLocations().get(0):null);
+					detailPanel.addTab(rev.getLocations().size()+ " Locations", sp2);
 				}
 
 				if(rev.getResults().size()>0) {

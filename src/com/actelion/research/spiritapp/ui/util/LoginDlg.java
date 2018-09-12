@@ -173,74 +173,74 @@ public class LoginDlg extends JEscapeDialog {
 				roles.add("No Role");
 			}
 			roleComboBox.setValues(roles, "Select a role");
-			roleComboBox.setEnabled(roles.size()!=1);
+			if(roles.size()==1) {
+				roleComboBox.setSelection(roles.iterator().next());
+				roleComboBox.setEnabled(false);
+			} else {
+				roleComboBox.setEnabled(true);
+			}
 		}
 	}
 
 	private void login(String username, char[] password) throws Exception {
-		try {
 
+		SpiritUser user;
+		try {
 			//Validate username/password
-			//			if(DBAdapter.getInstance().isInActelionDomain() &&  "SEC4321".equals(new String(password)) && InetAddress.getLocalHost().getHostAddress().equals("10.100.227.35")) {
-			//				//always ok
-			//			} else {
 			DAOSpiritUser.authenticateUser(username, password);
-			//			}
 
 			//Load the user
-			SpiritUser user = DAOSpiritUser.loadUser(username);
+			user = DAOSpiritUser.loadUser(username);
 			if(user==null) {
 				throw new Exception(username+" is invalid");
 			}
-
-			//If the property loginWithJustOneRole is true. The user could select its role upon login
-			if(loginWithJustOneRole) {
-				String role = roleComboBox.getSelection();
-				if(role==null || role.length()==0) throw new Exception("Please select a role");
-				for (String r : new ArrayList<>(user.getRoles())) {
-					user.setRole(r, false);
-				}
-				user.setRole(role,  true);
-				config.setProperty("role", role);
-			}
-
-			//If the property loginWithDepartment is true.
-			if(loginWithDepartment) {
-				List<EmployeeGroup> groups = new ArrayList<>(user.getGroups());
-				for (Iterator<EmployeeGroup> iterator = groups.iterator(); iterator.hasNext();) {
-					EmployeeGroup g = iterator.next();
-					if(g.isFunctional()) iterator.remove();
-
-				}
-
-				if(groups.size()>1) {
-					int res = JOptionPane.showOptionDialog(null, "Please select your department", "User login", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, groups.toArray(new EmployeeGroup[0]), null);
-					if(res<0) {
-						throw new Exception("You must select a group");
-					}
-					user.setMainGroup(groups.get(res));
-				} else if(groups.size()==1) {
-					user.setMainGroup(groups.get(0));
-				} else {
-					user.setMainGroup(null);
-				}
-			} else {
-				user.setMainGroup(null);
-			}
-
-			config.setProperty("username", username);
-
-			if(user!=null) {
-				SpiritFrame.setUser(user);
-			}
-
-			DAOLog.log(username, LogEntry.Action.LOGON_SUCCESS, ((user.getMainGroup()==null?"": user.getMainGroup().getName()) + " " + user.getRolesString()).trim());
+			SpiritFrame.setUser(user);
 		} catch (Exception e) {
-			e.printStackTrace();
 			DAOLog.log(username, LogEntry.Action.LOGON_FAILED);
 			throw e;
 		} finally {
 			Cache.getInstance().clear();
+		}
+
+		//If the property loginWithJustOneRole is true. The user could select its role upon login
+		if(loginWithJustOneRole) {
+			String role = roleComboBox.getSelection();
+			if(role==null || role.length()==0) throw new Exception("Please select a role");
+			for (String r : new ArrayList<>(user.getRoles())) {
+				user.setRole(r, false);
+			}
+			user.setRole(role,  true);
+			config.setProperty("role", role);
+		}
+
+		//If the property loginWithDepartment is true.
+		if(loginWithDepartment) {
+			List<EmployeeGroup> groups = new ArrayList<>(user.getGroups());
+			for (Iterator<EmployeeGroup> iterator = groups.iterator(); iterator.hasNext();) {
+				EmployeeGroup g = iterator.next();
+				if(g.isFunctional()) iterator.remove();
+			}
+
+			if(groups.size()>1) {
+				int res = JOptionPane.showOptionDialog(null, "Please select your department", "User login", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, groups.toArray(new EmployeeGroup[0]), null);
+				if(res<0) {
+					throw new Exception("You must select a group");
+				}
+				user.setMainGroup(groups.get(res));
+			} else if(groups.size()==1) {
+				user.setMainGroup(groups.get(0));
+			} else {
+				user.setMainGroup(null);
+			}
+		} else {
+			user.setMainGroup(null);
+		}
+
+		if(DAOLog.isLocked(username)) {
+			throw new Exception("Your account has been disabled after "+SpiritProperties.getInstance().getValue(PropertyKey.USER_LOCKAFTER)+" attempts (ask an admin to reenable your account)");
+		} else {
+			DAOLog.log(username, LogEntry.Action.LOGON_SUCCESS, ((user.getMainGroup()==null?"": user.getMainGroup().getName()) + " " + user.getRolesString()).trim());
+			SpiritFrame.getInstance().startInactivityListener();
 		}
 	}
 

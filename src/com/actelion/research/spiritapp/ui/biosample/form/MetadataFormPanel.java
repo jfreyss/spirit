@@ -48,12 +48,12 @@ import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JTextComboBox;
 import com.actelion.research.util.ui.TextChangeListener;
-import com.itextpdf.text.Font;
 
 /**
  * Panel used to represent the edition of a biosample as a form.
@@ -196,7 +196,7 @@ public class MetadataFormPanel extends JPanel {
 			c.fill=GridBagConstraints.NONE;
 			if(showContainerLocationSample) {
 				//SampleId
-				c.gridx = 0; add(new JCustomLabel("SampleId: ", Font.BOLD), c); //Name
+				c.gridx = 0; add(new JCustomLabel("SampleId: ", FastFont.BOLD), c); //Name
 				c.gridx = 1; add(sampleIdTextField, c);
 				sampleIdTextField.setEnabled(editable && !biotype.isHideSampleId());
 

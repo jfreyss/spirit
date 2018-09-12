@@ -22,7 +22,6 @@
 package com.actelion.research.spiritapp.ui.study;
 
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -81,7 +80,6 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		public String getValue(Study row) {
 			return row.getState();
 		}
-
 	};
 
 	public final Column<Study, String> COLUMN_IVV = new Column<Study, String>("Study\nInternalId", String.class, 50, 100) {
@@ -95,6 +93,10 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		@Override
 		public String getValue(Study row) {
 			return row.getType();
+		}
+		@Override
+		public boolean isAutoWrap() {
+			return true;
 		}
 	};
 
@@ -285,7 +287,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		public JComponent getCellComponent(AbstractExtendTable<Study> table, Study row, int rowNo, Object value) {
 			creationLabel.setValue(creation? row.getCreUser(): row.getUpdUser(), null, creation? row.getCreDate(): row.getUpdDate(),
 					SpiritRights.canEdit(row, SpiritFrame.getUser())? RightLevel.ADMIN:
-						SpiritRights.canEditBiosamples(row, SpiritFrame.getUser())? RightLevel.WRITE:
+						SpiritRights.canWork(row, SpiritFrame.getUser())? RightLevel.WRITE:
 							RightLevel.READ);
 			return creationLabel;
 		}
@@ -298,7 +300,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 		@Override
 		public void populateHeaderPopup(final AbstractExtendTable<Study> table, JPopupMenu popupMenu) {
 			popupMenu.add(new JSeparator());
-			popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
+			popupMenu.add(new JCustomLabel("Sort", FastFont.BOLD));
 
 			popupMenu.add(new AbstractAction("Sort by " + (creation?"CreatedBy": "UpdatedBy")) {
 				@Override
@@ -350,7 +352,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 
 		defaultColumns.add(COLUMN_RESPONSIBLES);
 		defaultColumns.add(COLUMN_DEPT);
-		if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_ADVANCED)) {
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_ADVANCED)) {
 			defaultColumns.add(COLUMN_STARTING_DATE);
 			defaultColumns.add(COLUMN_END_DATE);
 		}
@@ -360,7 +362,7 @@ public class StudyTableModel extends ExtendTableModel<Study> {
 			defaultColumns.add(column);
 		}
 		defaultColumns.add(COLUMN_BIOSAMPLES);
-		if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_RESULT)) {
 			defaultColumns.add(COLUMN_RESULTS);
 		}
 		defaultColumns.add(new StudyCreationColumn(true));

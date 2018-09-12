@@ -138,7 +138,7 @@ public class XTR96Scanner {
 		boolean test = new File(".").canWrite() && !new File(".").getAbsolutePath().startsWith("P:") && !new File(".").getAbsolutePath().contains("actelch02") && !new File(".").getAbsolutePath().contains("ares");
 		if(!test) throw new Exception("The working directory must be somewhere where you have write access.\n Currently it is: "+new File(".").getAbsolutePath());
 
-		if("baerr".equals(System.getProperty("user.name")) || "freyssj".equals(System.getProperty("user.name"))) {
+		if("true".equals(System.getProperty("simulateScanner"))) {
 			return new Plate(config.getRows(), config.getCols(), getTestTubes(1));
 		}
 

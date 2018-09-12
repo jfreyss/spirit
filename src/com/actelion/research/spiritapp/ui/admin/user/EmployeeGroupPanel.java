@@ -31,6 +31,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
@@ -64,6 +65,7 @@ public class EmployeeGroupPanel extends JPanel {
 				if(res!=JOptionPane.YES_OPTION) return;
 
 				try {
+					if(!Spirit.askReasonForChange()) return;
 					DAOEmployee.removeEmployeeGroup(sel.get(0), SpiritFrame.getUser());
 					refresh();
 				} catch (Exception e) {

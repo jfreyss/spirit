@@ -87,6 +87,7 @@ import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.spiritcore.util.Triple;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -97,7 +98,6 @@ import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.itextpdf.text.Font;
 
 public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChangeObserver {
 
@@ -124,7 +124,7 @@ public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChange
 	private BiosampleQuery query = new BiosampleQuery();
 	private BiosampleTable table = new BiosampleTable();
 	private JScrollPane tableScrollPane = new JScrollPane(table);
-	private JLabel queryLabel = new JCustomLabel("", Font.BOLD);
+	private JLabel queryLabel = new JCustomLabel("", FastFont.BOLD);
 
 	//Assignement
 	private JCheckBox autoCheckBox = new JCheckBox("Automatic Assignment", true);
@@ -181,7 +181,7 @@ public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChange
 		public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 			RackPosTubeId rp = (RackPosTubeId) row.getAuxiliaryInfos().get(AUX_RACKPOS);
 			comp.setForeground(getForeground(rp==null?-1: rp.getFirst()));
-			comp.setFont(comp.getFont().deriveFont(Font.BOLD));
+			comp.setFont(FastFont.BOLD);
 			comp.setBackground(getError(row)!=null?LF.COLOR_ERROR_BACKGROUND: new Color(240, 240, 255));
 		}
 		@Override
@@ -199,7 +199,7 @@ public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChange
 			RackPosTubeId rp = (RackPosTubeId) row.getAuxiliaryInfos().get(AUX_RACKPOS);
 			comp.setForeground(getForeground(rp==null?-1: rp.getFirst()));
 			comp.setBackground(getError(row)!=null?LF.COLOR_ERROR_BACKGROUND:new Color(240, 240, 255));
-			comp.setFont(comp.getFont().deriveFont(Font.BOLD));
+			comp.setFont(FastFont.BOLD);
 		}
 		@Override
 		public String getToolTipText(Biosample row) {return getError(row);}
@@ -216,7 +216,7 @@ public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChange
 			comp.setForeground(getForeground(rp==null?-1: rp.getFirst()));
 
 			comp.setBackground(getError(row)!=null?LF.COLOR_ERROR_BACKGROUND:new Color(240, 240, 255));
-			comp.setFont(comp.getFont().deriveFont(Font.BOLD));
+			comp.setFont(FastFont.BOLD);
 		}
 		@Override
 		public String getToolTipText(Biosample row) {return getError(row);}
@@ -656,16 +656,8 @@ public class BatchAssignDlg extends JSpiritEscapeDialog implements ISpiritChange
 				} else {
 					b.setLocPos(null,-1);
 				}
-				//
-				//
-				//				Container c = new Container(rackPanel.getContainerType(), scanned.getThird());
-				//				b.setContainer(c);
-				//				if(rackPanel.getBiolocation()!=null) {
-				//					b.setLocPos(rackPanel.getBiolocation(), rackPanel.getBiolocation().parsePosition(scanned.getSecond()));
-				//				} else {
-				//					b.setLocPos(null,-1);
-				//				}
 			}
+			if(!Spirit.askReasonForChangeIfUpdated(toSave)) return;
 			DAOBiosample.persistBiosamples(toSave, Spirit.askForAuthentication());
 
 			JExceptionDialog.showInfo(UIUtils.getMainFrame(), toSave.size() + " tubes assigned");

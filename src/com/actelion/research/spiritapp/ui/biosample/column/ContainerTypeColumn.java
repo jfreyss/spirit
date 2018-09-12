@@ -27,8 +27,8 @@ import javax.swing.JComponent;
 import javax.swing.table.TableCellEditor;
 
 import com.actelion.research.spiritapp.ui.location.ContainerLabel;
-import com.actelion.research.spiritapp.ui.location.ContainerTypeComboBox;
 import com.actelion.research.spiritapp.ui.location.ContainerLabel.ContainerDisplayMode;
+import com.actelion.research.spiritapp.ui.location.ContainerTypeComboBox;
 import com.actelion.research.spiritapp.ui.util.component.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;

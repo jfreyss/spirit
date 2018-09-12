@@ -29,6 +29,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -493,6 +494,7 @@ public class MiscUtils {
 	 * @return
 	 */
 	public static String serializeStringMap(Map<String, String> map) {
+		if(map==null) return "";
 		StringBuilder sb = new StringBuilder();
 		for (Entry<String, String> entry : map.entrySet()) {
 			if(sb.length()>0) sb.append(";");
@@ -546,7 +548,7 @@ public class MiscUtils {
 				}
 			}
 		}
-		if(key.length()>0) {
+		if(!inKey) {
 			map.put(key.toString(), value.toString());
 		}
 		return map;
@@ -810,6 +812,20 @@ public class MiscUtils {
 		SortedSet<T> res = new TreeSet<>();
 		for (Collection<T> t : elts) {
 			res.addAll(t);
+		}
+		return res;
+	}
+
+	public static<T, V> Map<T, V> mapOf(T key, V value) {
+		Map<T, V> res = new HashMap<>();
+		res.put(key, value);
+		return res;
+	}
+	public static<T, V> Map<T, V> mapOf(List<T> keys, List<V> values) {
+		Map<T, V> res = new HashMap<>();
+		if(keys.size()!=values.size()) throw new IllegalArgumentException("Sizes don't match");
+		for (int i = 0; i < keys.size(); i++) {
+			res.put(keys.get(i), values.get(i));
 		}
 		return res;
 	}

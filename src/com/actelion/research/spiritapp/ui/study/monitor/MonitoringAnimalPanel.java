@@ -33,7 +33,6 @@ import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,8 +45,8 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.text.JTextComponent;
 
+import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.biosample.SampleIdLabel;
 import com.actelion.research.spiritapp.ui.location.ContainerLabel;
@@ -56,7 +55,6 @@ import com.actelion.research.spiritapp.ui.util.component.LF;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.ActionTreatment;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.spiritcore.business.result.ObservationConstants;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.business.study.Measurement;
@@ -93,12 +91,12 @@ public class MonitoringAnimalPanel extends JPanel {
 
 	private final JLabel calculated1Label = new JCustomLabel("", Color.BLUE);
 	private final JLabel calculated2Label = new JCustomLabel("", Color.BLUE);
-	private final MonitorTextComboBox obsTextField;
+	private final MonitorTextField obsTextField;
 	private final MonitorTextField weighTextField;
 	private final JLabel formulationCommentsLabel = new JCustomLabel("", Color.BLUE);
 	private final JCustomTextField foodTextField = new JCustomTextField(CustomFieldType.DOUBLE);
 	private final JCustomTextField waterTextField = new JCustomTextField(CustomFieldType.DOUBLE);
-	private final List<JTextComponent> requiredComponents = new ArrayList<>();
+	private final List<JComponent> requiredComponents = new ArrayList<>();
 
 	public MonitoringAnimalPanel(final MonitoringDlg dlg, int no, final Biosample animal, final Phase phase, boolean onlyShowRequired) {
 		super(new BorderLayout());
@@ -158,51 +156,59 @@ public class MonitoringAnimalPanel extends JPanel {
 			lastObsLabel.setText( prevObsResult==null?"": (prevObsResult.getInheritedPhase().getShortName()+ ": " + prevObsResult.getFirstValue()));
 
 			//Init field
-			obsTextField = new MonitorTextComboBox(animal.getAuxResult(DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME), phase), 0, false);
-			obsTextField.setChoices(Arrays.asList(ObservationConstants.ALL_OBSERVATIONS));
-			obsTextField.setColumns(9);
+			//			obsTextField = new MonitorTextComboBox(animal.getAuxResult(DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME), phase), 0, false);
+			obsTextField = new MonitorTextField(animal.getAuxResult(DAOTest.getTest(DAOTest.OBSERVATION_TESTNAME), phase), 0, false);
+			//			obsTextField.get setChoices(Arrays.asList(ObservationConstants.ALL_OBSERVATIONS));
+			//			obsTextField.setColumns(18);
 			measurementComps.add(new JLabel("Observation: "));
 			measurementComps.add(UIUtils.createHorizontalBox(obsTextField, lastObsLabel));
 		}
 
 
 		//Other Measurements
+		List<Measurement> measurements = a==null? new ArrayList<>(): a.getMeasurements();
 		final List<MonitorTextField> formulaTextFields = new ArrayList<>();
 		for (Measurement em : phase.getStudy().getAllMeasurementsFromActions()) {
 			assert em.getTest()!=null;
 			final Result result = animal.getAuxResult(em.getTest(), phase, em.getParameters());
+			boolean required = measurements.contains(em);
 
 			List<TestAttribute> tas = em.getTest().getOutputAttributes();
 			for (int i = 0; i < tas.size(); i++) {
 				TestAttribute ta = tas.get(i);
-				boolean required = a!=null && a.getMeasurements().contains(em);
 
-				if(ta.getDataType()==DataType.NUMBER || ta.getDataType()==DataType.ALPHA || ta.getDataType()==DataType.AUTO || ta.getDataType()==DataType.FORMULA) {
-					//Find previousValue
-					JLabel lastMeasurementLabel = new JCustomLabel(FastFont.SMALL);
-					lastMeasurementLabel.setPreferredSize(new Dimension(80, 22));
-					lastMeasurementLabel.setForeground(Color.DARK_GRAY);
-					Result prevResult = SpiritRights.isBlind(phase.getStudy(), SpiritFrame.getUser())? null: Result.getPrevious(result, dlg.getAllPreviousResults());
-					lastMeasurementLabel.setText( prevResult==null || prevResult.getResultValue(ta)==null? "": (prevResult.getInheritedPhase().getShortName()+ ": " + prevResult.getResultValue(ta).getValue()));
+				if(ta.getDataType()==DataType.BIOSAMPLE || ta.getDataType()==DataType.D_FILE || ta.getDataType()==DataType.FILES) continue;
+				//Find previousValue
+				JLabel lastMeasurementLabel = new JCustomLabel(FastFont.SMALL);
+				lastMeasurementLabel.setPreferredSize(new Dimension(80, 22));
+				lastMeasurementLabel.setForeground(Color.DARK_GRAY);
+				Result prevResult = SpiritRights.isBlind(phase.getStudy(), SpiritFrame.getUser())? null: Result.getPrevious(result, dlg.getAllPreviousResults());
+				lastMeasurementLabel.setText( prevResult==null || prevResult.getResultValue(ta)==null? "": (prevResult.getInheritedPhase().getShortName()+ ": " + prevResult.getResultValue(ta).getValue()));
 
-					MonitorTextField tf = new MonitorTextField(result, i, required);
-					measurementComps.add(new JLabel(em.getDescription() + (tas.size()>1?"."+tas.get(i).getName():"")));
-					measurementComps.add(UIUtils.createHorizontalBox(tf, lastMeasurementLabel));
-					if(ta.getDataType()==DataType.FORMULA) {
-						formulaTextFields.add(tf);
-					} else {
-						if(required) requiredComponents.add(tf);
-						tf.addFocusListener(new FocusAdapter() {
-							@Override
-							public void focusLost(FocusEvent e) {
-								if(formulaTextFields.size()==0) return;
-								DAOResult.computeFormula(Collections.singletonList(result));
-								for(MonitorTextField ftf: formulaTextFields) {
-									ftf.refreshText();
-								}
+				MonitorTextField tf = new MonitorTextField(result, i, required);
+				measurementComps.add(new JCustomLabel(em.getDescription() + (tas.size()>1?"."+tas.get(i).getName():""), Color.BLUE));
+				measurementComps.add(UIUtils.createHorizontalBox(tf, lastMeasurementLabel));
+				if(ta.getDataType()==DataType.FORMULA) {
+					formulaTextFields.add(tf);
+				} else {
+					if(required) requiredComponents.add(tf);
+
+					System.out.println("MonitoringAnimalPanel.MonitoringAnimalPanel()");
+					tf.addFocusListener(new FocusAdapter() {
+						@Override
+						public void focusGained(FocusEvent e) {
+							System.out.println("MonitoringAnimalPanel.MonitoringAnimalPanel(...).new FocusAdapter() {...}.focusGained()");
+						}
+						@Override
+						public void focusLost(FocusEvent e) {
+							System.out.println("MonitoringAnimalPanel.MonitoringAnimalPanel(...).focusLost() > "+formulaTextFields);
+							if(formulaTextFields.size()==0) return;
+							DAOResult.computeFormula(Collections.singletonList(result));
+							for(MonitorTextField ftf: formulaTextFields) {
+								ftf.refreshText();
 							}
-						});
-					}
+						}
+					});
 				}
 			}
 		}
@@ -270,7 +276,6 @@ public class MonitoringAnimalPanel extends JPanel {
 
 		////////////////////////////////////////////////////////////////////////////////
 		//centerPanel
-		obsTextField.setColumns(18);
 		JPanel centerPanel = UIUtils.createVerticalBox(BorderFactory.createEmptyBorder(1, 1, 5, 1),
 				UIUtils.createHorizontalBox(new JLabel("Weight [g]:"), weighTextField, lastWeightLabel, weightIncLabel, Box.createHorizontalGlue()),
 				UIUtils.createHorizontalBox(foodWaterPanel, Box.createHorizontalGlue()),
@@ -449,7 +454,7 @@ public class MonitoringAnimalPanel extends JPanel {
 		return animal;
 	}
 
-	public List<JTextComponent> getRequiredComponents() {
+	public List<JComponent> getRequiredComponents() {
 		return requiredComponents;
 	}
 
@@ -506,6 +511,7 @@ public class MonitoringAnimalPanel extends JPanel {
 			ActionListener al = ev-> {
 				JPAUtil.pushEditableContext(SpiritFrame.getUser());
 				try {
+					if(!Spirit.askReasonForChangeIfUpdated(Collections.singleton(animal))) return;
 					//Persist the treatment action
 					ActionTreatment at = new ActionTreatment(nt, phase, weight, effDose1TextField.getTextDouble(), effDose2TextField.getTextDouble(), popFormulationTextField.getText(), popCommentsTextField.getText());
 					animal.setLastAction(at);

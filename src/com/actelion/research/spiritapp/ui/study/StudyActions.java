@@ -21,8 +21,10 @@
 
 package com.actelion.research.spiritapp.ui.study;
 
+import java.awt.Dialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -38,6 +40,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
 import com.actelion.research.spiritapp.Spirit;
+import com.actelion.research.spiritapp.report.AbstractDynamicReport;
+import com.actelion.research.spiritapp.report.EventsReport;
+import com.actelion.research.spiritapp.report.MasterScheduleReport;
+import com.actelion.research.spiritapp.report.StudyContentReport;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.audit.StudyHistoryDlg;
 import com.actelion.research.spiritapp.ui.study.depictor.StudyDepictor;
@@ -52,10 +58,12 @@ import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.ui.util.component.UserIdComboBox;
+import com.actelion.research.spiritcore.business.audit.Revision;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
+import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
@@ -72,10 +80,10 @@ public class StudyActions {
 
 	public static class Action_New extends AbstractAction {
 		public Action_New() {
-			super("New Study");
+			super("New Study...");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(AbstractAction.SMALL_ICON, IconType.STUDY.getIcon());
-			setEnabled(SpiritRights.canCreateStudy(SpiritFrame.getUser()));
+			setEnabled(SpiritRights.canEdit(new Study(), SpiritFrame.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -87,18 +95,20 @@ public class StudyActions {
 			if(SpiritFrame.getUser().getMainGroup()!=null) study.setEmployeeGroups(Collections.singletonList(SpiritFrame.getUser().getMainGroup()));
 
 			if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_STUDYDESIGN)) {
-				StudyDesignDlg.editStudy(study);
+				new StudyDesignDlg(study);
 			} else {
-				StudyInfoDlg.editStudy(study);
+				new StudyInfoDlg(study);
 			}
 			SpiritContextListener.setStudy(study);
 		}
 	}
 
 	public static class Action_EditInfos extends AbstractAction {
-		private final Study study;
+
+		protected final Study study;
+
 		public Action_EditInfos(Study study) {
-			super("Study Infos");
+			super("Study Infos...");
 			this.study = study;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			putValue(AbstractAction.SMALL_ICON, IconType.EDIT.getIcon());
@@ -107,12 +117,14 @@ public class StudyActions {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			StudyInfoDlg.editStudy(study);
+			new StudyInfoDlg(study);
 		}
 	}
 
 	public static class Action_EditDesign extends AbstractAction {
-		private final Study study;
+
+		protected final Study study;
+
 		public Action_EditDesign(Study study) {
 			super("Study Design");
 			this.study = study;
@@ -124,18 +136,18 @@ public class StudyActions {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			StudyDesignDlg.editStudy(study);
+			new StudyDesignDlg(study);
 		}
 	}
 
 	public static class Action_Promote extends AbstractAction {
 		private final Study study;
 		public Action_Promote(Study study) {
-			super("Change Status");
+			super("Change Status...");
 			this.study = study;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('s'));
 			putValue(AbstractAction.SMALL_ICON, IconType.STATUS.getIcon());
-			setEnabled(SpiritRights.canPromote(study, SpiritFrame.getUser()) && SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES).length>1);
+			setEnabled(SpiritRights.canWork(study, SpiritFrame.getUser()) && SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES).length>1);
 		}
 
 		@Override
@@ -164,7 +176,7 @@ public class StudyActions {
 		private final Study study;
 
 		public Action_Delete(Study study) {
-			super("Delete");
+			super("Delete...");
 			this.study = study;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			putValue(Action.SMALL_ICON, IconType.DELETE.getIcon());
@@ -184,7 +196,7 @@ public class StudyActions {
 	public static class Action_AssignTo extends AbstractAction {
 		private Study study;
 		public Action_AssignTo(Study study) {
-			super("Change Ownership/CreatedBy (admin)");
+			super("Change Ownership/CreatedBy...");
 			this.study = study;
 
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
@@ -238,7 +250,7 @@ public class StudyActions {
 			super(phase.toString());
 			this.phase = phase;
 			putValue(AbstractAction.SMALL_ICON, IconType.LINK.getIcon());
-			setEnabled(phase.getStudy()!=null && phase.getStudy().getPhasesWithGroupAssignments().size()>0 && SpiritRights.canEditBiosamples(phase.getStudy(), SpiritFrame.getUser()));
+			setEnabled(phase.getStudy()!=null && phase.getStudy().getPhasesWithGroupAssignments().size()>0 && SpiritRights.canWork(phase.getStudy(), SpiritFrame.getUser()));
 		}
 
 		@Override
@@ -280,7 +292,7 @@ public class StudyActions {
 
 			this.study = study;
 			putValue(AbstractAction.SMALL_ICON, IconType.PRINT.getIcon());
-			setEnabled(study!=null && (SpiritRights.canEditBiosamples(study, SpiritFrame.getUser()) || SpiritRights.canBlind(study, SpiritFrame.getUser())) && study.getParticipants().size()>0);
+			setEnabled(study!=null && (SpiritRights.canWork(study, SpiritFrame.getUser()) || SpiritRights.canBlind(study, SpiritFrame.getUser())) && study.getParticipants().size()>0);
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -317,7 +329,7 @@ public class StudyActions {
 			super("Reports");
 			this.study = study;
 			putValue(Action.SMALL_ICON, IconType.EXCEL.getIcon());
-			setEnabled(study!=null && SpiritRights.canEditBiosamples(study, SpiritFrame.getUser()));
+			setEnabled(study!=null && SpiritRights.canWork(study, SpiritFrame.getUser()));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -329,7 +341,7 @@ public class StudyActions {
 	public static class Action_History extends AbstractAction {
 		private final Study study;
 		public Action_History(Study study) {
-			super("Audit Trail");
+			super("Audit Trail...");
 			this.study = study;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
 			putValue(Action.SMALL_ICON, IconType.HISTORY.getIcon());
@@ -346,7 +358,126 @@ public class StudyActions {
 	}
 
 
+	public static class Action_ExportMasterSchedule extends AbstractAction {
 
+		private List<Study> studies = null;
+		private StudyTable studyTable = null;
+		private StudyQuery studyQuery = null;
+
+		public Action_ExportMasterSchedule(StudyTable studyTable) {
+			super("Export Master Schedule");
+
+			this.studyTable = studyTable;
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (studies == null)
+				return;
+
+			// generate the report and show it in a preview window
+			try {
+				AbstractDynamicReport report = new MasterScheduleReport(studies, studyTable);
+				report.buildReport();
+				report.addFooterNote("Search criterias: " + studyQuery.toString());
+				report.showPreview();
+			} catch (Exception ex) {
+				JExceptionDialog.showError(ex);
+			}
+		}
+
+		public void setStudies(List<Study> studies) {
+			this.studies = studies;
+		}
+
+		public void setStudyQuery(StudyQuery studyQuery) {
+			this.studyQuery = studyQuery;
+		}
+	}
+
+
+	public static class Action_ExportStudy extends AbstractAction {
+		private Study study = null;
+		private List<Biosample> biosamples = null;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (SpiritFrame.getStudy() == null)
+				return;
+
+			// generate the report and show it in a preview window
+			try {
+				AbstractDynamicReport report = new StudyContentReport(getStudy(), getBiosamples());
+				report.buildReport();
+				report.showPreview();
+			} catch (Exception ex) {
+				JExceptionDialog.showError(ex);
+			}
+		}
+
+		public void setStudy(Study study) {
+			this.study = study;
+		}
+		public Study getStudy() {
+			return study;
+		}
+
+		public void setBiosamples(List<Biosample> biosamples) {
+			this.biosamples = biosamples;
+		}
+
+		public List<Biosample> getBiosamples() {
+			return biosamples;
+		}
+	}
+
+
+	public static class Action_ExportStudyEvents extends AbstractAction {
+
+		private Dialog parentDlg = null;
+		private EventsReport report = new EventsReport();
+		private Study study = null;
+		private String filterByType;
+		private Serializable filterById;
+		private Integer filterBySid;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				if ( parentDlg != null )
+					parentDlg.dispose();
+
+				String title = "Report for Events on Study : " + study.getStudyId();
+
+				report.setFilters(filterByType, filterById, filterBySid);
+				report.buildReport();
+				report.setPreviewTitle(title);
+				report.addFooterNote(title);
+				report.showPreview();
+			} catch (Exception ex) {
+				JExceptionDialog.showError(ex.getMessage());
+			}
+		}
+
+		public void setRevisions(List<Revision> revisions) {
+			report.setRevisions(revisions);
+		}
+
+		public void setParentDlg(Dialog parentDlg) {
+			this.parentDlg = parentDlg;
+		}
+
+		public void setStudy(Study study) {
+			this.study = study;
+		}
+		
+		public void setFilters(String filterByType, Serializable filterById, Integer filterBySid) {
+			this.filterByType = filterByType;
+			this.filterById = filterById;
+			this.filterBySid = filterBySid;
+		}
+	}
+	
 	public static class Action_SetLivingStatus extends AbstractAction {
 
 		private List<Biosample> biosamples;
@@ -366,7 +497,7 @@ public class StudyActions {
 			Set<Study> studies = new HashSet<>();
 			boolean canEdit = true;
 			for (Biosample b : biosamples) {
-				canEdit = canEdit && SpiritRights.canEdit(b, SpiritFrame.getUser());
+				canEdit = canEdit && SpiritRights.canWork(b, SpiritFrame.getUser());
 				studies.add(b.getAttachedStudy());
 			}
 			study = studies.size()==1? studies.iterator().next(): null;
@@ -395,7 +526,8 @@ public class StudyActions {
 		comp.addMouseListener(new PopupAdapter() {
 			@Override
 			protected void showPopup(MouseEvent e) {
-				StudyActions.createPopup((Study)null).show(comp, e.getX(), e.getY());
+				JPopupMenu menu = StudyActions.createPopup((Study)null);
+				if(menu!=null) menu.show(comp, e.getX(), e.getY());
 			}
 		});
 	}
@@ -415,7 +547,8 @@ public class StudyActions {
 				} else {
 					study = null;
 				}
-				StudyActions.createPopup(study).show(table, e.getX(), e.getY());
+				JPopupMenu menu = StudyActions.createPopup(study);
+				if(menu!=null) menu.show(table, e.getX(), e.getY());
 			}
 		});
 	}
@@ -429,7 +562,8 @@ public class StudyActions {
 		panel.getStudyPane().addMouseListener(new PopupAdapter() {
 			@Override
 			protected void showPopup(MouseEvent e) {
-				StudyActions.createPopup(panel.getStudy()).show(panel.getStudyPane(), e.getX(), e.getY());
+				JPopupMenu menu = StudyActions.createPopup(panel.getStudy());
+				if(menu!=null) menu.show(panel.getStudyPane(), e.getX(), e.getY());
 			}
 		});
 	}
@@ -437,7 +571,8 @@ public class StudyActions {
 		panel.addMouseListener(new PopupAdapter() {
 			@Override
 			protected void showPopup(MouseEvent e) {
-				StudyActions.createPopup(panel.getStudy()).show(panel, e.getX(), e.getY());
+				JPopupMenu menu = StudyActions.createPopup(panel.getStudy());
+				if(menu!=null) menu.show(panel, e.getX(), e.getY());
 			}
 		});
 	}

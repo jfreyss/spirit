@@ -22,7 +22,6 @@
 package com.actelion.research.spiritapp.ui.biosample.dialog;
 
 import java.awt.BorderLayout;
-import java.awt.Font;
 import java.util.Date;
 import java.util.List;
 
@@ -36,13 +35,13 @@ import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleTable;
-import com.actelion.research.spiritapp.ui.biosample.BiosampleTableModel.Mode;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
@@ -63,14 +62,14 @@ public class SetExpiryDateDlg extends JSpiritEscapeDialog {
 		this.biosamples = JPAUtil.reattach(mySamples);
 
 		JPanel centerPanel = new JPanel(new BorderLayout());
-		JLabel label = new JCustomLabel("Please enter the expiry date of those samples", Font.BOLD);
+		JLabel label = new JCustomLabel("Please enter the expiry date of those samples", FastFont.BOLD);
 		label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		centerPanel.add(BorderLayout.NORTH, label);
 
 		JScrollPane sp;
 		BiosampleTable table = new BiosampleTable();
 		table.getModel().setCanExpand(false);
-		table.getModel().setMode(Mode.COMPACT);
+		//		table.getModel().setMode(Mode.COMPACT);
 		table.setRows(biosamples);
 
 
@@ -120,6 +119,7 @@ public class SetExpiryDateDlg extends JSpiritEscapeDialog {
 			biosample.setExpiryDate(expiryDate);
 		}
 
+		if(!Spirit.askReasonForChangeIfUpdated(biosamples)) return;
 		DAOBiosample.persistBiosamples(biosamples, Spirit.askForAuthentication());
 		dispose();
 		SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, biosamples);

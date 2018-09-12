@@ -143,5 +143,78 @@ public class StudyQuery {
 		this.recentStartDays = recentStartDays;
 	}
 
-
+	public String toString() {
+		StringBuilder buf = new StringBuilder();
+		if ( studyIds != null && !studyIds.equals("") ) {
+			buf.append("Study Ids: ");
+			buf.append(studyIds);
+		}
+		if ( keywords != null && !keywords.equals("") ) {
+			if ( buf.length() > 0 ) buf.append(" | ");
+			buf.append("Keywords='");
+			buf.append(keywords);
+			buf.append("'");
+		}
+		if ( user != null && !user.equals("") ) {
+			if ( buf.length() > 0 ) buf.append(" | ");
+			buf.append("User='");
+			buf.append(user);
+			buf.append("'");
+		}
+		if ( state != null && !state.equals("") ) {
+			if ( buf.length() > 0 ) buf.append(" | ");
+			buf.append("Status='");
+			buf.append(state);
+			buf.append("'");
+		}
+		if ( type != null && !type.equals("") ) {
+			if ( buf.length() > 0 ) buf.append(" | ");
+			buf.append("Type'");
+			buf.append(type);
+			buf.append("'");
+		}
+		if ( updDays != null && !updDays.equals("") ) {
+			if ( buf.length() > 0 ) buf.append(" | ");
+			buf.append("Upd Days='");
+			buf.append(updDays);
+			buf.append("'");
+		}
+		if ( creDays != null && !creDays.equals("") ) {
+			if ( buf.length() > 0 ) buf.append(" | ");
+			buf.append("Cre Days'");
+			buf.append(creDays);
+			buf.append("'");
+		}
+		if ( metadataMap != null ) {
+			for (Map.Entry<String, String> entry : metadataMap.entrySet()) {
+				if ( entry == null || entry.getKey() == null || entry.getKey().equals("")) {
+					continue;
+				}
+				
+				if ( entry.getKey().equals("Dir") && !entry.getValue().equals("") ) {
+					if ( buf.length() > 0 ) buf.append(" | ");
+					buf.append("Study Director='");
+					buf.append(entry.getValue());
+					buf.append("'");
+				}
+				if ( entry.getKey().equals("PriInv") && !entry.getValue().equals("") ) {
+					if ( buf.length() > 0 ) buf.append(" | ");
+					buf.append("Principal Investigator='");
+					buf.append(entry.getValue());
+					buf.append("'");
+				}
+				if ( entry.getKey().equals("GLP") && !entry.getValue().equals("") ) {
+					if ( buf.length() > 0 ) buf.append(" | ");
+					buf.append("GLP='");
+					buf.append(entry.getValue());
+					buf.append("'");
+				}
+			}
+		}
+		if ( buf.length() == 0 ) {
+			return "n/a";
+		}
+			
+		return buf.toString();
+	}
 }

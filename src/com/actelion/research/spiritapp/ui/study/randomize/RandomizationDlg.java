@@ -22,8 +22,6 @@
 package com.actelion.research.spiritapp.ui.study.randomize;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -62,7 +60,7 @@ public class RandomizationDlg extends JSpiritEscapeDialog {
 	private final Study study;
 	private final Phase phase;
 	private final List<Group> groups;
-	
+
 	private JTabbedPane wizardPane = new JCustomTabbedPane(JTabbedPane.LEFT);
 	private ConfigTab configTab;
 	private DataTab weighingTab;
@@ -70,7 +68,7 @@ public class RandomizationDlg extends JSpiritEscapeDialog {
 	private CageTab cageTab;
 	private SummaryTab summaryTab;
 
-	private final AutosaveDecorator autosaveDecorator = new AutosaveDecorator(this) {			
+	private final AutosaveDecorator autosaveDecorator = new AutosaveDecorator(this) {
 		@Override
 		public void autosave() throws Exception {
 			if(mustAskForExit()) {
@@ -79,7 +77,7 @@ public class RandomizationDlg extends JSpiritEscapeDialog {
 			setMustAskForExit(false);
 		}
 	};
-		
+
 	/**
 	 * Create a new RandomizationDlg for the given phase
 	 * @param p - can be null if the randomization does not need to be saved
@@ -89,15 +87,15 @@ public class RandomizationDlg extends JSpiritEscapeDialog {
 		if(p==null) 		{
 			throw new IllegalArgumentException("you need to select a phase");
 		}
-		
+
 		this.study = DAOStudy.getStudy(p.getStudy().getId());
 		this.groups = new ArrayList<>(study.getGroups());
 		this.phase = study.getPhase(p.getId());
-		
+
 		//Load the samples
 		DAOStudy.loadBiosamplesFromStudyRandomization(phase.getRandomization());
-		
-		
+
+
 		//find the biotype of the (possible) attached sample, and check if this biotype can be changed
 		if(getStudy()!=null && phase.getRandomization().getSamples().size()>0) {
 			canChooseBiotype = true;
@@ -116,86 +114,82 @@ public class RandomizationDlg extends JSpiritEscapeDialog {
 			biotype = DAOBiotype.getBiotype(Biotype.ANIMAL);
 			canChooseBiotype = true;
 		}
-		
-		//Buttons		
+
+		//Buttons
 		JButton saveButton = new JIconButton(IconType.SAVE, "Save (without doing the assignment)");
 		saveButton.setToolTipText("Save without finalization. Specimen are not assigned to the study");
-		saveButton.setEnabled(study!=null);		
-		saveButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					saveForLater();
-					dispose();
-				} catch (Exception ex) {
-					JExceptionDialog.showError(RandomizationDlg.this, ex);
-				}
-				
+		saveButton.setEnabled(study!=null);
+		saveButton.addActionListener(e-> {
+			try {
+				saveForLater();
+				dispose();
+			} catch (Exception ex) {
+				JExceptionDialog.showError(RandomizationDlg.this, ex);
 			}
 		});
-		
+
 		JPanel contentPanel = new JPanel(new BorderLayout());
 		contentPanel.add(BorderLayout.CENTER, wizardPane);
 		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalStrut(50), autosaveDecorator.getAutosaveCheckBox(), saveButton, Box.createHorizontalGlue()));
-		
-		
+
+
 
 		configTab = new ConfigTab(this);
 		weighingTab = new DataTab(this);
 		groupTab = new GroupTab(this);
 		cageTab = new CageTab(this);
 		summaryTab = new SummaryTab(this);
-		
-		
+
+
 		wizardPane.setFont(FastFont.BOLD);
 		wizardPane.add("<html><br>Parameters<br><br></html>", configTab);
 		wizardPane.add("<html><br>Randomization<br>Data<br><br></html>", weighingTab);
 		wizardPane.add("<html><br>Group<br>Assignment<br><br></html>", groupTab);
 		wizardPane.add("<html><br>Cage<br>Assignment<br><br></html>", cageTab);
 		wizardPane.add("<html><br>Saving<br><br></html>", summaryTab);
-		
+
 		WizardPanel.configureEvents(wizardPane, new WizardPanel[] {configTab, weighingTab, groupTab, cageTab, summaryTab});
-		
-		
+
+
 		setContentPane(contentPanel);
-		
-   		UIUtils.adaptSize(this, 1200, 1000);
+
+		UIUtils.adaptSize(this, 1200, 1000);
 		setVisible(true);
-	}	
-	
+	}
+
 	protected void saveForLater() throws Exception {
-		WizardPanel.updateModel(wizardPane, false);		
+		WizardPanel.updateModel(wizardPane, false);
 		DAOStudy.persistStudies(Collections.singleton(study), SpiritFrame.getUser());
-	}	
-		
+	}
+
 	public Phase getPhase() {
 		return phase;
 	}
-	
+
 	public Study getStudy() {
 		return study;
 	}
-	
+
 	public List<Group> getGroups(){
 		return groups;
 	}
-	
+
 	public Randomization getRandomization() {
 		return phase.getRandomization();
 	}
-		
+
 	public Biotype getBiotype() {
 		return biotype;
 	}
-	
+
 	public void setBiotype(Biotype biotype) {
 		this.biotype =  biotype;
 	}
-		
+
 	public boolean canChooseBiotype() {
 		return canChooseBiotype;
 	}
-	
+
 	public static Map<Integer, List<AttachedBiosample>> splitByGroup(List<AttachedBiosample> list) {
 		Map<Integer, List<AttachedBiosample>> id2list = new HashMap<>();
 		for (AttachedBiosample rndSample : list) {
@@ -207,9 +201,9 @@ public class RandomizationDlg extends JSpiritEscapeDialog {
 			}
 			l.add(rndSample);
 		}
-		
-		
+
+
 		return id2list;
 	}
-	
+
 }

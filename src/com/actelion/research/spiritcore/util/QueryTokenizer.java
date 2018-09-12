@@ -198,11 +198,15 @@ public class QueryTokenizer {
 			if("and".equalsIgnoreCase(tok) || "or".equalsIgnoreCase(tok)) {
 				//ignore
 			} else {
-				if(tok.length()>1 && tok.startsWith("\"") && tok.endsWith(tok.substring(0,1))) {
-					//Exact Search, never add wildcards
-					if(!value.equals(tok)) return false;
+				//Exact Search first
+				if( value.equals(tok) ) {
+					continue;
+				} else if ( tok.startsWith("*") || tok.endsWith("*") ) {
+					if ( value.toLowerCase().replaceAll("\\*", "").contains(tok.toLowerCase().replaceAll("\\*", "")) ) {
+						continue;
+					}
 				} else {
-					if(!value.toLowerCase().replaceAll("\\*", "").contains(tok.toLowerCase().replaceAll("\\*", ""))) return false;
+					return false;
 				}
 			}
 		}

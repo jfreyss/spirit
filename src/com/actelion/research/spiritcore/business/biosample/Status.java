@@ -30,13 +30,18 @@ public enum Status {
 
 	//Normal status
 	PLANNED("Planned", false, new Color(0, 0, 120), new Color(180, 180, 255)),
-	RECEIVED("Received", true, new Color(0, 120, 0), new Color(180, 255, 180)),
+	//	RECEIVED("Received", true, new Color(0, 120, 0), new Color(180, 255, 180)),
+	STORED("Stored", true, Color.BLACK, new Color(180, 255, 180)),
+	INPREP("In Preparation", true, new Color(0, 0, 150), new Color(180, 255, 180)),
+	TRANSFERRED("Transferred", true, new Color(0, 0, 150), new Color(180, 180, 255)),
+
+
+
 	USEDUP("Used Up", true, new Color(120, 70, 0), new Color(255, 180, 255)),
 	LOWVOL("Low Volume", true, new Color(120, 70, 0), new Color(160, 160, 80)),
-	STORED("Stored", true, Color.BLACK, null),
 
 	//no more available status
-	TRASHED ("Trashed", false, new Color(180, 0, 0), new Color(255, 80, 80)),
+	TRASHED ("Disposed", false, new Color(180, 0, 0), new Color(255, 80, 80)),
 	NECROPSY("Necropsied", false, new Color(100, 70, 0), new Color(255, 225, 225)),
 
 	//problematic status

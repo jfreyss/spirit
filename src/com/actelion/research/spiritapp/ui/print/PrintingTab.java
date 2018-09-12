@@ -23,6 +23,7 @@ package com.actelion.research.spiritapp.ui.print;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Font;
 import java.util.Collections;
 import java.util.List;
 
@@ -48,7 +49,6 @@ import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
-import com.itextpdf.text.Font;
 
 
 public class PrintingTab extends JPanel {

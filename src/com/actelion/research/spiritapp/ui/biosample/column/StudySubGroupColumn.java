@@ -39,36 +39,36 @@ public class StudySubGroupColumn extends Column<Biosample, Integer> {
 		super("Study\nSubgroup", Integer.class, 15, 15);
 		groupLabel.setFont(FastFont.SMALL);
 	}
-	
+
 	@Override
 	public float getSortingKey() {return 3.3f;}
-	
+
 	@Override
 	public Integer getValue(Biosample row) {
 		if(SpiritRights.isBlindAll(row.getInheritedStudy(), SpiritFrame.getUser())) return null;
 		return row.getInheritedGroup()==null || row.getInheritedGroup().getNSubgroups()<=1? null: row.getInheritedSubGroup()+1;
 	}
-	
+
 	@Override
 	public void setValue(Biosample row, Integer value) {
 		try {
-			row.setAttached(row.getInheritedStudy(), row.getInheritedGroup(), value-1);
+			row.setAttached(row.getInheritedStudy(), row.getInheritedGroup(), value==null? 0: value-1);
 		} catch(Exception e) {
 			JExceptionDialog.showError(e);
 		}
 	}
-	
+
 	@Override
-	public void paste(Biosample row, String value) throws Exception {							
-		setValue(row, Integer.parseInt(value));			
+	public void paste(Biosample row, String value) throws Exception {
+		setValue(row, Integer.parseInt(value));
 	}
-	
+
 	@Override
 	public boolean isEditable(Biosample row) {
 		return row!=null && row.getInheritedGroup()!=null && row.getAttachedStudy()!=null && row.getInheritedGroup().getNSubgroups()>1;
 	}
-	
-	
+
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<Biosample> table, Biosample b, int rowNo, Object value) {
 		groupLabel.setText(value==null? "": "'"+value, b.getInheritedGroup());

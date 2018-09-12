@@ -22,7 +22,6 @@
 package com.actelion.research.spiritapp.ui.biosample.dialog;
 
 import java.awt.BorderLayout;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,7 +39,6 @@ import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleTable;
-import com.actelion.research.spiritapp.ui.biosample.BiosampleTableModel.Mode;
 import com.actelion.research.spiritapp.ui.result.dialog.SetResultQualityDlg;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
@@ -53,69 +51,71 @@ import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 
 public class SetBiosampleQualityDlg extends JSpiritEscapeDialog {
-	
+
 	private List<Biosample> biosamples;
-	
+
 	public SetBiosampleQualityDlg(List<Biosample> mySamples, Quality quality) {
 		super(UIUtils.getMainFrame(), "Set Quality", SetBiosampleQualityDlg.class.getName());
 		this.biosamples = JPAUtil.reattach(mySamples);
-		
-		
+
+
 		JPanel centerPanel = new JPanel(new BorderLayout());
-		JLabel label = new JCustomLabel("Are you sure you want to modify the quality of those biosamples to " + quality, Font.BOLD);
+		JLabel label = new JCustomLabel("Are you sure you want to modify the quality of those biosamples to " + quality, FastFont.BOLD);
 		label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		centerPanel.add(BorderLayout.NORTH, label);
 
 		BiosampleTable table = new BiosampleTable();
 		JScrollPane sp = new JScrollPane(table);
 		table.getModel().setCanExpand(false);
-		table.getModel().setMode(Mode.COMPACT);
+		//		table.getModel().setMode(Mode.COMPACT);
 		table.setRows(biosamples);
 		centerPanel.add(BorderLayout.CENTER, sp);
-		
+
 		JPanel contentPanel = new JPanel(new BorderLayout());
-		contentPanel.add(BorderLayout.CENTER, centerPanel);		
+		contentPanel.add(BorderLayout.CENTER, centerPanel);
 		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), new JButton(new MarkAction(quality))));
-		
+
 		setContentPane(contentPanel);
 		setSize(900, 400);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
-		
+
 	}
-	
+
 	public class MarkAction extends AbstractAction {
 		private Quality quality;
-		
+
 		public MarkAction(Quality quality) {
 			super("Set As " + quality);
 			this.quality = quality;
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				
+
 				SpiritUser user = Spirit.askForAuthentication();
 				for (Biosample b : biosamples) {
 					b.setQuality(quality);
-				}				
+				}
+				if(!Spirit.askReasonForChangeIfUpdated(biosamples)) return;
 				DAOBiosample.persistBiosamples(biosamples, user);
-				
+
 				Set<Result> results = new HashSet<Result>();
 				for (Biosample b : biosamples) {
-					results.addAll(DAOResult.queryResults(ResultQuery.createQueryForBiosampleId((int)b.getId()), null));
+					results.addAll(DAOResult.queryResults(ResultQuery.createQueryForBiosampleId(b.getId()), null));
 				}
 				if(results.size()>0) {
 					List<Result> list = new ArrayList<Result>(results);
 					int res = JOptionPane.showConfirmDialog(SetBiosampleQualityDlg.this, "There are " + list.size() + " results linked.\nDo you also want to update the quality to the linked results?", "Success", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 					if(res==JOptionPane.YES_OPTION) {
-						new SetResultQualityDlg(list, quality);							
+						new SetResultQualityDlg(list, quality);
 					}
 				}
 				dispose();
@@ -126,5 +126,5 @@ public class SetBiosampleQualityDlg extends JSpiritEscapeDialog {
 			}
 		}
 	}
-	
+
 }

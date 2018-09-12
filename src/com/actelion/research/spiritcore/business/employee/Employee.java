@@ -50,7 +50,7 @@ import org.hibernate.envers.Audited;
 
 import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.IObject;
-import com.actelion.research.spiritcore.util.DifferenceMap;
+import com.actelion.research.spiritcore.business.audit.DifferenceList;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 
@@ -71,9 +71,7 @@ public class Employee implements Comparable<Employee>, IObject, IAuditable {
 	@Column(name="disabled")
 	private Boolean disabled = false;
 
-	/**
-	 * Encrypted password
-	 */
+	/** Encrypted password */
 	@Column(name="password", length=64)
 	private String password;
 
@@ -92,7 +90,6 @@ public class Employee implements Comparable<Employee>, IObject, IAuditable {
 	joinColumns = {@JoinColumn(name="employee_id")},
 	inverseJoinColumns = {@JoinColumn(name="group_id")})
 	private Set<EmployeeGroup> employeeGroups = new HashSet<>();
-
 
 	@Column(name="upd_user", length=20)
 	private String updUser;
@@ -300,48 +297,45 @@ public class Employee implements Comparable<Employee>, IObject, IAuditable {
 	}
 
 	public boolean isRole(String role) {
-		return Arrays.asList(getRoles()).contains(role);
+		return getRoles().contains(role);
 	}
 
-
-	@Override
-	public String getDifference(IAuditable r) {
-		if(r==null) r = new Employee();
-		if(!(r instanceof Employee)) return "";
-		return getDifferenceMap((Employee)r).flatten();
-	}
 
 	/**
 	 * Returns a map containing the differences between 2 results (usually 2 different versions).
-	 * The result is an empty string if there are no differences or if b is null
-	 * @param b
+	 * The result is an DifferenceList string if there are no differences or if r is null
+	 * @param auditable
 	 * @return
 	 */
-	public DifferenceMap getDifferenceMap(Employee r) {
-		DifferenceMap map = new DifferenceMap();
-		if(r==null) return map;
+	@Override
+	public DifferenceList getDifferenceList(IAuditable auditable) {
+		DifferenceList list = new DifferenceList("Employee", getId(), getUserName(), null);
+		if(auditable==null || !(auditable instanceof Employee)) return list;
+		Employee r = (Employee) auditable;
+
 		if(!CompareUtils.equals(getUserName(), r.getUserName())) {
-			map.put("Username", getUserName(), r.getUserName());
+			list.add("Username", getUserName(), r.getUserName());
 		}
 
 		if(!CompareUtils.equals(getManager(), r.getManager())) {
-			map.put("Manager", getManager()==null || getManager().getUserName()==null? "": getManager().getUserName(), r.getManager()==null || r.getManager().getUserName()==null? "": r.getManager().getUserName());
+			list.add("Manager", getManager()==null || getManager().getUserName()==null? "": getManager().getUserName(), r.getManager()==null || r.getManager().getUserName()==null? "": r.getManager().getUserName());
 		}
 
 		if(isDisabled()!=r.isDisabled()) {
-			map.put("Disabled", Boolean.toString(isDisabled()), Boolean.toString(r.isDisabled()));
+			list.add("Disabled", Boolean.toString(isDisabled()), Boolean.toString(r.isDisabled()));
 		}
 
 		if(!CompareUtils.equals(this.roles, r.roles)) {
-			map.put("Roles", this.roles, r.roles);
+			list.add("Roles", this.roles, r.roles);
 		}
 		try {
 			String actionCompare = MiscUtils.diffCollectionsSummary(getEmployeeGroups(), r.getEmployeeGroups(), null);
-			if(actionCompare!=null) map.put("Groups", actionCompare, null);
+			if(actionCompare!=null) list.add("Groups", actionCompare, null);
 		} catch (Exception e) {
 			e.printStackTrace(); //Should not happen
 		}
 
-		return map;
+		return list;
 	}
+
 }

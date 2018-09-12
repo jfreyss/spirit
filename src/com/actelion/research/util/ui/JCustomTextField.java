@@ -110,13 +110,10 @@ public class JCustomTextField extends JTextField {
 		this(type);
 		setType(type);
 		setColumns(columns);
-		init();
 	}
 
 	public JCustomTextField(CustomFieldType type, String initial) {
-		super();
-		setType(type);
-		init();
+		this(type);
 		super.setText(initial);
 	}
 
@@ -139,11 +136,10 @@ public class JCustomTextField extends JTextField {
 
 	public void setType(CustomFieldType type) {
 		this.type = type;
-		//		setHorizontalAlignment(type==CustomFieldType.DOUBLE || type==CustomFieldType.INTEGER? JTextField.RIGHT: JTextField.LEFT);
 		setColumns(type==CustomFieldType.INTEGER? 3: type==CustomFieldType.DOUBLE? 5: type==CustomFieldType.DATE? 10: 14);
 		if(type==CustomFieldType.DOUBLE || type==CustomFieldType.INTEGER) {
 			setMaxChars(10);
-			setTextWhenEmpty(type==CustomFieldType.DOUBLE ? "double": "number");
+			setToolTipText(type==CustomFieldType.DOUBLE ? "double": "number");
 		}
 		if(type==CustomFieldType.DATE) {
 			setTextWhenEmpty(FormatterUtils.getLocaleFormat().getLocaleDateFormat());
@@ -188,13 +184,12 @@ public class JCustomTextField extends JTextField {
 
 	/**
 	 * Returns the date, parsed according to the format set up in FormatterUtils
+	 * 
 	 * @return
 	 * @throws Exception if the text is not empty and the date is not well formatted
 	 */
 	public Date getTextDate() {
-		Date parsed = FormatterUtils.parseDateTime(getText());
-		if(parsed==null && getText().length()>0) return null; //throw new Exception("The date is not well formatted");
-		return parsed;
+		return FormatterUtils.getDateFromString(getText());
 	}
 
 	public void setTextInteger(Integer v) {
@@ -231,8 +226,8 @@ public class JCustomTextField extends JTextField {
 
 		fireTextChanged();
 
-		if(warningWhenEdited) {
-			setEditable(getText().length()==0);
+		if(warningWhenEdited && getText().length()>0) {
+			setEditable(false);
 		}
 	}
 
@@ -247,10 +242,7 @@ public class JCustomTextField extends JTextField {
 			@Override
 			public void focusLost(FocusEvent e) {
 				String t = getText();
-				//				if(!t.trim().equals(t)) {
 				setText(t.trim());
-				//				}
-				//				fireTextChanged();
 			}
 		});
 
@@ -263,13 +255,7 @@ public class JCustomTextField extends JTextField {
 
 					setEditable(true);
 					selectAll();
-					SwingUtilities.invokeLater(new Runnable() {
-						@Override
-						public void run() {
-							requestFocusInWindow();
-						}
-					});
-
+					SwingUtilities.invokeLater(() -> requestFocusInWindow() );
 				}
 
 			}
@@ -391,8 +377,7 @@ public class JCustomTextField extends JTextField {
 	public Dimension getPreferredSize() {
 		Dimension size = super.getPreferredSize();
 		if (getColumns() != 0) {
-			Insets insets = getInsets();
-			size.width = getColumns() * getColumnWidth(); //+ insets.left + insets.right;
+			size.width = getColumns() * getColumnWidth();
 		}
 		return size;
 	}

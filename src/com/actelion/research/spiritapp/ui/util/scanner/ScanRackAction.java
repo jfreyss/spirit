@@ -39,9 +39,9 @@ import com.actelion.research.util.ui.iconbutton.IconType;
  */
 public abstract class ScanRackAction extends AbstractAction {
 	
-	protected final SpiritScanner scanner;
+	protected final SpiritScannerHelper scanner;
 	
-	public ScanRackAction(String label, SpiritScanner scanner) {
+	public ScanRackAction(String label, SpiritScannerHelper scanner) {
 		super(label, IconType.SCANNER.getIcon());
 		this.scanner = scanner;
 	}
@@ -63,7 +63,7 @@ public abstract class ScanRackAction extends AbstractAction {
 	public void postScan(Location scannedRack) throws Exception  {}
 	
 
-	public SpiritScanner getScanner() {
+	public SpiritScannerHelper getScanner() {
 		return scanner;
 	}
 	

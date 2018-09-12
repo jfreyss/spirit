@@ -239,11 +239,10 @@ public class ManageSamplesDlg extends JEscapeDialog implements ISpiritChangeObse
 					for (Biosample b : allSamples) {
 						if(biotypeFilter.getSelection()!=null && !biotypeFilter.getSelection().equals(b.getBiotype())) continue;
 						if(containerTypeFilter.getSelection()!=null && !containerTypeFilter.getSelection().equals(b.getContainerType())) continue;
-						//						if(biosampleFilter.getSelection()!=null && !biosampleFilter.getSelection().equals(b.getTopParentInSameStudy())) continue;
 						if(groupFilter.getSelection()!=null && !groupFilter.getSelection().equals(b.getInheritedGroup())) continue;
 						if(phaseFilter.getSelection()!=null && !phaseFilter.getSelection().equals(b.getInheritedPhase())) continue;
 						if(namedSamplingComboBox.getSelection()!=null && (b.getAttachedSampling()==null ||!namedSamplingComboBox.getSelection().equals(b.getAttachedSampling().getNamedSampling()))) continue;
-						if(hideDeadCheckBox.isSelected() && (!b.getStatus().isAvailable() || !b.getTopParent().getStatus().isAvailable()) ) continue;
+						if(hideDeadCheckBox.isSelected() && (b.getStatus()!=null && !b.getStatus().isAvailable() || b.getTopParent().getStatus()!=null && !b.getTopParent().getStatus().isAvailable())) continue;
 						if(hideWithoutContainersCheckbox.isSelected() && b.getContainerType()==null) continue;
 						if(biosearchTextField.getText().length()>0 && !b.isCompatible(biosearchTextField.getText(), null)) continue;
 						tmp.add(b);

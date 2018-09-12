@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritcore.business.location;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -63,13 +62,12 @@ import org.hibernate.envers.RelationTargetAuditMode;
 
 import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.IObject;
+import com.actelion.research.spiritcore.business.audit.DifferenceList;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.LocationType.LocationCategory;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
-import com.actelion.research.spiritcore.util.DifferenceMap;
-import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 
 /**
@@ -81,7 +79,7 @@ import com.actelion.research.util.CompareUtils;
 @Audited
 @Table(name="biolocation", uniqueConstraints= {@UniqueConstraint(columnNames= {"name", "parent_id"})})
 @SequenceGenerator(name="biolocation_sequence", sequenceName="biolocation_sequence", allocationSize=1)
-public class Location implements Serializable, Comparable<Location>, Cloneable, IObject, IAuditable {
+public class Location implements Comparable<Location>, Cloneable, IObject, IAuditable {
 
 
 	public static final String SEPARATOR = "/";
@@ -284,11 +282,12 @@ public class Location implements Serializable, Comparable<Location>, Cloneable, 
 	@Override
 	public int compareTo(Location o2) {
 		if(o2==null) return -1;
-		if(equals(o2)) return 0;
+		if(this==o2) return 0;
 
-		if((getParent()==null && o2.getParent()==null) || (getParent()!=null && o2.getParent()!=null && getParent().getId()>0 && getParent().getId()==o2.getParent().getId())) {
-			return CompareUtils.compareSpecial(getName(), o2.getName());
-		}
+		//		if((getParent()==null && o2.getParent()==null) ||
+		//				(getParent()!=null && o2.getParent()!=null && getParent().getId()>0  && o2.getParent().getId()>0 && getParent().getId()==o2.getParent().getId())) {
+		//			return CompareUtils.compareSpecial(this.getName(), o2.getName());
+		//		}
 		return CompareUtils.compareSpecial(this.getHierarchyFull(), o2.getHierarchyFull());
 	}
 
@@ -470,6 +469,13 @@ public class Location implements Serializable, Comparable<Location>, Cloneable, 
 		return biosamples;
 	}
 
+	public Biosample getBiosample(int pos) {
+		for (Biosample b : biosamples) {
+			if(b.getPos()==pos) return b;
+		}
+		return null;
+	}
+
 	public void setBiosamples(Set<Biosample> biosamples) {
 		this.biosamples = biosamples;
 	}
@@ -590,6 +596,15 @@ public class Location implements Serializable, Comparable<Location>, Cloneable, 
 		return res;
 	}
 
+	public static Set<String> getNames(Collection<Location> locations) {
+		Set<String> res = new HashSet<>();
+		if(locations==null) return res;
+		for (Location loc : locations) {
+			res.add(loc.getName());
+		}
+		return res;
+	}
+
 	public static Set<LocationType> getLocationTypes(Collection<Location> locations) {
 		Set<LocationType> res = new HashSet<>();
 		if(locations==null) return res;
@@ -682,56 +697,44 @@ public class Location implements Serializable, Comparable<Location>, Cloneable, 
 		return res;
 	}
 
+	/**
+	 * Returns a map containing the differences between 2 locations (usually 2 different versions).
+	 * The result is an empty DifferenceList if there are no differences or if auditable is null
+	 * @param auditable
+	 * @return
+	 */
 	@Override
-	/**
-	 * Returns a map containing the differences between 2 locations (usually 2 different versions).
-	 * The result is an empty string if there are no differences or if b is null
-	 * @param b
-	 * @return
-	 */
-	public String getDifference(IAuditable l) {
-		if(l==null) l = new Location();
-		if(!(l instanceof Location)) return "";
-		return MiscUtils.flatten(getDifferenceMap((Location)l));
-	}
-
-	/**
-	 * Returns a map containing the differences between 2 locations (usually 2 different versions).
-	 * The result is an empty string if there are no differences or if b is null
-	 * @param b
-	 * @return
-	 */
-	public DifferenceMap getDifferenceMap(Location l) {
-
-		DifferenceMap map = new DifferenceMap();
-		if(l==null) return map;
+	public DifferenceList getDifferenceList(IAuditable auditable) {
+		DifferenceList list = new DifferenceList("Location", getId(), getHierarchyFull(), null);
+		if(auditable==null || !(auditable instanceof Location)) return list;
+		Location l = (Location) auditable;
 
 		if(CompareUtils.compare(getName(), l.getName())!=0) {
-			map.put("Name", getName(), l.getName());
+			list.add("Name", getName(), l.getName());
 		}
 		if(CompareUtils.compare(getDescription(), l.getDescription())!=0) {
-			map.put("Description", getDescription(), l.getDescription());
+			list.add("Description", getDescription(), l.getDescription());
 		}
 		if(CompareUtils.compare(getParent(), l.getParent())!=0) {
-			map.put("Parent", getParent()==null?"":getParent().getHierarchyFull(), l.getParent()==null?"":l.getParent().getHierarchyFull());
+			list.add("Parent", getParent()==null?"":getParent().getHierarchyFull(), l.getParent()==null?"":l.getParent().getHierarchyFull());
 		}
 		if(CompareUtils.compare(getLocationType(), l.getLocationType())!=0) {
-			map.put("LocationType", getLocationType()==null?"":getLocationType().getName(), l.getLocationType()==null?"":l.getLocationType().getName());
+			list.add("LocationType", getLocationType()==null?"":getLocationType().getName(), l.getLocationType()==null?"":l.getLocationType().getName());
 		}
 		if(CompareUtils.compare(getCols(), l.getCols())!=0) {
-			map.put("Cols", ""+getCols(), ""+l.getCols());
+			list.add("Cols", ""+getCols(), ""+l.getCols());
 		}
 		if(CompareUtils.compare(getRows(), l.getRows())!=0) {
-			map.put("Rows", ""+getRows(), ""+l.getRows());
+			list.add("Rows", ""+getRows(), ""+l.getRows());
 		}
 		if(CompareUtils.compare(getPrivacy(), l.getPrivacy())!=0 || CompareUtils.compare(getEmployeeGroup(), l.getEmployeeGroup())!=0) {
-			map.put("Privacy", getPrivacy() + (getEmployeeGroup()==null?"": " to "+getEmployeeGroup().getName()), l.getPrivacy() + (l.getEmployeeGroup()==null?"": " to "+l.getEmployeeGroup().getName()));
+			list.add("Privacy", getPrivacy() + (getEmployeeGroup()==null?"": " to "+getEmployeeGroup().getName()), l.getPrivacy() + (l.getEmployeeGroup()==null?"": " to "+l.getEmployeeGroup().getName()));
 		}
 		if(CompareUtils.compare(getCreUser(), l.getCreUser())!=0) {
-			map.put("CreatedBy", getCreUser(), l.getCreUser());
+			list.add("CreatedBy", getCreUser(), l.getCreUser());
 		}
 
-		return map;
+		return list;
 	}
 }
 

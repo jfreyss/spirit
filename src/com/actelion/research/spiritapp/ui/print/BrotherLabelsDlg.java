@@ -49,7 +49,6 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -62,11 +61,9 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
-import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.print.DirectPrinter;
 import com.actelion.research.spiritapp.print.LocationPrintable;
 import com.actelion.research.spiritapp.print.PrintLabel;
-import com.actelion.research.spiritapp.print.PrintableOfContainers;
 import com.actelion.research.spiritapp.print.SpiritPrinter;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JEscapeDialog;
@@ -95,7 +92,7 @@ public class BrotherLabelsDlg extends JEscapeDialog {
 
 	private JButton printButton = new JIconButton(IconType.PRINT, "Print");
 	private JLabel printLabel = new JCustomLabel("", Font.ITALIC);
-	private JComboBox<String> marginCombobox = new JComboBox<String>(new String[] { "Add top margin (PTouch config: 36mm paper)", "No top margin (PTouch config: 12mm paper)"});
+	//	private JComboBox<String> marginCombobox = new JComboBox<String>(new String[] { "Add top margin (PTouch config: 36mm paper)", "No top margin (PTouch config: 12mm paper)"});
 
 
 	public BrotherLabelsDlg() {
@@ -144,7 +141,7 @@ public class BrotherLabelsDlg extends JEscapeDialog {
 			c.weightx = 0; c.gridx = 1; c.gridy = 0; configPanel.add(printerComboBox, c);
 			c.weightx = 0; c.gridx = 0; c.gridy = 1; configPanel.add(new JLabel("Media: "), c);
 			c.weightx = 0; c.gridx = 1; c.gridy = 1; configPanel.add(mediaComboBox, c);
-			c.weightx = 0; c.gridx = 1; c.gridy = 2; configPanel.add(marginCombobox, c);
+			//			c.weightx = 0; c.gridx = 1; c.gridy = 2; configPanel.add(marginCombobox, c);
 
 			c.weighty = 1;
 			c.weightx = 1; c.gridx = 2; c.gridy = 4; configPanel.add(new JLabel(), c);
@@ -172,26 +169,15 @@ public class BrotherLabelsDlg extends JEscapeDialog {
 					}
 				}
 			});
-			mediaComboBox.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent ev) {
-					fireConfigChanged();
-				}
-			});
-			marginCombobox.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent ev) {
-					Spirit.getConfig().setProperty("print.brother.margin", marginCombobox.getSelectedIndex());
-					if(marginCombobox.getSelectedIndex()==0) {
-						PrintableOfContainers.setTopMargin(13);
-					} else {
-						PrintableOfContainers.setTopMargin(1);
-					}
-
-					fireConfigChanged();
-				}
-			});
-			marginCombobox.setSelectedIndex(Spirit.getConfig().getProperty("print.brother.margin", 1));
+			mediaComboBox.addActionListener(ev -> fireConfigChanged());
+			//			marginCombobox.addActionListener(new ActionListener() {
+			//				@Override
+			//				public void actionPerformed(ActionEvent ev) {
+			//					Spirit.getConfig().setProperty("print.brother.margin", marginCombobox.getSelectedIndex());
+			//					fireConfigChanged();
+			//				}
+			//			});
+			//			marginCombobox.setSelectedIndex(Spirit.getConfig().getProperty("print.brother.margin", 1));
 
 			if(services.length>0) {
 				printerComboBox.setSelection(services[0]);

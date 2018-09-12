@@ -26,8 +26,6 @@ import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -70,6 +68,7 @@ import com.actelion.research.spiritapp.ui.study.wizard.StudyInfoDlg;
 import com.actelion.research.spiritapp.ui.study.wizard.group.StudyGroupDlg;
 import com.actelion.research.spiritapp.ui.study.wizard.phase.PhaseDlg;
 import com.actelion.research.spiritapp.ui.study.wizard.treatment.StudyTreatmentDlg;
+import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
@@ -129,12 +128,8 @@ public class HelpBinder {
 
 	public static JButton createHelpButton() {
 		final JButton res = new JIconButton(IconType.HELP);
-		res.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				showHelp(res);
-			}
-		});
+		res.addActionListener( e-> showHelp(res));
+		if(! DBAdapter.isConfigurable()) res.setVisible(false);
 		return res;
 	}
 

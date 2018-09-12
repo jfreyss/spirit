@@ -44,7 +44,7 @@ public class MigrationScript2_3 extends MigrationScript {
 			+ "alter table spirit.revinfo add difference varchar2(256);\n";
 
 	public MigrationScript2_3() {
-		super("2.3.0");
+		super("2.3");
 	}
 
 	@Override

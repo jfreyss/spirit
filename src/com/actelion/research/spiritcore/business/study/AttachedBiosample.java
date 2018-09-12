@@ -112,7 +112,7 @@ public class AttachedBiosample implements Comparable<AttachedBiosample> {
 		return dataList;
 	}
 	public boolean isSkipRando() {
-		return skipRando || (biosample!=null && !biosample.getStatus().isAvailable());
+		return skipRando || (biosample!=null && biosample.getStatus()!=null && biosample.getStatus().isAvailable());
 	}
 	public void setSkipRando(boolean skipRando) {
 		this.skipRando = skipRando;

@@ -273,7 +273,7 @@ public class StudyEditorPane extends ImageEditorPane {
 					List<ElbLink> elbs = DAOResult.getNiobeLinksForStudy(study);
 					if(elbs.size()>0) {
 
-						sb.append("<b>Niobe:</b");
+						sb.append("<b>Niobe:</b>");
 
 						if("date".equals(sort)) {
 							Collections.sort(elbs, new Comparator<ElbLink>() {

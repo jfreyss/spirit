@@ -71,7 +71,6 @@ public class SQLConverterTest {
 				+ "";
 
 		String converted = SQLConverter.convertScript(script, SQLVendor.HSQL);
-		System.out.println("SQLConverterTest.testConversion() "+converted);
 		MigrationScript.executeScript(hsqlConn, converted, true, null);
 	}
 

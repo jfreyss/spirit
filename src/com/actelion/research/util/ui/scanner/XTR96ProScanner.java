@@ -90,7 +90,7 @@ public class XTR96ProScanner {
 		boolean test = new File(".").canWrite() && !new File(".").getAbsolutePath().startsWith("P:") && !new File(".").getAbsolutePath().contains("actelch02") && !new File(".").getAbsolutePath().contains("ares");
 		if(!test) throw new Exception("The working directory must be somewhere where you have write access.\n Currently it is: "+new File(".").getAbsolutePath());
 
-		if("baerr".equals(System.getProperty("user.name")) || "freyssj".equals(System.getProperty("user.name"))) {
+		if("true".equals(System.getProperty("simulateScanner"))) {
 			return new Plate(config.getRows(), config.getCols(), XTR96Scanner.getTestTubes(1));
 		}
 
@@ -207,10 +207,10 @@ public class XTR96ProScanner {
 				}
 			}
 
-			try {Thread.sleep(100);}catch (Exception e) {e.printStackTrace();}
+			try {Thread.sleep(200);}catch (Exception e) {System.err.println(e);}
 
-			try { thread.wait();} catch (Exception e) {e.printStackTrace();}
-
+			try { thread.wait();} catch (Exception e) {System.err.println(e);}
+			System.out.println("XTR96ProScanner.scanPlate() "+scannedTubes);
 			List<RackPos> tubes = parseResults(scannedTubes);
 			res.setTubes(tubes);
 			return res;

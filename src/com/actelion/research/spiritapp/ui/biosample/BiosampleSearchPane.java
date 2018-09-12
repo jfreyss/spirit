@@ -114,6 +114,7 @@ public class BiosampleSearchPane extends JPanel {
 					if(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER && query.isEmpty()) throw new Exception("You must enter more search criteria");
 
 					//Query samples
+					System.out.println("BiosampleSearchPane.query(...) "+query.getSuggestedQueryName());
 					biosamples = DAOBiosample.queryBiosamples(query, user);
 					LoggerFactory.getLogger(getClass()).debug("Query done in: "+(System.currentTimeMillis()-s)+"ms");
 
@@ -141,14 +142,9 @@ public class BiosampleSearchPane extends JPanel {
 						}
 					}
 					tab.getBiosampleOrRackTab().getBiosampleTable().getModel().setFilterTrashed(query.isFilterTrashed());
-					LoggerFactory.getLogger(getClass()).debug("Filtered in: "+(System.currentTimeMillis()-s)+"ms");
+					LoggerFactory.getLogger(getClass()).debug("Filtered in: " + (System.currentTimeMillis()-s) + "ms");
 					tab.sortBiosamples(biosamples);
-					LoggerFactory.getLogger(getClass()).debug("Sorted in: "+(System.currentTimeMillis()-s)+"ms");
-
-				}
-				@Override
-				protected void done() {
-
+					LoggerFactory.getLogger(getClass()).debug("Sorted in: " + (System.currentTimeMillis()-s) + "ms");
 
 					//If the query was done on hidden columns, unhide those
 					Set<BiosampleLinker> linkers = new HashSet<>(query.getLinker2values().keySet());
@@ -159,6 +155,12 @@ public class BiosampleSearchPane extends JPanel {
 							model.showHideable(col, true);
 						}
 					}
+					LoggerFactory.getLogger(getClass()).debug("Analyzed in: "+(System.currentTimeMillis()-s)+"ms");
+
+				}
+				@Override
+				protected void done() {
+
 
 					//Set the samples
 					tab.setBiosamples(biosamples);
@@ -166,7 +168,7 @@ public class BiosampleSearchPane extends JPanel {
 					LoggerFactory.getLogger(getClass()).debug("Display done in: "+(System.currentTimeMillis()-s)+"ms");
 
 
-					SpiritContextListener.setStatus(biosamples.size() + " Biosamples");
+					SpiritContextListener.setStatus(biosamples.size() + " Samples");
 
 				}
 			};
@@ -234,7 +236,7 @@ public class BiosampleSearchPane extends JPanel {
 
 	public class Action_Reset extends AbstractAction {
 		public Action_Reset() {
-			super("");
+			super("Clear");
 			putValue(Action.SMALL_ICON, IconType.CLEAR.getIcon());
 			setToolTipText("Reset all query fields");
 		}

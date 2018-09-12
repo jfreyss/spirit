@@ -30,6 +30,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -145,7 +146,11 @@ public class LocationDepictor extends JPanel {
 	}
 
 	public void setSelectedContainers(Collection<Container> selection) {
-		getRackPanel().setSelectedPoses(Container.getPoses(selection));
+		Set<Integer> selPoses = new HashSet<>();
+		for (Container c : selection) {
+			if(location!=null && location.equals(c.getLocation())) selPoses.add(c.getPos());
+		}
+		getRackPanel().setSelectedPoses(selPoses);
 		getRackPanel().repaint();
 
 		if(push>0) return;

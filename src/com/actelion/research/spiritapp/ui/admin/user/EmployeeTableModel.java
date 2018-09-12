@@ -29,6 +29,7 @@ import javax.swing.JComponent;
 import com.actelion.research.spiritapp.ui.util.component.SpiritExtendTableModel;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
+import com.actelion.research.spiritcore.services.dao.DAOLog;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.FastFont;
@@ -41,6 +42,12 @@ public class EmployeeTableModel extends SpiritExtendTableModel<Employee> {
 		@Override
 		public String getValue(Employee row) {
 			return row.isDisabled()?"Disabled": "Active";
+		}
+	};
+	public static final Column<Employee, String> COLUMN_LOCKED = new Column<Employee, String>("Locked", String.class, 40) {
+		@Override
+		public String getValue(Employee row) {
+			return DAOLog.isLocked(row.getUserName())?"Locked":"";
 		}
 	};
 	public static final Column<Employee, String> COLUMN_NAME = new Column<Employee, String>("Username", String.class, 110) {
@@ -97,12 +104,15 @@ public class EmployeeTableModel extends SpiritExtendTableModel<Employee> {
 		List<Column<Employee,?>> columns = new ArrayList<>();
 		columns.add(COLUMN_ROWNO);
 		columns.add(COLUMN_ACTIVE);
+		if(SpiritProperties.getInstance().getValueInt(PropertyKey.USER_LOCKAFTER)>0) {
+			columns.add(COLUMN_LOCKED);
+		}
 		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
 			columns.add(COLUMN_MANAGER);
 		}
 		columns.add(COLUMN_NAME);
 		columns.add(COLUMN_ROLES);
-		if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_RESULT)) {
 			columns.add(COLUMN_GROUPS);
 		}
 

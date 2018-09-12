@@ -63,7 +63,7 @@ import com.actelion.research.spiritcore.services.helper.BiosampleCreationHelper;
 import com.actelion.research.spiritcore.util.ListHashMap;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
-import com.actelion.research.util.ui.SwingWorkerExtended;
+import com.actelion.research.util.ui.LongTaskDlg;
 import com.actelion.research.util.ui.UIUtils;
 
 
@@ -114,9 +114,9 @@ public class CreateSamplesHelper {
 
 			//First filter: Find which ones must be deleted or created based on their status and their existence
 			for (Biosample b : allNeeded) {
-				boolean dead = b.getTopParentInSameStudy().getStatus()==Status.KILLED || b.getTopParentInSameStudy().getStatus()==Status.DEAD;
+				boolean dead = b.getTopParentInSameStudy().getStatus()==Status.KILLED;// || b.getTopParentInSameStudy().getStatus()==Status.DEAD;
 				if(dead && b.isDeadAt(b.getInheritedPhase())) {
-					//Remove samples from animals marked as Found Dead or Killed, but keep Animals marked as Necropsied
+					//Remove samples from animals marked as Killed, but keep Animals marked as Necropsied
 					if(b.getId()>0) {
 						toDelete.add(b);
 					}
@@ -139,7 +139,7 @@ public class CreateSamplesHelper {
 			//Check samples to be deleted
 			for(Biosample top: study.getParticipantsSorted()) {
 				//Skip dead/necropsied/...
-				if(!top.getStatus().isAvailable()) continue;
+				if(top.getStatus()!=null && !top.getStatus().isAvailable()) continue;
 
 				for(Biosample sample: top.getHierarchy(HierarchyMode.ATTACHED_SAMPLES)) {
 					if(sample.getInheritedGroup()==null) continue; //Reserve -> Skip
@@ -283,22 +283,29 @@ public class CreateSamplesHelper {
 					null,
 					new String[] {"Synchronize Samples", "Continue without synchronization", "Cancel"}, toDelete.size()>0? "Continue without synchronization": "Synchronize Samples");
 			if(res==0) {
-				new SwingWorkerExtended("Synchronize Samples", null, SwingWorkerExtended.FLAG_SYNCHRONOUS) {
+
+				List<Biosample> toSave = new ArrayList<>();
+				toSave.addAll(toUpdate);
+				toSave.addAll(toAdd);
+
+				if(toDelete.size()>0 && !ignoreDeletionCheckBox.isSelected()) {
+					if(!Spirit.askReasonForChange()) return false;
+				} else {
+					if(!Spirit.askReasonForChangeIfUpdated(toSave)) return false;
+				}
+
+				new LongTaskDlg("Synchronize Samples") {
 					@Override
-					protected void doInBackground() throws Exception {
+					public void longTask() throws Exception {
 						//Open the transaction
 						EntityManager session = JPAUtil.getManager();
 						EntityTransaction txn = null;
 						try {
 							txn = session.getTransaction();
 							txn.begin();
-							if(toUpdate.size()+toAdd.size()>0) {
-								List<Biosample> toSave = new ArrayList<>();
-								toSave.addAll(toUpdate);
-								toSave.addAll(toAdd);
+							if(toSave.size()>0) {
 								DAOBiosample.persistBiosamples(session, toSave, Spirit.askForAuthentication());
 							}
-
 
 							if(toDelete.size()>0 && !ignoreDeletionCheckBox.isSelected()) {
 								DAOBiosample.deleteBiosamples(session, toDelete, Spirit.askForAuthentication());
@@ -310,9 +317,6 @@ public class CreateSamplesHelper {
 							if (txn != null)try {txn.rollback();} catch (Exception e2) {e2.printStackTrace();}
 							throw e;
 						}
-					}
-					@Override
-					protected void done() {
 						SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_ADDED, Biosample.class, toAdd);
 						SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_DELETED, Biosample.class, toDelete);
 					}

@@ -50,7 +50,6 @@ public class BiosamplePopupDlg extends JDialog {
 	private static BiosamplePopupDlg instance;
 
 	private Collection<Biosample> objects = new ArrayList<>();
-	//	private Collection<Object> highlight = new ArrayList<>();
 	private Dimension prefDim = null;
 	private Dimension setDim = null;
 	private int maxCols;
@@ -84,11 +83,9 @@ public class BiosamplePopupDlg extends JDialog {
 	}
 
 	public void addObjects(Collection<Biosample> biosamples) {
-		//		highlight.clear();
 		if(this.objects!=null) {
 			this.objects.removeAll(biosamples);
 			this.objects.addAll(biosamples);
-			//			highlight.addAll(containersOrBiosamples);
 		}
 		refresh();
 	}
@@ -97,9 +94,7 @@ public class BiosamplePopupDlg extends JDialog {
 		if(objects.size()==0) return;
 
 		SwingUtilities.invokeLater(()->{
-
 			JPanel content = new JPanel();
-
 			content.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 			content.setBackground(Color.WHITE);
 
@@ -109,13 +104,7 @@ public class BiosamplePopupDlg extends JDialog {
 
 				pane.setPreferredSize(prefDim);
 				pane.setMinimumSize(prefDim);
-
-				//				boolean h = highlight.contains(object);
-				//				if(h) {
-				//					pane.setBorder(BorderFactory.createMatteBorder(2,2,2,2, Color.RED));
-				//				} else {
 				pane.setBorder(BorderFactory.createEmptyBorder());
-				//				}
 				if(object instanceof Container) {
 					pane.setBiosamples(((Container)object).getBiosamples());
 				} else if(object instanceof Biosample) {
@@ -139,16 +128,13 @@ public class BiosamplePopupDlg extends JDialog {
 			}
 			setSize(setDim);
 		});
-
 	}
 
 	public static BiosamplePopupDlg showBiosamples(Collection<Biosample> biosamples) {
-		System.out.println("BiosamplePopupDlg.showBiosamples() "+biosamples);
 		if(instance==null) {
 			instance = new BiosamplePopupDlg();
 		}
 		instance.addObjects(biosamples);
-
 		return instance;
 	}
 

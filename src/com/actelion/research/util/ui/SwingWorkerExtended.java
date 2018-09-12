@@ -33,7 +33,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -69,8 +68,7 @@ public class SwingWorkerExtended  {
 	public static boolean DEBUG = false;
 	public static boolean SHOW_EXCEPTION = true;
 
-	private static ExecutorService bgPool = Executors.newSingleThreadExecutor();
-
+	private static ExecutorService bgPool = Executors.newFixedThreadPool(1);
 
 	public static final int FLAG_SYNCHRONOUS = 0;
 	public static final int FLAG_ASYNCHRONOUS = 2;
@@ -87,7 +85,7 @@ public class SwingWorkerExtended  {
 	private static int instances;
 	private final AtomicBoolean bgTaskStarted = new AtomicBoolean(false);
 	private final AtomicBoolean longTaskDone = new AtomicBoolean(false);
-	private final static Map<Component, Map<String, Thread>> currentThreads = new ConcurrentHashMap<>();
+	private final static Map<Component, Thread> currentThreads = new ConcurrentHashMap<>();
 	private Runnable after;
 
 	public SwingWorkerExtended() {
@@ -98,8 +96,8 @@ public class SwingWorkerExtended  {
 		this(title, myComp, FLAG_ASYNCHRONOUS20MS);
 	}
 
-	public SwingWorkerExtended(final Component myComp, final int flags) {
-		this(null, myComp, flags);
+	public SwingWorkerExtended(final Component myComp, final int delayInMs) {
+		this(null, myComp, delayInMs);
 	}
 
 	/**
@@ -109,14 +107,14 @@ public class SwingWorkerExtended  {
 	 */
 	public SwingWorkerExtended(final String title, final Component myComp, final int delayInMs) {
 		final long started = System.currentTimeMillis();
-		this.name = (instances++) + "-" + (title==null?"SwingWorker":title);
+		this.name = (instances++) + "-" + (title==null?"SWE":title);
 		final Component comp = (myComp instanceof JFrame)? ((JFrame)myComp).getContentPane(): (myComp instanceof JDialog)? ((JDialog)myComp).getContentPane(): myComp;
 
 		String last = "";
 		if(DEBUG) {
 			StackTraceElement[] t = Thread.currentThread().getStackTrace();
 			for (StackTraceElement stackTraceElement : t) {
-				if(stackTraceElement.getClassName().startsWith("com.actelion") && !stackTraceElement.getClassName().startsWith("com.actelion.research.gui.util")) {
+				if(stackTraceElement.getClassName().startsWith("com.actelion") && !stackTraceElement.getClassName().startsWith("com.actelion.research.util")) {
 					last = stackTraceElement.toString();
 					break;
 				}
@@ -161,11 +159,11 @@ public class SwingWorkerExtended  {
 			if(DEBUG) System.out.println("SwingWorkerExtended "+name+" -DONE- " + (System.currentTimeMillis()-started) + "ms - " +callingThread);
 		} else {
 			//ASYNCHRONOUS MODE: call doBackground in a separate thread
-			sw = new Thread(name) {
+			sw = new Thread() {
 				@Override
 				public void run() {
 
-					if(isCancelled()) {
+					if(isCancelled() || isInterrupted()) {
 						endBgProcess();
 						if(DEBUG) System.out.println("SwingWorkerExtended "+name+" -STOP- " + (System.currentTimeMillis()-started) + "ms - " + callingThread);
 						return;
@@ -180,26 +178,40 @@ public class SwingWorkerExtended  {
 							return;
 						}
 					}
-					Runnable bgRunnable = new Runnable() {
+					if(isCancelled() || isInterrupted()) {
+						endBgProcess();
+						if(DEBUG) System.out.println("SwingWorkerExtended "+name+" -STOP- " + (System.currentTimeMillis()-started) + "ms - " + callingThread);
+						return;
+					}
+
+					bgPool.submit(new Thread(name) {
 						@Override
 						public void run() {
 							try {
+								if(isCancelled() || isInterrupted()  || sw.isInterrupted()) {
+									endBgProcess();
+									if(DEBUG) System.out.println("SwingWorkerExtended "+name+" -STOP- " + (System.currentTimeMillis()-started) + "ms - " + callingThread);
+									return;
+								}
+
 								//In Background
 								if(DEBUG) System.out.println("SwingWorkerExtended " + name + " -BG- " + (System.currentTimeMillis()-started) + "ms - " + callingThread);
 								SwingWorkerExtended.this.doInBackground();
 
-								if( !(isCancelled() || isInterrupted() || sw.isInterrupted())) {
-									SwingUtilities.invokeLater(doneRunnable);
-									if(DEBUG) System.out.println("SwingWorkerExtended "+name+" -DONE- " + (System.currentTimeMillis()-started) + "ms - " +callingThread);
+								if(isCancelled() || isInterrupted()  || sw.isInterrupted()) {
+									endBgProcess();
+									if(DEBUG) System.out.println("SwingWorkerExtended "+name+" -STOP- " + (System.currentTimeMillis()-started) + "ms - " + callingThread);
+									return;
 								}
+								SwingUtilities.invokeLater(doneRunnable);
+								if(DEBUG) System.out.println("SwingWorkerExtended "+name+" -DONE- " + (System.currentTimeMillis()-started) + "ms - " +callingThread);
 
 							} catch (final Throwable thrown) {
 								thrown.printStackTrace();
 								System.out.println("SwingWorkerExtended isCancelled="+isCancelled());
 								System.out.println("SwingWorkerExtended isInterrupted="+isInterrupted()+"/"+sw.isInterrupted());
-								System.out.println("SwingWorkerExtended contains="+(comp==null || currentThreads.get(comp)==null?"NA":currentThreads.get(comp).containsValue(sw)));
-								if(!isCancelled() && !isInterrupted() && !sw.isInterrupted() && (comp==null || currentThreads.get(comp).containsValue(sw))) {
-									//									if(SHOW_EXCEPTION && !thrown.getClass().getName().contains("hibernate") && (thrown.getCause()==null || !thrown.getCause().getClass().getName().contains("hibernate"))) {
+								System.out.println("SwingWorkerExtended contains="+(comp==null || currentThreads.get(comp)==null?"NA":currentThreads.get(comp)==sw));
+								if(!isCancelled() && !isInterrupted() && !sw.isInterrupted() && (comp==null || currentThreads.get(comp)==sw)) {
 									if(SHOW_EXCEPTION) {
 										JExceptionDialog.showError(comp, thrown);
 									} else {
@@ -211,12 +223,8 @@ public class SwingWorkerExtended  {
 							} finally {
 								endBgProcess();
 							}
-
-
-
 						}
-					};
-					bgPool.submit(bgRunnable);
+					});
 				}
 
 			};
@@ -225,19 +233,19 @@ public class SwingWorkerExtended  {
 
 			//Interrupt threads with the same name if start was delayed
 			if(comp!=null && delayInMs>0) {
-				if(currentThreads.get(comp)==null) currentThreads.put(comp, new HashMap<String, Thread>());
-				Thread t2 = currentThreads.get(comp).get(title);
-				currentThreads.get(comp).put(title, sw);
+				Thread t2 = currentThreads.get(comp);
+				currentThreads.put(comp, sw);
 				if(t2!=null && t2.isAlive()) {
-					try {t2.interrupt();}catch (Throwable e) {}
+					try {t2.interrupt();}catch (Throwable e) {e.printStackTrace();}
 				}
 			}
 
-			//Show the loading panel if the task takes more than 300m
+			/////////////////////////////////////////////////////////////
+			//Show the loading panel if the task takes more than 400m
 			delayVisibleThread = new Thread("SwingWorkerExtended-GlassPane") {
 				@Override
 				public void run() {
-					try{Thread.sleep(Math.max(delayInMs, 200));} catch(Exception e) {e.printStackTrace(); return;}
+					try{Thread.sleep(Math.max(delayInMs, 400));} catch(Exception e) {e.printStackTrace(); return;}
 					startBgProcess(title, comp);
 				}
 			};
@@ -353,14 +361,12 @@ public class SwingWorkerExtended  {
 						@Override
 						public void actionPerformed(ActionEvent e) {
 							endBgProcess();
-							sw.interrupt();
+							cancel();
 						}
 					};
 					stopButton.addActionListener(cancelAction);
 					KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
 					glassPane.registerKeyboardAction(cancelAction, stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
-					stopButton.addActionListener(cancelAction);
-
 				}
 
 
@@ -377,6 +383,7 @@ public class SwingWorkerExtended  {
 	}
 
 	private void endBgProcess() {
+		finalize();
 		longTaskDone.set(true);
 		if(bgTaskStarted.get()) {
 			try {
@@ -405,11 +412,29 @@ public class SwingWorkerExtended  {
 		return sw.isInterrupted();
 	}
 
+	/**
+	 * Task to be executed in a background thread
+	 * @throws Exception
+	 */
 	protected void doInBackground() throws Exception {}
-	protected void done() {}
 
 	/**
-	 * Runnable function to be executed  in the same thread after successful completion
+	 * Task to be executed on the event dispatcher after successfull completion of doInBackground
+	 * @throws Exception
+	 */
+	protected void done() {}
+
+
+	/**
+	 * Task to be executed on the calling thread, always called
+	 * @throws Exception
+	 */
+	@Override
+	protected void finalize() {}
+
+
+	/**
+	 * Runnable function to be executed on the calling thread, after successful completion
 	 * @param after
 	 */
 	public SwingWorkerExtended afterDone(Runnable after) {
@@ -424,11 +449,8 @@ public class SwingWorkerExtended  {
 
 	public static void awaitTermination() {
 		try {
-			bgPool.shutdown();
 			boolean success = bgPool.awaitTermination(1000, TimeUnit.MILLISECONDS);
 			if(!success) System.err.println("SwingWorker: tasks took more than 1s to complete");
-
-			bgPool = Executors.newSingleThreadExecutor();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

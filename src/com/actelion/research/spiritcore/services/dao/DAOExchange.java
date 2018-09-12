@@ -110,7 +110,6 @@ public class DAOExchange {
 			for (Map.Entry<TestAttribute, ResultValue> e : result.getResultValueMap().entrySet()) {
 				Test t = e.getKey().getTest();
 				if(t.getId()<=0) {
-					System.out.println("DAOExchange.persist() reload "+e.getKey().getTest().getName());
 					t = (Test) session.createQuery("from Test t where name = ?1").setParameter(1, t.getName()).getSingleResult();
 				}
 				assert t.getId()>0;

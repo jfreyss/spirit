@@ -55,6 +55,11 @@ import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 
+/**
+ * UI component used to work like the file browser of windows but for locations
+ * @author Joel Freyss
+ *
+ */
 public class LocationBrowser extends JPanel {
 
 	public static final String PROPERTY_LOCATION_SELECTED = "location_selected";
@@ -196,6 +201,14 @@ public class LocationBrowser extends JPanel {
 		updateView();
 	}
 
+	public void setFilter(LocationBrowserFilter filter) {
+		this.filter = filter;
+	}
+
+	public LocationBrowserFilter getFilter() {
+		return filter;
+	}
+
 	public void setAllowTextEditing(boolean allowTextEditing) {
 		this.allowTextEditing = allowTextEditing;
 	}
@@ -210,7 +223,6 @@ public class LocationBrowser extends JPanel {
 	}
 
 	private void updateBioLocation(String fullLocation) throws Exception {
-
 		fullLocation = fullLocation.replaceAll("[\n\r]", "");
 		cardLayout.show(LocationBrowser.this, "combo");
 		if(fullLocation.length()==0) {

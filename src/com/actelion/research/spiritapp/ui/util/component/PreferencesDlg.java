@@ -47,8 +47,6 @@ public class PreferencesDlg extends JEscapeDialog {
 	public PreferencesDlg() {
 		super(UIUtils.getMainFrame(), "User Preferences");
 
-		//		lfComboBox.setSelection(Spirit.getConfig().getProperty("preferences.lf", "Nimbus"));
-		//		fontFamilyComboBox.setSelection(Spirit.getConfig().getProperty("preferences.fontFamily", FastFont.getDefaultFontFamily()));
 		fontSizeComboBox.setSelection(Spirit.getConfig().getProperty("preferences.fontSize", FastFont.getDefaultFontSize()));
 		fontSizeComboBox.setRenderer(new DefaultListCellRenderer() {
 			@Override
@@ -68,8 +66,6 @@ public class PreferencesDlg extends JEscapeDialog {
 
 		add(BorderLayout.CENTER, UIUtils.createBox(
 				UIUtils.createTitleBox("Appearance", UIUtils.createTable(
-						//						new JLabel("Look & Feel: "), lfComboBox,
-						//						new JLabel("Font Family: "), fontFamilyComboBox,
 						new JLabel("Font Size: "), fontSizeComboBox
 						)),
 				null,
@@ -80,8 +76,6 @@ public class PreferencesDlg extends JEscapeDialog {
 	}
 
 	private void ok() {
-		//		Spirit.getConfig().setProperty("preferences.lf", lfComboBox.getSelection());
-		//		Spirit.getConfig().setProperty("preferences.fontFamily", fontFamilyComboBox.getSelection());
 		Spirit.getConfig().setProperty("preferences.fontSize", fontSizeComboBox.getSelection());
 		dispose();
 		SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);

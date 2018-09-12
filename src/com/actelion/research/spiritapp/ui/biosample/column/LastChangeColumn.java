@@ -67,7 +67,7 @@ public class LastChangeColumn extends Column<Biosample, String> {
 				//Find the first difference
 				Biosample b1 = rev0.getBiosamples().get(0);
 				Biosample b2 = rev1.getBiosamples().get(0);
-				diff = b1.getDifference(b2);
+				diff = b1.getDifferenceList(b2).toString();
 			}
 
 			if(revId>0 || diff.length()>0) {

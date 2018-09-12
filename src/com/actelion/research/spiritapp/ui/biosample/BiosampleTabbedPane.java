@@ -166,7 +166,7 @@ public class BiosampleTabbedPane extends JPanel implements IBiosampleDetail {
 			tabbedPane.setToolTipTextAt(tabbedPane.getTabCount()-1, "History");
 			tabbedPane.setIconAt(tabbedPane.getTabCount()-1, IconType.HISTORY.getIcon());
 
-			if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+			if(SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_RESULT)) {
 				if(!forRevision) {
 					tabbedPane.add("", resultTab);
 					tabbedPane.setToolTipTextAt(tabbedPane.getTabCount()-1, "Results");

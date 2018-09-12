@@ -22,7 +22,6 @@
 package com.actelion.research.spiritapp.ui.location.edit;
 
 import java.awt.BorderLayout;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.util.List;
 
@@ -44,6 +43,7 @@ import com.actelion.research.spiritcore.business.location.LocationFlag;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
@@ -58,7 +58,7 @@ public class SetLocationFlagDlg extends JSpiritEscapeDialog {
 		this.locations = JPAUtil.reattach(myLocations);
 
 		JPanel centerPanel = new JPanel(new BorderLayout());
-		JLabel label = new JCustomLabel("Are you sure you want to modify the flags of those locations to " + (flag==null?"none":flag.getName()), Font.BOLD);
+		JLabel label = new JCustomLabel("Are you sure you want to modify the flags of those locations to " + (flag==null?"none":flag.getName()), FastFont.BOLD);
 		label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		centerPanel.add(BorderLayout.NORTH, label);
 
@@ -110,6 +110,7 @@ public class SetLocationFlagDlg extends JSpiritEscapeDialog {
 				for (Location l : locations) {
 					l.setLocationFlag(flag);
 				}
+				if(!Spirit.askReasonForChangeIfUpdated(locations)) return;
 				DAOLocation.persistLocations(locations, user);
 
 				dispose();

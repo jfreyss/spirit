@@ -29,6 +29,7 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 
+import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
@@ -59,7 +60,6 @@ public class PromoteDlg extends JSpiritEscapeDialog {
 		okButton.addActionListener(e-> {
 			try {
 				promote(study, stateComboBox.getSelection(), SpiritFrame.getUser());
-				dispose();
 			} catch(Exception e2) {
 				JExceptionDialog.showError(PromoteDlg.this, e2);
 			}
@@ -79,11 +79,14 @@ public class PromoteDlg extends JSpiritEscapeDialog {
 		setVisible(true);
 	}
 
-	private static void promote(Study study, String state, SpiritUser user) throws Exception {
+	private void promote(Study study, String state, SpiritUser user) throws Exception {
 		if(state==null) throw new Exception("You must select a state");
 		if(state.equals(study.getState())) throw new Exception("You must select a state");
 		study.setState(state);
+		if(!Spirit.askReasonForChangeIfUpdated(Collections.singleton(study))) return;
 		DAOStudy.persistStudies(Collections.singleton(study), user);
+
+		dispose();
 		SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, study);
 	}
 }

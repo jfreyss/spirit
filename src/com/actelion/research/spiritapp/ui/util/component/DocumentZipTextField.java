@@ -120,7 +120,7 @@ public class DocumentZipTextField extends JCustomTextField {
 						File f = chooser.getSelectedFile();
 						Spirit.getConfig().setProperty("study.wizard.path", f.getParent());
 
-						int maxKilo = SpiritProperties.getInstance().getValueInt(PropertyKey.FILE_SIZE) * 1000;
+						int maxKilo = SpiritProperties.getInstance().getValueInt(PropertyKey.SYSTEM_FILE_SIZE) * 1000;
 						if(f.length()>maxKilo*1000) throw new Exception("The file is too large: Max: "+maxKilo+"kb");
 
 

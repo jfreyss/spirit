@@ -41,15 +41,15 @@ import javax.swing.JList;
  *  - Empty value possible
  *  - Text when empty
  *  - a custom renderer can be specified by overiding 'processCellRenderer'
- *  
+ *
  * @author freyssj
  */
 public class JGenericComboBox<T> extends JComboBoxBigPopup<T> {
-	
+
 	private String textWhenEmpty;
-	
+
 	public class JGenericComboBoxRenderer extends DefaultListCellRenderer {
-		
+
 		@SuppressWarnings("unchecked")
 		@Override
 		public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -76,7 +76,7 @@ public class JGenericComboBox<T> extends JComboBoxBigPopup<T> {
 				return lbl;
 			} else {
 				try {
-					Component comp2 = processCellRenderer(this, (T) value, index);					
+					Component comp2 = processCellRenderer(this, (T) value, index);
 					if(comp2!=null) {
 						if((comp2 instanceof JComponent) && (isSelected || (!((JComponent)comp2).isOpaque() && ((JComponent)comp2).getBackground()!=null))) {
 							((JComponent)comp2).setOpaque(true);
@@ -92,34 +92,34 @@ public class JGenericComboBox<T> extends JComboBoxBigPopup<T> {
 				return comp;
 			}
 		}
-		
+
 	}
-	
+
 	public JGenericComboBox() {
 		super(155, new DefaultComboBoxModel<T>());
 
 		setRenderer(new JGenericComboBoxRenderer());
 		setFont(FastFont.REGULAR);
 	}
-	
+
 	public JGenericComboBox(T[] values, boolean allowNull) {
 		this(Arrays.asList(values), allowNull );
 	}
-	
+
 	public JGenericComboBox(T[] values, String allowNull) {
 		this(Arrays.asList(values), allowNull );
 	}
-	
+
 	public JGenericComboBox(Collection<T> values, boolean allowNull) {
 		this();
 		setValues(values, allowNull);
 	}
-	
+
 	public JGenericComboBox(Collection<T> values, String allowNull) {
 		this();
-		setValues(values, allowNull);		
+		setValues(values, allowNull);
 	}
-	
+
 	public final void setValues(Collection<T> values) {
 		setValues(values, getTextWhenEmpty());
 	}
@@ -127,7 +127,7 @@ public class JGenericComboBox<T> extends JComboBoxBigPopup<T> {
 		setValues(values, allowNull? "": null);
 	}
 	public void setValues(Collection<T> values, String textWhenEmpty) {
-		T oldValue = getSelection();		
+		T oldValue = getSelection();
 		DefaultComboBoxModel<T> model = new DefaultComboBoxModel<T>();
 		if(textWhenEmpty!=null) {
 			setTextWhenEmpty(textWhenEmpty);
@@ -140,54 +140,49 @@ public class JGenericComboBox<T> extends JComboBoxBigPopup<T> {
 				}
 			}
 		}
-		setModel(model);		
+		setModel(model);
 		if(values!=null && oldValue!=null && values.contains(oldValue)) {
 			setSelection(oldValue);
 		}
 	}
-	
+
 	public List<T> getValues(){
 		List<T> res = new ArrayList<T>();
 		for (int i = 0; i < getModel().getSize(); i++) {
 			if(textWhenEmpty!=null && i==0) continue;
-			T option = (T) getModel().getElementAt(i);
+			T option = getModel().getElementAt(i);
 			res.add(option);
 		}
 		return res;
 	}
-	
-	
+
 	public void setSelectionString(String value) {
 		for (int i = 0; i < getModel().getSize(); i++) {
-			T option = (T) getModel().getElementAt(i);
-			if(option!=null && option.toString().equals(value)) {setSelectedIndex(i); selectedItemChanged(); return;}
+			T option = getModel().getElementAt(i);
+			if((option==null?"": option.toString()).equals(value)) {setSelectedIndex(i); selectedItemChanged(); return;}
 		}
-		
-		setSelectedItem(value);
 	}
-	public void setSelection(T value) {		
+
+	public void setSelection(T value) {
 		if(textWhenEmpty!=null && value==null && getModel().getSize()>0) setSelectedIndex(0);
 		else setSelectedItem(value);
 	}
-	
-	
+
 	@SuppressWarnings("unchecked")
 	public T getSelection() {
 		if(textWhenEmpty!=null && getSelectedIndex()==0) return null;
 		return (T) super.getSelectedItem();
 	}
-	
-	
 
 	public void setTextWhenEmpty(String textWhenEmpty) {
 		this.textWhenEmpty = textWhenEmpty;
 		setToolTipText(textWhenEmpty==null || textWhenEmpty.length()==0? null: textWhenEmpty);
 	}
-	
+
 	public String getTextWhenEmpty() {
 		return textWhenEmpty;
 	}
-	
+
 	@Override
 	public Dimension getMinimumSize() {
 		Dimension dim = super.getMinimumSize();
@@ -197,7 +192,7 @@ public class JGenericComboBox<T> extends JComboBoxBigPopup<T> {
 		}
 		return dim;
 	}
-			
+
 	@Override
 	public Dimension getPreferredSize() {
 		Dimension dim = super.getPreferredSize();
@@ -207,16 +202,16 @@ public class JGenericComboBox<T> extends JComboBoxBigPopup<T> {
 		}
 		return dim;
 	}
-	
+
 	/**
 	 * Custom renderer
 	 * To be overidden
-	 * @return null to use the default renderer 
+	 * @return null to use the default renderer
 	 */
 	public Component processCellRenderer(JLabel comp, T value, int index) {
 		return comp;
 	}
-	
-	
-	
+
+
+
 }

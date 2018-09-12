@@ -45,14 +45,14 @@ public class SpiritRights {
 
 	public enum ActionType {
 		READ_STUDY("Read Study", "Who is allowed to read a study (its samples and results are not necessarily readable)"),
-		CREATE_STUDY("Create Study", "Who is allowed to create a new study?"),
-		EDIT_STUDY("Edit Study", "Who is allowed to edit a study (its samples and results are not necessarily editable)"),
+		WORK_STUDY("Work Study", "Who is allowed to change the status of a study"),
+		EDIT_STUDY("Modify Study", "Who is allowed to edit a study (its samples and results are not necessarily editable)"),
 		DELETE_STUDY("Delete Study", "Who is allowed to delete a study (its samples and results?"),
-		CHANGE_STATUS("Change Status", "Who is allowed to change the status of a study"),
 
 		READ_BIOSAMPLE("Read Biosample", "Who is allowed to read a biosample. Note: it is necessary to also have read rights on the study to read samples on a study."),
-		EDIT_BIOSAMPLE("Create/Edit Biosample", "Who is allowed to edit a biosample. Note: it is necessary to also have read rights on the study to edit samples on a study."),
-		DELETE_BIOSAMPLE("Delete Biosample", "Who is allowed to edit a biosample. Note: it is necessary to also have delete rights on the study to delete samples on a study."),
+		WORK_BIOSAMPLE("Work Biosample", "Who is allowed to modify a biosample as part of the normal workflow (location, status). Note: it is necessary to also have read rights on the study to edit samples on a study."),
+		EDIT_BIOSAMPLE("Edit Biosample", "Who is allowed to edit a biosample. Note: it is necessary to also have read rights on the study to edit samples on a study."),
+		DELETE_BIOSAMPLE("Delete Biosample", "Who is allowed to edit a biosample. Note: it is necessary to also have read rights on the study to delete samples on a study."),
 
 		READ_LOCATION("Read Location", "Who is allowed to read a protected/private location. ('public' location are always readable)"),
 		EDIT_LOCATION("Edit Location", "Who is allowed to edit a location. ('public' location are always editable)"),
@@ -116,27 +116,10 @@ public class SpiritRights {
 	 * @return
 	 */
 	public static boolean canBlind(Study study, SpiritUser user) {
-		return isBlind(study, user) || canEditBiosamples(study, user);
+		return isBlind(study, user) || canWork(study, user);
 	}
 
-	/**
-	 * Is the user allowed to read the study?
-	 *
-	 * @param study
-	 * @param user
-	 * @return
-	 */
-	public static boolean canCreateStudy(SpiritUser user) {
-		if(user==null) return false;
 
-		//Check generic roles
-		for (String role : user.getRoles()) {
-			if(SpiritProperties.getInstance().isChecked(ActionType.CREATE_STUDY, role)) return true;
-		}
-
-		//Return true by default if roles have not been defined
-		return SpiritProperties.getInstance().getUserRoles().length<=1;
-	}
 	/**
 	 * Is the user allowed to read the study?
 	 *
@@ -160,7 +143,7 @@ public class SpiritRights {
 
 		//Otherwise, check generic roles
 		for (String role : user.getRoles()) {
-			if(SpiritProperties.getInstance().isChecked(ActionType.READ_STUDY, null, role)) return true;
+			if(SpiritProperties.getInstance().isChecked(ActionType.READ_STUDY, role)) return true;
 		}
 
 		//Check groups
@@ -174,33 +157,45 @@ public class SpiritRights {
 	}
 
 	/**
-	 * True if the user can not only read the study, but also add samples/results to it.
-	 * Note: This function is the same as canEdit(study) if groups are not used
-	 *
+	 * True if the user can work on the study: promote, add samples, ...
 	 * @param study
 	 * @param user
 	 * @return
 	 */
-	public static boolean canEditBiosamples(Study study, SpiritUser user) {
+	public static boolean canWork(Study study, SpiritUser user) {
 		if(user==null) return false;
-		if(study==null) return true;
+		if(study==null) return false;
+		if(study.getId()<=0) return true;
 
 		//Check if the study is sealed: then no rights
 		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
 			return false;
 		}
 
-		//Check specific study rights
+		//Check generic roles
 		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
 			for(EmployeeGroup eg: study.getEmployeeGroups()) {
 				if(user.isMember(eg)) return true;
 			}
+
+			if(study.getCreUser().equals(user.getUsername()) && SpiritProperties.getInstance().isChecked(ActionType.WORK_STUDY, UserType.CREATOR)) return true;
+			if(study.getUpdUser().equals(user.getUsername()) && SpiritProperties.getInstance().isChecked(ActionType.WORK_STUDY, UserType.UPDATER)) return true;
 			for(String uid: user.getManagedUsers()) {
 				if(study.getExpertUsersAsSet().contains(uid)) return true;
 			}
 			return canEdit(study, user);
 		} else {
-			return canRead(study, user);
+
+			String[] roles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_WORK, study.getState());
+			if(MiscUtils.contains(roles, "NONE")) return false;
+			if(MiscUtils.contains(roles, "ALL")) return true;
+			if(MiscUtils.contains(roles, user.getRoles())) return true;
+
+
+			for (String role : user.getRoles()) {
+				if(SpiritProperties.getInstance().isChecked(ActionType.WORK_STUDY, role)) return true;
+			}
+			return false;
 		}
 
 	}
@@ -242,7 +237,9 @@ public class SpiritRights {
 				}
 			}
 		}
-		return false;
+
+		//Return true by default if roles have not been defined
+		return SpiritProperties.getInstance().getUserRoles().length<=1;
 	}
 
 	/**
@@ -271,33 +268,6 @@ public class SpiritRights {
 		return false;
 	}
 
-	/**
-	 * True if the user can delete the study
-	 * @param study
-	 * @param user
-	 * @return
-	 */
-	public static boolean canPromote(Study study, SpiritUser user) {
-		if(user==null) return false;
-		if(study==null) return false;
-		if(study.getId()<=0) return true;
-
-		//Check if the study is sealed: then no rights
-		if("true".equals(SpiritProperties.getInstance().getValue(PropertyKey.STUDY_STATES_SEALED, study.getState()))) {
-			return false;
-		}
-
-		//Check generic roles
-		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
-			if(study.getCreUser().equals(user.getUsername()) && SpiritProperties.getInstance().isChecked(ActionType.CHANGE_STATUS, UserType.CREATOR)) return true;
-			if(study.getUpdUser().equals(user.getUsername()) && SpiritProperties.getInstance().isChecked(ActionType.CHANGE_STATUS, UserType.UPDATER)) return true;
-		}
-		for (String role : user.getRoles()) {
-			if(SpiritProperties.getInstance().isChecked(ActionType.CHANGE_STATUS, role)) return true;
-		}
-
-		return false;
-	}
 
 	/**
 	 * True if the user can edit the namedSampling, ie: he can edit the linked
@@ -374,6 +344,20 @@ public class SpiritRights {
 	}
 
 	/**
+	 * True if the user can work all biosamples
+	 * @param biosamples
+	 * @param user
+	 * @return
+	 */
+	public static boolean canWorkBiosamples(Collection<Biosample> biosamples, SpiritUser user) {
+		if(biosamples==null) return true;
+		for (Biosample biosample : biosamples) {
+			if(!canWork(biosample, user)) return false;
+		}
+		return true;
+	}
+
+	/**
 	 * True if the user can edit all biosamples
 	 * @param biosamples
 	 * @param user
@@ -397,13 +381,61 @@ public class SpiritRights {
 	 * @param user
 	 * @return
 	 */
-	public static boolean canEdit(Biosample biosample, SpiritUser user) {
+	public static boolean canWork(Biosample biosample, SpiritUser user) {
 		if(user==null) return false;
 		if(biosample==null) return true;
+		if(biosample.getId()<=0) return true;
+
 
 		//Study rights
 		if(biosample.getInheritedStudy()!=null) {
-			if(!canEditBiosamples(biosample.getInheritedStudy(), user) && !canBlind(biosample.getInheritedStudy(), user)) return false;
+			if(!canWork(biosample.getInheritedStudy(), user) && !canBlind(biosample.getInheritedStudy(), user)) return false;
+		}
+
+		//Check generic roles
+		for (String role : user.getRoles()) {
+			if(SpiritProperties.getInstance().isChecked(ActionType.WORK_BIOSAMPLE, role)) return true;
+		}
+
+		//Check group/hierarchy rights (if needed)
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+			for(String uid: user.getManagedUsers()) {
+				if(uid.equals(biosample.getCreUser()) && SpiritProperties.getInstance().isChecked(ActionType.WORK_BIOSAMPLE, UserType.CREATOR)) return true;
+				if(uid.equals(biosample.getUpdUser()) && SpiritProperties.getInstance().isChecked(ActionType.WORK_BIOSAMPLE, UserType.UPDATER)) return true;
+			}
+			if(biosample.getEmployeeGroup()!=null && user.isMember(biosample.getEmployeeGroup())) return true;
+
+			//Check generic roles
+			for (String role : user.getRoles()) {
+				if(SpiritProperties.getInstance().isChecked(ActionType.WORK_BIOSAMPLE, role)) return true;
+			}
+			return biosample.getId()<=0 || biosample.getInheritedStudy()!=null && (canRead(biosample.getInheritedStudy(), user) || canBlind(biosample.getInheritedStudy(), user));
+		}
+
+		//Return true by default if roles have not been defined
+		return SpiritProperties.getInstance().getUserRoles().length<=1;
+
+	}
+
+
+	/**
+	 * A user can edit a biosample if:
+	 * - he is the creator, owner, or is in the department of the sample
+	 * - or he is responsible of the biosample's study (if any)
+	 * - or he has edit access on the biosample's location (if any)
+	 *
+	 * @param biosample
+	 * @param user
+	 * @return
+	 */
+	public static boolean canEdit(Biosample biosample, SpiritUser user) {
+		if(user==null) return false;
+		if(biosample==null) return true;
+		if(biosample.getId()<=0) return true;
+
+		//Study rights
+		if(biosample.getInheritedStudy()!=null) {
+			if(!canWork(biosample.getInheritedStudy(), user) && !canBlind(biosample.getInheritedStudy(), user)) return false;
 		}
 
 		//Check generic roles
@@ -423,7 +455,7 @@ public class SpiritRights {
 			for (String role : user.getRoles()) {
 				if(SpiritProperties.getInstance().isChecked(ActionType.EDIT_BIOSAMPLE, role)) return true;
 			}
-			return biosample.getId()<=0 || biosample.getInheritedStudy()!=null && (canEditBiosamples(biosample.getInheritedStudy(), user) || canBlind(biosample.getInheritedStudy(), user));
+			return biosample.getId()<=0 || biosample.getInheritedStudy()!=null && (canRead(biosample.getInheritedStudy(), user) || canBlind(biosample.getInheritedStudy(), user));
 		}
 
 		//Return true by default if roles have not been defined
@@ -433,19 +465,16 @@ public class SpiritRights {
 
 	public static boolean canDelete(Biosample biosample, SpiritUser user) {
 		if(user==null) return false;
-
 		if(biosample==null) return false;
-		if(biosample.getId()<=0) return false;
-		if(user.getUsername().equals(biosample.getCreUser())) return true;
 
 		//Study rights
 		if(biosample.getInheritedStudy()!=null) {
-			if(!canEditBiosamples(biosample.getInheritedStudy(), user) && !canBlind(biosample.getInheritedStudy(), user)) return false;
+			if(!canWork(biosample.getInheritedStudy(), user) && !canBlind(biosample.getInheritedStudy(), user)) return false;
 		}
 
 		//Check generic roles
 		for (String role : user.getRoles()) {
-			if(SpiritProperties.getInstance().isChecked(ActionType.EDIT_BIOSAMPLE, role)) return true;
+			if(SpiritProperties.getInstance().isChecked(ActionType.DELETE_BIOSAMPLE, role)) return true;
 		}
 
 		//Check group/hierarchy rights (if needed)
@@ -497,7 +526,6 @@ public class SpiritRights {
 	public static boolean canEdit(Location location, SpiritUser user) {
 		if(user==null) return false;
 		if(location==null) return false;
-		if(location.getId()<=0) return true;
 
 		//Check generic roles
 		for (String role : user.getRoles()) {
@@ -526,7 +554,6 @@ public class SpiritRights {
 	public static boolean canDelete(Location location, SpiritUser user) {
 		if(user==null) return false;
 		if(location==null) return false;
-		if(location.getId()<=0) return true;
 
 		//Check generic roles
 		for (String role : user.getRoles()) {

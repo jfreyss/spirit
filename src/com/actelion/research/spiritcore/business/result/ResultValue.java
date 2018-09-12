@@ -127,7 +127,7 @@ public class ResultValue implements Comparable<ResultValue> {
 	}
 
 	public String getValue() {
-		if(getAttribute().getDataType()==DataType.LARGE) {
+		if(getAttribute()!=null && getAttribute().getDataType()==DataType.LARGE) {
 			return document==null? null: new String(document.getBytes());
 		} else {
 			return value;

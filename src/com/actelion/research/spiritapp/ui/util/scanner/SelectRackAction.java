@@ -29,29 +29,30 @@ import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.util.ui.JExceptionDialog;
 
 public abstract class SelectRackAction extends AbstractAction {
-	
-	private final SpiritScanner model;
-	
-	public SelectRackAction(SpiritScanner model) {
+
+	private final SpiritScannerHelper scanner;
+	private Location scannedRack = new Location();
+
+	public SelectRackAction(SpiritScannerHelper scanner) {
 		super("Set RackId");
-		this.model = model;
+		this.scanner = scanner;
 	}
-	
-	
+
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		showDlgForRackCreation();
 	}
-	
-	
+
+
 	/**
-	 * Propose creation of new rack, 
+	 * Propose creation of new rack,
 	 * to be called in postscan if needed
 	 */
 	public void showDlgForRackCreation() {
-		final SelectRackDlg dlg = new SelectRackDlg(model.getScannerConfiguration(), model.getScannedRack());
+		final SelectRackDlg dlg = new SelectRackDlg(scanner.getScannerConfiguration(), scannedRack);
 		dlg.setVisible(true);
-		
+
 		if(dlg.isSuccess()) {
 			try {
 				eventRackSelected(dlg.getSelection());
@@ -59,10 +60,10 @@ public abstract class SelectRackAction extends AbstractAction {
 				JExceptionDialog.showError(e);
 				showDlgForRackCreation();
 			}
-			
+
 		}
 	}
-	
+
 	/**
 	 * To be overridden by implementing class
 	 * @param rack

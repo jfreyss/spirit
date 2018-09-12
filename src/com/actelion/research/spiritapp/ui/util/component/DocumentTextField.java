@@ -24,7 +24,6 @@ package com.actelion.research.spiritapp.ui.util.component;
 import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -115,7 +114,7 @@ public class DocumentTextField extends JCustomTextField {
 
 		chooser.setApproveButtonText("Upload");
 		chooser.setPreferredSize(new Dimension(800,640));
-		chooser.setAccessory(UIUtils.createVerticalBox(new JCustomLabel("Current Document:", Font.BOLD), currentLabel, Box.createVerticalGlue(), deleteExisting));
+		chooser.setAccessory(UIUtils.createVerticalBox(new JCustomLabel("Current Document:", FastFont.BOLD), currentLabel, Box.createVerticalGlue(), deleteExisting));
 
 		int res = chooser.showOpenDialog(button);
 		if(res==JFileChooser.APPROVE_OPTION) {
@@ -123,7 +122,7 @@ public class DocumentTextField extends JCustomTextField {
 
 			Spirit.getConfig().setProperty("document.uploadDir", f);
 			try {
-				int maxKilo = SpiritProperties.getInstance().getValueInt(PropertyKey.FILE_SIZE) * 1000;
+				int maxKilo = SpiritProperties.getInstance().getValueInt(PropertyKey.SYSTEM_FILE_SIZE) * 1000;
 				if(f.length()>maxKilo*1000) throw new Exception("The file is too large: Max: "+maxKilo+"kb");
 				Document document = new Document();
 				document.setBytes(IOUtils.getBytes(f));

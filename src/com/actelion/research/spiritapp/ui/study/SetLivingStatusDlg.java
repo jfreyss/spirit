@@ -208,11 +208,12 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 		statusKilledRadioButton.setEnabled(animals.size()>0);
 		statusNecropsiedRadioButton.setEnabled(animals.size()>0);
 		for (Biosample a : animals) {
-			unsetGroupRadioButton.setEnabled(unsetGroupRadioButton.isEnabled() && a.getInheritedGroup()!=null  && a.getStatus().isAvailable());
-			statusAliveRadioButton.setEnabled(statusAliveRadioButton.isEnabled() && !a.getStatus().isAvailable());
-			statusDeadRadioButton.setEnabled(statusDeadRadioButton.isEnabled() && a.getStatus().isAvailable());
-			statusKilledRadioButton.setEnabled(statusKilledRadioButton.isEnabled() && a.getStatus().isAvailable());
-			statusNecropsiedRadioButton.setEnabled(statusNecropsiedRadioButton.isEnabled() && a.getStatus().isAvailable());
+			boolean available = a.getStatus()==null || a.getStatus().isAvailable();
+			unsetGroupRadioButton.setEnabled(unsetGroupRadioButton.isEnabled() && a.getInheritedGroup()!=null  && available);
+			statusAliveRadioButton.setEnabled(statusAliveRadioButton.isEnabled() && !available);
+			statusDeadRadioButton.setEnabled(statusDeadRadioButton.isEnabled() && available);
+			statusKilledRadioButton.setEnabled(statusKilledRadioButton.isEnabled() && available);
+			statusNecropsiedRadioButton.setEnabled(statusNecropsiedRadioButton.isEnabled() && available);
 		}
 
 	}
@@ -362,6 +363,8 @@ public class SetLivingStatusDlg extends JSpiritEscapeDialog {
 		}
 
 
+
+		if(!Spirit.askReasonForChangeIfUpdated(biosamplesToSave)) return;
 
 		new LongTaskDlg("Saving") {
 			@Override

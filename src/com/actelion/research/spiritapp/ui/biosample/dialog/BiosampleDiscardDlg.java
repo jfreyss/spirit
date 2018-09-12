@@ -39,7 +39,6 @@ import javax.swing.JScrollPane;
 import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleTable;
-import com.actelion.research.spiritapp.ui.biosample.BiosampleTableModel.Mode;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -85,7 +84,7 @@ public class BiosampleDiscardDlg {
 
 		BiosampleTable table = new BiosampleTable();
 		table.getModel().setCanExpand(false);
-		table.getModel().setMode(Mode.COMPACT);
+		//		table.getModel().setMode(Mode.COMPACT);
 		table.setRows(biosamples);
 		table.setSelection(toAdd);
 		JScrollPane sp = new JScrollPane(table);
@@ -112,6 +111,8 @@ public class BiosampleDiscardDlg {
 			res = JOptionPane.showConfirmDialog(UIUtils.getMainFrame(), "There are " +results.size()+ " results associated to those samples. Do you want to delete them?", "DELETE Biosamples", JOptionPane.YES_NO_OPTION);
 			if(res!=JOptionPane.YES_OPTION) return;
 		}
+
+		if(!Spirit.askReasonForChange()) return;
 
 		new LongTaskDlg("Deleting Biosamples") {
 			@Override

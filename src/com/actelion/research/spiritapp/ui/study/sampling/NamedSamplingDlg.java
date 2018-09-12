@@ -227,6 +227,9 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		c.gridx = 22; samplingsPanel.add(new JLabel("Container"), c);
 		//Amount
 		c.gridx = 25; samplingsPanel.add(new JLabel("Amount"), c);
+		//Comments
+		c.gridx = 26; samplingsPanel.add(new JLabel("Comments"), c);
+
 		c.gridx = 30; samplingsPanel.add(Box.createHorizontalStrut(5), c);
 
 		//Actions
@@ -301,28 +304,19 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 
 		final ContainerTypeComboBox containerTypeComboBox = new ContainerTypeComboBox();
 		containerTypeComboBox.setSelection(sampling.getContainerType());
+		containerTypeComboBox.setSelection(sampling.getContainerType());
 
 		final BlocNoComboBox blocNoComboBox = new BlocNoComboBox(false);
 		blocNoComboBox.setSelection(sampling.getBlocNo()==null? 1: sampling.getBlocNo());
 		blocNoComboBox.setVisible(sampling.getContainerType()!=null && sampling.getContainerType().isMultiple());
 
-		containerTypeComboBox.setSelection(sampling.getContainerType());
 
 		final JCustomTextField amountTextField = new JCustomTextField(CustomFieldType.DOUBLE);
 		amountTextField.setText(sampling.getAmount()==null?"": ""+sampling.getAmount());
-		amountTextField.addTextChangeListener(new TextChangeListener() {
-			@Override
-			public void textChanged(JComponent src) {
-				try {
-					Sampling copyFrom = sampling.clone();
-					sampling.setAmount(amountTextField.getText().length()==0? null: Double.parseDouble(amountTextField.getText()));
-					synchronizeSamples(study, copyFrom, sampling);
 
-				} catch(Exception e) {
-					amountTextField.setText("");
-				}
-			}
-		});
+		final JCustomTextField commentsTextField = new JCustomTextField(CustomFieldType.ALPHANUMERIC);
+		commentsTextField.setText(sampling.getComments());
+
 
 
 		final JCheckBox weighingCheckBox = new JCheckBox("", sampling.isWeighingRequired());
@@ -367,6 +361,32 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 				JExceptionDialog.showError(ex);
 			}
 		});
+		amountTextField.addTextChangeListener(new TextChangeListener() {
+			@Override
+			public void textChanged(JComponent src) {
+				try {
+					Sampling copyFrom = sampling.clone();
+					sampling.setAmount(amountTextField.getText().length()==0? null: Double.parseDouble(amountTextField.getText()));
+					synchronizeSamples(study, copyFrom, sampling);
+
+				} catch(Exception e) {
+					amountTextField.setText("");
+				}
+			}
+		});
+		commentsTextField.addTextChangeListener(new TextChangeListener() {
+			@Override
+			public void textChanged(JComponent src) {
+				try {
+					Sampling copyFrom = sampling.clone();
+					sampling.setComments(commentsTextField.getText());
+					synchronizeSamples(study, copyFrom, sampling);
+
+				} catch(Exception e) {
+					amountTextField.setText("");
+				}
+			}
+		});
 
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridy = y+1;
@@ -390,7 +410,8 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 		c.gridx = 23; samplingsPanel.add(blocNoComboBox, c);
 		//Amount
 		c.gridx = 25; samplingsPanel.add(UIUtils.createHorizontalBox(amountTextField, new JCustomLabel(sampling.getBiotype()!=null && sampling.getBiotype().getAmountUnit()!=null? sampling.getBiotype().getAmountUnit().getUnit():"", FastFont.SMALL)), c);
-		c.gridx = 30; samplingsPanel.add(Box.createHorizontalStrut(5), c);
+		//Comments
+		c.gridx = 26; samplingsPanel.add(commentsTextField, c);
 
 		//Actions
 		c.gridx = 34; samplingsPanel.add(UIUtils.createHorizontalBox(weighingCheckBox, Box.createHorizontalStrut(10)), c);
@@ -655,7 +676,10 @@ public class NamedSamplingDlg extends JSpiritEscapeDialog {
 			}
 			study.setUpdUser(Spirit.askForAuthentication().getUsername());
 
-			if(transactionMode) DAOStudy.persistStudies(Collections.singleton(study), Spirit.askForAuthentication());
+			if(transactionMode) {
+				if(!Spirit.askReasonForChangeIfUpdated(Collections.singleton(study))) return;
+				DAOStudy.persistStudies(Collections.singleton(study), Spirit.askForAuthentication());
+			}
 		}
 
 		//Delete the NamedSampling

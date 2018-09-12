@@ -28,6 +28,7 @@ import javax.swing.Icon;
 import javax.swing.JPanel;
 
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
+import com.actelion.research.spiritcore.business.study.StudyQuery;
 
 /**
  * SpiritTabs reprensents a Perspective in the Spirit's system.
@@ -91,5 +92,5 @@ public abstract class SpiritTab extends JPanel {
 	public abstract void onStudySelect();
 	public abstract <T> void fireModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details);
 
-
+	public void updateActions(StudyQuery studyQuery) {};
 }

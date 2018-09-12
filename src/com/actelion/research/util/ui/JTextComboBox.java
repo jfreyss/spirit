@@ -24,6 +24,7 @@ package com.actelion.research.util.ui;
 import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
@@ -40,6 +41,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.util.ArrayList;
@@ -190,6 +192,22 @@ public class JTextComboBox extends JCustomTextField {
 				}
 				showPopup();
 			}
+		});
+
+		addMouseMotionListener(new MouseMotionListener() {
+
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				if(e.getX()>getWidth()-20) {
+					setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+				} else {
+					setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
+				}
+
+			}
+
+			@Override
+			public void mouseDragged(MouseEvent e) {}
 		});
 
 		addFocusListener(new FocusAdapter() {

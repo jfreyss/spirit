@@ -62,6 +62,7 @@ import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.IOUtils;
 import com.actelion.research.util.UsageLog;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -189,7 +190,7 @@ public class PivotAnalyzerDlg extends JEscapeDialog {
 
 									//Export to DW
 									StringBuilder sb = DataWarriorExporter.getDwar(results, config, SpiritFrame.getUser());
-									File f = File.createTempFile("spirit_", ".dwar");
+									File f = IOUtils.createTempFile("export_", ".dwar");
 									FileWriter w = new FileWriter(f);
 									com.actelion.research.util.IOUtils.redirect(new StringReader(sb.toString()), w);
 									w.close();

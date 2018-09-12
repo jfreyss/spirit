@@ -170,7 +170,7 @@ public class ExporterDlg extends JEscapeDialog {
 					fileBrowser.setFile(new File(parent, System.currentTimeMillis()+".spirit").getAbsolutePath());
 					this.tmpExchange = new Exchange();
 					tmpExchange.addBiotypes(DAOBiotype.getBiotypes());
-					if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+					if(SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_RESULT)) {
 						tmpExchange.addTests(DAOTest.getTests());
 					}
 				} else if(exportAllRadioButton.isSelected()) {

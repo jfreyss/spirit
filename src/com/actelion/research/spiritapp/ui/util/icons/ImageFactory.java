@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -42,14 +43,14 @@ public class ImageFactory {
 
 	private static final Map<String, BufferedImage> images = Collections.synchronizedMap(new HashMap<String, BufferedImage>());
 	private static final BufferedImage emptyImage = new BufferedImage(40, 40, BufferedImage.TYPE_INT_ARGB);
-	
+
 	public static void clearCache() {
 		images.clear();
 	}
 	public static BufferedImage createImage() {
 		return emptyImage;
 	}
-	
+
 	public static BufferedImage createImage(int width, boolean hasAlpha) {
 		BufferedImage image = images.get("empty_"+width+"_"+hasAlpha);
 		if(image==null) {
@@ -64,7 +65,7 @@ public class ImageFactory {
 		}
 		return image;
 	}
-	
+
 	public static BufferedImage getImage(String key) {
 		if(key==null) return null;
 		key = key.toLowerCase();
@@ -82,15 +83,15 @@ public class ImageFactory {
 					System.err.println("no image for "+key+".png  "+e);
 				}
 			}
-			
+
 			if(image==null) {
 				int index = key.indexOf(' ');
 				int index2 = key.indexOf('/');
 				int index3 = key.indexOf('(');
-				
+
 				if(index2>0 && (index<=0 || index2<index)) index = index2;
 				if(index3>0 && (index<=0 || index3<index)) index = index3;
-				
+
 				if(index>0) image = getImage(key.substring(0, index).trim());
 			}
 			images.put(key, image);
@@ -98,7 +99,15 @@ public class ImageFactory {
 		BufferedImage img = images.get(key);
 		return img;
 	}
-	
+
+	public static ImageIcon getIcon(String key) {
+		BufferedImage img = getImage(key);
+		if(img==null) return null;
+		Image img2 = img.getScaledInstance(FastFont.getAdaptedSize(16), FastFont.getAdaptedSize(16), Image.SCALE_SMOOTH);
+		return new ImageIcon(img2);
+	}
+
+
 	public static BufferedImage getImage(String key, int width) {
 		key = key==null?"": key.toLowerCase();
 		if(!images.containsKey(key+"_"+width)) {
@@ -116,18 +125,18 @@ public class ImageFactory {
 		}
 		return images.get(key+"_"+width);
 	}
-	
-	
-	
-	
+
+
+
+
 	public static String getImageKey(Biosample biosample) {
 		if(biosample==null) return null;
 		String imageKey = null;
 		try {
 			if(biosample.getBiotype()==null) return null;
 			Image img = null;
-			
-			//Find the image if the biosample is living with a type 
+
+			//Find the image if the biosample is living with a type
 			if(biosample.getBiotype().getCategory()==BiotypeCategory.LIVING) {
 				String m = biosample.getMetadataValue("Type");
 				if(m!=null && m.length()>0) {
@@ -135,7 +144,7 @@ public class ImageFactory {
 					imageKey = m;
 				}
 			}
-			
+
 			//Find the image if the biosample has a name, labeled Type
 			if(img==null && biosample.getBiotype().getSampleNameLabel()!=null && biosample.getBiotype().getSampleNameLabel().startsWith("Type")) {
 				String s = biosample.getSampleName();
@@ -144,7 +153,7 @@ public class ImageFactory {
 					imageKey = s;
 				}
 			}
-			
+
 			//Find the image based on the first metadata
 			if(img==null && biosample.getBiotype().getMetadata().size()>0) {
 				for (BiotypeMetadata m : biosample.getBiotype().getMetadata()) {
@@ -153,10 +162,10 @@ public class ImageFactory {
 						img = ImageFactory.getImage(s);
 						imageKey = s;
 					}
-					break;					
+					break;
 				}
 			}
-			
+
 
 			//By default, Use the image of the biotype
 			if(img==null) {
@@ -166,8 +175,8 @@ public class ImageFactory {
 			if(img==null && biosample.getBiotype().getParent()!=null && biosample.getParent()!=null && biosample.getBiotype().getParent().equals(biosample.getParent().getBiotype())) {
 				return getImageKey(biosample.getParent());
 			}
-						
-			
+
+
 			if(img!=null) {
 				return imageKey==null? null: imageKey.replaceAll("'", "");
 			} else {
@@ -177,27 +186,27 @@ public class ImageFactory {
 			return null;
 		}
 	}
-	
+
 	public static BufferedImage getImage(Biosample biosample, int width) {
 		String imageKey = getImageKey(biosample);
 		if(imageKey!=null && imageKey.length()>0) return ImageFactory.getImage(imageKey, width);
 		else return ImageFactory.createImage(width, true);
 	}
-	
-	
+
+
 
 	public static Image getImage(Biotype type) {
 		Image img = ImageFactory.getImage(type.getName());
 		if(img!=null) return img;
 		else return ImageFactory.createImage();
 	}
-	
+
 	public static Image getImage(Biotype type, int width) {
 		Image img = ImageFactory.getImage(type.getName(), width);
 		if(img!=null) return img;
 		else return ImageFactory.createImage(width, true);
 	}
-	
+
 	public static Image getImageThumbnail(Biotype type) {
 		int size = FastFont.getAdaptedSize(22);
 		if(type==null) return ImageFactory.createImage(size, true);
@@ -206,5 +215,5 @@ public class ImageFactory {
 		if(type.getParent()!=null) return getImageThumbnail(type.getParent());
 		return ImageFactory.createImage(22, true);
 	}
-		
+
 }

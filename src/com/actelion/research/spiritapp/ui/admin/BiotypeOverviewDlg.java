@@ -28,19 +28,14 @@ import java.awt.Dimension;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.event.HyperlinkEvent.EventType;
 
-import com.actelion.research.spiritapp.Spirit;
-import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
-import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.ui.util.component.BiotypeComboBox;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.ui.JEscapeDialog;
-import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
@@ -66,7 +61,7 @@ public class BiotypeOverviewDlg extends JEscapeDialog {
 
 		final JButton addButton = new JIconButton(IconType.NEW, "New Biotype");
 		final JButton editButton = new JIconButton(IconType.EDIT, "Edit");
-		final JButton deleteButton = new JIconButton(IconType.DELETE, "Delete");
+		//		final JButton deleteButton = new JIconButton(IconType.DELETE, "Delete");
 		JButton closeButton = new JButton("Close");
 
 
@@ -77,7 +72,7 @@ public class BiotypeOverviewDlg extends JEscapeDialog {
 
 		JPanel contentPanel = new JPanel(new BorderLayout());
 		contentPanel.add(BorderLayout.NORTH, UIUtils.createTitleBox("Biotypes", UIUtils.createVerticalBox(
-				UIUtils.createHorizontalBox(new JLabel("Biotype: "), biotypeComboBox, editButton, deleteButton, Box.createHorizontalGlue()),
+				UIUtils.createHorizontalBox(new JLabel("Biotype: "), biotypeComboBox, editButton, Box.createHorizontalGlue()),
 				UIUtils.createHorizontalBox(addButton, Box.createHorizontalGlue()))));
 		contentPanel.add(BorderLayout.CENTER, sp);
 		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), closeButton));
@@ -87,7 +82,7 @@ public class BiotypeOverviewDlg extends JEscapeDialog {
 		biotypeComboBox.addTextChangeListener(e->{
 			biotypePane.setSelection(biotypeComboBox.getSelection());
 			editButton.setEnabled(biotypeComboBox.getSelection()!=null);
-			deleteButton.setEnabled(biotypeComboBox.getSelection()!=null);
+			//			deleteButton.setEnabled(biotypeComboBox.getSelection()!=null);
 		});
 
 
@@ -98,23 +93,24 @@ public class BiotypeOverviewDlg extends JEscapeDialog {
 				biotypeComboBox.setSelection(biotypeComboBox.getSelection());
 			}
 		});
-		deleteButton.addActionListener(e-> {
-			Biotype biotype = biotypeComboBox.getSelection();
-			if(biotype!=null) {
-				int r = JOptionPane.showConfirmDialog(BiotypeOverviewDlg.this, "Are you sure you want to delete " + biotype +"?", "Question", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-				if(r!=JOptionPane.YES_OPTION) return;
-				try {
-					if(biotype==null || biotype.getId()<=0) throw new Exception("Nothing to delete!?");
-					DAOBiotype.deleteBiotype(biotype, Spirit.askForAuthentication());
-					SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_DELETED, Biotype.class, biotype);
-					biotypeComboBox.setValues(DAOBiotype.getBiotypes(true));
-					biotypePane.setSelection(null);
-					JOptionPane.showMessageDialog(BiotypeOverviewDlg.this, biotype.getName() + " Deleted", "Success", JOptionPane.INFORMATION_MESSAGE);
-				} catch (Exception e2) {
-					JExceptionDialog.showError(e2);
-				}
-			}
-		});
+		//		deleteButton.addActionListener(e-> {
+		//			Biotype biotype = biotypeComboBox.getSelection();
+		//			if(biotype!=null) {
+		//				int r = JOptionPane.showConfirmDialog(BiotypeOverviewDlg.this, "Are you sure you want to delete " + biotype +"?", "Question", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+		//				if(r!=JOptionPane.YES_OPTION) return;
+		//				try {
+		//					if(biotype==null || biotype.getId()<=0) throw new Exception("Nothing to delete!?");
+		//					if(!Spirit.askReasonForChange()) return;
+		//					DAOBiotype.deleteBiotype(biotype, Spirit.askForAuthentication());
+		//					SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_DELETED, Biotype.class, biotype);
+		//					biotypeComboBox.setValues(DAOBiotype.getBiotypes(true));
+		//					biotypePane.setSelection(null);
+		//					JOptionPane.showMessageDialog(BiotypeOverviewDlg.this, biotype.getName() + " Deleted", "Success", JOptionPane.INFORMATION_MESSAGE);
+		//				} catch (Exception e2) {
+		//					JExceptionDialog.showError(e2);
+		//				}
+		//			}
+		//		});
 		addButton.addActionListener(e-> {
 			Biotype type = new Biotype();
 			new BiotypeEditDlg(type);
@@ -126,7 +122,7 @@ public class BiotypeOverviewDlg extends JEscapeDialog {
 			dispose();
 		});
 		editButton.setEnabled(biotypeComboBox.getSelection()!=null);
-		deleteButton.setEnabled(biotypeComboBox.getSelection()!=null);
+		//		deleteButton.setEnabled(biotypeComboBox.getSelection()!=null);
 
 		UIUtils.adaptSize(this, 1100, 800);
 		setLocationRelativeTo(UIUtils.getMainFrame());

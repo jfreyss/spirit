@@ -190,6 +190,10 @@ public class SpiritTabbedPane extends JComponent {
 		leadingPanel.setVisible(v);
 		initLayout();
 	}
+	
+	public Component getTabbedPane() {
+		return tabbedPane;
+	}
 
 	/**
 	 * Gets the tab, which extends/implements the given claz

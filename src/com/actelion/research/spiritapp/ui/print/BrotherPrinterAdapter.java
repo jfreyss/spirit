@@ -21,29 +21,18 @@
 
 package com.actelion.research.spiritapp.ui.print;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
-import java.awt.print.PageFormat;
-import java.awt.print.Printable;
-import java.awt.print.PrinterJob;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
 import javax.print.PrintService;
-import javax.print.attribute.HashPrintRequestAttributeSet;
-import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.Media;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -58,10 +47,7 @@ import javax.swing.event.HyperlinkEvent.EventType;
 import javax.swing.event.HyperlinkListener;
 
 import com.actelion.research.spiritapp.Spirit;
-import com.actelion.research.spiritapp.print.DirectPrinter;
 import com.actelion.research.spiritapp.print.PrintTemplate;
-import com.actelion.research.spiritapp.print.PrintableOfContainers;
-import com.actelion.research.spiritapp.print.PrintableOfLines;
 import com.actelion.research.spiritapp.print.SpiritPrinter;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.util.editor.EditorPaneDlg;
@@ -203,17 +189,6 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 			reloadPreferencesForMedia();
 			fireConfigChanged();
 		});
-		marginCombobox.addActionListener(e -> {
-			Spirit.getConfig().setProperty("print.brother.margin", marginCombobox.getSelectedIndex());
-			if (marginCombobox.getSelectedIndex() == 0) {
-				PrintableOfContainers.setTopMargin(13);
-			} else {
-				PrintableOfContainers.setTopMargin(2);
-			}
-
-			fireConfigChanged();
-		});
-		marginCombobox.setSelectedIndex(Spirit.getConfig().getProperty("print.brother.margin", 0));
 
 		if (services.length > 0) {
 			printerComboBox.setSelection(services[0]);
@@ -264,12 +239,11 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 	public JComponent getPreviewPanel(Container container) {
 		PrintService ps = printerComboBox.getSelection();
 		Media media = mediaComboBox.getSelection();
-		return getPreviewPanel(container, ps, media, getModel());
+		return PrintAdapter.getPreviewPanel(container, ps, media, getModel());
 	}
 
 	public PrintTemplate getModel() {
 		PrintTemplate tpl = new PrintTemplate();
-		// tpl.setShowBarcode(showBarcode.isSelected());
 		tpl.setOverlapPosition(overlapLeftCheckBox.isSelected() ? 1 : overlapRightCheckBox.isSelected() ? -1 : 0);
 		tpl.setShowParent(showParentCheckbox.isSelected());
 		tpl.setShowComments(showCommentsCheckbox.isSelected());
@@ -277,7 +251,7 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 		return tpl;
 	}
 
-	private static String[] getPrintableLines(Container container, PrintTemplate model) {
+	static String[] getPrintableLines(Container container, PrintTemplate model) {
 		String types;
 		String staining;
 		String sectionNo;
@@ -291,91 +265,24 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 			sectionNo = Biosample.getInfos(container.getBiosamples(), EnumSet.of(InfoFormat.COMMENTS), InfoSize.ONELINE);
 		}
 
-		List<Biosample> tops = new ArrayList<>();
-		for (Biosample b : container.getBiosamples()) {
-			if (!tops.contains(b.getTopParentInSameStudy())) {
-				tops.add(b.getTopParentInSameStudy());
+		List<Biosample> tops = new ArrayList<>(Biosample.getTopParentsInSameStudy(container.getBiosamples()));
+		List<String> toPrint = new ArrayList<>();
+		toPrint.add(container.getContainerId());
+		toPrint.add(container.getStudy() == null ? "" : model.isShowInternalIdFirst()? container.getStudy().getLocalIdOrStudyId(): container.getStudy().getStudyId());
+		if(model.isShowAllParticipants()) {
+			for (Biosample b : tops) {
+				toPrint.add(b.getSampleIdName());
 			}
-		}
-
-		return new String[] { container.getContainerId(), container.getStudy() == null ? "" : model.isShowInternalIdFirst()? container.getStudy().getLocalIdOrStudyId(): container.getStudy().getStudyId(),
-				tops.size() != 1 ? ""
-						: tops.get(0).getSampleId()
-						+ (tops.get(0).getSampleName() != null && tops.get(0).getSampleName().length() > 0 ? " [" + tops.get(0).getSampleName() + "]" : ""),
-						container.getGroup() == null ? "" : container.getGroup().getBlindedName(SpiritFrame.getUsername()),
-								container.getPhase() == null ? "" : container.getPhase().getAbsoluteDateAndName(), types, staining, sectionNo
-
-		};
-	}
-
-	public static JComponent getPreviewPanel(Container container, PrintService ps, Media media, PrintTemplate model) {
-
-		if (container == null)
-			return new JPanel();
-
-		Printable printable;
-		if(model.isPerLine()){
-			PrintableOfLines p = new PrintableOfLines(Collections.singletonList(getPrintableLines(container, model)));
-			printable = p;
 		} else {
-			PrintableOfContainers p = new PrintableOfContainers(Collections.singletonList(container));
-			p.setPrintTemplate(model);
-			printable = p;
+			toPrint.add(tops.size() != 1 ? "" : tops.get(0).getSampleIdName());
 		}
-		// if(model.isShowBarcode()){
-		// } else {
-		// PrintableOfLines p = new
-		// PrintableOfLines(Collections.singletonList(getPrintableLines(container,
-		// model)));
-		// printable = p;
-		// }
-		try {
+		toPrint.add(container.getGroup() == null ? "" : container.getGroup().getBlindedName(SpiritFrame.getUsername()));
+		toPrint.add(container.getPhase() == null ? "" : container.getPhase().getAbsoluteDateAndName());
+		toPrint.add(types);
+		toPrint.add(staining);
+		toPrint.add(sectionNo);
 
-			if (ps == null)
-				throw new Exception("You must select a 'Brother' printer");
-			PrintRequestAttributeSet attr = new HashPrintRequestAttributeSet();
-			if (media != null)
-				attr.add(media);
-
-			PrinterJob job = PrinterJob.getPrinterJob();
-			job.setPrintable(printable);
-			job.setPrintService(ps);
-			PageFormat pf = job.getPageFormat(attr);
-
-			BufferedImage img = new BufferedImage((int) pf.getWidth() * 3 + 10, (int) pf.getHeight() * 3 + 10, BufferedImage.TYPE_INT_RGB);
-			Graphics2D g = (Graphics2D) img.getGraphics();
-			g.setColor(Color.WHITE);
-			g.fillRect(0, 0, img.getWidth(), img.getHeight());
-			g.setColor(Color.BLACK);
-			g.drawRect(0, 0, img.getWidth() - 1, img.getHeight() - 1);
-			g.translate(3, 3); // border
-			g.scale(3, 3);
-			printable.print(g, pf, 0);
-			g.dispose();
-
-			int w = PREVIEW_WIDTH;
-			int h = img.getHeight() * w / img.getWidth();
-			if (h > PREVIEW_HEIGHT) {
-				h = PREVIEW_HEIGHT;
-				w = h * img.getWidth() / img.getHeight();
-			}
-
-			JLabel lbl = new JLabel();
-			lbl.setMinimumSize(new Dimension(w, h));
-			lbl.setPreferredSize(new Dimension(w, h));
-
-			BufferedImage scale = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-			g = (Graphics2D) scale.getGraphics();
-			g.drawImage(img, 0, 0, scale.getWidth(), scale.getHeight(), lbl);
-			g.dispose();
-
-			lbl.setIcon(new ImageIcon(scale));
-			return lbl;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return new JLabel(e.getMessage());
-		}
-
+		return toPrint.toArray(new String[toPrint.size()]);
 	}
 
 	@Override
@@ -383,39 +290,6 @@ public class BrotherPrinterAdapter extends PrintAdapter {
 		PrintService ps = printerComboBox.getSelection();
 		Media media = mediaComboBox.getSelection();
 
-		print(containers, ps, media, getModel());
-	}
-
-	public static void print(List<Container> containers, PrintService ps, Media media, PrintTemplate model) throws Exception {
-
-		if (containers == null || containers.size() == 0)
-			throw new Exception("You must select some containers to print");
-
-		List<Container> toPrint = new ArrayList<>();
-		for (Container b : containers) {
-			if (b != null) {
-				toPrint.add(b);
-			}
-		}
-
-
-		Printable printable;
-		if(model.isPerLine()){
-			List<String[]> items = new ArrayList<>();
-			for (Container c : containers) {
-				items.add(getPrintableLines(c, model));
-			}
-			PrintableOfLines p = new PrintableOfLines(items);
-			printable = p;
-		} else {
-			PrintableOfContainers p = new PrintableOfContainers(containers);
-			p.setPrintTemplate(model);
-			printable = p;
-
-		}
-
-		DirectPrinter printer = new DirectPrinter();
-		printer.print(ps, media, printable);
-
+		PrintAdapter.print(containers, ps, media, getModel());
 	}
 }

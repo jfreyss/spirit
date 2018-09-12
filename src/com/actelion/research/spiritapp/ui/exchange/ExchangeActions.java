@@ -41,7 +41,7 @@ public class ExchangeActions {
 	public static class Action_ExportExchange extends AbstractAction {
 		private SpiritFrame spirit;
 		public Action_ExportExchange(SpiritFrame spirit) {
-			super("Export Spirit Data");
+			super("Export " + SpiritFrame.getApplicationName() + " Data...");
 			this.spirit = spirit;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(AbstractAction.SMALL_ICON, IconType.EXCHANGE.getIcon());
@@ -62,7 +62,7 @@ public class ExchangeActions {
 
 	public static class Action_ImportExchange extends AbstractAction {
 		public Action_ImportExchange() {
-			super("Import Spirit Data");
+			super("Import " + SpiritFrame.getApplicationName() + " Data...");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('i'));
 			putValue(AbstractAction.SMALL_ICON, IconType.EXCHANGE.getIcon());
 			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));

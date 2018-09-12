@@ -45,6 +45,7 @@ public enum IconType {
 	DATAWARRIOR("DW", "dw.png", "Export to DataWarrior"),
 	EXCEL("Excel", "excel.png", "Export to Excel"),
 	CSV("CSV", "csv.png", "Export to CSV"),
+	PDF("PDF", "pdf.png", "Export to PDF"),
 	NEW("New", "new.png"),
 	DUPLICATE("Duplicate", "duplicate.png"),
 	OPEN("Open", "open.png"),

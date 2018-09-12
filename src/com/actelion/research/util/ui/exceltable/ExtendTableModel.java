@@ -61,7 +61,7 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 	protected List<ROW> rows = new ArrayList<>();
 
 	private ExcelUndoManager undoManager = null;
-	private Set<Column<ROW, ?>> readOnlyColumns = new HashSet<>();
+	private Set<String> readOnlyColumns = new HashSet<>();
 	private Set<ROW> readOnlyRows = new HashSet<ROW>();
 
 	private int maxRowsToExplore = 200;
@@ -307,7 +307,7 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 	 * - does not reset width
 	 */
 	public void removeEmptyColumns() {
-		setColumns(removeEmptyColumns(getAllColumns()));
+		setColumns(getNonEmptyColumns(getAllColumns()));
 	}
 
 	/**
@@ -315,12 +315,15 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 	 * don't fire event
 	 * only maxRowsToExplore are checked
 	 */
-	public List<Column<ROW, ?>> removeEmptyColumns(List<Column<ROW, ?>> columns) {
+	public List<Column<ROW, ?>> getNonEmptyColumns(List<Column<ROW, ?>> columns) {
 		List<Integer> rows = AbstractExtendTable.selectIndixes(getRowCount(), getMaxRowsToExplore());
 		List<Column<ROW, ?>> res = new ArrayList<>();
+		Set<Column<ROW, ?>> alwaysVisible = getAlwaysVisibleColumns();
 		for (int i = 0; i < columns.size(); i++) {
 			Column<ROW, ?> col = columns.get(i);
-			if(col.isHideable()) {
+			if(alwaysVisible!=null && alwaysVisible.contains(col)) {
+				res.add(col);
+			} else if(col.isHideable()) {
 				res.add(col);
 			} else {
 				exploreRows: for(int row: rows) {
@@ -343,9 +346,23 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 		return Collections.unmodifiableList(displayed);
 	}
 
+	/**
+	 * Returns all columns, including non visible
+	 * @return
+	 */
 	public List<Column<ROW, ?>> getAllColumns() {
 		return allColumns;
 	}
+
+	/**
+	 * Returns the columns, that must kept always visible.
+	 * To be overridden
+	 * @return
+	 */
+	public Set<Column<ROW, ?>> getAlwaysVisibleColumns() {
+		return null;
+	}
+
 
 
 	/**
@@ -414,7 +431,6 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 
 
 	private Set<Node> computeTreeRoots() {
-		//		Thread.dumpStack();
 		TreeSet<Node> res = new TreeSet<>();
 		row2node.clear();
 		for (int i = 0; i < rows.size(); i++) {
@@ -456,7 +472,7 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 					res.remove(childNode);
 					parentNode.children.add(childNode);
 					parentNode.leaf = false;
-					parentNode.expanded = useChildren? rows.containsAll(getTreeChildren(parent)): true;
+					parentNode.expanded = true;//useChildren? rows.containsAll(getTreeChildren(parent)): true;
 				}
 			}
 		} else if(useChildren) {
@@ -481,7 +497,6 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 				parentNode.expanded = nPresent==nChildren;
 			}
 		}
-
 		return res;
 	}
 
@@ -606,11 +621,14 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 			if(!isEditable) return false;
 			ROW row = getRow(rowIndex);
 			Column<ROW, ?> colObject = getColumn(columnIndex);
-			if(getReadOnlyColumns().contains(colObject)) return false;
+
+
+			if(getReadOnlyColumns().contains(colObject.getShortName())) return false;
 			if(getReadOnlyRows().contains(row)) return false;
 
 			return getColumn(columnIndex).isEditable(rows.get(rowIndex));
 		} catch (Exception e) {
+			e.printStackTrace();
 			return false;
 		}
 	}
@@ -653,7 +671,7 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 		Column<ROW, ?> colObject = getColumn(modelColumnIndex);
 		ROW row = rows.get(rowIndex);
 
-		if(colObject==null || !colObject.isEditable(row)) return;
+		if(colObject==null || !isCellEditable(rowIndex, modelColumnIndex)) return;
 		Object oldValue = getValueAt( rowIndex, modelColumnIndex );
 		colObject.paste(row, valueString);
 		if(undoManager!=null) {
@@ -661,7 +679,7 @@ public class ExtendTableModel<ROW> extends AbstractTableModel {
 		}
 	}
 
-	public Set<Column<ROW, ?>> getReadOnlyColumns() {
+	public Set<String> getReadOnlyColumns() {
 		return readOnlyColumns;
 	}
 

@@ -33,9 +33,9 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
-import javax.swing.JToggleButton;
 import javax.swing.SpinnerNumberModel;
 
 import com.actelion.research.spiritapp.ui.SpiritFrame;
@@ -64,8 +64,8 @@ import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class CreateChildrenDlg extends JEscapeDialog {
 
-	private JToggleButton radio1 = new JToggleButton("Manual creation");
-	private JToggleButton radio2 = new JToggleButton("Use a sampling's template");
+	private JRadioButton radio1 = new JRadioButton("Manual creation");
+	private JRadioButton radio2 = new JRadioButton("Use a sampling's template");
 
 	private final JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
 	private final BiotypeComboBox biotypeComboBox = new BiotypeComboBox(DAOBiotype.getBiotypes());
@@ -101,7 +101,7 @@ public class CreateChildrenDlg extends JEscapeDialog {
 				UIUtils.createVerticalBox(
 						new JHeaderLabel("How do you want to create the children of " + (parents.size()==1? parents.iterator().next().getSampleIdName(): " these "+parents.size() + " biosamples")),
 						UIUtils.createHorizontalBox(new JLabel("Phase: "), phaseComboBox, Box.createHorizontalGlue()),
-						UIUtils.createGrid(radio1, radio2)));
+						UIUtils.createVerticalBox(radio1, radio2)));
 
 
 		final JPanel centerPanel = new JPanel(new CardLayout());

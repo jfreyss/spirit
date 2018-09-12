@@ -25,6 +25,7 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -70,6 +71,11 @@ public class FluidxScanner {
 	}
 
 	public FluidxScanner() {
+		try {
+			this.inetAddress = InetAddress.getLocalHost().getHostAddress();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public List<RackPos> scanTubes(ScannerConfiguration config) throws Exception {
@@ -78,12 +84,14 @@ public class FluidxScanner {
 
 	public static List<RackPos> getTestTubes() throws Exception {
 		List<RackPos> testTubes = new ArrayList<>();
-		testTubes.add(new RackPos("A/01", "FB04948888"));
-		testTubes.add(new RackPos("A/02", "FB04948916"));
-		testTubes.add(new RackPos("B/01", "FB04948917"));
-		testTubes.add(new RackPos("B/02", "FB04948918"));
+		testTubes.add(new RackPos("A/01", "0198515274"));
+		//		testTubes.add(new RackPos("A/02", "1107428641"));
+		//		testTubes.add(new RackPos("B/01", "1160713712"));
+		//		testTubes.add(new RackPos("C/01", "1160750266"));
 		return testTubes;
 	}
+
+	private String inetAddress = "127.0.0.1";
 
 	/**
 	 * Scans a rack and returns the list of Positionable Tube (ids and positions).<br>
@@ -98,7 +106,7 @@ public class FluidxScanner {
 		//Check that we have write access on the current drive
 		if(!new File(".").canWrite()) throw new IOException("The working directory must be somewhere where you have write access.\n Currently it is: "+new File(".").getAbsolutePath());
 
-		if("baerr".equals(System.getProperty("user.name")) || "freyssj".equals(System.getProperty("user.name"))) {
+		if("true".equals(System.getProperty("simulateScanner"))) {
 			return new Plate(config.getRows(), config.getCols(), getTestTubes());
 		}
 
@@ -107,9 +115,11 @@ public class FluidxScanner {
 		OutputStream os = null;
 		Process p = null;
 		try {
-			sock = new Socket("127.0.0.1", 201);
+			sock = new Socket(inetAddress, 201);
 			os = sock.getOutputStream();
+			System.out.println("Winsock open");
 		} catch (Exception e) {
+			System.out.println("Winsock closed "+e);
 			File directory = getDirectory();
 			if(directory==null) throw new Exception("Could not find XTR96 installation");
 			p = Runtime.getRuntime().exec(new File(directory, "xtr-96.exe -s").getAbsolutePath());
@@ -117,7 +127,7 @@ public class FluidxScanner {
 			long time = System.currentTimeMillis();
 			while(System.currentTimeMillis()-time<10000) {
 				try {
-					sock = new Socket("127.0.0.1", 201);
+					sock = new Socket(inetAddress, 201);
 					os = sock.getOutputStream();
 					System.out.println("LAUNCHED");
 					break;
@@ -129,7 +139,7 @@ public class FluidxScanner {
 			}
 		}
 		if(os==null) {
-			throw new Exception("Scanner Winsock interface is not responding (port:201)");
+			throw new Exception("Scanner Winsock interface is not responding on " + inetAddress + " (port:201)");
 		}
 
 		if(config.regEditConfig!=null) {
@@ -188,7 +198,7 @@ public class FluidxScanner {
 
 	}
 
-	private static List<RackPos> parseResults(String res) throws NoReadException {
+	protected static List<RackPos> parseResults(String res) throws NoReadException {
 		int index = res.indexOf("...A01");
 		if(index>0) res = res.substring(index+3);
 
@@ -197,7 +207,7 @@ public class FluidxScanner {
 		String[] s = res.split("\n");
 		for(String t: s) {
 			String[] v = t.split(",");
-			if(v.length!=2) continue;
+			if(v.length < 2) continue;
 
 			String pos = v[0].trim();
 			String barcode = v[1].trim();
@@ -213,7 +223,7 @@ public class FluidxScanner {
 
 			if(RackPos.NOREAD.equals(barcode)) {
 				noread.add(new RackPos(normalPos, barcode));
-			} else if(!"No Tube".equals(barcode)) {
+			} else if(!"No Tube".equalsIgnoreCase(barcode)) {
 				tubes.add(new RackPos(normalPos, barcode));
 			}
 		}
@@ -230,11 +240,22 @@ public class FluidxScanner {
 		if(!directory.exists()) directory = new File("C:\\Program Files\\FluidX\\xtr-96\\");
 		if(!directory.exists()) directory = new File("C:\\Program Files (x86)\\FluidX\\xtr-96\\");
 		if(!directory.exists()) directory = new File("D:\\Program Files\\FluidX\\xtr-96\\");
+		if(!directory.exists()) directory = new File("C:\\Program Files\\FluidX\\Intellicode\\");
+		if(!directory.exists()) directory = new File("C:\\Program Files (x86)\\FluidX\\Intellicode\\");
 		if(!directory.exists()) directory = null;
 		return directory;
 	}
 	public static boolean isInstalled() {
-		return getDirectory()!=null;
+		return "true".equals(System.getProperty("simulateScanner")) || getDirectory()!=null;
+	}
+
+	public static void main(String[] args) throws Exception {
+
+		try(Socket sock = new Socket(InetAddress.getLocalHost(), 201)) {
+			System.out.println("FluidxScanner.main()" +  sock.getOutputStream());
+		}
+		//		System.out.println("FluidxScanner.main()" +  new Socket("10.180.233.249", 201).getOutputStream());
+		System.out.println("FluidxScanner.main() " + new FluidxScanner().scanPlate(ScannerConfiguration.SCANNER_CONFIGURATION_MATRIX_1_0PP));
 	}
 }
 

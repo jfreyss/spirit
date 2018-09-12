@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritapp.ui.biosample.column;
 
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.util.Comparator;
 
@@ -46,6 +45,7 @@ import com.actelion.research.spiritcore.business.biosample.LocationFormat;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
@@ -55,7 +55,7 @@ public class ContainerFullColumn extends Column<Biosample, String> {
 	private static ContainerLabel containerLabel = new ContainerLabel(ContainerDisplayMode.FULL);
 
 	public ContainerFullColumn() {
-		super("Container\n+Location", String.class, 45, 160);
+		super("Container\n+Location", String.class, 45, 200);
 	}
 
 	@Override
@@ -96,23 +96,18 @@ public class ContainerFullColumn extends Column<Biosample, String> {
 		if(value==null) {
 			row.setContainer(null);
 		} else {
-			try {
-				String[] split = value.split("\t",-1);
-				if(split.length==1) {
-					row.setContainerId(value);
-				} else {
-					if(split.length>0) row.setContainerType(ContainerType.get(split[0]));
-					if(split.length>1) row.setContainerId(split[1]);
-					if(split.length>2) row.setAmount(split[2].length()>0? Double.parseDouble(split[2]): null);
-					if(split.length>3) {
-						Location loc = DAOLocation.getCompatibleLocation(split[3], SpiritFrame.getUser());
-						row.setLocation(loc);
-					}
+			String[] split = value.split("\t",-1);
+			if(split.length==1) {
+				row.setContainerId(value);
+			} else {
+				if(split.length>0) row.setContainerType(ContainerType.get(split[0]));
+				if(split.length>1) row.setContainerId(split[1]);
+				if(split.length>2) row.setAmount(split[2].length()>0? Double.parseDouble(split[2]): null);
+				if(split.length>3) {
+					Location loc = DAOLocation.getCompatibleLocation(split[3], SpiritFrame.getUser());
+					row.setLocation(loc);
 				}
-			} catch(Exception e) {
-				e.printStackTrace();
 			}
-
 		}
 	}
 
@@ -156,7 +151,7 @@ public class ContainerFullColumn extends Column<Biosample, String> {
 		Biotype type = table.getModel() instanceof BiosampleTableModel? ((BiosampleTableModel) table.getModel()).getBiotype():null;
 
 		popupMenu.add(new JSeparator());
-		popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
+		popupMenu.add(new JCustomLabel("Sort", FastFont.BOLD));
 		if(type==null || !type.isHideContainer()) {
 			popupMenu.add(new AbstractAction("Sort by ContainerId") {
 				@Override

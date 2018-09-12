@@ -39,6 +39,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 
+import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
@@ -276,6 +277,8 @@ public class ImporterDlg extends JEscapeDialog {
 		}
 		@Override
 		public void actionPerformed(ActionEvent ev) {
+
+			if(!Spirit.askReasonForChange()) return;
 
 			new SwingWorkerExtended("Importing", getContentPane(), SwingWorkerExtended.FLAG_ASYNCHRONOUS) {
 				@Override

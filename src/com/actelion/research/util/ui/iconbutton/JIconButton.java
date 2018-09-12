@@ -47,8 +47,19 @@ public class JIconButton extends JButton {
 		super(action);
 	}
 
+	public JIconButton(Icon icon, AbstractAction action) {
+		super(action);
+		setIcon(icon);
+	}
+
 	public JIconButton(IconType iconType) {
 		this(iconType, "");
+	}
+
+	public JIconButton(IconType iconType, AbstractAction action) {
+		super(action);
+		ImageIcon icon = iconType==null? null: iconType.getIcon();
+		if(icon!=null) setIcon(icon);
 	}
 
 	public JIconButton(IconType iconType, String text, String tooltip) {
@@ -60,6 +71,7 @@ public class JIconButton extends JButton {
 		setIcon(icon);
 		setText(text);
 	}
+
 
 	public JIconButton(Icon icon, String text, ActionListener l) {
 		this(icon, text);

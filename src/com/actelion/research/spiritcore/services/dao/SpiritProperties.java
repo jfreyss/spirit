@@ -21,6 +21,7 @@
 
 package com.actelion.research.spiritcore.services.dao;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -50,7 +51,7 @@ public class SpiritProperties {
 
 	private static SpiritProperties instance = null;
 	private Map<String, String> properties;
-	//	private Boolean hasWorkflow;
+	private String dbVersion;
 
 	private SpiritProperties() {
 		try {
@@ -83,6 +84,7 @@ public class SpiritProperties {
 	 */
 	public String getValue(PropertyKey p) {
 		assert p.getParentProperty()==null;
+		assert p!=PropertyKey.DB_VERSION;
 
 		//Retrieve the value first from the adapter, then from the DB
 		String key = p.getKey();
@@ -101,7 +103,7 @@ public class SpiritProperties {
 
 	/**
 	 * Gets the value of a simple property or the default value
-	 * The result is splitted by ','
+	 * The result is split by ','
 	 */
 	public String[] getValues(PropertyKey p) {
 		return MiscUtils.split(getValue(p), ",");
@@ -239,18 +241,9 @@ public class SpiritProperties {
 	}
 
 	public void setValues(Map<String, String> map) {
-		assert map.containsKey(PropertyKey.DB_VERSION.getKey());
-
 		this.properties = new HashMap<>();
 		this.properties.putAll(map);
 		LoggerFactory.getLogger(getClass()).debug("properties="+properties);
-	}
-
-	public void saveValues() {
-		saveProperties(properties);
-
-		//Force Reload
-		SpiritProperties.instance = null;
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -258,7 +251,7 @@ public class SpiritProperties {
 	 * Loads the properties from the DB in a Map<String, String>
 	 * @return
 	 */
-	private static Map<String, String> loadProperties() {
+	private Map<String, String> loadProperties() {
 		Map<String, String> keyValuePairs = new HashMap<>();
 		EntityManager em = null;
 		try {
@@ -266,7 +259,11 @@ public class SpiritProperties {
 			List<SpiritProperty> properties = em.createQuery("from SpiritProperty").getResultList();
 			for(SpiritProperty p: properties) {
 				if(p==null) continue;
-				keyValuePairs.put(p.getKey(), p.getValue());
+				if(PropertyKey.DB_VERSION.getKey().equals(p.getId())) {
+					dbVersion = p.getValue();
+				} else {
+					keyValuePairs.put(p.getId(), p.getValue());
+				}
 			}
 			keyValuePairs.putAll(DBAdapter.getInstance().getProperties());
 			LoggerFactory.getLogger(SpiritProperties.class).debug("properties="+keyValuePairs);
@@ -276,22 +273,38 @@ public class SpiritProperties {
 		return keyValuePairs;
 	}
 
+	public List<SpiritProperty> getProperties() {
+		List<SpiritProperty> res = new ArrayList<>();
+		for (Map.Entry<String, String> entry : properties.entrySet()) {
+			if(DBAdapter.getInstance().getProperties().containsKey(entry.getKey())) continue;
+			if(PropertyKey.DB_VERSION.getKey().equals(entry.getKey())) {
+				dbVersion = entry.getValue();
+			} else {
+				res.add(new SpiritProperty(entry.getKey(), entry.getValue()));
+			}
+		}
+		return res;
+	}
+
 	/**
 	 * Save the given properties. Always open a new entitymanager, so this function can even be called in any context
 	 * @param keyValuePairs
 	 */
-	private static void saveProperties(Map<String, String> keyValuePairs) {
-		LoggerFactory.getLogger(SpiritProperties.class).debug("properties="+keyValuePairs);
+	public void saveValues() {
+
 		EntityManager em = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {
 			txn = em.getTransaction();
 			txn.begin();
-			for (Map.Entry<String, String> entry : keyValuePairs.entrySet()) {
-				LoggerFactory.getLogger(SpiritProperty.class).debug("Write "+entry.getKey()+" = "+entry.getValue());
-				SpiritProperty p = new SpiritProperty(entry.getKey(), entry.getValue());
+			for (SpiritProperty p : getProperties()) {
+				LoggerFactory.getLogger(SpiritProperty.class).debug("Write "+p.getId()+" = "+p.getValue());
 				em.merge(p);
 			}
+			SpiritProperty p = new SpiritProperty(PropertyKey.DB_VERSION.getKey(), dbVersion);
+			LoggerFactory.getLogger(SpiritProperty.class).debug("Write "+p.getId()+" = "+p.getValue());
+			em.merge(p);
+
 			txn.commit();
 			txn = null;
 		} catch(Exception e) {
@@ -299,11 +312,13 @@ public class SpiritProperties {
 			txn = null;
 			throw e;
 		}
+		//Force Reload
+		SpiritProperties.instance = null;
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	public String getDBVersion() {
-		return getValue(PropertyKey.DB_VERSION);
+		return dbVersion;
 	}
 
 	/**
@@ -311,7 +326,7 @@ public class SpiritProperties {
 	 * @param value
 	 */
 	public void setDBVersion(String value) {
-		setValue(PropertyKey.DB_VERSION, value);
+		this.dbVersion = value;
 	}
 
 	public String[] getUserRoles() {
@@ -338,7 +353,7 @@ public class SpiritProperties {
 	 * @return
 	 */
 	public boolean isAdvancedMode() {
-		return SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_ADVANCED);
+		return SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_ADVANCED);
 	}
 
 
@@ -367,7 +382,6 @@ public class SpiritProperties {
 	 *
 	 * By default:
 	 * - the admin can do everything
-	 * - the readall can read everything (and only read)
 	 * - everybody can create samples
 	 * - the owner, the updater have edit rights
 	 *
@@ -383,9 +397,9 @@ public class SpiritProperties {
 			defaultValue = true;
 		} else if(action.name().contains("READ")) {
 			defaultValue = SpiritProperties.getInstance().isOpen() || userType==UserType.CREATOR || userType==UserType.UPDATER;
-		} else if(action.name().contains("EDIT")) {
+		} else if(action.name().contains("WORK")) {
 			defaultValue = userType==UserType.CREATOR || userType==UserType.UPDATER;
-		} else if(action.name().contains("CHANGE")) {
+		} else if(action.name().contains("EDIT")) {
 			defaultValue = userType==UserType.CREATOR || userType==UserType.UPDATER;
 		} else if(action.name().contains("DELETE")) {
 			defaultValue = userType==UserType.CREATOR;
@@ -407,10 +421,10 @@ public class SpiritProperties {
 	 * @return
 	 */
 	public boolean isChecked(SpiritRights.ActionType action, SpiritRights.UserType userType, String role, boolean defaultValue) {
-		String key = getKey(action, userType, role);// "rights." + action + "_" + (userType==null? "role_" + role: userType);
+		String key = getKey(action, userType, role);
 		String v = properties.get(key);
-		if(v==null) return defaultValue;
-		return "true".equals(v);
+		boolean res = v==null? defaultValue: "true".equals(v);
+		return res;
 	}
 
 	public void setChecked(SpiritRights.ActionType action, SpiritRights.UserType userType, boolean val) {

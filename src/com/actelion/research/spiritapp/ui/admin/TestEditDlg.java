@@ -371,6 +371,8 @@ public class TestEditDlg extends JSpiritEscapeDialog {
 
 			updateModel();
 
+			if(!Spirit.askReasonForChangeIfUpdated(Collections.singleton(test))) return;
+
 			DAOTest.persistTests(Collections.singleton(test), user);
 			JOptionPane.showMessageDialog(this, "Test '" + test + "' " + (create? "created": "updated"), "Success", JOptionPane.INFORMATION_MESSAGE);
 			SpiritChangeListener.fireModelChanged(create? SpiritChangeType.MODEL_ADDED: SpiritChangeType.MODEL_UPDATED, Test.class, test);

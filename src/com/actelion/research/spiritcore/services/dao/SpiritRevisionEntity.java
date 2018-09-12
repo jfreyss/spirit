@@ -22,26 +22,26 @@
 package com.actelion.research.spiritcore.services.dao;
 
 import java.text.DateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.RevisionNumber;
 import org.hibernate.envers.RevisionTimestamp;
 
-import com.actelion.research.spiritcore.business.IAuditable;
-import com.actelion.research.spiritcore.util.Pair;
+import com.actelion.research.spiritcore.business.audit.DifferenceList;
+import com.actelion.research.spiritcore.util.MiscUtils;
 
 /**
  * Class overriding the default RevisionEntity of Hibernate, to add the logged in userId
@@ -56,7 +56,7 @@ import com.actelion.research.spiritcore.util.Pair;
 @RevisionEntity(SpiritRevisionListener.class)
 public class SpiritRevisionEntity {
 
-	public static int MAX_DIFF_LENGTH = 512;
+	public static final int MAX_DIFF_LENGTH = 4000;
 
 	@Id
 	@Column(name="rev")
@@ -77,21 +77,15 @@ public class SpiritRevisionEntity {
 	@Column(name="userId", length=20)
 	private String userId;
 
-	@Column(name="reason", length=256)
+	@Column(name="reason", length=1024)
 	private String reason;
 
-	@Column(name="difference", length=512)
+	@Basic(fetch=FetchType.LAZY)
+	@Column(name="difference", length=MAX_DIFF_LENGTH)
 	private String difference;
 
-	/**
-	 * List used to store the change for each entity, and to build the difference message dynamically
-	 */
-	private transient List<Pair<IAuditable, String>> changes = new ArrayList<>();
-	/**
-	 * Map used to store the number of changes for each entity
-	 */
-	private transient Map<Class<?>, Integer> counter = new HashMap<>();
-
+	@Transient
+	private transient DifferenceList differenceList = new DifferenceList();
 
 	public int getId() {
 		return id;
@@ -119,22 +113,13 @@ public class SpiritRevisionEntity {
 		this.timestamp = timestamp;
 	}
 
-	public String getReason() {
-		return reason;
+	public Map<String, String> getReason() {
+		return MiscUtils.deserializeStringMap(reason);
 	}
 
-	public void setReason(String reason) {
-		this.reason = reason;
+	public void setReason(Map<String, String> reason) {
+		this.reason = MiscUtils.serializeStringMap(reason);
 	}
-
-	//	public String getDifference() {
-	//		return difference;
-	//	}
-	//
-	//	public void setDifference(String difference) {
-	//		this.difference = difference;
-	//	}
-
 
 	@Override
 	public boolean equals(Object o) {
@@ -162,12 +147,25 @@ public class SpiritRevisionEntity {
 		return "SpiritRevisionEntity(id = " + id + ", revisionDate = " + DateFormat.getDateTimeInstance().format( getRevisionDate() ) + ")";
 	}
 
-	public String getDifference() {
-		return difference;
+	public DifferenceList getDifferenceList() {
+		if(difference!=null && differenceList.isEmpty()) {
+			try {
+				differenceList = DifferenceList.deserialize(difference);
+			} catch (Exception e) {
+				System.err.println("Cannot deserialize "+difference+">"+e);
+				e.printStackTrace();
+				differenceList = new DifferenceList();
+			}
+		}
+		return differenceList;
 	}
 
-	public void setDifference(String difference) {
-		this.difference = difference;
+	public void setDifferenceList(DifferenceList differenceList) {
+		this.differenceList = differenceList;
+		this.difference = differenceList==null? null: differenceList.serialize();
+		if(this.difference!=null && this.difference.length()>MAX_DIFF_LENGTH) {
+			this.difference = this.difference.substring(0, MAX_DIFF_LENGTH);
+		}
 	}
 
 	/**
@@ -183,11 +181,4 @@ public class SpiritRevisionEntity {
 		this.sid = sid;
 	}
 
-	public List<Pair<IAuditable, String>> getChanges() {
-		return changes;
-	}
-
-	public Map<Class<?>, Integer> getCounter() {
-		return counter;
-	}
 }

@@ -576,7 +576,6 @@ public class DAOResult {
 				result.setCreDate(now);
 			}
 
-			System.out.println("DAOResult.persistResults() "+result+" "+result.getResultValueMap());
 			if(result.getId()<=0) {
 				session.persist(result);
 				logger.debug("Persist result: "+result+" / "+result.getId());
@@ -591,7 +590,6 @@ public class DAOResult {
 				logger.debug(count+"/"+results.size()+" rows processed");
 			}
 		}
-
 	}
 
 	public static int rename(TestAttribute att, String value, String newValue, SpiritUser user) throws Exception {
@@ -962,13 +960,12 @@ public class DAOResult {
 	 * @throws Exception
 	 */
 	private static void attachOrCreateStudyResults(Study study, boolean skipEmptyPhase, Collection<Biosample> biosamples, Collection<Test> tests, Phase phaseFilter, String elbForCreatingMissingOnes) throws Exception  {
+		if(biosamples.size()==0) return;
 		Set<Biosample> allBiosamples = new HashSet<>(biosamples);
-		//Clean previous data
-		if(phaseFilter!=null) {
-			for (Biosample biosample : allBiosamples) {
-				biosample.clearAuxResults(phaseFilter);
-			}
-		}
+		//		//Clean previous data
+		//		for (Biosample biosample : allBiosamples) {
+		//			biosample.clearAuxResults(phaseFilter);
+		//		}
 
 
 		//Query all results associated to those samples
@@ -979,19 +976,23 @@ public class DAOResult {
 		q.setPhase(phaseFilter);
 
 		List<Result> results = queryResults(q, null);
+		//		List<Result> mapped = new ArrayList<>();
 
 		//Map the result to the associated biosample
 		Map<Integer,Biosample> map = JPAUtil.mapIds(allBiosamples);
 		for (Result result : results) {
 			Phase p = result.getInheritedPhase();
 
-			if(p==null) continue;
+			//			if(p==null) continue;
 			if(phaseFilter==null && skipEmptyPhase && result.getBiosample().getInheritedPhase()==null) continue; //if no phase filter -> returns only samples
 			if(phaseFilter!=null && !phaseFilter.equals(p)) continue; //if phase filter -> returns only results with samples and animals at this phase
 
 			Biosample b = map.get(result.getBiosample().getId());
-			if(b!=null) b.addAuxResult(result);
+			if(b!=null) {
+				b.addAuxResult(result);
+			}
 		}
+		//		DAOResult.fullLoad(mapped);
 
 		//Create missing results
 		if(elbForCreatingMissingOnes!=null) {

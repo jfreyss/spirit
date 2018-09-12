@@ -63,7 +63,6 @@ public class PivotItemFactory {
 		}
 	};
 
-
 	public static final PivotItem STUDY_GROUP = new PivotItem(PivotItemClassifier.STUDY_GROUP, "GroupName") {
 		@Override
 		public String getTitle(ResultValue rv) {
@@ -115,7 +114,6 @@ public class PivotItemFactory {
 		}
 	};
 
-
 	public static final PivotItem STUDY_SUBGROUP = new PivotItem(PivotItemClassifier.STUDY_GROUP, "GroupSt.") {
 		@Override
 		public String getTitle(ResultValue rv) {
@@ -150,21 +148,6 @@ public class PivotItemFactory {
 		}
 	};
 
-
-
-
-	//	public static final PivotItem COMPOUND_ACTNO = new PivotItem(PivotItemClassifier.COMPOUND, "ActNo") {
-	//		@Override
-	//		public String getTitle(ResultValue rv) {
-	//			Result r = rv.getResult();
-	//			if(r.getCompound()!=null) {
-	//				return r.getCompound().getActNo();
-	//			}  else {
-	//				return null;
-	//			}
-	//		}
-	//	};
-
 	public static final PivotItem RESULT_ELB = new PivotItem(PivotItemClassifier.RESULT, "ELB") {
 		@Override
 		public String getTitle(ResultValue rv) {
@@ -172,6 +155,7 @@ public class PivotItemFactory {
 			return r.getElb();
 		}
 	};
+
 	public static final PivotItem RESULT_TEST = new PivotItem(PivotItemClassifier.RESULT, "TestName") {
 		@Override
 		public String getTitle(ResultValue rv) {
@@ -241,7 +225,7 @@ public class PivotItemFactory {
 		@Override
 		public String getTitle(ResultValue rv) {
 			Result r = rv.getResult();
-			if(r.getBiosample()!=null && r.getBiosample().getContainer()!=null && r.getBiosample().getContainer().getLocation()!=null) {
+			if(r.getBiosample()!=null && r.getBiosample().getLocation()!=null) {
 				return r.getBiosample().getPos()>=0? "<c>" + (r.getBiosample().getPos()+1): "";
 			}  else {
 				return null;
@@ -305,11 +289,9 @@ public class PivotItemFactory {
 		@Override
 		public String getTitle(ResultValue rv) {
 			Result r = rv.getResult();
-			if(r.getBiosample()!=null && r.getBiosample().getBiotype()!=null) {
-				if(r.getBiosample().getBiotype().getSampleNameLabel()!=null && r.getBiosample()!=r.getBiosample().getTopParentInSameStudy() &&  r.getBiosample().getSampleName()!=null) {
+			if(r.getBiosample()!=null && r.getBiosample().getBiotype()!=null && !r.getBiosample().equals(r.getBiosample().getTopParent())) {
+				if(r.getBiosample().getBiotype().getSampleNameLabel()!=null /*&& r.getBiosample()!=r.getBiosample().getTopParentInSameStudy() &&  r.getBiosample().getSampleName()!=null*/) {
 					return "<b>" + r.getBiosample().getSampleName();
-				} else {
-					return "<b>" + r.getBiosample().getBiotype().getName();
 				}
 			}
 			return null;

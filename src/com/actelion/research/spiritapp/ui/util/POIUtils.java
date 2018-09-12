@@ -33,11 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import com.actelion.research.spiritcore.util.ListHashMap;
-import com.actelion.research.spiritcore.util.MiscUtils;
-
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormat;
@@ -46,25 +41,37 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import com.actelion.research.spiritcore.util.ListHashMap;
+import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.util.IOUtils;
 
 public class POIUtils {
-	
+
+	private static List<String> footerData = new ArrayList<String>();
+
+	public static void addFooterData(String footer) {
+		footerData.add(footer);
+	}
+
 	public static String[][] convertTable(List<List<String>> rows) {
-		int maxCols = 0; 
+		int maxCols = 0;
 		for(List<String> r: rows) {
 			for (int i = maxCols+1; i < r.size(); i++) {
 				if(r.get(i)!=null && r.get(i).length()>0) maxCols = i;
 			}
 		}
 		maxCols++;
-		
+
 		String[][] res = new String[rows.size()][maxCols];
 		for (int r = 0; r < rows.size(); r++) {
 			Arrays.fill(res[r], "");
 			for (int c = 0; c<maxCols && c < rows.get(r).size(); c++) {
 				if(rows.get(r).get(c)!=null) res[r][c] = rows.get(r).get(c);
 			}
-			
+
 		}
 		return res;
 	}
@@ -105,11 +112,11 @@ public class POIUtils {
 				}
 			}
 			previousToken = token;
-		}	
-		
+		}
+
 		return convertTable(rows);
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	public static Class[] getTypes(String[][] table) {
 		if(table.length==0) return null;
@@ -130,12 +137,12 @@ public class POIUtils {
 		}
 		return res;
 	}
-		
+
 	public static enum ExportMode {
 		HEADERS_TOP,
 		HEADERS_TOPLEFT
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	public static void exportToExcel(String[][] table, ExportMode exportMode) throws IOException {
 		Class[] types = getTypes(table);
@@ -143,120 +150,120 @@ public class POIUtils {
 		Map<String, CellStyle> styles = new HashMap<String, CellStyle>();
 		CellStyle style;
 		DataFormat df = wb.createDataFormat();
-		
-        Font font = wb.createFont();
-        font.setFontName("Serif");
-        font.setBoldweight(Font.BOLDWEIGHT_BOLD);
-        font.setFontHeightInPoints((short)15);
-        style = wb.createCellStyle();
-        style.setFont(font);
-        styles.put("title", style);
-        
-        font = wb.createFont();
-        font.setFontName("Serif");
-        font.setFontHeightInPoints((short)10);
-        style = wb.createCellStyle();
-        style.setBorderRight(CellStyle.BORDER_THIN);
-        style.setRightBorderColor(IndexedColors.BLACK.getIndex());
-        style.setBorderBottom(CellStyle.BORDER_THIN);
-        style.setBottomBorderColor(IndexedColors.BLACK.getIndex());
-        style.setBorderLeft(CellStyle.BORDER_THIN);
-        style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
-        style.setBorderTop(CellStyle.BORDER_THIN);
-        style.setTopBorderColor(IndexedColors.BLACK.getIndex());
-        style.setAlignment(CellStyle.ALIGN_CENTER);
-        style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-        style.setFillPattern(CellStyle.SOLID_FOREGROUND);
-        style.setFont(font);
+
+		Font font = wb.createFont();
+		font.setFontName("Serif");
+		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+		font.setFontHeightInPoints((short)15);
+		style = wb.createCellStyle();
+		style.setFont(font);
+		styles.put("title", style);
+
+		font = wb.createFont();
+		font.setFontName("Serif");
+		font.setFontHeightInPoints((short)10);
+		style = wb.createCellStyle();
+		style.setBorderRight(CellStyle.BORDER_THIN);
+		style.setRightBorderColor(IndexedColors.BLACK.getIndex());
+		style.setBorderBottom(CellStyle.BORDER_THIN);
+		style.setBottomBorderColor(IndexedColors.BLACK.getIndex());
+		style.setBorderLeft(CellStyle.BORDER_THIN);
+		style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
+		style.setBorderTop(CellStyle.BORDER_THIN);
+		style.setTopBorderColor(IndexedColors.BLACK.getIndex());
+		style.setAlignment(CellStyle.ALIGN_CENTER);
+		style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+		style.setFillPattern(CellStyle.SOLID_FOREGROUND);
+		style.setFont(font);
 		style.setWrapText(true);
 		style.setVerticalAlignment(CellStyle.VERTICAL_TOP);
-        styles.put("th", style);
-		
-        font = wb.createFont();
-        font.setFontName("Serif");
-        font.setFontHeightInPoints((short)9);
-        style = wb.createCellStyle();
-        style.setBorderRight(CellStyle.BORDER_THIN);
-        style.setRightBorderColor(IndexedColors.BLACK.getIndex());
-        style.setBorderLeft(CellStyle.BORDER_THIN);
-        style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
-        style.setAlignment(CellStyle.ALIGN_LEFT);
-        style.setFont(font);
-        style.setWrapText(true);
-		style.setVerticalAlignment(CellStyle.VERTICAL_TOP);
-        styles.put("td", style);
+		styles.put("th", style);
 
-        font = wb.createFont();
-        font.setFontName("Serif");
-        font.setFontHeightInPoints((short)9);
-        style = wb.createCellStyle();
-        style.setBorderRight(CellStyle.BORDER_THIN);
-        style.setRightBorderColor(IndexedColors.BLACK.getIndex());
-        style.setBorderLeft(CellStyle.BORDER_THIN);
-        style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
-        style.setBorderTop(CellStyle.BORDER_THIN);
-        style.setTopBorderColor(IndexedColors.BLACK.getIndex());
-        style.setBorderBottom(CellStyle.BORDER_THIN);
-        style.setBottomBorderColor(IndexedColors.BLACK.getIndex());
-        style.setAlignment(CellStyle.ALIGN_LEFT);
-        style.setFont(font);
-        style.setWrapText(true);
+		font = wb.createFont();
+		font.setFontName("Serif");
+		font.setFontHeightInPoints((short)9);
+		style = wb.createCellStyle();
+		style.setBorderRight(CellStyle.BORDER_THIN);
+		style.setRightBorderColor(IndexedColors.BLACK.getIndex());
+		style.setBorderLeft(CellStyle.BORDER_THIN);
+		style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
+		style.setAlignment(CellStyle.ALIGN_LEFT);
+		style.setFont(font);
+		style.setWrapText(true);
 		style.setVerticalAlignment(CellStyle.VERTICAL_TOP);
-        styles.put("td-border", style);
+		styles.put("td", style);
 
-        font = wb.createFont();
-        font.setFontName("Serif");
-        font.setFontHeightInPoints((short)9);
-        style = wb.createCellStyle();
-        style.setBorderRight(CellStyle.BORDER_THIN);
-        style.setRightBorderColor(IndexedColors.BLACK.getIndex());
-        style.setBorderLeft(CellStyle.BORDER_THIN);
-        style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
-        style.setAlignment(CellStyle.ALIGN_RIGHT);
-        style.setFont(font);
+		font = wb.createFont();
+		font.setFontName("Serif");
+		font.setFontHeightInPoints((short)9);
+		style = wb.createCellStyle();
+		style.setBorderRight(CellStyle.BORDER_THIN);
+		style.setRightBorderColor(IndexedColors.BLACK.getIndex());
+		style.setBorderLeft(CellStyle.BORDER_THIN);
+		style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
+		style.setBorderTop(CellStyle.BORDER_THIN);
+		style.setTopBorderColor(IndexedColors.BLACK.getIndex());
+		style.setBorderBottom(CellStyle.BORDER_THIN);
+		style.setBottomBorderColor(IndexedColors.BLACK.getIndex());
+		style.setAlignment(CellStyle.ALIGN_LEFT);
+		style.setFont(font);
+		style.setWrapText(true);
 		style.setVerticalAlignment(CellStyle.VERTICAL_TOP);
-        styles.put("td-double", style);
+		styles.put("td-border", style);
 
-        font = wb.createFont();
-        font.setFontName("Serif");
-        font.setFontHeightInPoints((short)9);
-        style = wb.createCellStyle();
-        style.setBorderRight(CellStyle.BORDER_THIN);
-        style.setRightBorderColor(IndexedColors.BLACK.getIndex());
-        style.setBorderLeft(CellStyle.BORDER_THIN);
-        style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
-        style.setAlignment(CellStyle.ALIGN_RIGHT);
-        style.setFont(font);
+		font = wb.createFont();
+		font.setFontName("Serif");
+		font.setFontHeightInPoints((short)9);
+		style = wb.createCellStyle();
+		style.setBorderRight(CellStyle.BORDER_THIN);
+		style.setRightBorderColor(IndexedColors.BLACK.getIndex());
+		style.setBorderLeft(CellStyle.BORDER_THIN);
+		style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
+		style.setAlignment(CellStyle.ALIGN_RIGHT);
+		style.setFont(font);
 		style.setVerticalAlignment(CellStyle.VERTICAL_TOP);
-        styles.put("td-right", style);
+		styles.put("td-double", style);
 
-        font = wb.createFont();
-        font.setFontName("Serif");
-        font.setBoldweight(Font.BOLDWEIGHT_BOLD);
-        font.setFontHeightInPoints((short)9);
-        style = wb.createCellStyle();
-        style.setBorderRight(CellStyle.BORDER_THIN);
-        style.setRightBorderColor(IndexedColors.BLACK.getIndex());
-        style.setBorderLeft(CellStyle.BORDER_THIN);
-        style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
-        style.setAlignment(CellStyle.ALIGN_RIGHT);
-        style.setFont(font);
+		font = wb.createFont();
+		font.setFontName("Serif");
+		font.setFontHeightInPoints((short)9);
+		style = wb.createCellStyle();
+		style.setBorderRight(CellStyle.BORDER_THIN);
+		style.setRightBorderColor(IndexedColors.BLACK.getIndex());
+		style.setBorderLeft(CellStyle.BORDER_THIN);
+		style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
+		style.setAlignment(CellStyle.ALIGN_RIGHT);
+		style.setFont(font);
 		style.setVerticalAlignment(CellStyle.VERTICAL_TOP);
-        styles.put("td-bold", style);
-        
-        font = wb.createFont();
-        font.setFontName("Serif");
-        font.setFontHeightInPoints((short)9);
-        style = wb.createCellStyle();
-        style.setBorderRight(CellStyle.BORDER_THIN);
-        style.setRightBorderColor(IndexedColors.BLACK.getIndex());
-        style.setBorderLeft(CellStyle.BORDER_THIN);
-        style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
-        style.setAlignment(CellStyle.ALIGN_RIGHT);
-        style.setFont(font);
-        style.setDataFormat(df.getFormat("d.mm.yyyy h:MM"));
+		styles.put("td-right", style);
+
+		font = wb.createFont();
+		font.setFontName("Serif");
+		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+		font.setFontHeightInPoints((short)9);
+		style = wb.createCellStyle();
+		style.setBorderRight(CellStyle.BORDER_THIN);
+		style.setRightBorderColor(IndexedColors.BLACK.getIndex());
+		style.setBorderLeft(CellStyle.BORDER_THIN);
+		style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
+		style.setAlignment(CellStyle.ALIGN_RIGHT);
+		style.setFont(font);
 		style.setVerticalAlignment(CellStyle.VERTICAL_TOP);
-        styles.put("td-date", style);
+		styles.put("td-bold", style);
+
+		font = wb.createFont();
+		font.setFontName("Serif");
+		font.setFontHeightInPoints((short)9);
+		style = wb.createCellStyle();
+		style.setBorderRight(CellStyle.BORDER_THIN);
+		style.setRightBorderColor(IndexedColors.BLACK.getIndex());
+		style.setBorderLeft(CellStyle.BORDER_THIN);
+		style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
+		style.setAlignment(CellStyle.ALIGN_RIGHT);
+		style.setFont(font);
+		style.setDataFormat(df.getFormat("d.mm.yyyy h:MM"));
+		style.setVerticalAlignment(CellStyle.VERTICAL_TOP);
+		styles.put("td-date", style);
 
 		Sheet sheet = wb.createSheet();
 		sheet.setFitToPage(true);
@@ -265,12 +272,12 @@ public class POIUtils {
 
 		int maxRows = 0;
 		for (int r = 0; r < table.length; r++) {
-	        Row row = sheet.createRow(r);	        
-	        if(r==0) {
-	        	row.setRowStyle(styles.get("th"));
-	        }
-	        
-	        int rows = 1;
+			Row row = sheet.createRow(r);
+			if(r==0) {
+				row.setRowStyle(styles.get("th"));
+			}
+
+			int rows = 1;
 			for (int c = 0; c < table[r].length; c++) {
 				cell = row.createCell(c);
 				String s = table[r][c];
@@ -280,7 +287,7 @@ public class POIUtils {
 					if(exportMode==ExportMode.HEADERS_TOP && r==0) {
 						cell.setCellStyle(styles.get("th"));
 						cell.setCellValue(s);
-						
+
 					} else if(exportMode==ExportMode.HEADERS_TOPLEFT && (r==0 || c==0)) {
 						if(r==0 && c==0) {
 							cell.setCellStyle(styles.get("td"));
@@ -293,7 +300,7 @@ public class POIUtils {
 						cell.setCellType(Cell.CELL_TYPE_NUMERIC);
 						cell.setCellValue(Double.parseDouble(s));
 					} else if(types[c]==String.class) {
-						cell.setCellStyle(styles.get(exportMode==ExportMode.HEADERS_TOPLEFT? "td-border": "td"));						
+						cell.setCellStyle(styles.get(exportMode==ExportMode.HEADERS_TOPLEFT? "td-border": "td"));
 						cell.setCellType(Cell.CELL_TYPE_NUMERIC);
 						cell.setCellValue(s);
 					} else {
@@ -306,24 +313,44 @@ public class POIUtils {
 				}
 			}
 			maxRows = Math.max(maxRows, rows);
-	        row.setHeightInPoints(rows*16f);
-	        
+			row.setHeightInPoints(rows*16f);
+
 		}
-		
+
+		// Add footer notes
+		if (footerData.size() > 0) {
+			Row row = sheet.createRow(table.length);
+			row.setHeightInPoints((footerData.size()*sheet.getDefaultRowHeightInPoints()));
+			cell = row.createCell(0);
+			sheet.addMergedRegion(new CellRangeAddress(
+					row.getRowNum(), //first row (0-based)
+					row.getRowNum(), //last row  (0-based)
+					0, //first column (0-based)
+					table[0].length - 1  //last column  (0-based)
+					));
+			//for ( String data : footerData ) {
+			style = wb.createCellStyle();
+			style.setWrapText(true);
+			cell.setCellStyle(style);
+			cell.setCellValue(MiscUtils.flatten(footerData, "\n"));
+			//}
+		}
+		footerData.clear();
+
 		autoSizeColumns(sheet);
 		if(table.length>0) {
 			for (int c = 0; c < table[0].length; c++) {
 				if(sheet.getColumnWidth(c)>10000) sheet.setColumnWidth(c, 3000);
 			}
 		}
-		
+
 		if(exportMode==ExportMode.HEADERS_TOPLEFT) {
 			for (int r = 1; r < table.length; r++) {
 				sheet.getRow(r).setHeightInPoints(maxRows*16f);
 			}
 		}
-				
-		File reportFile = File.createTempFile("xls_", ".xlsx");
+
+		File reportFile = IOUtils.createTempFile("export_", ".xlsx");
 		FileOutputStream out = new FileOutputStream(reportFile);
 		wb.write(out);
 		wb.close();
@@ -349,22 +376,23 @@ public class POIUtils {
 			return false;
 		}
 	}
-	
+
 	public static void autoSizeColumns(Sheet sheet) {
-		autoSizeColumns(sheet, 10000, true);
+		autoSizeColumns(sheet, 15000, true);
 	}
+
 	public static void autoSizeColumns(Sheet sheet, int maxColWidth, boolean resizeHeight) {
-		ListHashMap<Integer, Integer> col2lens = new ListHashMap<Integer, Integer>();
-		for (int row = sheet.getFirstRowNum(); row < sheet.getLastRowNum(); row++) {
+		ListHashMap<Integer, Integer> col2lens = new ListHashMap<>();
+		for (int row = sheet.getFirstRowNum(); row <= sheet.getLastRowNum(); row++) {
 			Row r = sheet.getRow(row);
-			if(r==null) continue;
+			if(r==null || r.getFirstCellNum()<0) continue;
 			short maxH = 0;
-			
-			for (int col = r.getFirstCellNum(); col < r.getLastCellNum(); col++) {
+
+			for (int col = r.getFirstCellNum(); col <= r.getLastCellNum(); col++) {
 				Cell c = r.getCell(col);
 				if(c==null || (c.getCellType()!=Cell.CELL_TYPE_STRING && c.getCellType()!=Cell.CELL_TYPE_NUMERIC)) continue;
-				
-				Font font = sheet.getWorkbook().getFontAt(c.getCellStyle().getFontIndex());				
+
+				Font font = sheet.getWorkbook().getFontAt(c.getCellStyle().getFontIndex());
 				String s = c.getCellType()==Cell.CELL_TYPE_STRING? c.getStringCellValue(): ""+c.getNumericCellValue();
 				String[] lines = MiscUtils.split(s, "\n");
 				int maxLen = 1;
@@ -372,7 +400,7 @@ public class POIUtils {
 					maxLen = Math.max(lines[i].length(), maxLen);
 				}
 				if(font.getFontHeightInPoints()<12) {
-					col2lens.add(col, 700 + maxLen*(int)((font.getFontHeightInPoints()+(font.getBoldweight()>500?1:0))*20));
+					col2lens.add(col, 700 + maxLen*(font.getFontHeightInPoints()+(font.getBoldweight()>500?1:0))*20);
 				}
 				maxH = (short) Math.max(maxH, 50 + lines.length * (font.getFontHeight()*1.2));
 			}
@@ -386,9 +414,8 @@ public class POIUtils {
 			if(lens.size()>10 && lens.get(lens.size()-1) > 2*lens.get(lens.size()-2)) {
 				len = lens.get(lens.size()-2);
 			}
-			sheet.setColumnWidth(col, Math.max(Math.min((int)(len*1.05), maxColWidth>0? maxColWidth: 300000), 1000));
+			sheet.setColumnWidth(col, Math.max(Math.min((int)(len*1.25), maxColWidth>0? maxColWidth: 300000), 1500));
 		}
-		
 	}
-	
+
 }

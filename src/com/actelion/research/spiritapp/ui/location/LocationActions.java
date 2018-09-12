@@ -21,6 +21,7 @@
 
 package com.actelion.research.spiritapp.ui.location;
 
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import javax.swing.Action;
 import javax.swing.JPopupMenu;
 
 import com.actelion.research.spiritapp.print.PrintLabel;
+import com.actelion.research.spiritapp.report.EventsReport;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.audit.LocationHistoryDlg;
 import com.actelion.research.spiritapp.ui.location.edit.LocationEditDlg;
@@ -42,8 +44,9 @@ import com.actelion.research.spiritcore.business.audit.Revision;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationFlag;
 import com.actelion.research.spiritcore.business.location.Privacy;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.services.SpiritRights;
-import com.actelion.research.spiritcore.services.dao.DAORevision;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.iconbutton.IconType;
@@ -60,12 +63,12 @@ public class LocationActions {
 			this(Collections.singleton(parent));
 		}
 		public Action_New(Collection<Location> selection) {
-			super("New Locations");
+			super("New Location...");
 			this.parent = selection==null || selection.size()==0? null: selection.iterator().next();
 			if(parent!=null) putValue(NAME, getValue(NAME) + " (under "+parent.getName()+")");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('l'));
 			putValue(AbstractAction.SMALL_ICON, IconType.LOCATION.getIcon());
-			setEnabled(parent==null || (parent.getLocationType().getPreferredChild()!=null && SpiritRights.canRead(parent, SpiritFrame.getUser())));
+			setEnabled(parent==null || (parent.getLocationType().getPreferredChild()!=null && SpiritRights.canRead(parent, SpiritFrame.getUser()) && SpiritRights.canEdit(new Location(), SpiritFrame.getUser())));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -80,9 +83,9 @@ public class LocationActions {
 			location.setName("");
 
 
-			if(SpiritFrame.getUser()!=null  && !SpiritFrame.getUser().isSuperAdmin() && (parent==null || parent.getInheritedPrivacy()==Privacy.PUBLIC)) {
-				location.setPrivacy(Privacy.PROTECTED);
+			if(SpiritFrame.getUser()!=null && !SpiritFrame.getUser().isSuperAdmin() && SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS) && SpiritFrame.getUser().getMainGroup()!=null && (parent==null || parent.getInheritedPrivacy()==Privacy.PUBLIC)) {
 				location.setEmployeeGroup(SpiritFrame.getUser().getMainGroup());
+				location.setPrivacy(Privacy.PROTECTED);
 			}
 
 			LocationEditDlg.edit(Collections.singletonList(location));
@@ -93,7 +96,7 @@ public class LocationActions {
 		private List<Location> locations;
 
 		public Action_Delete(List<Location> locations) {
-			super("Delete");
+			super("Delete...");
 			this.locations = locations;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('l'));
 			putValue(AbstractAction.SMALL_ICON, IconType.DELETE.getIcon());
@@ -115,7 +118,7 @@ public class LocationActions {
 	public static class Action_History extends AbstractAction {
 		private final Collection<Location> locations;
 		public Action_History(Collection<Location> locations) {
-			super("Audit Trail");
+			super("Audit Trail...");
 			this.locations = locations;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('a'));
 			putValue(Action.SMALL_ICON, IconType.HISTORY.getIcon());
@@ -124,11 +127,46 @@ public class LocationActions {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				List<Revision> revisions = DAORevision.getLastRevisions(locations.iterator().next());
-				new LocationHistoryDlg(revisions);
+				new LocationHistoryDlg(locations.iterator().next());
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
+		}
+	}
+
+	public static class Action_ExportLocationEvents extends AbstractAction {
+
+		private Dialog parentDlg = null;
+		private EventsReport report = new EventsReport();
+		private Location location = null;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				if ( parentDlg != null )
+					parentDlg.dispose();
+
+				String title = "Report for Events on Location : " + location.getName();
+
+				report.buildReport();
+				report.setPreviewTitle(title);
+				report.addFooterNote(title);
+				report.showPreview();
+			} catch (Exception ex) {
+				JExceptionDialog.showError(ex.getMessage());
+			}
+		}
+
+		public void setRevisions(List<Revision> revisions) {
+			report.setRevisions(revisions);
+		}
+
+		public void setParentDlg(Dialog parentDlg) {
+			this.parentDlg = parentDlg;
+		}
+
+		public void setLocation(final Location location) {
+			this.location = location;
 		}
 	}
 
@@ -136,7 +174,7 @@ public class LocationActions {
 		private List<Location> locations;
 
 		public Action_Print(Location location) {
-			super("Print Label");
+			super("Print Label...");
 			this.locations = Collections.singletonList(location);
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('p'));
 			putValue(AbstractAction.SMALL_ICON, IconType.PRINT.getIcon());
@@ -144,7 +182,7 @@ public class LocationActions {
 		}
 
 		public Action_Print(List<Location> locations) {
-			super("Print Labels");
+			super("Print Labels...");
 			this.locations = locations;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('p'));
 			putValue(AbstractAction.SMALL_ICON, IconType.PRINT.getIcon());
@@ -173,7 +211,7 @@ public class LocationActions {
 	public static class Action_Duplicate extends AbstractAction {
 		private List<Location> locations;
 		public Action_Duplicate(List<Location> locations) {
-			super("Duplicate");
+			super("Duplicate...");
 			this.locations = locations;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			putValue(AbstractAction.SMALL_ICON, IconType.DUPLICATE.getIcon());
@@ -196,12 +234,37 @@ public class LocationActions {
 		}
 	}
 
+	public static class Action_MoveLocations extends AbstractAction {
+		private List<Location> locations;
+		public Action_MoveLocations(List<Location> locations) {
+			super("Move");
+			this.locations = locations;
+			putValue(AbstractAction.MNEMONIC_KEY, (int)('m'));
+			putValue(AbstractAction.SMALL_ICON, IconType.DUPLICATE.getIcon());
+			boolean enabled = true;
+			for (Location location : locations) {
+				if(!SpiritRights.canEdit(location, SpiritFrame.getUser())) {
+					enabled = false;
+					break;
+				}
+			}
+			setEnabled(enabled);
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if(SpiritFrame.getUser()==null) return;
+
+
+			new MoveLocationDlg(locations);
+		}
+	}
 
 	public static class Action_EditBatch extends AbstractAction {
 		private List<Location> locations;
 
 		public Action_EditBatch(Location location) {
-			super("Edit / Move Location ("+location.getName()+")");
+			super("Edit / Move Location ("+location.getName()+")...");
 			this.locations = Collections.singletonList(location);
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(AbstractAction.SMALL_ICON, IconType.EDIT.getIcon());
@@ -210,7 +273,7 @@ public class LocationActions {
 		}
 
 		public Action_EditBatch(List<Location> locations) {
-			super("Edit");
+			super("Edit...");
 			this.locations = locations;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('e'));
 			putValue(AbstractAction.SMALL_ICON, IconType.EDIT.getIcon());
@@ -257,9 +320,8 @@ public class LocationActions {
 		table.addMouseListener(new PopupAdapter(table) {
 			@Override
 			protected void showPopup(MouseEvent e) {
-
-				JPopupMenu popupMenu = createPopup(table.getSelection());
-				popupMenu.show(table, e.getX(), e.getY());
+				JPopupMenu popup = createPopup(table.getSelection());
+				if(popup!=null) popup.show(table, e.getX(), e.getY());
 			}
 		});
 	}

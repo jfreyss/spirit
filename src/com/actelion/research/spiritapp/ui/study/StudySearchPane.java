@@ -36,6 +36,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.ui.SpiritFrame;
+import com.actelion.research.spiritapp.ui.SpiritTab;
 import com.actelion.research.spiritapp.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.ui.util.formtree.FormTree;
 import com.actelion.research.spiritcore.business.study.Study;
@@ -53,13 +54,13 @@ public class StudySearchPane extends JPanel {
 	private final JButton searchButton = new JButton(new Action_Search());
 	private final JButton resetButton = new JButton(new Action_Reset());
 
+	private SpiritTab parentTab;
 	private final StudyTable table;
 
 	public StudySearchPane(SpiritFrame frame, StudyTable table) {
 		super(new BorderLayout(0, 0));
 		this.table = table;
 		this.studySearchTree = new StudySearchTree(frame);
-
 
 		add(BorderLayout.CENTER, new JScrollPane(studySearchTree));
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), resetButton, searchButton));
@@ -70,6 +71,10 @@ public class StudySearchPane extends JPanel {
 
 		setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
 		setPreferredSize(new Dimension(220, 200));
+	}
+
+	public void setParentTab(SpiritTab parentTab) {
+		this.parentTab = parentTab;
 	}
 
 	/**
@@ -90,7 +95,7 @@ public class StudySearchPane extends JPanel {
 
 	public class Action_Reset extends AbstractAction {
 		public Action_Reset() {
-			super("");
+			super("Clear");
 			putValue(Action.SMALL_ICON, IconType.CLEAR.getIcon());
 			setToolTipText("Reset all query fields");
 		}
@@ -129,6 +134,9 @@ public class StudySearchPane extends JPanel {
 					table.setSelection(studies);
 				}
 				SpiritContextListener.setStatus(studies.size() + " Studies");
+				if (parentTab != null) {
+					parentTab.updateActions(query);
+				}
 			}
 		};
 	}
@@ -137,4 +145,7 @@ public class StudySearchPane extends JPanel {
 		return searchButton;
 	}
 
+	public StudyTable getTable() {
+		return this.table;
+	}
 }

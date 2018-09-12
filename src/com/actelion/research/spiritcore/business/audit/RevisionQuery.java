@@ -79,12 +79,19 @@ public class RevisionQuery {
 	public Date getFromDate() {
 		return fromDate;
 	}
+	/**
+	 * FromDate inclusive
+	 */
 	public void setFromDate(Date fromDate) {
 		this.fromDate = fromDate;
 	}
 	public Date getToDate() {
 		return toDate;
 	}
+	/**
+	 * ToDate exclusive
+	 * @param toDate
+	 */
 	public void setToDate(Date toDate) {
 		this.toDate = toDate;
 	}

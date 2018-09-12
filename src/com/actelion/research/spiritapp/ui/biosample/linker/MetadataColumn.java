@@ -23,7 +23,6 @@ package com.actelion.research.spiritapp.ui.biosample.linker;
 
 import java.awt.Color;
 import java.awt.Desktop;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.net.URI;
 import java.util.Comparator;
@@ -47,6 +46,7 @@ import com.actelion.research.spiritcore.business.result.ResultValue;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.FormatterUtils;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.AlphaNumericalCellEditor;
@@ -179,7 +179,7 @@ public class MetadataColumn extends AbstractLinkerColumn<String> {
 	@Override
 	public void populateHeaderPopup(final AbstractExtendTable<Biosample> table, JPopupMenu popupMenu) {
 		popupMenu.add(new JSeparator());
-		popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
+		popupMenu.add(new JCustomLabel("Sort", FastFont.BOLD));
 		popupMenu.add(new AbstractAction("Sort by "+getShortName()) {
 			@Override
 			public void actionPerformed(ActionEvent e) {

@@ -32,12 +32,12 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class PivotCellColumn extends Column<PivotRow, PivotCell>{
-	
+
 	private PivotColumn col;
 	private PivotCellPanel valueListPanel = new PivotCellPanel();
-	
+
 	public PivotCellColumn(PivotColumn col) {
-		super(col.getTitle(), PivotCell.class, 30, 200);
+		super(col.getTitle(), PivotCell.class, 30, 300);
 		this.col = col;
 	}
 
@@ -45,28 +45,27 @@ public class PivotCellColumn extends Column<PivotRow, PivotCell>{
 	public PivotCell getValue(PivotRow row) {
 		return row.getPivotCell(col);
 	}
-		
+
 	@Override
 	public JComponent getCellComponent(AbstractExtendTable<PivotRow> t, PivotRow row, int rowNo, Object value) {
 		PivotCell pivotCell = (PivotCell) value;
 		PivotTable table = (PivotTable) t;
 		if(pivotCell!=null) {
-	
+
 			valueListPanel.setPivotCell(pivotCell);
-			
+
 			return valueListPanel;
 		} else {
-			JComponent comp = super.getCellComponent(table, row, rowNo, value);
-			return comp;
+			return super.getCellComponent(table, row, rowNo, value);
 		}
 	}
-	
+
 	@Override
 	public boolean isMultiline() {
 		return true;
 	}
-	
-	
+
+
 	@Override
 	public boolean shouldMerge(PivotRow r1, PivotRow r2) {
 		return false;

@@ -27,9 +27,7 @@ import java.util.List;
 import javax.swing.JComponent;
 
 import com.actelion.research.spiritapp.ui.util.component.SpiritExtendTable;
-import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 
 public class StudyTable extends SpiritExtendTable<Study> {
 
@@ -54,7 +52,7 @@ public class StudyTable extends SpiritExtendTable<Study> {
 	@Override
 	public void postProcess(Study row, int rowNo, Object value, JComponent c) {
 		super.postProcess(row, rowNo, value, c);
-		if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_STATES_SEALED, row.getState())) {
+		if("Archived".equals(row.getState())) {
 			c.setForeground(Color.GRAY);
 		}
 	}

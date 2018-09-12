@@ -94,7 +94,7 @@ public class LocationNameColumn extends Column<Location, String> {
 	public JComponent getCellComponent(AbstractExtendTable<Location> table, Location row, int rowNo, Object value) {
 		label.setLocation(row);
 		label.setForeground(row==null || row.getPrivacy()==null? Color.BLACK: row.getPrivacy().getFgColor());
-		label.setFont(row==null || row.getLocationType().getCategory()==LocationCategory.MOVEABLE? FastFont.REGULAR:
+		label.setFont(row==null || row.getLocationType()==null || row.getLocationType().getCategory()==LocationCategory.MOVEABLE? FastFont.REGULAR:
 			row.getLocationType()==LocationType.BUILDING? FastFont.BIG:
 				FastFont.BOLD);
 		return label;

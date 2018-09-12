@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritapp.ui.location;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -43,7 +42,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
 import com.actelion.research.spiritapp.Spirit;
-import com.actelion.research.spiritapp.ui.location.ContainerTableModel.ContainerTableModelType;
+import com.actelion.research.spiritapp.ui.biosample.BiosampleTable;
 import com.actelion.research.spiritapp.ui.location.depictor.LocationDepictor;
 import com.actelion.research.spiritapp.ui.location.depictor.RackDepictorListener;
 import com.actelion.research.spiritapp.ui.location.depictor.RackDropListener;
@@ -62,6 +61,7 @@ import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.Config;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -77,14 +77,15 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 
 	/** Biosample to set location */
 	private Location currentLocation;
-	private final ContainerTable containerTable = new ContainerTable(ContainerTableModelType.CHECKIN);
+	//	private final ContainerTable containerTable = new ContainerTable(ContainerTableModelType.CHECKIN);
+	private final BiosampleTable biosampleTable = new BiosampleTable();
 
 	private LocationBrowser locationBrowser = new LocationBrowser();
 	private LocationDepictor locationDepictor = new LocationDepictor();
 
 
 	private JRadioButton patternRadioButton = new JRadioButton(Direction.PATTERN.getName());
-	private JRadioButton rightRadioButton = new JRadioButton(Direction.LEFT_RIGHT.getName());
+	private JRadioButton rightRadioButton = new JRadioButton(Direction.LEFT_RIGHT.getName(), true);
 	private JRadioButton bottomRadioButton = new JRadioButton(Direction.TOP_BOTTOM.getName());
 
 	private JLabel commentsLabel = new JCustomLabel("", Color.RED);
@@ -98,8 +99,10 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 	private int push = 0;
 
 	public CheckinDlg(Collection<Biosample> mySamples, boolean commitTransaction) {
-		super(UIUtils.getMainFrame(), commitTransaction? "Checkin / Relocate": "Set Location", commitTransaction? CheckinDlg.class.getName(): null);
+		super(UIUtils.getMainFrame(), "Assign Storage Location", commitTransaction? CheckinDlg.class.getName(): null);
 		this.commitTransaction = commitTransaction;
+
+		//		biosampleTable.getModel().setMode(Mode.COMPACT);
 
 		List<Biosample> biosamples;
 		if(commitTransaction) {
@@ -163,15 +166,49 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 			}
 		});
 
-		containerTable.enableDragSource(false);
-		containerTable.addMouseListener(new MouseAdapter() {
+		//		containerTable.enableDragSource();
+		//		containerTable.addMouseListener(new MouseAdapter() {
+		//			@Override
+		//			public void mouseClicked(MouseEvent e) {
+		//				if(push>0) return;
+		//				try {
+		//					push++;
+		//					if(e.getClickCount()>=2) {
+		//						List<Container> sel = containerTable.getSelection();
+		//						if(sel.size()>0) {
+		//							Location l = sel.get(0).getLocation();
+		//							if(l!=null && !l.equals(locationDepictor.getBioLocation())) {
+		//								locationBrowser.setBioLocation(l);
+		//								locationDepictor.setBioLocation(l);
+		//								eventChangeLocation();
+		//							}
+		//						}
+		//					}
+		//					eventTableSelection();
+		//				} finally {
+		//					push--;
+		//				}
+		//			}
+		//		});
+		//		containerTable.getSelectionModel().addListSelectionListener(e-> {
+		//			if(e.getValueIsAdjusting()) return;
+		//			if(push>0) return;
+		//			try {
+		//				push++;
+		//				eventTableSelection();
+		//			} finally {
+		//				push--;
+		//			}
+		//		});
+		biosampleTable.enableDragSource();
+		biosampleTable.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(push>0) return;
 				try {
 					push++;
 					if(e.getClickCount()>=2) {
-						List<Container> sel = containerTable.getSelection();
+						List<Container> sel = Biosample.getContainers(biosampleTable.getSelection(), true);
 						if(sel.size()>0) {
 							Location l = sel.get(0).getLocation();
 							if(l!=null && !l.equals(locationDepictor.getBioLocation())) {
@@ -187,7 +224,7 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 				}
 			}
 		});
-		containerTable.getSelectionModel().addListSelectionListener(e-> {
+		biosampleTable.getSelectionModel().addListSelectionListener(e-> {
 			if(e.getValueIsAdjusting()) return;
 			if(push>0) return;
 			try {
@@ -213,7 +250,6 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 			if(locs!=null && locs.size()>0) {
 				//link location
 				Location loc = locs.get(0);
-				//				loc = JPAUtil.reattach(loc);
 				locationBrowser.setBioLocation(loc);
 				locationDepictor.setBioLocation(loc);
 				eventChangeLocation();
@@ -224,50 +260,49 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 		});
 
 		//ContentPane Layout
-		JPanel containerPanel = new JPanel(new BorderLayout());
-		JScrollPane sp1 = new JScrollPane(containerTable);
-		containerPanel.add(BorderLayout.CENTER, sp1);
-		containerPanel.add(BorderLayout.NORTH, containerStatusLabel);
+		JScrollPane sp1 = new JScrollPane(biosampleTable);
+		JPanel containerPanel = UIUtils.createBox(sp1, containerStatusLabel);
 
-		if(Container.getScannedPoses(containers).size()>0) {
-			patternRadioButton.setSelected(true);
-			RackDropListener.setDirection(Direction.PATTERN);
-			locationDepictor.setBioLocation(null);
-			locationDepictor.computeDroppedPoses(-1, containers);
-		} else if(Container.getPoses(containers).size()==containers.size()) {
-			patternRadioButton.setSelected(true);
-			RackDropListener.setDirection(Direction.PATTERN);
-		} else {
-			rightRadioButton.setSelected(true);
-			RackDropListener.setDirection(Direction.LEFT_RIGHT);
+		//Direction Panel
+		JPanel directionPanel = null;
+		if(SpiritProperties.getInstance().isAdvancedMode()) {
+			if(Container.getScannedPoses(containers).size()>0) {
+				patternRadioButton.setSelected(true);
+				RackDropListener.setDirection(Direction.PATTERN);
+				locationDepictor.setBioLocation(null);
+				locationDepictor.computeDroppedPoses(-1, containers);
+			} else if(Container.getPoses(containers).size()==containers.size()) {
+				patternRadioButton.setSelected(true);
+				RackDropListener.setDirection(Direction.PATTERN);
+			} else {
+				rightRadioButton.setSelected(true);
+				RackDropListener.setDirection(Direction.LEFT_RIGHT);
+			}
+
+			ButtonGroup group = new ButtonGroup();
+			group.add(rightRadioButton);
+			group.add(bottomRadioButton);
+			group.add(patternRadioButton);
+
+			ActionListener al = e-> {
+				RackDropListener.setDirection(rightRadioButton.isSelected()? Direction.LEFT_RIGHT: bottomRadioButton.isSelected()? Direction.TOP_BOTTOM: patternRadioButton.isSelected()? Direction.PATTERN: Direction.DEFAULT);
+				makePreview();
+			};
+			rightRadioButton.addActionListener(al);
+			bottomRadioButton.addActionListener(al);
+			patternRadioButton.addActionListener(al);
+
+			directionPanel = UIUtils.createTitleBox("Direction",
+					UIUtils.createHorizontalBox(
+							rightRadioButton,
+							new JLabel(Direction.LEFT_RIGHT.getImage()),
+							Box.createHorizontalStrut(5),
+							bottomRadioButton,
+							new JLabel(Direction.TOP_BOTTOM.getImage()),
+							Box.createHorizontalStrut(5),
+							patternRadioButton,
+							Box.createHorizontalGlue()));
 		}
-
-		ButtonGroup group = new ButtonGroup();
-		group.add(rightRadioButton);
-		group.add(bottomRadioButton);
-		group.add(patternRadioButton);
-
-		ActionListener al = e-> {
-			RackDropListener.setDirection(rightRadioButton.isSelected()? Direction.LEFT_RIGHT: bottomRadioButton.isSelected()? Direction.TOP_BOTTOM: patternRadioButton.isSelected()? Direction.PATTERN: Direction.DEFAULT);
-			makePreview();
-		};
-		rightRadioButton.addActionListener(al);
-		bottomRadioButton.addActionListener(al);
-		patternRadioButton.addActionListener(al);
-
-		JPanel moveToPanel = UIUtils.createHorizontalBox(
-				rightRadioButton,
-				new JLabel(Direction.LEFT_RIGHT.getImage()),
-				Box.createHorizontalStrut(5),
-				bottomRadioButton,
-				new JLabel(Direction.TOP_BOTTOM.getImage()),
-				Box.createHorizontalStrut(5),
-				patternRadioButton,
-				Box.createHorizontalStrut(15),
-				commentsLabel,
-				Box.createHorizontalGlue()
-				);
-
 
 		//Configure OkButton
 		JButton okButton;
@@ -278,11 +313,10 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 		}
 
 		//TopPanel
-		//TODO readd newLocationButton
 		JPanel locationPanel = UIUtils.createBox(
 				UIUtils.createTitleBox("Location", UIUtils.createBox(locationDepictor, UIUtils.createBox(locationBrowser, null, null, null, locationDepictor.createZoomPanel()))),
-				UIUtils.createTitleBox("Direction", moveToPanel),
-				UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), /*newLocationButton,*/ Box.createHorizontalGlue(), okButton));
+				directionPanel,
+				UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), /*newLocationButton,*/ Box.createHorizontalGlue(), commentsLabel, okButton));
 		getRootPane().setDefaultButton(okButton);
 
 
@@ -295,7 +329,7 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 		});
 
 		JSplitPane centerPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, UIUtils.createTitleBox("Containers", containerPanel), locationPanel);
-		centerPane.setDividerLocation(340);
+		centerPane.setDividerLocation(400);
 		setContentPane(centerPane);
 
 		if(currentLocation!=null) {
@@ -305,21 +339,22 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 
 
 		//Init the container table
-		containerTable.setRows(new ArrayList<>(containers));
-		containerTable.selectAll();
-
+		//		containerTable.setRows(new ArrayList<>(containers));
+		//		containerTable.selectAll();
+		biosampleTable.setRows(new ArrayList<>(biosamples));
+		biosampleTable.selectAll();
 
 		eventChangeLocation();
 
-		UIUtils.adaptSize(this, 1200, 760);
+		UIUtils.adaptSize(this, 1300, 800);
 		setVisible(true);
 	}
 
 	public void eventTableSelection() {
-		List<Container> containers = containerTable.getSelection();
+		List<Container> containers = Biosample.getContainers(biosampleTable.getSelection());
 		containerStatusLabel.setText("<html><b>" + containers.size()+ " Containers selected</b><br>Drag or Dbl-Click where you want to move them</html>");
 		locationDepictor.setSelectedContainers(containers);
-		locationDepictor.setHighlightContainers(containerTable.getRows());
+		locationDepictor.setHighlightContainers(Biosample.getContainers(biosampleTable.getRows()));
 		makePreview();
 	}
 
@@ -342,11 +377,6 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 			bottomRadioButton.setEnabled(true);
 			rightRadioButton.setEnabled(true);
 			patternRadioButton.setEnabled(true);
-
-			//preview if empty rack
-			Set<Biosample> present = new HashSet<Biosample>(location.getBiosamples());
-			present.removeAll(containerTable.getRows());
-
 		}
 
 		makePreview();
@@ -363,14 +393,17 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 		location = JPAUtil.reattach(location);
 
 		Set<Integer> selPoses = locationDepictor.getSelectedPoses();
-		List<Container> containers = containerTable.getSelection();
-		if(selPoses.size()>0) {
+		//		Set<Location> locations = Biosample.getLocations(biosampleTable.getSelection());
+		List<Container> containers = Biosample.getContainers(biosampleTable.getSelection());
+		if(selPoses.size()>0 /*&& locations.size()==1 && locations.iterator().next().equals(location)*/) {
 			int min = location.getSize()-1;
 			for (Integer p : selPoses) {
 				if(p<min) min = p;
 			}
+			System.out.println("CheckinDlg.makePreview() min="+min);
 			locationDepictor.computeDroppedPoses(min, containers);
 		} else {
+			System.out.println("CheckinDlg.makePreview() pos="+(location.getSize()>0?0:-1));
 			locationDepictor.computeDroppedPoses( location.getSize()>0?0:-1, containers);
 		}
 	}
@@ -379,9 +412,8 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 		Location location = locationDepictor.getBioLocation();
 		if(location==null) throw new Exception("You must select a location");
 
-
 		List<Integer> poses = locationDepictor.getDroppedPoses();
-		List<Container> containers = containerTable.getSelection();
+		List<Container> containers = Biosample.getContainers(biosampleTable.getSelection());
 		if(location.getLabeling()==LocationLabeling.NONE) {
 			for (int i = 0; i < containers.size(); i++) {
 				containers.get(i).setLocation(location);
@@ -396,7 +428,7 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 		toSave.addAll(containers);
 
 		locationDepictor.setSelectedContainers(containers);
-		containerTable.repaint();
+		biosampleTable.repaint();
 		locationDepictor.setBioLocation(location);
 	}
 
@@ -414,13 +446,12 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 			c.setPos(pos);
 			toSave.add(c);
 		}
-		//		locationDepictor.setBioLocation(locationDepictor.getBioLocation());
 	}
 
 	public void eventOk() throws Exception {
 		SpiritUser user = Spirit.askForAuthentication();
 		if(!commitTransaction && toSave.size()==0) {
-			List<Container> containers = containerTable.getRows();
+			List<Container> containers = Biosample.getContainers(biosampleTable.getSelection());
 			containerDropped(containers, locationDepictor.getSelectedPoses());
 		}
 
@@ -434,6 +465,10 @@ public class CheckinDlg extends JSpiritEscapeDialog {
 
 		if(commitTransaction) {
 			List<Biosample> biosamples = Container.getBiosamples(toSave);
+
+			//Don't ask for reason of change, because this is normal process
+			//if(!Spirit.askReasonForChangeIfUpdated(biosamples)) return;
+
 			DAOBiosample.persistBiosamples(biosamples, user);
 			SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, biosamples);
 		}

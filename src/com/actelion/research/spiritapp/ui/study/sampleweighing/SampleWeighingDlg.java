@@ -25,15 +25,16 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -59,6 +60,7 @@ import com.actelion.research.spiritapp.ui.util.HelpBinder;
 import com.actelion.research.spiritapp.ui.util.component.BalanceDecorator;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.biosample.Container;
@@ -126,7 +128,6 @@ public class SampleWeighingDlg extends JEscapeDialog {
 				return;
 			}
 		}
-
 
 
 		//init components
@@ -244,18 +245,19 @@ public class SampleWeighingDlg extends JEscapeDialog {
 		});
 
 
-		//contentPane
-		JPanel contentPane = new JPanel(new BorderLayout());
-		contentPane.add(BorderLayout.CENTER, centerPanel);
-		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), balanceDecorator.getBalanceCheckBox(), Box.createHorizontalGlue(), batchButton, okButton));
+
+
+		setContentPane(UIUtils.createBox(centerPanel,
+				null,
+				UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), balanceDecorator.getBalanceCheckBox(), Box.createHorizontalGlue(), batchButton, okButton)));
+		UIUtils.adaptSize(this, 950, 1000);
 
 		//init
 		initViewInBackground();
 
-		setContentPane(contentPane);
-		UIUtils.adaptSize(this, 950, 1000);
-		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
+
+
 	}
 
 	private void initViewInBackground() {
@@ -275,12 +277,13 @@ public class SampleWeighingDlg extends JEscapeDialog {
 			protected void doInBackground() throws Exception {
 
 				//Apply filters
+				long s = System.currentTimeMillis();
 				study = JPAUtil.reattach(study);
 				List<Biosample> filtered = new ArrayList<>();
 				for(Biosample a: study.getParticipantsSorted()) {
 
 					//Filter by animals
-					if(onlyAlive.isSelected() && a.getStatus()!=Status.INLAB && a.getStatus()!=Status.NECROPSY) continue;
+					if(onlyAlive.isSelected() && a.getStatus()!=null && a.getStatus()!=Status.INLAB && a.getStatus()!=Status.NECROPSY) continue;
 
 					if(animals.size()>0 && !animals.contains(a)) continue;
 
@@ -300,7 +303,8 @@ public class SampleWeighingDlg extends JEscapeDialog {
 
 
 					//Retrieve the samples
-					List<Biosample> samples = a.getSamplesFromStudyDesign(phase, onlyRequired.isSelected());
+					Collection<Biosample> samples = onlyRequired.isSelected()? a.getSamplesFromStudyDesign(phase, true):
+						a.getHierarchy(HierarchyMode.CHILDREN);
 					if(samples.size()>0) {
 						filtered.add(a);
 						list.add(a);
@@ -316,6 +320,7 @@ public class SampleWeighingDlg extends JEscapeDialog {
 
 				//Retrieve results to populate the fields
 				DAOResult.attachOrCreateStudyResultsToSamples(study, list, phase, elb);
+				System.out.println("SampleWeighingDlg.initViewInBackground().doInBackground() DONE in "+(System.currentTimeMillis()-s));
 			}
 
 			@Override
@@ -333,13 +338,12 @@ public class SampleWeighingDlg extends JEscapeDialog {
 
 				//Create panels for each animal
 				boolean showOnlyRequired = onlyRequired.isSelected();
-
+				Set<Measurement> measurements = study.getAllMeasurementsFromSamplings();
 				for (Biosample topSample : new ArrayList<>(animal2Samples.keySet())) {
 					List<Biosample> samples = animal2Samples.get(topSample);
 
 					//animalHeader
 					JPanel animalHeader = MonitoringAnimalPanel.createAnimalPanel(++n, topSample, topSample.getExpectedEndPhase());
-
 					//Required comps?
 					boolean hasRequiredWeight = false;
 					boolean hasRequiredLength = false;
@@ -363,14 +367,14 @@ public class SampleWeighingDlg extends JEscapeDialog {
 					//TableHeader
 					comps.add(null);
 					comps.add(null);
-					comps.add(null);
+					comps.add(Box.createHorizontalStrut(40));
 					JLabel weightLabel = new JLabel("Weight [g] ");
 					weightLabel.setVisible(!showOnlyRequired || hasRequiredWeight);
 					comps.add(weightLabel);
 					JLabel lenLabel = new JLabel("Len. [mm] ");
 					lenLabel.setVisible(!showOnlyRequired || hasRequiredLength);
 					comps.add(lenLabel);
-					for(Measurement m: study.getAllMeasurementsFromSamplings()) {
+					for(Measurement m: measurements) {
 						assert m.getTest()!=null;
 						List<TestAttribute> tas = m.getTest().getOutputAttributes();
 						for (int i = 0; i < tas.size(); i++) {
@@ -391,12 +395,7 @@ public class SampleWeighingDlg extends JEscapeDialog {
 
 						//Find required samples
 						if(sample.getAttachedSampling()==null) {
-							lengthTF.setVisible(false);
-							if(sample.getStudyAction(phase)!=null && sample.getStudyAction(phase).isMeasureWeight()) {
-								weightTF.setRequired(true);
-								requiredComponents.add(weightTF);
-								hasRequiredWeight = true;
-							}
+							//Nothing
 						} else {
 							weightTF.setVisible(!showOnlyRequired || sample.getAttachedSampling().isWeighingRequired());
 							lengthTF.setVisible(!showOnlyRequired || sample.getAttachedSampling().isLengthRequired());
@@ -439,7 +438,6 @@ public class SampleWeighingDlg extends JEscapeDialog {
 									tf.setVisible(!showOnlyRequired || tf.isRequired());
 									comps.add(tf);
 
-
 									if(ta.getDataType()==DataType.FORMULA) {
 										tf.setEnabled(false);
 										formulaTextFields.add(tf);
@@ -462,7 +460,6 @@ public class SampleWeighingDlg extends JEscapeDialog {
 						comps.add(commentsTF);
 					}
 
-
 					templateComponents.add(UIUtils.createBox(BorderFactory.createEtchedBorder(), UIUtils.createTable(cols, comps), animalHeader));
 
 				}
@@ -474,21 +471,18 @@ public class SampleWeighingDlg extends JEscapeDialog {
 				//Init required components
 				for (int i = 0; i < requiredComponents.size()-1; i++) {
 					final JComponent next = (requiredComponents.get(i+1));
-					if(requiredComponents.get(i) instanceof JCustomTextField) {
-						((JCustomTextField)requiredComponents.get(i)).addActionListener(new ActionListener() {
-							@Override
-							public void actionPerformed(ActionEvent e) {
-								next.requestFocusInWindow();
-							}
-						});
+					if(requiredComponents.get(i) instanceof MonitorTextField) {
+						((MonitorTextField)requiredComponents.get(i)).addActionListener(e->next.requestFocusInWindow());
+					} else if(requiredComponents.get(i) instanceof JCustomTextField) {
+						((JCustomTextField)requiredComponents.get(i)).addActionListener(e->next.requestFocusInWindow());
 					} else {
 						System.err.println("Not supported: "+ requiredComponents.get(i));
 					}
 				}
 
 
-				SampleWeighingDlg.this.getContentPane().validate();
-				SampleWeighingDlg.this.getContentPane().repaint();
+				templatePanel.getParent().validate();
+				templatePanel.getParent().repaint();
 			}
 		};
 

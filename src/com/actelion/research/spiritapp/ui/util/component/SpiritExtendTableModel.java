@@ -24,6 +24,12 @@ package com.actelion.research.spiritapp.ui.util.component;
 import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
+/**
+ * Table with the ability to make columns readOnly
+ * @author Joel Freyss
+ *
+ * @param <T>
+ */
 public class SpiritExtendTableModel<T extends IObject> extends ExtendTableModel<T> {
 
 

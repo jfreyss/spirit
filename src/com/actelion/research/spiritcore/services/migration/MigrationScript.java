@@ -74,6 +74,7 @@ public abstract class MigrationScript {
 		scripts.add(new MigrationScript2_1());
 		scripts.add(new MigrationScript2_2());
 		scripts.add(new MigrationScript2_3());
+		scripts.add(new MigrationScript2_4());
 		return scripts;
 	}
 

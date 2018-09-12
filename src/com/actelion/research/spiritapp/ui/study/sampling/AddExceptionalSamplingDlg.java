@@ -41,6 +41,7 @@ import javax.swing.JScrollPane;
 
 import org.slf4j.LoggerFactory;
 
+import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleList;
 import com.actelion.research.spiritapp.ui.study.PhaseComboBox;
@@ -48,6 +49,7 @@ import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.ui.util.component.LF;
 import com.actelion.research.spiritapp.ui.util.editor.ImageEditorPane;
+import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
@@ -201,7 +203,7 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		List<Biosample> toSave = new ArrayList<>();
 		Set<Biosample> samplesToStayInSubgroup = new HashSet<>(study.getParticipants(group, subgroup));
 		for (Biosample animal : animals) {
-			if(animal.getStatus().isAvailable()) {
+			if(animal.getStatus()!=null && animal.getStatus().isAvailable()) {
 				samplesToStayInSubgroup.remove(animal);
 			}
 		}
@@ -254,6 +256,10 @@ public class AddExceptionalSamplingDlg extends JEscapeDialog {
 		LoggerFactory.getLogger(getClass()).debug("add sampling to " + group + " " + phase + " " + subgroup);
 
 		//Save in a transaction
+		List<IAuditable> list = new ArrayList<>();
+		list.add(study);
+		list.addAll(toSave);
+		if(!Spirit.askReasonForChangeIfUpdated(list)) return;
 		JPAUtil.pushEditableContext(SpiritFrame.getUser());
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;

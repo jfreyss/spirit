@@ -33,28 +33,28 @@ import com.actelion.research.spiritcore.business.location.Location;
 /**
  * Scan rack and populate the given EditBiosampleTable.
  * The scanned containers have to be empty
- * 
+ *
  *  preScan and postScan can be overridden
  * @author freyssj
  *
  */
 public class ScanRackForTableAction extends ScanRackAction {
-	
+
 	private EditBiosampleTable table;
-	
-	public ScanRackForTableAction(SpiritScanner scanner, EditBiosampleTable table) {
+
+	public ScanRackForTableAction(SpiritScannerHelper scanner, EditBiosampleTable table) {
 		super("Scan Rack", scanner);
 		this.table = table;
 	}
-	
+
 	@Override
 	public Location scan() throws Exception {
 		final Biotype biotype = table.getModel().getBiotype();
 		//Scan and validate
 		Location rack = scanner.scan(biotype.getContainerType());
-		
-		
-		List<Biosample> rows = new ArrayList<Biosample>(rack.getBiosamples());
+
+
+		List<Biosample> rows = new ArrayList<>(rack.getBiosamples());
 		for (Biosample b : rows) {
 			b.setBiotype(biotype);
 		}
@@ -63,8 +63,8 @@ public class ScanRackForTableAction extends ScanRackAction {
 		table.getModel().initColumns();
 		table.resetPreferredColumnWidth();
 		return rack;
-	}	
-	
-	
+	}
+
+
 
 }

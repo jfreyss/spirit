@@ -99,9 +99,9 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 		setSurrendersFocusOnKeystroke(false);
 		setFillsViewportHeight(true);
 
-		if(model.getRowCount()==0) {
+		if(model.getRowCount()==0 && canAddRow) {
 			ROW t = getModel().createRecord(null);
-			if(t!=null && canAddRow) model.add(t);
+			if(t!=null) model.add(t);
 		}
 
 
@@ -210,23 +210,6 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 		});
 
 		addKeyListener(new KeyAdapter() {
-			//			@Override
-			//			public void keyPressed(final KeyEvent e) {
-			//				final int row = getSelectedRow();
-			//				final int col = getSelectedColumn();
-			//				final int modelCol = convertColumnIndexToModel(col);
-			//				if(modelCol<0) return;
-			//
-			//				//Hack to fix Java bug, where editable combobox don't get the keyevent dispatched to their editor
-			//				if(e.getKeyChar()>=32 && e.getKeyChar()<127 && e.getKeyChar()!=127 && (e.getModifiersEx()&KeyEvent.CTRL_DOWN_MASK)==0) {
-			//					if(!isEditing()) {
-			//						Column<ROW, ?> column = getModel().getColumn(modelCol);
-			//						if(!column.isEditable(getModel().getRow(row))) return;
-			//						editCellAt(row, modelCol);
-			//					}
-			//				}
-			//
-			//			}
 			@Override
 			public void keyReleased(KeyEvent e) {
 				lastEditingRow = convertRowIndexToModel(getSelectedRow());
@@ -430,8 +413,9 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			int[] selRows = getSelectedRows();
-			ROW t = getModel().createRecord();
-			if(t==null) return;
+			if(selRows.length==0) return;
+			ROW record = getModel().createRecord(getModel().getRows().get(selRows[selRows.length-1]));
+			if(record==null) return;
 			Arrays.sort(selRows);
 
 			for (int i = 0; i<selRows.length; i++) {
@@ -440,11 +424,15 @@ public class ExcelTable<ROW> extends AbstractExtendTable<ROW> {
 					return;
 				}
 			}
+
+			//Remove the rows
 			for (int i = selRows.length-1; i>=0; i--) {
 				getModel().getRows().remove(selRows[i]);
 			}
+
+			//Be sure to have at least one row
 			if(getModel().getRows().size()==0) {
-				getModel().getRows().add(t);
+				getModel().getRows().add(record);
 			}
 			getModel().fireTableDataChanged();
 		}

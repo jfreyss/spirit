@@ -46,7 +46,6 @@ public class SpiritContextListener {
 		LoggerFactory.getLogger(SpiritContextListener.class).debug("Set Study " +study);
 		try {
 			for (ISpiritContextObserver o : observers) {
-				System.out.println("SpiritContextListener.setStudy() "+o+">"+study);
 				o.setStudy(study);
 			}
 		} catch(Throwable e) {

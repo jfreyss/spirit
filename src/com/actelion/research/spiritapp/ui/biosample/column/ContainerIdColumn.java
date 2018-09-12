@@ -43,8 +43,9 @@ public class ContainerIdColumn extends Column<Biosample, String> {
 
 	@Override
 	public String getValue(Biosample row) {
-		return row.getContainerId()==null?"": row.getContainerId();
+		return row.getContainerId();
 	}
+
 	@Override
 	public void setValue(Biosample row, String value) {
 		if(row.getBiotype()==null || row.isAbstract()) return;
@@ -54,12 +55,12 @@ public class ContainerIdColumn extends Column<Biosample, String> {
 			row.setContainerId(value);
 		}
 	}
+
 	@Override
 	public boolean isEditable(Biosample row) {
 		if(row==null) return true;
 		if(row.getBiotype()==null || row.isAbstract()) return false;
 		return true;
-
 	}
 
 	@Override

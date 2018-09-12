@@ -31,6 +31,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
 
 import com.actelion.research.spiritcore.business.audit.LogEntry;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.util.QueryTokenizer;
 
 /**
@@ -99,4 +100,30 @@ public class DAOLog {
 			em.close();
 		}
 	}
+
+	public static boolean isLocked(String user)  {
+		int maxAttempts = SpiritProperties.getInstance().getValueInt(PropertyKey.USER_LOCKAFTER);
+		if(maxAttempts<=0) return false;
+		EntityManager em = JPAUtil.createManager();
+		try {
+			Query query = em.createQuery("from LogEntry l where l.user = ? order by l.date desc");
+			query.setParameter(1, user);
+			query.setMaxResults(maxAttempts);
+			List<LogEntry> res = query.getResultList();
+			for (LogEntry l : res) {
+				switch(l.getAction()) {
+				case UNLOCK: return false; //The account has been reenabled withing the last max attempts
+				case LOGON_SUCCESS: return false; //The account has been successfully authentificated withing the last max attempts
+				case LOGON_FAILED: /*continue*/;
+				}
+			}
+			return true;
+		} catch(Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			em.close();
+		}
+	}
+
+
 }

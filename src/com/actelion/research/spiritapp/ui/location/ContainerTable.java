@@ -109,13 +109,11 @@ public class ContainerTable extends SpiritExtendTable<Container> {
 		}
 	}
 
-	public void enableDragSource(boolean removeOnDrop) {
-		DropListener dropListener = new DropListener(removeOnDrop);
+	public void enableDragSource() {
+		DropListener dropListener = new DropListener(false);
 		DragSource dragSource = DragSource.getDefaultDragSource();
 		dragSource.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_COPY_OR_MOVE, dropListener);
 	}
-
-
 
 	@Override
 	public void postProcess(Container row, int rowNo, Object value, JComponent c) {

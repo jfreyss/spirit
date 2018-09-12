@@ -423,7 +423,7 @@ public class StudyDepictor extends JPanel implements MouseListener, MouseMotionL
 					if(samples.size()<10) {
 						for (Biosample b : samples) {
 							Pair<Status, Phase> p = b.getLastActionStatus();
-							sb.append(b.getSampleIdName() + (!p.getFirst().isAvailable()?" " + p.getFirst()+ "->" + p.getSecond().getShortName(): "") +  "<br>");
+							sb.append(b.getSampleIdName() + (p.getFirst()!=null && !p.getFirst().isAvailable()? " " + p.getFirst() + (p.getSecond()!=null? "->" + p.getSecond().getShortName(): ""): "") +  "<br>");
 						}
 					}
 

@@ -51,7 +51,8 @@ public abstract class AbstractLinkerColumn<T> extends Column<Biosample, T> {
 
 	@Override
 	public boolean isHideable() {
-		return linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().isSecundary();
+		return (linker.getBiotypeMetadata()!=null && linker.getBiotypeMetadata().isSecundary())
+				|| (linker.getAggregatedMetadata()!=null && linker.getAggregatedMetadata().isSecundary());
 	}
 
 	@Override

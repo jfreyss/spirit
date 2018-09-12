@@ -31,6 +31,7 @@ import com.actelion.research.util.ui.FastFont;
 
 public class LF {
 
+	public static final Color DARK_GREEN = new Color(0, 80, 0);
 	public static final Color FGCOLOR_ADMIN = new Color(0, 80, 0);
 	public static final Color FGCOLOR_WRITE = new Color(20, 60, 0);
 	public static final Color FGCOLOR_READ = new Color(40, 0, 0, 80);
@@ -44,9 +45,9 @@ public class LF {
 
 	public static final Color BGCOLOR_LINKED = new Color(255,250,240);
 	public static final Color FGCOLOR_LINKED = new Color(80,80,80);
-	
+
 	public static final Color BGCOLOR_TODAY = new Color(255,255,180); //yellowish
-	
+
 	public static final Color BGCOLOR_LOCATION = new Color(245,245,255); //blueish
 
 	public static void initComp(JEditorPane editorPane) {

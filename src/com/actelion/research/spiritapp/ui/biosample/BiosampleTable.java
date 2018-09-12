@@ -23,14 +23,20 @@ package com.actelion.research.spiritapp.ui.biosample;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Font;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceDragEvent;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragSourceListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +59,7 @@ import com.actelion.research.spiritapp.ui.biosample.edit.EditBiosampleTableModel
 import com.actelion.research.spiritapp.ui.biosample.linker.AbstractLinkerColumn;
 import com.actelion.research.spiritapp.ui.biosample.linker.LinkerColumnFactory;
 import com.actelion.research.spiritapp.ui.biosample.linker.SampleIdColumn;
+import com.actelion.research.spiritapp.ui.location.depictor.ContainerTransferable;
 import com.actelion.research.spiritapp.ui.util.component.LF;
 import com.actelion.research.spiritapp.ui.util.component.SpiritExtendTable;
 import com.actelion.research.spiritcore.business.biosample.BarcodeType;
@@ -61,7 +68,9 @@ import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerMethod;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
+import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.pivot.PivotRow;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.ListHashMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.FastFont;
@@ -97,7 +106,7 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		setBorderStrategy(BorderStrategy.WHEN_DIFFERENT_VALUE);
 		setCellSelectionEnabled(true);
 		setFillsViewportHeight(false);
-		setHeaderClickingPolicy(HeaderClickingPolicy.POPUP);
+		setHeaderLeftClickingPolicy(HeaderLeftClickingPolicy.POPUP);
 
 		getTableHeader().addMouseListener(new MouseAdapter() {
 			@Override
@@ -195,41 +204,6 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 	 */
 	public void setSmartColumns(boolean smartColumns) {
 		this.smartColumns = smartColumns;
-	}
-
-
-
-	public Collection<Biosample> getHighlightedSamples() {
-		int[] selRows = getSelectedRows();
-		int[] selCols = getSelectedColumns();
-
-		Set<Biosample> res = new LinkedHashSet<>();
-		for (int c = 0; c < selCols.length; c++) {
-			for (int r = 0; r < selRows.length; r++) {
-				Biosample row = getModel().getRows().get(selRows[r]);
-				Column<Biosample, ?> col = getModel().getColumn(convertColumnIndexToModel(selCols[c]));
-				if(col.getColumnClass()==Biosample.class) {
-					Biosample b = (Biosample) col.getValue(row);
-					if(b!=null) res.add(b);
-				} else if(col instanceof ContainerFullColumn) {
-					if(row.getContainer()!=null) {
-						res.addAll(row.getContainer().getBiosamples());
-					}
-				} else if(col instanceof AbstractLinkerColumn) {
-					BiosampleLinker linker = ((AbstractLinkerColumn<?>)col).getLinker();
-					Biosample linked = ((AbstractLinkerColumn<?>) col).getLinker().getLinked(row);
-					//					if(linked!=null && linked.getContainer()!=null && ((col instanceof ContainerIdColumn) || (col instanceof ContainerTypeColumn) || (col instanceof ContainerLocationPosColumn))) {
-					//						res.addAll(linked.getContainer().getBiosamples());
-					//					} else
-					if(linked!=null && (col instanceof SampleIdColumn)) {
-						res.add(linked);
-					} else if(!linker.isLinked()) {
-						res.add(row);
-					}
-				}
-			}
-		}
-		return res;
 	}
 
 	/**
@@ -438,9 +412,10 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 	 * Biotype -> Expand / Collapse
 	 */
 	public static void populateExpandPopup(final AbstractExtendTable<Biosample> table, JPopupMenu menu) {
-		final ExtendTableModel<Biosample> model = table.getModel();
+		if(!SpiritProperties.getInstance().isAdvancedMode()) return;
 
 		//Initialize variables
+		final ExtendTableModel<Biosample> model = table.getModel();
 		final Biotype biotype = (model instanceof EditBiosampleTableModel)? ((EditBiosampleTableModel) model).getBiotype():  ((BiosampleTableModel) model).getBiotype();
 		final Set<BiosampleLinker> presentLinkers = getPresentLinkers(table);
 
@@ -461,7 +436,6 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 
 		//Go through each linkers and check what are the available fields that could be proposed to expand/collapse
 		//Create a map of bioTypeString->list of linkers
-
 		final ListHashMap<String, BiosampleLinker> biotypeName2linkers = new ListHashMap<>();
 		final Set<String> toExpand = new HashSet<>();
 		if(presentLinkers!=null) {
@@ -477,7 +451,6 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 				if(biotypeName==null) continue;
 
 				biotypeName2linkers.add(biotypeName, linker);
-				System.out.println("BiosampleTable.populateExpandPopup() "+biotypeName+">"+linker+">"+presentLinkers.contains(linker));
 				if(!presentLinkers.contains(linker)) {
 					toExpand.add(biotypeName);
 				}
@@ -486,9 +459,9 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 
 		////////////////////////////////////////
 		//Show Expand menu if there is one linker or if there is a container column
-		if(toExpand.size()>0 || (hasContainer && (biotype==null || !biotype.isHideContainer()))) {
+		if( toExpand.size()>0 || (hasContainer && (biotype==null || !biotype.isHideContainer()))) {
 			menu.add(new JSeparator());
-			menu.add(new JCustomLabel("Expand Columns", Font.BOLD));
+			menu.add(new JCustomLabel("Expand Columns", FastFont.BOLD));
 
 			//Expand-Location menu
 			if(hasContainer && (biotype==null || !biotype.isHideContainer())) {
@@ -546,10 +519,51 @@ public class BiosampleTable extends SpiritExtendTable<Biosample> {
 		}
 	}
 
-	@Override
-	protected boolean shouldMerge(int viewCol, int row1, int row2) {
-
-
-		return super.shouldMerge(viewCol, row1, row2);
+	public void enableDragSource() {
+		DropListener dropListener = new DropListener(false);
+		DragSource dragSource = DragSource.getDefaultDragSource();
+		dragSource.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_COPY_OR_MOVE, dropListener);
 	}
+
+	public class DropListener implements DragSourceListener, DragGestureListener {
+		private List<Container> containers = null;
+		private boolean removeOnDrop;
+
+		public DropListener(boolean removeOnDrop) {
+			this.removeOnDrop = removeOnDrop;
+		}
+
+		@Override
+		public void dragGestureRecognized(DragGestureEvent dge) {
+			if(getSelectedRow()<0) return;
+			containers = Biosample.getContainers(getSelection());
+			Transferable transferable = new ContainerTransferable(containers);
+			dge.startDrag(null, transferable, this);
+
+		}
+
+
+		@Override
+		public void dragEnter(DragSourceDragEvent dsde) {}
+
+		@Override
+		public void dragOver(DragSourceDragEvent dsde) {}
+
+		@Override
+		public void dropActionChanged(DragSourceDragEvent dsde) {}
+
+		@Override
+		public void dragExit(DragSourceEvent dse) {}
+
+		@Override
+		public void dragDropEnd(DragSourceDropEvent dsde) {
+			if(dsde.getDropSuccess() && removeOnDrop) {
+				getRows().removeAll(Container.getBiosamples(containers));
+				getModel().fireTableDataChanged();
+			}
+			containers = null;
+			repaint();
+		}
+	}
+
 }

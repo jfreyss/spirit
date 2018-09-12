@@ -21,8 +21,6 @@
 
 package com.actelion.research.spiritapp.ui.location.edit;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -33,25 +31,19 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.swing.Box;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
-import com.actelion.research.spiritapp.ui.biosample.BiosampleTable;
-import com.actelion.research.spiritapp.ui.biosample.BiosampleTableModel.Mode;
 import com.actelion.research.spiritapp.ui.location.LocationActions;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
+import com.actelion.research.spiritapp.ui.util.SpiritContextListener;
 import com.actelion.research.spiritapp.ui.util.component.JSpiritEscapeDialog;
-import com.actelion.research.spiritcore.business.biosample.Biosample;
-import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -199,38 +191,43 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 	}
 
 	private static void delete(List<Location> locations) throws Exception {
+		//The user cannot delete a
+		//		List<Biosample> toCheckout = new ArrayList<>();
+		for (Location l : locations) {
+			if(l.getBiosamples().size()>0) throw new Exception("You cannot delete " + l.getHierarchyFull() + " because it is not empty");
+			//			toCheckout.addAll(l.getBiosamples());
+		}
+
 		int res = JOptionPane.showConfirmDialog(UIUtils.getMainFrame(), "Are you sure you want to delete " + (locations.size() == 1 ? locations.get(0).getHierarchyFull() : locations.size() + " locations") + "?", "Delete Location", JOptionPane.YES_NO_OPTION);
 		if (res != JOptionPane.YES_OPTION) return;
 
-		List<Biosample> toCheckout = new ArrayList<>();
-		for (Location l : locations) {
-			toCheckout.addAll(l.getBiosamples());
-		}
+		//
+		//		Status status = null;
+		//		if(toCheckout.size()>0) {
+		//			throw new Exception("There are "+toCheckout+" samples in these locations"):
+		//			BiosampleTable table = new BiosampleTable();
+		//			table.getModel().setCanExpand(false);
+		//			table.getModel().setMode(Mode.COMPACT);
+		//			table.setRows(toCheckout);
+		//			JScrollPane sp = new JScrollPane(table);
+		//			sp.setPreferredSize(new Dimension(750, 400));
+		//
+		//			JPanel msgPanel = new JPanel(new BorderLayout());
+		//			msgPanel.add(BorderLayout.NORTH, new JLabel("<html><div style='color:orange'>What do you want to do with the " + toCheckout.size() + " biosamples of those locations?</div>"));
+		//			msgPanel.add(BorderLayout.CENTER, sp);
+		//
+		//			res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(), msgPanel, "Checkout", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {"Mark as "+Status.TRASHED, "Mark as "+Status.USEDUP, "Cancel"}, null);
+		//			if(res==0) {
+		//				status = Status.TRASHED;
+		//			} else if(res==1) {
+		//				status = Status.USEDUP;
+		//			} else {
+		//				return;
+		//			}
+		//		}
 
-		Status status = null;
-		if(toCheckout.size()>0) {
-
-			BiosampleTable table = new BiosampleTable();
-			table.getModel().setCanExpand(false);
-			table.getModel().setMode(Mode.COMPACT);
-			table.setRows(toCheckout);
-			JScrollPane sp = new JScrollPane(table);
-			sp.setPreferredSize(new Dimension(750, 400));
-
-			JPanel msgPanel = new JPanel(new BorderLayout());
-			msgPanel.add(BorderLayout.NORTH, new JLabel("<html><div style='color:orange'>What do you want to do with the " + toCheckout.size() + " biosamples of those locations?</div>"));
-			msgPanel.add(BorderLayout.CENTER, sp);
-
-			res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(), msgPanel, "Checkout", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {"Mark as "+Status.TRASHED, "Mark as "+Status.USEDUP, "Cancel"}, null);
-			if(res==0) {
-				status = Status.TRASHED;
-			} else if(res==1) {
-				status = Status.USEDUP;
-			} else {
-				return;
-			}
-
-		}
+		//Ask for a reason
+		if(!Spirit.askReasonForChange()) return;
 
 		//Update in a transaction
 		EntityManager session = null;
@@ -240,11 +237,13 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 			txn = session.getTransaction();
 			txn.begin();
 
-			for (Biosample b : toCheckout) {
-				b.setLocPos(null, -1);
-				b.setStatus(status);
-			}
-			if(toCheckout.size()>0) DAOBiosample.persistBiosamples(session, toCheckout, SpiritFrame.getUser());
+			//			for (Biosample b : toCheckout) {
+			//				b.setLocPos(null, -1);
+			//				b.setStatus(status);
+			//			}
+			//			if(toCheckout.size()>0) {
+			//				DAOBiosample.persistBiosamples(session, toCheckout, SpiritFrame.getUser());
+			//			}
 			DAOLocation.deleteLocations(session, locations, SpiritFrame.getUser());
 
 			txn.commit();
@@ -264,6 +263,9 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 	 * @throws Exception
 	 */
 	private void save(List<Location> locations) throws Exception {
+
+		if(!Spirit.askReasonForChangeIfUpdated(locations)) return;
+
 		new SwingWorkerExtended(this, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			@Override
 			protected void doInBackground() throws Exception {
@@ -272,6 +274,9 @@ public class LocationEditDlg extends JSpiritEscapeDialog {
 			@Override
 			protected void done() {
 				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Location.class, locations);
+				if(locations.size()==1) {
+					SpiritContextListener.setLocation(locations.get(0), -1);
+				}
 				dispose();
 				savedLocations = locations;
 			}

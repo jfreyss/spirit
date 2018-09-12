@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritapp.ui.biosample.linker;
 
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
@@ -38,6 +37,7 @@ import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker.LinkerType;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 
@@ -131,7 +131,7 @@ public class SampleIdColumn extends AbstractLinkerColumn<String> {
 	@Override
 	public void populateHeaderPopup(final AbstractExtendTable<Biosample> table, JPopupMenu popupMenu) {
 		popupMenu.add(new JSeparator());
-		popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
+		popupMenu.add(new JCustomLabel("Sort", FastFont.BOLD));
 
 		Biotype biotype = linker.getBiotypeForLabel();
 		popupMenu.add(new AbstractAction("Sort by Group/SampleId") {

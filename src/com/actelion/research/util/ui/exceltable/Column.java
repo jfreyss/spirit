@@ -332,10 +332,8 @@ public abstract class Column<ROW, VALUE> implements Comparable<Column<?, ?>> {
 		VALUE o1 = getValue(r1);
 		VALUE o2 = getValue(r2);
 
-		if(o1==null && o2==null) return true;
 		String s1 = o1==null? "": o1.toString();
 		String s2 = o2==null? "": o2.toString();
-		if(s1.length()==0 && s2.length()==0) return true;
 		return s1.equals(s2);
 	}
 

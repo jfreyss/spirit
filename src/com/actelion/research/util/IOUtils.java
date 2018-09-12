@@ -21,15 +21,16 @@
 
 package com.actelion.research.util;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -61,6 +62,7 @@ public class IOUtils {
 	public static String readerToString(Reader reader) throws IOException {
 		return  readerToString(reader, Integer.MAX_VALUE);
 	}
+
 	public static String readerToString(Reader reader, int maxSize) throws IOException {
 		char[] buf = new char[512];
 		int c;
@@ -68,7 +70,11 @@ public class IOUtils {
 		while(sb.length()<maxSize && ( c = reader.read(buf, 0, Math.min(buf.length, maxSize-sb.length()))) > 0) {
 			sb.append(buf, 0, c);
 		}
-		return sb.toString();
+		String s = sb.toString();
+
+		//Remove BOM
+		if(s.startsWith("\uFEFF")) s = s.substring(1);
+		return s;
 	}
 
 	/**
@@ -78,7 +84,11 @@ public class IOUtils {
 	 * @throws IOException
 	 */
 	public static String streamToString(InputStream is) throws IOException {
-		return streamToString(is, "UTF-8").replace("\uFEFF", "");
+		String s = streamToString(is, "UTF-8");
+
+		//Remove BOM
+		if(s.startsWith("\uFEFF")) s = s.substring(1);
+		return s;
 	}
 
 	public static String streamToString(InputStream is, String encoding) throws IOException {
@@ -125,7 +135,7 @@ public class IOUtils {
 	}
 
 	public static String fileToString(File f, int maxSize) throws IOException {
-		try (FileReader reader = new FileReader(f)) {
+		try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"))) {
 			return readerToString(reader, maxSize);
 		}
 	}
@@ -171,6 +181,24 @@ public class IOUtils {
 	public static void copy(File src, File dest) throws IOException {
 		try(InputStream is = new FileInputStream(src); OutputStream os = new FileOutputStream(dest)) {
 			redirect(is, os);
+		}
+	}
+
+	/**
+	 * Creates File in the temporary folder
+	 * @param prefix
+	 * @param suffix
+	 * @return
+	 */
+	public static File createTempFile(String prefix, String suffix) {
+		if (suffix == null) suffix = ".tmp";
+
+		File tmpdir = new File(System.getProperty("java.io.tmpdir"));
+		if(!tmpdir.exists()) tmpdir.mkdirs();
+		for(int i=0; ; i++) {
+			File file = new File(tmpdir, prefix + FormatterUtils.formatYYYYMMDD() + (i==0?"": "_" + i) + suffix);
+			if(!file.exists()) return file;
+
 		}
 	}
 

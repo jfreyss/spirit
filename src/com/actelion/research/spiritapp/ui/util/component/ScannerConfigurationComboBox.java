@@ -24,20 +24,17 @@ package com.actelion.research.spiritapp.ui.util.component;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.util.ui.JGenericComboBox;
 import com.actelion.research.util.ui.scanner.ScannerConfiguration;
 
 public class ScannerConfigurationComboBox extends JGenericComboBox<ScannerConfiguration> {
-	public ScannerConfigurationComboBox(boolean allowOpeningFile) {
-		
+	public ScannerConfigurationComboBox() {
+
 		List<ScannerConfiguration> list = new ArrayList<ScannerConfiguration>();
-		for (ScannerConfiguration sc : ScannerConfiguration.valuesForBiosamples()) {
+		for (ScannerConfiguration sc : DBAdapter.getInstance().getScannerConfigurations()) {
 			list.add(sc);
 		}
-		
-		if(allowOpeningFile) {
-			list.add(ScannerConfiguration.SCANNER_CONFIGURATION_OPENFILE);
-		}		
 		setValues(list, false);
 	}
 

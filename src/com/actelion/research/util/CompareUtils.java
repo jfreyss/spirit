@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.StringTokenizer;
 
 
@@ -54,27 +55,6 @@ public class CompareUtils {
 		if(l1>l2) return 1;
 		if(l1<l2) return -1;
 		return s1.compareToIgnoreCase(s2);
-
-		//		boolean allDigits1 = true;
-		//		boolean allDigits2 = true;
-		//		for(int j=0; allDigits1 && j<s1.length();j++) {
-		//			if(!Character.isDigit(s1.charAt(j))) allDigits1 = false;
-		//		}
-		//		for(int j=0; allDigits2 && j<s2.length();j++) {
-		//			if(!Character.isDigit(s2.charAt(j))) allDigits2 = false;
-		//		}
-		//		if(allDigits1 && allDigits2) {
-		//			long l1 = fastLongValueOf(s1);
-		//			long l2 = fastLongValueOf(s2);
-		//			return l1>l2?1: l1==l2? 0: -1;
-		//		} else if(allDigits1 && !allDigits2) {
-		//			return -1;
-		//		} else if(!allDigits1 && allDigits2) {
-		//			return 1;
-		//		} else {
-		//			//Compare by string first case insensitive
-		//			return s1.compareToIgnoreCase(s2);
-		//		}
 	}
 
 	/**
@@ -247,7 +227,7 @@ public class CompareUtils {
 
 
 	/**
-	 * Comparator for strings, comparing blocks separately so that the order becomes SLIDE-1, SLIDE-2, SLIDE-10, SLIDE-10-1, ...
+	 * Comparator for strings
 	 */
 	public static final Comparator<Object> STRING_COMPARATOR = new Comparator<Object>() {
 		@Override
@@ -256,6 +236,19 @@ public class CompareUtils {
 			if(o1==null) return 1; //Null at the end
 			if(o2==null) return -1;
 			return CompareUtils.compare(o1.toString(), o2.toString());
+		}
+	};
+
+	/**
+	 * Comparator for strings, comparing blocks separately so that the order becomes SLIDE-1, SLIDE-2, SLIDE-10, SLIDE-10-1, ...
+	 */
+	public static final Comparator<Object> SPECIAL_COMPARATOR = new Comparator<Object>() {
+		@Override
+		public int compare(Object o1, Object o2) {
+			if(o1==null && o2==null) return 0;
+			if(o1==null) return 1; //Null at the end
+			if(o2==null) return -1;
+			return CompareUtils.compareSpecial(o1.toString(), o2.toString());
 		}
 	};
 
@@ -318,6 +311,32 @@ public class CompareUtils {
 		System.out.println("CompareUtils.normal: "+t1);
 		System.out.println("CompareUtils.date: "+t2);
 		System.out.println("CompareUtils.string: "+t3);
+
+
+
+		List<String> list = new ArrayList<>();
+		Random r = new Random(3);
+		for (int i = 0; i < 100000; i++) {
+			StringBuilder sb = new StringBuilder();
+			for (int j = 0; j < r.nextInt(10)+10; j++) {
+
+				int n = r.nextInt()%5;
+				if(n==0) {
+					sb.append( (char) ('A'+r.nextInt(26)));
+				} else if(n==1) {
+					sb.append( (char) ('a'+r.nextInt(26)));
+				} else if(n==2) {
+					sb.append( (char) ('0'+r.nextInt(10)));
+				} else if(n==3) {
+					sb.append( " ");
+				} else if(n==4) {
+					sb.append( "-+/".charAt(r.nextInt(3)));
+				}
+			}
+			list.add(sb.toString().trim());
+		}
+		Collections.sort(list, CompareUtils.SPECIAL_COMPARATOR);
+		System.out.println("CompareUtils.main() "+list);
 	}
 
 

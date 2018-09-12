@@ -245,7 +245,7 @@ public class ResultTest extends AbstractSpiritTest {
 		PivotTemplate tpl = new CompactPivotTemplate();
 		tpl.init(results);
 		PivotDataTable table = new PivotDataTable(results, tpl);
-		Assert.assertEquals(5, table.getPivotColumns().size());
+		Assert.assertEquals(2, table.getPivotColumns().size());
 		Assert.assertEquals(17, table.getPivotRows().size());
 
 		//		tpl = new ColumnPivotTemplate();

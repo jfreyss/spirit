@@ -23,8 +23,6 @@ package com.actelion.research.spiritapp.ui.study.wizard;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,25 +53,14 @@ public class ExtraMeasurementDlg extends JEscapeDialog {
 	public ExtraMeasurementDlg() {
 		super(UIUtils.getMainFrame(), "Extra Measurement", true);
 
-		testChoice.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				initUI();
+		testChoice.addTextChangeListener(e-> initUI());
+		okButton.addActionListener(e-> {
+			try {
+				eventOk();
+			} catch(Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});
-		okButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					eventOk();
-				} catch(Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
-			}
-		});
-
-
 
 		JPanel contentPane = new JPanel(new BorderLayout());
 		contentPane.add(BorderLayout.NORTH, UIUtils.createHorizontalBox(new JLabel("Test: "), testChoice, Box.createHorizontalGlue()));

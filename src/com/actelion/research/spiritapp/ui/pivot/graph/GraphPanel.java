@@ -88,6 +88,7 @@ public class GraphPanel extends JScrollPane {
 			popupFrame.setLocationRelativeTo(GraphPanel.this);
 			popupFrame.setVisible(true);
 		});
+
 	}
 
 	public void setListSelectionListener(ListSelectionListener listener) {
@@ -141,7 +142,9 @@ public class GraphPanel extends JScrollPane {
 	 * To be called on the EventDispatcherThread
 	 */
 	public void refreshGraphs() {
-		if(analyzer==null) return;
+		if(analyzer==null) {
+			return;
+		}
 
 		sortedCols.clear();
 		List<BoxPlot> panels = new ArrayList<>();

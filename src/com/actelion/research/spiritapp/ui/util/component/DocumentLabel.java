@@ -31,7 +31,6 @@ import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.util.IOUtils;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.exceltable.JLabelNoRepaint;
-import com.itextpdf.text.Font;
 
 public class DocumentLabel extends JLabelNoRepaint {
 
@@ -55,7 +54,6 @@ public class DocumentLabel extends JLabelNoRepaint {
 		});
 
 		super.setForeground(Color.BLUE);
-		super.setFont(getFont().deriveFont(Font.UNDERLINE));
 	}
 
 	@Override

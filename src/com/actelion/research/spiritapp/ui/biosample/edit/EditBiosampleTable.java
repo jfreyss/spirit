@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritapp.ui.biosample.edit;
 
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -51,6 +50,7 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.services.dao.DAOBarcode;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.exceltable.Column;
@@ -104,7 +104,6 @@ public class EditBiosampleTable extends SpiritExcelTable<Biosample> {
 
 	@Override
 	public void initCellEditors() {
-
 		//Set the editors
 		for (int i = 0; i < getColumnCount(); i++) {
 			Column<Biosample, ?> cb = getModel().getColumn(i);
@@ -117,8 +116,6 @@ public class EditBiosampleTable extends SpiritExcelTable<Biosample> {
 				col.setCellEditor(sampleIdCellEditor);
 			}
 		}
-
-
 	}
 
 	@Override
@@ -137,9 +134,8 @@ public class EditBiosampleTable extends SpiritExcelTable<Biosample> {
 					throw new Exception("The biosamples should have the same bioType in the table view");
 				}
 			}
-
-
 		}
+
 		//Reset the model
 		getModel().setRows(biosamples);
 		getModel().setBiotype(type);
@@ -194,16 +190,12 @@ public class EditBiosampleTable extends SpiritExcelTable<Biosample> {
 		}
 
 		popupMenu.add(new JSeparator());
-		popupMenu.add(new JCustomLabel("Misc", Font.BOLD));
+		popupMenu.add(new JCustomLabel("Misc", FastFont.BOLD));
 		popupMenu.add(new FillCellAction(this, column, fillChoices));
 
 
 		if(column instanceof LinkedBiosampleColumn) {
 			popupMenu.add(new GenerateForLinkedAction());
-			//		} else if(column instanceof SampleIdColumn) {
-			//			popupMenu.add(new GenerateForScanEditorAction());
-			//		} else if(column instanceof ParentBiosampleColumn) {
-			//			popupMenu.add(new ConvertNoToAnimalIdAction(this));
 		}
 
 		BiosampleTable.populateExpandPopup(this, popupMenu);
@@ -211,25 +203,6 @@ public class EditBiosampleTable extends SpiritExcelTable<Biosample> {
 	}
 
 
-
-	//	@Override
-	//	public void setValueAt(Object aValue, int row, int column) {
-	////		Column<Biosample, ?> col = getModel().getColumn(convertColumnIndexToModel(column));
-	////		if(col instanceof AuxiliaryColumn && !getUndoManager().isPushed()) {
-	////			//Auxiliary column should ask confirmation when editing
-	////			Double val = ((AuxiliaryColumn)col).getValue(getRows().get(row));
-	////			if(val!=null && aValue!=null && !val.equals(aValue)) {
-	////				int res = JOptionPane.showConfirmDialog(this, "Are you sure to replace the value "+val+" by "+ aValue + "?", "Replace Value", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-	////				setRowSelectionInterval(row, row);
-	////				setColumnSelectionInterval(column, column);
-	////				requestFocusInWindow();
-	////				if(res!=JOptionPane.YES_OPTION) return;
-	////			}
-	////		}
-	//		super.setValueAt(aValue, row, column);
-	//
-	//		repaint();
-	//	}
 
 
 }

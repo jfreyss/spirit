@@ -10,10 +10,13 @@ import org.junit.Test;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOBarcode;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
+import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
 public class BarcodeTest extends AbstractSpiritTest {
@@ -36,7 +39,6 @@ public class BarcodeTest extends AbstractSpiritTest {
 		Assert.assertEquals(Integer.parseInt(id3.substring(3)), Integer.parseInt(id1.substring(3))+1);
 		Assert.assertEquals(Integer.parseInt(id4.substring(3)), Integer.parseInt(id1.substring(3))+2);
 		Assert.assertEquals(Integer.parseInt(id5.substring(3)), Integer.parseInt(id2.substring(3))+1);
-
 
 		//Test increment with a studyId
 		Biotype t3 = new Biotype("Human");
@@ -108,12 +110,12 @@ public class BarcodeTest extends AbstractSpiritTest {
 		Assert.assertEquals("TBa000200", biosamples.get(199).getSampleId());
 
 
-
-		//Create a misleading large sampleId, the auto generated id should not be affected
+		//Create a large sampleId, with a wrong pattern
 		Biosample b1 = new Biosample(biotype);
 		b1.setSampleId("TBa9999");
 		DAOBiosample.persistBiosamples(MiscUtils.listOf(b1), user);
 
+		//The auto generated id should not be affected
 		Biosample b2 = new Biosample(biotype);
 		DAOBiosample.persistBiosamples(MiscUtils.listOf(b2), user);
 		Assert.assertEquals("TBa000201", b2.getSampleId());
@@ -126,13 +128,15 @@ public class BarcodeTest extends AbstractSpiritTest {
 
 		b2 = new Biosample(biotype);
 		DAOBiosample.persistBiosamples(MiscUtils.listOf(b2), user);
-		Assert.assertEquals("TBa010000", b2.getSampleId());
+		Assert.assertEquals("TBa010001", b2.getSampleId());
 
-		//Delete the 2 large sampleIds, the next generated Id should fix the sequence hole
+		//Delete the 2 larger sampleIds
 		DAOBiosample.deleteBiosamples(MiscUtils.listOf(b1, b2), user);
+
+		//,The next generated Id should fix the sequence hole
 		b2 = new Biosample(biotype);
 		DAOBiosample.persistBiosamples(MiscUtils.listOf(b2), user);
-		Assert.assertEquals("TBa000202", b2.getSampleId());
+		Assert.assertEquals("TBa000211", b2.getSampleId());
 
 
 		//Create a overflow. The next Id should continue
@@ -142,7 +146,53 @@ public class BarcodeTest extends AbstractSpiritTest {
 
 		b2 = new Biosample(biotype);
 		DAOBiosample.persistBiosamples(MiscUtils.listOf(b2), user);
-		Assert.assertEquals("TBa1000000", b2.getSampleId());
+		Assert.assertEquals("TBa1000001", b2.getSampleId());
+	}
+
+
+	@Test
+	public void testIgnoreUseBarcodeSequence() throws Exception {
+		SpiritProperties.getInstance().setValue(PropertyKey.SYSTEM_USEBARCODESEQUENCE, "false");
+		try {
+			//Persist a biotype
+			Biotype biotype = new Biotype("TestSampleId2");
+			biotype.setCategory(BiotypeCategory.LIQUID);
+			biotype.setPrefix("TBB");
+			DAOBiotype.persistBiotype(biotype, user);
+
+
+			//Save 45 samples
+			List<Biosample> biosamples = new ArrayList<>();
+			for (int i = 0; i < 45; i++) {
+				Biosample b = new Biosample(biotype);
+				biosamples.add(b);
+			}
+			DAOBiosample.persistBiosamples(biosamples, user);
+			Assert.assertEquals("TBB000001", biosamples.get(0).getSampleId());
+			Assert.assertEquals("TBB000045", biosamples.get(44).getSampleId());
+
+			//Delete those samples
+			DAOBiosample.deleteBiosamples(biosamples, user);
+
+			JPAUtil.clear();
+			//Recreate them
+			biosamples = new ArrayList<>();
+			for (int i = 0; i < 45; i++) {
+				Biosample b = new Biosample(biotype);
+				biosamples.add(b);
+			}
+			DAOBiosample.persistBiosamples(biosamples, user);
+
+
+			//Test ids stats from 1 again (not use of the sequence)
+			Assert.assertEquals("TBB000001", biosamples.get(0).getSampleId());
+			Assert.assertEquals("TBB000045", biosamples.get(44).getSampleId());
+		} finally {
+			SpiritProperties.getInstance().setValue(PropertyKey.SYSTEM_USEBARCODESEQUENCE, "false");
+		}
+
+
+
 	}
 
 

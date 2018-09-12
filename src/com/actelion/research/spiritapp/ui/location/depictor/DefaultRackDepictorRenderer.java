@@ -26,6 +26,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Shape;
+import java.util.Set;
 
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.util.icons.ImageFactory;
@@ -87,11 +88,19 @@ public class DefaultRackDepictorRenderer implements RackDepictorRenderer {
 			g.setClip(r.intersection(g.getClipBounds()));
 			//Draw Image
 			boolean small = r.height < FastFont.getDefaultFontSize()*3;
+			int iconSize = Math.max(FastFont.getDefaultFontSize(), Math.min(r.height/4, FastFont.getDefaultFontSize()*2));
 			if(!small) {
 				if(c.getBiosamples().size()==1) {
 					Biosample b = c.getBiosamples().iterator().next();
-					Image img = ImageFactory.getImage(b, FastFont.getDefaultFontSize()*2);
-					if(img!=null) g.drawImage(img, r.x, r.y, depictor);
+					//Paint status
+					if(b.getStatus()!=null) {
+						g.setColor(b.getStatus().getBackground());
+						g.fillRect(r.x+1, r.y+1, iconSize, iconSize);
+					}
+
+					//Paint icon
+					Image img = ImageFactory.getImage(b, iconSize);
+					if(img!=null) g.drawImage(img, r.x+1, r.y+1, depictor);
 				} else if(c.getContainerType()!=null) {
 					g.drawImage(c.getContainerType().getImage(FastFont.getDefaultFontSize()*2), r.x, r.y, depictor);
 				}
@@ -100,16 +109,16 @@ public class DefaultRackDepictorRenderer implements RackDepictorRenderer {
 			//Draw biosample or containerid
 			g.setColor(Color.DARK_GRAY);
 			g.setFont(FastFont.MEDIUM);
-			int x = r.x + (!small? Math.min(FastFont.getDefaultFontSize()*2, Math.max(0, (r.width-FastFont.getDefaultFontSize()*3)/5)): 2);
+			int x = r.x + (small? 2: Math.max(iconSize+2, (r.width-iconSize-4)/5));
 			int y = r.y+FastFont.MEDIUM.getSize()+2;
 			if(c.getContainerOrBiosampleId().length()>0) {
 				g.drawString(c.getContainerOrBiosampleId(), x, y);
 			}
-
+			y += FastFont.SMALL.getSize()+1;
+			
 			//Print Study info from container
 			g.setColor(Color.BLACK);
 			String info = c.getPrintStudyLabel(SpiritFrame.getUsername());
-			y += FastFont.SMALL.getSize()+1;
 			if(info.length()>0) {
 				g.setFont(FastFont.SMALL);
 				for (String line: info.split("\n")) {
@@ -117,8 +126,7 @@ public class DefaultRackDepictorRenderer implements RackDepictorRenderer {
 					y+=g.getFont().getSize();
 				}
 			}
-
-
+						
 			//Print Metadata info from container
 			String infos = c.getPrintMetadataLabel(InfoSize.EXPANDED);
 			int index = (infos+'\n').indexOf('\n');

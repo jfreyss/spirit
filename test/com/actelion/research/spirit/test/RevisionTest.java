@@ -12,8 +12,11 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Document;
+import com.actelion.research.spiritcore.business.audit.DifferenceItem.ChangeType;
+import com.actelion.research.spiritcore.business.audit.DifferenceList;
 import com.actelion.research.spiritcore.business.audit.Revision;
 import com.actelion.research.spiritcore.business.audit.RevisionQuery;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -22,8 +25,8 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeCategory;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
+import com.actelion.research.spiritcore.business.property.SpiritProperty;
 import com.actelion.research.spiritcore.business.result.Result;
-import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyQuery;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
@@ -34,6 +37,8 @@ import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
+import com.actelion.research.spiritcore.util.MiscUtils;
+import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.util.IOUtils;
 
 public class RevisionTest extends AbstractSpiritTest {
@@ -78,7 +83,7 @@ public class RevisionTest extends AbstractSpiritTest {
 		Revision rev2 = DAORevision.getRevision(rev.getRevId());
 		Assert.assertEquals(rev.toString(), rev2.toString());
 		Assert.assertEquals(RevisionType.ADD, rev.getRevisionType());
-		DAORevision.revert(rev, user, "Revert");
+		DAORevision.revert(rev, user);
 
 		// Load Revisions
 		JPAUtil.clearAll();
@@ -108,7 +113,7 @@ public class RevisionTest extends AbstractSpiritTest {
 
 		Revision rev = revisions.get(0);
 		Assert.assertEquals(RevisionType.MOD, rev.getRevisionType());
-		DAORevision.revert(rev, user, "Revert");
+		DAORevision.revert(rev, user);
 		b = DAOBiosample.getBiosample(sampleId);
 		Assert.assertNotNull(b);
 		Assert.assertEquals("Old comments", b.getComments());
@@ -136,7 +141,7 @@ public class RevisionTest extends AbstractSpiritTest {
 
 		Revision rev = revisions.get(0);
 		Assert.assertEquals(RevisionType.DEL, rev.getRevisionType());
-		DAORevision.revert(rev, user, "Revert");
+		DAORevision.revert(rev, user);
 		b = DAOBiosample.getBiosample(sampleId);
 		Assert.assertNotNull(sampleId + " not found", b);
 		Assert.assertEquals("Old comments", b.getComments());
@@ -180,13 +185,13 @@ public class RevisionTest extends AbstractSpiritTest {
 
 		Revision rev = revisions.get(0);
 		Assert.assertEquals(RevisionType.DEL, rev.getRevisionType());
-		DAORevision.revert(rev, user, "Revert");
+		DAORevision.revert(rev, user);
 		b = DAOBiosample.getBiosample(sampleId);
 		Assert.assertNotNull(sampleId + " not found", b);
 		Assert.assertEquals("Old comments", b.getComments());
 
 	}
-
+	/*
 	@Test
 	public void testRevertCombo2() throws Exception {
 		ExchangeTest.initDemoExamples(user);
@@ -208,7 +213,7 @@ public class RevisionTest extends AbstractSpiritTest {
 
 		Revision rev = revisions.get(0);
 		Assert.assertEquals(RevisionType.MOD, rev.getRevisionType());
-		DAORevision.revert(rev, user, "Revert");
+		DAORevision.revert(rev, user);
 		study = DAOStudy.queryStudies(StudyQuery.createForLocalId("IVV2016-2"), user).get(0);
 		Assert.assertNotNull(study);
 
@@ -240,19 +245,20 @@ public class RevisionTest extends AbstractSpiritTest {
 		rev = revisions.get(0);
 		//		Assert.assertEquals(RevisionType.DEL, rev.getRevisionType());
 		Assert.assertTrue(rev.getBiosamples().size() > 0);
-		DAORevision.revert(rev, user, "Revert");
+		DAORevision.revert(rev, user);
 
 		rev = revisions.get(1);
 		Assert.assertEquals(RevisionType.DEL, rev.getRevisionType());
 		Assert.assertTrue(rev.getResults().size() > 0);
-		DAORevision.revert(rev, user, "Revert");
+		DAORevision.revert(rev, user);
 
 	}
+	 */
 
 	@Test
 	public void testDocuments() throws Exception {
 		// System.setProperty("show_sql", "true");
-		File f = File.createTempFile("test_", ".txt");
+		File f = IOUtils.createTempFile("test_", ".txt");
 		f.getParentFile().mkdirs();
 		IOUtils.bytesToFile("Some file content".getBytes(), f);
 
@@ -321,7 +327,7 @@ public class RevisionTest extends AbstractSpiritTest {
 		Assert.assertEquals("bytes", new String(r1.getMetadataDocument(biotype.getMetadata("doc")).getBytes()));
 
 		//Restore
-		DAORevision.restore(Collections.singleton(r1), user, "restored");
+		DAORevision.restore(Collections.singleton(r1), user);
 		List<Biosample> biosamples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForSampleIdOrContainerIds(r1.getSampleId()), user);
 		Assert.assertEquals(biotype, biosamples.get(0).getBiotype());
 		Assert.assertEquals("Test", new String(biosamples.get(0).getMetadataDocument(biotype.getMetadata("doc")).getFileName()));
@@ -371,6 +377,38 @@ public class RevisionTest extends AbstractSpiritTest {
 	 * @throws Exception
 	 */
 	@Test
+	public void testAuditDifferenceOnStudyAndSamples() throws Exception {
+		DBAdapter.getInstance().setAuditSimplified(false);
+		JPAUtil.pushEditableContext(user);
+		Study s = new Study();
+		DAOStudy.persistStudies(Collections.singleton(s), user);
+		JPAUtil.popEditableContext();
+
+		JPAUtil.pushEditableContext(user);
+		List<Biosample> list = new ArrayList<>();
+		for (int i = 0; i < 100; i++) {
+			Biosample b = new Biosample(DAOBiotype.getBiotype("Animal"));
+			b.setInheritedStudy(s);
+			list.add(b);
+		}
+		DAOBiosample.persistBiosamples(list, user);
+		JPAUtil.popEditableContext();
+
+		RevisionQuery q = new RevisionQuery();
+		q.setStudyIdFilter(s.getStudyId());
+		List<Revision> revs = DAORevision.queryRevisions(q);
+
+		Assert.assertEquals(2, revs.size());
+		System.out.println("RevisionTest.testAuditDifferenceOnStudyAndSamples() "+revs.get(0).getDifference());
+		System.out.println("RevisionTest.testAuditDifferenceOnStudyAndSamples() "+revs.get(1).getDifference());
+		DBAdapter.getInstance().setAuditSimplified(true);
+
+	}
+	/**
+	 * Tests that differences are computed, and the reason for change is saved
+	 * @throws Exception
+	 */
+	@Test
 	public void testAuditDifferenceOnSample() throws Exception {
 
 		JPAUtil.pushEditableContext(user);
@@ -385,7 +423,7 @@ public class RevisionTest extends AbstractSpiritTest {
 
 		JPAUtil.pushEditableContext(user);
 		b.setMetadataValue("Type", "Mice");
-		JPAUtil.setReasonForChange("Error of type");
+		JPAUtil.setReasonForChange(MiscUtils.mapOf("Type", "Error of type"));
 		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
 		JPAUtil.popEditableContext();
 
@@ -396,10 +434,11 @@ public class RevisionTest extends AbstractSpiritTest {
 
 		List<Revision> revs = DAORevision.getLastRevisions(b);
 		Assert.assertTrue(revs.size()==4);
-		Assert.assertTrue(revs.get(0).getDifference().contains("Sex=M"));
-		Assert.assertTrue(revs.get(1).getDifference().contains("Type=Mice"));
-		Assert.assertTrue(revs.get(2).getDifference().contains("Type=Rat"));
-		Assert.assertTrue(revs.get(3).getDifference().contains("Created"));
+		Assert.assertTrue(revs.get(0).getDifference().serialize().contains("Sex"));
+		Assert.assertTrue(revs.get(1).getDifference().serialize().contains("Type"));
+		Assert.assertTrue(revs.get(2).getDifference().serialize().contains("Type"));
+		Assert.assertTrue(revs.get(2).getDifference().get(0).getChangeType()==ChangeType.MOD);
+		Assert.assertTrue(revs.get(3).getDifference().get(0).getChangeType()==ChangeType.ADD);
 
 		Assert.assertEquals("", revs.get(0).getReason());
 		Assert.assertEquals("Error of type", revs.get(1).getReason());
@@ -457,26 +496,33 @@ public class RevisionTest extends AbstractSpiritTest {
 	@Test
 	public void testAuditDifferenceOnProperties() throws Exception {
 		JPAUtil.pushEditableContext(user);
-		JPAUtil.setReasonForChange("Changed config1");
 		SpiritProperties.getInstance().setValue(PropertyKey.SYSTEM_HOMEDAYS, "14");
 		SpiritProperties.getInstance().saveValues();
 		JPAUtil.popEditableContext();
 
 		JPAUtil.pushEditableContext(user);
-		JPAUtil.setReasonForChange("Changed config2");
 		SpiritProperties.getInstance().setValue(PropertyKey.SYSTEM_HOMEDAYS, "7");
 		SpiritProperties.getInstance().saveValues();
 		JPAUtil.popEditableContext();
 
+		//Query lastChange
+		Pair<SpiritProperty, DifferenceList> lastChange = DAORevision.getLastChange(new SpiritProperty(PropertyKey.SYSTEM_HOMEDAYS.getKey(), "5"));
+		Assert.assertEquals("system.home.days=7", lastChange.getFirst().toString());
+		Assert.assertEquals("Property;system.home.days;;system.home.days;5;7;;1", lastChange.getSecond().serialize());
+		System.out.println("RevisionTest.testAuditDifferenceOnProperties() "+lastChange);
+
+		lastChange = DAORevision.getLastChange(new SpiritProperty(PropertyKey.SYSTEM_HOMEDAYS.getKey(), "7"));
+		Assert.assertEquals("system.home.days=7", lastChange.getFirst().toString());
+		Assert.assertEquals("", lastChange.getSecond().serialize());
+
+
+		//Query revision
 		RevisionQuery q = new RevisionQuery();
 		List<Revision> revs = DAORevision.queryRevisions(q);
 
 		Assert.assertEquals(1, revs.get(0).getSpiritProperties().size());
-		Assert.assertEquals("Changed config2", revs.get(0).getReason());
-		Assert.assertEquals("Changed config1", revs.get(1).getReason());
 
-		System.out.println("RevisionTest.testReasonForLastChangeOnProperties() "+revs.get(0).getDifference()+" / "+revs.get(1).getDifference());
-		Assert.assertEquals(PropertyKey.SYSTEM_HOMEDAYS.getKey()+"=7", revs.get(0).getDifference());
+		Assert.assertEquals("Property;system.home.days;;system.home.days;7;14;;1", revs.get(0).getDifference().serialize());
 
 	}
 

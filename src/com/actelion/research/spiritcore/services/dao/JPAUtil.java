@@ -164,7 +164,7 @@ public class JPAUtil {
 	//	}
 
 
-	private static List<EntityManager> all = new ArrayList<>();
+	private static List<EntityManager> all = Collections.synchronizedList(new ArrayList<>());
 
 	private static class MyThreadLocal extends ThreadLocal<EntityManager> {
 
@@ -187,11 +187,13 @@ public class JPAUtil {
 		 * Make sure all related threads are stopped
 		 */
 		public void clear() {
-			EntityManager em = get();
-			if(em!=null && em.isOpen() ) {
-				LoggerFactory.getLogger(JPAUtil.class).debug("Clear EM: "+em+" active="+em.getTransaction().isActive());
-				if(em.getTransaction().isActive()) em.getTransaction().rollback();
-				em.clear();
+			//			EntityManager em = get();
+			for(EntityManager em: all) {
+				if(em!=null && em.isOpen() ) {
+					LoggerFactory.getLogger(JPAUtil.class).debug("Clear EM: "+em+" active="+em.getTransaction().isActive());
+					if(em.getTransaction().isActive()) em.getTransaction().rollback();
+					em.clear();
+				}
 			}
 		}
 
@@ -237,7 +239,9 @@ public class JPAUtil {
 
 		@Override
 		public void remove() {
-			get().close();
+			EntityManager em = get();
+			all.remove(em);
+			em.close();
 		}
 	}
 
@@ -252,7 +256,7 @@ public class JPAUtil {
 	 */
 	private static Map<Thread, SpiritUser> thread2user = Collections.synchronizedMap(new HashMap<Thread, SpiritUser>());
 
-	private static Map<Thread, String> thread2ReasonForChange = Collections.synchronizedMap(new HashMap<Thread, String>());
+	private static Map<Thread, Map<String, String>> thread2ReasonForChange = Collections.synchronizedMap(new HashMap<Thread, Map<String, String>>());
 
 	private static EntityManagerFactory factory;
 
@@ -291,11 +295,16 @@ public class JPAUtil {
 		try {
 			LoggerFactory.getLogger(JPAUtil.class).debug("Clear Sessions");
 			popEditableContext();
-			if(readEntityManager!=null) {
-				readEntityManager.clear();
-			}
-			if(writeEntityManager!=null) {
-				writeEntityManager.clear();
+			//			if(readEntityManager!=null) {
+			//				readEntityManager.clear();
+			//			}
+			//			if(writeEntityManager!=null) {
+			//				writeEntityManager.clear();
+			//			}
+			for (EntityManager em: new ArrayList<>(all)) {
+				if (em.isOpen()) {
+					em.clear();
+				}
 			}
 		} catch(Exception e) {
 			LoggerFactory.getLogger(JPAUtil.class).warn("Could not clear managers: ", e);
@@ -410,10 +419,11 @@ public class JPAUtil {
 	}
 
 	/**
-	 * Get an entitymanager based on the current context (and thread):
+	 * Get an entitymanager based on the current context and thread:
 	 * - read: returns the open EM, which is always open
 	 * - write: returns the open EM, which is open/close together with the dialogs
 	 * - request: returns the associated EM, which MUST be created first  with openRequest and which MUST be closed in a ServletFilter
+	 * Thread-Safe
 	 * @return
 	 */
 	public static EntityManager getManager() {
@@ -585,7 +595,7 @@ public class JPAUtil {
 		assert jpaMode!=JPAMode.REQUEST;
 		if(jpaMode==JPAMode.WRITE) {
 			jpaMode = JPAMode.READ;
-			setReasonForChange("");
+			setReasonForChange(new HashMap<>());
 		}
 	}
 
@@ -598,18 +608,8 @@ public class JPAUtil {
 	public static void pushEditableContext(SpiritUser user) {
 		assert jpaMode!=JPAMode.REQUEST;
 		setSpiritUser(user);
-		setReasonForChange("");
-
-		//		if(readEntityManager==null) {
-		//			try {
-		//				initFactory();
-		//			} catch (Exception e) {
-		//				e.printStackTrace();
-		//			}
-		//		}
 
 		jpaMode = JPAMode.WRITE;
-
 		if(writeEntityManager!=null) {
 			writeEntityManager.close();
 		}
@@ -761,7 +761,7 @@ public class JPAUtil {
 	/**
 	 * Gets the reasonForChange, associated to the current context (thread)
 	 */
-	public static String getReasonForChange() {
+	public static Map<String, String> getReasonForChange() {
 		if(jpaMode==JPAMode.REQUEST) {
 			return thread2ReasonForChange.get(Thread.currentThread());
 		} else {
@@ -772,12 +772,11 @@ public class JPAUtil {
 	/**
 	 * Sets the reasonForChange if needed, associated to the current context (thread)
 	 */
-	public static void setReasonForChange(String reason) {
+	public static void setReasonForChange(Map<String, String> reasons) {
 		if(jpaMode==JPAMode.REQUEST) {
-			thread2ReasonForChange.put(Thread.currentThread(), reason);
+			thread2ReasonForChange.put(Thread.currentThread(), reasons);
 		} else {
-			thread2ReasonForChange.put(null, reason);
+			thread2ReasonForChange.put(null, reasons);
 		}
 	}
-
 }

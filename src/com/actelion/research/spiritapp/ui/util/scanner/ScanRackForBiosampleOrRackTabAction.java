@@ -28,19 +28,19 @@ import com.actelion.research.util.ui.scanner.ScannerConfiguration;
 /**
  * Scan rack and populate the given BiosampleOrRackTab.
  * The scanned containers have to be empty, the tables are always reset
- * 
+ *
  * @author freyssj
  *
  */
 public abstract class ScanRackForBiosampleOrRackTabAction extends ScanRackAction {
-	
+
 	private BiosampleOrRackTab tab;
-	
-	public ScanRackForBiosampleOrRackTabAction(SpiritScanner scanner, BiosampleOrRackTab tab) {
+
+	public ScanRackForBiosampleOrRackTabAction(SpiritScannerHelper scanner, BiosampleOrRackTab tab) {
 		super("Scan Rack", scanner);
 		this.tab = tab;
 	}
-	
+
 	/**
 	 * If not overriden, this will ask for the configuration before scanning
 	 * @return
@@ -53,9 +53,10 @@ public abstract class ScanRackForBiosampleOrRackTabAction extends ScanRackAction
 	 * Scan and set the update the rack
 	 */
 	@Override
-	public Location scan() throws Exception {	
-		Location rack = scanner.scan(getScannerConfiguration(), false);			
+	public Location scan() throws Exception {
+		scanner.setScannerConfiguration(getScannerConfiguration());
+		Location rack = scanner.scan();
 		tab.setRack(rack);
-		return rack;		
-	}	
+		return rack;
+	}
 }

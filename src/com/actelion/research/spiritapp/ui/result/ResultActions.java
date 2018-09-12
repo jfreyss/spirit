@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritapp.ui.result;
 
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -57,6 +56,7 @@ import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOSpiritUser;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
@@ -336,7 +336,7 @@ public class ResultActions {
 				List<Result> objects = table.getSelection();
 				JPopupMenu popupMenu = new JPopupMenu();
 				String s = SpiritFrame.getUser()!=null && SpiritFrame.getUser().isSuperAdmin() && objects!=null && objects.size()==1? " (id:" + objects.get(0).getId()+")":"";
-				popupMenu.add(new JCustomLabel("   Result Menu"+s, Font.BOLD));
+				popupMenu.add(new JCustomLabel("   Result Menu"+s, FastFont.BOLD));
 
 				if(objects==null || objects.size()==0) {
 				} else if(objects.size()==1) {

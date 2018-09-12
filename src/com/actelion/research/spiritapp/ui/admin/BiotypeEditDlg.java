@@ -33,6 +33,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -420,6 +421,9 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 			public void actionPerformed(ActionEvent ev) {
 				int r = JOptionPane.showConfirmDialog(BiotypeEditDlg.this, "Are you sure you want to delete this type?", "Question", JOptionPane.YES_NO_OPTION);
 				if(r!=JOptionPane.YES_OPTION) return;
+
+				if(!Spirit.askReasonForChange()) return;
+
 				try {
 					if(biotype==null || biotype.getId()<=0) throw new Exception("Nothing to delete!?");
 					DAOBiotype.deleteBiotype(biotype, Spirit.askForAuthentication());
@@ -521,6 +525,7 @@ public class BiotypeEditDlg extends JSpiritEscapeDialog {
 		boolean add = biotype.getId()<=0;
 		updateModel();
 
+		if(!Spirit.askReasonForChangeIfUpdated(Collections.singleton(biotype))) return;
 		DAOBiotype.persistBiotype(biotype, Spirit.askForAuthentication());
 		SpiritChangeListener.fireModelChanged(add? SpiritChangeType.MODEL_ADDED: SpiritChangeType.MODEL_UPDATED, Biotype.class, biotype);
 

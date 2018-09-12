@@ -38,7 +38,6 @@ public class JExceptionDialog {
 	private JExceptionDialog() {}
 
 	public static void showError(Throwable e) {
-		System.out.println("JExceptionDialog.showError() "+e);
 		Frame parent = Frame.getFrames().length > 0 ? Frame.getFrames()[Frame.getFrames().length - 1] : null;
 		if(parent instanceof SplashScreen) parent = null;
 		showError(parent, e);
@@ -90,7 +89,6 @@ public class JExceptionDialog {
 	}
 
 	public static void show(final Component parent, final String message, final String title, final int messageType) {
-		System.out.println("JExceptionDialog.show() "+message+" "+SwingUtilities.isEventDispatchThread());
 		if(!SwingUtilities.isEventDispatchThread()) {
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override

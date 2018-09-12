@@ -54,8 +54,8 @@ import org.hibernate.envers.RelationTargetAuditMode;
 
 import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.IObject;
+import com.actelion.research.spiritcore.business.audit.DifferenceList;
 import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
-import com.actelion.research.spiritcore.util.DifferenceMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 
@@ -349,33 +349,30 @@ public class Test implements Comparable<Test>, IObject, IAuditable {
 		return res;
 	}
 
-	@Override
-	public String getDifference(IAuditable t) {
-		if(!(t instanceof Test)) return "";
-		return getDifferenceMap((Test)t).flatten();
-	}
-
 	/**
-	 * Returns a map containing the differences between 2 biotypes (usually 2 different versions).
-	 * The result is an empty string if there are no differences or if b is null
+	 * Returns a DifferenceList containing the differences between 2 biotypes (usually 2 different versions).
+	 * The result is an empty DifferenceList if there are no differences or if b is null
 	 * @param b
 	 * @return
 	 */
-	public DifferenceMap getDifferenceMap(Test b) {
-		DifferenceMap map = new DifferenceMap();
-		if(b==null) return map;
+	@Override
+	public DifferenceList getDifferenceList(IAuditable auditable) {
+		DifferenceList list = new DifferenceList("Test", getId(), getName(), null);
+		if(auditable==null || !(auditable instanceof Test)) return list;
+		Test b = (Test) auditable;
+
 		if(!CompareUtils.equals(getName(), b.getName())) {
-			map.put("Name", getName(), b.getName());
+			list.add("Name", getName(), b.getName());
 		}
 		if(!CompareUtils.equals(getCategory(), b.getCategory())) {
-			map.put("Category", getCategory(), b.getCategory());
+			list.add("Category", getCategory(), b.getCategory());
 		}
 
 		//Compare attributes
 		String metadataCompare = MiscUtils.diffCollectionsSummary(getAttributes(), b.getAttributes(), TestAttribute.EXACT_COMPARATOR);
-		if(metadataCompare!=null) map.put("Attributes", metadataCompare, null);
+		if(metadataCompare!=null) list.add("Attributes", metadataCompare, null);
 
-		return map;
+		return list;
 	}
 
 }

@@ -21,9 +21,6 @@
 
 package com.actelion.research.util.ui.scanner;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Class used to configure the different plates, which can be scanned.
  * Each configuration contains a name, the XTR/FluidX registry's name, the last scanned position, and if the tubes can contain biosample and/or biosamples
@@ -33,48 +30,60 @@ import java.util.List;
  */
 public enum ScannerConfiguration {
 
-	SCANNER_CONFIGURATION_MATRIX_PP("8x12 Matrix 0.5PP", "Custom 2", "H12", "Matrix 0.5PP", true, true),
-	SCANNER_CONFIGURATION_MATRIX_1_0PP("8x12 Matrix 1.0PP", "Custom 2", "H12", "Matrix 1.0PP", true, true),
-	SCANNER_CONFIGURATION_MATRIX_GLASS("8x12 Matrix Glass", "Custom 4", "H12", null, true, false),
-	SCANNER_CONFIGURATION_FLUIX_0_5("8x12 FluidX 0.5PP", "FluidX", "H12", "FluidX 0.5PP", false, true),
-	SCANNER_CONFIGURATION_FLUIX_1_4("8x12 FluidX 1.4PP", "FluidX", "H12", "FluidX 1.4PP", false, true),
-	SCANNER_CONFIGURATION_CRYO_120("12x10 Cryotube", "Cryotube 120", "L10", "Cryotube", false, true),
-	SCANNER_CONFIGURATION_CRYO_24("6x4 Cryotube", "Custom 5", "D06", "Cryotube", false, true),
-	SCANNER_CONFIGURATION_RACK24("4x6 Rack 24", "Custom 3", "D06", null, true, false),
 
-	SCANNER_CONFIGURATION_OPENFILE("Paste From a list", null, null, null, false, false);
+	SCANNER_CONFIGURATION_MATRIX_PP("8x12 Matrix 0.5PP", "Custom 2", "H12", "Matrix 0.5PP"),
+	SCANNER_CONFIGURATION_MATRIX_1_0PP("8x12 Matrix 1.0PP", "Custom 2", "H12", "Matrix 1.0PP"),
+	SCANNER_CONFIGURATION_FLUIX_0_5("8x12 FluidX 0.5PP", "FluidX", "H12", "FluidX 0.5PP"),
+	SCANNER_CONFIGURATION_FLUIX_1_4("8x12 FluidX 1.4PP", "FluidX", "H12", "FluidX 1.4PP"),
+	SCANNER_CONFIGURATION_FLUIDX_96("8x12 FluidX", "FluidX", "H12", "FluidX 0.5PP"),
+	SCANNER_CONFIGURATION_FLUIDX_48("6x8 FluidX", "FluidX", "H8", "FluidX 1.4PP"),
+	SCANNER_CONFIGURATION_FLUIDX_24("4x6 FluidX", "FluidX", "H6", "FluidX 20ml"),
+	SCANNER_CONFIGURATION_CRYO_120("12x10 Cryotube", "Cryotube 120", "L10", "Cryotube"),
+	SCANNER_CONFIGURATION_CRYO_24("6x4 Cryotube", "Custom 5", "D06", "Cryotube"),
+
+	SCANNER_CONFIGURATION_MATRIX_GLASS("8x12 Matrix Glass", "Custom 4", "H12", null),
+	SCANNER_CONFIGURATION_RACK24("4x6 Rack 24", "Custom 3", "D06", null),
+
+	SCANNER_CONFIGURATION_96("8x12", "", "H12", ""),
+	SCANNER_CONFIGURATION_48("6x8", "", "H8", ""),
+
+	SCANNER_CONFIGURATION_OPENFILE("Paste From a list", null, null, null);
 
 
 	public final String name;
 	public final String regEditConfig;
 	public final String last;
 	public final String defaultTubeType;
-	private final boolean allowCompounds;
-	private final boolean allowBiosamples;
 
-	private ScannerConfiguration(String name, String regEditConfig, String last, String defaultTubeType, boolean allowCompounds, boolean allowBiosamples) {
+	private ScannerConfiguration(String name, String regEditConfig, String last, String defaultTubeType) {
 		this.name = name;
 		this.regEditConfig = regEditConfig;
 		this.last = last;
 		this.defaultTubeType = defaultTubeType;
-		this.allowCompounds = allowCompounds;
-		this.allowBiosamples = allowBiosamples;
 	}
 
 	public static ScannerConfiguration[] valuesForBiosamples() {
-		List<ScannerConfiguration> res = new ArrayList<ScannerConfiguration>();
-		for(ScannerConfiguration config: values()) {
-			if(config.allowBiosamples) res.add(config);
-		}
-		return res.toArray(new ScannerConfiguration[res.size()]);
+		return new ScannerConfiguration[] {
+				SCANNER_CONFIGURATION_MATRIX_PP,
+				SCANNER_CONFIGURATION_MATRIX_1_0PP,
+				SCANNER_CONFIGURATION_FLUIX_0_5,
+				SCANNER_CONFIGURATION_FLUIX_1_4,
+				SCANNER_CONFIGURATION_FLUIDX_48,
+				SCANNER_CONFIGURATION_FLUIDX_24,
+				SCANNER_CONFIGURATION_CRYO_120,
+				SCANNER_CONFIGURATION_CRYO_24,
+				SCANNER_CONFIGURATION_OPENFILE
+		};
 	}
 
 	public static ScannerConfiguration[] valuesForCompounds() {
-		List<ScannerConfiguration> res = new ArrayList<ScannerConfiguration>();
-		for(ScannerConfiguration config: values()) {
-			if(config.allowCompounds) res.add(config);
-		}
-		return res.toArray(new ScannerConfiguration[res.size()]);
+		return new ScannerConfiguration[] {
+				SCANNER_CONFIGURATION_MATRIX_PP,
+				SCANNER_CONFIGURATION_MATRIX_1_0PP,
+				SCANNER_CONFIGURATION_MATRIX_GLASS,
+				SCANNER_CONFIGURATION_RACK24,
+				SCANNER_CONFIGURATION_OPENFILE
+		};
 	}
 
 	public String getDefaultTubeType() {
@@ -107,14 +116,5 @@ public enum ScannerConfiguration {
 			return 12;
 		}
 	}
-
-	public boolean isAllowBiosamples() {
-		return allowBiosamples;
-	}
-	public boolean isAllowCompounds() {
-		return allowCompounds;
-	}
-
-
 
 }

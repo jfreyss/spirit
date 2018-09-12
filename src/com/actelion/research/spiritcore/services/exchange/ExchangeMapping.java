@@ -326,12 +326,7 @@ public class ExchangeMapping {
 
 		//Location
 		for (Location l : exchange.getLocations()) {
-			Location existing = null;
-			try {
-				existing = DAOLocation.getCompatibleLocation(l.getHierarchyFull(), null);
-			} catch(Exception e) {
-				existing = null;
-			}
+			Location existing = DAOLocation.getCompatibleLocation(l.getHierarchyFull(), null);
 			location2action.put(l.getHierarchyFull(), existing!=null? EntityAction.MAP_REPLACE: EntityAction.CREATE);
 			location2mappedLocation.put(l.getHierarchyFull(), existing!=null? existing: l);
 		}
@@ -477,7 +472,7 @@ public class ExchangeMapping {
 				assert mappedTest.getId()>0;
 				for (TestAttribute ta : inputTest.getAttributes()) {
 					EntityAction action2 = testAttribute2action.get(new Pair<String, String>(inputTest.getName(), ta.getName()));
-					System.out.println("ExchangeMapping.computeMappedTests() "+ta+">"+action2);
+					//					System.out.println("ExchangeMapping.computeMappedTests() "+ta+">"+action2);
 					if(action2==null || action2==EntityAction.SKIP) {
 						//Nothing
 					} else if(action2==EntityAction.CREATE) {
@@ -603,12 +598,7 @@ public class ExchangeMapping {
 
 		mappedLocations = new ArrayList<>();
 		for (Location inputLocation : exchange.getLocations()) {
-			Location existing;
-			try {
-				existing = DAOLocation.getCompatibleLocation(inputLocation.getHierarchyFull(), null);
-			} catch(Exception e) {
-				existing = null;
-			}
+			Location existing = DAOLocation.getCompatibleLocation(inputLocation.getHierarchyFull(), null);
 			EntityAction action = location2action.get(inputLocation.getHierarchyFull());
 			if(action==null || action==EntityAction.SKIP) {
 				//Ignore

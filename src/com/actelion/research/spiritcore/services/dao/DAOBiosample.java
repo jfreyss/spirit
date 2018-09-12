@@ -177,7 +177,6 @@ public class DAOBiosample {
 			} else {
 				query = session.createQuery("from Biosample b where (b.sampleId in (" + sb + ") or b.name in (" + sb + ")) and b.inheritedStudy = ?1").setParameter(1, study);
 			}
-			//			query.setHint("org.hibernate.readOnly", !JPAUtil.isEditableContext());
 			biosamples.addAll(query.getResultList());
 		}
 		return biosamples;
@@ -196,7 +195,6 @@ public class DAOBiosample {
 
 	public static List<Biosample> queryBiosamples(EntityManager session, BiosampleQuery q, SpiritUser user) throws Exception {
 		assert q!=null;
-
 
 		StringBuilder clause = new StringBuilder();
 		List<Object> parameters = new ArrayList<>();
@@ -418,7 +416,7 @@ public class DAOBiosample {
 			}
 
 			if (q.isFilterTrashed()) {
-				clause.append(" and b.status <> ? and b.status <> ? ");
+				clause.append(" and (b.status is null or (b.status <> ? and b.status <> ?)) ");
 				parameters.add(Status.TRASHED);
 				parameters.add(Status.USEDUP);
 			}
@@ -656,7 +654,7 @@ public class DAOBiosample {
 		logger.info("Persist "+biosamples.size()+" biosamples");
 
 		for (Biosample b : biosamples) {
-			if (!SpiritRights.canEdit(b, user)) {
+			if (!SpiritRights.canWork(b, user)) {
 				throw new Exception("You are not allowed to edit the biosample "+b.getSampleId());
 			}
 		}
@@ -670,7 +668,7 @@ public class DAOBiosample {
 		try {
 
 			/////////////////////////////////////////////////
-			//Find dependent studues that must be saved first
+			//Find dependent studies that must be saved first
 			/////////////////////////////////////////////////
 			Set<Study> studyToSave = new HashSet<>();
 			Set<Group> groupToSave = new HashSet<>();
@@ -1044,12 +1042,13 @@ public class DAOBiosample {
 				assert c!=null;
 				if(c.getContainerType()!=null && c.getContainerType().isMultiple()) {
 					//If the containerType is multiple and not unique, make sure the user can add a sample to it
-					if(!SpiritRights.canEditBiosamples(c.getBiosamples(), user)) {
+					List<Biosample> samplesInContainer = session.createQuery("from Biosample b where b.container.containerId = ?1").setParameter(1, containerId).getResultList();
+					if(!SpiritRights.canEditBiosamples(samplesInContainer, user)) {
 						throw new Exception("You are not allowed to edit the container " + containerId);
 					} else if(c.getContainerType().isMultiple() && c.getContainerType()!=b.getContainerType()) {
 						throw new Exception("The container's type of " + b.getSampleId() + ": " + containerId+" is " + c.getContainerType());
-					} else if(c.getContainerType().isMultiple() && !CompareUtils.equals(c.getStudy(), b.getInheritedStudy())) {
-						throw new Exception("You cannot mix studies on the same container "+containerId+" ("+c.getStudy()+"<>"+b.getInheritedStudy()+")");
+					} else if(c.getContainerType().isMultiple() && Biosample.getStudy(samplesInContainer)!=null && !CompareUtils.equals(Biosample.getStudy(samplesInContainer), b.getInheritedStudy())) {
+						throw new Exception("You cannot mix studies on the same container " + containerId + " (" + Biosample.getStudy(samplesInContainer) + "<>" + b.getInheritedStudy() + ")");
 					}
 					if(b.getContainerIndex()==null || b.getContainerIndex()<1) {
 						b.setContainerIndex(1);
@@ -1103,8 +1102,6 @@ public class DAOBiosample {
 			}
 		}
 		session.flush();
-
-
 
 		// ///////////////////////////////////////////
 		// Update the inverse values of the linked biosamples if needed (to create a new version)

@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritapp.ui.result.column;
 
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.util.Comparator;
 
@@ -38,6 +37,7 @@ import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.util.CompareUtils;
 import com.actelion.research.util.FormatterUtils;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
@@ -86,7 +86,7 @@ public class CreationColumn extends Column<Result, String> {
 	@Override
 	public void populateHeaderPopup(final AbstractExtendTable<Result> table, JPopupMenu popupMenu) {
 		popupMenu.add(new JSeparator());
-		popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
+		popupMenu.add(new JCustomLabel("Sort", FastFont.BOLD));
 
 		popupMenu.add(new AbstractAction("Sort by " + (creation?"CreatedBy": "UpdatedBy")) {
 			@Override

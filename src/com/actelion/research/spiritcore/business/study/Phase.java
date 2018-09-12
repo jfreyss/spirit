@@ -172,7 +172,6 @@ public class Phase implements IObject, Comparable<Phase>, Cloneable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if(this==obj) return true;
 		if(! (obj instanceof Phase)) return false;
 		Phase p = (Phase) obj;
 		if(getId()>0 || p.getId()>0) return getId() == p.getId();

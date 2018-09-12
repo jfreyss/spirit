@@ -112,7 +112,7 @@ public class ConcurrencyTest extends AbstractSpiritTest {
 			throw new AssertionFailedError("Saving by emp1b should not be possible");
 		} catch (Exception e) {
 			//OK
-			System.err.println(e);
+			System.err.println("OK: " + e);
 		}
 	}
 }

@@ -60,7 +60,7 @@ import org.hibernate.envers.RelationTargetAuditMode;
 
 import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.IObject;
-import com.actelion.research.spiritcore.util.DifferenceMap;
+import com.actelion.research.spiritcore.business.audit.DifferenceList;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.CompareUtils;
 
@@ -563,79 +563,74 @@ public class Biotype implements Serializable, Comparable<Biotype>, Cloneable, IO
 		}
 	}
 
-	@Override
-	public String getDifference(IAuditable b) {
-		if(!(b instanceof Biotype)) return "";
-		return getDifferenceMap((Biotype)b).toString();
-	}
-
 	/**
-	 * Returns a map containing the differences between 2 biotypes (usually 2 different versions).
-	 * The result is an empty string if there are no differences or if b is null
-	 * @param b
+	 * Returns a DifferenceList containing the differences between 2 biotypes (usually 2 different versions).
+	 * The result is an empty DifferenceList if there are no differences or if auditable is null
+	 * @param auditable
 	 * @return
 	 */
-	public DifferenceMap getDifferenceMap(Biotype b) {
-
-		DifferenceMap map = new DifferenceMap();
-		if(b==null) return map;
+	@Override
+	public DifferenceList getDifferenceList(IAuditable auditable) {
+		DifferenceList list = new DifferenceList("Biotype", getId(), getName(), null);
+		if(auditable==null || !(auditable instanceof Biotype)) return list;
+		Biotype b = (Biotype) auditable;
 
 		if(!CompareUtils.equals(getName(), b.getName())) {
-			map.put("Name", getName(), b.getName());
+			list.add("Name", getName(), b.getName());
 		}
 
 		if(!CompareUtils.equals(getPrefix(), b.getPrefix())) {
-			map.put("Prefix", getPrefix(), b.getPrefix());
+			list.add("Prefix", getPrefix(), b.getPrefix());
 		}
 
 		if(!CompareUtils.equals(isAbstract(), b.isAbstract())) {
-			map.put("Abstract", Boolean.toString(isAbstract()), Boolean.toString(b.isAbstract()));
+			list.add("Abstract", Boolean.toString(isAbstract()), Boolean.toString(b.isAbstract()));
 		}
 
 		if(!CompareUtils.equals(isHideContainer(), b.isHideContainer())) {
-			map.put("HideContainer", Boolean.toString(isHideContainer()), Boolean.toString(b.isHideContainer()));
+			list.add("HideContainer", Boolean.toString(isHideContainer()), Boolean.toString(b.isHideContainer()));
 		}
 
 		if(!CompareUtils.equals(isHideSampleId(), b.isHideSampleId())) {
-			map.put("HideSampleId", Boolean.toString(isHideSampleId()), Boolean.toString(b.isHideSampleId()));
+			list.add("HideSampleId", Boolean.toString(isHideSampleId()), Boolean.toString(b.isHideSampleId()));
 		}
 
 		if(!CompareUtils.equals(isNameAutocomplete(), b.isNameAutocomplete())) {
-			map.put("NameAutocomplete", Boolean.toString(isNameAutocomplete()), Boolean.toString(b.isNameAutocomplete()));
+			list.add("NameAutocomplete", Boolean.toString(isNameAutocomplete()), Boolean.toString(b.isNameAutocomplete()));
 		}
 
 		if(!CompareUtils.equals(isNameRequired(), b.isNameRequired())) {
-			map.put("NameRequired", Boolean.toString(isNameRequired()), Boolean.toString(b.isNameRequired()));
+			list.add("NameRequired", Boolean.toString(isNameRequired()), Boolean.toString(b.isNameRequired()));
 		}
 
 		if(!CompareUtils.equals(isNameAutocomplete(), b.isNameAutocomplete())) {
-			map.put("NameAutocomplete", Boolean.toString(isNameAutocomplete()), Boolean.toString(b.isNameAutocomplete()));
+			list.add("NameAutocomplete", Boolean.toString(isNameAutocomplete()), Boolean.toString(b.isNameAutocomplete()));
 		}
 
 		if(!CompareUtils.equals(getAmountUnit(), b.getAmountUnit())) {
-			map.put("Amount", getAmountUnit()==null?"": getAmountUnit().toString(), b.getAmountUnit()==null?"": b.getAmountUnit().toString());
+			list.add("Amount", getAmountUnit()==null?"": getAmountUnit().toString(), b.getAmountUnit()==null?"": b.getAmountUnit().toString());
 		}
 
 		if(!CompareUtils.equals(getCategory(), b.getCategory())) {
-			map.put("Category", getCategory()==null?"": getCategory().getName(), b.getCategory()==null?"": b.getCategory().getName());
+			list.add("Category", getCategory()==null?"": getCategory().getName(), b.getCategory()==null?"": b.getCategory().getName());
 		}
 
 		if(!CompareUtils.equals(getContainerType(), b.getContainerType())) {
-			map.put("ContainerType", getContainerType()==null?"":getContainerType().getName(), b.getContainerType()==null?"":b.getContainerType().getName());
+			list.add("ContainerType", getContainerType()==null?"":getContainerType().getName(), b.getContainerType()==null?"":b.getContainerType().getName());
 		}
 
 		if(!CompareUtils.equals(getParent(), b.getParent())) {
-			map.put("Parent", getParent()==null?"": getParent().getName(), b.getParent()==null?"": b.getParent().getName());
+			list.add("Parent", getParent()==null?"": getParent().getName(), b.getParent()==null?"": b.getParent().getName());
 		}
 
 		if(!CompareUtils.equals(getSampleNameLabel(), b.getSampleNameLabel())) {
-			map.put("SampleName", getSampleNameLabel(), b.getSampleNameLabel());
+			list.add("SampleName", getSampleNameLabel(), b.getSampleNameLabel());
 		}
 
 		//Compare metadata
 		String metadataCompare = MiscUtils.diffCollectionsSummary(getMetadata(), b.getMetadata(), BiotypeMetadata.EXACT_COMPARATOR);
-		if(metadataCompare!=null) map.put("Metadata", metadataCompare, null);
+		if(metadataCompare!=null) list.add("Metadata", metadataCompare, null);
 
-		return map;
+		return list;
 	}
 }

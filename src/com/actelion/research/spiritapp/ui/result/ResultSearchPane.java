@@ -161,7 +161,7 @@ public class ResultSearchPane extends JPanel {
 	 */
 	public class Action_Reset extends AbstractAction {
 		public Action_Reset() {
-			super("");
+			super("Reset");
 			putValue(Action.SMALL_ICON, IconType.CLEAR.getIcon());
 			setToolTipText("Reset all query fields");
 		}
@@ -174,7 +174,6 @@ public class ResultSearchPane extends JPanel {
 			tab.setResults(new ArrayList<Result>());
 			SpiritContextListener.setStatus("");
 			ResultSearchPane.this.firePropertyChange(PROPERTY_SEARCH, null, "");
-
 		}
 	}
 

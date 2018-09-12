@@ -55,6 +55,7 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		SAMPLENAME,
 		METADATA,
 		COMMENTS,
+		CONTAINERID
 	}
 
 	private String label;
@@ -278,7 +279,7 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		this.aggregatedMetadata = null;
 		this.type = LinkerType.METADATA;
 		this.biotypeMetadata = biotypeMetadata;
-		this.biotypeForLabel = biotypeMetadata.getBiotype();
+		this.biotypeForLabel = biotypeMetadata==null? null: biotypeMetadata.getBiotype();
 	}
 
 	public boolean isLinked() {
@@ -334,7 +335,7 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 	}
 
 	/**
-	 * Not null, to link to an other biosample through the metadata
+	 * to link to an other biosample through the metadata
 	 */
 	public BiotypeMetadata getAggregatedMetadata() {
 		return aggregatedMetadata;
@@ -349,6 +350,7 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		case SAMPLENAME: return b.getSampleName();
 		case METADATA: return b.getBiotype()==null || biotypeMetadata==null || !b.getBiotype().equals(biotypeMetadata.getBiotype())? null: b.getMetadataValue(biotypeMetadata);
 		case COMMENTS: return b.getComments();
+		case CONTAINERID: return b.getContainerId();
 		default: return "??"+type;
 		}
 	}
@@ -370,6 +372,9 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 			return true;
 		case COMMENTS:
 			b.setComments(value);
+			return true;
+		case CONTAINERID:
+			b.setContainerId(value);
 			return true;
 		default: return false;
 		}
@@ -442,7 +447,7 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 
 
 	/**
-	 * Returns the label: biotypeOrMetadata\nMetadataOrType[.MetadataOrType]
+	 * Returns the label, used as unique identifier: biotypeOrMetadata\nMetadataOrType[.MetadataOrType]
 	 * @return
 	 */
 	public String getLabel() {
@@ -481,12 +486,17 @@ public class BiosampleLinker implements Comparable<BiosampleLinker> {
 		return label;
 	}
 
+	/**
+	 * Returns the label in a readable format
+	 * @return
+	 */
 	public String getLabelShort() {
 		String prefix = aggregatedMetadata==null || aggregatedMetadata.getName()==null?"": aggregatedMetadata.getName() + ".";
 		switch(type) {
 		case SAMPLEID: return   prefix + "SampleId";
 		case SAMPLENAME: return  prefix + (biotypeForLabel==null? "SampleName" :biotypeForLabel.getSampleNameLabel());
 		case COMMENTS: return prefix + "Comments";
+		case CONTAINERID: return prefix + "ContainerId";
 		default:
 			if(biotypeMetadata!=null) return prefix + biotypeMetadata.getName();
 			return "??";

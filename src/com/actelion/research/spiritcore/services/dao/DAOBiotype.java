@@ -183,16 +183,22 @@ public class DAOBiotype {
 		return res;
 	}
 
-	public static Set<String> getAutoCompletionFieldsForSampleId(Biotype biotype) {
+	public static Set<String> getAutoCompletionFieldsForSampleId(Biotype biotype, BiotypeMetadata fromAgregated, Study study) {
+		System.out.println("DAOBiotype.getAutoCompletionFieldsForSampleId() "+biotype+" "+fromAgregated+" "+study );
 		if(biotype==null || biotype.getId()<=0) return new TreeSet<String>();
 
 		//Use Cache
-		String key = "biotype_autocompletion_sampleid_"+biotype.getId();
+		String key = "biotype_autocompletion_sampleid_"+biotype.getId()+"_"+fromAgregated+"_"+study;
 		Set<String> res = (Set<String>) Cache.getInstance().get(key);
 		if(res==null) {
 			EntityManager session = JPAUtil.getManager();
-			Query query = session.createQuery("SELECT distinct(b.sampleId) FROM Biosample b WHERE b.biotype = ?1");
+			Query query = session.createQuery("select distinct(b.sampleId) from Biosample b where b.biotype = ?1"
+					+ (fromAgregated==null?"": " and exists(from Biosample b2 where b2.linkedBiosamples[?2] = b " + ((study==null?"": " and b2.inheritedStudy = ?3")) + " )"));
 			query.setParameter(1, biotype);
+			if(fromAgregated!=null) {
+				query.setParameter(2, fromAgregated);
+				if(study!=null) query.setParameter(3, study);
+			}
 			query.setMaxResults(3000);
 			res = new TreeSet<String>(CompareUtils.STRING_COMPARATOR);
 			res.addAll(query.getResultList());

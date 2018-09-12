@@ -177,7 +177,6 @@ public class DatabaseMigrationDlg extends JDialog {
 							JExceptionDialog.showWarning(DatabaseMigrationDlg.this, "The Spirit database was successfully migrated.\n There were however some migration errors, please check what went wrong.");
 						} else {
 							JExceptionDialog.showInfo(DatabaseMigrationDlg.this, "The Spirit database was successfully migrated.");
-							dispose();
 						}
 					} else {
 						JExceptionDialog.showError(DatabaseMigrationDlg.this, "The Spirit database could not be migrated. Please check the errors.");
@@ -185,6 +184,7 @@ public class DatabaseMigrationDlg extends JDialog {
 				} catch(Exception e) {
 					JExceptionDialog.showError(DatabaseMigrationDlg.this, e);
 				}
+				dispose();
 			}
 		};
 	}

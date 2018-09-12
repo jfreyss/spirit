@@ -50,7 +50,6 @@ import com.actelion.research.spiritcore.business.study.Study;
 public class PrintableOfContainers implements Printable {
 
 	private final float MM2PIXELS = 72f/25.4f;
-	private static int topMargin = 13;//12;
 
 	private List<Container> containers = new ArrayList<>();
 	private String jobName = "";
@@ -86,7 +85,7 @@ public class PrintableOfContainers implements Printable {
 		int fontSizeIncrease = highLabel?1: 0;
 
 		//Draw Overlap
-		float lineOffset = /*pf.getWidth()<100? 0:*/ (pf.getWidth()<130? 8: 10)  * printTemplate.getOverlapPosition();
+		float lineOffset = (pf.getWidth()<130? 8: 10)  * printTemplate.getOverlapPosition();
 		int lineOffsetPixel = (int) (lineOffset * MM2PIXELS); //margin where label sticks
 		int maxWidth = (int) Math.min((pf.getWidth()<=0? 100: pf.getWidth())-2, (pf.getImageableWidth()<=0? 100: pf.getImageableWidth())) - Math.abs(lineOffsetPixel);
 		int maxWidthTop = maxWidth - 21;
@@ -96,9 +95,9 @@ public class PrintableOfContainers implements Printable {
 		} else if(lineOffsetPixel<0) {
 			g.drawLine((int) ((pf.getWidth()<=0? 100: pf.getWidth()) + lineOffsetPixel), 0, (int) (pf.getWidth()<=0? 100: pf.getWidth()) + lineOffsetPixel, (int) pf.getHeight());
 		}
-		g.translate(2, topMargin);
+		g.translate(2, 0);
 
-		int cy = 0;
+		float cy = 0;
 		int textOffsetPixel = printTemplate.getBarcodePosition()==1? Math.max(21, 2 + g.getFontMetrics(new Font(Font.SANS_SERIF, Font.PLAIN, 3+fontSizeIncrease)).stringWidth(barcode)): 0;
 
 		//Print study
@@ -117,8 +116,7 @@ public class PrintableOfContainers implements Printable {
 			if(group!=null) {
 				cy+=4+fontSizeIncrease;
 				string = group.getName();
-				g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 5+fontSizeIncrease));
-				reduceSizeIfTooWide(g, string, maxWidthTop, 2);
+				g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 4+fontSizeIncrease));
 				g.drawString(string, textOffsetPixel, cy);
 			}
 		}
@@ -128,7 +126,6 @@ public class PrintableOfContainers implements Printable {
 		if(phase!=null) {
 			cy+=4+fontSizeIncrease;
 			g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 4+fontSizeIncrease));
-			reduceSizeIfTooWide(g, string, maxWidthTop, 2);
 			g.drawString(phase.getAbsoluteDateAndName(), textOffsetPixel, cy);
 		}
 
@@ -136,23 +133,15 @@ public class PrintableOfContainers implements Printable {
 		if(printTemplate.isShowParent() && topBiosample!=null) {
 			if(study!=null) {
 				//Sample in study: print topSampleId/topSampleName/Status
-				cy+=4+fontSizeIncrease;
+				cy+=5+fontSizeIncrease;
 				g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 5+fontSizeIncrease));
 				string = topBiosample.getSampleIdName();
 				reduceSizeIfTooWide(g, string, maxWidthTop, 2);
-				//				int w = g.getFontMetrics().stringWidth(string);
 				g.drawString(string, textOffsetPixel, cy);
-
-				//				Pair<Status, Phase> p = topBiosample.getLastActionStatus();
-				//				if(p.getFirst()!=null && p.getSecond()!=null) {
-				//					string = "->" + p.getSecond().getShortName();
-				//					g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 4+fontSizeIncrease));
-				//					g.drawString(string, textOffsetPixel + w + 3, cy);
-				//				}
 			} else {
 				//Sample not is study but has a parent: print topSampleId/topSampleName
 				if(!topBiosample.getBiotype().isHideSampleId()) {
-					cy+=4+fontSizeIncrease;
+					cy+=5+fontSizeIncrease;
 					g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 5+fontSizeIncrease));
 					string = topBiosample.getSampleId();
 					reduceSizeIfTooWide(g, string, maxWidthTop, 2);
@@ -190,18 +179,19 @@ public class PrintableOfContainers implements Printable {
 
 
 
-		int cy2;
-		int cx = cy<19? textOffsetPixel: 0;
+		float cy2;
+		int cx = cy<18? textOffsetPixel: 0;
 		int maxCx = (int) ((pf.getWidth()<=0? 100: pf.getWidth()) - Math.abs(lineOffsetPixel) - 1*MM2PIXELS);
 		int maxCy = (int) (pf.getHeight()<=0? 100: pf.getHeight());
-		if(cy>=18 && cy<=20) {cy=20;cx=0;} else if(cy>20) {cx=0;}
+		if(cy>=18 && cy<=19) {cy=19;}
+		if(cy>=19) {cx=0;}
 		if(string!=null && string.length()>0) {
 			cy+=4+fontSizeIncrease;
-			g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 5+fontSizeIncrease));
+			g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 4+fontSizeIncrease));
 			reduceSizeIfTooWide(g, string, maxCx - cx, 2);
 			cy2 = PrinterUtil.print(g, string, cx, cy, maxCx - cx, 10);
 		} else {
-			cy2 = cy+4;
+			cy2 = cy+5;
 		}
 		int wName = string.indexOf('\n')>0? -1: g.getFontMetrics().stringWidth(string);
 
@@ -229,7 +219,7 @@ public class PrintableOfContainers implements Printable {
 
 		//4. Print comments amount (ITALIC)
 		if(printTemplate.isShowComments()) {
-			cy += 1+fontSizeIncrease;
+			cy += fontSizeIncrease;
 			string = Biosample.getInfos(c.getBiosamples(), EnumSet.of(InfoFormat.COMMENTS, InfoFormat.AMOUNT), InfoSize.ONELINE);
 			g.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 4+fontSizeIncrease));
 			if(cy>24) cx = 0;
@@ -282,10 +272,10 @@ public class PrintableOfContainers implements Printable {
 		return jobName;
 	}
 
-	public static void setTopMargin(int topMargin) {
-		PrintableOfContainers.topMargin = topMargin;
-	}
-	public static int getTopMargin() {
-		return topMargin;
-	}
+	//	public static void setTopMargin(int topMargin) {
+	//		PrintableOfContainers.topMargin = topMargin;
+	//	}
+	//	public static int getTopMargin() {
+	//		return topMargin;
+	//	}
 }

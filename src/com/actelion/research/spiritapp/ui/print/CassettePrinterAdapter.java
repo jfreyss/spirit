@@ -22,7 +22,6 @@
 package com.actelion.research.spiritapp.ui.print;
 
 import java.awt.GridBagLayout;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -99,19 +98,18 @@ public class CassettePrinterAdapter extends PrintAdapter {
 				new JLabel("Brother Printer: "), printerComboBox,
 				new JLabel("Media: "), mediaComboBox);
 
-		ActionListener refreshActionListener = e-> fireConfigChanged();
-		ptouchRadioButton.addActionListener(refreshActionListener);
-		cassetteMateRadioButton.addActionListener(refreshActionListener);
-		defaultRadioButton.addActionListener(refreshActionListener);
-		multipleAnimalsRadioButton.addActionListener(refreshActionListener);
-		oneAnimalRadioButton.addActionListener(refreshActionListener);
-		printStudyIdCheckBox.addActionListener(refreshActionListener);
-		printBlocNoCheckBox.addActionListener(refreshActionListener);
+		ptouchRadioButton.addActionListener(e-> fireConfigChanged());
+		cassetteMateRadioButton.addActionListener(e-> fireConfigChanged());
+		defaultRadioButton.addActionListener(e-> fireConfigChanged());
+		multipleAnimalsRadioButton.addActionListener(e-> fireConfigChanged());
+		oneAnimalRadioButton.addActionListener(e-> fireConfigChanged());
+		printStudyIdCheckBox.addActionListener(e-> fireConfigChanged());
+		printBlocNoCheckBox.addActionListener(e-> fireConfigChanged());
 
 		//FileBrowser
 		configPanel = new JPanel(new GridBagLayout());
 		fileBrowser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		fileBrowser.setFile(Spirit.getConfig().getProperty("printer.cassette", "Y:\\LABUSER (PorthaS)\\PrintMateCache(BOURQUG)"));
+		fileBrowser.setFile(Spirit.getConfig().getProperty("printer.cassette", "\\\\idorsia.com\\org\\Res_shared_folders\\LABUSER\\PrintMateCache(BOURQUG)"));
 
 		//configPanel
 		configPanel = UIUtils.createVerticalBox(
@@ -138,19 +136,19 @@ public class CassettePrinterAdapter extends PrintAdapter {
 
 		ptouchRadioButton.setSelected(Spirit.getConfig().getProperty("printer.cassette.type", "").equals("ptouch")) ;
 
-		printerComboBox.addActionListener(ev-> {
+		printerComboBox.addActionListener(e -> {
 			List<Media> media = SpiritPrinter.loadMedias(printerComboBox.getSelection(), containerType.getName());
 			mediaComboBox.setValues(media, false);
 
 			for (Media m : media) {
-				if(m.toString().equalsIgnoreCase(containerType.getName())) {
+				if(m.toString().equalsIgnoreCase(containerType.getName()) || m.toString().equalsIgnoreCase(containerType.getBrotherFormat().getMedia())) {
 					mediaComboBox.setSelection(m);
 					break;
 				}
 			}
 			fireConfigChanged();
 		});
-		mediaComboBox.addActionListener(ev->fireConfigChanged());
+		mediaComboBox.addActionListener(e -> fireConfigChanged());
 
 		if(services.length>0) {
 			printerComboBox.getActionListeners()[0].actionPerformed(null);
@@ -182,7 +180,7 @@ public class CassettePrinterAdapter extends PrintAdapter {
 		} else {
 			PrintService ps = printerComboBox.getSelection();
 			Media media = mediaComboBox.getSelection();
-			return BrotherPrinterAdapter.getPreviewPanel(container, ps, media, getModel());
+			return PrintAdapter.getPreviewPanel(container, ps, media, getModel());
 		}
 	}
 
@@ -270,7 +268,7 @@ public class CassettePrinterAdapter extends PrintAdapter {
 		} else {
 			PrintService ps = printerComboBox.getSelection();
 			Media media = mediaComboBox.getSelection();
-			BrotherPrinterAdapter.print(containers, ps, media, getModel());
+			PrintAdapter.print(containers, ps, media, getModel());
 		}
 
 	}

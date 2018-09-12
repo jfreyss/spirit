@@ -38,32 +38,35 @@ import javax.persistence.TemporalType;
 @Table(name="logentry", indexes = {
 		@Index(name="logentry_user_index", columnList = "creUser"), @Index(name="logEntry_date_index", columnList = "creDate")})
 public class LogEntry implements Serializable, Comparable<LogEntry> {
-	
+
 	public static enum Action {
 		/**Register successful logon attempts*/
 		LOGON_SUCCESS,
 		/**Register unsuccessful logon attempts*/
 		LOGON_FAILED,
+		/**when the account has been unlocked */
+		UNLOCK,
+		//		/**when the account has been disabled after n failed attempts */
+		//		DISABLED,
 	}
-	
+
 	@Column(name="creUser", length=20, nullable=false)
 	@Id
 	private String user;
-	
+
 	@Temporal(value=TemporalType.TIMESTAMP)
 	@Column(name="creDate", nullable=false)
 	@Id
 	private Date date;
-	
-	
+
 	@Enumerated(EnumType.STRING)
 	@Column(name="action", length=20, nullable=false)
 	@Id
 	private Action action;
-	
+
 	@Column(name="ipAddress", length=20)
 	private String ipAddress;
-	
+
 	@Column(name="comments", length=128)
 	private String comments;
 
@@ -90,11 +93,11 @@ public class LogEntry implements Serializable, Comparable<LogEntry> {
 	public void setAction(Action action) {
 		this.action = action;
 	}
-	
+
 	public String getIpAddress() {
 		return ipAddress;
 	}
-	
+
 	public void setIpAddress(String ipAddress) {
 		this.ipAddress = ipAddress;
 	}
@@ -106,13 +109,13 @@ public class LogEntry implements Serializable, Comparable<LogEntry> {
 	public void setComments(String comments) {
 		this.comments = comments;
 	}
-	
+
 
 	@Override
 	public int hashCode() {
 		return user.hashCode() + date.hashCode();
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if(obj==null) return false;
@@ -120,10 +123,10 @@ public class LogEntry implements Serializable, Comparable<LogEntry> {
 		LogEntry l = (LogEntry) obj;
 		return user.equals(l.getUser()) && date.equals(l.getDate()) && action==l.getAction();
 	}
-	
+
 	@Override
-	public int compareTo(LogEntry o) {		
+	public int compareTo(LogEntry o) {
 		return -getDate().compareTo(o.getDate());
 	}
-	
+
 }

@@ -56,6 +56,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import javax.swing.border.Border;
 
 public final class UIUtils {
@@ -551,6 +552,11 @@ public final class UIUtils {
 		return getColor(255-(int)((255-col.getRed())*FACTOR), 255-(int)((255-col.getGreen())*FACTOR), 255-(int)((255-col.getBlue())*FACTOR), 0);
 	}
 
+	public static JPanel addPadding(int padx, int pady, JComponent comp) {
+		return UIUtils.createBox(comp, Box.createVerticalStrut(pady), Box.createVerticalStrut(pady), Box.createHorizontalStrut(padx), Box.createHorizontalStrut(padx));
+	}
+
+
 	public static JPanel createHorizontalTitlePanel(String title) {
 		return createHorizontalTitlePanel(title, getColor(114, 160, 193));
 	}
@@ -689,6 +695,15 @@ public final class UIUtils {
 		Map map = (Map)(tk.getDesktopProperty("awt.font.desktophints"));
 		if (map != null) {
 			((Graphics2D)g).addRenderingHints(map);
+		}
+	}
+
+	public static void applyNimbusLaF() {
+		try {
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+			UIManager.put("nimbusSelectionBackground", new Color(173,207,231));
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 

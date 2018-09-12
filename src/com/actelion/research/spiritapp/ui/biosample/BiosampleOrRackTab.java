@@ -33,7 +33,6 @@ import java.util.Set;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import com.actelion.research.spiritapp.ui.location.ContainerActions;
@@ -103,29 +102,26 @@ public class BiosampleOrRackTab extends JPanel implements IExportable {
 			}
 		});
 
-		BiosampleActions.attachPopup(biosampleTable);
-		BiosampleActions.attachPopup(biosampleScrollPane);
-
-
-		ListSelectionListener listener = new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				if(push>0) return;
-				try {
-					push++;
-					firePropertyChange(PROPERTY_SELECTION, null, "");
-				} finally {
-					push--;
-				}
+		ListSelectionListener listener = e -> {
+			if(push>0) return;
+			try {
+				push++;
+				firePropertyChange(PROPERTY_SELECTION, null, "");
+			} finally {
+				push--;
 			}
 		};
 
 		biosampleTable.getSelectionModel().addListSelectionListener(listener);
 		biosampleTable.getColumnModel().getSelectionModel().addListSelectionListener(listener);
-
 		tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
 
+		//Attach popups
+		BiosampleActions.attachPopup(biosampleTable);
+		BiosampleActions.attachPopup(biosampleScrollPane);
 	}
+
+
 
 	public void setTabPaneVisible(boolean rackViewVisible) {
 		removeAll();

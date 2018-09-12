@@ -44,33 +44,34 @@ import com.actelion.research.util.ui.TextChangeListener;
 public class MonitorTextChangeListener implements TextChangeListener {
 	private Result result;
 	private int valueNo;
-	
+
 	public MonitorTextChangeListener(Result result, int valueNo) {
 		this.result = result;
 		this.valueNo = valueNo;
 	}
-	
+
 	@Override
 	public void textChanged(JComponent s) {
 		assert s instanceof JCustomTextField;
 		JCustomTextField src = (JCustomTextField) s;
 		try {
 			JPAUtil.pushEditableContext(SpiritFrame.getUser());
-			
+
 			Date now = JPAUtil.getCurrentDateFromDatabase();
 			result.getOutputResultValues().get(valueNo).setValue(src.getText());
 			result.setUpdUser(Spirit.askForAuthentication().getUsername());
 			result.setUpdDate(now);
-			
+
+			if(!Spirit.askReasonForChangeIfUpdated(Collections.singletonList(result))) return;
 			DAOResult.persistResults(Collections.singletonList(result), SpiritFrame.getUser());
-			src.setBorderColor(Color.BLUE);					
+			src.setBorderColor(Color.BLUE);
 			src.setToolTipText((src.getToolTipText()==null?"<html>":src.getToolTipText()+"<br>") + "Updated value: "+MonitoringCagePanel.formatTooltipText(src.getText(), result.getUpdUser(), result.getUpdDate()));
 		} catch(Exception ex) {
-			src.setBorderColor(Color.RED);					
+			src.setBorderColor(Color.RED);
 			JExceptionDialog.showError(src, ex);
 		} finally {
-			JPAUtil.popEditableContext();				
+			JPAUtil.popEditableContext();
 		}
 	}
-	
+
 }

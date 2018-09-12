@@ -53,7 +53,7 @@ public class SQLConverter {
 		//Replace alter tables
 		if(vendor==SQLVendor.HSQL) {
 			script = script.replaceAll("(?i)alter table (.*?) add \\((.*?)\\)", "alter table $1 add $2");
-			script = script.replaceAll("(?i)alter table (.*?) modify \\((.*)\\)", "alter table $1 alter column $2");
+			script = script.replaceAll("(?i)alter table (.*?) modify \\((.*?)\\)", "alter table $1 alter column $2");
 		} else if(vendor==SQLVendor.MYSQL) {
 			script = script.replaceAll("(?i)alter table (.*?) add (.*?)", "alter table $1 add $2");
 			script = script.replaceAll("(?i)alter table (.*?) modify \\((.*?)\\)", "alter table $1 modify $2");

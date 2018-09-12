@@ -53,10 +53,9 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.actelion.research.spiritapp.ui.study.GroupComboBox;
 import com.actelion.research.spiritapp.ui.study.GroupLabel;
+import com.actelion.research.spiritapp.ui.util.PDFUtils;
 import com.actelion.research.spiritcore.business.study.Group;
-import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.UIUtils;
 
 /**
@@ -271,7 +270,7 @@ public abstract class AbstractReport {
 		styles.put(Style.S_TD_RIGHT, style);
 
 		font = wb.createFont();
-		font.setFontHeightInPoints((short)7);
+		font.setFontHeightInPoints((short)8);
 		style = wb.createCellStyle();
 		style.setBorderRight(CellStyle.BORDER_THIN);
 		style.setRightBorderColor(IndexedColors.BLACK.getIndex());
@@ -695,48 +694,25 @@ public abstract class AbstractReport {
 		}
 	}
 
-
-	protected void createHeadersWithPhase(Sheet sheet, Study study, Phase phase, String subtitle) {
-		int line = 0;
-		Row row = sheet.createRow(line++);
-		row.setHeightInPoints(21f);
-		Cell cell = row.createCell(0);
-		cell.setCellStyle(styles.get(Style.S_TITLE14));
-		cell.setCellValue(study.getStudyId() + (study.getLocalId()!=null? " (" + study.getLocalId() + ")":""));
-
-		row = sheet.createRow(line++);
-		row.setHeightInPoints(21f);
-		cell = row.createCell(0);
-		cell.setCellStyle(styles.get(Style.S_TITLE12));
-		cell.setCellValue("Date: " + FormatterUtils.formatDateTime(new Date()));
-		if(phase!=null) {
-			cell.setCellValue(phase.getShortName() + (phase.getAbsoluteDate()!=null? " - " + FormatterUtils.formatDate(phase.getAbsoluteDate()): ""));
-		}
-		cell = row.createCell(3);
-		cell.setCellStyle(styles.get(Style.S_TITLE12));
-		cell.setCellValue(subtitle);
-
-		//		sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 10));
-		//		sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 2));
-		//		sheet.addMergedRegion(new CellRangeAddress(1, 1, 3, 10));
-
-
-	}
-
 	protected void createHeadersWithTitle(Sheet sheet, Study study, String title) {
 		sheet.createRow(0).setHeightInPoints(22f);
-		set(sheet, 0, 0, study.getStudyId() +  (study.getLocalId()!=null? " / " + study.getLocalId():"") + (title==null?"": ": " + title) , Style.S_TITLE14);
+		set(sheet, 0, 0, study.getStudyId() +  (study.getLocalId()!=null? " / " + study.getLocalId():"") + (title==null?"": ": " + title) , Style.S_TITLE14BLUE);
 	}
 
 	protected void createHeadersWithTitleSubtitle(Sheet sheet, Study study, String title, String subtitle) {
 		sheet.createRow(0).setHeightInPoints(22f);
-		sheet.createRow(1).setHeightInPoints(21f);
-		sheet.createRow(2).setHeightInPoints(21f);
-		set(sheet, 0, 0, study.getStudyId(), Style.S_TITLE14);
-		set(sheet, 1, 0, (study.getLocalId()!=null? " (" + study.getLocalId() + ")":""), Style.S_TITLE12);
-		set(sheet, 2, 0, FormatterUtils.formatDateTimeShort(new Date()), Style.S_TITLE12);
-		set(sheet, 0, 2, title, Style.S_TITLE14);
-		set(sheet, 1, 2, subtitle, Style.S_TITLE14BLUE);
+		set(sheet, 0, 0, study.getStudyId() +  (study.getLocalId()!=null? " / " + study.getLocalId():"") + (title==null?"": ": " + title) , Style.S_TITLE14);
+		sheet.createRow(1).setHeightInPoints(20f);
+		set(sheet, 1, 0, subtitle, Style.S_TITLE14BLUE);
+
+		//		sheet.createRow(0).setHeightInPoints(22f);
+		//		sheet.createRow(1).setHeightInPoints(21f);
+		//		sheet.createRow(2).setHeightInPoints(21f);
+		//		set(sheet, 0, 0, study.getStudyId(), Style.S_TITLE14);
+		//		set(sheet, 1, 0, (study.getLocalId()!=null? " (" + study.getLocalId() + ")":""), Style.S_TITLE12);
+		//		set(sheet, 2, 0, FormatterUtils.formatDateTimeShort(new Date()), Style.S_TITLE12);
+		//		set(sheet, 0, 2, title, Style.S_TITLE14);
+		//		set(sheet, 1, 2, subtitle, Style.S_TITLE14BLUE);
 	}
 
 
@@ -774,7 +750,7 @@ public abstract class AbstractReport {
 
 
 	/**
-	 * Export the report to the given file (null will create a tmp file and open it in Excel)
+	 * Exports the report to the given file (null will create a tmp file and open it in Excel)
 	 * @param reportFile
 	 */
 	public void export(File reportFile) throws Exception {
@@ -791,6 +767,30 @@ public abstract class AbstractReport {
 		try(OutputStream out = new BufferedOutputStream(new FileOutputStream(reportFile))) {
 			wb.write(out);
 		}
+
+		if(open) {
+			Desktop.getDesktop().open(reportFile);
+		}
+	}
+
+	/**
+	 * Exports the report to PDD.
+	 * This works by converting the HSSF to PDF through Itext
+	 * @param reportFile
+	 * @throws Exception
+	 */
+	public void exportPDF(File reportFile) throws Exception {
+		if(wb==null) throw new Exception("You must first generate the report");
+		boolean open = false;
+		if(reportFile==null) {
+			String name = getName();
+			if(study!=null) name = study.getStudyId()+"_"+name;
+			reportFile = File.createTempFile( name, ".pdf");
+			open = true;
+		}
+
+
+		PDFUtils.convertHSSF2Pdf(wb, study.getStudyId() + ": " + study.getTitle(), reportFile);
 
 		if(open) {
 			Desktop.getDesktop().open(reportFile);
@@ -869,7 +869,7 @@ public abstract class AbstractReport {
 		List<Group> groups = new ArrayList<>(study.getGroups());
 		for (int i = 1; i < groups.size(); i++) {
 			final Group group = groups.get(i);
-			populateCompareGroup2Groups.put(group, groups.get(0));
+			//			populateCompareGroup2Groups.put(group, groups.get(0));
 
 			final GroupComboBox groupCombobox = new GroupComboBox(groups.subList(0, i));
 			groupCombobox.setSelection(populateCompareGroup2Groups.get(group));

@@ -42,20 +42,20 @@ import com.actelion.research.util.CompareUtils;
 
 /**
  * Represents an element on which we allow pivoting
- * 
+ *
  * @author freyssj
  *
  */
 public abstract class PivotItem implements Comparable<PivotItem>, Serializable {
 
-	private static int index = 0;	
-	private final static Map<String, Integer> id2sortOrder = new HashMap<String, Integer>();	
-	
+	private static int index = 0;
+	private final static Map<String, Integer> id2sortOrder = new HashMap<>();
+
 	private final String id;
 	private final PivotItemClassifier classifier;
 	private final String name;
 	private final int sortOrder;
-	
+
 	PivotItem(PivotItemClassifier classifier, String name) {
 		this.id = classifier.getLabel() + "." + name;
 		this.classifier = classifier;
@@ -68,58 +68,58 @@ public abstract class PivotItem implements Comparable<PivotItem>, Serializable {
 		}
 	}
 
-	
+
 	public String getId() {
 		return id;
 	}
-	
+
 	public String getFullName() {
 		return name;
 	}
-	
+
 	public String getShortName() {
 		return name.substring(getSubClassifier().length()).trim();
 	}
-	
+
 	@Override
 	public String toString() {
 		return name;
-	}	
-	
+	}
+
 	@Override
 	public int compareTo(PivotItem o) {
 		return COMPARATOR_SORTORDER.compare(this, o);
 	}
-	
-	
+
+
 	public abstract String getTitle(ResultValue rv);
-	
+
 	public String getTitleCleaned(ResultValue rv) {
 		String s = getTitle(rv);
 		if(s.length()>3 && s.charAt(0)=='<' && s.charAt(2)=='>') s = s.substring(3);
 		return s;
 	}
-	
+
 	public int getSortOrder() {
 		return sortOrder;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof PivotItem)) return false;
 		if(this==obj) return true;
 		return compareTo((PivotItem)obj)==0;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return sortOrder;
 	}
-	
+
 	public PivotItemClassifier getClassifier() {
 		return classifier;
 	}
-	
+
 	public String getSubClassifier() {
 		if(name.startsWith("[")) {
 			int index = name.indexOf("]");
@@ -128,8 +128,8 @@ public abstract class PivotItem implements Comparable<PivotItem>, Serializable {
 		}
 		return "";
 	}
-	
-	
+
+
 	/**
 	 * Check if this pivotItems would return more than 2 values for the given results
 	 * @param forResults
@@ -138,12 +138,12 @@ public abstract class PivotItem implements Comparable<PivotItem>, Serializable {
 	 */
 	public boolean isDiscriminating(List<Result> results) {
 		if(results==null || results.isEmpty()) return false;
-		boolean isAlwaysShown = 
+		boolean isAlwaysShown =
 				this==PivotItemFactory.RESULT_INPUT
-				|| this==PivotItemFactory.STUDY_GROUP		
+				|| this==PivotItemFactory.STUDY_GROUP
 				|| this==PivotItemFactory.BIOSAMPLE_NAME
 				|| this==PivotItemFactory.RESULT_TEST;
-		
+
 		if(isAlwaysShown) {
 			//If it is the ALWAYS_SHOWN list, we display it if one value is not null
 			for (Result result : results) {
@@ -156,7 +156,7 @@ public abstract class PivotItem implements Comparable<PivotItem>, Serializable {
 				}
 			}
 		} else {
-			
+
 			boolean first = true;
 			String seenValue = null;
 			for (Result result : results) {
@@ -176,11 +176,11 @@ public abstract class PivotItem implements Comparable<PivotItem>, Serializable {
 		return false;
 	}
 
-	
+
 	/**
-	 * Comparator used to 
+	 * Comparator used to
 	 */
-	public static final Comparator<PivotItem> COMPARATOR_SORTORDER = new Comparator<PivotItem>() {		
+	public static final Comparator<PivotItem> COMPARATOR_SORTORDER = new Comparator<PivotItem>() {
 		@Override
 		public int compare(PivotItem o1, PivotItem o2) {
 			int c;
@@ -191,35 +191,34 @@ public abstract class PivotItem implements Comparable<PivotItem>, Serializable {
 				BiosampleLinker l1 = ((PivotItemBiosampleLinker) o1).getLinker();
 				BiosampleLinker l2 = ((PivotItemBiosampleLinker) o2).getLinker();
 				return l1.compareTo(l2);
-				
+
 			} else if((o1 instanceof PivotItemBiosampleLinker) && !(o2 instanceof PivotItemBiosampleLinker)) {
 				return 1;
 			} else if(!(o1 instanceof PivotItemBiosampleLinker) && (o2 instanceof PivotItemBiosampleLinker)) {
-				return -1;				
+				return -1;
 			} else {
 				c = o1.getSortOrder() - o2.getSortOrder();
-				if(c!=0) return c;				
+				if(c!=0) return c;
 			}
-			
-			
+
+
 			return o1.getFullName().compareTo(o2.getFullName());
 		}
 	};
-	
+
 
 	public static Map<String, List<PivotItem>> mapClassifier(Collection<PivotItem> collection){
 		List<PivotItem> items = new ArrayList<PivotItem>(collection);
 		Collections.sort(items, COMPARATOR_SORTORDER);
-		Map<String, List<PivotItem>> res = new LinkedHashMap<String, List<PivotItem>>();
+		Map<String, List<PivotItem>> res = new LinkedHashMap<>();
 		for (PivotItem pivotItem : items) {
 			PivotItemClassifier classifier = pivotItem.getClassifier();
-			
-			
+
+
 			String key = pivotItem.getSubClassifier().length()>0? pivotItem.getSubClassifier(): classifier.getLabel();
 			List<PivotItem> l = res.get(key);
 			if(l==null) {
-				l = new ArrayList<PivotItem>();
-				res.put(key, l);
+				res.put(key, l = new ArrayList<>());
 			}
 			l.add(pivotItem);
 		}
@@ -229,5 +228,5 @@ public abstract class PivotItem implements Comparable<PivotItem>, Serializable {
 	public boolean isHideForBlinds() {
 		return false;
 	}
-	
+
 }

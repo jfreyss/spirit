@@ -51,7 +51,7 @@ import org.hibernate.envers.Audited;
 
 import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.IObject;
-import com.actelion.research.spiritcore.util.DifferenceMap;
+import com.actelion.research.spiritcore.business.audit.DifferenceList;
 import com.actelion.research.util.CompareUtils;
 
 @Entity
@@ -261,35 +261,30 @@ public class EmployeeGroup implements Comparable<EmployeeGroup>, Serializable, I
 		return res;
 	}
 
-	@Override
-	public String getDifference(IAuditable r) {
-		if(r==null) r = new EmployeeGroup();
-		if(!(r instanceof EmployeeGroup)) return "";
-		return getDifferenceMap((EmployeeGroup)r).flatten();
-	}
-
 	/**
 	 * Returns a map containing the differences between 2 results (usually 2 different versions).
-	 * The result is an empty string if there are no differences or if b is null
+	 * The result is an empty DifferenceList if there are no differences or if r is null
 	 * @param b
 	 * @return
 	 */
-	public DifferenceMap getDifferenceMap(EmployeeGroup r) {
+	@Override
+	public DifferenceList getDifferenceList(IAuditable auditable) {
+		DifferenceList list = new DifferenceList("Group", getId(), getName(), null);
+		if(auditable==null || !(auditable instanceof EmployeeGroup)) return list;
+		EmployeeGroup r = (EmployeeGroup) auditable;
 
-		DifferenceMap map = new DifferenceMap();
-		if(r==null) return map;
 		if(!CompareUtils.equals(getName(), r.getName())) {
-			map.put("Name", getName(), r.getName());
+			list.add("Name", getName(), r.getName());
 		}
 
 		if(!CompareUtils.equals(getParent(), r.getParent())) {
-			map.put("Parent", getParent()==null || getParent().getName()==null? "": getParent().getName(), r.getParent()==null || r.getParent().getName()==null? "": r.getParent().getName());
+			list.add("Parent", getParent()==null || getParent().getName()==null? "": getParent().getName(), r.getParent()==null || r.getParent().getName()==null? "": r.getParent().getName());
 		}
 
 		if(isDisabled()!=r.isDisabled()) {
-			map.put("Disabled", Boolean.toString(isDisabled()), Boolean.toString(r.isDisabled()));
+			list.add("Disabled", Boolean.toString(isDisabled()), Boolean.toString(r.isDisabled()));
 		}
 
-		return map;
+		return list;
 	}
 }

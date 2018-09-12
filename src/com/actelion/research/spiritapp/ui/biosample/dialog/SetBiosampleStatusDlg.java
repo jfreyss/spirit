@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritapp.ui.biosample.dialog;
 
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.util.List;
 
@@ -35,7 +34,6 @@ import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleTable;
-import com.actelion.research.spiritapp.ui.biosample.BiosampleTableModel.Mode;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.ui.util.component.JSpiritEscapeDialog;
@@ -44,6 +42,7 @@ import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
@@ -68,12 +67,12 @@ public class SetBiosampleStatusDlg extends JSpiritEscapeDialog {
 		}
 
 
-		JLabel label = new JCustomLabel("Are you sure you want to modify the status of those biosamples / containers to " + (status==null?"No Status": status.toString()), Font.BOLD);
+		JLabel label = new JCustomLabel("Are you sure you want to modify the status of those biosamples / containers to " + (status==null?"No Status": status.toString()), FastFont.BOLD);
 		label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
 		BiosampleTable table = new BiosampleTable();
 		table.getModel().setCanExpand(false);
-		table.getModel().setMode(Mode.COMPACT);
+		//		table.getModel().setMode(Mode.COMPACT);
 		table.setRows(biosamples);
 
 		JPanel buttons;
@@ -117,6 +116,7 @@ public class SetBiosampleStatusDlg extends JSpiritEscapeDialog {
 					b.setLocPos(null, -1);
 					b.setStatus(Status.TRASHED);
 				}
+				if(!Spirit.askReasonForChangeIfUpdated(biosamples)) return;
 				DAOBiosample.persistBiosamples(biosamples, user);
 
 				dispose();
@@ -143,6 +143,7 @@ public class SetBiosampleStatusDlg extends JSpiritEscapeDialog {
 				for (Biosample b : biosamples) {
 					b.setStatus(status);
 				}
+				if(!Spirit.askReasonForChangeIfUpdated(biosamples)) return;
 				DAOBiosample.persistBiosamples(biosamples, user);
 
 				dispose();

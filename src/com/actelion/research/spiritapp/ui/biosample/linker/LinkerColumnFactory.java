@@ -33,7 +33,7 @@ public class LinkerColumnFactory {
 	public static AbstractLinkerColumn<?> create(BiosampleLinker linker) {
 		switch(linker.getType()) {
 		case SAMPLEID:
-			return new SampleIdColumn(linker, true, true);
+			return new SampleIdColumn(linker, false, false);
 		case SAMPLENAME:
 			return new SampleNameColumn(linker);
 		case METADATA:

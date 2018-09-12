@@ -31,23 +31,23 @@ import java.net.URLEncoder;
 public class UsageLog {
 
 	public static final String ACTION_LOGON = "Logon";
-	
-	
-	public void logUsage(final String application, final String userId) {
+
+
+	public static void logUsage(final String application, final String userId) {
 		logUsage(application, userId, ACTION_LOGON, null, null);
 	}
-	
+
 	/**
 	 * Parameters should be formatted like: [key=value][,key=value]*
 	 * @param application
 	 * @param userId (if null, the current user.name)
 	 * @param pcName (if null, the current InetAddress.getLocalhose)
-	 * @param action (if null, Logon) 
+	 * @param action (if null, Logon)
 	 * @param parameters (can be null)
 	 */
 	public static void logUsage(final String application, final String userId, final String pcName, final String action, final String parameters) {
 		if(application==null) throw new IllegalArgumentException("Application cannot be null");
-		new Thread() {			
+		new Thread() {
 			@Override
 			public void run() {
 				try {
@@ -69,21 +69,21 @@ public class UsageLog {
 					String parameters2 = "home="+home+";user="+userId+";os="+os+";version="+System.getProperty("java.version")+";";
 					if(parameters!=null) parameters2 += parameters;
 
-					new URL("http://ares:8080/dataCenter/log.do?project=" + URLEncoder.encode(application, "UTF-8") 
-							+ "&username="+URLEncoder.encode(userId2, "UTF-8")
-							+ "&pcname=" + URLEncoder.encode(pcName2, "UTF-8")
-							+ "&action=" + URLEncoder.encode(action2, "UTF-8") 
-							+ "&ip=" + URLEncoder.encode(ip, "UTF-8") 
-							+ (parameters2!=null? "&parameters="+URLEncoder.encode(parameters2, "UTF-8"): "")
+					new URL("http://ares:8080/dataCenter/log.do?project=" + URLEncoder.encode(application, "UTF-8")
+					+ "&username="+URLEncoder.encode(userId2, "UTF-8")
+					+ "&pcname=" + URLEncoder.encode(pcName2, "UTF-8")
+					+ "&action=" + URLEncoder.encode(action2, "UTF-8")
+					+ "&ip=" + URLEncoder.encode(ip, "UTF-8")
+					+ (parameters2!=null? "&parameters="+URLEncoder.encode(parameters2, "UTF-8"): "")
 							).getContent();
-						
+
 				} catch(Throwable e) {
 					e.printStackTrace();
-				}				
+				}
 			}
 		}.start();
 	}
-		
+
 
 	public static void main(String[] args) {
 		System.out.println("UsageLog.main() os="+System.getProperty("os.name")+" vendor="+System.getProperty("java.home")+" java="+System.getProperty("java.version"));

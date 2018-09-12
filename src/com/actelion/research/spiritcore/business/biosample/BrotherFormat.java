@@ -25,6 +25,7 @@ public enum BrotherFormat {
 
 	_9x24("9mmx24_1", 0),
 
+	_12x23N("12mmx23_1", 0),
 	_12x33("12mmx33_1", 8),
 	_12x33N("12mmx33_1", 0),
 	_12x42("12mmx42_1", 8),
@@ -39,17 +40,17 @@ public enum BrotherFormat {
 	;
 
 	private final String media;
-	private final float lineOffset;
+	private final float leftLineOffset;
 
 	/**
 	 *
 	 * @param medias
-	 * @param lineOffset - distance of line from the left border in mm
+	 * @param leftLineOffset - distance of line from the left border in mm
 	 * @param barcodeOnRight
 	 */
-	private BrotherFormat(String media,  float lineOffset) {
+	private BrotherFormat(String media,  float leftLineOffset) {
 		this.media = media;
-		this.lineOffset = lineOffset;
+		this.leftLineOffset = leftLineOffset;
 	}
 
 	public String getMedia() {
@@ -57,7 +58,12 @@ public enum BrotherFormat {
 	}
 
 	public float getLineOffset() {
-		return lineOffset;
+		return leftLineOffset;
 	}
 
+	@Override
+	public String toString() {
+		return media;
+	}
 }
+

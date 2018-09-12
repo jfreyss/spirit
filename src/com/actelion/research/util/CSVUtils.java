@@ -103,7 +103,7 @@ public class CSVUtils {
 	}
 
 	public static void exportToCsv(String[][] table) throws Exception {
-		File reportFile = File.createTempFile("xls_", ".csv");
+		File reportFile = IOUtils.createTempFile("export_", ".csv");
 		exportToCsv(table, reportFile);
 		Desktop.getDesktop().open(reportFile);
 	}
@@ -155,6 +155,9 @@ public class CSVUtils {
 		try (LineNumberReader reader = new LineNumberReader(r)) {
 			String line;
 			while((line = reader.readLine())!=null) {
+				if (line.isEmpty()) {
+					continue;
+				}
 				String[] split = split(line, ",;\t");
 				lines.add(split);
 			}

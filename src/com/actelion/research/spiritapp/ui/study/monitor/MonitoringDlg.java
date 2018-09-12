@@ -47,7 +47,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.text.JTextComponent;
 
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.biosample.ContainerComboBox;
@@ -103,7 +102,7 @@ public class MonitoringDlg extends JEscapeDialog {
 
 	private JPanel cagePanel = new JPanel(new GridBagLayout());
 	private JPanel animalPanel = new JPanel(new GridBagLayout());
-	private List<JTextComponent> requiredComponents = new ArrayList<>();
+	private List<JComponent> requiredComponents = new ArrayList<>();
 	private final String elb;
 
 	public MonitoringDlg(Phase p) {
@@ -162,19 +161,15 @@ public class MonitoringDlg extends JEscapeDialog {
 		// ContentPanel
 		cagePanel.setBackground(Color.WHITE);
 		cagePanel.setOpaque(true);
-		JScrollPane sp1 = new JScrollPane(cagePanel);
-		sp1.getVerticalScrollBar().setAutoscrolls(true);
-		sp1.getVerticalScrollBar().setUnitIncrement(16);
-		JPanel cageSp = new JPanel(new BorderLayout());
-		cageSp.add(BorderLayout.CENTER, sp1);
+		JScrollPane cageSp = new JScrollPane(cagePanel);
+		cageSp.getVerticalScrollBar().setAutoscrolls(true);
+		cageSp.getVerticalScrollBar().setUnitIncrement(16);
 		cageSp.setMinimumSize(new Dimension(0,0));
 
 		animalPanel.setBackground(Color.WHITE);
 		animalPanel.setOpaque(true);
-		JScrollPane sp2 = new JScrollPane(animalPanel);
-		sp2.getVerticalScrollBar().setUnitIncrement(16);
-		JPanel animalSp = new JPanel(new BorderLayout());
-		animalSp.add(BorderLayout.CENTER, sp2);
+		JScrollPane animalSp = new JScrollPane(animalPanel);
+		animalSp.getVerticalScrollBar().setUnitIncrement(16);
 		animalSp.setMinimumSize(new Dimension(0,0));
 
 		splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, cageSp, animalSp);
@@ -254,7 +249,7 @@ public class MonitoringDlg extends JEscapeDialog {
 
 			// The animal has some measurements
 			// Add the animal to our list
-			if(!onlyRequired || (a!=null && (a.isMeasureWeight() || (a.getNamedTreatment()!=null && a.getNamedTreatment().isWeightDependant()) || a.getMeasurements().size()>0))) {
+			if(!onlyRequired || (a!=null && (a.isMeasureWeight() || a.getNamedTreatment()!=null || a.getMeasurements().size()>0))) {
 				filteredAnimals.add(animal);
 			}
 
@@ -389,9 +384,11 @@ public class MonitoringDlg extends JEscapeDialog {
 		for(final JComponent comp: requiredComponents) {
 			if(comp.isEnabled()) {
 				if(previous!=null) {
-					((JCustomTextField)previous).addActionListener(e-> {
-						comp.requestFocusInWindow();
-					});
+					if(previous instanceof MonitorTextField) {
+						((MonitorTextField) previous).addActionListener(e-> comp.requestFocusInWindow());
+					} else {
+						((JCustomTextField) previous).addActionListener(e-> comp.requestFocusInWindow());
+					}
 				}
 				previous = comp;
 			}
@@ -434,7 +431,7 @@ public class MonitoringDlg extends JEscapeDialog {
 
 	public static List<FoodWater> getOrCreateFoodWaterFor(Phase phase) {
 		List<FoodWater> fwsFromGivenPhase = DAOFoodWater.getFoodWater(phase.getStudy(), phase);
-		List<FoodWater> res = new ArrayList<FoodWater>();
+		List<FoodWater> res = new ArrayList<>();
 		for (Container cage: Biosample.getContainers(phase.getStudy().getParticipantsSorted())) {
 
 			//Create or retrieve a row for this cage/phase

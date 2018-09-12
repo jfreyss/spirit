@@ -237,7 +237,9 @@ public class DataTab extends WizardPanel {
 		for(Biosample b: study.getParticipantsSorted()) {
 
 			//Skip this sample if it belongs to a group which should not be randomized
-			if(!comingFromCrossover) {
+			if(b.getStatus()!=null && !b.getStatus().isAvailable()) {
+				continue;
+			} else if(!comingFromCrossover) {
 				if(!isGroupSplitting && b.getInheritedGroup()==null) {
 					//OK
 				} else if(b.getInheritedGroup()!=null &&

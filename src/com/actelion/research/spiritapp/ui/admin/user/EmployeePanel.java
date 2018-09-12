@@ -35,15 +35,15 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
+import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JExceptionDialog;
@@ -75,6 +75,7 @@ public class EmployeePanel extends JPanel {
 				if(res!=JOptionPane.YES_OPTION) return;
 
 				try {
+					if(!Spirit.askReasonForChange()) return;
 					DAOEmployee.removeEmployee(sel.get(0), SpiritFrame.getUser());
 					SpiritFrame.clearAll();
 					refresh();
@@ -92,28 +93,11 @@ public class EmployeePanel extends JPanel {
 				employeeTable.setSelection(sel);
 			}
 		});
-		createUserButton.addActionListener(ev-> {
-			createUser("");
-		});
+		createUserButton.addActionListener(ev-> createUser(""));
 
 		employeeTable.getModel().setTreeViewActive(false);
-		//		if(editable) {
-		//			employeeTable.addMouseListener(new MouseAdapter() {
-		//				@Override
-		//				public void mouseClicked(MouseEvent e) {
-		//					if(e.getClickCount()>=2) {
-		//						editUserButton.getActionListeners()[0].actionPerformed(null);
-		//					}
-		//				}
-		//			});
-		//		}
 
-		activeCheckbox.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				refresh();
-			}
-		});
+		activeCheckbox.addChangeListener(e -> refresh());
 
 
 		filterField.setOpaque(false);
@@ -123,6 +107,10 @@ public class EmployeePanel extends JPanel {
 				refresh();
 			}
 		});
+
+
+		//Disable delete for Selenium
+		deleteUserButton.setVisible(SpiritProperties.getInstance().isAdvancedMode());
 
 		setLayout(new GridLayout());
 		add(UIUtils.createBox(

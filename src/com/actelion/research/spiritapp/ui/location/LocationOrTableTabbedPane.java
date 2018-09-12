@@ -23,15 +23,19 @@ package com.actelion.research.spiritapp.ui.location;
 
 import java.awt.Component;
 import java.awt.Point;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 
+import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleTable;
@@ -67,10 +71,6 @@ public class LocationOrTableTabbedPane extends JCustomTabbedPane {
 				selection = Container.getBiosamples(locationDepictor.getSelectedContainers());
 			}
 
-			//		locationDepictor.setDisplayChildren(true);
-			locationDepictor.setShowOneEmptyPosition(false);
-
-
 			//Update
 			updateDepictorOrTable();
 
@@ -82,8 +82,8 @@ public class LocationOrTableTabbedPane extends JCustomTabbedPane {
 			}
 		});
 
-
 		//hide or show the selected biosamples if a selection is made
+		locationDepictor.setShowOneEmptyPosition(false);
 		locationDepictor.addRackDepictorListener(new RackDepictorListener() {
 			@Override
 			public void onSelect(Collection<Integer> pos, Container lastSelect, boolean dblClick) {
@@ -94,20 +94,18 @@ public class LocationOrTableTabbedPane extends JCustomTabbedPane {
 					firePropertyChange(PROPERTY_SELECTION, null, new ArrayList<>());
 				}
 			}
-			//			@Override
-			//			public void locationSelected(final Location location) {
-			//				setBioLocation(location);
-			//			}
 			@Override
 			public void onPopup(Collection<Integer> pos, Container lastSelect, Component comp, Point point) {
 				Set<Container> containers = locationDepictor.getSelectedContainers();
 				if(pos.size()>0) {
-					ContainerActions.createPopup(containers).show(comp, point.x, point.y);
+					JPopupMenu popup = ContainerActions.createPopup(containers);
+					if(popup!=null) popup.show(comp, point.x, point.y);
 				}
 			}
 			@Override
 			public void locationPopup(Location location, Component comp, Point point) {
-				LocationActions.createPopup(location==null? new ArrayList<Location>(): Collections.singletonList(location)).show(comp, point.x, point.y);
+				JPopupMenu popup = LocationActions.createPopup(location==null? new ArrayList<Location>(): Collections.singletonList(location));
+				if(popup!=null) popup.show(comp, point.x, point.y);
 			}
 		});
 
@@ -130,7 +128,6 @@ public class LocationOrTableTabbedPane extends JCustomTabbedPane {
 	public BiosampleTable getBiosampleTable() {
 		return biosampleTable;
 	}
-
 
 	public Location getBioLocation() {
 		return location;
@@ -179,6 +176,11 @@ public class LocationOrTableTabbedPane extends JCustomTabbedPane {
 			if(getSelectedIndex()==0) {
 				String[][] layout = locationDepictor.getLocationLayout();
 				if(layout==null) throw new Exception("You cannot export the layout if there are biosamples");
+				// footer information
+				LocalDate now = LocalDate.now();
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
+				POIUtils.addFooterData("Printed by " + Spirit.getUsername() + " the " + now.format(formatter));
+				POIUtils.addFooterData("Product Version : " + Spirit.class.getPackage().getImplementationVersion() == null ? "" : "v." + Spirit.class.getPackage().getImplementationVersion());
 				POIUtils.exportToExcel(layout, POIUtils.ExportMode.HEADERS_TOPLEFT);
 			} else {
 				POIUtils.exportToExcel(biosampleTable.getTabDelimitedTable(), POIUtils.ExportMode.HEADERS_TOP);

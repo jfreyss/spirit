@@ -65,6 +65,7 @@ public class SlidePrinterAdapter extends PrintAdapter {
 	private JPanel configPanel;
 	private JCheckBox printInternalIdCheckBox = new JCheckBox("Print InternalId instead of studyId", true);
 	private JCheckBox printBlocNoCheckBox = new JCheckBox("Print BlocNo", true);
+	private JCheckBox printAllParticipantIds = new JCheckBox("Print All Participants", true);
 
 	private JRadioButton slideMateRadioButton = new JRadioButton("Print to SlideMate", true);
 	private JRadioButton ptouchRadioButton = new JRadioButton("Print to PTouch Printer");
@@ -81,10 +82,10 @@ public class SlidePrinterAdapter extends PrintAdapter {
 		super(tab);
 
 		slideMateBrowser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		slideMateBrowser.setFile(Spirit.getConfig().getProperty("printer.slidemate.path", "Y:\\SlideMateCache (BOURQUG)"));
+		slideMateBrowser.setFile(Spirit.getConfig().getProperty("printer.slidemate.path", "\\\\idorsia.com\\org\\Res_shared_folders\\LABUSER\\PrintMateCache(BOURQUG)"));
 
 		tsvBrowser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		tsvBrowser.setFile(Spirit.getConfig().getProperty("printer.slidecsv.path", "Y:\\SlideMateCache (BOURQUG)\\labels.csv"));
+		tsvBrowser.setFile(Spirit.getConfig().getProperty("printer.slidecsv.path", "\\\\idorsia.com\\org\\Res_shared_folders\\LABUSER\\PrintMateCache(BOURQUG)\\labels.csv"));
 
 		PrintService[] services = SpiritPrinter.getPrintServices();
 		printerComboBox = new JGenericComboBox<PrintService>(services, true);
@@ -103,7 +104,7 @@ public class SlidePrinterAdapter extends PrintAdapter {
 
 		configPanel = UIUtils.createVerticalBox(
 
-				UIUtils.createHorizontalBox(Box.createHorizontalStrut(10), printInternalIdCheckBox, Box.createHorizontalStrut(10), printBlocNoCheckBox, Box.createHorizontalGlue()),
+				UIUtils.createTable(3, printInternalIdCheckBox, printBlocNoCheckBox, printAllParticipantIds),
 
 				Box.createVerticalStrut(15),
 
@@ -139,6 +140,7 @@ public class SlidePrinterAdapter extends PrintAdapter {
 		tsvRadioButton.addActionListener(refreshActionListener);
 		printInternalIdCheckBox.addActionListener(refreshActionListener);
 		printBlocNoCheckBox.addActionListener(refreshActionListener);
+		printAllParticipantIds.addActionListener(refreshActionListener);
 
 
 		printerComboBox.addActionListener(e-> {
@@ -221,7 +223,7 @@ public class SlidePrinterAdapter extends PrintAdapter {
 		} else {
 			PrintService ps = printerComboBox.getSelection();
 			Media media = mediaComboBox.getSelection();
-			return BrotherPrinterAdapter.getPreviewPanel(container, ps, media, getModel());
+			return PrintAdapter.getPreviewPanel(container, ps, media, getModel());
 		}
 	}
 
@@ -232,6 +234,7 @@ public class SlidePrinterAdapter extends PrintAdapter {
 		tpl.setOverlapPosition(0);
 		tpl.setShowInternalIdFirst(printInternalIdCheckBox.isSelected());
 		tpl.setShowBlocNo(printBlocNoCheckBox.isSelected());
+		tpl.setShowAllParticipants(printAllParticipantIds.isSelected());
 		return tpl;
 	}
 
@@ -277,7 +280,7 @@ public class SlidePrinterAdapter extends PrintAdapter {
 		} else {
 			PrintService ps = printerComboBox.getSelection();
 			Media media = mediaComboBox.getSelection();
-			BrotherPrinterAdapter.print(containers, ps, media, getModel());
+			PrintAdapter.print(containers, ps, media, getModel());
 		}
 
 	}
@@ -334,10 +337,10 @@ public class SlidePrinterAdapter extends PrintAdapter {
 				sb.append("$" + studyId); 									//1 -StudyId
 				sb.append("$" + c.getContainerOrBiosampleId());				//2 -Barcode
 				sb.append("$" + (group==null?".": group.getName()));		//3 -Group
-				sb.append("$" + (tops.size()<1?".": tops.get(0).getSampleId() + (tops.get(0).getSampleName()!=null && tops.get(0).getSampleName().length()>0? " [" + tops.get(0).getSampleName() + "]":"")).replace('$', ' ') );
-				sb.append("$" + (tops.size()<2?".": tops.get(1).getSampleId() + (tops.get(1).getSampleName()!=null && tops.get(1).getSampleName().length()>0? " [" + tops.get(1).getSampleName() + "]":"")).replace('$', ' ') );
-				sb.append("$" + (tops.size()<3?".": tops.get(2).getSampleId() + (tops.get(2).getSampleName()!=null && tops.get(2).getSampleName().length()>0? " [" + tops.get(2).getSampleName() + "]":"")).replace('$', ' ') );
-				sb.append("$" + (tops.size()<4?".": tops.get(3).getSampleId() + (tops.get(3).getSampleName()!=null && tops.get(3).getSampleName().length()>0? " [" + tops.get(3).getSampleName() + "]":"")).replace('$', ' ') );
+				sb.append("$" + (tops.size()<1?".": tops.get(0).getSampleIdName()).replace('$', ' ') );
+				sb.append("$" + (tops.size()<2?".": tops.get(1).getSampleIdName()).replace('$', ' ') );
+				sb.append("$" + (tops.size()<3?".": tops.get(2).getSampleIdName()).replace('$', ' ') );
+				sb.append("$" + (tops.size()<4?".": tops.get(3).getSampleIdName()).replace('$', ' ') );
 
 				sb.append("$" + name);	 		//8
 				sb.append("$" + staining); 		//9

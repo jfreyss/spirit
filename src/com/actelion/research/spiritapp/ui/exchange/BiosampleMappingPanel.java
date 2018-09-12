@@ -48,9 +48,9 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.EntityAction;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.UIUtils;
-import com.itextpdf.text.Font;
 
 public class BiosampleMappingPanel extends JPanel implements IMappingPanel {
 
@@ -61,31 +61,31 @@ public class BiosampleMappingPanel extends JPanel implements IMappingPanel {
 	private JRadioButton r3 = new JRadioButton("Create a copy");
 	private final BiosampleList l = new BiosampleList();
 
-	public BiosampleMappingPanel(ImporterDlg dlg, Biotype inputBiotype, List<Biosample> inputBiosamples) { 
+	public BiosampleMappingPanel(ImporterDlg dlg, Biotype inputBiotype, List<Biosample> inputBiosamples) {
 		super(new GridLayout());
-	
+
 		this.dlg = dlg;
 		this.inputBiotype = inputBiotype;
-		
+
 		setMinimumSize(new Dimension(200, 200));
-		
+
 		ButtonGroup group = new ButtonGroup();
-		group.add(r1); 
-		group.add(r2); 
+		group.add(r1);
+		group.add(r2);
 		group.add(r3);
-		
+
 		r1.setSelected(true);
 		r1.setToolTipText("The Biosample from the imported file will be ignored, and possible links will be made to the existing ones");
 		r2.setToolTipText("The Biosample from the imported file will be replaced by the one in this file");
 		r3.setToolTipText("The Biosample from the imported file will be renamed by appending .1 / .2 to the sampleId");
-		
-		
+
+
 		JPanel existingPanel = UIUtils.createVerticalBox(BorderFactory.createEtchedBorder(),
-						new JCustomLabel("What do you want to do for the biosamples with existing sampleIds? ", Font.BOLD),
-						UIUtils.createHorizontalBox(BorderFactory.createEmptyBorder(2, 2, 2, 2), r1, r2, r3, Box.createVerticalGlue()));
+				new JCustomLabel("What do you want to do for the biosamples with existing sampleIds? ", FastFont.BOLD),
+				UIUtils.createHorizontalBox(BorderFactory.createEmptyBorder(2, 2, 2, 2), r1, r2, r3, Box.createVerticalGlue()));
 		existingPanel.setOpaque(true);
 		existingPanel.setBackground(LF.COLOR_ERROR_BACKGROUND);
-				
+
 		final BiosampleMetadataPanel metadataPanel = new BiosampleMetadataPanel();
 		if(inputBiosamples!=null) {
 			Collections.sort(inputBiosamples);
@@ -99,7 +99,7 @@ public class BiosampleMappingPanel extends JPanel implements IMappingPanel {
 					return this;
 				}
 			});
-			l.addListSelectionListener(new ListSelectionListener() {						
+			l.addListSelectionListener(new ListSelectionListener() {
 				@Override
 				public void valueChanged(ListSelectionEvent e) {
 					if(e.getValueIsAdjusting()) return;
@@ -109,29 +109,31 @@ public class BiosampleMappingPanel extends JPanel implements IMappingPanel {
 			if(inputBiosamples.size()>0) {
 				l.setSelectedIndex(0);
 			}
-			
-			
-			existingPanel.setVisible(existing.size()>0);			
+
+
+			existingPanel.setVisible(existing.size()>0);
 			add(UIUtils.createBox(
-					new JScrollPane(metadataPanel), 
+					new JScrollPane(metadataPanel),
 					new JLabel(l.getModel().getSize()+" "+inputBiotype.getName() + " (" + existing.size()+" overlapping sampleIds)"),
 					existingPanel,
-					new JScrollPane(l), 
+					new JScrollPane(l),
 					null));
 		}  else {
 			existingPanel.setVisible(false);
 		}
 		updateView();
 	}
-	
+
+	@Override
 	public void updateView() {
 		ExchangeMapping mapping = dlg.getMapping();
-		EntityAction action = mapping.getBiotype2existingBiosampleAction().get(inputBiotype.getName());		
+		EntityAction action = mapping.getBiotype2existingBiosampleAction().get(inputBiotype.getName());
 		if(action==EntityAction.SKIP) r1.setSelected(true);
 		if(action==EntityAction.MAP_REPLACE) r2.setSelected(true);
-		if(action==EntityAction.CREATE) r3.setSelected(true);		
+		if(action==EntityAction.CREATE) r3.setSelected(true);
 	}
-	
+
+	@Override
 	public void updateMapping() {
 		ExchangeMapping mapping = dlg.getMapping();
 		EntityAction action = r1.isSelected()? EntityAction.SKIP: r2.isSelected()? EntityAction.MAP_REPLACE: r3.isSelected()? EntityAction.CREATE: EntityAction.SKIP;

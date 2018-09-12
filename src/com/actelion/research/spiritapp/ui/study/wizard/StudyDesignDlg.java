@@ -61,6 +61,7 @@ import com.actelion.research.spiritapp.ui.util.HelpBinder;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.ui.util.component.JSpiritEscapeDialog;
+import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
@@ -109,8 +110,12 @@ public class StudyDesignDlg extends JSpiritEscapeDialog {
 		return new StudyDesignDlg(s, true);
 	}
 
-	public static StudyDesignDlg editStudy(Study s) {
-		return new StudyDesignDlg(s, false);
+	/**
+	 * Edit a study design
+	 * @param myStudy
+	 */
+	public StudyDesignDlg(Study myStudy) {
+		this(myStudy, false);
 	}
 
 	public StudyDesignDlg(Study myStudy, boolean duplicateMode) {
@@ -212,13 +217,17 @@ public class StudyDesignDlg extends JSpiritEscapeDialog {
 		final JButton editNamedSamplingButton = new JButton(new Action_EditNamedSampling(false));
 		editNamedSamplingButton.setEnabled(false);
 
+		final JButton duplicateSamplingButton = new JButton(new Action_DuplicateSampling());
+		duplicateSamplingButton.setEnabled(false);
+
 		JPanel samplingPanel = UIUtils.createTitleBox("6. Sampling Templates",
 				UIUtils.createBox(
 						new JScrollPane(samplingList),
-						UIUtils.createHorizontalBox(new JButton(new Action_EditNamedSampling(true)), editNamedSamplingButton, Box.createHorizontalGlue())));
+						UIUtils.createHorizontalBox(new JButton(new Action_EditNamedSampling(true)), editNamedSamplingButton, duplicateSamplingButton, Box.createHorizontalGlue())));
 		samplingList.addListSelectionListener(e-> {
 			if(samplingList.getSelectedValue()!=null) studyDesigner.setSelectedNamedSampling(samplingList.getSelectedValue());
 			editNamedSamplingButton.setEnabled(samplingList.getSelectedValue()!=null);
+			duplicateSamplingButton.setEnabled(samplingList.getSelectedValue()!=null);
 		});
 		samplingList.addMouseListener(new MouseAdapter() {
 			@Override
@@ -264,6 +273,14 @@ public class StudyDesignDlg extends JSpiritEscapeDialog {
 			try {
 				boolean add = study.getId()<=0;
 
+				if(getToDelete().size()>0) {
+					if(!Spirit.askReasonForChange()) return;
+				} else {
+					List<IAuditable> list = new ArrayList<>();
+					list.add(study);
+					list.addAll(getToUpdate());
+					if(!Spirit.askReasonForChangeIfUpdated(list)) return;
+				}
 
 				EntityManager session = JPAUtil.getManager();
 				//Start the transaction
@@ -406,6 +423,27 @@ public class StudyDesignDlg extends JSpiritEscapeDialog {
 			refresh();
 		}
 	}
+
+	public class Action_DuplicateSampling extends AbstractAction {
+		public Action_DuplicateSampling() {
+			putValue(AbstractAction.NAME, "Duplicate");
+			putValue(AbstractAction.SMALL_ICON, IconType.DUPLICATE.getIcon());
+		}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			NamedSampling ns = samplingList.getSelectedValue();
+			if(ns==null) return;
+			ns = ns.clone();
+			ns.setId(0);
+
+			new NamedSamplingDlg(study, ns, StudyDesignDlg.this);
+
+			refresh();
+		}
+	}
+
+
 	public class Action_EditNamedTreatment extends AbstractAction {
 		private boolean add;
 		public Action_EditNamedTreatment(boolean add) {

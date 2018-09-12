@@ -38,6 +38,7 @@ import com.actelion.research.spiritcore.business.biosample.BarcodeSequence.Categ
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.util.MiscUtils;
 
 /**
@@ -52,9 +53,11 @@ public class DAOBarcode {
 	 */
 	private static final int MAX_HOLE = 100; //To be increased with the number of users
 	private static Map<String, List<String>> prefix2PrecomputedIds = new HashMap<>();
+	private static Map<String, String> lastUsedIds = new HashMap<>();
 
 	public static synchronized void reset() {
 		prefix2PrecomputedIds.clear();
+		lastUsedIds.clear();
 	}
 
 	/**
@@ -64,7 +67,8 @@ public class DAOBarcode {
 	 * @return
 	 */
 	public static String getNextId(ContainerType locType) {
-		String pattern = (locType.getName()+"XX").substring(0, 2).toUpperCase();
+		String pattern = (locType.getName()+"XX").substring(0, 2).toUpperCase() + "######";
+		if(locType.isMultiple()) pattern += "-N";
 		return getNextId(Category.CONTAINER, pattern, null);
 	}
 
@@ -83,7 +87,7 @@ public class DAOBarcode {
 		String prefix = biotype.getPrefix();
 		if(prefix==null || prefix.length()==0) throw new Exception("SampleIds cannot be generated for " +biotype.getName()+" because the prefix is null");
 
-		if(biotype.getPrefix().contains("{StudyId}") && b.getInheritedStudy()==null) throw new Exception("You nust selec a study first");
+		if(biotype.getPrefix().contains("{StudyId}") && b.getInheritedStudy()==null) throw new Exception("You nust select a study first");
 		return DAOBarcode.getNextId(Category.BIOSAMPLE, prefix, b);
 	}
 
@@ -151,14 +155,14 @@ public class DAOBarcode {
 					.getSingleResult();
 		} else if(cat==Category.CONTAINER) {
 			lastBarcode = (String) session.createQuery(
-					"select max(b.container.containerId) from Biosample b where b.container.containerId like ?1")
-					.setParameter(1, pattern.replaceAll("\\#+", "%"))
+					"select max(b.container.containerId) from Biosample b where b.container.containerId like ?1 and length(b.container.containerId)>=?2")
+					.setParameter(1, pattern.replaceAll("\\#+", "%").replaceAll("-N", ""))
+					.setParameter(2, pattern.length())
 					.getSingleResult();
 
 		} else {
 			throw new IllegalArgumentException("Invalid category: "+cat);
 		}
-		LoggerFactory.getLogger(DAOBarcode.class).debug("getLastBarcode for "+cat+"."+pattern+" = " + lastBarcode);
 		return lastBarcode;
 
 	}
@@ -167,10 +171,13 @@ public class DAOBarcode {
 		String formattedPattern = formatPattern(pattern, context);
 
 		assert formattedPattern.contains("#");
-		int prefLength = formattedPattern.indexOf("#");
-		int incrementLength = formattedPattern.lastIndexOf("#")-formattedPattern.indexOf("#")+1;
-		int suffLength = formattedPattern.length()-formattedPattern.lastIndexOf("#")-1;
-
+		int firstIndex = formattedPattern.indexOf("#");
+		int lastIndex = formattedPattern.lastIndexOf("#");
+		int prefLength = firstIndex;
+		int incrementLength = lastIndex-firstIndex+1;
+		int suffLength = formattedPattern.length() - lastIndex-1;
+		String suffix = formattedPattern.substring(formattedPattern.length()-suffLength);
+		if(suffix.equals("-N")) suffix = "";
 
 		//Retrieve next id
 		List<String> list = prefix2PrecomputedIds.get(cat+"_"+formattedPattern);
@@ -183,87 +190,109 @@ public class DAOBarcode {
 			list = new ArrayList<>();
 			prefix2PrecomputedIds.put(cat+"_"+formattedPattern, list);
 
-			int reserveN = cat==Category.BIOSAMPLE || cat==Category.CONTAINER? 20: 1;
+			int reserveN = cat==Category.BIOSAMPLE || cat==Category.CONTAINER? 10: 1;
 
 			//Find the last used increment
-			int lastIncrement = -1;
-			if(newPrefix) {
-				String lastBarcode = getLastBarcode(cat, formattedPattern);
+			int startIncrement = 1;
 
-				if(lastBarcode==null) {
-					lastIncrement = 0;
-				} else {
-					lastBarcode = lastBarcode.substring(prefLength, lastBarcode.length()-suffLength);
-					try {
-						lastIncrement = lastBarcode.length()==0? 0: Integer.parseInt(MiscUtils.extractStartDigits(lastBarcode));
-					} catch (Exception e) {
-						System.err.println("Error in getting last barcode: "+e);
-					}
+			String lastDBBarcode = getLastBarcode(cat, formattedPattern);
+			if(lastDBBarcode==null) {
+				startIncrement = 1;
+			} else {
+				lastDBBarcode = MiscUtils.extractStartDigits(lastDBBarcode.substring(prefLength));
+				try {
+					startIncrement = lastDBBarcode.length()==0? 1: 1 + Integer.parseInt(MiscUtils.extractStartDigits(lastDBBarcode));
+				} catch (Exception e) {
+					System.err.println("Error in getting last barcode: "+e);
 				}
 			}
+			System.out.println("DAOBarcode.getNextId() startIncrement="+startIncrement);
+
+			String lastUsed = lastUsedIds.get(cat+"_"+formattedPattern);
+			if(lastUsed!=null) {
+				lastUsed = MiscUtils.extractStartDigits(lastUsed.substring(prefLength));
+				try {
+					int startIncrement2 = lastUsed.length()==0? 1: 1 + Integer.parseInt(lastUsed);
+					System.out.println("DAOBarcode.getNextId() startIncrement2="+startIncrement2+"  --> startIncrement="+startIncrement);
+					startIncrement = Math.max(startIncrement, startIncrement2);
+				} catch (Exception e) {
+					System.err.println("Error in getting last barcode: "+e);
+				}
+			}
+
 
 			//Find the theoretical last barcode, and update it.
-			//Be careful to create a new session, or we may commit all other changes (open request must be followed by JPAUtil.closerequest in the finally close)
-			EntityTransaction txn = null;
-			EntityManager session = null;
-			try {
-				session = JPAUtil.createManager();
+			//Be careful to create a new session, otherwise we may commit all other changes
+			if(SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_USEBARCODESEQUENCE)) {
+				EntityTransaction txn = null;
+				EntityManager session = null;
+				try {
+					session = JPAUtil.createManager();
 
-				List<BarcodeSequence> barcodeSequences = session.createQuery("from BarcodeSequence bs where type = ?1 and category = ?2")
-						.setParameter(1, formattedPattern)
-						.setParameter(2, cat)
-						.getResultList();
-				txn = session.getTransaction();
-				txn.begin();
-				String nextBarcode = "";
-				if(barcodeSequences.size()==0) {
-
-
-					//Create a new sequence
-					for (int i = 0; i < reserveN; i++) {
-						nextBarcode =  formattedPattern.substring(0, prefLength) + new DecimalFormat(MiscUtils.repeat("0", incrementLength)).format(lastIncrement+i+1) + formattedPattern.substring(formattedPattern.length()-suffLength);
-						list.add(nextBarcode);
-					}
-					BarcodeSequence sequence = new BarcodeSequence(cat, formattedPattern, nextBarcode);
-					session.persist(sequence);
-				} else {
-					BarcodeSequence sequence = barcodeSequences.get(0);
-					String lastBarcode = sequence.getLastBarcode();
-					LoggerFactory.getLogger(DAOBarcode.class).debug("Last barcode for "+formattedPattern+ " is "+lastBarcode);
-					int lastBarcodeN2;
-					try {
-						lastBarcodeN2 = lastBarcode==null? 0: Integer.parseInt(lastBarcode.substring(prefLength, lastBarcode.length()-suffLength));
-					} catch (Exception e) {
-						lastBarcodeN2 = 0;
-					}
-					if(newPrefix) {
-						if(lastBarcodeN2<lastIncrement) {
-							//The sequence number is smaller than the actual sampleId
-							LoggerFactory.getLogger(DAOBarcode.class).debug("Error in the naming for sequence prefix: "+formattedPattern+ ", restart at "+lastIncrement+" instead of "+lastBarcodeN2);
-							lastBarcodeN2 = lastIncrement;
-						} else if(lastIncrement>=0 && lastBarcodeN2> lastIncrement + MAX_HOLE) {
-							//Such a big hole in the sequence is very unlikely,
-							LoggerFactory.getLogger(DAOBarcode.class).debug("Fix hole in NextId Sequence for prefix: "+formattedPattern+ ", restart at "+lastIncrement+" instead of "+lastBarcodeN2);
-							lastBarcodeN2 = lastIncrement;
+					List<BarcodeSequence> barcodeSequences = session.createQuery("from BarcodeSequence bs where type = ?1 and category = ?2")
+							.setParameter(1, formattedPattern)
+							.setParameter(2, cat)
+							.getResultList();
+					txn = session.getTransaction();
+					txn.begin();
+					if(barcodeSequences.size()==0) {
+						//Create a new sequence
+						String nextBarcode =  formattedPattern.substring(0, prefLength) + new DecimalFormat(MiscUtils.repeat("0", incrementLength)).format(startIncrement+reserveN-1) + suffix;
+						LoggerFactory.getLogger(DAOBarcode.class).debug("Create new sequence for " + formattedPattern + " = " + nextBarcode);
+						BarcodeSequence sequence = new BarcodeSequence(cat, formattedPattern, nextBarcode);
+						session.persist(sequence);
+					} else {
+						BarcodeSequence sequence = barcodeSequences.get(0);
+						String lastBarcode = sequence.getLastBarcode();
+						LoggerFactory.getLogger(DAOBarcode.class).debug("Last barcode from seq for " + formattedPattern+ " = " + lastBarcode);
+						int startBarcodeSeq;
+						try {
+							startBarcodeSeq = lastBarcode==null? 1: 1 + Integer.parseInt(MiscUtils.extractStartDigits(lastBarcode));
+						} catch (Exception e) {
+							startBarcodeSeq = startIncrement;
 						}
-					}
+						if(newPrefix) {
+							LoggerFactory.getLogger(DAOBarcode.class).debug("Last barcodes: seq="+startBarcodeSeq+" / db="+startIncrement);
+							if(startBarcodeSeq<startIncrement) {
+								//The sequence number is smaller than the actual sampleId
+								LoggerFactory.getLogger(DAOBarcode.class).debug("Error in the naming for sequence prefix: "+formattedPattern+ ", restart at "+startIncrement+" instead of "+startBarcodeSeq);
+								startBarcodeSeq = startIncrement;
+							} else if(startIncrement>=0 && startBarcodeSeq> startIncrement + MAX_HOLE) {
+								//Such a big hole in the sequence is very unlikely,
+								LoggerFactory.getLogger(DAOBarcode.class).debug("Fix hole in NextId Sequence for prefix: "+formattedPattern+ ", restart at "+startIncrement+" instead of "+startBarcodeSeq);
+								startBarcodeSeq = startIncrement;
+							} else if(startBarcodeSeq<startIncrement) {
 
-					for (int i = 0; i < reserveN; i++) {
-						nextBarcode =  formattedPattern.substring(0, prefLength) + new DecimalFormat(MiscUtils.repeat("0", incrementLength)).format(lastBarcodeN2+i+1) + formattedPattern.substring(formattedPattern.length()-suffLength);
-						list.add(nextBarcode);
+							} else {
+								LoggerFactory.getLogger(DAOBarcode.class).debug("continue at "+startBarcodeSeq);
+							}
+						}
+						//Start the sequence at ##1 if possible
+						while(startBarcodeSeq%10!=1) startBarcodeSeq++;
+						startIncrement = startBarcodeSeq;
+						sequence.setLastBarcode(formattedPattern.substring(0, prefLength) + new DecimalFormat(MiscUtils.repeat("0", incrementLength)).format(startIncrement+reserveN-1) + suffix);
 					}
-					sequence.setLastBarcode(nextBarcode);
+					txn.commit();
+					txn = null;
+
+				} finally {
+					if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
+					if(session!=null) try{session.close();}catch (Exception e) {e.printStackTrace();}
 				}
-				txn.commit();
-				txn = null;
-
-			} finally {
-				if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
-				if(session!=null) try{session.close();}catch (Exception e) {e.printStackTrace();}
 			}
+
+			//Reserve the barcodes for future use
+			LoggerFactory.getLogger(DAOBarcode.class).debug("Reserve Ids for "+formattedPattern+" : start at "+startIncrement+" lastUsed="+lastUsed+" lastDBBarcode="+lastDBBarcode);
+			for (int i = 0; i < reserveN; i++) {
+				int nextId = startIncrement+i;
+				String nextBarcode =  formattedPattern.substring(0, prefLength) + new DecimalFormat(MiscUtils.repeat("0", incrementLength)).format(nextId) + suffix;
+				list.add(nextBarcode);
+			}
+
 		}
 
 		String res = list.remove(0);
+		lastUsedIds.put(cat+"_"+formattedPattern, res);
 		LoggerFactory.getLogger(DAOBarcode.class).debug("getNextId for "+formattedPattern+" = " + res + ", format="+formattedPattern);
 		return res;
 	}

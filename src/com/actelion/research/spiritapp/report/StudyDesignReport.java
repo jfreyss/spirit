@@ -56,7 +56,7 @@ public class StudyDesignReport extends AbstractReport {
 		CreationHelper helper = wb.getCreationHelper();
 
 		//create sheet
-		Sheet sheet = createSheet(wb, "Design");
+		Sheet sheet = createSheet(wb, "Study Design");
 		sheet.setPrintGridlines(false);
 		createHeadersWithTitle(sheet, study, "Study Design");
 

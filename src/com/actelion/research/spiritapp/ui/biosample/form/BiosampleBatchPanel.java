@@ -41,8 +41,8 @@ import com.actelion.research.spiritapp.ui.biosample.edit.EditBiosampleTable;
 import com.actelion.research.spiritapp.ui.biosample.edit.SetLocationAction;
 import com.actelion.research.spiritapp.ui.util.scanner.ScanRackForTableAction;
 import com.actelion.research.spiritapp.ui.util.scanner.SelectRackAction;
-import com.actelion.research.spiritapp.ui.util.scanner.SpiritScanner;
-import com.actelion.research.spiritapp.ui.util.scanner.SpiritScanner.Verification;
+import com.actelion.research.spiritapp.ui.util.scanner.SpiritScannerHelper;
+import com.actelion.research.spiritapp.ui.util.scanner.SpiritScannerHelper.Verification;
 import com.actelion.research.spiritcore.business.biosample.BarcodeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -56,15 +56,16 @@ public class BiosampleBatchPanel extends JPanel {
 
 	private Biosample parent;
 	private Biotype biotype;
-	
+
 	private final EditBiosampleTable table = new EditBiosampleTable();
 	private MetadataFormPanel formPanel;
-	
+
 	private JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 0, 999, 1));
 	private JButton setLocationButton = new JButton(new SetLocationAction(table));
-	private SpiritScanner model = new SpiritScanner(Verification.EMPTY_CONTAINERS);
-	private JButton scanButton = new JButton(new ScanRackForTableAction(model, table) {
-		
+	private SpiritScannerHelper scanner = new SpiritScannerHelper();
+	private JButton scanButton = new JButton(new ScanRackForTableAction(scanner, table) {
+
+
 		@Override
 		public Location scan() throws Exception {
 			if(!Biosample.isEmpty(table.getRows())) {
@@ -73,19 +74,19 @@ public class BiosampleBatchPanel extends JPanel {
 					table.clear();
 				}
 			}
-			
+
 			return super.scan();
 		}
-		
+
 		@Override
 		public void postScan(Location rack) throws Exception {
 			setLocationButton.setEnabled(table.getRows().size()>0);
 			for(Biosample b: table.getRows()) {
 				b.setParent(b);
-				formPanel.updateModel();				
-			}			
+				formPanel.updateModel();
+			}
 
-			new SelectRackAction(scanner) {				
+			new SelectRackAction(scanner) {
 				@Override
 				protected void eventRackSelected(Location rack) throws Exception {
 					//Convert the scanned position to the real position
@@ -93,22 +94,22 @@ public class BiosampleBatchPanel extends JPanel {
 						b.setLocation(rack);
 						if(b.getContainer()!=null) b.setPos(rack==null? -1: rack.parsePosition(b.getContainer().getScannedPosition()));
 					}
-					table.repaint();					
+					table.repaint();
 				}
 			}.showDlgForRackCreation();
-			
+
 			spinner.setValue(table.getRows().size());
 		}
 	});
-	
+
 	/**
-	 * 
+	 *
 	 * @param dlg
 	 * @param biotype
 	 */
 	public BiosampleBatchPanel() {
 		setLayout(new BorderLayout());
-		
+		scanner.setVerification(Verification.EMPTY_CONTAINERS);
 		//itemsPanel
 		formPanel = new MetadataFormPanel(false, false) {
 			@Override
@@ -116,15 +117,15 @@ public class BiosampleBatchPanel extends JPanel {
 				try {
 					updateSamples();
 				} catch(Exception e) {
-					JExceptionDialog.showError(e);					
+					JExceptionDialog.showError(e);
 				}
 			}
 		};
-		
+
 		setBiotype(null);
 		initUI();
 	}
-	
+
 	private void initUI() {
 		//table
 		try {
@@ -132,46 +133,46 @@ public class BiosampleBatchPanel extends JPanel {
 			table.setRows(biotype, null);
 		} catch(Exception e) {
 			JExceptionDialog.showError(e);
-		}		
+		}
 		table.setCanAddRow(false);
 
 		JPanel tablePanel = new JPanel(new BorderLayout());
 		tablePanel.setOpaque(false);
 		tablePanel.add(BorderLayout.CENTER, new JScrollPane(table));
 		tablePanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-		
+
 		//actionPanel
 		setLocationButton.setEnabled(false);
 		JPanel actionPanel = UIUtils.createHorizontalBox(
 				Box.createHorizontalGlue(),
-				UIUtils.createTitleBoxSmall(null, 
+				UIUtils.createTitleBoxSmall(null,
 						UIUtils.createVerticalBox(
-							UIUtils.createHorizontalBox(new JLabel("Number: "), spinner),
-							setLocationButton,
-							Box.createVerticalGlue())),
+								UIUtils.createHorizontalBox(new JLabel("Number: "), spinner),
+								setLocationButton,
+								Box.createVerticalGlue())),
 				Box.createHorizontalStrut(2),
 				new JLabel(" or "),
 				Box.createHorizontalStrut(2),
-				UIUtils.createTitleBoxSmall(null, 
+				UIUtils.createTitleBoxSmall(null,
 						UIUtils.createVerticalBox(
-							new JCustomLabel("Scan", FastFont.BOLD),
-							Box.createVerticalGlue(),
-							scanButton						
-						))
-		);
+								new JCustomLabel("Scan", FastFont.BOLD),
+								Box.createVerticalGlue(),
+								scanButton
+								))
+				);
 		scanButton.setEnabled(biotype!=null && !biotype.isAbstract());
-		
+
 		removeAll();
-		add(BorderLayout.WEST, UIUtils.createVerticalBox(BorderFactory.createEmptyBorder(5, 5, 5, 5), 
-					formPanel, 
-					Box.createVerticalStrut(10),
-					actionPanel,
-					Box.createVerticalGlue()));
+		add(BorderLayout.WEST, UIUtils.createVerticalBox(BorderFactory.createEmptyBorder(5, 5, 5, 5),
+				formPanel,
+				Box.createVerticalStrut(10),
+				actionPanel,
+				Box.createVerticalGlue()));
 		add(BorderLayout.CENTER, tablePanel);
 		validate();
-		
+
 		//actions
-		spinner.addChangeListener(new ChangeListener() {			
+		spinner.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				try {
@@ -183,7 +184,7 @@ public class BiosampleBatchPanel extends JPanel {
 		});
 
 	}
-	
+
 	public void setBiotype(Biotype biotype) {
 		this.biotype = biotype;
 		formPanel.setBiosample(new Biosample(biotype));
@@ -194,7 +195,7 @@ public class BiosampleBatchPanel extends JPanel {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void updateSamples() throws Exception {
 		List<Biosample> res = new ArrayList<>(table.getRows());
 		int n = (Integer) spinner.getValue();
@@ -215,11 +216,11 @@ public class BiosampleBatchPanel extends JPanel {
 		for (int i=res.size()-1; i>=n; i--) {
 			res.remove(i);
 		}
-		
+
 		table.setRows(biotype, res);
 		setLocationButton.setEnabled(table.getRows().size()>0);
 	}
-	
+
 
 	@Override
 	public void setEnabled(boolean enabled) {
@@ -229,7 +230,7 @@ public class BiosampleBatchPanel extends JPanel {
 		table.setEnabled(enabled);
 		scanButton.setEnabled(enabled && biotype.getContainerType()!=null && biotype.getContainerType().getBarcodeType()==BarcodeType.MATRIX);
 	}
-	
+
 	public List<Biosample> getBiosamples() {
 		if(!isEnabled()) return new ArrayList<Biosample>();
 		List<Biosample> res = table.getBiosamples();

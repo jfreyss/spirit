@@ -258,14 +258,14 @@ public class ContainerTableModel extends ExtendTableModel<Container> {
 		}
 	}
 
-	public static class BlocNoColumn extends Column<Container, String> {
+	public static class BlocNoColumn extends Column<Container, Integer> {
 		public BlocNoColumn() {
-			super("BlocNo", String.class, 100, 500);
+			super("BlocNo", Integer.class, 20, 50);
 		}
 
 		@Override
-		public String getValue(Container row) {
-			return row.getBlocDescription();
+		public Integer getValue(Container row) {
+			return row.getBlocNo();
 		}
 	}
 

@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritapp.ui;
 
-import java.awt.Font;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -58,9 +57,9 @@ import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
-import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.iconbutton.IconType;
 
@@ -73,12 +72,11 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 public class PopupHelper {
 
 	public JPopupMenu createStudyPopup(Study s) {
-		//Reload the study to make sure the object is accurate
-		final Study study = s==null? null: DAOStudy.getStudy(s.getId());
+		final Study study = JPAUtil.reattach(s);
 
 		JPopupMenu popupMenu = new JPopupMenu();
 		if(study!=null) {
-			popupMenu.add(new JCustomLabel("    Study: " + study.getStudyId(), Font.BOLD));
+			popupMenu.add(new JCustomLabel("    Study: " + study.getStudyId(), FastFont.BOLD));
 			popupMenu.add(new JSeparator());
 
 			if(SpiritFrame.getUser()==null) {
@@ -113,7 +111,7 @@ public class PopupHelper {
 			}
 
 			//Participants
-			if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_ADVANCED)) {
+			if(SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_ADVANCED)) {
 				JMenu attachMenu = new JMenu("Participants");
 				attachMenu.setIcon(IconType.LINK.getIcon());
 				attachMenu.setMnemonic('a');
@@ -122,7 +120,7 @@ public class PopupHelper {
 					attachMenu.setEnabled(false);
 				}
 				{
-					if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_ADVANCED)) {
+					if(SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_ADVANCED)) {
 						JMenu autoMenu = new JMenu("Automatic Assignment");
 						autoMenu.setIcon(IconType.LINK.getIcon());
 						autoMenu.setMnemonic('a');
@@ -140,7 +138,7 @@ public class PopupHelper {
 						attachMenu.add(new JSeparator());
 					}
 
-					attachMenu.add(new JMenuItem(new BiosampleActions.Action_BatchEdit("Edit Participants", study, study.getParticipantsSorted().size()>0 && SpiritRights.canEditBiosamples(study, Spirit.getUser())) {
+					attachMenu.add(new JMenuItem(new BiosampleActions.Action_BatchEdit("Edit Participants", study, study.getParticipantsSorted().size()>0 && SpiritRights.canWork(study, Spirit.getUser())) {
 						@Override
 						public List<Biosample> getBiosamples() {
 							List<Biosample> res = new ArrayList<>(study.getParticipantsSorted());
@@ -148,7 +146,7 @@ public class PopupHelper {
 							return res;
 						}
 					}));
-					attachMenu.add(new JMenuItem(new BiosampleActions.Action_BatchEdit("Add Participants", study, SpiritRights.canEditBiosamples(study, Spirit.getUser())) {
+					attachMenu.add(new JMenuItem(new BiosampleActions.Action_BatchEdit("Add Participants", study, SpiritRights.canWork(study, Spirit.getUser())) {
 						@Override
 						public List<Biosample> getBiosamples() {
 							Study s = JPAUtil.reattach(study);
@@ -216,7 +214,7 @@ public class PopupHelper {
 
 
 		} else {
-			popupMenu.add(new JCustomLabel("   Study Menu", Font.BOLD));
+			popupMenu.add(new JCustomLabel("   Study Menu", FastFont.BOLD));
 			popupMenu.add(new JSeparator());
 			popupMenu.add(new JMenuItem(new StudyActions.Action_New()));
 		}
@@ -254,7 +252,7 @@ public class PopupHelper {
 
 
 		String s = biosamples.size()==1? biosamples.get(0).getSampleIdName(): biosamples.size()+" selected";
-		menu.add(new JCustomLabel("   Biosample: " + s, Font.BOLD));
+		menu.add(new JCustomLabel("   Biosample: " + s, FastFont.BOLD));
 
 		//New
 		JMenu newMenu = new JMenu("New");
@@ -265,7 +263,7 @@ public class PopupHelper {
 		newMenu.add(new BiosampleActions.Action_Duplicate(biosamples));
 		newMenu.add(new JSeparator());
 		newMenu.add(new BiosampleActions.Action_NewChildren(biosamples));
-		if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_RESULT)) {
 			newMenu.add(new BiosampleActions.Action_NewResults(biosamples));
 		}
 
@@ -293,14 +291,9 @@ public class PopupHelper {
 			JMenu statusMenu = new JMenu("Trash / Set Status");
 			statusMenu.setIcon(IconType.STATUS.getIcon());
 			statusMenu.add(new BiosampleActions.Action_SetStatus(biosamples, null));
-			statusMenu.add(new BiosampleActions.Action_SetStatus(biosamples, Status.INLAB));
-			statusMenu.add(new JSeparator());
-			statusMenu.add(new BiosampleActions.Action_SetStatus(biosamples, Status.PLANNED));
-			statusMenu.add(new BiosampleActions.Action_SetStatus(biosamples, Status.RECEIVED));
-			statusMenu.add(new JSeparator());
-			statusMenu.add(new BiosampleActions.Action_SetStatus(biosamples, Status.LOWVOL));
-			statusMenu.add(new BiosampleActions.Action_SetStatus(biosamples, Status.USEDUP));
-			statusMenu.add(new BiosampleActions.Action_SetStatus(biosamples, Status.TRASHED));
+			for (Status status : DBAdapter.getInstance().getAllowedStatus()) {
+				statusMenu.add(new BiosampleActions.Action_SetStatus(biosamples, status));
+			}
 			editMenu.add(statusMenu);
 		} else {
 			JMenu statusMenu = new JMenu("Trash / Set Status");
@@ -324,7 +317,6 @@ public class PopupHelper {
 		menu.add(new JSeparator());
 		menu.add(new JMenuItem(new BiosampleActions.Action_Checkin(biosamples)));
 		menu.add(new JMenuItem(new BiosampleActions.Action_Checkout(biosamples)));
-
 
 		//Print
 		menu.add(new JSeparator());
@@ -357,7 +349,7 @@ public class PopupHelper {
 		JPopupMenu menu = new JPopupMenu();
 
 		String s = locations.size()==1? locations.get(0).getName(): locations.size()+" selected";
-		menu.add(new JCustomLabel("   Location: "+s, Font.BOLD));
+		menu.add(new JCustomLabel("   Location: "+s, FastFont.BOLD));
 
 		JMenu newMenu = new JMenu("New");
 		newMenu.setMnemonic('n');
@@ -372,6 +364,7 @@ public class PopupHelper {
 		editMenu.setIcon(IconType.EDIT.getIcon());
 		menu.add(editMenu);
 		editMenu.add(new JMenuItem(new LocationActions.Action_EditBatch(locations)));
+		editMenu.add(new JMenuItem(new LocationActions.Action_MoveLocations(locations)));
 
 
 		//SetStatus for samples
@@ -393,7 +386,6 @@ public class PopupHelper {
 		advancedMenu.setIcon(IconType.ADMIN.getIcon());
 		menu.add(advancedMenu);
 		advancedMenu.add(new JMenuItem(new LocationActions.Action_Delete(locations)));
-		advancedMenu.add(new JSeparator());
 
 		return menu;
 	}
@@ -402,7 +394,7 @@ public class PopupHelper {
 	public JPopupMenu createResultPopup(List<Result> results) {
 		JPopupMenu menu = new JPopupMenu();
 		if(results!=null && results.size()>0) {
-			menu.add(new JCustomLabel("   Results: " + (results.size()>1?" "+results.size()+" selected":""), Font.BOLD));
+			menu.add(new JCustomLabel("   Results: " + (results.size()>1?" "+results.size()+" selected":""), FastFont.BOLD));
 			menu.add(new JSeparator());
 
 			String elb = null;
@@ -443,7 +435,6 @@ public class PopupHelper {
 			systemMenu.add(new ResultActions.Action_Delete_Results(results));
 			systemMenu.add(new JSeparator());
 			systemMenu.add(new ResultActions.Action_AssignTo(results));
-			systemMenu.add(new JSeparator());
 			menu.add(systemMenu);
 
 		}

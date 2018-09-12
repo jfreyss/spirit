@@ -47,6 +47,7 @@ import javax.swing.JTextField;
 
 import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
+import com.actelion.research.spiritapp.ui.util.DatePicker;
 import com.actelion.research.spiritapp.ui.util.HelpBinder;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
@@ -78,18 +79,19 @@ import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
+
 public class StudyInfoDlg extends JEscapeDialog {
 
-	private Study study;
-	private final boolean inTransaction;
+	protected Study study;
+	protected final boolean inTransaction;
 
-	private JCustomTextField ivvField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 12);
-	private JCustomTextField studyIdField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 12);
-	private JCustomTextField titleField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 60);
+	protected JCustomTextField localIdField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 12);
+	protected JCustomTextField studyIdField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 12);
+	protected JCustomTextField titleField = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 60);
 
-	private JGenericComboBox<String> stateComboBox;
-	private JTextComboBox typeComboBox;
-	private Map<String, JComponent> metadataKey2comp = new HashMap<>();
+	protected JGenericComboBox<String> stateComboBox;
+	protected JTextComboBox typeComboBox;
+	protected Map<String, JComponent> metadataKey2comp = new HashMap<>();
 	private final JPanel metadataPanel = new JPanel(new GridLayout());
 	private EmployeeGroupComboBox eg1ComboBox = new EmployeeGroupComboBox(false);
 	private EmployeeGroupComboBox eg2ComboBox = new EmployeeGroupComboBox(false);
@@ -110,12 +112,12 @@ public class StudyInfoDlg extends JEscapeDialog {
 	private String[] studyTypes;
 
 
-	public static void editStudy(Study s) {
-		new StudyInfoDlg(s, true);
+	public StudyInfoDlg(Study s) {
+		this(s, true);
 	}
 
-	protected StudyInfoDlg(Study s, boolean inTransaction) {
-		super(UIUtils.getMainFrame(), "Study - Infos");
+	public StudyInfoDlg(Study s, boolean inTransaction) {
+		super(UIUtils.getMainFrame(), "Edit Study - Infos");
 		if(inTransaction) this.study = JPAUtil.reattach(s);
 		else this.study = s;
 		this.inTransaction = inTransaction;
@@ -134,7 +136,7 @@ public class StudyInfoDlg extends JEscapeDialog {
 
 		JPanel studyDescPanel = UIUtils.createTitleBox("Definition", UIUtils.createTable(
 				new JLabel("StudyId*: "), UIUtils.createHorizontalBox(studyIdField),
-				(!studyIdEditable? new JLabel("InternalId:"): null), (!studyIdEditable? UIUtils.createHorizontalBox(ivvField, new JInfoLabel("Your own identifier (unique)")): null),
+				(!studyIdEditable? new JLabel("InternalId:"): null), (!studyIdEditable? UIUtils.createHorizontalBox(localIdField, new JInfoLabel("Your own identifier (unique)")): null),
 				new JLabel("Title*: "), titleField,
 				null, designMode? synchroCheckbox: null));
 
@@ -186,17 +188,18 @@ public class StudyInfoDlg extends JEscapeDialog {
 		List<String> possibleStates = Arrays.asList(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES));
 		stateComboBox = new JGenericComboBox<>(possibleStates, false);
 		if(possibleStates.size()>0) {
-			statesRightsPanel = UIUtils.createTitleBox("Status" + (studyRightsPanel.isVisible()?" / User Rights":""), UIUtils.createVerticalBox(
-					UIUtils.createHorizontalBox(new JLabel("Status: "), stateComboBox, Box.createHorizontalGlue()),
-					studyRightsPanel));
-			stateComboBox.setEnabled(SpiritRights.canPromote(study, SpiritFrame.getUser()));
+			statesRightsPanel = UIUtils.createTitleBox("Status" + (studyRightsPanel.isVisible()?" / User Rights":""),
+					UIUtils.createVerticalBox(
+							UIUtils.createHorizontalBox(new JLabel("Status: "), stateComboBox, Box.createHorizontalGlue()),
+							studyRightsPanel));
+			stateComboBox.setEnabled(SpiritRights.canWork(study, SpiritFrame.getUser()));
 
 		} else {
 			stateComboBox.setEnabled(false);
 		}
+		statesRightsPanel.setVisible(SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES).length>=0);
 
 		//Documents Panel
-
 		StudyDocumentEditorPane documentEditorPane = new StudyDocumentEditorPane();
 		documentEditorPane.setStudy(study);
 		JPanel documentPanel = UIUtils.createTitleBox("Documents", new JScrollPane(documentEditorPane));
@@ -213,15 +216,7 @@ public class StudyInfoDlg extends JEscapeDialog {
 			okButton = new JButton("OK");
 		}
 
-		okButton.addActionListener(ev-> {
-			try {
-				ok();
-				cancel = false;
-				dispose();
-			} catch (Exception e) {
-				JExceptionDialog.showError(StudyInfoDlg.this, e);
-			}
-		});
+		okButton.addActionListener(ev-> save() );
 
 		//Update View
 		if(studyIdPattern.length()>0 && study.getId()<=0) {
@@ -229,7 +224,7 @@ public class StudyInfoDlg extends JEscapeDialog {
 		}
 
 		studyIdField.setText(study.getStudyId());
-		ivvField.setText(study.getLocalId());
+		localIdField.setText(study.getLocalId());
 		titleField.setText(study.getTitle());
 		typeComboBox.setText(study.getType());
 		stateComboBox.setSelection(study.getState());
@@ -253,17 +248,13 @@ public class StudyInfoDlg extends JEscapeDialog {
 		add(BorderLayout.CENTER, UIUtils.createVerticalBox(studyDescPanel, metadataPanel, statesRightsPanel, documentPanel, studyNotesPanel));
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue(), okButton));
 
-		//		stateComboBox.addActionListener(e-> {
-		//			eventStudyStatusChanged();
-		//			stateComboBox.requestFocusInWindow();
-		//		});
 		typeComboBox.addTextChangeListener(e-> {
 			updateMetadataPanel();
 			typeComboBox.requestFocusInWindow();
 		});
 
-		//		eventStudyStatusChanged();
 		updateMetadataPanel();
+		postConstruct();
 
 		//Set visible
 		UIUtils.adaptSize(this, -1, -1);
@@ -271,21 +262,12 @@ public class StudyInfoDlg extends JEscapeDialog {
 
 	}
 
+	/**
+	 * To be overriden for specific construct
+	 */
+	protected void postConstruct() {
 
-
-	//	private void eventStudyStatusChanged() {
-	//		String state =  stateComboBox.getSelection();
-	//		String[] adminRoles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_ADMIN, state);
-	//		String[] expertRoles = SpiritProperties.getInstance().getValues(PropertyKey.STUDY_STATES_EXPERT, state);
-	//
-	//
-	//		adminUsersTextArea.setEnabled(!MiscUtils.contains(adminRoles, "ALL") && !MiscUtils.contains(adminRoles, "NONE"));
-	//		expertUsersTextArea.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
-	//		eg1ComboBox.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
-	//		eg2ComboBox.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
-	//		blindAllUsersField.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
-	//		blindNamesUsersField.setEnabled(!MiscUtils.contains(expertRoles, "ALL") && !MiscUtils.contains(expertRoles, "NONE"));
-	//	}
+	}
 
 	private void updateMetadataPanel() {
 		//Study Type
@@ -314,9 +296,10 @@ public class StudyInfoDlg extends JEscapeDialog {
 					combo.setSelection(study.getMetadataMap().get(metadataKey));
 					comp = combo;
 				} else if(DataType.DATE.name().equals(datatype)) {
-					JCustomTextField dateField = new JCustomTextField(CustomFieldType.DATE);
-					dateField.setText(study.getMetadataMap().get(metadataKey));
-					comp = dateField;
+					DatePicker datePicker = new DatePicker();
+					datePicker.setText(study.getMetadataMap().get(metadataKey));
+					comp = datePicker;
+
 				} else if(DataType.AUTO.name().equals(datatype)) {
 					JTextComboBox field = new JTextComboBox();
 					field.setChoices(DAOStudy.getMetadataValues(metadataKey));
@@ -330,7 +313,7 @@ public class StudyInfoDlg extends JEscapeDialog {
 				metadataKey2comp.put(metadataKey, comp);
 			}
 
-			comp.setToolTipText("");
+			comp.setToolTipText(null);
 			comp.setEnabled(true);
 
 			if(types.length>0 && !MiscUtils.contains(types, typeComboBox.getText())) {
@@ -368,119 +351,131 @@ public class StudyInfoDlg extends JEscapeDialog {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void ok() throws Exception {
+	public void save() {
+		try {
 
-		if(studyIdField.getText().length()==0) throw new Exception("You must enter a unique studyId");
-		SpiritUser user = Spirit.askForAuthentication();
+			if(studyIdField.getText().length()==0) throw new Exception("You must enter a unique studyId");
+			SpiritUser user = Spirit.askForAuthentication();
 
-		//Update Model
-		//Definition
-		if(typeComboBox.isVisible() && studyTypes.length>0 && typeComboBox.getText().length()==0) throw new Exception("The type is required");
-		study.setStudyId(studyIdField.getText());
-		study.setState(stateComboBox.getSelection());
-		study.setLocalId(ivvField.getText());
-		study.setTitle(titleField.getText());
-		study.setSynchronizeSamples(synchroCheckbox.isSelected());
-		study.setType(typeComboBox.getText());
-
-		if(stateComboBox.isEnabled()) {
-			if(stateComboBox.getSelection()==null) throw new Exception("You must select a status");
+			//Update Model
+			//Definition
+			if(typeComboBox.isVisible() && studyTypes.length>0 && typeComboBox.getText().length()==0) throw new Exception("The type is required");
+			study.setStudyId(studyIdField.getText());
 			study.setState(stateComboBox.getSelection());
-		}
+			study.setLocalId(localIdField.getText());
+			study.setTitle(titleField.getText());
+			study.setSynchronizeSamples(synchroCheckbox.isSelected());
+			study.setType(typeComboBox.getText());
 
-		//Users
-		if(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER && SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
-			//Check that the write-users are valid
-			String adminUsers = adminUsersTextArea.getText().trim();
-			if(adminUsers.length()==0) throw new Exception("One admin is required");
-
-			//Check that the read-users are valid
-			String expertUsers = expertUsersTextArea.getText().trim();
-
-			//Check that the blind-users are valid
-			if(!blindAllUsersField.isEnabled()) {
-				blindAllUsersField.setText("");
-				blindNamesUsersField.setText("");
+			if(stateComboBox.isEnabled()) {
+				if(stateComboBox.getSelection()==null) throw new Exception("You must select a status");
+				study.setState(stateComboBox.getSelection());
 			}
-			String blindAllUsers = blindAllUsersField.getText().trim();
-			String blindNamesUsers = blindNamesUsersField.getText().trim();
-			DBAdapter.getInstance().checkValid(Arrays.asList(MiscUtils.split(blindAllUsers)));
 
-			Set<String> setExpertUsers = new TreeSet<>(Arrays.asList(MiscUtils.split(expertUsers)));
-			Set<String> setAdminUsers = new TreeSet<>(Arrays.asList(MiscUtils.split(adminUsers)));
-			Set<String> setBlindNames = new TreeSet<>(Arrays.asList(MiscUtils.split(blindNamesUsers)));
-			Set<String> setBlindAll = new TreeSet<>(Arrays.asList(MiscUtils.split(blindAllUsers)));
+			//Users
+			if(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER && SpiritProperties.getInstance().isChecked(PropertyKey.USER_USEGROUPS)) {
+				//Check that the write-users are valid
+				String adminUsers = adminUsersTextArea.getText().trim();
+				if(adminUsers.length()==0) throw new Exception("One admin is required");
 
-			if(!Collections.disjoint(setExpertUsers, setAdminUsers)) throw new Exception("Some users have expert and admin access");
-			if(!Collections.disjoint(setExpertUsers, setBlindNames)) throw new Exception("Some users have expert and blind access");
-			if(!Collections.disjoint(setExpertUsers, setBlindAll)) throw new Exception("Some users have expert and blind access");
-			if(!Collections.disjoint(setAdminUsers, setBlindNames)) throw new Exception("Some users have admin and blind access");
-			if(!Collections.disjoint(setAdminUsers, setBlindAll)) throw new Exception("Some users have admin and blind access");
-			if(!Collections.disjoint(setBlindNames, setBlindAll)) throw new Exception("Some users have different blind access");
+				//Check that the read-users are valid
+				String expertUsers = expertUsersTextArea.getText().trim();
 
-
-			Set<String> allUsers = new HashSet<>();
-			allUsers.addAll(setExpertUsers);
-			allUsers.addAll(setAdminUsers);
-			allUsers.addAll(setBlindNames);
-			allUsers.addAll(setBlindAll);
-			DBAdapter.getInstance().checkValid(allUsers);
-
-			study.setAdminUsers(adminUsers);
-			study.setExpertUsers(expertUsers);
-			study.setBlindUsers(setBlindAll, setBlindNames);
-		} else {
-			study.setAdminUsers("");
-			study.setExpertUsers("");
-			study.setBlindAllUsers(new HashSet<String>());
-			study.setBlindDetailsUsers(new HashSet<String>());
-		}
-
-		//Metadata
-		Map<String, String> metaMap = study.getMetadataMap();
-		for (String metadataKey : SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA)) {
-			String name = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metadataKey);
-			boolean req = SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_METADATA_REQUIRED, metadataKey);
-			JComponent comp = metadataKey2comp.get(metadataKey);
-			String val = "";
-			if(comp!=null && comp.isEnabled() && comp.isVisible()) {
-
-				if(comp instanceof JGenericComboBox) {
-					val = ((JGenericComboBox<String>)comp).getSelection();
-				} else if(comp instanceof JCustomTextField) {
-					if(!((JCustomTextField)comp).isValidFormat()) throw new Exception("The format of '" + name + "' is invalid");
-					val = ((JTextField)comp).getText();
-				} else if(comp instanceof JTextField) {
-					val = ((JTextField)comp).getText();
-				} else if(comp instanceof JCheckBox) {
-					val = ((JCheckBox)comp).isSelected()?"true":"false";
+				//Check that the blind-users are valid
+				if(!blindAllUsersField.isEnabled()) {
+					blindAllUsersField.setText("");
+					blindNamesUsersField.setText("");
 				}
-				if(val==null) val = "";
+				String blindAllUsers = blindAllUsersField.getText().trim();
+				String blindNamesUsers = blindNamesUsersField.getText().trim();
+				DBAdapter.getInstance().checkValid(Arrays.asList(MiscUtils.split(blindAllUsers)));
 
-				if(req && val.length()==0) throw new Exception(name + " is required");
+				Set<String> setExpertUsers = new TreeSet<>(Arrays.asList(MiscUtils.split(expertUsers)));
+				Set<String> setAdminUsers = new TreeSet<>(Arrays.asList(MiscUtils.split(adminUsers)));
+				Set<String> setBlindNames = new TreeSet<>(Arrays.asList(MiscUtils.split(blindNamesUsers)));
+				Set<String> setBlindAll = new TreeSet<>(Arrays.asList(MiscUtils.split(blindAllUsers)));
+
+				if(!Collections.disjoint(setExpertUsers, setAdminUsers)) throw new Exception("Some users have expert and admin access");
+				if(!Collections.disjoint(setExpertUsers, setBlindNames)) throw new Exception("Some users have expert and blind access");
+				if(!Collections.disjoint(setExpertUsers, setBlindAll)) throw new Exception("Some users have expert and blind access");
+				if(!Collections.disjoint(setAdminUsers, setBlindNames)) throw new Exception("Some users have admin and blind access");
+				if(!Collections.disjoint(setAdminUsers, setBlindAll)) throw new Exception("Some users have admin and blind access");
+				if(!Collections.disjoint(setBlindNames, setBlindAll)) throw new Exception("Some users have different blind access");
+
+
+				Set<String> allUsers = new HashSet<>();
+				allUsers.addAll(setExpertUsers);
+				allUsers.addAll(setAdminUsers);
+				allUsers.addAll(setBlindNames);
+				allUsers.addAll(setBlindAll);
+				DBAdapter.getInstance().checkValid(allUsers);
+
+				study.setAdminUsers(adminUsers);
+				study.setExpertUsers(expertUsers);
+				study.setBlindUsers(setBlindAll, setBlindNames);
+			} else {
+				study.setAdminUsers("");
+				study.setExpertUsers("");
+				study.setBlindAllUsers(new HashSet<String>());
+				study.setBlindDetailsUsers(new HashSet<String>());
 			}
-			metaMap.put(metadataKey, val);
-		}
-		study.setMetadataMap(metaMap);
 
-		//Notes
-		study.setNotes(notesTextArea.getText());
+			//Metadata
+			Map<String, String> metaMap = study.getMetadataMap();
+			for (String metadataKey : SpiritProperties.getInstance().getValues(PropertyKey.STUDY_METADATA)) {
+				String name = SpiritProperties.getInstance().getValue(PropertyKey.STUDY_METADATA_NAME, metadataKey);
+				boolean req = SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_METADATA_REQUIRED, metadataKey);
+				JComponent comp = metadataKey2comp.get(metadataKey);
+				String val = "";
+				if(comp!=null && comp.isEnabled() && comp.isVisible()) {
 
-		List<EmployeeGroup> egs = new ArrayList<>();
-		if(eg1ComboBox.getSelection()!=null) egs.add(eg1ComboBox.getSelection());
-		if(eg2ComboBox.getSelection()!=null) egs.add(eg2ComboBox.getSelection());
-		study.setEmployeeGroups(egs);
-		study.setUpdUser(user.getUsername());
+					if(comp instanceof JGenericComboBox) {
+						val = ((JGenericComboBox<String>)comp).getSelection();
+					} else if(comp instanceof JCustomTextField) {
+						if(!((JCustomTextField)comp).isValidFormat()) throw new Exception("The format of '" + name + "' is invalid");
+						val = ((JTextField)comp).getText();
+					} else if(comp instanceof JTextField) {
+						val = ((JTextField)comp).getText();
+					} else if(comp instanceof JCheckBox) {
+						val = ((JCheckBox)comp).isSelected()?"true":"false";
+					} else if (comp instanceof DatePicker) {
+						DatePicker c = (DatePicker) comp;
+						val = c.getText();
+					} else {
+						assert false;
+					}
+					if(val==null) val = "";
 
-		if(inTransaction) {
-			try {
-				JPAUtil.pushEditableContext(user);
-				int id = study.getId();
-				DAOStudy.persistStudies(Collections.singleton(study), user);
-				SpiritChangeListener.fireModelChanged(id<=0? SpiritChangeType.MODEL_ADDED: SpiritChangeType.MODEL_UPDATED, Study.class, study);
-			} finally {
-				JPAUtil.popEditableContext();
+					if(req && val.length()==0) throw new Exception(name + " is required");
+					metaMap.put(metadataKey, val);
+				}
 			}
+			study.setMetadataMap(metaMap);
+
+			//Notes
+			study.setNotes(notesTextArea.getText());
+
+			List<EmployeeGroup> egs = new ArrayList<>();
+			if(eg1ComboBox.getSelection()!=null) egs.add(eg1ComboBox.getSelection());
+			if(eg2ComboBox.getSelection()!=null) egs.add(eg2ComboBox.getSelection());
+			study.setEmployeeGroups(egs);
+			study.setUpdUser(user.getUsername());
+
+			if(inTransaction) {
+				if(!Spirit.askReasonForChangeIfUpdated(Collections.singleton(study))) return;
+				try {
+					JPAUtil.pushEditableContext(user);
+					int id = study.getId();
+					DAOStudy.persistStudies(Collections.singleton(study), user);
+					SpiritChangeListener.fireModelChanged(id<=0? SpiritChangeType.MODEL_ADDED: SpiritChangeType.MODEL_UPDATED, Study.class, study);
+				} finally {
+					JPAUtil.popEditableContext();
+				}
+			}
+			cancel = false;
+			dispose();
+		} catch (Exception e) {
+			JExceptionDialog.showError(StudyInfoDlg.this, e);
 		}
 	}
 
@@ -491,5 +486,6 @@ public class StudyInfoDlg extends JEscapeDialog {
 	public boolean isCancel() {
 		return cancel;
 	}
+
 
 }

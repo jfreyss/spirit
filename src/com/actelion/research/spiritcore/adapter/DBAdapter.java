@@ -45,6 +45,7 @@ import java.util.Set;
 import org.slf4j.LoggerFactory;
 
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.Location;
@@ -60,6 +61,8 @@ import com.actelion.research.spiritcore.util.SQLConverter;
 import com.actelion.research.spiritcore.util.SQLConverter.SQLVendor;
 import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.FormatterUtils.DateTimeFormat;
+import com.actelion.research.util.ui.scanner.ScannerConfiguration;
+
 
 /**
  * The adapter is responsible for the specific requirements concerning the DB: connection, user authentification, user tables, ...
@@ -105,6 +108,8 @@ public abstract class DBAdapter {
 	 */
 	private static Map<String, String> properties = new HashMap<>();
 
+	private boolean auditSimplified = true;
+
 
 	/**
 	 * Gets the DBAdapter based on the configuration (Singleton pattern).
@@ -116,7 +121,7 @@ public abstract class DBAdapter {
 		if(instance==null) {
 			synchronized (DBAdapter.class) {
 				if(instance==null) {
-					loadDBProperties();
+					readDBProperties();
 
 					//Find the adapter and the config
 					String className = System.getProperty(ADAPTER_PROPERTY.getPropertyName());
@@ -150,7 +155,7 @@ public abstract class DBAdapter {
 		instance = myInstance;
 	}
 
-	public static void loadDBProperties() {
+	public static void readDBProperties() {
 		properties = new LinkedHashMap<>();
 		Properties prop = new Properties();
 		if(configFile.exists()) {
@@ -166,7 +171,7 @@ public abstract class DBAdapter {
 		}
 	}
 
-	public final static void saveDBProperties() throws Exception {
+	public final static void writeDBProperties() throws Exception {
 		Properties prop = new Properties();
 		for (Entry<String, String> e : properties.entrySet()) {
 			prop.put(e.getKey(), e.getValue()==null?"": e.getValue());
@@ -254,7 +259,7 @@ public abstract class DBAdapter {
 
 	public SpiritUser loadUser(String username) throws Exception {
 		Employee emp = DAOEmployee.getEmployee(username);
-		if(emp==null) return null;
+		if(emp==null || emp.isDisabled()) return null;
 		SpiritUser user = new SpiritUser(emp);
 		return user;
 	}
@@ -458,10 +463,32 @@ public abstract class DBAdapter {
 	 * @return
 	 */
 	public boolean isAuditSimplified() {
-		return true;
+		return auditSimplified;
+	}
+	public void setAuditSimplified(boolean auditSimplified) {
+		this.auditSimplified = auditSimplified;
 	}
 
 	public String getSoftwareName() {
 		return "Spirit";
+	}
+
+	public Status[] getAllowedStatus() {
+		Status[] res = new Status[Status.values().length+1];
+		res[0] = null;
+		System.arraycopy(Status.values(), 0, res, 1, Status.values().length);
+		return res;
+	}
+
+	/**
+	 * To be overridden to allow/disallow some edition of columns
+	 * @return
+	 */
+	public Set<String> getReadOnlyColumns() {
+		return new HashSet<>();
+	}
+
+	public ScannerConfiguration[] getScannerConfigurations() {
+		return ScannerConfiguration.valuesForBiosamples();
 	}
 }

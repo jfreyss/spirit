@@ -116,7 +116,6 @@ public class RackDepictor extends JPanel {
 				}
 			}
 
-
 			@Override
 			public void mouseMoved(MouseEvent e) {
 				int pos = getPosAt(e.getX(), e.getY());

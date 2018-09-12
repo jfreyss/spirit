@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritcore.business.study;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -65,7 +64,7 @@ import com.actelion.research.util.CompareUtils;
 @Table(name="sampling")
 @SequenceGenerator(name="sampling_sequence", sequenceName="sampling_sequence", allocationSize=1)
 @BatchSize(size=16)
-public class Sampling implements Comparable<Sampling>, Cloneable, Serializable {
+public class Sampling implements Comparable<Sampling>, Cloneable {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="sampling_sequence")

@@ -21,112 +21,82 @@
 
 package com.actelion.research.spiritapp.ui.audit;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseEvent;
 import java.util.List;
 
-import javax.swing.AbstractAction;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
+import javax.swing.Box;
+import javax.swing.JCheckBox;
+import javax.swing.JPanel;
 
 import com.actelion.research.spiritapp.Spirit;
-import com.actelion.research.spiritapp.ui.SpiritFrame;
-import com.actelion.research.spiritapp.ui.biosample.BiosampleTabbedPane;
-import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
-import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
+import com.actelion.research.spiritapp.ui.biosample.BiosampleActions.Action_ExportBiosampleEvents;
 import com.actelion.research.spiritcore.business.audit.Revision;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.services.SpiritRights;
-import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
-import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.util.FormatterUtils;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
-import com.actelion.research.util.ui.PopupAdapter;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
-import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
+import com.actelion.research.util.ui.iconbutton.IconType;
+import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 /**
  * Dialog used to show the previous versions of a biosample
- * @author Joel Freyss
  *
+ * @author Joel Freyss
  */
 public class BiosampleHistoryDlg extends JEscapeDialog {
 
-	private RevisionTable revisionList = new RevisionTable();
+	private RevisionPanel revisionPanel = new RevisionPanel();
+	private JCheckBox byFieldCheckbox = new JCheckBox("Changes per field", true);
 
 	public BiosampleHistoryDlg(final Biosample biosample) {
-		super(UIUtils.getMainFrame(), "Biosample History");
+		super(UIUtils.getMainFrame(), "Biosample - Audit Trail - " + biosample.getSampleId());
 
-		try {
-			if(biosample.getInheritedStudy()!=null && SpiritRights.isBlind(biosample.getInheritedStudy(), Spirit.getUser())) {
-				JExceptionDialog.showError("The history is not visible for blind users");
-				return;
+		if(biosample.getInheritedStudy()!=null && SpiritRights.isBlind(biosample.getInheritedStudy(), Spirit.getUser())) {
+			JExceptionDialog.showError("The history is not visible for blind users");
+			return;
+		}
+
+		revisionPanel.setFilters("Sample", biosample.getId(), null);
+		byFieldCheckbox.addActionListener(e->revisionPanel.setSingular(byFieldCheckbox.isSelected()));
+		byFieldCheckbox.setVisible(SpiritProperties.getInstance().isAdvancedMode());
+
+		Action_ExportBiosampleEvents exportBiosampleEventsAction = new Action_ExportBiosampleEvents();
+		exportBiosampleEventsAction.setParentDlg(this);
+		exportBiosampleEventsAction.setFilters("Sample", biosample.getId(), null);
+		JIconButton exportBiosampleEventsButton = new JIconButton(IconType.PDF, "Export Sample Events...", exportBiosampleEventsAction);
+		JPanel actionPanel = UIUtils.createHorizontalBox(Box.createHorizontalGlue(), exportBiosampleEventsButton);
+
+		JPanel topPanel = UIUtils.createHorizontalBox(Box.createHorizontalGlue(), byFieldCheckbox);
+		setContentPane(UIUtils.createBox(revisionPanel, topPanel, actionPanel));
+
+		//Load revisions in background
+		new SwingWorkerExtended(revisionPanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+			private List<Revision> revisions;
+			@Override
+			protected void doInBackground() throws Exception {
+				revisions = DAORevision.getLastRevisions(biosample);
 			}
 
-			final BiosampleTabbedPane detailPanel = new BiosampleTabbedPane(true);
-			revisionList.getSelectionModel().addListSelectionListener(e-> {
-				if(e.getValueIsAdjusting()) return;
-				List<Revision> sel = revisionList.getSelection();
-				if(sel.size()!=1) {
-					detailPanel.setBiosamples(null);
-				}  else {
-					detailPanel.setBiosamples(sel.get(0).getBiosamples());
+			@Override
+			protected void done() {
+				if(revisions.size()==0) {
+					JExceptionDialog.showError("There are no revisions saved");
 				}
-			});
-
-			revisionList.addMouseListener(new PopupAdapter() {
-				@Override
-				protected void showPopup(MouseEvent e) {
-					List<Revision> sel = revisionList.getSelection();
-					if(sel.size()==1) {
-						JPopupMenu menu = new JPopupMenu();
-						menu.add(new RestoreAction(sel.get(0).getBiosamples()));
-						menu.show(revisionList, e.getX(), e.getY());
-					}
-				}
-			});
-
-			JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT,
-					UIUtils.createTitleBox("Revisions", new JScrollPane(revisionList)),
-					UIUtils.createTitleBox("Biosample Revision", new JScrollPane(detailPanel)));
-			splitPane.setDividerLocation(500);
-			setContentPane(splitPane);
-
-
-			//Load revisions in background
-			new SwingWorkerExtended(revisionList, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
-				private List<Revision> revisions;
-				//				private Map<Revision, String> changeMap;
-				@Override
-				protected void doInBackground() throws Exception {
-					revisions = DAORevision.getLastRevisions(biosample);
-					//					changeMap = getChangeMap(revisions);
-				}
-
-				@Override
-				protected void done() {
-					if(revisions.size()==0) {
-						JExceptionDialog.showError("There are no revisions saved");
-					}
-					//					revisionList.setRows(revisions, changeMap);
-					revisionList.setRows(revisions);
-				}
-			};
+				revisionPanel.setSingular(byFieldCheckbox.isSelected());
+				revisionPanel.setRows(revisions);
+				exportBiosampleEventsAction.setRevisions(revisions);
+				exportBiosampleEventsAction.setBiosample(biosample);
+			}
+		};
 
 
 
-			UIUtils.adaptSize(this, 1000, 600);
-			setVisible(true);
+		UIUtils.adaptSize(this, 1200, 800);
+		setVisible(true);
 
-		} catch (Exception e) {
-			JExceptionDialog.showError(e);
-			dispose();
-		}
 	}
 
 	//	private Map<Revision, String> getChangeMap(List<Revision> revisions ) {
@@ -150,47 +120,41 @@ public class BiosampleHistoryDlg extends JEscapeDialog {
 	//		return changeMap;
 	//
 	//	}
-
-	private class RestoreAction extends AbstractAction {
-		private List<Biosample> biosamples;
-
-		public RestoreAction(List<Biosample> biosamples) {
-			super("Restore version");
-			this.biosamples = biosamples;
-			for (Biosample biosample : biosamples) {
-				if(!SpiritRights.canEdit(biosample, SpiritFrame.getUser())) {
-					setEnabled(false);
-					break;
-				}
-			}
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			int res = JOptionPane.showConfirmDialog(BiosampleHistoryDlg.this, "Are you sure you want to restore to the selected version?", "Restore", JOptionPane.YES_NO_OPTION);
-			if(res!=JOptionPane.YES_OPTION) return;
-			try {
-				JPAUtil.pushEditableContext(JPAUtil.getSpiritUser());
-				for (Biosample biosample : biosamples) {
-					biosample.setLastAction(new com.actelion.research.spiritcore.business.biosample.ActionComments("Restored from version "+FormatterUtils.formatDateTime(biosample.getUpdDate())));
-					biosample.setUpdDate(null);
-				}
-				DAOBiosample.persistBiosamples(biosamples, SpiritFrame.getUser());
-				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, biosamples);
-				dispose();
-			} catch (Exception ex) {
-				JExceptionDialog.showError(ex);
-			} finally {
-				JPAUtil.popEditableContext();
-			}
-		}
-	}
-
-	@Override
-	protected boolean mustAskForExit() {
-		return false;
-	}
-
+	//
+	//	private class RestoreAction extends AbstractAction {
+	//		private List<Biosample> biosamples;
+	//
+	//		public RestoreAction(List<Biosample> biosamples) {
+	//			super("Restore version");
+	//			this.biosamples = biosamples;
+	//			for (Biosample biosample : biosamples) {
+	//				if(!SpiritRights.canEdit(biosample, SpiritFrame.getUser())) {
+	//					setEnabled(false);
+	//					break;
+	//				}
+	//			}
+	//		}
+	//
+	//		@Override
+	//		public void actionPerformed(ActionEvent e) {
+	//			int res = JOptionPane.showConfirmDialog(BiosampleHistoryDlg.this, "Are you sure you want to restore to the selected version?", "Restore", JOptionPane.YES_NO_OPTION);
+	//			if(res!=JOptionPane.YES_OPTION) return;
+	//			try {
+	//				JPAUtil.pushEditableContext(JPAUtil.getSpiritUser());
+	//				for (Biosample biosample : biosamples) {
+	//					biosample.setLastAction(new com.actelion.research.spiritcore.business.biosample.ActionComments("Restored from version "+FormatterUtils.formatDateTime(biosample.getUpdDate())));
+	//					biosample.setUpdDate(null);
+	//				}
+	//				DAOBiosample.persistBiosamples(biosamples, SpiritFrame.getUser());
+	//				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Biosample.class, biosamples);
+	//				dispose();
+	//			} catch (Exception ex) {
+	//				JExceptionDialog.showError(ex);
+	//			} finally {
+	//				JPAUtil.popEditableContext();
+	//			}
+	//		}
+	//	}
 
 
 }

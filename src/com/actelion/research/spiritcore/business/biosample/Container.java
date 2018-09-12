@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,23 +59,19 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 
 	public static final char BLOC_SEPARATOR = '-';
 
-
 	/**ContainerId */
 	@Column(length=25,name="containerid")
 	private String containerId;
-
 
 	/**ContainerType, must be equal to the container's containerType if container!=null*/
 	@Enumerated(EnumType.STRING)
 	@Column(name="containertype")
 	private ContainerType containerType;
 
-
 	private transient Biosample createdFor;
 
 	/**Biosamples in this container*/
 	private transient Set<Biosample> biosamples = null;
-
 
 	public Container() {
 	}
@@ -131,6 +128,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 	public void setPos(int pos) {
 		for(Biosample b: getBiosamples()) {
 			b.setPos(pos);
+			b.setScannedPosition(null);
 		}
 	}
 
@@ -183,9 +181,14 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 				if(o2==null) return -1;
 				int c = CompareUtils.compare(o1.getContainerIndex(), o2.getContainerIndex());
 				if(c!=0) return c;
-				return CompareUtils.compare(o1.getSampleId(), o2.getSampleId());
+				c = CompareUtils.compare(o1.getSampleId(), o2.getSampleId());
+				if(c!=0) return c;
+				return o1.getId()-o2.getId();
 			});
-			if(containerId!=null && containerId.length()>0 && (containerType==null || containerType.isMultiple())) {
+			//			if(containerId!=null && containerId.length()>0 && (containerType==null || containerType.isMultiple())) {
+			if(containerId!=null && containerId.length()>0 && (containerType!=null && containerType.isMultiple())) {
+				//TODO: should be removed
+				//				Thread.dumpStack();
 				biosamples.addAll(JPAUtil.getManager().createQuery("from Biosample b where b.container.containerId = ?1").setParameter(1, containerId).getResultList());
 			}
 			if(createdFor!=null) {
@@ -206,6 +209,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 	}
 
 	public Biosample getFirstBiosample() {
+		if(createdFor!=null) return createdFor;
 		return getBiosamples().size()>0? getBiosamples().iterator().next(): null;
 	}
 
@@ -272,18 +276,16 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 
 	public String getBlocDescription() {
 		Container c = this;
-		StringBuilder sb = new StringBuilder();
+		Set<String> lines = new LinkedHashSet<>();
 
-		sb.append(c.getContainerType().getBlocNoPrefix()==null?"": c.getContainerType().getBlocNoPrefix() + c.getBlocNo() + "\n");
 
 		int count=0;
 		for (Biosample b : c.getBiosamples()) {
-			if(count++>7 && c.getBiosamples().size()>7) {
-				sb.append("("+c.getBiosamples().size()+" samples)");
-				break;
-			}
-			sb.append(b.getInfos(EnumSet.of(InfoFormat.SAMPLENAME, InfoFormat.BIOTYPE, InfoFormat.METATADATA, InfoFormat.COMMENTS), InfoSize.ONELINE)+"\n");
+			lines.add(b.getInfos(EnumSet.of(InfoFormat.SAMPLENAME, InfoFormat.BIOTYPE, InfoFormat.METATADATA, InfoFormat.COMMENTS), InfoSize.ONELINE));
 		}
+		StringBuilder sb = new StringBuilder();
+		sb.append(c.getContainerType().getBlocNoPrefix()==null?"": c.getContainerType().getBlocNoPrefix() + c.getBlocNo() + "\n");
+		sb.append(MiscUtils.flatten(lines, "\n"));
 		return sb.toString();
 	}
 
@@ -361,6 +363,7 @@ public class Container implements Cloneable, Comparable<Container>, Serializable
 		} else {
 			//Default Label
 			res = Biosample.getInfos(getBiosamples(), EnumSet.of(
+					InfoFormat.SAMPLEID,
 					InfoFormat.TOPIDNAMES,
 					InfoFormat.SAMPLENAME,
 					InfoFormat.METATADATA,

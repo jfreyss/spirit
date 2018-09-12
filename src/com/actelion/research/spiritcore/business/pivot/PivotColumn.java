@@ -73,18 +73,21 @@ public class PivotColumn implements Comparable<PivotColumn> {
 		int ind2 = title2.indexOf("<r>");
 		if(ind1>=0 && ind2>=0) {
 			int c;
-
 			c = title1.substring(0, ind1).compareToIgnoreCase(title2.substring(0, ind2));
 			if(c!=0) return c;
 
 			c = phase==null? (o.phase==null?0: 1): phase.compareTo(o.phase);
-
 			if(c!=0) return c;
-
 		} else if(ind1>=0 && ind2<0) {
 			return 1;
 		} else if(ind1<0 && ind2>=0) {
 			return -1;
+		} else {
+			int c = title1.compareToIgnoreCase(title2);
+			if(c!=0) return c;
+
+			c = phase==null? (o.phase==null?0: 1): phase.compareTo(o.phase);
+			if(c!=0) return c;
 		}
 
 		int c = testAttribute==null? (o.testAttribute==null?0: 1): testAttribute.compareTo(o.testAttribute);

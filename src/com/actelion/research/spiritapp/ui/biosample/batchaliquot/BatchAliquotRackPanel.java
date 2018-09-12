@@ -48,7 +48,7 @@ import com.actelion.research.spiritapp.ui.location.depictor.RackDepictor;
 import com.actelion.research.spiritapp.ui.util.component.LF;
 import com.actelion.research.spiritapp.ui.util.component.ScannerConfigurationComboBox;
 import com.actelion.research.spiritapp.ui.util.icons.ImageFactory;
-import com.actelion.research.spiritapp.ui.util.scanner.SpiritScanner;
+import com.actelion.research.spiritapp.ui.util.scanner.SpiritScannerHelper;
 import com.actelion.research.spiritcore.business.biosample.AmountUnit;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
@@ -68,17 +68,16 @@ import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 import com.actelion.research.util.ui.scanner.RackPos;
-import com.itextpdf.text.Font;
 
 class BatchAliquotRackPanel extends JPanel {
 
 	private BatchAliquotDlg dlg;
 	private int rackNo;
 
-	private JCustomLabel infoLabel = new JCustomLabel("", Font.NORMAL, 12f);
+	private JCustomLabel infoLabel = new JCustomLabel("");
 	private RackDepictor plateDepictor = new RackDepictor();
 
-	private ScannerConfigurationComboBox scannerConfigComboBox = new ScannerConfigurationComboBox(true);
+	private ScannerConfigurationComboBox scannerConfigComboBox = new ScannerConfigurationComboBox();
 
 
 	private JToggleButton parentButton = new JToggleButton("Parent");
@@ -157,7 +156,9 @@ class BatchAliquotRackPanel extends JPanel {
 		JButton scanButton = new JButton("Scan");
 		scanButton.addActionListener(e-> {
 			try {
-				Location rack = new SpiritScanner().scan(scannerConfigComboBox.getSelection(), false);
+				SpiritScannerHelper scanner = new SpiritScannerHelper();
+				scanner.setScannerConfiguration(scannerConfigComboBox.getSelection());
+				Location rack = new SpiritScannerHelper().scan();
 				if(rack==null) return;
 				System.out.println("BatchAliquotRackPanel.BatchAliquotRackPanel() scan="+rack.getContainers());
 
@@ -187,7 +188,7 @@ class BatchAliquotRackPanel extends JPanel {
 		c.weightx = 0; c.gridx = 2; c.gridy=1; southPanel.add(childButton, c);
 		c.weightx = 1; c.gridx = 3; c.gridy=1; southPanel.add(cardPanel, c);
 
-		add(BorderLayout.NORTH, UIUtils.createHorizontalBox(new JCustomLabel("Rack "+(rackNo+1), Font.BOLD, 16f), infoLabel, Box.createHorizontalGlue(),
+		add(BorderLayout.NORTH, UIUtils.createHorizontalBox(new JCustomLabel("Rack "+(rackNo+1), FastFont.BIGGEST), infoLabel, Box.createHorizontalGlue(),
 				Box.createHorizontalStrut(5),scannerConfigComboBox, scanButton, clearButton));
 		add(BorderLayout.CENTER, plateDepictor);
 		add(BorderLayout.SOUTH, southPanel);

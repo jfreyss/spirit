@@ -31,11 +31,13 @@ import com.actelion.research.spiritapp.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.ui.biosample.IBiosampleDetail;
 import com.actelion.research.spiritapp.ui.util.component.SpiritHyperlinkListener;
 import com.actelion.research.spiritapp.ui.util.editor.ImageEditorPane;
+import com.actelion.research.spiritcore.business.audit.DifferenceList;
 import com.actelion.research.spiritcore.business.audit.Revision;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
+import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.FormatterUtils;
 
 public class BiosampleHistoryPanel extends ImageEditorPane implements IBiosampleDetail {
@@ -96,21 +98,21 @@ public class BiosampleHistoryPanel extends ImageEditorPane implements IBiosample
 							Biosample b1 = revisions.get(i).getBiosamples().get(0);
 							if(i+1<revisions.size()) {
 								Biosample b2 = revisions.get(i+1).getBiosamples().get(0);
-								diff = b1.getDifference(b2);
+								DifferenceList diffList = b1.getDifferenceList(b2);
+								if(diffList.size()==0) continue;
+								diff = diffList.toHtmlString(false);
 							} else {
-								Biosample b2 = revisions.get(0).getBiosamples().get(0);
-								diff = b1.getDifference(b2);
-								if(diff.length()==0) diff = "First version";
+								diff = "Created";
 							}
 
-							if(diff.length()==0) continue;
 							txt.append("<tr>");
 							if(biosamples.size()>1) {
 								txt.append("<th style='white-space:nowrap' valign=top>&nbsp;" + b.getSampleId() + "</th>");
 							}
 							txt.append("<th style='white-space:nowrap' valign=top>&nbsp;" + FormatterUtils.formatDateTimeShort(rev.getDate()) + "</th>");
 							txt.append("<th style='white-space:nowrap' valign=top>&nbsp;" + rev.getUser() + "&nbsp;</th>");
-							txt.append("<td style='white-space:nowrap' valign=top>" + diff.replace(";", "<br>") +"</td>");
+							txt.append("<td style='white-space:nowrap' valign=top>" + diff + "</td>");
+							txt.append("<td style='white-space:nowrap' valign=top style='color:gray'>" + MiscUtils.removeHtml(rev.getReason()) +"</td>");
 							txt.append("</tr>");
 						}
 					} catch(Exception e) {

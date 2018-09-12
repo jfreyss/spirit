@@ -119,18 +119,7 @@ public class GroupPanel extends JPanel {
 		}
 
 		//Create Panel
-		//		final JPanel contentPanel = new JPanel(new GridBagLayout());
 		setBackground(group==null? Color.LIGHT_GRAY: group.getColor());
-		//		setTitleFont(new Font(Font.DIALOG, Font.BOLD, 13));
-		//		setTitlePainter(new Painter() {
-		//			@Override
-		//			public void paint(Graphics2D g, Object object, int width, int height) {
-		//				g.setPaint(new GradientPaint(0, 0, Color.LIGHT_GRAY, 0, height, contentPanel.getBackground()));
-		//				g.fillRect(0, 0, width, height);
-		//
-		//			}
-		//		});
-
 		setBorder(BorderFactory.createRaisedBevelBorder());
 
 

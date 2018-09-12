@@ -37,6 +37,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.text.JTextComponent;
 
+import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.location.ContainerLabel;
 import com.actelion.research.spiritapp.ui.location.ContainerLabel.ContainerDisplayMode;
@@ -180,7 +181,7 @@ public class MonitoringCagePanel extends JPanel {
 				Date now = JPAUtil.getCurrentDateFromDatabase();
 
 				try {
-					List<Result> results = new ArrayList<Result>();
+					List<Result> results = new ArrayList<>();
 
 					//Update results of current phase (based on previous tare)
 					if(newFoodCons!=null) {
@@ -235,6 +236,8 @@ public class MonitoringCagePanel extends JPanel {
 					currentFw.setUpdDate(now);
 
 					updateLabels(newFoodCons, newWaterCons, newNextFoodCons, newNextWaterCons);
+
+					if(!Spirit.askReasonForChangeIfUpdated(results)) return;
 
 					JPAUtil.pushEditableContext(SpiritFrame.getUser());
 					DAOResult.persistResults(results, SpiritFrame.getUser());

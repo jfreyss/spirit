@@ -24,8 +24,6 @@ package com.actelion.research.spiritapp.ui.study.randomize;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -63,101 +61,81 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 import com.actelion.research.util.ui.iconbutton.JIconButton;
 
 public class SummaryTab extends WizardPanel {
-	
+
 	private final RandomizationDlg dlg;
 	private Study study;
 	private AttachedBiosampleTable rndTable;
-	
+
 	private final JButton numberingButton = new JButton("Automatic Renumbering");
 	private final JCheckBox saveWeightCheckbox = new JCheckBox("Save weights as results", true);
-	
+
 	public SummaryTab(final RandomizationDlg dlg) {
 		this.dlg = dlg;
 		this.study = dlg.getStudy();
-		
+
 		//Create the table
 		rndTable = new AttachedBiosampleTable(new AttachedBiosampleTableModel(AttachedBiosampleTableModel.Mode.RND_SUMMARY, study, null, dlg.getPhase()), false);
 		rndTable.setDragEnabled(false);
 		rndTable.setDropTarget(null);
-		
+
 		JPanel centerPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = GridBagConstraints.WEST;
 		c.weightx = 1; c.fill = GridBagConstraints.BOTH;
-		c.weighty = 0; 
-		c.weighty = 1; 
+		c.weighty = 0;
+		c.weighty = 1;
 		c.gridx = 0; c.gridy = 1; centerPanel.add(new JScrollPane(rndTable), c);
-		c.weightx = 0; c.weighty = 0; c.fill = GridBagConstraints.NONE;		
-		
+		c.weightx = 0; c.weighty = 0; c.fill = GridBagConstraints.NONE;
+
 		rndTable.setGoNextOnEnter(false);
 		rndTable.setCanSort(true);
-		
+
 		JButton reportButton = new JIconButton(IconType.EXCEL, "Report");
 		reportButton.setEnabled(dlg.getStudy()!=null);
-		reportButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					StudyGroupAssignmentReport rep = new StudyGroupAssignmentReport();
-					rep.populateReport(dlg.getStudy());
-					rep.export(null);
-				} catch (Exception ex) {
-					JExceptionDialog.showError(ex);
-				}
+		reportButton.addActionListener(e-> {
+			try {
+				StudyGroupAssignmentReport rep = new StudyGroupAssignmentReport();
+				rep.populateReport(dlg.getStudy());
+				rep.export(null);
+			} catch (Exception ex) {
+				JExceptionDialog.showError(ex);
 			}
 		});
-		
-		
+
+
 		JButton saveButton = new JIconButton(IconType.SAVE, "Make the assignments");
-		saveButton.addActionListener(new ActionListener() {			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					terminateRandomization();
-					dlg.dispose();					
-					SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, dlg.getStudy());
-					JExceptionDialog.showInfo(dlg, "Randomization and assignments saved");
-				} catch (Exception ex) {
-					JExceptionDialog.showError(dlg, ex);
-				}
+		saveButton.addActionListener(e -> terminateRandomization());
 
-				
-			}
-		});
-		
-		numberingButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				
-				//Count the number of samples
-				int needed = 0;
-				for (AttachedBiosample rndSample : rndTable.getRows()) {
-					if(rndSample.getSampleName()==null || rndSample.getSampleName().length()==0) {
-						needed++;
-					}
-				}
+		numberingButton.addActionListener(e-> {
 
-				if(needed==0) {
-					JOptionPane.showMessageDialog(SummaryTab.this, "Renumbering is not possible before clearing the existing numbers", "Renumbering", JOptionPane.WARNING_MESSAGE);
-					renumberEvent(-1);
-					return;
+			//Count the number of samples
+			int needed = 0;
+			for (AttachedBiosample rndSample : rndTable.getRows()) {
+				if(rndSample.getSampleName()==null || rndSample.getSampleName().length()==0) {
+					needed++;
 				}
-				
-				int n = suggestFirstNumber();				
-				Object res = JOptionPane.showInputDialog(SummaryTab.this, "Enter the first No:", "Renumbering", JOptionPane.QUESTION_MESSAGE, null, null, ""+n);
-				if(res==null) return;
-				try {
-					n = Integer.parseInt(res.toString());
-				} catch(Exception ex) {
-					JExceptionDialog.showError(SummaryTab.this, res + " is not a valid number");
-					return;
-				}	
-				renumberEvent(n);
 			}
+
+			if(needed==0) {
+				JOptionPane.showMessageDialog(SummaryTab.this, "Renumbering is not possible before clearing the existing numbers", "Renumbering", JOptionPane.WARNING_MESSAGE);
+				renumberEvent(-1);
+				return;
+			}
+
+			int n = suggestFirstNumber();
+			Object res = JOptionPane.showInputDialog(SummaryTab.this, "Enter the first No:", "Renumbering", JOptionPane.QUESTION_MESSAGE, null, null, ""+n);
+			if(res==null) return;
+			try {
+				n = Integer.parseInt(res.toString());
+			} catch(Exception ex) {
+				JExceptionDialog.showError(SummaryTab.this, res + " is not a valid number");
+				return;
+			}
+			renumberEvent(n);
 		});
-		
+
 		add(BorderLayout.NORTH, UIUtils.createTitleBox("", UIUtils.createVerticalBox(
-				new JLabel("Please confirm the assignment after checking the samples and their group/subgroups"), 
+				new JLabel("Please confirm the assignment after checking the samples and their group/subgroups"),
 				UIUtils.createHorizontalBox(numberingButton, new JInfoLabel("Renumber the animals sequentially starting at a given number"), Box.createHorizontalGlue()))));
 		add(BorderLayout.CENTER, centerPanel);
 		add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(/*dlg.createSaveButton(),*/ reportButton, Box.createHorizontalGlue(), saveWeightCheckbox, saveButton));
@@ -166,7 +144,7 @@ public class SummaryTab extends WizardPanel {
 
 	@Override
 	public void updateModel(boolean allowDialogs) throws Exception {
-		
+
 	}
 
 	/**
@@ -179,14 +157,14 @@ public class SummaryTab extends WizardPanel {
 			try {
 				max = Math.max(max, Integer.parseInt(b.getSampleName()));
 			} catch(Exception e) {
-				
-			}			
+
+			}
 		}
-		return max + 1;		
+		return max + 1;
 	}
 	private void renumberEvent(int start) {
 		dlg.setMustAskForExit(true);
-		List<AttachedBiosample> samples = rndTable.getRows();		
+		List<AttachedBiosample> samples = rndTable.getRows();
 		//Renumber
 		if(start>0) {
 			for (AttachedBiosample rndSample : samples) {
@@ -198,7 +176,7 @@ public class SummaryTab extends WizardPanel {
 		reassignSubGroups(study, samples);
 		repaint();
 	}
-	
+
 	@Override
 	public void updateView() {
 		List<AttachedBiosample> samples = new ArrayList<AttachedBiosample>(dlg.getRandomization().getSamples());
@@ -212,7 +190,7 @@ public class SummaryTab extends WizardPanel {
 				return CompareUtils.compare(o1.getSampleName(), o2.getSampleName());
 			}
 		});
-			
+
 		rndTable.getModel().setNData(dlg.getRandomization().getNData());
 		try {
 			rndTable.getModel().setBiotype(dlg.getBiotype());
@@ -221,9 +199,9 @@ public class SummaryTab extends WizardPanel {
 			JExceptionDialog.showError(e);
 		}
 		rndTable.setRows(samples);
-		
-		
-		//renumber if none has a number or if one of the 
+
+
+		//renumber if none has a number or if one of the
 		boolean hasNumber = false;
 		boolean hasSubGroups = false;
 		for (AttachedBiosample rndSample : samples) {
@@ -232,29 +210,38 @@ public class SummaryTab extends WizardPanel {
 		}
 
 		if(!hasNumber || !hasSubGroups) renumberEvent(-1);
-		
-	}
-	
-	
-	
-	
-	
-	public void terminateRandomization() throws Exception {
-		if(study==null) throw new Exception("This option is only possible in the context of a study");
-		boolean saveWeights = saveWeightCheckbox.isSelected();
-		
-		SpiritUser user = Spirit.askForAuthentication();
-		Randomization randomization = dlg.getRandomization();
 
-		
-		//save
-		DAOStudy.persistStudies(Collections.singleton(study), SpiritFrame.getUser());
-		AttachBiosamplesHelper.attachSamples(study, randomization.getSamples(), saveWeights? dlg.getPhase(): null, saveWeights, user);
+	}
+
+
+
+
+
+	public void terminateRandomization() {
+		try {
+			if(study==null) throw new Exception("This option is only possible in the context of a study");
+			boolean saveWeights = saveWeightCheckbox.isSelected();
+
+			SpiritUser user = Spirit.askForAuthentication();
+			Randomization randomization = dlg.getRandomization();
+
+
+			//save
+			if(!Spirit.askReasonForChangeIfUpdated(Collections.singleton(study))) return;
+			DAOStudy.persistStudies(Collections.singleton(study), SpiritFrame.getUser());
+			AttachBiosamplesHelper.attachSamples(study, randomization.getSamples(), saveWeights? dlg.getPhase(): null, saveWeights, user);
+			dlg.dispose();
+			SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Study.class, dlg.getStudy());
+			JExceptionDialog.showInfo(dlg, "Randomization and assignments saved");
+		} catch (Exception ex) {
+			JExceptionDialog.showError(dlg, ex);
+		}
+
 
 	}
 
 	public static void reassignSubGroups(Study study, List<AttachedBiosample> samples) {
-		
+
 		//
 		//Assign subgroups when possible
 		//Create a map of group -> array of subgroup -> n of allowed animals
@@ -268,19 +255,19 @@ public class SummaryTab extends WizardPanel {
 				group2left.put(gr, left);
 			}
 		}
-		
-		
-		
+
+
+
 		//assign the sample to subgroups
 		loop: for (AttachedBiosample rndSample : samples) {
 			rndSample.setSubGroup(1);
 
 			if(rndSample.getGroup()==null) continue;
-			
-			
+
+
 			int[] left = group2left.get(rndSample.getGroup());
 			if(left==null) continue;
-			
+
 			//Create a new subgroup
 			for (int i = 0; i < left.length; i++) {
 				if(left[i]>0) {
@@ -291,9 +278,9 @@ public class SummaryTab extends WizardPanel {
 			}
 			rndSample.setSubGroup(left.length-1); //always the last one by default
 		}
-		
-		
-	
-		
+
+
+
+
 	}
 }

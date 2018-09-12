@@ -21,27 +21,33 @@
 
 package com.actelion.research.spiritapp.ui.admin;
 
+import java.awt.Dialog;
 import java.awt.event.ActionEvent;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
+import com.actelion.research.spiritapp.report.EventsReport;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.admin.user.UserAdminDlg;
 import com.actelion.research.spiritapp.ui.audit.LogEntryDlg;
-import com.actelion.research.spiritapp.ui.audit.RecentChancesDlg;
+import com.actelion.research.spiritapp.ui.audit.RecentChangesDlg;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
 import com.actelion.research.spiritcore.business.IObject;
+import com.actelion.research.spiritcore.business.audit.Revision;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
@@ -52,7 +58,7 @@ public class AdminActions {
 
 	public static class Action_AdminBiotypes extends AbstractAction {
 		public Action_AdminBiotypes() {
-			super("Edit Biotypes");
+			super("Edit Biotypes...");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('t'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
 			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
@@ -109,7 +115,7 @@ public class AdminActions {
 				new SwingWorkerExtended("Rollback", UIUtils.getMainFrame()) {
 					@Override
 					protected void doInBackground() throws Exception {
-						DAORevision.restore(objects, SpiritFrame.getUser(), "Rollback" + (reason.length()==0?"":"(" + reason + ")"));
+						DAORevision.restore(objects, SpiritFrame.getUser());
 					}
 					@Override
 					protected void done() {
@@ -135,23 +141,23 @@ public class AdminActions {
 	public static class Action_Revisions extends AbstractAction {
 		private String userId;
 		public Action_Revisions(String userId) {
-			super("Recent Changes " + (userId==null || userId.length()==0? "": "(" + userId + ")"));
+			super("Recent Changes" + (userId==null || userId.length()==0? "...": " (" + userId + ")..."));
 			this.userId = userId;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
 			putValue(AbstractAction.SMALL_ICON, userId==null? IconType.ADMIN.getIcon(): IconType.HISTORY.getIcon());
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			new RecentChancesDlg(userId);
+			new RecentChangesDlg(userId);
 		}
 	}
 
 	public static class Action_RenameElb extends AbstractAction {
 		public Action_RenameElb() {
-			super("Rename ELB");
+			super("Rename ELB...");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
-			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
+			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()) && SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_RESULT));
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -161,7 +167,7 @@ public class AdminActions {
 
 	public static class Action_LastLogins extends AbstractAction {
 		public Action_LastLogins() {
-			super("Recent Connections");
+			super("Recent Connections...");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('c'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
 			setEnabled(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER && (SpiritFrame.getUser()==null || SpiritRights.isSuperAdmin(SpiritFrame.getUser())));
@@ -174,7 +180,7 @@ public class AdminActions {
 
 	public static class Action_ManageUsers extends AbstractAction {
 		public Action_ManageUsers() {
-			super("Edit Users");
+			super("Edit Users...");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
 			setEnabled(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER  && (SpiritFrame.getUser()==null || SpiritRights.isSuperAdmin(SpiritFrame.getUser())));
@@ -201,4 +207,34 @@ public class AdminActions {
 	}
 
 
+	public static class Action_ExportChangeEvents extends AbstractAction {
+
+		private Dialog parentDlg = null;
+		private EventsReport report = new EventsReport();
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				if ( parentDlg != null )
+					parentDlg.dispose();
+
+				String title = "Report for Change Events";
+
+				report.buildReport();
+				report.setPreviewTitle(title);
+				report.addFooterNote(title);
+				report.showPreview();
+			} catch (Exception ex) {
+				JExceptionDialog.showError(ex.getMessage());
+			}
+		}
+
+		public void setRevisions(List<Revision> revisions) {
+			report.setRevisions(revisions);
+		}
+
+		public void setParentDlg(Dialog parentDlg) {
+			this.parentDlg = parentDlg;
+		}
+	}
 }

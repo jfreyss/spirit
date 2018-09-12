@@ -78,6 +78,7 @@ import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.Quality;
+import com.actelion.research.spiritcore.business.audit.DifferenceList;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationLabeling;
@@ -94,7 +95,6 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.business.study.StudyAction;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.util.DifferenceMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Pair;
 import com.actelion.research.spiritcore.util.SetHashMap;
@@ -336,7 +336,7 @@ public class Biosample implements Comparable<Biosample>, Cloneable, IObject, IAu
 	/**Status*/
 	@Column(name="state", nullable=true)
 	@Enumerated(EnumType.STRING)
-	private Status status = Status.INLAB;
+	private Status status = null;
 
 	/**Container, to be specified when the containertype is multiple only, it should be null otherwise*/
 	@Embedded
@@ -622,7 +622,6 @@ public class Biosample implements Comparable<Biosample>, Cloneable, IObject, IAu
 			linkedBiosamples.put(bType, bio);
 		}
 		getMetadataValues().put(bType, bio==null? "": bio.getSampleId());
-		System.out.println("Biosample.setMetadataBiosample() "+bType+">"+bio+">"+linkedBiosamples);
 	}
 
 
@@ -730,11 +729,11 @@ public class Biosample implements Comparable<Biosample>, Cloneable, IObject, IAu
 	 * @param subGroup
 	 */
 	public void setAttached(Study attachedStudy, Group group, int subGroup) {
-
 		if(CompareUtils.compare(attachedStudy, getAttachedStudy())==0 && CompareUtils.compare(group, getInheritedGroup())==0 && subGroup==getInheritedSubGroup() ) {
 			//No change, skip it
 			return;
 		}
+
 		if(group==null) {
 			setAttachedStudy(attachedStudy);
 			setInheritedGroup(null);
@@ -898,7 +897,7 @@ public class Biosample implements Comparable<Biosample>, Cloneable, IObject, IAu
 		public int compare(Biosample o1, Biosample o2) {
 			if(o2==null) return o1==null?0: -1;
 			if(o2==o1) return 0;
-			if(o1.getId()>0 && o1.getId()==o2.getId()) return 0;
+			if(o1.getId()>0 && o2.getId()>0 && o1.getId()==o2.getId()) return 0;
 
 			//Compare Scanned Position
 			int c;
@@ -1352,21 +1351,6 @@ public class Biosample implements Comparable<Biosample>, Cloneable, IObject, IAu
 		return biotype==null || biotype.getAmountUnit()==null? null: new Amount(amount, biotype.getAmountUnit());
 	}
 
-	//	/**
-	//	 * Adds an action (and delete the similar action in the list if it was not saved, so that
-	//	 * "move to loc1" will erase any other "move to ..." recorded in the same session)
-	//	 * @param action
-	//	 */
-	//	public void addAction(ActionBiosample action) {
-	//		for (Iterator<ActionBiosample> iterator = actions.iterator(); iterator.hasNext();) {
-	//			ActionBiosample a = iterator.next();
-	//			if(a.getId()<=0 && a.getClass()==action.getClass()) {
-	//				iterator.remove();
-	//			}
-	//		}
-	//		actions.add(action);
-	//	}
-
 	public Map<String, Object> getAuxiliaryInfos() {
 		return infos;
 	}
@@ -1429,8 +1413,7 @@ public class Biosample implements Comparable<Biosample>, Cloneable, IObject, IAu
 		if(container!=null) {
 			container.setCreatedFor(this);
 		}
-		if(((oldCid==null && newCid==null) || (oldCid!=null && oldCid.equals(newCid)))
-				&& (oldCType==newCType)) {
+		if(oldCid!=null && oldCid.equals(newCid) && oldCType==newCType) {
 			return;
 		}
 
@@ -1439,13 +1422,14 @@ public class Biosample implements Comparable<Biosample>, Cloneable, IObject, IAu
 			this.container.removeBiosample(this);
 		}
 
+		//Update the container
+		this.container = container;
+
 		//And add it to the new one
 		if(container!=null) {
 			container.addBiosample(this);
 		}
 
-		//Update the container
-		this.container = container;
 	}
 
 	public static SortedSet<Location> getLocations(Collection<Biosample> biosamples){
@@ -1485,7 +1469,7 @@ public class Biosample implements Comparable<Biosample>, Cloneable, IObject, IAu
 
 	public static Status getStatus(Collection<Biosample> biosamples) {
 		if(biosamples==null) return null;
-		SortedSet<Status> res = new TreeSet<>();
+		Set<Status> res = new LinkedHashSet<>();
 		for (Biosample b : biosamples) {
 			if(b!=null) res.add(b.getStatus());
 		}
@@ -1499,7 +1483,7 @@ public class Biosample implements Comparable<Biosample>, Cloneable, IObject, IAu
 	 */
 	public static Set<Study> getStudies(Collection<Biosample> biosamples) {
 		if(biosamples==null) return null;
-		Set<Study> res = new HashSet<>();
+		Set<Study> res = new LinkedHashSet<>();
 		for (Biosample b : biosamples) {
 			res.add(b.getInheritedStudy());
 		}
@@ -2286,10 +2270,11 @@ public class Biosample implements Comparable<Biosample>, Cloneable, IObject, IAu
 		@SuppressWarnings("unchecked")
 		List<Result> results = (List<Result>) getAuxiliaryInfos().get(AUX_RESULT_ALL);
 		if(results==null) {
-			results = new ArrayList<Result>();
-			getAuxiliaryInfos().put(AUX_RESULT_ALL, results);
+			getAuxiliaryInfos().put(AUX_RESULT_ALL, results = new ArrayList<Result>());
 		}
-		results.add(r);
+		if(!results.contains(r)) {
+			results.add(r);
+		}
 	}
 
 	/**
@@ -2297,13 +2282,12 @@ public class Biosample implements Comparable<Biosample>, Cloneable, IObject, IAu
 	 * @param phase (null to clear all)
 	 */
 	public void clearAuxResults(Phase phase) {
-		assert phase!=null;
 		@SuppressWarnings("unchecked")
 		List<Result> results = (List<Result>) getAuxiliaryInfos().get(AUX_RESULT_ALL);
 		if(results!=null) {
 			List<Result> cleaned = new ArrayList<>();
 			for (Result result : new ArrayList<>(results)) {
-				if(!phase.equals(result.getInheritedPhase())) {
+				if(phase!=null && !phase.equals(result.getInheritedPhase())) {
 					cleaned.add(result);
 				}
 			}
@@ -2433,13 +2417,15 @@ public class Biosample implements Comparable<Biosample>, Cloneable, IObject, IAu
 			this.location = null;
 			this.pos = -1;
 		} else {
-			if(this.location!=null) {
-				this.location.getBiosamples().remove(this);
+			if(loc!=this.location) {
+				if(this.location!=null) {
+					this.location.getBiosamples().remove(this);
+				}
+				this.location = loc;
+				this.location.getBiosamples().add(this);
 			}
-			this.location = loc;
 			this.pos = pos;
 
-			this.location.getBiosamples().add(this);
 		}
 	}
 
@@ -2594,86 +2580,70 @@ public class Biosample implements Comparable<Biosample>, Cloneable, IObject, IAu
 
 	/**
 	 * Returns a string containing the differences between 2 samples (usually 2 different versions).
-	 * The result is an empty string if there are no differences or if b is null
-	 * @param b
+	 * The result is am empty DifferenceList if there are no differences or if b is null
+	 * @param auditable
 	 * @return
 	 */
 	@Override
-	public String getDifference(IAuditable b) {
-		if(b==null) b = new Biosample();
-		if(!(b instanceof Biosample)) return "";
-		try {
-			return getDifferenceMap((Biosample)b).flatten();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return "Err: " + e;
-		}
-	}
+	public DifferenceList getDifferenceList(IAuditable auditable) {
+		DifferenceList list = new DifferenceList("Sample", getId(), getSampleId(), getInheritedStudy()==null?null: getInheritedStudy().getSid());
+		if(auditable==null || !(auditable instanceof Biosample)) return list;
+		Biosample b = (Biosample) auditable;
 
-	/**
-	 * Returns a map containing the differences between 2 samples (usually 2 different versions).
-	 * The result is an empty string if there are no differences or if b is null
-	 * @param b
-	 * @return
-	 */
-	public DifferenceMap getDifferenceMap(Biosample b) {
-
-		DifferenceMap map = new DifferenceMap();
-		if(b==null) return map;
 		if(!CompareUtils.equals(getInheritedStudy(), b.getInheritedStudy())) {
-			map.put("Study", getInheritedStudy()==null?"":getInheritedStudy().getStudyId(), b.getInheritedStudy()==null?"":b.getInheritedStudy().getStudyId());
+			list.add("Study", getInheritedStudy()==null?"":getInheritedStudy().getStudyId(), b.getInheritedStudy()==null?"":b.getInheritedStudy().getStudyId());
 		}
 		if(!CompareUtils.equals(getInheritedGroup(), b.getInheritedGroup())) {
-			map.put("Group", getInheritedGroup()==null?"": getInheritedGroup().getName(), b.getInheritedGroup()==null?"": b.getInheritedGroup().getName());
+			list.add("Group", getInheritedGroup()==null?"": getInheritedGroup().getName(), b.getInheritedGroup()==null?"": b.getInheritedGroup().getName());
 		}
 		if(!CompareUtils.equals(getInheritedPhase(), b.getInheritedPhase())) {
-			map.put("Phase", getInheritedPhaseString(), b.getInheritedPhaseString());
+			list.add("Phase", getInheritedPhaseString(), b.getInheritedPhaseString());
 		}
 		if(!CompareUtils.equals(getContainerType(), b.getContainerType()) || !CompareUtils.equals(getContainerId(), b.getContainerId()) || !CompareUtils.equals(getContainerIndex(), b.getContainerIndex())) {
-			map.put("Container", (getContainerType()==null? "": getContainerType().getName()) + (getContainerId()!=null && getContainerId().length()>0? " " + getContainerId():"") + (getContainerIndex()!=null && getContainerIndex()>0? ":"+getContainerIndex():"")
+			list.add("Container", (getContainerType()==null? "": getContainerType().getName()) + (getContainerId()!=null && getContainerId().length()>0? " " + getContainerId():"") + (getContainerIndex()!=null && getContainerIndex()>0? ":"+getContainerIndex():"")
 					, (b.getContainerType()==null? "": b.getContainerType().getName()) + (b.getContainerId()!=null && b.getContainerId().length()>0? " " + b.getContainerId():"") + (b.getContainerIndex()!=null && b.getContainerIndex()>0? ":"+b.getContainerIndex():""));
 		}
 		if(!CompareUtils.equals(getAmount(), b.getAmount())) {
-			map.put("Amount", getAmount()==null?"": getAmount().toString(), b.getAmount()==null?"": b.getAmount().toString());
+			list.add("Amount", getAmount()==null?"": getAmount().toString(), b.getAmount()==null?"": b.getAmount().toString());
 		}
 		if(!CompareUtils.equals(getLocationString(LocationFormat.FULL_POS, null), b.getLocationString(LocationFormat.FULL_POS, null))) {
-			map.put("Location", getLocationString(LocationFormat.FULL_POS, null), b.getLocationString(LocationFormat.FULL_POS, null));
+			list.add("Location", getLocationString(LocationFormat.FULL_POS, null), b.getLocationString(LocationFormat.FULL_POS, null));
 		}
 		if(!CompareUtils.equals(getSampleId(), b.getSampleId())) {
-			map.put("SampleId", getSampleId(), b.getSampleId());
+			list.add("SampleId", getSampleId(), b.getSampleId());
 		}
 		if(!CompareUtils.equals(getBiotype(), b.getBiotype())) {
-			map.put("Biotype", getBiotype()==null?"":getBiotype().getName(), b.getBiotype()==null?"":b.getBiotype().getName());
+			list.add("Biotype", getBiotype()==null?"":getBiotype().getName(), b.getBiotype()==null?"":b.getBiotype().getName());
 		}
 		if(getBiotype()!=null) {
 			if(getBiotype().getSampleNameLabel()!=null && !CompareUtils.equals(getSampleName(), b.getSampleName())) {
-				map.put(getBiotype().getSampleNameLabel(), getSampleName(), b.getSampleName());
+				list.add(getBiotype().getSampleNameLabel(), getSampleName(), b.getSampleName());
 			}
 			for (BiotypeMetadata bm : getBiotype().getMetadata()) {
 				if(!CompareUtils.equals(getMetadataValue(bm), b.getMetadataValue(bm))) {
-					map.put(bm.getName(), getMetadataValue(bm), b.getMetadataValue(bm));
+					list.add(bm.getName(), getMetadataValue(bm), b.getMetadataValue(bm));
 				}
 			}
 		}
 		if(!CompareUtils.equals(getComments(), b.getComments())) {
-			map.put("Comments", getComments(), b.getComments());
+			list.add("Comments", getComments(), b.getComments());
 		}
 		if(!CompareUtils.equals(getStatus(), b.getStatus()) || !CompareUtils.equals(getEndPhase(), b.getEndPhase()) ) {
-			map.put("Status", getStatus()==null?"":getStatus().getName() + (getEndPhase()==null?"": " at " + getEndPhase().getShortName()),
+			list.add("Status", getStatus()==null?"":getStatus().getName() + (getEndPhase()==null?"": " at " + getEndPhase().getShortName()),
 					b.getStatus()==null?"":b.getStatus().getName() + (b.getEndPhase()==null?"": " at " + b.getEndPhase().getShortName()));
 		}
 		if(!CompareUtils.equals(getQuality(), b.getQuality())) {
-			map.put("Quality", getQuality()==null?"":getQuality().getName(), b.getQuality()==null?"":b.getQuality().getName());
+			list.add("Quality", getQuality()==null?"":getQuality().getName(), b.getQuality()==null?"":b.getQuality().getName());
 		}
 		if(!CompareUtils.equals(getCreUser(), b.getCreUser())) {
-			map.put("CreatedBy", getCreUser(), b.getCreUser());
+			list.add("CreatedBy", getCreUser(), b.getCreUser());
 		}
 		if(!CompareUtils.equals(getLastAction(), b.getLastAction())) {
 			if(getLastAction()!=null) {
-				map.put("ACTION", getLastAction().getDetails(), b.getLastAction().getDetails());
+				list.add("ACTION", getLastAction()==null? null: getLastAction().getDetails(), null);
 			}
 		}
-		return map;
+		return list;
 	}
 
 	public String getLastActionSerialized() {

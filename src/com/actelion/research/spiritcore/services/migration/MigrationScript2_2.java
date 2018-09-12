@@ -42,7 +42,7 @@ public class MigrationScript2_2 extends MigrationScript {
 					"alter table spirit.study_aud ADD (studytype varchar2(32 char));\n"
 					;
 	public MigrationScript2_2() {
-		super("2.2.0");
+		super("2.2");
 	}
 
 	@Override

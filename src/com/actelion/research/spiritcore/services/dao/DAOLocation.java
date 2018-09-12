@@ -148,7 +148,7 @@ public class DAOLocation {
 			if(location.getPrivacy()==null) {
 				throw new Exception("The privacy is required for " + location);
 			} else if((location.getPrivacy()==Privacy.PRIVATE || location.getPrivacy()==Privacy.PROTECTED)) {
-				if(location.getEmployeeGroup()==null) throw new Exception("You must specify the department for " + location);
+				if(location.getEmployeeGroup()==null) throw new Exception("You must specify the department for " + location + "(" + location.getPrivacy() + ")");
 			}
 
 			//Check positions
@@ -419,6 +419,12 @@ public class DAOLocation {
 		return res;
 	}
 
+	/**
+	 * Delete locations after checking rights
+	 * @param locations
+	 * @param user
+	 * @throws Exception
+	 */
 	public static void deleteLocations(Collection<Location> locations, SpiritUser user) throws Exception {
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
@@ -433,6 +439,14 @@ public class DAOLocation {
 		}
 	}
 
+	/**
+	 * Delete locations in the same transaction
+	 * After checking rights
+	 * @param session
+	 * @param locations
+	 * @param user
+	 * @throws Exception
+	 */
 	public static void deleteLocations(EntityManager session, Collection<Location> locations, SpiritUser user) throws Exception {
 
 		if(user==null) throw new Exception("There is no user");
@@ -462,7 +476,7 @@ public class DAOLocation {
 
 
 	/**
-	 * Find compatible location and throw an exception if none is found
+	 * Find compatible location and returns null ifnone is found
 	 * If a user is given, only the location readable by the user are queried
 	 *
 	 * @param mediumLocation
@@ -470,19 +484,27 @@ public class DAOLocation {
 	 * @return
 	 * @throws Exception
 	 */
-	public static Location getCompatibleLocation(String mediumLocation, SpiritUser user) throws Exception {
-		Set<Location> res = queryLocations(mediumLocation, user);
+	public static Location getCompatibleLocation(String mediumLocation, SpiritUser user) {
+		Set<Location> res;
+		try {
+			res = queryLocations(mediumLocation, user);
+		} catch (Exception e) {
+			return null;
+		}
 
 		if(res.size()>1) {
-			StringBuilder sb = new StringBuilder();
-			if(res.size()<5) {
-				for (Location l : res) {
-					sb.append("\n "+l.getHierarchyFull());
-				}
-			}
-			throw new Exception(res.size() + " locations found for '"+mediumLocation+"': "+sb.toString());
+			return null;
+			//			StringBuilder sb = new StringBuilder();
+			//			if(res.size()<5) {
+			//				for (Location l : res) {
+			//					sb.append("\n "+l.getHierarchyFull());
+			//				}
+			//			}
+			//
+			//			throw new Exception(res.size() + " locations found for '"+mediumLocation+"': "+sb.toString());
 		} else if(res.size()==0) {
-			throw new Exception("Unknown location: "+mediumLocation);
+			//			throw new Exception("Unknown location: "+mediumLocation);
+			return null;
 		} else { //possibles.size==1
 			try {
 				return res.iterator().next();
@@ -558,7 +580,7 @@ public class DAOLocation {
 
 		Location location = getCompatibleLocation(fullLocation, user);
 
-		return new LocPos(location, location.parsePosition(pos));
+		return location==null? null: new LocPos(location, location.parsePosition(pos));
 
 
 	}

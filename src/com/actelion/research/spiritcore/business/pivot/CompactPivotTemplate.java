@@ -47,8 +47,18 @@ public class CompactPivotTemplate extends PivotTemplate {
 		setWhere(PivotItemFactory.RESULT_TEST, Where.ASCOL);
 		setWhere(PivotItemFactory.RESULT_OUTPUT, Where.ASCOL);
 
+		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_BIOTYPE, results)) {
+			setWhere(PivotItemFactory.BIOSAMPLE_BIOTYPE, Where.ASCOL);
+		}
+
+
+
 		if(isDiscriminating(PivotItemFactory.BIOSAMPLE_NAME, results)) {
-			setWhere(PivotItemFactory.BIOSAMPLE_NAME, !isMultiColumns(results) && !hasMoreOrEqualThanNValues(PivotItemFactory.BIOSAMPLE_NAME, results, 25)? Where.ASCOL: Where.ASCELL);
+			if(!isMultiColumns(results) && !hasMoreOrEqualThanNValues(PivotItemFactory.BIOSAMPLE_NAME, results, 25)) {
+				setWhere(PivotItemFactory.BIOSAMPLE_NAME,Where.ASCOL);
+			} else {
+				setWhere(PivotItemFactory.BIOSAMPLE_NAME,Where.ASCELL);
+			}
 			setWhere(PivotItemFactory.RESULT_INPUT, !isMultiColumns(results) && !hasMoreOrEqualThanNValues(PivotItemFactory.RESULT_INPUT, results, 25)? Where.ASCOL: Where.ASCELL);
 		} else {
 			setWhere(PivotItemFactory.BIOSAMPLE_NAME, Where.ASCOL);

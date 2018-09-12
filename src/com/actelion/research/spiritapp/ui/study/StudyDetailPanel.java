@@ -38,7 +38,6 @@ import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleTabbedPane;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleTable;
-import com.actelion.research.spiritapp.ui.biosample.BiosampleTableModel.Mode;
 import com.actelion.research.spiritapp.ui.pivot.graph.GraphPanel;
 import com.actelion.research.spiritapp.ui.study.depictor.StudyDepictor;
 import com.actelion.research.spiritapp.ui.util.SpiritContextListener;
@@ -104,14 +103,14 @@ public class StudyDetailPanel extends JPanel {
 		};
 		participantTable.getSelectionModel().addListSelectionListener(l);
 		participantTable.getColumnModel().getSelectionModel().addListSelectionListener(l);
-		participantTable.getModel().setMode(Mode.COMPACT);
+		//		participantTable.getModel().setMode(Mode.COMPACT);
 
 		JSplitPane quickViewSplitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT, new JScrollPane(quickLinkPanel), graphPanel);
 
 		infoTabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
 		infoTabbedPane.add("Infos", new JScrollPane(editorPane));
 		infoTabbedPane.add("Participants", new JScrollPane(participantTable));
-		if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_RESULT)) {
 			infoTabbedPane.add("Data", quickViewSplitPane);
 		}
 

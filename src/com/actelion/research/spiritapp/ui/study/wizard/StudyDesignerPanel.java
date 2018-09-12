@@ -414,7 +414,7 @@ public class StudyDesignerPanel extends JPanel {
 		//Remove the samples from dead animals
 		Set<Biosample> availables = new HashSet<>();
 		for (Biosample sample : samples) {
-			if(sample.getTopParentInSameStudy().getStatus().isAvailable()) {
+			if(sample.getTopParentInSameStudy()!=null && sample.getTopParentInSameStudy().getStatus()!=null && sample.getTopParentInSameStudy().getStatus().isAvailable()) {
 				availables.add(sample);
 			}
 		}

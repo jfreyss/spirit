@@ -44,7 +44,6 @@ import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
-import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.util.QueryTokenizer;
@@ -78,26 +77,34 @@ public class DAOTest {
 
 	private static Map<Integer, Test> getId2TestMap() {
 		@SuppressWarnings("unchecked")
-		Map<Integer, Test> id2Test = (Map<Integer, Test>) Cache.getInstance().get("id2test"+JPAUtil.getManager());
+		Map<Integer, Test> id2Test = (Map<Integer, Test>) Cache.getInstance().get("id2test_"+JPAUtil.getManager());
 		if(id2Test==null) {
-
 			EntityManager session = JPAUtil.getManager();
 			List<Test> res = session.createQuery(
 					"select distinct(t) from Test t left join fetch t.attributes").getResultList();
 			id2Test = JPAUtil.mapIds(res);
-			Cache.getInstance().add("id2Test_"+JPAUtil.getManager(), id2Test, Cache.FAST);
+			Cache.getInstance().add("id2test_"+JPAUtil.getManager(), id2Test, Cache.FAST);
+			Cache.getInstance().add("name2test_"+JPAUtil.getManager(), Test.mapName(res), Cache.FAST);
 		}
 		return id2Test;
 	}
+
+	@SuppressWarnings("unchecked")
+	private static Map<String, Test> getName2TestMap() {
+		getId2TestMap();
+		return (Map<String, Test>) Cache.getInstance().get("name2test_"+JPAUtil.getManager());
+	}
+
 
 	public static Test getTest(int id) {
 		return getId2TestMap().get(id);
 	}
 
 	public static List<Test> getTests(Collection<Integer> ids) {
+		List<Test> res = new ArrayList<>();
+		if(ids.size()==0) return res;
 		Map<Integer, Test> id2Test = getId2TestMap();
 
-		List<Test> res = new ArrayList<>();
 		for (Integer id : ids) {
 			Test t = id2Test.get(id);
 			if(t!=null) res.add(t);
@@ -106,11 +113,7 @@ public class DAOTest {
 	}
 
 	public static Test getTest(String name) {
-		Map<Integer, Test> id2Test = getId2TestMap();
-		for (Test t : id2Test.values()) {
-			if(t.getName().equals(name)) return t;
-		}
-		return null;
+		return getName2TestMap().get(name);
 	}
 
 	public static List<Test> getTests() {
@@ -177,7 +180,7 @@ public class DAOTest {
 				session.persist(test);
 			}
 		}
-		Cache.getInstance().remove("id2test"+JPAUtil.getManager());
+		Cache.getInstance().remove("id2test_"+JPAUtil.getManager());
 	}
 
 	public static void removeTest(Test test, SpiritUser user) throws Exception {
@@ -199,7 +202,7 @@ public class DAOTest {
 			session.remove(test);
 			txn.commit();
 			txn = null;
-			Cache.getInstance().remove("id2test"+JPAUtil.getManager());
+			Cache.getInstance().remove("id2test_"+JPAUtil.getManager());
 
 		} finally {
 			if(txn!=null && txn.isActive()) try{txn.rollback();}catch (Exception e) {e.printStackTrace();}
@@ -207,17 +210,22 @@ public class DAOTest {
 	}
 
 	public static Set<String> getAutoCompletionFields(TestAttribute att) {
-		return getAutoCompletionFields(Collections.singleton(att), null);
-	}
-
-	public static Set<String> getAutoCompletionFields(Collection<TestAttribute> atts, Study study) {
-		EntityManager session = JPAUtil.getManager();
-		Query query =  session.createQuery(
-				"select distinct(rv.value) from ResultValue rv" +
-						" where " + QueryTokenizer.expandForIn("rv.attribute.id", JPAUtil.getIds(atts)) + " and rv.value is not null " +
-						(study!=null? " and rv.result.biosample.inheritedStudy.id = "+study.getId():""));
-
-		return new TreeSet<String>( query.getResultList());
+		Set<String> cached = (Set<String>) Cache.getInstance().get("autocompletion_ta_" + att.getId());
+		if(cached==null) {
+			EntityManager session = JPAUtil.getManager();
+			Query query =  session.createQuery("select rv.value, count(*) from ResultValue rv where rv.attribute.id = " + att.getId() + " and rv.value is not null group by rv.value");
+			List<Object[]> l = query.getResultList();
+			Collections.sort(l, (o1, o2) -> {
+				return -((Long)o1[1]).compareTo(((Long)o2[1]));
+			});
+			List<String> items = new ArrayList<>();
+			for (int i = 0; i < 100 && i<l.size(); i++) {
+				items.add((String)l.get(i)[0]);
+			}
+			cached = new TreeSet<String>(items);
+			Cache.getInstance().add("autocompletion_ta_" + att.getId(), cached, Cache.FAST);
+		}
+		return cached;
 	}
 
 	public static Map<TestAttribute, Collection<String>> getInputFields(Integer testId, String studyIds) throws Exception {
@@ -232,7 +240,7 @@ public class DAOTest {
 			StringBuilder jpql = new StringBuilder();
 			jpql.append("SELECT distinct(rv.value) FROM ResultValue rv " +
 					" where (" + QueryTokenizer.expandOrQuery("rv.result.biosample.inheritedStudy.studyId = ?", studyIds) + ")" +
-					" and rv.attribute.id = "+att.getId() /*+ " and rv.attribute.outputType = 'INPUT'"*/);
+					" and rv.attribute.id = " + att.getId());
 
 			Query query = session.createQuery(jpql.toString());
 			List<String> choices = new ArrayList<>();

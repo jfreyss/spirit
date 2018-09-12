@@ -73,7 +73,6 @@ public class SamplesLocationReport extends AbstractReport {
 		if(showResults){
 			List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForBiosampleIds(JPAUtil.getIds(allSamples)), user);
 			sample2results = Result.mapBiosample(results);
-			System.out.println("SamplesLocationReport.populateWorkBook() FOUND "+results.size());
 		}
 
 		Collections.sort(allSamples, Biosample.HIERARCHY_COMPARATOR);
@@ -81,9 +80,9 @@ public class SamplesLocationReport extends AbstractReport {
 		if(allSamples.size()==0) throw new Exception("There are no samples to be reported. Make sure you have a sampling template with some required weighings.");
 
 		//Loop through each sample and display the data
-		Sheet sheet = createSheet(wb, "Locations");
+		Sheet sheet = createSheet(wb, "Sample Locations");
 		sheet.setFitToPage(true);
-		createHeadersWithTitle(sheet, study, "Sample's locations");
+		createHeadersWithTitle(sheet, study, "Sample locations");
 
 		///////////////
 		//		0		1		2		3		4		5		6		7		8		9		10
@@ -167,9 +166,10 @@ public class SamplesLocationReport extends AbstractReport {
 			SpiritFrame.setUser(DAOSpiritUser.loadUser("freyssj"));
 			SamplesLocationReport wg = new SamplesLocationReport();
 			wg.populateReport(DAOStudy.getStudyByStudyId("S-00511"));
-			wg.export(null);
+			wg.exportPDF(null);
 		} catch(Exception e) {
 			e.printStackTrace();
+		} finally {
 		}
 		System.exit(1);
 	}

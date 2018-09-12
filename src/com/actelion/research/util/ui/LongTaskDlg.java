@@ -24,7 +24,6 @@ package com.actelion.research.util.ui;
 import java.awt.Component;
 import java.awt.Dimension;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -48,23 +47,24 @@ public abstract class LongTaskDlg extends JDialog {
 		JPanel centerPane = new JPanel();
 		Component spacer = Box.createRigidArea(new Dimension(140, 140));
 		centerPane.add(spacer);
-		centerPane.setBorder(BorderFactory.createRaisedBevelBorder());
+		//		centerPane.setBorder(BorderFactory.createRaisedBevelBorder());
 		setContentPane(centerPane);
 		setUndecorated(true);
 
-		pack();
-		setLocationRelativeTo(UIUtils.getMainFrame());
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		UIUtils.adaptSize(this, -1, -1);
 		new SwingWorkerExtended(title, centerPane, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 			@Override
 			protected void doInBackground() throws Exception {
-				try {
-					longTask();
-				} finally {
-					dispose();
-				}
+				System.out.println("LongTaskDlg.LongTaskDlg(...).new SwingWorkerExtended() {...}.doInBackground()");
+				longTask();
 			}
+			@Override
+			protected void finalize() {
+				System.out.println("LongTaskDlg.LongTaskDlg(...).new SwingWorkerExtended() {...}.finalize()");
+				LongTaskDlg.this.setVisible(false);
+			};
 		};
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setVisible(true);
 
 	}
@@ -75,7 +75,7 @@ public abstract class LongTaskDlg extends JDialog {
 		new LongTaskDlg("LONG WAIT") {
 			@Override
 			public void longTask() throws Exception {
-				Thread.sleep(4000);
+				Thread.sleep(10000);
 			}
 		};
 	}

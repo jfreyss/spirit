@@ -36,6 +36,7 @@ public class PrintTemplate {
 	private boolean showBlocNo = true;
 	private boolean showMetadata = true;
 	private boolean showComments = true;
+	private boolean showAllParticipants = false;
 	private boolean perLine = false;
 
 	public boolean isShowInternalIdFirst() {
@@ -85,6 +86,12 @@ public class PrintTemplate {
 	}
 	public void setPerLine(boolean perLine) {
 		this.perLine = perLine;
+	}
+	public boolean isShowAllParticipants() {
+		return showAllParticipants;
+	}
+	public void setShowAllParticipants(boolean showAllParticipants) {
+		this.showAllParticipants = showAllParticipants;
 	}
 
 

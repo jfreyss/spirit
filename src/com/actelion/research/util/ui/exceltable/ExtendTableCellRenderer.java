@@ -303,16 +303,20 @@ public class ExtendTableCellRenderer<ROW>  implements TableCellRenderer, Seriali
 		String key = row+"_"+viewCol;
 		Boolean b = row_col2BottomBorder.get(key);
 		if(b==null) {
+
 			if(row<0) {
 				b = false;
 			} else if(row+1>=model.getRowCount()) {
 				b = false;
-			} else if(viewCol>0 && table.getColumnCount()<100
-					&& !shouldMergeWithBottom(table, viewCol-1, row)
-					&& ((table.getValueAt(row, viewCol)==null && viewCol>=2)
-							|| table.getModel().getColumn(table.convertColumnIndexToModel(viewCol-1)).getCategory().equals(table.getModel().getColumn(table.convertColumnIndexToModel(viewCol)).getCategory()))
-					) {
-				b = false;
+			} else if(viewCol>0 && table.getColumnCount()<100) {
+				String cat1 = table.getModel().getColumn(table.convertColumnIndexToModel(viewCol-1)).getCategory();
+				String cat2 = table.getModel().getColumn(table.convertColumnIndexToModel(viewCol)).getCategory();
+				if(!shouldMergeWithBottom(table, viewCol-1, row)
+						&& ((table.getValueAt(row, viewCol)==null && viewCol>=2) || (cat1.length()>0 && cat1.equals(cat2)))) {
+					b = false;
+				} else {
+					b = table.shouldMerge(viewCol, row, row+1);
+				}
 			} else {
 				b = table.shouldMerge(viewCol, row, row+1);
 			}

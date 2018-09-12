@@ -121,9 +121,9 @@ public class DAOStudy {
 					if(level==RightLevel.ADMIN) {
 						if(SpiritRights.canEdit(study, user)) studies.add(study);
 					} else if(level==RightLevel.BLIND) {
-						if(SpiritRights.isBlind(study, user) || SpiritRights.canEditBiosamples(study, user)) studies.add(study);
+						if(SpiritRights.isBlind(study, user) || SpiritRights.canWork(study, user)) studies.add(study);
 					} else if(level==RightLevel.WRITE) {
-						if(SpiritRights.canEditBiosamples(study, user)) studies.add(study);
+						if(SpiritRights.canWork(study, user)) studies.add(study);
 					} else if(level==RightLevel.READ) {
 						if(SpiritRights.canRead(study, user)) studies.add(study);
 					}
@@ -347,7 +347,9 @@ public class DAOStudy {
 			List<Study> filtered = new ArrayList<>();
 			loop: for (Study study : studies) {
 				for (Map.Entry<String, String> e : q.getMetadataMap().entrySet()) {
-					if(e.getValue().length()>0 && !study.getMetadata(e.getKey()).toLowerCase().contains(e.getValue().toLowerCase())) continue loop;
+					if(e.getValue().length()>0 && (study.getMetadata(e.getKey())==null || !study.getMetadata(e.getKey()).toLowerCase().contains(e.getValue().toLowerCase()))) {
+						continue loop;
+					}
 				}
 				filtered.add(study);
 			}
@@ -374,6 +376,7 @@ public class DAOStudy {
 	 * @throws Exception
 	 */
 	public static List<Study> persistStudies(Collection<Study> studies, SpiritUser user) throws Exception {
+
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn = null;
 		try {

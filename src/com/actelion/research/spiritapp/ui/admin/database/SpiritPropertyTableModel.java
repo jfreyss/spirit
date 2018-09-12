@@ -31,7 +31,7 @@ public class SpiritPropertyTableModel extends ExtendTableModel<SpiritProperty> {
 	public StringColumn<SpiritProperty> keyColumn = new StringColumn<SpiritProperty>("Key") {
 		@Override
 		public String getValue(SpiritProperty row) {
-			return row.getKey();
+			return row.getId();
 		}
 	};
 	public StringColumn<SpiritProperty> valueColumn = new StringColumn<SpiritProperty>("Value") {

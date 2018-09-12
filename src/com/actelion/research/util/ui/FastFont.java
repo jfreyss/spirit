@@ -23,10 +23,10 @@ package com.actelion.research.util.ui;
 
 import java.awt.Font;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
-import javax.swing.UIManager;
+import javax.swing.JLabel;
 
 /**
  * Class used to cache fonts, thus avoiding the repetitive use of constructors
@@ -57,6 +57,7 @@ public class FastFont extends Font {
 	}
 
 	private static void init() {
+		defaultFontFamily = new JLabel().getFont().getFamily(Locale.US);
 		BIGGEST = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize*16/12);
 		BIGGER = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize*14/12);
 		BIG = FastFont.getFont(defaultFontFamily, Font.BOLD, defaultFontSize*13/12);
@@ -67,19 +68,6 @@ public class FastFont extends Font {
 		SMALL = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize*10/12);
 		SMALLER = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize*9/12);
 		SMALLEST = FastFont.getFont(defaultFontFamily, Font.PLAIN, defaultFontSize*7/12);
-
-		Set<Object> keySet = UIManager.getLookAndFeelDefaults().keySet();
-		Object[] keys = keySet.toArray(new Object[keySet.size()]);
-		for (Object key : keys) {
-			if (key != null && key.toString().toLowerCase().contains("font")) {
-				Font font = UIManager.getDefaults().getFont(key);
-				if (font != null) {
-					//					font = new Font(defaultFontFamily, font.getStyle(), defaultFontSize);
-					font = new Font(defaultFontFamily, Font.PLAIN, defaultFontSize);
-					UIManager.put(key, font);
-				}
-			}
-		}
 	}
 
 

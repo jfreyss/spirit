@@ -49,16 +49,16 @@ import com.actelion.research.util.ui.UIUtils;
 
 public class LocationMappingPanel extends JPanel implements IMappingPanel  {
 	private ImporterDlg dlg;
-//	private Set<Location> locations;
-	
+	//	private Set<Location> locations;
+
 	private final JPanel centerPanel = new JPanel();
 	private final Map<String, MappingPanel> mappingPanels = new HashMap<>();
-	
+
 	public LocationMappingPanel(ImporterDlg dlg, Set<Location> fromLocations) {
 		super(new BorderLayout());
 		this.dlg = dlg;
 		setMinimumSize(new Dimension(200, 200));
-		
+
 		//Sort locations
 		Set<Location> locations = new TreeSet<>(fromLocations);
 
@@ -69,33 +69,31 @@ public class LocationMappingPanel extends JPanel implements IMappingPanel  {
 			locationBrowser.setMinimumSize(new Dimension(400, 26));
 			MappingPanel mappingPanel = new MappingPanel(locationBrowser);
 			mappingPanels.put(l.getHierarchyFull(), mappingPanel);
-			
+
 			formComponents.add(new JLabel("<html><b>"+l.getHierarchyFull()+"</b>: "));
 			formComponents.add(mappingPanel);
-			
-			
+
+
 			//Preselection
-			try {
-				Location match = DAOLocation.getCompatibleLocation(l.getHierarchyFull(), null);
-				if(match!=null) {
-					mappingPanel.setMappingAction(EntityAction.MAP_REPLACE);
-					mappingPanel.setCreationEnabled(false);
-					locationBrowser.setBioLocation(match);
-				}
-			} catch(Exception e) {
+			Location match = DAOLocation.getCompatibleLocation(l.getHierarchyFull(), null);
+			if(match!=null) {
+				mappingPanel.setMappingAction(EntityAction.MAP_REPLACE);
+				mappingPanel.setCreationEnabled(false);
+				locationBrowser.setBioLocation(match);
+			} else {
 				//no match
 				mappingPanel.setMappingAction(EntityAction.CREATE);
 				mappingPanel.setCreationEnabled(true);
 			}
-			
-		}		
+
+		}
 		centerPanel.add(UIUtils.createHorizontalBox(UIUtils.createTable(formComponents), Box.createHorizontalGlue()));
 
 
 		//Init Layout
 		JButton createAllButton = new JButton("Create All");
 		createAllButton.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				for (String l: mappingPanels.keySet()) {
@@ -106,7 +104,7 @@ public class LocationMappingPanel extends JPanel implements IMappingPanel  {
 			}
 		});
 		JButton ignoreAllButton = new JButton("Ignore All");
-		ignoreAllButton.addActionListener(new ActionListener() {			
+		ignoreAllButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				for (String l: mappingPanels.keySet()) {
@@ -117,7 +115,7 @@ public class LocationMappingPanel extends JPanel implements IMappingPanel  {
 			}
 		});
 		JButton mapAllButton = new JButton("Map All");
-		mapAllButton.addActionListener(new ActionListener() {			
+		mapAllButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				for (String l: mappingPanels.keySet()) {
@@ -129,29 +127,31 @@ public class LocationMappingPanel extends JPanel implements IMappingPanel  {
 				}
 			}
 		});
-		
+
 		add(BorderLayout.NORTH, UIUtils.createHorizontalBox(new JLabel("<html>Import Locations: "), UIUtils.createHorizontalBox(BorderFactory.createDashedBorder(null), createAllButton, ignoreAllButton, mapAllButton), Box.createHorizontalGlue()));
 		add(BorderLayout.CENTER, new JScrollPane(UIUtils.createHorizontalBox(centerPanel, Box.createGlue())));
-		
-		
+
+
 	}
-	
+
+	@Override
 	public void updateView() {
 		// TODO Auto-generated method stub
-		
+
 	}
-		
+
+	@Override
 	public void updateMapping() {
 		ExchangeMapping mapping = dlg.getMapping();
 		for (String l: mappingPanels.keySet()) {
 			MappingPanel mappingPanel = mappingPanels.get(l);
 			LocationBrowser locationBrowser = (LocationBrowser) mappingPanel.getMappingComponent();
-			
+
 			mapping.getLocation2action().put(l, mappingPanel.getMappingAction());
 			if(locationBrowser.getBioLocation()!=null) {
 				mapping.getLocation2mappedLocation().put(l, locationBrowser.getBioLocation());
 			}
 		}
 	}
-	
+
 }

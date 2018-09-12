@@ -84,7 +84,7 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 	 * @param biosamples
 	 */
 	private EditBiosampleDlg(List<Biosample> biosamplesInput, boolean transactionMode) throws Exception {
-		super(UIUtils.getMainFrame(), "Biosample - Batch Edit", transactionMode? EditBiosampleDlg.class.getName(): null);
+		super(UIUtils.getMainFrame(), "Sample - Batch Edit", transactionMode? EditBiosampleDlg.class.getName(): null);
 
 		//Make sure the user is logged
 		try {
@@ -117,7 +117,10 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 					try {
 						SpiritUser user = Spirit.askForAuthentication();
 
-						toSave = BiosampleCreationHelper.validate(EditBiosampleDlg.this, editPanel.getTable().getBiosamples(), editPanel.getTable(), getParticipitatingStudy()!=null, true);
+						toSave = BiosampleCreationHelper.validate(EditBiosampleDlg.this,
+								editPanel.getTable().getBiosamples(),
+								editPanel.getTable(),
+								getParticipitatingStudy()!=null, true);
 
 						if(toSave==null) return;
 						if(toSave.size()==0) throw new Exception("There are no samples to save");
@@ -126,6 +129,7 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 							if(b.getId()<=0) { isAddOp = true; break;}
 						}
 
+						if(!Spirit.askReasonForChangeIfUpdated(toSave)) return;
 						DAOBiosample.persistBiosamples(toSave, user);
 						resSavedBiosamples.addAll(toSave);
 
@@ -136,8 +140,8 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 						editPanel.getTable().setSelection(selBiosample, selCol);
 						throw e;
 					}
-
 				}
+
 				@Override
 				protected void done() {
 					if(toSave==null) return;
@@ -161,6 +165,10 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 
 	}
 
+	/**
+	 * Set the default study of the samples to be added
+	 * @param participatingStudy
+	 */
 	public void setParticipatingStudy(Study participatingStudy) {
 		this.participatingStudy = participatingStudy;
 		editPanel.getTable().getModel().setStudy(participatingStudy);
@@ -180,9 +188,12 @@ public class EditBiosampleDlg extends JSpiritEscapeDialog {
 		return resSavedBiosamples;
 	}
 
+	public EditBiosamplePanel getEditPanel() {
+		return editPanel;
+	}
+
 	public void setForcedBiotype(Biotype biotype) {
 		editPanel.setForcedBiotype(biotype);
-
 	}
 
 }

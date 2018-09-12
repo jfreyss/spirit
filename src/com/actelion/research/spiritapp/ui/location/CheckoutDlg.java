@@ -90,6 +90,8 @@ public class CheckoutDlg extends JSpiritEscapeDialog {
 			for (Biosample b : biosamples) {
 				b.setLocPos(null, -1);
 			}
+			//Don't ask for reason of change, because this is normal process
+			//if(!Spirit.askReasonForChangeIfUpdated(biosamples)) return;
 			DAOBiosample.persistBiosamples(biosamples, user);
 
 			dispose();

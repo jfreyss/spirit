@@ -56,7 +56,8 @@ public class SwingWorkerTest extends AbstractSpiritTest {
 					//Nothing
 				}
 			}.afterDone(() -> {
-				finished.add(index);				System.out.println("Thread-"+index+" completed in "+(System.currentTimeMillis()-s)+"ms");
+				finished.add(index);
+				System.out.println("Thread-"+index+" completed in "+(System.currentTimeMillis()-s)+"ms");
 			});
 		}
 		//Initially, nothing is fininshed
@@ -142,7 +143,7 @@ public class SwingWorkerTest extends AbstractSpiritTest {
 		service.shutdown();
 		service.awaitTermination(10, TimeUnit.SECONDS);
 
-		//Test if DB is locked
+		//Test if DB is locked: force older version and update (errors are expected)
 		SpiritProperties.getInstance().setDBVersion("2.1");
 		SpiritProperties.getInstance().saveValues();
 		JPAUtil.closeFactory();

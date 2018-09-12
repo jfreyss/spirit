@@ -24,29 +24,27 @@ package com.actelion.research.util.ui.exceltable;
 import java.awt.Color;
 import java.awt.Graphics;
 
+import com.actelion.research.util.ui.UIUtils;
+
 public class JLabelNoRepaintWithArrow extends JLabelNoRepaint {
 	private int arrow = 0;
-	
+
 	public void setArrow(int arrow) {
 		this.arrow = arrow;
 	}
-	
+
 	@Override
 	protected void paintComponent(Graphics g) {
+		UIUtils.applyDesktopProperties(g);
 		super.paintComponent(g);
 		if(arrow!=0) {
 			int x = getWidth() - 7;
-			int y = 6;
-			
-			g.setColor(Color.WHITE);
-			g.fillPolygon(
-					new int[] {x-4, x+4, x}, 
-					new int[] {y+5*arrow, y+5*arrow, y-5*arrow}, 3);
+			int y = 8;
 
 			g.setColor(Color.BLACK);
 			g.fillPolygon(
-					new int[] {x-3, x+3, x}, 
-					new int[] {y+4*arrow, y+4*arrow, y-4*arrow}, 3);
+					new int[] {x-4, x+4, x},
+					new int[] {y+6*arrow, y+6*arrow, y-6*arrow}, 3);
 		}
 	}
 }

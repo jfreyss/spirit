@@ -55,12 +55,17 @@ public class StudyDiscardDlg {
 
 		final List<Biosample> biosamples = DAOBiosample.queryBiosamples(BiosampleQuery.createQueryForStudyIds(s.getStudyIdAndInternalId()), user);
 		final List<Result> results = DAOResult.queryResults(ResultQuery.createQueryForStudyIds(s.getStudyIdAndInternalId()), user);
+		if(biosamples.size()>0 || results.size()>0) {
+			throw new Exception("You cannot delete "+study+" because it contains " + biosamples.size() + " samples and " + results.size() + " results");
+		}
 
-		int res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(), "Are you sure you want to 'DEFINITELY' delete " + study + "\b (" + biosamples.size() + " samples, " + results.size() + " results)", "DELETE Study", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new String[] {"Delete", "Cancel"}, "Cancel");
+
+		int res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(), "Are you sure you want to 'DEFINITELY' delete " + study, "DELETE Study", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new String[] {"Delete", "Cancel"}, "Cancel");
 		if(res!=0) return;
 
 
 
+		if(!Spirit.askReasonForChange()) return;
 		new LongTaskDlg("Deleting Study") {
 			@Override
 			public void longTask() throws Exception {

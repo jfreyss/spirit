@@ -21,124 +21,69 @@
 
 package com.actelion.research.spiritapp.ui.audit;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseEvent;
 import java.util.List;
 
-import javax.swing.AbstractAction;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
+import javax.swing.Box;
+import javax.swing.JCheckBox;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
 
-import com.actelion.research.spiritapp.ui.SpiritFrame;
-import com.actelion.research.spiritapp.ui.location.LocationTable;
-import com.actelion.research.spiritapp.ui.location.depictor.LocationDepictor;
-import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
-import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
+import com.actelion.research.spiritapp.ui.location.LocationActions.Action_ExportLocationEvents;
 import com.actelion.research.spiritcore.business.audit.Revision;
 import com.actelion.research.spiritcore.business.location.Location;
-import com.actelion.research.spiritcore.services.SpiritRights;
-import com.actelion.research.spiritcore.services.dao.DAOLocation;
+import com.actelion.research.spiritcore.services.dao.DAORevision;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
-import com.actelion.research.util.ui.PopupAdapter;
+import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
-import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
+import com.actelion.research.util.ui.iconbutton.IconType;
+import com.actelion.research.util.ui.iconbutton.JIconButton;
 
+/**
+ * Dialog to view the revisions per location
+ *
+ * @author Joel Freyss
+ */
 public class LocationHistoryDlg extends JEscapeDialog {
 
+	private RevisionPanel revisionPanel = new RevisionPanel();
+	private JCheckBox byFieldCheckbox = new JCheckBox("Changes per field", true);
 
-	public LocationHistoryDlg(final List<Revision> revisions) {
-		super(UIUtils.getMainFrame(), "Location History", true);
+	public LocationHistoryDlg(final Location location) {
+		super(UIUtils.getMainFrame(), "Location - Audit Trail - " + location.getName());
 
-		try {
-			if(revisions.size()==0) throw new Exception("There are no revisions saved");
+		Action_ExportLocationEvents exportLocationEventsAction = new Action_ExportLocationEvents();
+		exportLocationEventsAction.setParentDlg(this);
+		JIconButton exportLocationEventsButton = new JIconButton(IconType.PDF, "Export Location Events...", exportLocationEventsAction);
+		JPanel actionPanel = UIUtils.createHorizontalBox(Box.createHorizontalGlue(), exportLocationEventsButton);
 
-			final RevisionTable revisionList = new RevisionTable();
-			//			Map<Revision, String> lastChanges = DAORevision.getLastChanges(revisions)
-			//			revisionList.setRows(revisions, lastChanges);
-			revisionList.setRows(revisions);
-			final LocationTable locationTable = new LocationTable();
-			final LocationDepictor locationDepictor = new LocationDepictor();
+		byFieldCheckbox.setVisible(SpiritProperties.getInstance().isAdvancedMode());
+		JPanel topPanel = UIUtils.createHorizontalBox(Box.createHorizontalGlue(), byFieldCheckbox);
+		setContentPane(UIUtils.createBox(revisionPanel, topPanel, actionPanel));
 
-			locationDepictor.setForRevisions(true);
-			locationTable.getSelectionModel().addListSelectionListener(e-> {
-				if(e.getValueIsAdjusting()) return;
-				locationDepictor.setBioLocation(locationTable.getSelection().size()==1? locationTable.getSelection().get(0): null);
-			});
-			revisionList.getSelectionModel().addListSelectionListener(e-> {
-				if(e.getValueIsAdjusting()) return;
-				List<Revision> rev = revisionList.getSelection();
-				if(rev.size()==1) {
-					locationTable.setRows(rev.get(0).getLocations());
-					locationDepictor.setBioLocation(rev.get(0).getLocations().size()==1? rev.get(0).getLocations().get(0): null);
+		//Load revisions in background
+		new SwingWorkerExtended(revisionPanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+			private List<Revision> revisions;
+
+			@Override
+			protected void doInBackground() throws Exception {
+				revisions = DAORevision.getLastRevisions(location);
+			}
+
+			@Override
+			protected void done() {
+				if(revisions.size()==0) {
+					JExceptionDialog.showError("There are no revisions saved");
 				}
-			});
+				revisionPanel.setSingular(byFieldCheckbox.isSelected());
+				revisionPanel.setRows(revisions);
+				exportLocationEventsAction.setLocation(location);
+				exportLocationEventsAction.setRevisions(revisions);
+			}
+		};
 
-
-			revisionList.addMouseListener(new PopupAdapter() {
-				@Override
-				protected void showPopup(MouseEvent e) {
-					List<Revision> rev = revisionList.getSelection();
-					if(rev.size()==1) {
-						JPopupMenu menu = new JPopupMenu();
-						menu.add(new RestoreAction(rev.get(0).getLocations()));
-						menu.show(revisionList, e.getX(), e.getY());
-					}
-				}
-			});
-
-			JScrollPane sp = new JScrollPane(locationTable);
-			sp.setPreferredSize(new Dimension(400, 180));
-			JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT,
-					UIUtils.createTitleBox("Revisions", new JScrollPane(revisionList)),
-					UIUtils.createTitleBox("Location Revision", UIUtils.createBox(locationDepictor, sp)));
-
-			JPanel contentPanel = new JPanel(new BorderLayout());
-			contentPanel.add(BorderLayout.CENTER, splitPane);
-			setContentPane(contentPanel);
-
-
-			UIUtils.adaptSize(this, 850, 600);
-			setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-			setLocationRelativeTo(UIUtils.getMainFrame());
-			setVisible(true);
-		} catch (Exception e) {
-			JExceptionDialog.showError(e);
-			dispose();
-		}
-
+		UIUtils.adaptSize(this, 1000, 800);
+		setVisible(true);
 	}
 
-	private class RestoreAction extends AbstractAction {
-		private List<Location> locations;
-
-		public RestoreAction(List<Location> locations) {
-			super("Restore version");
-			this.locations = locations;
-			for (Location l : locations) {
-				if(!SpiritRights.canEdit(l, SpiritFrame.getUser())) {
-					setEnabled(false);
-					break;
-				}
-			}
-		}
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			try {
-				int res = JOptionPane.showConfirmDialog(LocationHistoryDlg.this, "Are you sure you want to restore to the selected version?", "Restore", JOptionPane.YES_NO_OPTION);
-				if(res!=JOptionPane.YES_OPTION) return;
-				DAOLocation.persistLocations(locations, SpiritFrame.getUser());
-				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Location.class, locations);
-				dispose();
-			} catch (Exception ex) {
-				JExceptionDialog.showError(ex);
-			}
-		}
-	}
 }

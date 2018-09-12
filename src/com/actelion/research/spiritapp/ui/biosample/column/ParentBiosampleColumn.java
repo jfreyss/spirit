@@ -37,6 +37,7 @@ import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class ParentBiosampleColumn extends Column<Biosample, Biosample> {
+
 	private EditBiosampleTableModel model;
 	private static SampleIdLabel sampleIdLabel = new SampleIdLabel();
 

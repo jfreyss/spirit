@@ -36,8 +36,8 @@ import javax.swing.JPanel;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleOrRackTab;
 import com.actelion.research.spiritapp.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritapp.ui.util.scanner.ScanRackForBiosampleOrRackTabAction;
-import com.actelion.research.spiritapp.ui.util.scanner.SpiritScanner;
-import com.actelion.research.spiritapp.ui.util.scanner.SpiritScanner.Verification;
+import com.actelion.research.spiritapp.ui.util.scanner.SpiritScannerHelper;
+import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.business.location.Location;
@@ -52,22 +52,22 @@ import com.actelion.research.util.ui.scanner.ScannerConfiguration;
  */
 @Deprecated
 public class ScanUpdateDlg extends JSpiritEscapeDialog {
-	
+
 	private final Location rack;
-	private SpiritScanner scanner = new SpiritScanner();
+	private SpiritScannerHelper scanner = new SpiritScannerHelper();
 	private BiosampleOrRackTab originalRackTab = new BiosampleOrRackTab();
 	private BiosampleOrRackTab currentRackTab = new BiosampleOrRackTab();
-	
-	
+
+
 	public ScanUpdateDlg(Location rackLocation) {
 		super(UIUtils.getMainFrame(), "Scan & Update", ScanUpdateDlg.class.getName());
 		assert rackLocation!=null;
-		
+
 		//Reload the rack in its current context
 		this.rack = JPAUtil.reattach(rackLocation);
 
 		//Buttons
-		JButton scanButton = new JButton(new ScanRackForBiosampleOrRackTabAction(scanner, currentRackTab) {			
+		JButton scanButton = new JButton(new ScanRackForBiosampleOrRackTabAction(scanner, currentRackTab) {
 			@Override
 			public ScannerConfiguration getScannerConfiguration() {
 				//Find compatible ScannerConfiguratoin
@@ -75,58 +75,58 @@ public class ScanUpdateDlg extends JSpiritEscapeDialog {
 				if(types.size()!=1) return null;
 				ContainerType type = types.iterator().next();
 				List<ScannerConfiguration> res = new ArrayList<>();
-				for (ScannerConfiguration c : ScannerConfiguration.valuesForBiosamples()) {
+				for (ScannerConfiguration c : DBAdapter.getInstance().getScannerConfigurations()) {
 					if(c.getCols()!=rack.getCols()) continue;
 					if(c.getRows()!=rack.getRows()) continue;
-					if(!type.getName().equals(c.getDefaultTubeType())) continue;					
-					
+					if(!type.getName().equals(c.getDefaultTubeType())) continue;
+
 					res.add(c);
 				}
-				
+
 				return res.size()==1? res.get(0): null;
 			}
 		});
-	
-//TODO uncomment
-//		//Depictor
-//		currentRackTab.getRackDepictor().setBackgroundColorSelecter(new SpiritPlateDepictor.IColorSelecter() {			
-//			@Override
-//			public String getName() {
-//				return "Unmatched";
-//			}
-//			
-//			@Override
-//			public Color getColor(RackPos value, Plate plate, int row, int col) {
-//				if(currentRackTab.getRack()==null || originalRackTab.getRack()==null) return null;
-//				
-//				Container c1 = originalRackTab.getRack().getScannedContainer(row, col);
-//				Container c2 = currentRackTab.getRack().getScannedContainer(row, col);
-//				if(CompareUtils.compare(c1, c2)!=0) return Color.RED;
-//				if(c2!=null) return Color.GREEN;
-//				return null;
-//			}
-//		});
-		
+
+		//TODO uncomment
+		//		//Depictor
+		//		currentRackTab.getRackDepictor().setBackgroundColorSelecter(new SpiritPlateDepictor.IColorSelecter() {
+		//			@Override
+		//			public String getName() {
+		//				return "Unmatched";
+		//			}
+		//
+		//			@Override
+		//			public Color getColor(RackPos value, Plate plate, int row, int col) {
+		//				if(currentRackTab.getRack()==null || originalRackTab.getRack()==null) return null;
+		//
+		//				Container c1 = originalRackTab.getRack().getScannedContainer(row, col);
+		//				Container c2 = currentRackTab.getRack().getScannedContainer(row, col);
+		//				if(CompareUtils.compare(c1, c2)!=0) return Color.RED;
+		//				if(c2!=null) return Color.GREEN;
+		//				return null;
+		//			}
+		//		});
+
 
 		//CenterPanel
-		JPanel centerPanel = new JPanel(new GridLayout(1, 2));		
+		JPanel centerPanel = new JPanel(new GridLayout(1, 2));
 		centerPanel.add(UIUtils.createBox(BorderFactory.createTitledBorder("Before Update"), originalRackTab, UIUtils.createHorizontalBox(), null, null, null));
 		centerPanel.add(UIUtils.createBox(BorderFactory.createTitledBorder("After Update"), currentRackTab, UIUtils.createHorizontalBox(Box.createHorizontalGlue()), null, null, null));
-		
-		
+
+
 		//ContentPanel
 		JPanel contentPanel = new JPanel(new BorderLayout());
 		contentPanel.add(BorderLayout.CENTER, centerPanel);
 		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(),scanButton));
 		setContentPane(contentPanel);
-		
+
 		//Init
 		originalRackTab.setRack(rack);
-		
+
 		pack();
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
 	}
-	
+
 }

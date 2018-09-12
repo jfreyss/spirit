@@ -23,7 +23,6 @@ package com.actelion.research.spiritapp.ui.result.edit;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -44,6 +43,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 
+import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.util.POIUtils;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
@@ -70,6 +70,7 @@ import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
@@ -264,6 +265,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 			final SpiritUser user = SpiritFrame.getUser();
 			assert user!=null;
 
+
 			new SwingWorkerExtended("Saving", getContentPane()) {
 				private Exception exception = null;
 				private List<Result> toSave;
@@ -273,9 +275,13 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 						toSave = validateResults();
 						if(toSave==null) return;
 
+						if(!Spirit.askReasonForChangeIfUpdated(toSave)) {
+							toSave = null;
+							return;
+						}
+
 						if(editWholeExperiment) {
 							DAOResult.persistExperiment(newExperiment, elbTextField.getText().trim(), toSave, user);
-
 						} else {
 							//Save the visible results
 							DAOResult.persistResults(toSave, user);
@@ -497,6 +503,8 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 			if(res!=JOptionPane.YES_OPTION) return;
 
 
+			if(!Spirit.askReasonForChange()) return;
+
 			new SwingWorkerExtended("Delete "+elb, getContentPane()) {
 				@Override
 				protected void doInBackground() throws Exception {
@@ -557,7 +565,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 			Study s = result.getBiosample()!=null && result.getBiosample().getInheritedStudy()!=null? result.getBiosample().getInheritedStudy(): null;
 			if(s!=null) {
 				if(result.getPhase()!=null && result.getPhase().getStudy().getId()!=s.getId()) {
-					throw new ValidationException("The phase for the result "+result+" should be on study "+result.getPhase().getStudy().getLocalId(), result, "Phase");
+					throw new ValidationException("The phase for the result "+result+" should be on study "+result.getPhase().getStudy(), result, "Phase");
 				}
 			}
 		}
@@ -703,7 +711,7 @@ public class EditResultDlg extends JSpiritEscapeDialog {
 		textArea.setCaretPosition(0);
 		textArea.setPreferredSize(new Dimension(400, 400));
 
-		JPanel panel = UIUtils.createBox(new JScrollPane(textArea), new JCustomLabel(header, Font.BOLD));
+		JPanel panel = UIUtils.createBox(new JScrollPane(textArea), new JCustomLabel(header, FastFont.BOLD));
 		int res = JOptionPane.showOptionDialog(parent, panel, title, 0, JOptionPane.QUESTION_MESSAGE, null, options, null);
 		return res;
 

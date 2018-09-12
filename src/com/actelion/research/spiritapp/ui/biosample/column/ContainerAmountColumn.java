@@ -34,31 +34,31 @@ public class ContainerAmountColumn extends Column<Biosample, Double> {
 	public ContainerAmountColumn(Biotype biotype) {
 		super("Container\n" + (biotype==null || biotype.getAmountUnit()==null?"Amount":biotype.getAmountUnit().getNameUnit()) , Double.class, 40, 60);
 	}
-	
+
 	@Override
 	public Double getValue(Biosample row) {
 		if(row==null) return null;
 		return row.getAmount();
 	}
-	
+
 	@Override
 	public float getSortingKey() {
 		return 2.8f;
 	}
-	
+
 	@Override
 	public void setValue(Biosample row, Double value) {
 		row.setAmount(value);
 	}
-	
+
 	@Override
 	public boolean isEditable(Biosample row) {
 		return row!=null && row.getBiotype()!=null && row.getBiotype().getAmountUnit()!=null;
 	}
-	
+
 	@Override
-	public String getToolTipText() {return "Amount";}		
-	
+	public String getToolTipText() {return "Amount";}
+
 	@Override
 	public void postProcess(AbstractExtendTable<Biosample> table, Biosample row, int rowNo, Object value, JComponent comp) {
 		comp.setBackground(LF.BGCOLOR_LOCATION);

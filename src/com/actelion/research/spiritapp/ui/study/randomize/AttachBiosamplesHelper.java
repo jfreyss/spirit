@@ -33,7 +33,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.swing.JOptionPane;
 
+import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
+import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.biosample.ActionTreatment;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
@@ -243,8 +245,33 @@ public class AttachBiosamplesHelper {
 		}
 
 
-		//		List<Biosample> dividingBiosamplesToRemove = new ArrayList<>();
-		//		toSave.addAll(BiosampleCreationHelper.processDividingSamples(study, dividingBiosamplesToRemove));
+		//Prepare weighing
+		List<Result> weighings = new ArrayList<>();
+		if(saveWeights) {
+			//Load existing results
+			DAOResult.attachOrCreateStudyResultsToTops(study, toSave, phase, DAOResult.suggestElb(SpiritFrame.getUsername()));
+
+			//Update results if the samples have a weight
+			Test test = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
+			if(test==null) throw new Exception("The weights cannot be saved if the test "+DAOTest.WEIGHING_TESTNAME+" does not exist");
+			for (AttachedBiosample s : list) {
+				Result r = s.getBiosample().getAuxResult(test, phase);
+				if(r==null) continue;
+				if(s.getWeight()==null && r.getFirstAsDouble()==null) continue;
+				if(s.getWeight()!=null && r.getFirstAsDouble()!=null && Math.abs(s.getWeight()-r.getFirstAsDouble())<.001) continue;
+
+				r.getOutputResultValues().get(0).setValue(s.getWeight()==null?"": "" + s.getWeight());
+				r.setUpdDate(new java.util.Date());
+				r.setUpdUser(SpiritFrame.getUser().getUsername());
+				weighings.add(r);
+			}
+		}
+
+
+		List<IAuditable> l = new ArrayList<>();
+		l.addAll(toSave);
+		if(saveWeights) l.addAll(wrongStudySamples);
+		if(!Spirit.askReasonForChangeIfUpdated(l)) return;
 
 
 		//Open the transaction
@@ -257,34 +284,8 @@ public class AttachBiosamplesHelper {
 			//Save without checking the rights: rights have been checked already, and we may clone a rat from a previous study, where the user has no rights
 			DAOBiosample.persistBiosamples(session, toSave, user);
 
-			//Propose deletion?
-			//			if(dividingBiosamplesToRemove.size()>0) {
-			//				int res = JOptionPane.showConfirmDialog(UIUtils.getMainFrame(), "There are "+dividingBiosamplesToRemove.size()+" extra samples derived from those animals that need to be deleted. Do you confirm", "Extra samples", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-			//				if(res==JOptionPane.YES_OPTION) {
-			//					DAOBiosample.deleteBiosamples(session, dividingBiosamplesToRemove, SpiritFrame.getUser());
-			//				}
-			//			}
-
 			//Persist the weights into the result table
 			if(saveWeights) {
-				//Load existing results
-				DAOResult.attachOrCreateStudyResultsToTops(study, toSave, phase, DAOResult.suggestElb(SpiritFrame.getUsername()));
-				List<Result> weighings = new ArrayList<Result>();
-
-				//Update results if the samples have a weight
-				Test test = DAOTest.getTest(DAOTest.WEIGHING_TESTNAME);
-				if(test==null) throw new Exception("The weights cannot be saved if the test "+DAOTest.WEIGHING_TESTNAME+" does not exist");
-				for (AttachedBiosample s : list) {
-					Result r = s.getBiosample().getAuxResult(test, phase);
-					if(r==null) continue;
-					if(s.getWeight()==null && r.getFirstAsDouble()==null) continue;
-					if(s.getWeight()!=null && r.getFirstAsDouble()!=null && Math.abs(s.getWeight()-r.getFirstAsDouble())<.001) continue;
-
-					r.getOutputResultValues().get(0).setValue(s.getWeight()==null?"": "" + s.getWeight());
-					r.setUpdDate(new java.util.Date());
-					r.setUpdUser(SpiritFrame.getUser().getUsername());
-					weighings.add(r);
-				}
 
 				DAOResult.persistResults(session, weighings, SpiritFrame.getUser());
 			}
@@ -330,7 +331,7 @@ public class AttachBiosamplesHelper {
 		EntityTransaction txn = null;
 		Map<Biosample, Biosample> old2new = new HashMap<>();
 		try {
-			if(!SpiritRights.canEdit(newStudy, user)) throw new Exception("You are not allowed to edit "+newStudy);
+			if(!SpiritRights.canWork(newStudy, user)) throw new Exception("You are not allowed to edit "+newStudy);
 			for (Biosample animal : samples) {
 				if(animal.getId()<=0) throw new Exception("The animal "+animal+" is not persistant");
 				if(animal.getParent()!=null) throw new Exception("The animal "+animal+" has already a parent");

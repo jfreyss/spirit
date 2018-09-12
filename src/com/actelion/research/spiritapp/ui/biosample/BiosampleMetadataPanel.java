@@ -239,12 +239,12 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 			}
 
 			//SampleId
-			txt.append("<a href='bio:" + b.getId() + "'><span" + (b.getBiotype()!=null && b.getBiotype().isHideSampleId()?"":" style='font-weight:bold'") + ">" + b.getSampleId() + "</span></a> ");
+			txt.append("<a href='bio:" + b.getId() + "'><span" + (b.getBiotype()!=null && b.getBiotype().isHideSampleId()?"":" style='font-weight:bold'") + ">" + b.getSampleId() + "</span></a><br> ");
 
 			//Status
 			Pair<Status, Phase> s = b.getLastActionStatus();
-			if((s.getFirst()!=null && s.getFirst()!=Status.INLAB) || s.getSecond()!=null) {
-				txt.append(" <i style='background:" + UIUtils.getHtmlColor(s.getFirst().getBackground()) + "; color:#000000'>" + s.getFirst() + (s.getSecond()!=null? (s.getFirst().isAvailable()? " until ": " at ") + s.getSecond().getShortName(): "") + " </i><br>");
+			if(s.getFirst()!=null) {
+				txt.append(" <i style='background:" + UIUtils.getHtmlColor(s.getFirst()==null? null: s.getFirst().getBackground()) + "; color:#000000'>" + s.getFirst() + (s.getSecond()!=null? (s.getFirst().isAvailable()? " until ": " at ") + s.getSecond().getShortName(): "") + " </i><br>");
 			}
 
 			//Quality
@@ -274,7 +274,7 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 		if(b.getBiotype()!=null) {
 			for (BiotypeMetadata metadataType : new TreeSet<>(b.getBiotype().getMetadata())) { //Use TreeSet because Envers may not sort it
 				String value = b.getMetadataValue(metadataType);
-				if(value!=null && value.length()>0) {
+				if((value!=null && value.length()>0) || (metadataType.getDataType()==DataType.BIOSAMPLE && b.getMetadataBiosample(metadataType)!=null)) {
 					txt.append("<tr>");
 					String name = metadataType.getName();
 					txt.append("<td width=60px style='width:60px;white-space:nowrap' valign=top>" + name  + ":</td>");
@@ -304,7 +304,12 @@ public class BiosampleMetadataPanel extends ImageEditorPane implements IBiosampl
 						txt.append("<td><div style='width:100%' disabled>" + MiscUtils.convert2Html(value) + "</textarea></td>");
 					} else if(metadataType.getDataType()==DataType.BIOSAMPLE && b.getMetadataBiosample(metadataType)!=null) {
 						Biosample linked = b.getMetadataBiosample(metadataType);
-						txt.append("<td><a href='bio:" + linked.getId() + "'>" + linked.getSampleId() + "</a><span style='white-space:nowrap;color:gray'><br>" + linked.getInfos(EnumSet.of(InfoFormat.SAMPLENAME, InfoFormat.METATADATA), InfoSize.ONELINE) + "</span></td>");
+						if(linked.getBiotype().isHideSampleId()) {
+							txt.append("<td style='white-space:nowrap;color:gray'>" + linked.getInfos(EnumSet.of(InfoFormat.SAMPLENAME, InfoFormat.METATADATA), InfoSize.ONELINE) + "</td>");
+
+						} else {
+							txt.append("<td><a href='bio:" + linked.getId() + "'>" + linked.getSampleId() + "</a><span style='white-space:nowrap;color:gray'><br>" + linked.getInfos(EnumSet.of(InfoFormat.SAMPLENAME, InfoFormat.METATADATA), InfoSize.ONELINE) + "</span></td>");
+						}
 					} else if(metadataType.getDataType()==DataType.MULTI) {
 						txt.append("<td>" + value.replace(";", "<br>") + "</td>");
 					} else if((value.startsWith("http://") || value.startsWith("https://")) && value.indexOf("://", 7)<0){

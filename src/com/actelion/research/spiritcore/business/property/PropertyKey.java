@@ -70,11 +70,15 @@ public class PropertyKey {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			return FormatterUtils.DateTimeFormat.AMERICAN.toString();
+			return FormatterUtils.DateTimeFormat.DDMMMYYYY.toString();
 		}
 	};
-	public static final PropertyKey TAB_RESULT = new PropertyKey(Tab.SYSTEM, "Result Tab is enabled", "Uncheck to remove the result functionality, for a pure LIMS system", "tab.result", "true", "true,false");
-	public static final PropertyKey FILE_SIZE = new PropertyKey(Tab.SYSTEM, "Max FileSize [Mo]:", "Max file size for the documents", "system.document.max", "15");
+	public static final PropertyKey SYSTEM_ADVANCED = new PropertyKey(Tab.STUDY, "Feature: Advanced Mode", "Allow parent relationships", "system.advanced", "true", "true, false");
+	public static final PropertyKey SYSTEM_RESULT = new PropertyKey(Tab.SYSTEM, "Result Tab is enabled", "Keep checked to have the result functionality", "system.result", "true", "true,false");
+	public static final PropertyKey SYSTEM_USEBARCODESEQUENCE = new PropertyKey(Tab.SYSTEM, "Reserve Ids", "Use sequences to avoid concurrent users to use the same id. If checked, this will create holes in the id sequences, but prevent error message when concurrent insertion happen", "system.useBarcodeSequence", "true", "true,false");
+	public static final PropertyKey SYSTEM_FILE_SIZE = new PropertyKey(Tab.SYSTEM, "Max FileSize [Mo]:", "Max file size for the documents", "system.document_size", "15");
+	public static final PropertyKey SYSTEM_SESSION_TIMEOUT = new PropertyKey(Tab.SYSTEM, "Session timeout (min):", "Session timeout duration", "system.session.timeout", "0");
+	public static final PropertyKey SYSTEM_ASKREASON = new PropertyKey(Tab.SYSTEM, "Ask for a reason when fields get updated:", "Ask for a reason for change when the user enters a change", "system.audit.reason", "false", "true,false");
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// USER PROPERTIES
@@ -83,6 +87,7 @@ public class PropertyKey {
 	public static final PropertyKey USER_ONEROLE = new PropertyKey(Tab.USER, "Rights based on one role", "Are users requested to login with a specic role?<br>(if true, the user will be asked for a role upon login instead of having all roles simultaneously)", "user.login.role", "false", "true,false");
 	public static final PropertyKey USER_USEGROUPS = new PropertyKey(Tab.USER, "Rights based on groups", "Are the rights only role based??<br>(if true, the rights are purely role based and not user/dept specific)", "user.login.groups", "true", "true,false");
 	public static final PropertyKey USER_OPENBYDEFAULT = new PropertyKey(Tab.USER, "Default User Rights", "open = study and biosamples are readable by everyone<br>restricted = biosamples and their results are limited to the departments of the owner", "rights.mode", "restricted", "open, restricted");
+	public static final PropertyKey USER_LOCKAFTER = new PropertyKey(Tab.USER, "Lock user after n attempts", "Number of failed attempts before locking user", "user.lock", "0", "0,3,5,10");
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// BIOSAMPLE PROPERTIES
@@ -145,11 +150,15 @@ public class PropertyKey {
 		@Override public String[] getSpecialChoices() {return new String[]{"ALL", "NONE"};}
 	};
 
-	public static final PropertyKey STUDY_STATES_EDIT = new PropertyKey(STUDY_STATES, "Edit Roles", "Roles of administrators (can edit study design/rights)", "admin", "", USER_ROLES) {
+	public static final PropertyKey STUDY_STATES_WORK = new PropertyKey(STUDY_STATES, "Work Roles", "Roles of study workers (can add samples)", "work", "", USER_ROLES) {
+		@Override public String getDefaultValue(String nestedValue) {return "ALL";};
+		@Override public String[] getSpecialChoices() {return new String[]{"ALL", "NONE"};}
+	};
+	public static final PropertyKey STUDY_STATES_EDIT = new PropertyKey(STUDY_STATES, "Edit Roles", "Roles of study editors (can edit study design/rights)", "edit", "", USER_ROLES) {
 		@Override public String getDefaultValue(String nestedValue) {return "";};
 		@Override public String[] getSpecialChoices() {return new String[]{"ALL", "NONE"};}
 	};
-	public static final PropertyKey STUDY_STATES_DELETE = new PropertyKey(STUDY_STATES, "Delete Roles", "Delete roles", "delete", "", USER_ROLES) {
+	public static final PropertyKey STUDY_STATES_DELETE = new PropertyKey(STUDY_STATES, "Delete Roles", "Delete study roles", "delete", "", USER_ROLES) {
 		@Override public String getDefaultValue(String nestedValue) {return "";};
 		@Override public String[] getSpecialChoices() {return new String[]{"ALL", "NONE"};}
 	};
@@ -158,7 +167,6 @@ public class PropertyKey {
 
 	public static final PropertyKey STUDY_FEATURE_STUDYDESIGN = new PropertyKey(Tab.STUDY, "Feature: Study Design", "Allow complex design and generation of samples", "study.feature.design", "true", "true, false");
 	public static final PropertyKey STUDY_FEATURE_LIVEMONITORING = new PropertyKey(Tab.STUDY, "Feature: Live Monitoring", "Allow the live monitoring of participants", "study.feature.monitoring", "true", "true, false");
-	public static final PropertyKey STUDY_FEATURE_ADVANCED = new PropertyKey(Tab.STUDY, "Feature: Advanced Mode", "Allow parent relationships", "study.feature.advanced", "true", "true, false");
 
 
 	private static Map<Tab, List<PropertyKey>> tab2properties;

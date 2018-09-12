@@ -34,16 +34,19 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.util.component.EmployeeGroupComboBox;
 import com.actelion.research.spiritapp.ui.util.component.JSpiritEscapeDialog;
 import com.actelion.research.spiritapp.ui.util.component.UserIdComboBox;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
+import com.actelion.research.spiritcore.business.audit.LogEntry.Action;
 import com.actelion.research.spiritcore.business.employee.Employee;
 import com.actelion.research.spiritcore.business.employee.EmployeeGroup;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.services.dao.DAOEmployee;
+import com.actelion.research.spiritcore.services.dao.DAOLog;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JComboCheckBox;
@@ -62,6 +65,7 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 	private JButton generateButton = new JButton("Reset");
 
 	private JCheckBox disabledCheckBox  = new JCheckBox("Disabled");
+	private JCheckBox lockedCheckBox  = new JCheckBox("Locked");
 	private EmployeeGroupComboBox group1Box = new EmployeeGroupComboBox(false);
 	private EmployeeGroupComboBox group2Box = new EmployeeGroupComboBox(false);
 	private EmployeeGroupComboBox group3Box = new EmployeeGroupComboBox(false);
@@ -112,6 +116,11 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 		if(iter.hasNext()) group4Box.setSelection(iter.next());
 		disabledCheckBox.setSelected(emp.isDisabled());
 
+		boolean locked = DAOLog.isLocked(emp.getUserName());
+		lockedCheckBox.setSelected(locked);
+		lockedCheckBox.setEnabled(locked);
+		lockedCheckBox.setVisible(SpiritProperties.getInstance().getValueInt(PropertyKey.USER_LOCKAFTER)>0);
+
 
 		rolesBox.setCheckedItems(new ArrayList<>(emp.getRoles()).toArray(new String[0]));
 
@@ -133,7 +142,7 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 						new JLabel("Username: "), UIUtils.createHorizontalBox(usernameField, new JInfoLabel("unique")),
 						(mode==UserManagedMode.WRITE_PWD? new JLabel("Password: "): null), (mode==UserManagedMode.WRITE_PWD? UIUtils.createHorizontalBox(passwordField, generateButton): null),
 						useGroups? new JLabel("Manager: "): null, useGroups? managerField: null,
-								null, disabledCheckBox)),
+								null, UIUtils.createHorizontalBox(disabledCheckBox, lockedCheckBox))),
 				groupPanel,
 				UIUtils.createTitleBox("Roles", UIUtils.createTable(
 						Box.createHorizontalStrut(20), rolesBox)));
@@ -168,10 +177,16 @@ public class EmployeeEditDlg extends JSpiritEscapeDialog {
 
 
 				emp.setRoles(new TreeSet<>(Arrays.asList(rolesBox.getCheckedItems())));
-
 				emp.setDisabled(disabledCheckBox.isSelected());
 
+				if(!Spirit.askReasonForChangeIfUpdated(Collections.singleton(emp))) return;
 				DAOEmployee.persistEmployees(Collections.singleton(emp), SpiritFrame.getUser());
+
+				if(lockedCheckBox.isEnabled() & !lockedCheckBox.isSelected()) {
+					DAOLog.log(emp.getUserName(), Action.UNLOCK);
+					JExceptionDialog.showError(emp.getUserName()+" has been unlocked");
+				}
+
 				dispose();
 			} catch (Exception e) {
 				JExceptionDialog.showError(e);

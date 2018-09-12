@@ -58,7 +58,7 @@ public enum ContainerType {
 	TUBE_5("Tube 5ml",					"5ml", 		"tube_5", 		BrotherFormat._12x49,		BarcodeType.NOBARCODE),
 	TUBE_9("Tube 9ml",					"9ml", 		"tube_5", 		BrotherFormat._12x49,		BarcodeType.NOBARCODE),
 	DNA_WHATMAN("DNA Card Whatman",		"DNA", 		"dna_whatman", 	BrotherFormat._12x33N,		BarcodeType.NOBARCODE),
-	K7("Cassette",						"Cass.",	"cassette", 	null,						BarcodeType.GENERATE, 8, "C."),
+	K7("Cassette",						"Cass.",	"cassette", 	BrotherFormat._12x23N,		BarcodeType.GENERATE, 8, "C."),
 	BOTTLE("Bottle",					"Bottle", 	"bottle", 		BrotherFormat._12x33N,		BarcodeType.GENERATE, 99, "B."),
 	SLIDE("Slide",						"Slide", 	"slide", 		BrotherFormat._18x24,		BarcodeType.GENERATE, 8, "Bl."),
 	CAGE("Cage",						"Cage", 	"cage", 		null,						BarcodeType.GENERATE, 8, null),

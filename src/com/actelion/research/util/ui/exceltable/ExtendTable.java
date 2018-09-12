@@ -52,17 +52,17 @@ import com.actelion.research.util.ui.exceltable.ExtendTableModel.Node;
 public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 
 	public ExtendTable(List<Column<ROW, ?>> columns) {
-		this(new ExtendTableModel<ROW>(columns), HeaderClickingPolicy.SORT);
+		this(new ExtendTableModel<ROW>(columns), HeaderLeftClickingPolicy.SORT);
 	}
 
 	public ExtendTable(final ExtendTableModel<ROW> model) {
-		this(model, HeaderClickingPolicy.SORT);
+		this(model, HeaderLeftClickingPolicy.SORT);
 	}
 
-	public ExtendTable(final ExtendTableModel<ROW> model, final HeaderClickingPolicy headerClickingPolicy) {
+	public ExtendTable(final ExtendTableModel<ROW> model, final HeaderLeftClickingPolicy headerClickingPolicy) {
 		super(model);
 		setModel(model);
-		setHeaderClickingPolicy(headerClickingPolicy);
+		setHeaderLeftClickingPolicy(headerClickingPolicy);
 		setBorderStrategy(BorderStrategy.WHEN_DIFFERENT_VALUE);
 
 		//Set Our custom CellRenderer
@@ -93,8 +93,22 @@ public class ExtendTable<ROW> extends AbstractExtendTable<ROW> {
 			public void mouseClicked(MouseEvent e) {
 				int col = getSelectedColumn();
 				int row = getSelectedRow();
-				if(col<0 || row<0 || e.getClickCount()<2) return;
+				if(col<0 || row<0) return;
 
+				if(getModel().isCanExpand()) {
+					java.awt.Rectangle rect = getCellRect(row, col, false);
+					int x = e.getX() - rect.x;
+					int y = e.getY() - rect.y;
+					final Node info = getModel().getNode(getRows().get(row));
+					if(info!=null && info.leaf!=Boolean.TRUE) {
+						if(x>info.pattern.length()*6+1 && x<info.pattern.length()*6+10 && y>rect.height/2-6 && y<rect.height/2+4 ) {
+							eventTreeExpand();
+						}
+					}
+
+				}
+
+				if(e.getClickCount()<2) return;
 
 				Column<ROW, ?> column = getModel().getColumn(convertColumnIndexToModel(col));
 				boolean consume = column.mouseDoubleClicked(ExtendTable.this, getModel().getRow(row), row, getModel().getValueAt(row, convertColumnIndexToModel(col)));

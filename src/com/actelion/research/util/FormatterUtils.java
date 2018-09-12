@@ -358,6 +358,16 @@ public class FormatterUtils {
 			return FormatterUtils.yyyymmddFormat.format(new Date());
 		}
 	}
+	
+	/**
+	 * Returns the date, parsed according to the format set up in FormatterUtils
+	 * @return Date object or null
+	 */
+	public static Date getDateFromString(String date) {
+		Date parsed = FormatterUtils.parseDateTime(date);
+		if(parsed==null && date.length()>0) return null; //throw new Exception("The date is not well formatted");
+		return parsed;
+	}
 
 	public static void main(String[] args) {
 		System.out.println(parseDateTime("10.10.2013 12:23:20"));

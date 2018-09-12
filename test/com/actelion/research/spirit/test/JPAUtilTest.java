@@ -26,7 +26,6 @@ import com.actelion.research.spiritcore.services.dao.DAOTest;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.spiritcore.services.helper.BiosampleCreationHelper;
 import com.actelion.research.spiritcore.services.helper.ExpressionHelper;
-import com.actelion.research.spiritcore.services.helper.WorkflowHelper;
 
 
 public class JPAUtilTest extends AbstractSpiritTest {
@@ -37,10 +36,6 @@ public class JPAUtilTest extends AbstractSpiritTest {
 	}
 
 
-	/**
-	 * Instantiate all utility constructor to check if we get full coverage
-	 * @throws Exception
-	 */
 	@Test
 	public void testUtilityConstructors() throws Exception {
 		new DAOBarcode();
@@ -60,7 +55,6 @@ public class JPAUtilTest extends AbstractSpiritTest {
 
 		new ExpressionHelper();
 		new BiosampleCreationHelper();
-		new WorkflowHelper();
 
 		new JPAUtil();
 

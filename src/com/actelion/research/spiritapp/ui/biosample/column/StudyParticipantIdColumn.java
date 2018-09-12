@@ -21,7 +21,6 @@
 
 package com.actelion.research.spiritapp.ui.biosample.column;
 
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.util.Collections;
 import java.util.Comparator;
@@ -34,13 +33,14 @@ import javax.swing.JSeparator;
 import com.actelion.research.spiritapp.ui.biosample.SampleIdLabel;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.util.CompareUtils;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
 
 public class StudyParticipantIdColumn extends Column<Biosample, Biosample> {
 
-	private static SampleIdLabel sampleIdLabel = new SampleIdLabel(false, false);
+	private static SampleIdLabel sampleIdLabel = new SampleIdLabel(true, true);
 
 	public StudyParticipantIdColumn() {
 		super("Study\nParticipantId", Biosample.class, 80, 200);
@@ -61,7 +61,7 @@ public class StudyParticipantIdColumn extends Column<Biosample, Biosample> {
 	@Override
 	public void populateHeaderPopup(final AbstractExtendTable<Biosample> table, JPopupMenu popupMenu) {
 		popupMenu.add(new JSeparator());
-		popupMenu.add(new JCustomLabel("Sort", Font.BOLD));
+		popupMenu.add(new JCustomLabel("Sort", FastFont.BOLD));
 
 		popupMenu.add(new AbstractAction("Sort by SampleId") {
 			@Override

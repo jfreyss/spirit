@@ -188,7 +188,7 @@ public class ApplySamplingDlg extends JEscapeDialog {
 			//Filter Animals
 			List<Biosample> biosamples = new ArrayList<Biosample>();
 			for(Biosample b : study.getParticipantsSorted()) {
-				if(!showDeadCheckBox.isSelected() && ((phaseComboBox.getSelection()!=null && b.isDeadAt(phaseComboBox.getSelection())) || (phaseComboBox.getSelection()==null && !b.getStatus().isAvailable()))) continue;
+				if(!showDeadCheckBox.isSelected() && ((phaseComboBox.getSelection()!=null && b.isDeadAt(phaseComboBox.getSelection())) || (phaseComboBox.getSelection()==null && b.getStatus()!=null && !b.getStatus().isAvailable()))) continue;
 				biosamples.add(b);
 			}
 			List<Biosample> sel = biosampleList.getSelection();

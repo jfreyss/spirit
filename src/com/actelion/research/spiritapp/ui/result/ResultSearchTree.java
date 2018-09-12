@@ -40,6 +40,7 @@ import com.actelion.research.spiritapp.ui.util.component.PhaseNode;
 import com.actelion.research.spiritapp.ui.util.component.QualityComboBox;
 import com.actelion.research.spiritapp.ui.util.component.UpdDateNode;
 import com.actelion.research.spiritapp.ui.util.formtree.AbstractNode;
+import com.actelion.research.spiritapp.ui.util.formtree.AbstractNode.FieldType;
 import com.actelion.research.spiritapp.ui.util.formtree.CheckboxNode;
 import com.actelion.research.spiritapp.ui.util.formtree.FormTree;
 import com.actelion.research.spiritapp.ui.util.formtree.InputNode;
@@ -48,7 +49,6 @@ import com.actelion.research.spiritapp.ui.util.formtree.ObjectComboBoxNode;
 import com.actelion.research.spiritapp.ui.util.formtree.Strategy;
 import com.actelion.research.spiritapp.ui.util.formtree.TextComboBoxMultipleNode;
 import com.actelion.research.spiritapp.ui.util.formtree.TextComboBoxNode;
-import com.actelion.research.spiritapp.ui.util.formtree.AbstractNode.FieldType;
 import com.actelion.research.spiritcore.business.Quality;
 import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
@@ -189,7 +189,7 @@ public class ResultSearchTree extends FormTree {
 		}) {
 			@Override
 			public Collection<String> getChoices() {
-				return DAOResult.getElbsForStudy(frame==null? null: frame.getStudyId());
+				return DAOResult.getElbsForStudy(SpiritFrame.getStudyId());
 
 			}
 		};
@@ -210,7 +210,7 @@ public class ResultSearchTree extends FormTree {
 			public Collection<String> getChoices() {
 				Set<String> res = new TreeSet<String>();
 				try {
-					for(Study s: DAOStudy.queryStudies(StudyQuery.createForStudyIds(frame==null? null: frame.getStudyId()), SpiritFrame.getUser())){
+					for(Study s: DAOStudy.queryStudies(StudyQuery.createForStudyIds(SpiritFrame.getStudyId()), SpiritFrame.getUser())){
 						for(Phase p: s.getPhases()) {
 							res.add(p.getShortName());
 						}

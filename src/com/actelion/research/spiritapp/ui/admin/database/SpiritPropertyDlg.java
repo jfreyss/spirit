@@ -28,6 +28,7 @@ import java.awt.GridLayout;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.text.JTextComponent;
 
+import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeListener;
 import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.ui.util.component.JSpiritEscapeDialog;
@@ -131,7 +133,6 @@ public class SpiritPropertyDlg extends JSpiritEscapeDialog {
 		button.addActionListener(e -> {
 			StringBuilder sb = new StringBuilder();
 			for (String key : new TreeSet<String>(propertyMap.keySet())) {
-				if(key.equals(PropertyKey.DB_VERSION)) continue;
 				sb.append(key + "=" + propertyMap.get(key) + "\n");
 			}
 			JTextArea editorPane = new JTextArea();
@@ -179,10 +180,23 @@ public class SpiritPropertyDlg extends JSpiritEscapeDialog {
 				c.setSelected("true".equals(val));
 				c.addActionListener(e -> propertyMap.put(propertyPrefix + p.getKey(), c.isSelected()?"true":"false"));
 			} else if(p.getOptions()!=null) {
-				final JComboBox<String> c = new JComboBox<>(p.getChoices());
+				String[] choices = p.getChoices();
+				final JComboBox<String> c = new JComboBox<>(choices);
 				editorComp = c;
 
-				c.setSelectedItem(val);
+				System.out.println("SpiritPropertyDlg.createPropertyPanel() "+p+" > "+val);
+				if(val!=null && val.length()>0) {
+					if(Arrays.asList(p.getChoices()).contains(val) ) {
+						c.setSelectedItem(val);
+					} else {
+						for (int i = 0; i < choices.length; i++) {
+							if(choices[i]!=null && choices[i].toLowerCase().startsWith(val.toLowerCase())) {
+								c.setSelectedIndex(i);
+								break;
+							}
+						}
+					}
+				}
 				c.addActionListener(e-> propertyMap.put(propertyPrefix + p.getKey(), (String) c.getSelectedItem()));
 			} else if(p.getLinkedOptions()!=null) {
 				String parentVal = propertyMap.get(p.getLinkedOptions().getKey());
@@ -325,6 +339,9 @@ public class SpiritPropertyDlg extends JSpiritEscapeDialog {
 		//User roles data
 		ActionType last = null;
 		for (ActionType actionType : SpiritRights.ActionType.values()) {
+
+			if(!SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_RESULT) && actionType.name().contains("RESULT")) continue;
+
 			//Draws a separator if we have a new type
 			if(last!=null && actionType.name().startsWith("READ")) {
 				for (int i = 0; i < nCols; i++) {
@@ -386,11 +403,14 @@ public class SpiritPropertyDlg extends JSpiritEscapeDialog {
 		//Success->Save
 		//DBProperties in config file (if configurable)
 		if(DBAdapter.isConfigurable()) {
-			DBAdapter.saveDBProperties();
+			DBAdapter.writeDBProperties();
 		}
 
 		//ConfigProperties in DB
 		SpiritProperties.getInstance().setValues(propertyMap);
+
+		if(!Spirit.askReasonForChangeIfUpdated(SpiritProperties.getInstance().getProperties())) return;
+
 		SpiritProperties.getInstance().saveValues();
 		dispose();
 

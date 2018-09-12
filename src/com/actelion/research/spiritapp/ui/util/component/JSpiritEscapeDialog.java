@@ -31,10 +31,11 @@ import java.awt.event.WindowFocusListener;
 
 import javax.swing.JDialog;
 
+import org.slf4j.LoggerFactory;
+
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
 import com.actelion.research.util.ui.JEscapeDialog;
-import com.itextpdf.text.log.LoggerFactory;
 
 /**
  * JEscapeDialog for Spirit that allow transaction isolation.

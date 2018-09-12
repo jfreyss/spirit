@@ -62,13 +62,13 @@ import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.IObject;
 import com.actelion.research.spiritcore.business.Quality;
+import com.actelion.research.spiritcore.business.audit.DifferenceList;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.result.TestAttribute.OutputType;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.PhaseFormat;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.util.DifferenceMap;
 import com.actelion.research.spiritcore.util.SetHashMap;
 import com.actelion.research.util.CompareUtils;
 
@@ -848,51 +848,40 @@ public class Result implements Comparable<Result>, Cloneable, IObject, IAuditabl
 
 
 	/**
-	 * Returns a string containing the differences between 2 results (usually 2 different versions).
-	 * The result is an empty string if there are no differences or if b is null
-	 * @param b
+	 * Returns a DifferenceList containing the differences between 2 results (usually 2 different versions).
+	 * The result is an empty DifferenceList if there are no differences or if auditable is null
+	 * @param auditable
 	 * @return
 	 */
 	@Override
-	public String getDifference(IAuditable r) {
-		if(r==null) r = new Result();
-		if(!(r instanceof Result)) return "";
-		return getDifferenceMap((Result)r).flatten();
-	}
+	public DifferenceList getDifferenceList(IAuditable auditable) {
+		DifferenceList list = new DifferenceList("Result", getId(), "", getStudy()==null?null: getStudy().getId());
+		if(auditable==null || !(auditable instanceof Result)) return list;
+		Result r = (Result) auditable;
 
-	/**
-	 * Returns a map containing the differences between 2 results (usually 2 different versions).
-	 * The result is an empty string if there are no differences or if b is null
-	 * @param b
-	 * @return
-	 */
-	public DifferenceMap getDifferenceMap(Result r) {
-
-		DifferenceMap map = new DifferenceMap();
-		if(r==null) return map;
 		if(!CompareUtils.equals(getStudy(), r.getStudy())) {
-			map.put("Study", getStudy()==null?"":getStudy().getStudyId(), r.getStudy()==null?"":r.getStudy().getStudyId());
+			list.add("Study", getStudy()==null?"":getStudy().getStudyId(), r.getStudy()==null?"":r.getStudy().getStudyId());
 		}
 
 		if(!CompareUtils.equals(getTest(), r.getTest())) {
-			map.put("Test", getTest().getName(), r.getTest().getName());
+			list.add("Test", getTest().getName(), r.getTest().getName());
 		}
 
 		if(!CompareUtils.equals(getPhase(), r.getPhase())) {
-			map.put("Phase", getPhase()==null?"":getPhase().getName(), r.getPhase()==null?"":r.getPhase().getName());
+			list.add("Phase", getPhase()==null?"":getPhase().getName(), r.getPhase()==null?"":r.getPhase().getName());
 		}
 
 		if(!CompareUtils.equals(getCreUser(), r.getCreUser())) {
-			map.put("CreatedBy", getCreUser(), r.getCreUser());
+			list.add("CreatedBy", getCreUser(), r.getCreUser());
 		}
 
 		for (TestAttribute ta : getTest().getAttributes()) {
 			if(!CompareUtils.equals(getResultValueString(ta), r.getResultValueString(ta))) {
-				map.put(ta.getName(), getResultValueString(ta), r.getResultValueString(ta));
+				list.add(ta.getName(), getResultValueString(ta), r.getResultValueString(ta));
 			}
 		}
 
-		return map;
+		return list;
 	}
 
 	@Override

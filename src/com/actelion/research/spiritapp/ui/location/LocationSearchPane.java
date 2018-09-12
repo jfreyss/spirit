@@ -35,7 +35,6 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.util.component.BiotypeComboBox;
@@ -46,6 +45,7 @@ import com.actelion.research.spiritcore.business.location.LocationQuery;
 import com.actelion.research.spiritcore.services.dao.DAOBiotype;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
@@ -73,23 +73,27 @@ public class LocationSearchPane extends JPanel {
 		super(new BorderLayout());
 		this.frame = frame;
 
+		JPanel emptyFilterPanel = UIUtils.createHorizontalBox(emptyCheckbox, nonEmptyCheckbox);
 		JPanel filterLocation = UIUtils.createTable(1, 0, 1,
 				biotypeComboBox,
 				keywordsTextField,
-				UIUtils.createHorizontalBox(emptyCheckbox, nonEmptyCheckbox));
+				emptyFilterPanel);
 		filterLocation.setOpaque(true);
 		filterLocation.setBackground(Color.WHITE);
-		//		viewMineButton.setVisible(SpiritFrame.getUser()!=null && SpiritFrame.getUser().getMainGroup()!=null);
 
 		this.forcedBiotype = forcedBiotype;
 		if(forcedBiotype!=null) {
 			biotypeComboBox.setSelection(forcedBiotype);
 			biotypeComboBox.setEnabled(false);
+		} else {
+			biotypeComboBox.setVisible(false);
+		}
+		if(!SpiritProperties.getInstance().isAdvancedMode()) {
+			emptyFilterPanel.setVisible(false);
 		}
 
-		add(BorderLayout.NORTH, UIUtils.createBox(new JScrollPane(filterLocation), null, UIUtils.createHorizontalBox(/*viewMineButton,*/ Box.createHorizontalGlue(), resetButton, searchButton)));
-
-		//		JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JBGScrollPane(locationTable1), new JBGScrollPane(locationTable2));
+		add(BorderLayout.NORTH, UIUtils.createBox(filterLocation,
+				null, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), resetButton, searchButton)));
 		add(BorderLayout.CENTER, new JBGScrollPane(locationTable));
 		setMinimumSize(new Dimension(150, 200));
 		setPreferredSize(new Dimension(200, 200));
@@ -135,7 +139,6 @@ public class LocationSearchPane extends JPanel {
 		emptyCheckbox.setSelected(true);
 		nonEmptyCheckbox.setSelected(true);
 		queryMyLocations();
-
 	}
 
 	public void query() {
@@ -173,13 +176,11 @@ public class LocationSearchPane extends JPanel {
 				}
 
 				LocationSearchPane.this.firePropertyChange(PROPERTY_QUERIED, 0, 1);
-
 			}
 		};
 	}
 
 	public void setQuery(LocationQuery filter) {
-		//		studyComboBox.setText(filter.getStudyId()==null? null: filter.getStudyId());
 		keywordsTextField.setText(filter.getName());
 		query();
 	}
@@ -228,7 +229,7 @@ public class LocationSearchPane extends JPanel {
 
 	public class Action_Reset extends AbstractAction {
 		public Action_Reset() {
-			super("");
+			super("Clear");
 			putValue(Action.SMALL_ICON, IconType.CLEAR.getIcon());
 			setToolTipText("Reset all query fields");
 		}

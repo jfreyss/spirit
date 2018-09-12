@@ -37,26 +37,26 @@ import org.krysalis.barcode4j.impl.datamatrix.SymbolShapeHint;
 import org.krysalis.barcode4j.output.java2d.Java2DCanvasProvider;
 
 /**
- * Location are printed on P-Touch printers: 
- * 
+ * Location are printed on P-Touch printers:
+ *
  * The format is the following
  * <pre>
- * 2D 2D |  Name     
+ * 2D 2D |  Name
  * 2D 2D |  Hierarchy
- * </pre> 
- * 
+ * </pre>
+ *
  * This class is generic to allow the printing of any number of PrintLabel (2D code and multi-line text).
  * The labels are pre-cuts if the printer allows it.
- * 
+ *
  * @author jfreyss
  *
  */
 public class LocationPrintable implements Printable {
-	
-		
+
+
 	private String jobName = "";
-	
-	private List<PrintLabel> labels = new ArrayList<PrintLabel>(); 
+
+	private List<PrintLabel> labels = new ArrayList<PrintLabel>();
 
 	/**
 	 * Creates the Printable Object
@@ -66,68 +66,68 @@ public class LocationPrintable implements Printable {
 		this.labels = new ArrayList<PrintLabel>(labels);
 		this.jobName = "Locations (" + labels.size() + ")";
 	}
-	
-	
+
+
 	@Override
-	public int print(Graphics graphics, PageFormat pf, int pageIndex) throws PrinterException {			
+	public int print(Graphics graphics, PageFormat pf, int pageIndex) throws PrinterException {
 		if (labels==null || pageIndex>=labels.size()) return NO_SUCH_PAGE;
 
 		PrintLabel label = labels.get(pageIndex);
-		if(label==null) return PAGE_EXISTS;		
-		
-				
+		if(label==null) return PAGE_EXISTS;
+
+
 		//Start drawing
 		Graphics2D g = (Graphics2D) graphics;
-//		g.translate(0, 11);
-		
-		g.translate(3, PrintableOfContainers.getTopMargin());
+		//		g.translate(0, 11);
+
+		g.translate(3, 0);
 
 		g.setClip(null);
 		g.setColor(Color.BLACK);
-		
+
 		//Split the text by lines
 		String[] lines = label.getLabel()==null?new String[0]: label.getLabel().split("\n", -1);
-		
+
 		//Find the longest line
 		String maxLine = "";
 		for (String line : lines) {
 			if(line.length()>maxLine.length()) maxLine = line;
 		}
-		
+
 		//Use the biggest font possible (>=5)
-		int marginX = label.getBarcodeId()!=null && label.getBarcodeId().length()>0? 25: 2;		
+		int marginX = label.getBarcodeId()!=null && label.getBarcodeId().length()>0? 25: 2;
 		int fontSize = (int) (pf.getHeight()/(lines.length+1));
 		while(fontSize>5 && g.getFontMetrics(new Font("Arial", Font.PLAIN, fontSize)).stringWidth(maxLine)>pf.getWidth()-marginX-4) {
 			fontSize--;
 		}
-		
-		
-		
+
+
+
 		//Print the text vertically centered
-		int y = (int) (pf.getHeight() -10 )/ (lines.length+1) + 5;
-		g.setFont(new Font("Arial", Font.PLAIN, fontSize));		
-		for (String line : lines) {			
+		float y = (int) (pf.getHeight() -10 )/ (lines.length+1) + 5;
+		g.setFont(new Font("Arial", Font.PLAIN, fontSize));
+		for (String line : lines) {
 			y = PrinterUtil.print(g, line, marginX, y, (int) (pf.getWidth()-marginX-1), (int) (pf.getHeight()-y));
 		}
-		
-		
+
+
 		//Print Barcode on the upper left
 		if(label.getBarcodeId()!=null && label.getBarcodeId().length()>0) {
-			g.setFont(new Font("Arial", Font.PLAIN, 3));		
+			g.setFont(new Font("Arial", Font.PLAIN, 3));
 			g.drawString(label.getBarcodeId(), 4, 6);
 			g.translate(4, 8);
 			DataMatrixBean bean = new DataMatrixBean();
-	        bean.setModuleWidth(1);
-	        bean.doQuietZone(false);
-	        bean.setShape(SymbolShapeHint.FORCE_SQUARE);
-	        Java2DCanvasProvider canvas = new Java2DCanvasProvider(g, 0);
-	        bean.generateBarcode(canvas, label.getBarcodeId());
+			bean.setModuleWidth(1);
+			bean.doQuietZone(false);
+			bean.setShape(SymbolShapeHint.FORCE_SQUARE);
+			Java2DCanvasProvider canvas = new Java2DCanvasProvider(g, 0);
+			bean.generateBarcode(canvas, label.getBarcodeId());
 		}
 
-		
+
 		return PAGE_EXISTS;
 	}
-	
+
 	@Override
 	public String toString() {
 		return jobName;

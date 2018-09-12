@@ -22,7 +22,6 @@
 package com.actelion.research.spiritapp.ui.result.dialog;
 
 import java.awt.BorderLayout;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.util.List;
 
@@ -44,37 +43,38 @@ import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.services.SpiritUser;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 
 public class SetResultQualityDlg extends JSpiritEscapeDialog {
-	
+
 	private List<Result> results;
-	
+
 	public SetResultQualityDlg(List<Result> myResults, Quality quality) {
 		super(UIUtils.getMainFrame(), "Set Quality", SetResultQualityDlg.class.getName());
 		this.results = JPAUtil.reattach(myResults);
-		
+
 		JPanel contentPanel = new JPanel(new BorderLayout());
-		JLabel label = new JCustomLabel("Are you sure you want to modify the quality of those results to " + quality, Font.BOLD);
+		JLabel label = new JCustomLabel("Are you sure you want to modify the quality of those results to " + quality, FastFont.BOLD);
 		label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		contentPanel.add(BorderLayout.NORTH, label);
 
 		ResultTable table = new ResultTable();
 		JScrollPane sp = new JScrollPane(table);
 		table.setRows(results);
-		contentPanel.add(BorderLayout.CENTER, sp);		
+		contentPanel.add(BorderLayout.CENTER, sp);
 		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), new JButton(new MarkAction(quality))));
-		
+
 		setContentPane(contentPanel);
 		setSize(900, 400);
 		setLocationRelativeTo(UIUtils.getMainFrame());
 		setVisible(true);
-		
+
 	}
-	
-	
+
+
 	public class MarkAction extends AbstractAction {
 		private Quality quality;
 		public MarkAction(Quality quality) {
@@ -83,11 +83,13 @@ public class SetResultQualityDlg extends JSpiritEscapeDialog {
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			try {				
+			try {
 				SpiritUser user = Spirit.askForAuthentication();
 				for (Result result : results) {
 					result.setQuality(quality);
 				}
+				if(!Spirit.askReasonForChangeIfUpdated(results)) return;
+
 				DAOResult.persistResults(results, user);
 				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_UPDATED, Result.class, results);
 				dispose();
@@ -96,5 +98,5 @@ public class SetResultQualityDlg extends JSpiritEscapeDialog {
 			}
 		}
 	}
-	
+
 }

@@ -22,6 +22,7 @@
 package com.actelion.research.spiritapp.ui;
 
 import java.awt.Component;
+import java.awt.Image;
 import java.awt.Toolkit;
 import java.net.URL;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.Action;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -41,6 +43,7 @@ import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 
 import org.slf4j.LoggerFactory;
 
+import com.actelion.research.spiritapp.InactivityListener;
 import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleTab;
@@ -70,7 +73,6 @@ import com.actelion.research.spiritcore.business.result.ResultQuery;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.services.dao.Cache;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
@@ -80,6 +82,7 @@ import com.actelion.research.spiritcore.util.Config;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.ui.ApplicationErrorLog;
 import com.actelion.research.util.ui.FastFont;
+import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.JStatusBar;
 import com.actelion.research.util.ui.SplashScreen;
@@ -100,7 +103,9 @@ import com.actelion.research.util.ui.iconbutton.IconType;
 public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserver, ISpiritContextObserver {
 
 	protected static SplashConfig splashConfig = new SplashScreen.SplashConfig(Spirit.class.getResource("spirit.jpg"), "Spirit", "Spirit v." + Spirit.class.getPackage().getImplementationVersion() + "<br> (C) Idorsia - J.Freyss");
-	protected static SpiritFrame _instance = null;;
+	protected static SpiritFrame _instance = null;
+	protected static Image applicationIcon = Toolkit.getDefaultToolkit().createImage(Spirit.class.getResource("ico.png"));
+	protected static String applicationName = "Spirit";
 
 	protected String copyright;
 	protected PopupHelper popupHelper = new PopupHelper();
@@ -111,6 +116,8 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 	private Runnable afterLoginAction = null;
 	private RightLevel studyLevel = RightLevel.READ;
 	private boolean multipleChoices = true;
+
+	private InactivityListener inactivityListener;
 
 
 	public SpiritFrame(String title, String copyright) {
@@ -123,6 +130,7 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		this.afterLoginAction = afterLoginAction;
 		assert SpiritFrame._instance==null;
 		SpiritFrame._instance = this;
+		inactivityListener = new InactivityListener(this);
 
 		SpiritChangeListener.register(this);
 		SpiritContextListener.register(this);
@@ -153,6 +161,13 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 	 * @return
 	 */
 	public abstract List<SpiritTab> getTabs();
+
+
+	public void cleanupOnLogout() {
+		JPAUtil.clearAll();
+		getTabbedPane().removeAll();
+		this.repaint();
+	}
 
 
 	public void setStudyLevel(RightLevel studyLevel, boolean multipleChoices) {
@@ -252,12 +267,12 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		editMenu.add(new StudyActions.Action_New());
 		editMenu.add(new BiosampleActions.Action_NewBatch());
 		editMenu.add(new LocationActions.Action_New());
-		if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_RESULT)) {
 			editMenu.add(new ResultActions.Action_New());
 		}
 		editMenu.add(new JSeparator());
 
-		SpiritMenu.addEditMenuItems(editMenu);
+		SpiritMenu.addEditMenuItems(this, editMenu);
 
 		menuBar.add(SpiritMenu.getDevicesMenu());
 
@@ -477,7 +492,7 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 			protected void done() {
 				if(action==SpiritChangeType.LOGIN) {
 					recreateUI();
-				} else if(w==Biotype.class || w==Test.class) {
+				} else if (w==Biotype.class || w==Test.class) {
 					//Refresh all tabs to refresh filters
 					for (Component c : tabbedPane.getComponents()) {
 						if(c instanceof SpiritTab) {
@@ -485,15 +500,19 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 						}
 					}
 				} else {
-					SpiritTab tab = getSelectedTab();
-					if(tab!=null) {
-						//Prevent the event onStudyTab to be fired
-						tab.setSelectedStudyId(tabbedPane.getStudyId());
-
-						//Select component and fire modelChanged event
-						tabbedPane.setSelectedComponent(tab);
-						tab.fireModelChanged(action, w, details);
+					Component selComponent = tabbedPane.getSelectedComponent();
+					Component c = tabbedPane.getTabbedPane();
+					if (c != null && c instanceof JCustomTabbedPane) {
+						JCustomTabbedPane p = (JCustomTabbedPane) c;
+						for (int i=0; i<p.getTabCount(); i++) {
+							Component t = p.getComponentAt(i);
+							if (t != null && t instanceof SpiritTab) {
+								tabbedPane.setSelectedComponent(t);
+								((SpiritTab) t).fireModelChanged(action, w, details);
+							}
+						}
 					}
+					tabbedPane.setSelectedComponent(selComponent);
 				}
 			}
 		};
@@ -562,11 +581,19 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 		JPAUtil.setSpiritUser(user);
 	}
 
+	private int push = 0;
 	public void setStudyId(String studyId) {
-		if(studyId!=null && studyId.equals(tabbedPane.getStudyId())) return;
-		tabbedPane.setStudyId(studyId);
-		if(getSelectedTab()!=null) {
-			getSelectedTab().onStudySelect();
+		if(push>0) return;
+		try {
+			push++;
+
+			if(studyId!=null && studyId.equals(tabbedPane.getStudyId())) return;
+			tabbedPane.setStudyId(studyId);
+			if(getSelectedTab()!=null) {
+				getSelectedTab().onStudySelect();
+			}
+		} finally {
+			push--;
 		}
 	}
 
@@ -581,10 +608,30 @@ public abstract class SpiritFrame extends JFrame implements ISpiritChangeObserve
 	public static void clearAll() {
 		SwingWorkerExtended.awaitTermination();
 		JPAUtil.clearAll();
-		Cache.getInstance().clear();
 	}
 
 	public PopupHelper getPopupHelper() {
 		return popupHelper;
+	}
+
+	public static Image getApplicationIcon() {
+		return SpiritFrame.applicationIcon;
+	}
+
+	public static String getApplicationName() {
+		return SpiritFrame.applicationName;
+	}
+
+	public void initInactivityListener(Action action, int interval) {
+		inactivityListener.setAction(action);
+		inactivityListener.setInterval(interval);
+	}
+
+	public void startInactivityListener() {
+		inactivityListener.start();
+	}
+
+	public void stopInactivityListener() {
+		inactivityListener.stop();
 	}
 }

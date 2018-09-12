@@ -47,14 +47,14 @@ import com.actelion.research.util.CompareUtils;
  *
  */
 public class PivotCell implements Comparable<PivotCell> {
-	
+
 
 	//Underlying data
 	private final PivotDataTable table;
 	private List<ResultValue> values = new ArrayList<>();
-	private List<PivotCellKey> orderedNestedKeys = new ArrayList<>();		
+	private List<PivotCellKey> orderedNestedKeys = new ArrayList<>();
 	private Map<PivotCellKey, PivotCell> nestedMap = null;
-	
+
 	//
 	private Margins margin = null;
 	private boolean calculated = false;
@@ -67,21 +67,21 @@ public class PivotCell implements Comparable<PivotCell> {
 	private int N;
 	private Quality quality = null;
 
-	
+
 	/**
 	 * Margins showing where to display the values:
-	 * <pre> 
+	 * <pre>
 	 * 0...........m1...........m2...........m3...........m4...........m5
 	 *   label             value  computed     std                  (N)
 	 * </pre>
-	 * 
-	 * The margin is used to know the best preferred size (max(m5)), but we still have to transform the margins to perform right-alignment 
 	 *
-	 * <pre> 
+	 * The margin is used to know the best preferred size (max(m5)), but we still have to transform the margins to perform right-alignment
+	 *
+	 * <pre>
 	 * 0...........m1...........WIDTH-m52....WIDTH-m53....WIDTH-m54....WIDTH
 	 *   label             value  computed     std                  (N)
 	 * </pre>
-	 * 
+	 *
 	 * @author freyssj
 	 *
 	 */
@@ -91,28 +91,27 @@ public class PivotCell implements Comparable<PivotCell> {
 		public int m3Std = 0;
 		public int m4N = 0;
 		public int m5Width = 0;
-		
+
 		@Override
 		public String toString() {
 			return m1Value+" "+m2Computed+" "+m3Std+" "+m4N+" "+m5Width;
 		}
 	}
-	
+
 	public PivotCell(PivotDataTable table) {
 		this.table = table;
 	}
-		
+
 	private void calculateStats() {
 		if(calculated) return;
-		
-		
-		calculated = true;		
+
+		calculated = true;
 		aggregated = null;
 		std = null;
 		coeff = null;
 		N=0;
 		quality = null;
-		
+
 		if(values.size()==0) return;
 
 		//Calculate quality
@@ -127,25 +126,25 @@ public class PivotCell implements Comparable<PivotCell> {
 		}
 		quality = res;
 
-		
-		//Calculate number of non null values		
+
+		//Calculate number of non null values
 		for (ResultValue value: values) {
 			if(value.getValue()!=null) {
 				N++;
 			}
 		}
-		
+
 		PivotTemplate tpl = table.getTemplate();
 		if(tpl.getAggregation()==Aggregation.HIDE) {
 			//Count of all results, empty or non empty
 			aggregated = "";
 		} else if(tpl.getAggregation()==Aggregation.COUNT) {
 			//Count of all results, empty or non empty
-			aggregated = values.size();			
+			aggregated = values.size();
 		} else if(tpl.getAggregation()==Aggregation.ALL_VALUES) {
 			//All Values, separated by "; "
 			Collections.sort(values);
-			StringBuilder sb = new StringBuilder();			
+			StringBuilder sb = new StringBuilder();
 			for (ResultValue value: values) {
 				if(sb.length()>0) sb.append("; ");
 				sb.append(value.getValue()==null?"": value.getValue());
@@ -154,8 +153,7 @@ public class PivotCell implements Comparable<PivotCell> {
 		} else if(values.size()==1) {
 			//One value-> don't compute but display
 			aggregated = values.get(0).getDoubleValue()==null? values.get(0).getValue(): values.get(0).getDoubleValue();
-		} else {	
-			
+		} else {
 			//Calculate Display1, Display2
 			boolean hasNonDoubles = false;
 			List<Double> doubles = new ArrayList<>();
@@ -164,13 +162,13 @@ public class PivotCell implements Comparable<PivotCell> {
 				if(value.getAttribute().getDataType()==DataType.NUMBER || value.getAttribute().getDataType()==DataType.FORMULA) {
 					Double v = value.getDoubleValue();
 					if(v!=null) doubles.add(v);
-					else if(value.getValue()!=null) hasNonDoubles = true;					
+					else if(value.getValue()!=null) hasNonDoubles = true;
 				} else {
 					String t = value.getValue();
 					if(t!=null) texts.add(t);
 				}
 			}
-			
+
 			if(texts.size()>0) {
 				if(doubles.size()>0) {
 					//If we have a mix of doubles and texts, there is nothing to display
@@ -188,7 +186,7 @@ public class PivotCell implements Comparable<PivotCell> {
 					} else {
 						aggregated = "?";
 					}
-					
+
 				}
 			} else if(doubles.size()>0) {
 				if(tpl.getAggregation()==Aggregation.AVERAGE) {
@@ -216,28 +214,28 @@ public class PivotCell implements Comparable<PivotCell> {
 				} else {
 					aggregated = "??";
 				}
-				
+
 
 				Double s  = getStd(doubles, getAverage(doubles));
 				if(s==null) {
 					std = null;
 					coeff = null;
 				} else {
-					int c = (int) (s / getAverage(doubles) * 100); 
+					int c = (int) (s / getAverage(doubles) * 100);
 					coeff = c;
 					if(tpl.getDeviation()==Deviation.COEFF_VAR) {
 						std = (double) c;
 					} else if(tpl.getDeviation()==Deviation.STD) {
-						std = s;					
+						std = s;
 					}
 				}
-				
+
 			} else {
 				aggregated = "";
 			}
-			
+
 		}
-		
+
 		//Calculate ComputedValue
 		if(tpl.getComputed()!=null) {
 			List<Double> doubles = new ArrayList<>();
@@ -252,12 +250,12 @@ public class PivotCell implements Comparable<PivotCell> {
 		}
 
 	}
-	
+
 	public Comparable<?> getValue() {
 		calculateStats();
 		return aggregated;
 	}
-	
+
 	public Group getGroup() {
 		return Biosample.getGroup(Result.getBiosamples(getResults()));
 	}
@@ -265,38 +263,38 @@ public class PivotCell implements Comparable<PivotCell> {
 	public Phase getPhase() {
 		return Biosample.getPhase(Result.getBiosamples(getResults()));
 	}
-	
+
 	public Biosample getBiosample() {
 		Set<Biosample> biosamples = Result.getBiosamples(getResults());
 		return biosamples.size()==1? biosamples.iterator().next(): null;
 	}
-	
+
 	public Double getStd(){
 		calculateStats();
-		return std;		
+		return std;
 	}
 	public Integer getCoeffVariation() {
 		calculateStats();
-		return coeff;		
+		return coeff;
 	}
-	
+
 	public Double getComputed() {
 		calculateStats();
 		return calculatedValue;
 	}
-	
+
 	public List<PivotCellKey> getNestedKeys() {
 		calculateNested();
 		return orderedNestedKeys;
 	}
-	
+
 	public PivotCell getNested(PivotCellKey key) {
 		calculateNested();
 		PivotCell pc = nestedMap.get(key);
 		if(pc!=null) return pc;
 		return new PivotCell(table);
 	}
-		
+
 	/**
 	 * Split the cell based on the Template.Cell parameters.
 	 * For each ResultValue included in this cell, we calculate the key and create a Map<key, new sub PivotCell>
@@ -304,7 +302,7 @@ public class PivotCell implements Comparable<PivotCell> {
 	private void calculateNested() {
 		if(nestedMap==null) {
 			nestedMap = new LinkedHashMap<>();
-			
+
 			for (int i = 0; i < values.size(); i++) {
 				ResultValue v = values.get(i);
 				PivotCellKey key = getCellKey(table.getTemplate(), v);
@@ -312,27 +310,27 @@ public class PivotCell implements Comparable<PivotCell> {
 				if(values==null) {
 					nestedMap.put(key, values = new PivotCell(table));
 				}
-				values.values.add(v);			
+				values.values.add(v);
 			}
-			
+
 			orderedNestedKeys.clear();
 			orderedNestedKeys.addAll(nestedMap.keySet());
 		}
-	}	
+	}
 
 	private static PivotCellKey getCellKey(PivotTemplate template, ResultValue rv) {
 		Result r = rv.getResult();
-		if(r==null) return new PivotCellKey(null, "");		
-		
+		if(r==null) return new PivotCellKey(null, "");
+
 		Phase phase = null;
 		StringBuilder sb = new StringBuilder();
 		for (PivotItem item : template.getPivotItems(Where.ASCELL)) {
 			if(phase==null && item.getClassifier()==PivotItemClassifier.STUDY_PHASE) {
-				phase = rv.getResult().getInheritedPhase(); 
+				phase = rv.getResult().getInheritedPhase();
 			}
-						
+
 			//Append the item's title
-			String title = item.getTitle(rv);			
+			String title = item.getTitle(rv);
 			if(title!=null) {
 				if(title.length()>=3 && title.charAt(0)=='<' && title.charAt(2)=='>') {
 					title = title.substring(3);
@@ -343,11 +341,11 @@ public class PivotCell implements Comparable<PivotCell> {
 				}
 			}
 		}
-		
-				
-		return new PivotCellKey(phase, sb.toString());			 
+
+
+		return new PivotCellKey(phase, sb.toString());
 	}
-	
+
 	@Override
 	public String toString() {
 		calculateStats();
@@ -358,19 +356,19 @@ public class PivotCell implements Comparable<PivotCell> {
 			if(sb.length()>0) sb.append("\r\n");
 			if(hasKeys && table.getTemplate().getAggregation()==Aggregation.COUNT && (aggregated instanceof Integer) && 1==Integer.valueOf((Integer)aggregated)) {
 				sb.append(s);
-			} else { 
+			} else {
 				sb.append((s.length()==0?"":s+": ") + (aggregated==null? "": aggregated.toString()));
 			}
 		}
 		return sb.toString();
 	}
-	
+
 	@Override
 	public int compareTo(PivotCell o) {
 		if(o==null) return -1;
 		return CompareUtils.compare(getValue(), o.getValue());
 	}
-	
+
 	/**
 	 * Returns results associated with this cell in the appropriate order (according to split)
 	 * @return
@@ -383,10 +381,10 @@ public class PivotCell implements Comparable<PivotCell> {
 			for (ResultValue value : c2.values) {
 				results.add(value.getResult());
 			}
-		}		
+		}
 		return results;
 	}
-	
+
 	/**
 	 * Returns the associated ResultValues
 	 * @return
@@ -394,31 +392,31 @@ public class PivotCell implements Comparable<PivotCell> {
 	public List<ResultValue> getValues() {
 		return values;
 	}
-	
+
 	public int getN() {
 		return N;
 	}
-	
+
 	public Quality getQuality() {
 		return quality;
 	}
-	
+
 	public PivotDataTable getTable() {
 		return table;
 	}
-	
+
 	private static final Double getMedian(List<Double> doubles) {
 		if(doubles.size()==0) return null;
 		Collections.sort(doubles);
 		Double median;
 		if(doubles.size()%2==0) {
-			median = (doubles.get(doubles.size()/2-1) + doubles.get(doubles.size()/2)) / 2;  
+			median = (doubles.get(doubles.size()/2-1) + doubles.get(doubles.size()/2)) / 2;
 		} else {
 			median = doubles.get(doubles.size()/2);
 		}
 		return median;
 	}
-	
+
 	private static final Double getMin(List<Double> doubles) {
 		if(doubles.size()==0) return null;
 		double min = Double.MAX_VALUE;
@@ -435,7 +433,7 @@ public class PivotCell implements Comparable<PivotCell> {
 		}
 		return max;
 	}
-	
+
 	private static final Double getSum(List<Double> doubles) {
 		if(doubles.size()==0) return null;
 		double sum = 0;
@@ -444,7 +442,7 @@ public class PivotCell implements Comparable<PivotCell> {
 		}
 		return sum;
 	}
-	
+
 	private static final Double getAverage(List<Double> doubles) {
 		if(doubles.size()==0) return null;
 		double avg = 0;
@@ -465,13 +463,13 @@ public class PivotCell implements Comparable<PivotCell> {
 		if(hasNeg) {
 			return Double.NaN;
 		} else {
-			return Math.pow(product, 1.0/doubles.size());				
+			return Math.pow(product, 1.0/doubles.size());
 		}
 	}
-	
+
 	private static Double getStd(List<Double> doubles, Double average) {
 		Double stdAverage;
-		
+
 		if(average==null || doubles.size()<=1) {
 			stdAverage = null;
 		} else {
@@ -482,18 +480,17 @@ public class PivotCell implements Comparable<PivotCell> {
 		}
 		return stdAverage;
 	}
-	
+
 	public Margins getMargins() {
 		return margin;
 	}
-	
+
 	public void setMargin(Margins margin) {
 		this.margin = margin;
 	}
-	
+
 	public void addValue(ResultValue value) {
 		values.add(value);
 	}
-	
+
 }
-		

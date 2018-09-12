@@ -46,8 +46,8 @@ import com.actelion.research.spiritapp.ui.location.depictor.DefaultRackDepictorR
 import com.actelion.research.spiritapp.ui.location.depictor.RackDepictor;
 import com.actelion.research.spiritapp.ui.util.scanner.ScanRackForBiosampleOrRackTabAction;
 import com.actelion.research.spiritapp.ui.util.scanner.SelectRackAction;
-import com.actelion.research.spiritapp.ui.util.scanner.SpiritScanner;
-import com.actelion.research.spiritapp.ui.util.scanner.SpiritScanner.Verification;
+import com.actelion.research.spiritapp.ui.util.scanner.SpiritScannerHelper;
+import com.actelion.research.spiritapp.ui.util.scanner.SpiritScannerHelper.Verification;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoFormat;
 import com.actelion.research.spiritcore.business.biosample.Biosample.InfoSize;
@@ -66,7 +66,7 @@ class BatchAssignRackPanel extends JPanel {
 	private BatchAssignDlg dlg;
 	private int rackNo;
 
-	private SpiritScanner scanner = new SpiritScanner(Verification.EMPTY_CONTAINERS);
+	private SpiritScannerHelper scanner = new SpiritScannerHelper();
 	private BiosampleOrRackTab rackTab = new BiosampleOrRackTab();
 	private JLabel sharedInfoLabel = new JCustomLabel("", FastFont.REGULAR);
 	private JLabel rackIdLabel = new JLabel();
@@ -78,8 +78,7 @@ class BatchAssignRackPanel extends JPanel {
 		this.rackNo = rackNo;
 
 
-
-		//TODO
+		scanner.setVerification(Verification.EMPTY_CONTAINERS);
 		rackTab.getRackDepictor().setRackDepictorRenderer(new DefaultRackDepictorRenderer() {
 			@Override
 			public void paintWell(RackDepictor depictor, Graphics2D g, Location location, int pos, Container c, Rectangle r) {

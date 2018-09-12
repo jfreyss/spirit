@@ -51,13 +51,18 @@ import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 import com.actelion.research.util.ui.iconbutton.IconType;
 
+/**
+ * Component focused on the handling of Biosamples
+ *
+ * @author Joel Freyss
+ *
+ */
 public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 
-	private PivotPanel pivotCardPanel;
-
-	private BiosampleOrRackTab tableOrRackTab;
-	private BiosampleSearchPane searchPane;
-	private BiosampleTabbedPane biosampleDetailPanel = new BiosampleTabbedPane();
+	protected PivotPanel pivotCardPanel;
+	protected BiosampleOrRackTab tableOrRackTab;
+	protected BiosampleSearchPane searchPane;
+	protected BiosampleTabbedPane biosampleDetailPanel = new BiosampleTabbedPane();
 	private boolean first = true;
 
 	public BiosampleTab(SpiritFrame frame) {
@@ -84,9 +89,8 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 		westPane.setDividerLocation(1500);
 
 		JPanel eastPanel = new JPanel(new BorderLayout());
-
-		JSplitPane contentPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, westPane, eastPanel);
-		contentPane.setDividerLocation(260);
+		JSplitPane topPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, westPane, eastPanel);
+		topPane.setDividerLocation(260);
 
 		//TableTab
 		tableOrRackTab = new BiosampleOrRackTab();
@@ -125,21 +129,19 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 		pivotCardPanel.getPivotTable().getSelectionModel().addListSelectionListener(listener);
 		pivotCardPanel.getPivotTable().getColumnModel().getSelectionModel().addListSelectionListener(listener);
 
-
-
 		eastPanel.add(BorderLayout.CENTER, pivotCardPanel);
 
 		JPanel buttonsPanel = createButtonsPanel();
-		if(buttonsPanel!=null) eastPanel.add(BorderLayout.SOUTH, buttonsPanel);
-
-
+		if(buttonsPanel!=null) {
+			eastPanel.add(BorderLayout.SOUTH, buttonsPanel);
+		}
 
 		searchPane.addPropertyChangeListener(evt-> {
 			BiosampleTab.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
 		});
 
 		setLayout(new BorderLayout());
-		add(BorderLayout.CENTER, contentPane);
+		add(BorderLayout.CENTER, topPane);
 
 	}
 
@@ -175,7 +177,6 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 		repaint();
 
 	}
-
 
 	protected BiosampleOrRackTab getBiosampleOrRackTab() {
 		return tableOrRackTab;
@@ -258,7 +259,6 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 						r.setValue(ta, "1");
 						toPivot.add(r);
 					}
-
 				}
 				@Override
 				protected void done() {
@@ -296,9 +296,7 @@ public class BiosampleTab extends SpiritTab implements IBiosampleTab {
 	@Override
 	public void onStudySelect() {
 		if(SpiritFrame.getStudyId()!=null && SpiritFrame.getStudyId().length()>0) {
-			query(searchPane.getSearchTree().getQuery());
-		} else {
-			tableOrRackTab.setBiosamples(new ArrayList<>());
+			query(BiosampleQuery.createQueryForStudyIds(SpiritFrame.getStudyId()));
 		}
 		searchPane.getSearchTree().eventStudyChanged();
 	}

@@ -39,6 +39,7 @@ import com.actelion.research.spiritapp.ui.biosample.column.CreationColumn;
 import com.actelion.research.spiritapp.ui.biosample.column.ExpiryDateColumn;
 import com.actelion.research.spiritapp.ui.biosample.column.ParentBiosampleColumn;
 import com.actelion.research.spiritapp.ui.biosample.column.ScannedPosColumn;
+import com.actelion.research.spiritapp.ui.biosample.column.StatusColumn;
 import com.actelion.research.spiritapp.ui.biosample.column.StudyGroupColumn;
 import com.actelion.research.spiritapp.ui.biosample.column.StudyIdColumn;
 import com.actelion.research.spiritapp.ui.biosample.column.StudyParticipantIdColumn;
@@ -46,6 +47,8 @@ import com.actelion.research.spiritapp.ui.biosample.column.StudyPhaseColumn;
 import com.actelion.research.spiritapp.ui.biosample.column.StudySubGroupColumn;
 import com.actelion.research.spiritapp.ui.biosample.linker.LinkerColumnFactory;
 import com.actelion.research.spiritapp.ui.biosample.linker.SampleIdColumn;
+import com.actelion.research.spiritapp.ui.util.component.SpiritExtendTableModel;
+import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.biosample.BarcodeType;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
@@ -58,19 +61,19 @@ import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.dao.DAOBiosample;
 import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.exceltable.Column;
-import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
 /**
  * Table used to edit a list of Biosamples
  *
  * @author Joel Freyss
  */
-public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
+public class EditBiosampleTableModel extends SpiritExtendTableModel<Biosample> {
 
 	private Biotype type;
 	private Study study;
 
 	private boolean compactView = false;
+	private Set<String> readOnlyColumns;
 
 	public EditBiosampleTableModel() {
 		initColumns();
@@ -98,6 +101,8 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 	}
 
 	public void initColumns() {
+		List<Column<Biosample, ?>> columns = new ArrayList<>();
+
 		//Analyze the data
 		boolean hasParents2 = false;
 		boolean hasScanPos = false;
@@ -115,85 +120,111 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 			}
 		}
 
-		List<Column<Biosample, ?>> defaultColumns = new ArrayList<>();
+		//RowNo
+		columns.add(COLUMN_ROWNO);
 
-		//Generic Elements
-		defaultColumns.add(COLUMN_ROWNO);
-
+		//Scan
 		if(hasScanPos) {
-			defaultColumns.add(new ScannedPosColumn());
+			columns.add(new ScannedPosColumn());
 		}
 
-		//Container Elements
-		if(type!=null && type.isAbstract()) {
-			//No container
-		} else if(type!=null && type.isHideContainer()) {
-			defaultColumns.add(new ContainerLocationPosColumn());
-			if(type.getAmountUnit()!=null) defaultColumns.add(new ContainerAmountColumn(type));
-		} else if(type!=null) {
-			if(SpiritProperties.getInstance().isChecked(PropertyKey.BIOSAMPLE_CONTAINERTYPES)) {
-				if(type.getContainerType()==null) defaultColumns.add(new ContainerTypeColumn());
+		//Container/Location Elements
+		if(type!=null) {
+			if(type.isAbstract()) {
+				//No container
+			} else if(type.isHideContainer()) {
+				columns.add(new ContainerLocationPosColumn());
+				if(type.getAmountUnit()!=null) columns.add(new ContainerAmountColumn(type));
+			} else {
+				if(SpiritProperties.getInstance().isChecked(PropertyKey.BIOSAMPLE_CONTAINERTYPES)) {
+					if(type.getContainerType()==null) columns.add(new ContainerTypeColumn());
+				}
+				if(type.getContainerType()==null || type.getContainerType().getBarcodeType()!=BarcodeType.NOBARCODE) columns.add(new ContainerIdColumn());
+				columns.add(new ContainerLocationPosColumn());
+				if(type.getAmountUnit()!=null) columns.add(new ContainerAmountColumn(type));
 			}
-			if(type.getContainerType()==null || type.getContainerType().getBarcodeType()!=BarcodeType.NOBARCODE) defaultColumns.add(new ContainerIdColumn());
-			defaultColumns.add(new ContainerLocationPosColumn());
-			if(type.getAmountUnit()!=null) defaultColumns.add(new ContainerAmountColumn(type));
-		} else {
+		} else if(SpiritProperties.getInstance().isAdvancedMode()) {
 			//When sampling or other type, we condensed the container's infos in one column
-			defaultColumns.add(new ContainerFullColumn());
+			columns.add(new ContainerFullColumn());
 		}
 
-		//Study Elements
+		//Study
 		if(type!=null && (type.getCategory()==BiotypeCategory.LIVING || type.getCategory()==BiotypeCategory.SOLID || type.getCategory()==BiotypeCategory.LIQUID) || hasAttachedSamples) {
-			defaultColumns.add(new StudyIdColumn());
+			columns.add(new StudyIdColumn());
 			if(SpiritProperties.getInstance().isChecked(PropertyKey.STUDY_FEATURE_STUDYDESIGN)) {
-				defaultColumns.add(new StudyGroupColumn(this));
-				defaultColumns.add(new StudySubGroupColumn());
-				defaultColumns.add(new StudyPhaseColumn(this));
+				columns.add(new StudyGroupColumn(this));
+				columns.add(new StudySubGroupColumn());
+				columns.add(new StudyPhaseColumn(this));
 			}
 		}
 
+		//Parent
 		if(SpiritProperties.getInstance().isAdvancedMode()) {
 			if(type!=null && type.getCategory()==BiotypeCategory.PURIFIED && type.getParent()==null) {
 				//Don't add parents columns
 			} else if(!compactView) {
 				//Top
 				if(hasParents2) {
-					defaultColumns.add(new StudyParticipantIdColumn());
+					columns.add(new StudyParticipantIdColumn());
 				}
 			}
 
 			//Parent (must always be displayed except for living)
 			if(type==null || type.getCategory()!=BiotypeCategory.LIVING) {
-				defaultColumns.add(new ParentBiosampleColumn(this));
+				columns.add(new ParentBiosampleColumn(this));
 			}
 		}
 
 
+		//SampleId/SampleName
 		Column<Biosample, String> sampleIdColumn = new SampleIdColumn(new BiosampleLinker(LinkerType.SAMPLEID, type), false, true);
-		defaultColumns.add(sampleIdColumn);
+		columns.add(sampleIdColumn);
 		setTreeColumn(sampleIdColumn);
 
 		if(type!=null && type.getSampleNameLabel()!=null && !compactView) {
-			defaultColumns.add(LinkerColumnFactory.create(new BiosampleLinker(LinkerType.SAMPLENAME, type)));
+			columns.add(LinkerColumnFactory.create(new BiosampleLinker(LinkerType.SAMPLENAME, type)));
 		}
 
+		//Metatadata
 		if(type!=null && !compactView) {
-
 			for (BiotypeMetadata t : type.getMetadata()) {
-				defaultColumns.add(LinkerColumnFactory.create(new BiosampleLinker(t)));
+				columns.add(LinkerColumnFactory.create(new BiosampleLinker(t)));
 			}
 
 			//Comments
-			defaultColumns.add(LinkerColumnFactory.create(new BiosampleLinker(LinkerType.COMMENTS, type)));
+			columns.add(LinkerColumnFactory.create(new BiosampleLinker(LinkerType.COMMENTS, type)));
 
 		} else {
-			defaultColumns.add(new CombinedColumn());
+			columns.add(new CombinedColumn());
 		}
-		setColumns(defaultColumns);
+		if(SpiritProperties.getInstance().isAdvancedMode()) {
+			columns.add(new StatusColumn());
+		}
+
+		//Remove empty columns that are not editable
+		Set<String> readOnlyColumns = getReadOnlyColumns();
+		if(readOnlyColumns!=null) {
+			List<Column<Biosample, ?>> toRemove = new ArrayList<>();
+			for (Column<Biosample, ?> column : columns) {
+				if(readOnlyColumns.contains(column.getShortName()) || readOnlyColumns.contains(column.getName()))
+					toRemove.add(column);
+			}
+			toRemove.removeAll(getNonEmptyColumns(columns));
+
+			Set<Column<Biosample, ?>> alwaysVisible = getAlwaysVisibleColumns();
+			if(alwaysVisible!=null) toRemove.removeAll(alwaysVisible);
+			columns.removeAll(toRemove);
+		}
+
+
+
+
+		setColumns(columns);
 	}
 
 	@Override
 	public List<Column<Biosample, ?>> getPossibleColumns() {
+		if(!SpiritProperties.getInstance().isAdvancedMode()) return super.getPossibleColumns();
 		List<Column<Biosample, ?>> res = new ArrayList<>();
 		res.add(new BiosampleElbColumn());
 		if(SpiritProperties.getInstance().isChecked(PropertyKey.BIOSAMPLE_CONTAINERTYPES)) {
@@ -215,6 +246,7 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 		res.add(new BiosampleQualityColumn());
 		res.add(new ExpiryDateColumn());
 		res.add(new CreationColumn(false));
+		res.add(new StatusColumn());
 		return res;
 	}
 
@@ -230,7 +262,7 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 		res.setAttachedStudy(model==null? study: model.getAttachedStudy());
 		res.setInheritedGroup(model==null? null: model.getInheritedGroup());
 		res.setInheritedPhase(model==null? null: model.getInheritedPhase());
-		res.setInheritedSubGroup(model==null? null: model.getInheritedSubGroup());
+		res.setInheritedSubGroup(model==null? 0: model.getInheritedSubGroup());
 		res.setContainerType(model==null? null: model.getContainerType());
 		return res;
 	}
@@ -245,13 +277,13 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
 
 		try {
+			if(!super.isCellEditable(rowIndex, columnIndex)) return false;
+
 			Column<Biosample, ?> column = getColumn(columnIndex);
 			Biosample row = getRows().get(rowIndex);
 			if(column instanceof SampleIdColumn && row.getBiotype()==null) return false;
 
-			if(getReadOnlyColumns().contains(column)) return false;
-
-			return getColumn(columnIndex).isEditable(rows.get(rowIndex));
+			return true;
 		} catch (Exception e) {
 			return false;
 		}
@@ -281,5 +313,48 @@ public class EditBiosampleTableModel extends ExtendTableModel<Biosample> {
 		DAOBiosample.computeFormula(Collections.singleton(b));
 	}
 
+
+	/**
+	 * Returns the column shortName of columns that are read only
+	 */
+	@Override
+	public Set<String> getReadOnlyColumns() {
+		if(readOnlyColumns==null) {
+			return DBAdapter.getInstance().getReadOnlyColumns();
+		} else {
+			return readOnlyColumns;
+		}
+	}
+
+	/**
+	 * Sets the read only columns
+	 * @param readOnlyColumns
+	 */
+	public void setReadOnlyColumns(Set<String> readOnlyColumns) {
+		this.readOnlyColumns = readOnlyColumns;
+	}
+
+	/**
+	 * Sets the editable columns.
+	 * Returns true if some columns are found in the model
+	 * @param editableColumns
+	 * @return
+	 */
+	public boolean setEditableColumns(Set<String> editableColumns) {
+		boolean found = false;
+		readOnlyColumns = new HashSet<>();
+		for (Column<Biosample, ?> column : getAllColumns()) {
+			if(editableColumns.contains(column.getShortName()) || editableColumns.contains(column.getName())) {
+				found = true;
+			} else {
+				readOnlyColumns.add(column.getShortName());
+			}
+		}
+		if(found) {
+			initColumns();
+			fireTableStructureChanged();
+		}
+		return found;
+	}
 
 }

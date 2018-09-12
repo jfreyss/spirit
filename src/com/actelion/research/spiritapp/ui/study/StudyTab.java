@@ -143,7 +143,7 @@ public class StudyTab extends SpiritTab implements IStudyTab {
 
 	@Override
 	public void onStudySelect() {
-		String studyIds = getFrame().getStudyId();
+		String studyIds = SpiritFrame.getStudyId();
 		if(studyIds==null || studyIds.length()==0) return;
 
 		this.initialized = true;

@@ -21,13 +21,11 @@
 
 package com.actelion.research.spiritapp.ui.admin.config;
 
-import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.Box;
 import javax.swing.JButton;
-import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
 import com.actelion.research.util.ui.JCustomTabbedPane;
@@ -36,46 +34,36 @@ import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.UIUtils;
 
 public class ConfigDlg extends JEscapeDialog {
-	
+
 	private JTabbedPane tabbedPane = new JCustomTabbedPane();
 
 	private ConfigWeighingTab weighingTab = new ConfigWeighingTab();
-//	private ConfigRTab rTab = new ConfigRTab();
-	
+
 	public ConfigDlg() {
 		super(UIUtils.getMainFrame(), "Config", true);
-		
+
 		tabbedPane.add("Weighing Balance", weighingTab);
-//		tabbedPane.add("R Installation", rTab);
-		
-		
+
+
 		JButton okButton = new JButton("Ok");
-		okButton.addActionListener(new ActionListener() {			
+		okButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				eventOk();
 			}
 		});
-		
-		
-		JPanel contentPanel = new JPanel(new BorderLayout());
-		contentPanel.add(BorderLayout.CENTER, tabbedPane);
-		contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton));		
-		setContentPane(contentPanel);
-		
-		pack();
-		setLocationRelativeTo(UIUtils.getMainFrame());
+
+		setContentPane(UIUtils.createBox(tabbedPane, null, UIUtils.createHorizontalBox(Box.createHorizontalGlue(), okButton)));
+		UIUtils.adaptSize(this, -1, -1);
 		setVisible(true);
 	}
-	
+
 	private void eventOk() {
 		try {
 			weighingTab.eventOk();
-//			rTab.eventOk();
-			dispose();			
+			dispose();
 		} catch (Exception e) {
 			JExceptionDialog.showError(e);
 		}
-		
 	}
 }

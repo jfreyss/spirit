@@ -15,6 +15,7 @@ import com.actelion.research.spiritcore.business.audit.Revision;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.biosample.BiosampleQuery;
+import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
 import com.actelion.research.spiritcore.business.property.PropertyKey;
 import com.actelion.research.spiritcore.business.result.ResultQuery;
@@ -338,11 +339,11 @@ public class StudyTest extends AbstractSpiritTest {
 		//Try rollback
 		List<Revision> revisions = DAORevision.getLastRevisions(s);
 		Revision rev = revisions.get(0);
-		DAORevision.revert(rev, user, "test");
+		DAORevision.revert(rev, user);
 
 		//Try Restore
 		rev = revisions.get(revisions.size()-1);
-		DAORevision.restore(rev.getStudies(), user, "test");
+		DAORevision.restore(rev.getStudies(), user);
 
 		//Try reload
 		s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
@@ -484,9 +485,8 @@ public class StudyTest extends AbstractSpiritTest {
 		Study s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		Biosample previous = null;
 
-		//Check correctess of order
+		//Check correctness of order
 		for(Biosample b: s.getParticipantsSorted()) {
-			System.out.println("StudyTest.testAttachedSamples() "+b+" "+b.getInheritedGroupString(null)+" "+b.getInheritedSubGroup()+" "+ b.getSampleName());
 			if(previous!=null) {
 				Assert.assertTrue(b.getInheritedGroup()==null
 						|| b.getInheritedGroup().compareTo(previous.getInheritedGroup())>0
@@ -494,6 +494,23 @@ public class StudyTest extends AbstractSpiritTest {
 			}
 			previous = b;
 		}
+
+		//Add a sample to the study in a group and then remove the group
+		Biosample b = new Biosample(DAOBiotype.getBiotype(Biotype.ANIMAL));
+		b.setAttached(s, s.getGroups().iterator().next(), 0);
+		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
+		b = JPAUtil.reattach(b);
+		Assert.assertEquals(s, b.getAttachedStudy());
+		Assert.assertEquals(s.getGroups().iterator().next(), b.getInheritedGroup());
+
+		b.setAttached(s, null, 0);
+		DAOBiosample.persistBiosamples(Collections.singleton(b), user);
+		b = JPAUtil.reattach(b);
+		Assert.assertEquals(s, b.getAttachedStudy());
+		Assert.assertEquals(null, b.getInheritedGroup());
+
+
+
 	}
 
 	@Test
@@ -501,13 +518,16 @@ public class StudyTest extends AbstractSpiritTest {
 
 		Study s = DAOStudy.getStudyByLocalIdOrStudyIds("IVV2016-1").get(0);
 		List<Biosample> samples = new ArrayList<>();
-		for (Biosample b : s.getParticipantsSorted()) {
+		for (Biosample b : s.getParticipants()) {
 			samples.addAll(b.getHierarchy(HierarchyMode.ATTACHED_SAMPLES));
 		}
-		DAOResult.attachOrCreateStudyResultsToTops(s, s.getParticipantsSorted(), null, null);
+		System.out.println("StudyTest.testAttachedResults() = "+ DAOResult.queryResults(ResultQuery.createQueryForStudyIds(s.getStudyId()), null));
+
+		DAOResult.attachOrCreateStudyResultsToTops(s, s.getParticipants(), null, null);
 		DAOResult.attachOrCreateStudyResultsToSamples(s, samples, null, null);
 
-		for (Biosample b : s.getParticipantsSorted()) {
+		for (Biosample b : s.getParticipants()) {
+			System.out.println("StudyTest.testAttachedResults() "+b.getId()+" "+b+" > "+b.getAuxResults());
 			Assert.assertTrue(b.getAuxResults().size()>0);
 		}
 		int nRes = 0;
@@ -657,8 +677,9 @@ public class StudyTest extends AbstractSpiritTest {
 		s2.getMetadataMap().put("Site", "onsite");
 		s2.getMetadataMap().put("Experimenter", "Employee1");
 		s2.getMetadataMap().put("Old", "previous");
+		//		s1 = DAOStudy.persistStudies(MiscUtils.listOf(s1), user).get(0);
 
-		Assert.assertEquals("Title=My Title 1 replacing My Title 2\nExperimenter=Employee2 replacing Employee1\nOld= replacing previous", s1.getDifference(s2));
+		Assert.assertEquals("Study;0;;Title;My Title 1;My Title 2;0;1\nStudy;0;;Experimenter;Employee2;Employee1;0;1\nStudy;0;;Old;;previous;0;1", s1.getDifferenceList(s2).serialize());
 
 
 
@@ -670,14 +691,14 @@ public class StudyTest extends AbstractSpiritTest {
 
 		s2 = s1.clone();
 		s2.getGroups().iterator().next().setName("G3");
-		Assert.assertEquals("Groups=updated", s2.getDifference(s1));
+		Assert.assertEquals("Study;#;#;Groups;updated;;" + s2.getId() + ";1", s2.getDifferenceList(s1).serialize().replaceAll("(Study;.+?;.+?;)(.*?)", "Study;#;#;$2"));
 
 
 		s1 = DAOStudy.persistStudies(Collections.singleton(s1), user).get(0);
 		s2 = s1.clone();
 		s2.getPhases().iterator().next().getRandomization().setNAnimals(3);
 		s2.getPhases().iterator().next().serializeRandomization();
-		Assert.assertEquals("Phases=modified P1", s2.getDifference(s1));
+		Assert.assertEquals("Study;#;#;Phases;modified P1;;" + s2.getId() + ";1", s2.getDifferenceList(s1).serialize().replaceAll("(Study;.+?;.+?;)(.*?)", "Study;#;#;$2"));
 
 	}
 

@@ -90,8 +90,10 @@ public class TestOverviewDlg extends JEscapeDialog implements ISpiritChangeObser
 		deleteButton.addActionListener(e-> {
 			try {
 				Test t = testChoice.getSelection();
+
 				int res = JOptionPane.showConfirmDialog(TestOverviewDlg.this, "Are you sure you want to delete " + t + "?", "Delete Test", JOptionPane.YES_NO_OPTION);
 				if(res!=JOptionPane.YES_OPTION) return;
+				if(!Spirit.askReasonForChange()) return;
 				DAOTest.removeTest(t, Spirit.askForAuthentication());
 				testChoice.reset();
 				SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_DELETED, Test.class, t);

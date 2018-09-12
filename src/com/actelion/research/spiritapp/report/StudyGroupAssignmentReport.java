@@ -111,17 +111,16 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 
 
 			//Create Header
-			Sheet sheet = createSheet(wb, "GA "+ (phase==null?"Final": phase.getShortName()));
+			Sheet sheet = createSheet(wb, "Group Assignment - " + (phase==null? "Final": phase.getShortName()));
 			sheet.setFitToPage(true);
-			createHeadersWithPhase(sheet, study, phase, "Group Assignment Data");
 			sheet.createRow(4).setHeightInPoints(23f);
-
+			createHeadersWithTitle(sheet, study, "Group assignment" + (phase==null?" - Final": " done at " +phase.getShortName()));
 
 			int col = 0;
 			set(sheet, 5, col++, "No.", Style.S_TH_CENTER);
 			set(sheet, 5, col++, "BW [g]", Style.S_TH_CENTER);
 			for(int i=0; i<nData; i++) set(sheet, 5, col++, "Data"+(i+1), Style.S_TH_CENTER);
-			set(sheet, 4, 0, "Before Rando.", Style.S_TH_CENTER, 1, col);
+			set(sheet, 4, 0, "Before", Style.S_TH_CENTER, 1, col);
 
 
 			set(sheet, 5, col++, "AnimalId", Style.S_TH_CENTER);
@@ -135,7 +134,7 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 				}
 			}
 			set(sheet, 5, col++, "Treatment", Style.S_TH_CENTER);
-			set(sheet, 4, 2, "After Rando.", Style.S_TH_CENTER, 1, col-2);
+			set(sheet, 4, 2, "After", Style.S_TH_CENTER, 1, col-2);
 			int maxCol = col-1;
 
 			//Group separator?
@@ -173,7 +172,7 @@ public class StudyGroupAssignmentReport extends AbstractReport {
 				groupBefore = r.getGroup();
 			}
 			drawLineUnder(sheet, line, 0, maxCol, (short)1);
-			POIUtils.autoSizeColumns(sheet);
+			POIUtils.autoSizeColumns(sheet, 30000, true);
 		}
 
 		if(wb.getNumberOfSheets()==0) throw new Exception("There was no randomization fone for "+study);

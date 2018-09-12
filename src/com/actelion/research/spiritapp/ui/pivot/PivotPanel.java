@@ -319,7 +319,7 @@ public class PivotPanel extends JPanel {
 
 				//Export to DW
 				StringBuilder sb = DataWarriorExporter.getDwar(results, config, SpiritFrame.getUser());
-				File f = File.createTempFile("spirit_", ".dwar");
+				File f = IOUtils.createTempFile("export_", ".dwar");
 				FileWriter w = new FileWriter(f);
 				IOUtils.redirect(new StringReader(sb.toString()), w);
 				w.close();
@@ -337,7 +337,7 @@ public class PivotPanel extends JPanel {
 				throw new Exception("Exporting to DW is not supported in this view");
 			}
 
-			File f = File.createTempFile("spirit_", ".dwar");
+			File f = IOUtils.createTempFile("export_", ".dwar");
 			try(FileWriter w = new FileWriter(f)) {
 				IOUtils.redirect(new StringReader(dwar), w);
 				Desktop.getDesktop().open(f);

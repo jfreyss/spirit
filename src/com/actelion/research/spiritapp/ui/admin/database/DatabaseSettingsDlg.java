@@ -23,7 +23,6 @@ package com.actelion.research.spiritapp.ui.admin.database;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -42,7 +41,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 
 import com.actelion.research.spiritapp.ui.SpiritDB;
@@ -58,7 +56,6 @@ import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.spiritcore.services.migration.MigrationScript;
 import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
-import com.actelion.research.util.ui.JCustomTabbedPane;
 import com.actelion.research.util.ui.JCustomTextField;
 import com.actelion.research.util.ui.JCustomTextField.CustomFieldType;
 import com.actelion.research.util.ui.JEscapeDialog;
@@ -88,7 +85,7 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public DatabaseSettingsDlg(boolean testImmediately) {
-		super(UIUtils.getMainFrame(), "Database Settings");
+		super(UIUtils.getMainFrame(), "Settings");
 
 		//Initialize with current adapter
 		adapter = DBAdapter.getInstance();
@@ -203,7 +200,7 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 			});
 		} else {
 			comps.add(new JLabel(DBAdapter.ADAPTER_PROPERTY.getDisplayName() + ": "));
-			comps.add(new JCustomLabel(initialAdapter==null?"":initialAdapter.getClass().getSimpleName(), Font.BOLD));
+			comps.add(new JCustomLabel(initialAdapter==null?"":initialAdapter.getClass().getSimpleName(), FastFont.BOLD));
 		}
 		comps.add(new JLabel(PropertyKey.DB_VERSION.getLabel() + ": "));
 		comps.add(new JCustomLabel(version, FastFont.BIGGER, hasError?Color.RED: Color.BLUE));
@@ -216,8 +213,6 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 
 
 		//TabbedPane
-		JTabbedPane tabbedPane = new JCustomTabbedPane();
-		tabbedPane.setFont(FastFont.BOLD);
 		setContentPane(UIUtils.createBox(
 				UIUtils.createTitleBox("DB Connection",specificConfigPane),
 				UIUtils.createTitleBox("DB Type", UIUtils.createTable(comps)),
@@ -235,6 +230,10 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 			}
 		}
 	}
+
+	/**
+	 * Creates the db setting specifi properties
+	 */
 	private void initUISpecificProperties() {
 		List<JComponent> comps = new ArrayList<>();
 		if(adapter!=null) {
@@ -249,10 +248,9 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 		sp.setVisible(help!=null && help.length()>0);
 		sp.setPreferredSize(new Dimension(450, 200));
 		specificConfigPane.removeAll();
-		specificConfigPane.add(UIUtils.createBox(
-				UIUtils.createTable(comps),
-				sp));
+		specificConfigPane.add(UIUtils.createBox(UIUtils.createTable(comps), sp));
 	}
+
 
 	private JComponent addComp(PropertyDescriptor property, List<JComponent> comps) {
 		comps.add(new JLabel(property.getDisplayName()+": "));
@@ -276,15 +274,11 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 			final JCustomTextField comp = new JCustomTextField(CustomFieldType.ALPHANUMERIC, 22);
 			comp.setTextWhenEmpty("Encrypted password");
 			JButton encryptButton = new JButton("...");
-			encryptButton.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					String res = JOptionPane.showInputDialog(DatabaseSettingsDlg.this, "Please enter the DB password (clear text) to encrypt it", "Encrypt password", JOptionPane.QUESTION_MESSAGE);
-					if(res==null) return;
-					StringEncrypter encrypter = new StringEncrypter("program from joel");
-					comp.setText(encrypter.encrypt(res.trim().toCharArray()));
-
-				}
+			encryptButton.addActionListener(e-> {
+				String res = JOptionPane.showInputDialog(DatabaseSettingsDlg.this, "Please enter the DB password (clear text) to encrypt it", "Encrypt password", JOptionPane.QUESTION_MESSAGE);
+				if(res==null) return;
+				StringEncrypter encrypter = new StringEncrypter("program from joel");
+				comp.setText(encrypter.encrypt(res.trim().toCharArray()));
 			});
 			dbproperty2comp.put(property, comp);
 			comps.add(UIUtils.createHorizontalBox(comp, encryptButton));
@@ -331,6 +325,10 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 		DBAdapter.setAdapter(null);
 	}
 
+	/**
+	 * Tests the connection
+	 * @throws Exception
+	 */
 	private void testConnection() throws Exception {
 		if(adapter==null) throw new Exception("You must select an adapter");
 		updateDBProperties();
@@ -343,6 +341,10 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 	}
 
 
+	/**
+	 * Validates the schema and DB version
+	 * @throws Exception
+	 */
 	private void testSchema() throws Exception {
 		if(adapter==null) throw new Exception("You must select an adapter");
 		updateDBProperties();
@@ -359,6 +361,10 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 	}
 
 
+	/**
+	 * Test Connection and Saves the properties to the DB
+	 * @throws Exception
+	 */
 	private void save() throws Exception {
 		if(adapter==null) throw new Exception("You must select an adapter");
 
@@ -371,7 +377,7 @@ public class DatabaseSettingsDlg extends JEscapeDialog {
 		//Success->Save
 		//DBProperties in config file (if configurable)
 		if(DBAdapter.isConfigurable()) {
-			DBAdapter.saveDBProperties();
+			DBAdapter.writeDBProperties();
 		}
 
 		dispose();

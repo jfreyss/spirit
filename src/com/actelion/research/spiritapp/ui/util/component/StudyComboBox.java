@@ -163,12 +163,12 @@ public class StudyComboBox extends JObjectComboBox<Study> {
 		String[] tokens = MiscUtils.split(studyIds);
 		StringBuilder sb = new StringBuilder();
 		for (String sid : tokens) {
-			if(!sid.toUpperCase().equals(sid)) {
-				sid = sid.toUpperCase();
-			}
+			//			if(!sid.toUpperCase().equals(sid)) {
+			//				sid = sid.toUpperCase();
+			//			}
 			if(sid.length()>0 && sid.length()<7 && !sid.equals("0")) {
 				//Normalize the studyId
-				String s = sid.startsWith("S-")? sid.substring(2): sid.startsWith("S")? sid.substring(1): sid;
+				String s = sid.toUpperCase().startsWith("S-")? sid.substring(2): sid.toUpperCase().startsWith("S0")? sid.substring(1): sid;
 				try {
 					Double.parseDouble(s);
 					while(s.length()<5) s = "0" + s;

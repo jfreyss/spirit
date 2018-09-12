@@ -21,9 +21,11 @@
 
 package com.actelion.research.spiritcore.business.audit;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.envers.RevisionType;
 
@@ -37,31 +39,36 @@ import com.actelion.research.spiritcore.business.property.SpiritProperty;
 import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.business.study.Study;
-import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.FormatterUtils;
 
+/**
+ * Revision is used to display the audit trail to the user.
+ * The Revisions are transaction based: for each transaction, there is one revision with
+ * @author Joel Freyss
+ *
+ */
 public class Revision implements Comparable<Revision> {
 	private int revId;
 	private RevisionType type;
-	private String reason;
-	private String difference;
 	private String user;
-	private Study study;
-	private List<IAuditable> auditable = new ArrayList<>();
 	private Date date;
+	private Study study;
+	private DifferenceList differenceList;
+	private Map<String, String> reasonsOfChange;
+	private List<IAuditable> auditable = new ArrayList<>();
 
 
 	public Revision() {
 	}
 
-	public Revision(int revId, RevisionType type, Study study, String reason, String difference, String user, Date date) {
+	public Revision(int revId, RevisionType type, Study study, Map<String, String> reasonsOfChange, DifferenceList difference, String user, Date date) {
 		super();
 		this.date = date;
 		this.revId = revId;
 		this.type = type;
 		this.study = study;
-		this.reason = reason;
-		this.difference = difference;
+		this.reasonsOfChange = reasonsOfChange;
+		this.differenceList = difference;
 		this.user = user;
 	}
 
@@ -85,39 +92,10 @@ public class Revision implements Comparable<Revision> {
 		return -(revId-o.revId);
 	}
 
-	public String getWhat() {
-		List<Biosample> biosamples = getBiosamples();
-		List<Result> results = getResults();
-		List<Study> studies = getStudies();
-		List<Test> tests = getTests();
-		List<Location> locations = getLocations();
-		List<Biotype> biotypes = getBiotypes();
-		List<SpiritProperty> properties = getSpiritProperties();
-		List<Employee> employees = getEmployees();
-		List<EmployeeGroup> employeeGroups = getEmployeeGroups();
-		String t = (type==RevisionType.ADD?"Add": type==RevisionType.DEL?"Del": "Upd") + " ";
-
-		List<String> desc = new ArrayList<>();
-		desc.add(t);
-		if(results.size()>0) desc.add(results.size() + " result" + (results.size()>1?"s":""));
-		if(biosamples.size()>0) desc.add(biosamples.size() + " sample" + (biosamples.size()>1?"s":""));
-		if(locations.size()>0) desc.add(locations.size() + " location" + (locations.size()>1?"s":""));
-		if(studies.size()>0) desc.add(studies.size() + " stud" + (studies.size()>1?"ies":"y"));
-
-		if(biotypes.size()>0) desc.add(biotypes.size() + " biotypes");
-		if(tests.size()>0) desc.add(tests.size() + " tests");
-		if(properties.size()>0) desc.add(properties.size() + " properties");
-		if(employees.size()>0) desc.add(employees.size() + " employees");
-		if(employeeGroups.size()>0) desc.add(employeeGroups.size() + " groups");
-
-		return MiscUtils.flatten(desc, " ");
-	}
-
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(revId + ". " + user + ": ");
-		sb.append(getWhat());
+		sb.append(revId + ". " + user);
 		sb.append(" (" + FormatterUtils.formatDateTime(date) + ")");
 		return sb.toString();
 	}
@@ -200,10 +178,52 @@ public class Revision implements Comparable<Revision> {
 	}
 
 	public String getReason() {
-		return reason;
+		if(getReasonsOfChange().size()==1) return getReasonsOfChange().values().iterator().next();
+
+		StringBuilder sb = new StringBuilder();
+		for(Map.Entry<String, String> e: getReasonsOfChange().entrySet()) {
+			sb.append(e.getKey()+": "+e.getValue() + "\n");
+		}
+		return sb.toString();
 	}
 
-	public String getDifference() {
-		return difference;
+	public Map<String, String> getReasonsOfChange() {
+		return reasonsOfChange;
 	}
+
+	public String getReasonsOfChange(String field) {
+		String res = reasonsOfChange.get(field);
+		return res;
+	}
+
+	public DifferenceList getDifference() {
+		return differenceList;
+	}
+
+	/**
+	 * Gets the difference formatted in HTML, without the ids of the entities being modified
+	 * If filterById==0, then all changes are returned
+	 * If filterById>0, then only the changes concerning this id are returned
+	 * @param filterById
+	 * @return
+	 */
+	public String getDifferenceFormatted(String entityType, Serializable entityId, Integer sid) {
+		if(getDifference()==null) return null;
+		return getDifference().filter(entityType, entityId, sid).toHtmlString(true);
+	}
+
+	public static List<RevisionItem> getRevisionItems(List<Revision> revisions, String entityType, Serializable entityId, Integer sid) {
+		//Explode revision into revisionItem
+		List<RevisionItem> res = new ArrayList<>();
+		if(revisions!=null) {
+			for (Revision revision : revisions) {
+				for (DifferenceItem di : revision.getDifference().filter(entityType, entityId, sid)) {
+					res.add(new RevisionItem(revision, di));
+				}
+			}
+		}
+
+		return res;
+	}
+
 }

@@ -29,6 +29,7 @@ import javax.persistence.Table;
 import org.hibernate.envers.Audited;
 
 import com.actelion.research.spiritcore.business.IAuditable;
+import com.actelion.research.spiritcore.business.audit.DifferenceList;
 import com.actelion.research.util.CompareUtils;
 
 /**
@@ -46,7 +47,7 @@ public class SpiritProperty implements Comparable<SpiritProperty>, IAuditable {
 
 	@Id
 	@Column(name="id", length=128)
-	private String key;
+	private String id;
 
 	@Column(name="value", length=512)
 	private String value;
@@ -54,7 +55,7 @@ public class SpiritProperty implements Comparable<SpiritProperty>, IAuditable {
 	public SpiritProperty() {}
 
 	public SpiritProperty(String key, String value) {
-		this.key = key;
+		this.id = key;
 		this.value = value;
 	}
 
@@ -62,8 +63,8 @@ public class SpiritProperty implements Comparable<SpiritProperty>, IAuditable {
 	 * The Key of the property such as "format.date"
 	 * @return
 	 */
-	public String getKey() {
-		return key;
+	public String getId() {
+		return id;
 	}
 
 	/**
@@ -74,8 +75,8 @@ public class SpiritProperty implements Comparable<SpiritProperty>, IAuditable {
 		return value;
 	}
 
-	public void setKey(String key) {
-		this.key = key;
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	public void setValue(String value) {
@@ -84,30 +85,33 @@ public class SpiritProperty implements Comparable<SpiritProperty>, IAuditable {
 
 	@Override
 	public int hashCode() {
-		return key.hashCode();
+		return id.hashCode();
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		return (obj instanceof SpiritProperty) && key.equals(((SpiritProperty) obj).getKey());
+		return (obj instanceof SpiritProperty) && id.equals(((SpiritProperty) obj).getId());
 	}
 
 	@Override
 	public int compareTo(SpiritProperty o) {
-		return key==null? (o.key==null?0: -1): key.compareTo(o.key);
+		return id==null? (o.id==null?0: -1): id.compareTo(o.id);
 	}
 
 	@Override
 	public String toString() {
-		return key + "=" + value;
+		return id + "=" + value;
 	}
 
 	@Override
-	public String getDifference(IAuditable b) {
-		if(!(b instanceof SpiritProperty)) return "Class";
-		SpiritProperty p = (SpiritProperty) b;
-		if(!CompareUtils.equals(value, p.value)) return key+"="+value;
-		return null;
+	public DifferenceList getDifferenceList(IAuditable r) {
+		DifferenceList res = new DifferenceList("Property", id, "", null);
+		if(!(r instanceof SpiritProperty)) return res;
+		SpiritProperty p = (SpiritProperty) r;
+		if(!CompareUtils.equals(value, p.value)) {
+			res.add(id, value, p.value);
+		}
+		return res;
 	}
 
 }

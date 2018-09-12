@@ -37,6 +37,7 @@ import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.adapter.DBAdapter.UserManagedMode;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.SpiritRights;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
@@ -53,7 +54,7 @@ public class LocationEditTableModel extends ExtendTableModel<Location> {
 		columns.add(new LocationLabelingColumn());
 		columns.add(new LocationRowsColumn());
 		columns.add(new LocationColsColumn());
-		if(DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER) {
+		if(SpiritProperties.getInstance().isAdvancedMode() && DBAdapter.getInstance().getUserManagedMode()!=UserManagedMode.UNIQUE_USER) {
 			columns.add(new LocationPrivacyColumn());
 		}
 

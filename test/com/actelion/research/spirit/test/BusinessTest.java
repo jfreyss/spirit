@@ -21,8 +21,6 @@
 
 package com.actelion.research.spirit.test;
 
-import java.io.File;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,7 +29,6 @@ import com.actelion.research.spiritcore.business.Document.DocumentType;
 import com.actelion.research.spiritcore.business.result.TestAttribute;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.Phase;
-import com.actelion.research.util.IOUtils;
 
 /**
  * Test functions from the business package
@@ -147,7 +144,6 @@ public class BusinessTest {
 
 		//Add 2nd doc
 		doc.addZipEntry(new Document("2", "def".getBytes()));
-		IOUtils.bytesToFile(doc.getBytes(), new File("d:\\tmp\\zip.zip"));
 
 
 		retrieved = doc.getZipEntry(0);

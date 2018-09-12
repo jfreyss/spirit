@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Cache {
 
 	public static final int FAST = 15;
+	public static final int MEDIUM = 60;
 	public static final int LONG = 300;
 
 	private static class CachedObject {
@@ -86,7 +87,7 @@ public class Cache {
 	private Cache() {}
 
 	public void add(String name, Object obj) {
-		add(name, obj, 600);
+		add(name, obj, LONG);
 	}
 
 	public void add(String name, Object obj, int timeSec) {

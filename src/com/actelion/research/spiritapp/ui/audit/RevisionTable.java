@@ -21,20 +21,14 @@
 
 package com.actelion.research.spiritapp.ui.audit;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.actelion.research.spiritcore.business.audit.Revision;
 import com.actelion.research.util.ui.exceltable.ExtendTable;
 
 public class RevisionTable extends ExtendTable<Revision> {
 
-	private Map<Revision, String> changeMap = new HashMap<>();
-
 	public RevisionTable() {
 		super(new RevisionTableModel());
-		setBorderStrategy(BorderStrategy.WHEN_DIFFERENT_VALUE);
+		setBorderStrategy(BorderStrategy.ALL_BORDER);
 	}
 
 	@Override
@@ -42,23 +36,4 @@ public class RevisionTable extends ExtendTable<Revision> {
 		return (RevisionTableModel) super.getModel();
 	}
 
-	public void setChangeMap(Map<Revision, String> changeMap) {
-		this.changeMap = changeMap;
-	}
-
-	public Map<Revision, String> getChangeMap() {
-		return changeMap;
-	}
-
-	@Override
-	public void setRows(List<Revision> data) {
-		super.setRows(data);
-		resetPreferredColumnWidth();
-	}
-
-	//	public void setRows(List<Revision> data, Map<Revision, String> changeMap) {
-	//		getModel().setRows(data);
-	//		getModel().setChangeMap(changeMap);
-	//		resetPreferredColumnWidth();
-	//	}
 }

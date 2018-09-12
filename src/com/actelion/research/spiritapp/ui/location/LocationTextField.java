@@ -32,6 +32,8 @@ import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
@@ -46,6 +48,7 @@ import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 
 import com.actelion.research.spiritapp.ui.SpiritFrame;
+import com.actelion.research.spiritapp.ui.location.LocationBrowser.LocationBrowserFilter;
 import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.util.ui.JCustomTextField;
@@ -55,7 +58,8 @@ public class LocationTextField extends JCustomTextField {
 
 	private LocationBrowser locationBrowser = new LocationBrowser();
 	private Dimension size = new Dimension(160, 27);
-
+	private int frameWidth = 300;
+	private int frameHeight = 70;
 
 	@Override
 	public Dimension getMinimumSize() {
@@ -63,8 +67,13 @@ public class LocationTextField extends JCustomTextField {
 	}
 
 	public LocationTextField() {
+		this(LocationBrowserFilter.ALL);
+	}
+
+	public LocationTextField(LocationBrowserFilter filter) {
 		super(CustomFieldType.ALPHANUMERIC, 22);
 		locationBrowser.setAllowTextEditing(false);
+		locationBrowser.setFilter(filter);
 
 		setLayout(null);
 		addMouseListener(new MouseAdapter() {
@@ -93,9 +102,6 @@ public class LocationTextField extends JCustomTextField {
 		});
 		locationBrowser.addPropertyChangeListener(LocationBrowser.PROPERTY_LOCATION_SELECTED, evt -> {
 			Location loc = locationBrowser.getBioLocation();
-
-			System.out.println("LocationTextField.LocationTextField() "+getText()+" to become "+  loc);
-
 			setText(loc==null?"": loc.getHierarchyFull());
 		});
 
@@ -111,15 +117,30 @@ public class LocationTextField extends JCustomTextField {
 
 		AWTEventListener listener = event-> {
 			if((event instanceof MouseEvent ) && ((MouseEvent)event).getID()==MouseEvent.MOUSE_CLICKED) {
+				System.out.println("LocationTextField.LocationTextField() "+frame);
 				if(frame!=null && (event.getSource() instanceof Component) && SwingUtilities.getWindowAncestor((Component) event.getSource())!=frame &&  event.getSource()!=LocationTextField.this) {
 					hidePopup();
 				}
 			}
 		};
-		Toolkit.getDefaultToolkit().addAWTEventListener(listener, AWTEvent.MOUSE_EVENT_MASK);
 
 
+		addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentShown(ComponentEvent e) {
+				Toolkit.getDefaultToolkit().addAWTEventListener(listener, AWTEvent.MOUSE_EVENT_MASK);
+			}
+			@Override
+			public void componentHidden(ComponentEvent e) {
+				Toolkit.getDefaultToolkit().removeAWTEventListener(listener);
+			}
+		});
 		setBioLocation(null);
+	}
+
+
+	public void setFilter(LocationBrowserFilter filter) {
+		locationBrowser.setFilter(filter);
 	}
 
 
@@ -131,23 +152,24 @@ public class LocationTextField extends JCustomTextField {
 	public Location getBioLocation() throws Exception {
 		if(isFocusOwner()) {
 			//The user is focused on the textfield and therefore still in editmode
-			try {
-				if(getText().length()==0) {
-					locationBrowser.setBioLocation(null);
-				} else {
-					Location loc = DAOLocation.getCompatibleLocation(getText(), SpiritFrame.getUser());
-					locationBrowser.setBioLocation(loc);
-				}
-			} catch(Exception ex) {
-				ex.printStackTrace();
+			if(getText().length()==0) {
+				locationBrowser.setBioLocation(null);
+			} else {
+				Location loc = DAOLocation.getCompatibleLocation(getText(), SpiritFrame.getUser());
+				locationBrowser.setBioLocation(loc);
 			}
 		}
 		return locationBrowser.getBioLocation();
 	}
 
 
+	public void setFrameWidth(int width) {
+		this.frameWidth = width;
+	}
 
-
+	public void setFrameHeight(int height) {
+		this.frameHeight = height;
+	}
 
 	private JDialog frame;
 	public void hidePopup() {
@@ -180,7 +202,7 @@ public class LocationTextField extends JCustomTextField {
 			frame.setUndecorated(true);
 			frame.setContentPane(panel);
 			frame.setAlwaysOnTop(true);
-			frame.setSize(300, 70);
+			frame.setSize(frameWidth, frameHeight);
 			int x = p.x;
 			int y = p.y+getBounds().height;
 			if(y+frame.getHeight()>Toolkit.getDefaultToolkit().getScreenSize().height) {

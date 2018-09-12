@@ -23,7 +23,6 @@ package com.actelion.research.spiritapp.ui.util;
 
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -43,7 +42,7 @@ import com.actelion.research.spiritapp.ui.biosample.batchassign.BatchAssignDlg;
 import com.actelion.research.spiritapp.ui.biosample.edit.EditBiosampleDlg;
 import com.actelion.research.spiritapp.ui.print.BrotherLabelsDlg;
 import com.actelion.research.spiritapp.ui.util.component.PreferencesDlg;
-import com.actelion.research.spiritapp.ui.util.scanner.SpiritScanner;
+import com.actelion.research.spiritapp.ui.util.scanner.SpiritScannerHelper;
 import com.actelion.research.spiritcore.adapter.DBAdapter;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.location.Location;
@@ -74,13 +73,12 @@ public class SpiritAction {
 			this.nextAction = nextAction;
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
 			putValue(AbstractAction.SMALL_ICON, IconType.REFRESH.getIcon());
-
 		}
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				JPAUtil.closeFactory();
+				JPAUtil.clearAll();
 			} catch(Exception ex) {
 				JExceptionDialog.showError(ex);
 			}
@@ -136,6 +134,8 @@ public class SpiritAction {
 		public void actionPerformed(ActionEvent e) {
 			//Open dialog
 			SpiritFrame.setUser((SpiritUser) null);
+			SpiritFrame.getInstance().cleanupOnLogout();
+			SpiritFrame.getInstance().stopInactivityListener();
 			LoginDlg.openLoginDialog(top, (app==null?"": app + " ") +"Login", msg);
 			SpiritChangeListener.fireModelChanged(SpiritChangeType.LOGIN);
 
@@ -160,18 +160,18 @@ public class SpiritAction {
 			//Record usage and version
 			if(version==null) return;
 			UsageLog.logUsage("Spirit", SpiritFrame.getUsername(), null, UsageLog.ACTION_LOGON, "app=" + app + ";v="+version);
-		} else if(!"false".equalsIgnoreCase(System.getProperty("jnlp.logusage"))) {
-			new Thread() {
-				@Override
-				public void run() {
-					try {
-						//Record usage
-						new URL("http://c.statcounter.com/11069822/0/f9288463/1/").getContent();
-					} catch(Exception e) {
-						e.printStackTrace();
-					}
-				};
-			}.start();
+			//		} else if(!"false".equalsIgnoreCase(System.getProperty("jnlp.logusage"))) {
+			//			new Thread() {
+			//				@Override
+			//				public void run() {
+			//					try {
+			//						//Record usage
+			//						new URL("http://c.statcounter.com/11069822/0/f9288463/1/").getContent();
+			//					} catch(Exception e) {
+			//						e.printStackTrace();
+			//					}
+			//				};
+			//			}.start();
 		}
 
 
@@ -226,7 +226,7 @@ public class SpiritAction {
 
 	public static class Action_DatabaseConnection extends AbstractAction {
 		public Action_DatabaseConnection() {
-			super("Database connection");
+			super("Database connection...");
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('d'));
 			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
@@ -239,7 +239,7 @@ public class SpiritAction {
 
 	public static class Action_DatabaseProperties extends AbstractAction {
 		public Action_DatabaseProperties() {
-			super("Settings");
+			super("Settings...");
 			putValue(AbstractAction.SMALL_ICON, IconType.ADMIN.getIcon());
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('s'));
 			setEnabled(SpiritRights.isSuperAdmin(SpiritFrame.getUser()));
@@ -253,7 +253,7 @@ public class SpiritAction {
 
 	public static class Action_Scan extends AbstractAction {
 		public Action_Scan() {
-			super("Scan");
+			super("Scan Rack");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
 			putValue(Action.SMALL_ICON, IconType.SCANNER.getIcon());
 		}
@@ -261,8 +261,8 @@ public class SpiritAction {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				SpiritScanner scanner = new SpiritScanner();
-				Location rack = scanner.scan(null, false);
+				SpiritScannerHelper scanner = new SpiritScannerHelper();
+				Location rack = scanner.scan();
 				if(rack==null) return;
 
 				SpiritContextListener.setRack(rack);
@@ -275,7 +275,7 @@ public class SpiritAction {
 
 	public static class Action_ScanAndSetLocation extends AbstractAction {
 		public Action_ScanAndSetLocation() {
-			super("Scan & Set Location");
+			super("Scan & Set Location...");
 			putValue(AbstractAction.MNEMONIC_KEY, (int)('r'));
 			putValue(Action.SMALL_ICON, IconType.SCANNER.getIcon());
 		}
@@ -283,8 +283,9 @@ public class SpiritAction {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				SpiritScanner scanner = new SpiritScanner();
-				Location rack = scanner.scan(null, true);
+				SpiritScannerHelper scanner = new SpiritScannerHelper();
+				scanner.setAskRackIdLocation(true);
+				Location rack = scanner.scan();
 				if(rack==null) return;
 
 				if(rack.getName()==null || rack.getName().length()==0) {

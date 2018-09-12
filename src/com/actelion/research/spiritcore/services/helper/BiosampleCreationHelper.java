@@ -48,7 +48,6 @@ import com.actelion.research.spiritcore.business.biosample.Biotype;
 import com.actelion.research.spiritcore.business.biosample.BiotypeMetadata;
 import com.actelion.research.spiritcore.business.biosample.Container;
 import com.actelion.research.spiritcore.business.biosample.ContainerType;
-import com.actelion.research.spiritcore.business.biosample.Status;
 import com.actelion.research.spiritcore.business.study.Group;
 import com.actelion.research.spiritcore.business.study.NamedSampling;
 import com.actelion.research.spiritcore.business.study.Phase;
@@ -99,15 +98,15 @@ public class BiosampleCreationHelper {
 				StudyAction action = animal.getStudyAction(phase);
 				if(action==null) continue;
 
-
 				//Should we apply the sampling on this action
 				if(action.getNamedSampling1()!=null && (ns==null || ns.equals(action.getNamedSampling1()))) {
-					LoggerFactory.getLogger(BiosampleCreationHelper.class).debug("Apply " +phase+" "+action.getNamedSampling1());
+					LoggerFactory.getLogger(BiosampleCreationHelper.class).debug("Apply " + animal +  " " + phase+" "+action.getNamedSampling1());
 					for (Sampling topSampling : action.getNamedSampling1().getTopSamplings()) {
 						retrieveOrCreateSamplesRec(phase, animal, topSampling, biosamples);
 					}
 				}
 				if(action.getNamedSampling2()!=null && (ns==null || ns.equals(action.getNamedSampling2()))) {
+					LoggerFactory.getLogger(BiosampleCreationHelper.class).debug("Apply " + animal +  " " + phase+" "+action.getNamedSampling2());
 					for (Sampling topSampling : action.getNamedSampling2().getTopSamplings()) {
 						retrieveOrCreateSamplesRec(phase, animal, topSampling, biosamples);
 					}
@@ -156,12 +155,7 @@ public class BiosampleCreationHelper {
 
 		//generateContainers
 		if(generateContainers) {
-			List<Biosample> filtered = new ArrayList<>();
-			for (Biosample b : biosamples) {
-				if(b.getContainer()!=null/* && b.getContainer().getId()>0*/) continue;
-				filtered.add(b);
-			}
-			assignContainers(biosamples, filtered);
+			assignContainers(biosamples, biosamples);
 		}
 
 		//Remove link to Sampling (we don't want the linkage outside study)
@@ -183,7 +177,7 @@ public class BiosampleCreationHelper {
 
 			if(b.getContainer()!=null && b.getContainerId()!=null && b.getContainerType()!=null && b.getContainerType().isMultiple() /*&& b.getContainer().getId()>0*/) {
 				//The container is already saved, map it in order to potentially reuse it
-				String key = b.getInheritedPhase() + "_" + b.getTopParentInSameStudy().getSampleId() + "_"+ s.getContainerType() + "_" + s.getBlocNo();
+				String key = b.getContainerType()+"_"+b.getInheritedPhase() + "_" + b.getTopParentInSameStudy().getSampleId() + "_"+ s.getContainerType() + "_" + s.getBlocNo();
 				key2Containers.put(key, b.getContainer());
 			}
 		}
@@ -208,12 +202,12 @@ public class BiosampleCreationHelper {
 				//If there is a container, we add it
 				//If not, we create it, and add it into
 
-				String key = b.getInheritedPhase() + "_" + b.getTopParentInSameStudy().getSampleId() + "_"+ s.getContainerType() + "_" + s.getBlocNo();
+				String key = b.getContainerType()+"_"+b.getInheritedPhase() + "_" + b.getTopParentInSameStudy().getSampleId() + "_"+ s.getContainerType() + "_" + s.getBlocNo();
 				Container container = key2Containers.get(key);
 				if(container==null) {
 					String prefix;
 					if(s.getContainerType().getBarcodeType()==BarcodeType.GENERATE) {
-						String key2 = b.getTopParentInSameStudy().getSampleId() + "_" + s.getContainerType();
+						String key2 = b.getContainerType()+"_"+b.getTopParentInSameStudy().getSampleId() + "_" + s.getContainerType();
 						prefix = map2prefix.get(key2);
 						if(prefix==null) {
 							prefix = DAOBarcode.getNextId(s.getContainerType());
@@ -222,11 +216,11 @@ public class BiosampleCreationHelper {
 					} else {
 						prefix = b.getSampleId();
 					}
-					String containerId = prefix + "-" + (s.getBlocNo());
+					String containerId = prefix + "-" + s.getBlocNo();
 					container = new Container(s.getContainerType(), containerId);
 					key2Containers.put(key, container);
 				}
-				LoggerFactory.getLogger(BiosampleCreationHelper.class).debug("Assign " + container + " to "+b);
+				LoggerFactory.getLogger(BiosampleCreationHelper.class).debug("Assign " + container + " to "+b + "("+s+" : bl."+s.getBlocNo()+")");
 				b.setContainer(container);
 			}
 
@@ -244,18 +238,11 @@ public class BiosampleCreationHelper {
 	private static void retrieveOrCreateSamplesRec(Phase phase, Biosample parent, Sampling sampling, List<Biosample> res) {
 		boolean isNecropsy = sampling.getNamedSampling()!=null && sampling.getNamedSampling().isNecropsy();
 
-		if(isNecropsy
-				&& (parent.getTopParentInSameStudy().getStatus()==Status.DEAD || parent.getTopParentInSameStudy().getStatus()==Status.KILLED)
-				&& phase!=null
-				&& parent.isDeadAt(phase)) {
-			return;
-		}
-
 		Phase phaseOfSample;
 		if(phase==null) {
 			phaseOfSample = parent.getInheritedPhase();
-		} else{
-			Phase endPhase = parent.getTopParentInSameStudy().getExpectedEndPhase();
+		} else {
+			Phase endPhase = isNecropsy? parent.getTopParentInSameStudy().getExpectedEndPhase(): null;
 			phaseOfSample = isNecropsy && endPhase!=null? endPhase: phase;
 		}
 
@@ -294,6 +281,10 @@ public class BiosampleCreationHelper {
 
 	}
 
+
+	public static List<Biosample> validate(JDialog opener, List<Biosample> biosamples) throws Exception {
+		return validate(opener, biosamples, null, false, false);
+	}
 
 	/**
 	 *
@@ -372,8 +363,10 @@ public class BiosampleCreationHelper {
 			boolean canEdit = SpiritRights.canEdit(b, SpiritFrame.getUser());
 			if(!canEdit) throw new ValidationException("You cannot allowed to update " + b, b, "SampleId");
 
-			//Validate
-			if(b.getSampleId()==null || b.getSampleId().length()==0) throw new ValidationException("The sampleId cannot be empty", b, "SampleId");
+			//SampleId required if prefix is null, as it cannot be generated automatically
+			if((b.getBiotype().getPrefix()==null || b.getBiotype().getPrefix().length()==0) && (b.getSampleId()==null || b.getSampleId().length()==0)) throw new ValidationException("The sampleId cannot be empty", b, "SampleId");
+
+			//Biotype is required
 			if(b.getBiotype()==null) throw new ValidationException("Biotype cannot be empty", b, "SampleId");
 
 			if(b.getBiotype().getSampleNameLabel()!=null && b.getBiotype().isNameRequired() && (b.getSampleName()==null || b.getSampleName().length()==0)){
@@ -387,34 +380,40 @@ public class BiosampleCreationHelper {
 				}
 				if(askValidChoice && metadataType.getDataType()==DataType.LIST) {
 					if(val!=null && val.length()>0 && !metadataType.extractChoices().contains(val)) {
-						int res = JOptionPane.showConfirmDialog(opener, val + " is not a valid "+metadataType.getName()+".\nWould you like to proceed anyways?", "Invalid Choice", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-						if(res!=JOptionPane.YES_OPTION) {
+						if(!allowDialogs) {
 							throw new ValidationException(val + " is not a valid "+metadataType.getName(), b, metadataType.getName());
+						} else {
+							int res = JOptionPane.showConfirmDialog(opener, val + " is not a valid "+metadataType.getName()+".\nWould you like to proceed anyways?", "Invalid Choice", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+							if(res!=JOptionPane.YES_OPTION) {
+								throw new ValidationException(val + " is not a valid "+metadataType.getName(), b, metadataType.getName());
+							}
+							askValidChoice = false;
 						}
-						askValidChoice = false;
 					}
 				}
 			}
 
-			//Check uniqueness
+			//Check uniqueness, when a sampleId is given
 			Integer existingId = sampleId2Ids.get(b.getSampleId());
-			if(allowCloning) {
-				if(sampleId2sample.get(b.getSampleId())!=null ) {
-					//There is a conflict among samples in the list
-					toClones.add(b);
-					toCloneConflicts.add(sampleId2sample.get(b.getSampleId()));
-				} else if(existingId!=null && existingId!=b.getId()) {
-					//There is a conflict among samples in the db
-					toClones.add(b);
-					toCloneConflicts.add(DAOBiosample.getBiosampleById(existingId));
-				}
-			} else {
-				assert !allowCloning;
-				if(sampleId2sample.get(b.getSampleId())!=null) {
-					throw new ValidationException("The sample with the id '"+b.getSampleId()+"' is duplicated", b, "SampleId");
-				}
-				if(existingId!=null && existingId!=b.getId()) {
-					throw new ValidationException("The sampleId "+b.getSampleId()+" exists already in Spirit", b, "SampleId");
+			if(b.getSampleId()!=null && b.getSampleId().length()>0) {
+				if(allowCloning) {
+					if(sampleId2sample.get(b.getSampleId())!=null ) {
+						//There is a conflict among samples in the list
+						toClones.add(b);
+						toCloneConflicts.add(sampleId2sample.get(b.getSampleId()));
+					} else if(existingId!=null && existingId!=b.getId()) {
+						//There is a conflict among samples in the db
+						toClones.add(b);
+						toCloneConflicts.add(DAOBiosample.getBiosampleById(existingId));
+					}
+				} else {
+					assert !allowCloning;
+					if(sampleId2sample.get(b.getSampleId())!=null) {
+						throw new ValidationException("The sample with the id '"+b.getSampleId()+"' is duplicated", b, "SampleId");
+					}
+					if(existingId!=null && existingId!=b.getId()) {
+						throw new ValidationException("The sampleId "+b.getSampleId()+" exists already in Spirit", b, "SampleId");
+					}
 				}
 			}
 

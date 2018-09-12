@@ -57,7 +57,7 @@ public class MetadataComponentFactory {
 	 */
 	public static JComponent getComponentFor(final BiotypeMetadata metadataType) {
 		if(metadataType.getDataType()==DataType.AUTO) {
-			JComponent res = new AutoCompleteComponent(metadataType.getName()) {
+			JComponent res = new AutoCompleteComponent() {
 				@Override
 				public Collection<String> getChoices() {
 					return DAOBiotype.getAutoCompletionFields(metadataType, null);
@@ -67,13 +67,21 @@ public class MetadataComponentFactory {
 				res.setBackground(LF.BGCOLOR_REQUIRED);
 			}
 			return res;
+		} else {
+			JComponent res = getComponentFor(metadataType.getDataType(), metadataType.getParameters());
+			if(metadataType.isRequired()) {
+				res.setBackground(LF.BGCOLOR_REQUIRED);
+			}
+			return res;
 		}
-		return getComponentFor(metadataType.getDataType(), metadataType.getParameters(), metadataType.isRequired());
 	}
 
-	public static JComponent getComponentFor(final DataType datatype, String parameters, boolean required) {
+	public static JComponent getComponentFor(final DataType dataType, String parameters) {
 		JComponent res = null;
-		switch (datatype) {
+		switch (dataType) {
+		case AUTO:
+			res = new AutoCompleteComponent();
+			break;
 		case ALPHA:
 			res = new AlphaNumericalComponent();
 			break;
@@ -105,10 +113,7 @@ public class MetadataComponentFactory {
 			res = new FormulaComponent(parameters);
 			break;
 		default:
-			res = new JLabel("Not editable: [" + datatype+"]");
-		}
-		if(required) {
-			res.setBackground(LF.BGCOLOR_REQUIRED);
+			res = new JLabel("Not editable: [" + dataType+"]");
 		}
 		return res;
 	}
@@ -333,7 +338,7 @@ public class MetadataComponentFactory {
 	}
 
 	public static class AutoCompleteComponent extends JTextComboBox implements MetadataComponent {
-		public AutoCompleteComponent(final String name) {
+		public AutoCompleteComponent() {
 			super();
 			setEditable(true);
 			setColumns(28);
@@ -397,6 +402,7 @@ public class MetadataComponentFactory {
 	public static class FormulaComponent extends NumericalComponent implements MetadataComponent {
 		public FormulaComponent(String parameters) {
 			setToolTipText(parameters);
+			setEnabled(false);
 			setEditable(false);
 			setForeground(Color.BLUE);
 		}

@@ -40,6 +40,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JTextComboBox;
@@ -47,37 +48,37 @@ import com.actelion.research.util.ui.TextChangeListener;
 import com.actelion.research.util.ui.UIUtils;
 
 public abstract class CorrectionDlg<ATTRIBUTE, DATA> extends JEscapeDialog {
-	
+
 	public static final int OK = 1;
 
 	private int returnCode;
-	private List<JButton> allButtons = new ArrayList<JButton>();	
+	private List<JButton> allButtons = new ArrayList<JButton>();
 	private JDialog parent;
-	
+
 	public CorrectionDlg(JDialog parent, final CorrectionMap<ATTRIBUTE, DATA> correctionMap) {
 		super(parent, "Typos correction", true);
 		this.parent = parent;
-		
-		List<Component> panels = new ArrayList<>();
-		for (ATTRIBUTE att : correctionMap.keySet()) {			
-			panels.add(UIUtils.createTitleBox(getName(att), createPanel(correctionMap.get(att))));
-		}		
-		panels.add(Box.createHorizontalGlue());
-		JPanel centerPane = UIUtils.createVerticalBox(panels); 
 
-		
+		List<Component> panels = new ArrayList<>();
+		for (ATTRIBUTE att : correctionMap.keySet()) {
+			panels.add(UIUtils.createTitleBox(getName(att), createPanel(correctionMap.get(att))));
+		}
+		panels.add(Box.createHorizontalGlue());
+		JPanel centerPane = UIUtils.createVerticalBox(panels);
+
+
 		JButton skipButton = new JButton("Continue");
-		skipButton.addActionListener(new ActionListener() {			
+		skipButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				returnCode = OK;
 				dispose();
 			}
 		});
-		
+
 		JButton replaceButton = new JButton("Replace All");
 		getRootPane().setDefaultButton(replaceButton);
-		replaceButton.addActionListener(new ActionListener() {			
+		replaceButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				for (JButton button : allButtons) {
@@ -89,21 +90,21 @@ public abstract class CorrectionDlg<ATTRIBUTE, DATA> extends JEscapeDialog {
 				dispose();
 			}
 		});
-		
+
 		JPanel contentPane = new JPanel(new BorderLayout());
-		
+
 		JLabel label = new JLabel("<html><b style='color:#AA8800'>Warning:</b> Some values may be incorrect.<br> Please check or replace with the suggested values if needed.</html>");
 		label.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 5));
-		
+
 		contentPane.add(BorderLayout.NORTH, label);
 		if(centerPane.getPreferredSize().getHeight()>500) {
-			contentPane.add(BorderLayout.CENTER, new JScrollPane(centerPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));			
+			contentPane.add(BorderLayout.CENTER, new JScrollPane(centerPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
 		} else {
 			contentPane.add(BorderLayout.CENTER, centerPane);
 		}
-		
+
 		contentPane.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(Box.createGlue(), replaceButton, skipButton));
-		
+
 		setContentPane(contentPane);
 		pack();
 		if(getSize().height>700) {
@@ -111,25 +112,25 @@ public abstract class CorrectionDlg<ATTRIBUTE, DATA> extends JEscapeDialog {
 		}
 		setLocationRelativeTo(parent);
 		setVisible(true);
-		
+
 	}
 
 
 	private JPanel createPanel(List<Correction<ATTRIBUTE, DATA>> list) {
-//		final ATTRIBUTE att = list.get(0).getAttribute();
+		//		final ATTRIBUTE att = list.get(0).getAttribute();
 
 		List<Component> comps = new ArrayList<>();
 		for (final Correction<ATTRIBUTE, DATA> correction : list) {
-			
-//			JTextField oldValueTextField = new JTextField(correction.getValue());
-//			oldValueTextField.setEditable(false);
-//			oldValueTextField.setBackground(Color.LIGHT_GRAY);
-			
+
+			//			JTextField oldValueTextField = new JTextField(correction.getValue());
+			//			oldValueTextField.setEditable(false);
+			//			oldValueTextField.setBackground(Color.LIGHT_GRAY);
+
 
 			final JTextComboBox newValueComboBox = new JTextComboBox(correction.getSuggestedValues());
 			newValueComboBox.setText(correction.getSuggestedValue());
-			
-			final JButton replaceButton = new JButton("Replace");			
+
+			final JButton replaceButton = new JButton("Replace");
 			final JLabel doneLabel = new JCustomLabel("                  ", new Font("Arial", Font.PLAIN, 9));
 			int score = (int)(100*correction.getScore());
 			doneLabel.setOpaque(true);
@@ -138,12 +139,12 @@ public abstract class CorrectionDlg<ATTRIBUTE, DATA> extends JEscapeDialog {
 			if(score>0) {
 				doneLabel.setText(" "+score+"% match ");
 			} else {
-				doneLabel.setText(" No match ");					
+				doneLabel.setText(" No match ");
 			}
-			
-			
-			comps.add(doneLabel); 
-			comps.add(new JCustomLabel(correction.getValue(), Font.BOLD));
+
+
+			comps.add(doneLabel);
+			comps.add(new JCustomLabel(correction.getValue(), FastFont.BOLD));
 			comps.add(new JLabel(" is a new attribute. Did you mean? "));
 			comps.add(newValueComboBox);
 			comps.add(replaceButton);
@@ -155,23 +156,23 @@ public abstract class CorrectionDlg<ATTRIBUTE, DATA> extends JEscapeDialog {
 				}
 			});
 			replaceButton.setEnabled(newValueComboBox.getText().length()>0);
-			replaceButton.addActionListener(new ActionListener() {					
+			replaceButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					String newVal = newValueComboBox.getText();
-					
-					performCorrection(correction, newVal);						
+
+					performCorrection(correction, newVal);
 					doneLabel.setText("Done");
 					doneLabel.setForeground(new Color(0,100,0));
 					parent.repaint();
 				}
-			});				
-			allButtons.add(replaceButton);			
-		}			
+			});
+			allButtons.add(replaceButton);
+		}
 		JPanel panel = UIUtils.createTable(5, comps);
 		return panel;
 	}
-	
+
 
 	/**
 	 * @return the returnCode
@@ -183,5 +184,5 @@ public abstract class CorrectionDlg<ATTRIBUTE, DATA> extends JEscapeDialog {
 	protected abstract String getSuperCategory(ATTRIBUTE att);
 	protected abstract String getName(ATTRIBUTE att);
 	protected abstract void performCorrection(Correction<ATTRIBUTE, DATA> correction, String newValue);
-	
+
 }

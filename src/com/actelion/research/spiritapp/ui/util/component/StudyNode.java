@@ -122,13 +122,13 @@ public class StudyNode extends TextComboBoxNode {
 
 	public List<Study> getStudies() {
 		String sel = getSelection();
-		List<Study> res = new ArrayList<Study>();
+		List<Study> res = new ArrayList<>();
 		for(String s: MiscUtils.split(sel)) {
 			Study study = quickCache==null? null: quickCache.get(s);
 			if(study==null) {
 				study = DAOStudy.getStudyByStudyId(s);
 			}
-			if(study==null || !SpiritRights.canEditBiosamples(study, SpiritFrame.getUser())) continue;
+			if(study==null || !SpiritRights.canWork(study, SpiritFrame.getUser())) continue;
 			res.add(study);
 		}
 		return res;

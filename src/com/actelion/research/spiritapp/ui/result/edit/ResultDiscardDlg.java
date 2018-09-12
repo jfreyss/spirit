@@ -47,32 +47,34 @@ public class ResultDiscardDlg {
 
 	public static void createDialogForDelete(List<Result> results) throws Exception {
 		//this.biosamples = biosamples;
-		
+
 		SpiritUser user = Spirit.askForAuthentication();
-		
+
 		try {
-			JPAUtil.pushEditableContext(SpiritFrame.getUser());			
+			JPAUtil.pushEditableContext(SpiritFrame.getUser());
 			results = JPAUtil.reattach(results);
-			
-			for (Result result : results) {			
+
+			for (Result result : results) {
 				if(!SpiritRights.canDelete(result, user)) throw new Exception("You cannot delete "+result);
 			}
-			
+
 			ResultTable table = new ResultTable();
 			table.setRows(results);
 			JScrollPane sp = new JScrollPane(table);
 			sp.setPreferredSize(new Dimension(700, 400));
-			
+
 			JPanel msgPanel = new JPanel(new BorderLayout());
 			msgPanel.add(BorderLayout.NORTH, new JCustomLabel("Are you sure you want to 'DEFINITELY' delete " + (results.size()>1? "those " + results.size() + " results": " this result"), FastFont.BOLD));
 			msgPanel.add(BorderLayout.CENTER, sp);
-			
+
 			int res = JOptionPane.showOptionDialog(UIUtils.getMainFrame(), msgPanel, "DELETE Results", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new String[] {"Delete", "Cancel"}, "Cancel");
 			if(res!=0) return;
 
+			if(!Spirit.askReasonForChange()) return;
+
 			DAOResult.deleteResults(results, user);
 		} finally {
-			JPAUtil.popEditableContext();			
+			JPAUtil.popEditableContext();
 		}
 		SpiritChangeListener.fireModelChanged(SpiritChangeType.MODEL_DELETED, Result.class, results);
 	}

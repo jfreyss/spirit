@@ -51,20 +51,20 @@ import com.actelion.research.util.ui.exceltable.JComponentNoRepaint;
  */
 public class PivotCellPanel extends JComponentNoRepaint {
 
-	private static final Color COLOR_VERYBAD = new Color(200, 100, 100); 
-	private static final Color COLOR_BAD = new Color(180, 110, 100); 
+	private static final Color COLOR_VERYBAD = new Color(200, 100, 100);
+	private static final Color COLOR_BAD = new Color(180, 110, 100);
 	private static final Color COLOR_DUBIOUS = new Color(180, 150, 100);
 	private static final Color COLOR_OK = new Color(130, 180, 100);
-	
+
 	private PivotTemplate template;
 	private PivotCell cell;
 	private Dimension dim = new Dimension(50,12);
 
-	
+
 	public PivotCellPanel() {
 	}
-	
-	
+
+
 	@Override
 	public String getToolTipText() {
 		if(cell.getResults().size()==0) return null;
@@ -73,7 +73,7 @@ public class PivotCellPanel extends JComponentNoRepaint {
 		}
 		StringBuilder sb = new StringBuilder();
 		sb.append("<html><table border=0 cellpadding=1 cellmargin=0 style='font-size:8px'>");
-		
+
 		for(Result r: cell.getResults()) {
 			sb.append("<tr>");
 			sb.append("<td>" + MiscUtils.removeHtmlAndNewLines(r.getBiosample().getInheritedGroupString(SpiritFrame.getUsername())) + "</td>");
@@ -88,12 +88,12 @@ public class PivotCellPanel extends JComponentNoRepaint {
 		sb.append("</table>");
 		return sb.toString();
 	}
-	
+
 	public void setPivotCell(PivotCell pivotCell) {
 		this.template = pivotCell.getTable().getTemplate();
-		this.cell = pivotCell; 
-	}	
-	
+		this.cell = pivotCell;
+	}
+
 	/**
 	 * Get the margins, ie the x coordinates where:
 	 * - label: x=2
@@ -101,34 +101,34 @@ public class PivotCellPanel extends JComponentNoRepaint {
 	 * - computed: x=m2Computed
 	 * - std: x=m3Std
 	 * - n: x=m4N
-	 * 
+	 *
 	 * The margins are calculated such as the data fits exactly, and they are valid for each nested row
 	 * @return
 	 */
 	public Margins getMargins() {
 		if(cell.getMargins()!=null) return cell.getMargins();
-		
+
 		Margins margin = new Margins();
 		cell.setMargin(margin);
 		margin.m1Value = 1;
-		
+
 		//Key
-		Font f = FastFont.MEDIUM;		
+		Font f = FastFont.MEDIUM;
 		for (PivotCellKey key : cell.getNestedKeys()) {
 			String s = key.getKey();
 			if(s.length()>0) {
 				margin.m1Value = Math.max(margin.m1Value, getFontMetrics(f).stringWidth(s+":")+4);
 			}
-		}		
-		margin.m1Value = Math.max(4, margin.m1Value); 
-		
+		}
+		margin.m1Value = Math.max(4, margin.m1Value);
+
 		//Values
 		f = FastFont.REGULAR;
-		margin.m2Computed = margin.m1Value;			
+		margin.m2Computed = margin.m1Value;
 		for (PivotCellKey key : cell.getNestedKeys()) {
 			PivotCell vl = cell.getNested(key);
 			Object m = vl.getValue();
-			
+
 			if(m instanceof Double) {
 				String s = FormatterUtils.formatMax3((Double) m);
 				margin.m2Computed = Math.max(margin.m2Computed, getFontMetrics(f).stringWidth(s)+margin.m1Value+2);
@@ -141,7 +141,7 @@ public class PivotCellPanel extends JComponentNoRepaint {
 			}
 		}
 
-		//Computed  
+		//Computed
 		f = FastFont.MEDIUM;
 		margin.m3Std = margin.m2Computed;
 		if(template.getComputed()!=null && template.getComputed()!=Computed.NONE) {
@@ -155,23 +155,23 @@ public class PivotCellPanel extends JComponentNoRepaint {
 			}
 		}
 
-		
-		//STD 
+
+		//STD
 		margin.m4N = margin.m3Std;
 		if(template.getDeviation()!=null && template.getDeviation()!=Deviation.NONE) {
 			for (PivotCellKey key : cell.getNestedKeys()) {
 				PivotCell vl = cell.getNested(key);
-		
+
 				if(vl.getStd()!=null) {
 					Double coeff = vl.getStd();
 					if(coeff!=null) {
 						String s = coeff>999? "999": "+"+FormatterUtils.format1(coeff);
 						margin.m4N = Math.max(margin.m4N, getFontMetrics(f).stringWidth(s) + margin.m3Std + 8);
-					}				
+					}
 				}
 			}
 		}
-		
+
 		//N
 		f = FastFont.SMALL;
 		margin.m5Width = margin.m4N;
@@ -183,20 +183,20 @@ public class PivotCellPanel extends JComponentNoRepaint {
 				}
 			}
 		}
-		
+
 		return margin;
 	}
-	
+
 	@Override
 	public void update(Graphics g) {
 		paint(g);
-	}	
-	
-	
+	}
+
+
 	@Override
 	/**
 	 * Paint the component using the following alignment
-	 * <pre> 
+	 * <pre>
 	 * 0...........m1...........WIDTH-m52....WIDTH-m53....WIDTH-m54....WIDTH
 	 *   label             value  computed     std                  (N)
 	 * </pre>
@@ -207,19 +207,21 @@ public class PivotCellPanel extends JComponentNoRepaint {
 		UIUtils.applyDesktopProperties(g);
 		super.paintComponent(g);
 
-		Margins margins = cell.getMargins();		
+		Margins margins = cell.getMargins();
 		if(margins==null) return;
 
-		
+
 		int y = 0;
-		int offset = 0; 
+		int offset = 0;
 		final int lineHeight = FastFont.getDefaultFontSize()-1;
 
+
+		int line = 0;
 
 		//Left-aligned: labels (if needed)
 		g.setFont(FastFont.MEDIUM);
 		g.setColor(UIUtils.getColor(160, 95, 0));
-		int line = 0;
+		line = 0;
 		for (PivotCellKey key : cell.getNestedKeys()) {
 			String s = key.getKey();
 			if(s.length()>0) {
@@ -227,33 +229,32 @@ public class PivotCellPanel extends JComponentNoRepaint {
 			}
 			line++;
 		}
-		
+
 		//Clear text to display values
-		g.clearRect(Math.max(0, getWidth() - margins.m5Width + margins.m1Value - 4), 1, getWidth(), getHeight());
-		
+		g.clearRect(Math.max(0, Math.min(margins.m1Value, getWidth() - margins.m5Width + margins.m1Value - 4)), 1, getWidth(), getHeight());
+
 		//Right-aligned
 		//Display N
 		g.setFont(FastFont.SMALL);
 		if(template.isShowN()) {
 			line = 0;
-			int x = Math.max(margins.m4N-margins.m1Value, getWidth() - margins.m5Width + margins.m4N);
+			int x = Math.min(margins.m4N, getWidth() - margins.m5Width + margins.m4N);
 			for (PivotCellKey key : cell.getNestedKeys()) {
 				PivotCell vl = cell.getNested(key);
 				if(vl.getN()>1) {
 					String s = "("+vl.getN()+")";
 					g.setColor(UIUtils.getColor(100,100,255));
 					g.setFont(FastFont.SMALL);
-					g.drawString(s, x, y + (line+1)*lineHeight - 1);					
+					g.drawString(s, x, y + (line+1)*lineHeight - 1);
 				}
 				line++;
-			}			
+			}
 		}
-		
 
 		//Display STD
 		if(template.getDeviation()!=Deviation.NONE) {
 			line = 0;
-			int x = Math.max(margins.m3Std-margins.m1Value, getWidth() - margins.m5Width + margins.m3Std);
+			int x = Math.min(margins.m3Std-margins.m1Value, getWidth() - margins.m5Width + margins.m3Std);
 			g.setFont(FastFont.SMALL);
 			for (PivotCellKey key : cell.getNestedKeys()) {
 				PivotCell vl = cell.getNested(key);
@@ -264,41 +265,41 @@ public class PivotCellPanel extends JComponentNoRepaint {
 					else if(coeff>50) g.setColor(COLOR_BAD);
 					else if(coeff>20) g.setColor(COLOR_DUBIOUS);
 					else g.setColor(COLOR_OK);
-					if(template.getDeviation()==Deviation.COEFF_VAR) {								
+					if(template.getDeviation()==Deviation.COEFF_VAR) {
 						s =  '\u00b1' + (Math.abs(coeff)>500?"??": coeff + "%");
 					} else {
 						s = vl.getStd()>999? "+++": '\u00b1' + FormatterUtils.format1(vl.getStd());
 					}
 					g.drawString(s, x, y+(line+1)*lineHeight);
-					
+
 				}
 				line++;
 			}
 		}
-		
+
 
 
 		//Display Computed
-		g.setFont(FastFont.MEDIUM);		
+		g.setFont(FastFont.MEDIUM);
 		if(template.getComputed()!=null && template.getComputed()!=Computed.NONE) {
 			line = 0;
-			int x = Math.max(margins.m2Computed-margins.m1Value, getWidth() - margins.m5Width + margins.m2Computed);
+			int x = Math.min(margins.m2Computed-margins.m1Value, getWidth() - margins.m5Width + margins.m2Computed);
 			for (PivotCellKey key : cell.getNestedKeys()) {
 				PivotCell vl = cell.getNested(key);
 				if(vl==null) continue;
 				String o = template.getComputed().format(vl.getComputed());
 				if(o!=null) {
 					g.setColor(vl.getComputed()!=null && vl.getComputed()<0? Color.RED: Color.BLUE);
-					g.drawString(o, x, y+(line+1)*lineHeight);						
+					g.drawString(o, x, y+(line+1)*lineHeight);
 				}
 				line++;
 			}
 		}
-		
+
 		//Display values
 		line = 0;
 		g.setFont(FastFont.REGULAR);
-		int x = Math.max(0, getWidth() - margins.m5Width + margins.m1Value);
+		int x = Math.min(margins.m1Value, getWidth() - margins.m5Width + margins.m1Value);
 		for (PivotCellKey key : cell.getNestedKeys()) {
 			PivotCell vl = cell.getNested(key);
 			Object m = vl.getValue();
@@ -311,7 +312,7 @@ public class PivotCellPanel extends JComponentNoRepaint {
 				s = Integer.toString((Integer)m);
 			} else {
 				s = m.toString();
-			}			
+			}
 			g.setColor(getForeground());
 			if(vl.getN()>0) {
 				Quality q = vl.getQuality();
@@ -320,32 +321,33 @@ public class PivotCellPanel extends JComponentNoRepaint {
 					g.fillRect(x-1, line*lineHeight+2, 1+g.getFontMetrics().stringWidth(s), lineHeight);
 					g.setColor(getForeground());
 				}
-			}			
+			}
 			g.drawString(s, x, y+(line+1)*lineHeight);
 			line++;
 		}
-	
+
+
 
 	}
-	
+
 	@Override
 	public Dimension getPreferredSize() {
-		Margins margin = getMargins();		
+		Margins margin = getMargins();
 		int n = cell.getNestedKeys().size();
-		dim.width = Math.max(margin.m5Width, 
+		dim.width = Math.max(margin.m5Width,
 				FastFont.getAdaptedSize((cell.getNestedKeys().size()>1? 40:0) + 60 + (template.getDeviation()!=Deviation.NONE?25:0) + (template.getComputed()!=Computed.NONE?25:0)));
 		dim.height = n*(FastFont.defaultFontSize-1)+4;
 		return dim;
 	}
-	
+
 	@Override
 	public Dimension getMinimumSize() {
 		return getPreferredSize();
 	}
-	
+
 	@Override
 	public Dimension getMaximumSize() {
 		return getPreferredSize();
 	}
-	
+
 }

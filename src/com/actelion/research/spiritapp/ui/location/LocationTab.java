@@ -93,7 +93,6 @@ public class LocationTab extends SpiritTab {
 		//If a query is made, restricts the displayed locations to the result's location
 		searchPane.addPropertyChangeListener(LocationSearchPane.PROPERTY_QUERIED,  evt-> {
 			detailPane.setBiosamples(null);
-			//			locationDepictor.setAcceptedAdminLocations(searchPane.getLocationQuery().isEmpty()? null: searchPane.getAcceptedAdminLocations());
 		});
 
 		//If the locationBrowser is changed, update the location
@@ -187,11 +186,9 @@ public class LocationTab extends SpiritTab {
 			//Refresh their parent
 			List<Location> parents = JPAUtil.reattach(Location.getParents(locs));
 			List<Location> rows = new ArrayList<>(searchPane.getLocationTable().getRows());
-			System.out.println("LocationTab.fireModelChanged(1) "+rows);
 			rows.removeAll(locs);
 			rows = JPAUtil.reattach(rows);
 			searchPane.getLocationTable().setRows(rows);
-			System.out.println("LocationTab.fireModelChanged(2) "+rows);
 
 			//Set the active location: parent
 			Location parent = parents.size()==0? null: parents.get(0);
@@ -223,11 +220,6 @@ public class LocationTab extends SpiritTab {
 		} else {
 			Location l = tabbedPane.getBioLocation();
 			l = JPAUtil.reattach(l);
-			//			Collection<Container> sel = locationDepictor.getSelectedContainers();
-			//
-			//
-			//			//Refresh the loc (set null first to be sure to trigger a change)
-			//			locationDepictor.setSelectedContainers(sel);
 			setBioLocation(l);
 		}
 	}

@@ -266,6 +266,7 @@ public class BiosampleFormDlg extends JSpiritEscapeDialog {
 		for (Biosample b : toSave) {
 			if(b.getId()<=0) isNew = true;
 		}
+		if(!Spirit.askReasonForChangeIfUpdated(toSave)) return;
 		DAOBiosample.persistBiosamples(toSave, Spirit.askForAuthentication());
 		dispose();
 

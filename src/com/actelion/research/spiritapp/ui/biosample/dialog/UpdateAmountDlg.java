@@ -107,7 +107,7 @@ public class UpdateAmountDlg extends JSpiritEscapeDialog {
 
 	public static void updateAmount(List<Biosample> biosamples, AmountOp op, double amount, SpiritUser user) throws Exception {
 		for (Biosample b : biosamples) {
-			if (!SpiritRights.canEdit(b, user)) {
+			if (!SpiritRights.canWork(b, user)) {
 				throw new Exception("You are not allowed to update the amount");
 			}
 			if (op == AmountOp.SUBSTRACT && b.getAmount() != null && b.getAmount() < amount) {
@@ -126,6 +126,7 @@ public class UpdateAmountDlg extends JSpiritEscapeDialog {
 			}
 		}
 
+		if(!Spirit.askReasonForChangeIfUpdated(biosamples)) return;
 		DAOBiosample.persistBiosamples(biosamples, user);
 	}
 

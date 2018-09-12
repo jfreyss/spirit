@@ -12,6 +12,7 @@ import org.junit.Test;
 import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.Quality;
+import com.actelion.research.spiritcore.business.audit.DifferenceList;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.Biosample.HierarchyMode;
 import com.actelion.research.spiritcore.business.biosample.BiosampleLinker;
@@ -31,7 +32,6 @@ import com.actelion.research.spiritcore.services.dao.DAOEmployee;
 import com.actelion.research.spiritcore.services.dao.DAOLocation;
 import com.actelion.research.spiritcore.services.dao.DAOStudy;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
-import com.actelion.research.spiritcore.util.DifferenceMap;
 import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.util.IOUtils;
 
@@ -121,7 +121,7 @@ public class BiosampleTest extends AbstractSpiritTest {
 		b1.setSampleName("CD4");
 		b1.setMetadataValue("meta1", "ALPHA1 ALPHA3");
 		b1.setMetadataValue("meta2", "10");
-		File f = File.createTempFile("test_", ".txt");
+		File f = IOUtils.createTempFile("test_", ".txt");
 		f.getParentFile().mkdirs();
 		IOUtils.bytesToFile("Some file content".getBytes(), f);
 		b1.setMetadataDocument(biotype.getMetadata("meta3"), new Document(f));
@@ -166,7 +166,7 @@ public class BiosampleTest extends AbstractSpiritTest {
 		Assert.assertEquals(1, DAOBiosample.queryBiosamples(q, user).size());
 
 		q = new BiosampleQuery();
-		q.getLinker2values().put(new BiosampleLinker(LinkerType.SAMPLENAME), "cd6");
+		q.getLinker2values().put(new BiosampleLinker(LinkerType.SAMPLENAME), "CD6");
 		Assert.assertEquals(1, DAOBiosample.queryBiosamples(q, user).size());
 
 
@@ -246,7 +246,7 @@ public class BiosampleTest extends AbstractSpiritTest {
 		Assert.assertNotNull(organ);
 		DAOBiotype.getAutoCompletionFieldsForComments(organ, null);
 		DAOBiotype.getAutoCompletionFieldsForName(organ, null);
-		DAOBiotype.getAutoCompletionFieldsForSampleId(organ);
+		DAOBiotype.getAutoCompletionFieldsForSampleId(organ, null, null);
 		for (BiotypeMetadata mt : organ.getMetadata()) {
 			DAOBiotype.getAutoCompletionFields(mt, null);
 		}
@@ -440,6 +440,7 @@ public class BiosampleTest extends AbstractSpiritTest {
 		q.setPhases("fds");
 		q.setPhases("fds");
 		q.setSampleId("dss");
+		q.setSampleIds("dss");
 		q.setSampleIdOrContainerIds("dss");
 		q.setSampleNames("dsd");
 		q.setSearchMySamples(true);
@@ -560,12 +561,12 @@ public class BiosampleTest extends AbstractSpiritTest {
 		b2.setContainerId("Cage1");
 		b2.setSampleId("Hum1");
 
-		DifferenceMap map = b1.getDifferenceMap(b2);
+		DifferenceList map = b1.getDifferenceList(b2);
 		Assert.assertEquals(2, map.size());
-		Assert.assertNotNull(map.get("Container"));
-		Assert.assertNotNull(map.get("Biotype"));
-		Assert.assertEquals("SampleId=Hum1\nBiotype=Human", b1.getDifference(null));
-		Assert.assertEquals("Container= replacing Cage Cage1\nBiotype=Human replacing Animal", b1.getDifference(b2));
+		Assert.assertEquals("Sample;0;Hum1;Container;;Cage Cage1;;1\nSample;0;Hum1;Biotype;Human;Animal;;1", map.serialize());
+
+		map = b1.getDifferenceList(null);
+		Assert.assertEquals("", map.serialize());
 
 
 		b1 = new Biosample(DAOBiotype.getBiotype("Animal"));
@@ -582,15 +583,15 @@ public class BiosampleTest extends AbstractSpiritTest {
 		b2.setSampleName("No2");
 		b2.setMetadataValue("Type", "Mice");
 		b2.setMetadataValue("Sex", "M");
-		b2.setComments("Animal2");
+		b2.setComments("Animal2;Test\n");
 
-		Assert.assertEquals("No=No1 replacing No2\nType=Rat replacing Mice\nComments=Animal1 replacing Animal2", b1.getDifference(b2));
-		Assert.assertEquals("No=No2 replacing No1\nType=Mice replacing Rat\nComments=Animal2 replacing Animal1", b2.getDifference(b1));
+		Assert.assertEquals("Sample;0;;No;No1;No2;;1\nSample;0;;Type;Rat;Mice;;1\nSample;0;;Comments;Animal1;Animal2\\;Test;;1", b1.getDifferenceList(b2).serialize());
+		Assert.assertEquals("Sample;0;;No;No2;No1;;1\nSample;0;;Type;Mice;Rat;;1\nSample;0;;Comments;Animal2\\;Test;Animal1;;1", b2.getDifferenceList(b1).serialize());
 
 		b1 = new Biosample(DAOBiotype.getBiotype("Animal"), "ANL1");
 		b2 = new Biosample("ANL2");
-		Assert.assertEquals("SampleId=ANL1 replacing ANL2\nBiotype=Animal", b1.getDifference(b2));
-		Assert.assertEquals("SampleId=ANL2 replacing ANL1\nBiotype= replacing Animal", b2.getDifference(b1));
+		Assert.assertEquals("Sample;0;ANL1;SampleId;ANL1;ANL2;;1\nSample;0;ANL1;Biotype;Animal;;;1", b1.getDifferenceList(b2).serialize());
+		Assert.assertEquals("Sample;0;ANL2;SampleId;ANL2;ANL1;;1\nSample;0;ANL2;Biotype;;Animal;;1", b2.getDifferenceList(b1).serialize());
 	}
 
 
@@ -608,7 +609,7 @@ public class BiosampleTest extends AbstractSpiritTest {
 		b2.setContainerType(ContainerType.BOTTLE);
 		b2.getMetadata().add(new BiotypeMetadata("M2", DataType.ALPHA));
 
-		Assert.assertEquals("ContainerType=Bottle\nSampleName=Main2 replacing Main\nMetadata=added M2", b2.getDifference(b1));
+		Assert.assertEquals("Biotype;0;B1;ContainerType;Bottle;;;1\nBiotype;0;B1;SampleName;Main2;Main;;1\nBiotype;0;B1;Metadata;added M2;;;1", b2.getDifferenceList(b1).serialize());
 	}
 
 	/**

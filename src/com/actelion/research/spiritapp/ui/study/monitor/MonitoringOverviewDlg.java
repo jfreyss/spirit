@@ -50,8 +50,6 @@ import com.actelion.research.spiritapp.ui.pivot.graph.GraphPanelWithResults;
 import com.actelion.research.spiritapp.ui.study.StudyActions;
 import com.actelion.research.spiritapp.ui.study.monitor.MonitoringHelper.MonitoringStats;
 import com.actelion.research.spiritapp.ui.util.HelpBinder;
-import com.actelion.research.spiritapp.ui.util.ISpiritChangeObserver;
-import com.actelion.research.spiritapp.ui.util.SpiritChangeType;
 import com.actelion.research.spiritapp.ui.util.component.LF;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
 import com.actelion.research.spiritcore.business.biosample.FoodWater;
@@ -71,20 +69,23 @@ import com.actelion.research.util.ui.SwingWorkerExtended;
 import com.actelion.research.util.ui.UIUtils;
 import com.actelion.research.util.ui.exceltable.JSplitPaneWithZeroSizeDivider;
 
-public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChangeObserver {
+public class MonitoringOverviewDlg extends JEscapeDialog {
 
 	private final Study s;
 
 	private final JPanel contentPanel = new JPanel(new BorderLayout());
+	private GraphPanelWithResults graphPanel = new GraphPanelWithResults();
+
 
 	public MonitoringOverviewDlg(Study s) throws Exception {
 		super(UIUtils.getMainFrame(), "Live Monitoring - " +(s==null?"": s.getStudyId()) );
 		if (s == null) throw new Exception("You must select a study");
 		this.s = s;
 
-		//		SpiritChangeListener.register(this);
 		setContentPane(contentPanel);
 		UIUtils.adaptSize(this, 1500, 1200);
+
+
 		recreateUIInThread();
 		setVisible(true);
 	}
@@ -99,7 +100,6 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 	}
 
 	private void recreateUIInThread()  {
-		System.out.println("MonitoringOverviewDlg.recreateUIInThread()");
 
 		new SwingWorkerExtended("Loading", contentPanel, SwingWorkerExtended.FLAG_ASYNCHRONOUS100MS) {
 
@@ -113,7 +113,6 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 
 			@Override
 			protected void doInBackground() throws Exception {
-				System.out.println("MonitoringOverviewDlg.recreateUIInThread().new SwingWorkerExtended() {...}.doInBackground()");
 				// Load animals
 				study = JPAUtil.reattach(s);
 				animals = study.getParticipantsSorted();
@@ -128,9 +127,25 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 					tests.add(t);
 				}
 				Collections.sort(tests);
+				DAOResult.fullLoad(results);
 
 				//Load FWs
 				allFws = DAOFoodWater.getFoodWater(study, null);
+
+				//Update
+				graphPanel.setPivotTemplate(new MonitorPivotTemplate());
+
+				//Select the graph Weighing first
+				graphPanel.getGraphPanel().setResults(results).afterDone(()->{
+					List<BoxPlot> boxPlots = graphPanel.getGraphPanel().getBoxPlots();
+					for (int i = 0; i < boxPlots.size(); i++) {
+						if(boxPlots.get(i).getTitle1().contains(DAOTest.WEIGHING_TESTNAME)) {
+							graphPanel.setSelectedIndex(i);
+							break;
+						}
+					}
+				});
+
 			}
 
 			@Override
@@ -202,37 +217,23 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 					final JScrollPane displaySp = new JScrollPane(displayPane);
 					displaySp.setPreferredSize(new Dimension(400, 500));
 
-					GraphPanelWithResults graphPanel = new GraphPanelWithResults();
-					graphPanel.setPivotTemplate(new MonitorPivotTemplate());
-
-					JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, displaySp, graphPanel);
-					splitPane.setDividerLocation(380);
-					contentPanel.removeAll();
-					contentPanel.add(BorderLayout.CENTER, splitPane);
-					contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue(), new JButton(new CloseAction())));
-					contentPanel.validate();
-					contentPanel.repaint();
-
 					final JComponent comp = nowButton;
 					SwingUtilities.invokeLater(()-> {
+						JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT, displaySp, graphPanel);
+						splitPane.setDividerLocation(380);
+						contentPanel.removeAll();
+						contentPanel.add(BorderLayout.CENTER, splitPane);
+						contentPanel.add(BorderLayout.SOUTH, UIUtils.createHorizontalBox(HelpBinder.createHelpButton(), Box.createHorizontalGlue(), new JButton(new CloseAction())));
+						contentPanel.validate();
+						contentPanel.repaint();
+
 						//Scroll to current date
 						if (comp != null) {
 							Point pt = SwingUtilities.convertPoint(comp, 0, 0, displaySp);
 							displaySp.getVerticalScrollBar().setValue(pt.y-displaySp.getHeight()/2);
 						}
-
-						//Load results
-						graphPanel.setResults(results, false);
-
-						//Select the graph Weighing first
-						List<BoxPlot> boxPlots = graphPanel.getGraphPanel().getBoxPlots();
-						for (int i = 0; i < boxPlots.size(); i++) {
-							if(boxPlots.get(i).getTitle1().contains(DAOTest.WEIGHING_TESTNAME)) {
-								graphPanel.setSelectedIndex(i);
-								break;
-							}
-						}
 					});
+
 				} catch(Exception e) {
 					JExceptionDialog.showError(e);
 				}
@@ -241,9 +242,4 @@ public class MonitoringOverviewDlg extends JEscapeDialog implements ISpiritChang
 		};
 	}
 
-	@Override
-	public <T> void actionModelChanged(SpiritChangeType action, Class<T> what, Collection<T> details) {
-		if(!isVisible()) return;
-		recreateUIInThread();
-	}
 }

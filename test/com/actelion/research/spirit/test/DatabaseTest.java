@@ -77,7 +77,7 @@ public class DatabaseTest extends AbstractSpiritTest {
 		}
 
 		//Test we can retrieve the version
-		String version = SpiritProperties.getInstance().getValue(PropertyKey.DB_VERSION);
+		String version = SpiritProperties.getInstance().getDBVersion();
 		Assert.assertNotNull(version);
 
 		//Test we can retrieve the rights
@@ -96,7 +96,7 @@ public class DatabaseTest extends AbstractSpiritTest {
 		RevisionQuery q = new RevisionQuery(null, null, null, null, false, false, false, false, true);
 		Revision rev = DAORevision.queryRevisions(q).get(0);
 		Assert.assertEquals(1, rev.getSpiritProperties().size());
-		Assert.assertEquals("rights.mode", rev.getSpiritProperties().get(0).getKey());
+		Assert.assertEquals("rights.mode", rev.getSpiritProperties().get(0).getId());
 		Assert.assertEquals("test", rev.getSpiritProperties().get(0).getValue());
 		Assert.assertEquals("######", rev.getUser());
 		System.out.println("DatabaseTest.testProperties() "+rev.getSpiritProperties());

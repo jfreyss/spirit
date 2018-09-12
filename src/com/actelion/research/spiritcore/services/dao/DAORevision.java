@@ -28,9 +28,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -47,6 +47,8 @@ import com.actelion.research.spiritcore.business.DataType;
 import com.actelion.research.spiritcore.business.Document;
 import com.actelion.research.spiritcore.business.IAuditable;
 import com.actelion.research.spiritcore.business.IObject;
+import com.actelion.research.spiritcore.business.audit.DifferenceItem.ChangeType;
+import com.actelion.research.spiritcore.business.audit.DifferenceList;
 import com.actelion.research.spiritcore.business.audit.Revision;
 import com.actelion.research.spiritcore.business.audit.RevisionQuery;
 import com.actelion.research.spiritcore.business.biosample.Biosample;
@@ -62,7 +64,6 @@ import com.actelion.research.spiritcore.business.study.Phase;
 import com.actelion.research.spiritcore.business.study.Sampling;
 import com.actelion.research.spiritcore.business.study.Study;
 import com.actelion.research.spiritcore.services.SpiritUser;
-import com.actelion.research.spiritcore.util.MiscUtils;
 import com.actelion.research.spiritcore.util.Pair;
 
 /**
@@ -106,7 +107,7 @@ public class DAORevision {
 		if(obj instanceof IObject) {
 			id = ((IObject)obj).getId();
 		} else if(obj instanceof SpiritProperty) {
-			id = ((SpiritProperty)obj).getKey();
+			id = ((SpiritProperty)obj).getId();
 		} else {
 			assert false;
 			return null;
@@ -140,27 +141,10 @@ public class DAORevision {
 			query.setMaxResults(n);
 			query.addOrder(AuditEntity.revisionNumber().desc());
 		}
-		List<Revision> revisions = getRevisions(query.getResultList());
+		List<Revision> revisions = getRevisions(null, query.getResultList());
 		LoggerFactory.getLogger(DAORevision.class).debug("Loaded revisions for " + claz.getSimpleName() + "("+entityId + ") maxRevId="+maxRevId + "-" + n + " in " + (System.currentTimeMillis()-s)+"ms");
 		return revisions;
 	}
-
-
-	/**
-	 * Returns last version of the given entity until the given maxRevId (-1 to ignore)
-	 * @param obj
-	 * @param maxRevId (-1, to ignore)
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public static<T extends IAuditable> T getLastVersion(T obj, int maxRevId) {
-		Revision rev = getLastRevision(obj, maxRevId);
-		if(rev==null) return null;
-		assert rev.getAuditables().size()==1;
-		return (T) rev.getAuditables().get(0);
-	}
-
-
 
 	/**
 	 * Get the different versions of several elements.
@@ -231,7 +215,7 @@ public class DAORevision {
 
 		int rev1 = 0;
 		try {
-			rev1 = query.getRevId()>0? query.getRevId(): query.getFromDate()==null? 0: reader.getRevisionNumberForDate(query.getFromDate()).intValue();
+			rev1 = query.getRevId()>0? query.getRevId(): query.getFromDate()==null? 0: reader.getRevisionNumberForDate(query.getFromDate()).intValue()+1;
 		} catch (Exception e) {
 			//before first revision->ignore
 		}
@@ -242,7 +226,7 @@ public class DAORevision {
 			//after last revision->ignore
 		}
 		LoggerFactory.getLogger(DAORevision.class).debug("getRevisions between " + rev1 + " and " + rev2);
-		List<Class<?>> entityClasses = new ArrayList<>();
+		Set<Class<?>> entityClasses = new HashSet<>();
 		if(query.isStudies()) entityClasses.add(Study.class);
 		if(query.isSamples()) entityClasses.add(Biosample.class);
 		if(query.isResults()) entityClasses.add(Result.class);
@@ -253,12 +237,13 @@ public class DAORevision {
 		if(query.isAdmin()) entityClasses.add(EmployeeGroup.class);
 		if(query.isAdmin()) entityClasses.add(SpiritProperty.class);
 
-		List<Revision> revisions = getRevisions(queryForRevisions(reader, entityClasses, rev1, rev2, query.getUserIdFilter(), query.getSidFilter(), query.getStudyIdFilter()));
+		List<Revision> revisions = getRevisions(entityClasses, queryForRevisions(reader, entityClasses, rev1, rev2, query.getUserIdFilter(), query.getSidFilter(), query.getStudyIdFilter()));
 		LoggerFactory.getLogger(DAORevision.class).debug("Loaded revisions in "+(System.currentTimeMillis()-s)+"ms");
 
 		//Post filter per study
 		List<Revision> res = new ArrayList<>();
 		for (Revision revision : revisions) {
+			System.out.println("DAORevision.queryRevisions() "+revision+" "+revision.getType()+" "+revision.getDifference());
 			if(query.getSidFilter()>0 || (query.getStudyIdFilter()!=null && query.getStudyIdFilter().length()>0) ) {
 				boolean ok = false;
 				if(!ok) {
@@ -288,6 +273,7 @@ public class DAORevision {
 					continue;
 				}
 			}
+
 			res.add(revision);
 		}
 
@@ -295,7 +281,7 @@ public class DAORevision {
 		return res;
 	}
 
-	private static List<Object[]> queryForRevisions(AuditReader reader, List<Class<?>> entityClasses, int minRev, int maxRev, String userFilter, int sid, String studyIdFilter) {
+	private static List<Object[]> queryForRevisions(AuditReader reader, Set<Class<?>> entityClasses, int minRev, int maxRev, String userFilter, int sid, String studyIdFilter) {
 		List<Object[]> res = new ArrayList<>();
 		LoggerFactory.getLogger(DAORevision.class).debug("queryForRevisions "+entityClasses+" "+userFilter+" "+sid+" "+studyIdFilter+" "+minRev+" "+maxRev);
 		//Find the study Id from the studyId (the study may have been deleted)
@@ -315,7 +301,12 @@ public class DAORevision {
 		for(Class<?> claz: entityClasses ) {
 			AuditQuery query = reader.createQuery().forRevisionsOfEntity(claz, false, true)
 					.add(AuditEntity.revisionNumber().between(minRev, maxRev));
-			if(userFilter!=null && userFilter.length()>0) {
+			if (userFilter!=null
+					&& userFilter.length()>0
+					&& (claz==Result.class 
+							|| claz==Biosample.class
+							|| claz==Study.class
+							|| claz==Location.class)) {
 				query = query.add(AuditEntity.property("updUser").eq(userFilter));
 			}
 			if(sid>0) {
@@ -340,12 +331,14 @@ public class DAORevision {
 	 * @param objects
 	 * @return
 	 */
-	private static List<Revision> getRevisions(List<Object[]> objects){
+	private static List<Revision> getRevisions(Set<Class<?>> entityClasses, List<Object[]> objects){
 		Map<Integer, Revision> map = new HashMap<>();
 		for (Object[] a: objects) {
 
 			Object entity = a[0];
-			if(!(entity instanceof IAuditable)) continue;
+			if(entityClasses==null && !(entity instanceof IAuditable)) continue;
+			else if(entityClasses!=null && !entityClasses.contains(entity.getClass())) continue;
+
 
 			SpiritRevisionEntity rev = (SpiritRevisionEntity) a[1];
 			RevisionType type = (RevisionType) a[2];
@@ -354,7 +347,7 @@ public class DAORevision {
 			if(r==null) {
 				int sid = rev.getSid();
 				Study study = DAOStudy.getStudy(sid);
-				r = new Revision(rev.getId(), type, study, rev.getReason(), rev.getDifference(), rev.getUserId(), rev.getRevisionDate());
+				r = new Revision(rev.getId(), type, study, rev.getReason(), rev.getDifferenceList(), rev.getUserId(), rev.getRevisionDate());
 				map.put(rev.getId(), r);
 			} else {
 				if(type==RevisionType.DEL) r.setType(RevisionType.DEL);
@@ -375,17 +368,16 @@ public class DAORevision {
 	 * @param comments
 	 * @throws Exception
 	 */
-	public static void restore(Collection<? extends IObject> objects, SpiritUser user, String comments) throws Exception {
+	public static void restore(Collection<? extends IObject> objects, SpiritUser user) throws Exception {
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn =  session.getTransaction();
 
 		try {
-			if(comments==null || comments.trim().length()==0) throw new Exception("You must give a reason");
 			txn.begin();
 			Date now = JPAUtil.getCurrentDateFromDatabase();
 			Map<String, IObject> mapMerged = new HashMap<>();
 			for (IObject entity : objects) {
-				remap(session, entity, now, user, comments, mapMerged);
+				remap(session, entity, now, user, mapMerged);
 				session.merge(entity);
 				mapMerged.put(entity.getClass() + "_" + entity.getId(), null);
 			}
@@ -411,7 +403,7 @@ public class DAORevision {
 	 * @throws Exception
 	 */
 	@SuppressWarnings("unchecked")
-	public static void revert(Revision revision, SpiritUser user, String comments) throws Exception {
+	public static void revert(Revision revision, SpiritUser user) throws Exception {
 		EntityManager session = JPAUtil.getManager();
 		EntityTransaction txn =  session.getTransaction();
 
@@ -426,9 +418,7 @@ public class DAORevision {
 			txn.begin();
 
 			for(Class<IObject> claz : new Class[]{Biotype.class, Test.class, Study.class, Location.class, Biosample.class, Result.class}) {
-				List<Class<?>> entityClasses = new ArrayList<>();
-				entityClasses.add(claz);
-				List<Object[]> res = queryForRevisions(reader, entityClasses, revId, revId, null, -1, null);
+				List<Object[]> res = queryForRevisions(reader, Collections.singleton(claz), revId, revId, null, -1, null);
 
 
 				List<IObject> toDelete = new ArrayList<>();
@@ -457,7 +447,7 @@ public class DAORevision {
 				while(toMerge.size()>0 && step++<10) {
 					for (IObject o : new ArrayList<>(toMerge)) {
 						int id = o.getId();
-						boolean success = remap(session, o, now, user, comments, mapMerged);
+						boolean success = remap(session, o, now, user, mapMerged);
 						if(!success) continue;
 						toMerge.remove(o);
 
@@ -479,68 +469,19 @@ public class DAORevision {
 		}
 	}
 
-
-	/**
-	 * Compute the LastChange for each revision.
-	 * Because this function can take some time,
-	 * @param rev
-	 * @return
-	 */
-	@Deprecated
-	public static Map<Revision, String> getLastChanges(Collection<Revision> revisions) {
-		Map<Revision, String> changeMap = new HashMap<>();
-		for (Revision r : revisions) {
-			if(revisions.size()>100 && r.getAuditables().size()>1) {
-				changeMap.put(r, "-");
-			} else {
-				changeMap.put(r, DAORevision.getLastChange(r));
-			}
-		}
-		return changeMap;
-	}
-
-
-	/**
-	 * Computes the differences between the objects in this revision and the last update.
-	 * A maximum of 4 differences is returned (separated by newlines)
-	 * @param rev
-	 * @return
-	 */
-	public static String getLastChange(Revision rev) {
-		if(rev.getType()==RevisionType.DEL) return "Deleted";
-		if(rev.getType()==RevisionType.ADD) return "Created";
-		final int MAX = 4;
-
-		LinkedHashSet<String> diffs = new LinkedHashSet<>();
-		for(IAuditable s: rev.getAuditables()) {
-			IAuditable previous = getLastVersion(s, rev.getRevId()-1);
-			String diff = s.getDifference(previous);
-			if(diff!=null && diff.length()>0) {
-				if(diffs.size()>=MAX) {
-					diffs.add("...");
-					break;
-				}
-				diffs.add(diff);
-			}
-		}
-
-		return MiscUtils.flatten(diffs, "\n");
-	}
-
 	/**
 	 * Gets the last version and the change for the given entity, in the given context.
 	 * This method should return the last change, even if the changes of the given entity have not been committed.
 	 *
-	 * This method is used in the SpritRevisionEntityListener to record the differences between the object to be saved and the last revision.
+	 * This method should be used exclusively from the SpritRevisionEntityListener to record the differences between the object to be saved and the last revision.
+	 * (when the record to be saved in already in the audit table)
 	 *
 	 * @param entityClass
 	 * @param entityId
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static<T extends IAuditable> Pair<T, String> getLastChange(RevisionType revisionType, Class<T> entityClass, Serializable entityId) {
-
-
+	public static<T extends IAuditable> Pair<IAuditable, DifferenceList> getLastChange(RevisionType revisionType, Class<T> entityClass, Serializable entityId) {
 		//Query the 2 last revisions of entityClass:entityId
 		EntityManager session = JPAUtil.getManager();
 		AuditReader reader = AuditReaderFactory.get(session);
@@ -556,20 +497,52 @@ public class DAORevision {
 		//Compute the difference between those 2 last versions
 		assert histories.size()>0;
 
-		Pair<T, String> res;
+		DifferenceList diff = null;
 		if(revisionType==RevisionType.DEL) {
-			res = new Pair<T, String>((T)histories.get(0)[0], "Removed");
+			diff = ((T)histories.get(0)[0]).getDifferenceList(null);
+			diff.add("", ChangeType.DEL);
+			assert diff.size()==1;
 		} else if(revisionType==RevisionType.ADD) {
-			res = new Pair<T, String>((T)histories.get(0)[0],  "Created");
+			diff = ((T)histories.get(0)[0]).getDifferenceList(null);
+			diff.add("", ChangeType.ADD);
+			assert diff.size()==1;
 		} else if(histories.size()>=2) {
-			String diff;
-			diff = ((T)histories.get(0)[0]).getDifference((T)histories.get(1)[0]);
-			res = new Pair<T, String>((T)histories.get(0)[0], diff);
+			diff = ((T)histories.get(0)[0]).getDifferenceList((T)histories.get(1)[0]);
 		} else {
-			res = null;
+			return null;
 		}
-		return res;
+		return new Pair<IAuditable, DifferenceList>((T)histories.get(0)[0], diff);
 	}
+
+	/**
+	 * Returns the lastChange from the given entity.
+	 * This method should be called outside the SpritRevisionEntityListener (when the record is not yet in the audit table)
+	 *
+	 * @param auditable
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static<T extends IAuditable> Pair<T, DifferenceList> getLastChange(IAuditable auditable) {
+		//Query the 2 last revisions of entityClass:entityId
+		EntityManager session = JPAUtil.getManager();
+		AuditReader reader = AuditReaderFactory.get(session);
+		AuditQuery query = reader.createQuery()
+				.forRevisionsOfEntity(auditable.getClass(), true, true)
+				.add(AuditEntity.id().eq(auditable.getSerializableId()))
+				.addOrder(AuditEntity.revisionNumber().desc())
+				.setMaxResults(1)
+				.setCacheable(false)
+				.setLockMode(LockMode.NONE);
+		List<IAuditable> histories = query.getResultList();
+
+		//Compute the difference between those 2 last versions
+		if(histories.size()==0) {
+			return new Pair<T, DifferenceList>(null, new DifferenceList());
+		} else {
+			return new Pair<T, DifferenceList>((T)histories.get(0), auditable.getDifferenceList(histories.get(0)));
+		}
+	}
+
 
 	/**
 	 * Updates the date, user, comments of the given object
@@ -579,13 +552,12 @@ public class DAORevision {
 	 * @param comments
 	 * @throws Exception
 	 */
-	private static boolean remap(EntityManager session, IObject clone, Date now, SpiritUser user, String comments, Map<String, IObject> mapMerged) throws Exception {
+	private static boolean remap(EntityManager session, IObject clone, Date now, SpiritUser user, Map<String, IObject> mapMerged) throws Exception {
 
 		LoggerFactory.getLogger(DAORevision.class).debug("Restore "+clone.getClass().getSimpleName()+": "+clone);
 		boolean success = true;
 		if(clone instanceof Study) {
 			Study s = ((Study) clone);
-			s.setNotes((s.getNotes()==null || s.getNotes().length()==0? "": s + " - ") +  comments);
 			s.setUpdDate(now);
 			s.setUpdUser(user.getUsername());
 
@@ -662,7 +634,6 @@ public class DAORevision {
 					r.setBiosample(b);
 				}
 			}
-			r.setComments((r.getComments()==null?"": r.getComments() + " - ") + comments);
 			r.setUpdDate(now);
 			r.setUpdUser(user.getUsername());
 		} else if(clone instanceof Location) {

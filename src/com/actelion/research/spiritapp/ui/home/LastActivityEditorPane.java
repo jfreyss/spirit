@@ -305,7 +305,7 @@ public class LastActivityEditorPane extends ImageEditorPane {
 				sb.append("<table><tr><td align=top width=200 style='padding-left:3px'>");
 				StudyEditorPane.formatNumberBiosamples(sb, s, countBio.get(s));
 				sb.append("</td><td align=top width=200>");
-				if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+				if(SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_RESULT)) {
 					StudyEditorPane.formatNumberResults(sb, s, countRes.get(s));
 				}
 				sb.append("</td style='padding-left:3px'></tr>");

@@ -40,6 +40,7 @@ import com.actelion.research.spiritcore.business.result.Result;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.dao.DAORevision;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.JEscapeDialog;
 import com.actelion.research.util.ui.JExceptionDialog;
 import com.actelion.research.util.ui.PopupAdapter;
@@ -51,50 +52,51 @@ public class ResultHistoryDlg extends JEscapeDialog {
 
 
 	public ResultHistoryDlg(final Result result) {
-		super(UIUtils.getMainFrame(), "Result History", true);
+		super(UIUtils.getMainFrame(), "Result - Audit Trail");
 
 		try {
-			final RevisionTable revisionList = new RevisionTable();
+			final RevisionTable revisionTable = new RevisionTable();
 			final ResultTable resultTable = new ResultTable();
 
 
-			revisionList.getSelectionModel().addListSelectionListener(e-> {
+			revisionTable.getModel().setFilters("Result", result.getId(), 0);
+			revisionTable.getSelectionModel().addListSelectionListener(e-> {
 				if(e.getValueIsAdjusting()) return;
-				List<Revision> rev = revisionList.getSelection();
+				List<Revision> rev = revisionTable.getSelection();
 				if(rev.size()==1) {
 					resultTable.setRows(rev.get(0).getResults());
 				}
 			});
 
 
-			revisionList.addMouseListener(new PopupAdapter() {
-				@Override
-				protected void showPopup(MouseEvent e) {
-					List<Revision> rev = revisionList.getSelection();
-					if(rev.size()==1) {
-						JPopupMenu menu = new JPopupMenu();
-						menu.add(new RestoreAction(rev.get(0).getResults()));
-						menu.show(revisionList, e.getX(), e.getY());
+			if(SpiritProperties.getInstance().isAdvancedMode()) {
+				revisionTable.addMouseListener(new PopupAdapter() {
+					@Override
+					protected void showPopup(MouseEvent e) {
+						List<Revision> rev = revisionTable.getSelection();
+						if(rev.size()==1) {
+							JPopupMenu menu = new JPopupMenu();
+							menu.add(new RestoreAction(rev.get(0).getResults()));
+							menu.show(revisionTable, e.getX(), e.getY());
+						}
 					}
-				}
-			});
+				});
+			}
 
-
-			JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.HORIZONTAL_SPLIT,
-					UIUtils.createTitleBox("Revisions", new JScrollPane(revisionList)),
-					UIUtils.createTitleBox("Result Revision", new JScrollPane(resultTable)));
-			splitPane.setDividerLocation(500);
+			JSplitPane splitPane = new JSplitPaneWithZeroSizeDivider(JSplitPane.VERTICAL_SPLIT,
+					UIUtils.createTitleBox("Result revisions", new JScrollPane(revisionTable)),
+					UIUtils.createTitleBox("Revision Detail", new JScrollPane(resultTable)));
+			splitPane.setDividerLocation(400);
 			setContentPane(splitPane);
 
 
 			//Load revisions in background
-			new SwingWorkerExtended(revisionList, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
+			new SwingWorkerExtended(revisionTable, SwingWorkerExtended.FLAG_ASYNCHRONOUS20MS) {
 				private List<Revision> revisions;
-				//				private Map<Revision, String> changeMap;
+
 				@Override
 				protected void doInBackground() throws Exception {
 					revisions = DAORevision.getLastRevisions(result);
-					//					changeMap = getChangeMap(revisions);
 				}
 
 				@Override
@@ -102,14 +104,13 @@ public class ResultHistoryDlg extends JEscapeDialog {
 					if(revisions.size()==0) {
 						JExceptionDialog.showError("There are no revisions saved");
 					}
-					//					revisionList.setRows(revisions, changeMap);
-					revisionList.setRows(revisions);
+					revisionTable.setRows(revisions);
 				}
 			};
 
 
 
-			UIUtils.adaptSize(this, 1000, 600);
+			UIUtils.adaptSize(this, 1000, 800);
 			setVisible(true);
 		} catch (Exception e) {
 			JExceptionDialog.showError(e);
@@ -117,28 +118,6 @@ public class ResultHistoryDlg extends JEscapeDialog {
 		}
 
 	}
-	//
-	//	private Map<Revision, String> getChangeMap(List<Revision> revisions ) {
-	//		Map<Revision, String> changeMap = new HashMap<>();
-	//		List<Revision> revs = new ArrayList<>();
-	//		for (int i = 0; i < revisions.size(); i++) {
-	//			Result b1 = revisions.get(i).getResults().get(0);
-	//			String diff;
-	//			if(i+1<revisions.size()) {
-	//				Result b2 = revisions.get(i+1).getResults().get(0);
-	//				diff = b1.getDifference(b2);
-	//			} else {
-	//				Result b2 = revisions.get(0).getResults().get(0);
-	//				diff = b1.getDifference(b2);
-	//				if(diff.length()==0) diff = "First version";
-	//			}
-	//
-	//			revs.add(revisions.get(i));
-	//			changeMap.put(revisions.get(i), diff);
-	//		}
-	//		return changeMap;
-	//
-	//	}
 
 	private class RestoreAction extends AbstractAction {
 		private List<Result> results;

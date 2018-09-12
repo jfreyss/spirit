@@ -21,9 +21,11 @@
 
 package com.actelion.research.spiritapp.ui;
 
+import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JSeparator;
 
+import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.admin.AdminActions;
 import com.actelion.research.spiritapp.ui.biosample.BiosampleActions;
 import com.actelion.research.spiritapp.ui.exchange.ExchangeActions;
@@ -39,7 +41,7 @@ import com.actelion.research.util.ui.UIUtils;
 
 public class SpiritMenu {
 
-	public static void addEditMenuItems(JMenu editMenu) {
+	public static void addEditMenuItems(JFrame frame, JMenu editMenu) {
 		editMenu.add(new SpiritAction.Action_Preferences());
 		editMenu.add(new JSeparator());
 		if(DBAdapter.getInstance().getUserManagedMode()==UserManagedMode.WRITE_PWD) {
@@ -47,8 +49,14 @@ public class SpiritMenu {
 			editMenu.add(new JSeparator());
 		}
 		editMenu.add(new SpiritAction.Action_Refresh());
-		editMenu.add(new SpiritAction.Action_Relogin(UIUtils.getMainFrame(), "Spirit"));
+		SpiritAction.Action_Relogin actionRelogin = new SpiritAction.Action_Relogin(UIUtils.getMainFrame(), "Spirit");
+		editMenu.add(actionRelogin);
 		editMenu.add(new SpiritAction.Action_Exit());
+
+		int timeout = SpiritProperties.getInstance().getValueInt(PropertyKey.SYSTEM_SESSION_TIMEOUT);
+		if (timeout > 0) {
+			Spirit.getInstance().initInactivityListener(actionRelogin, timeout);
+		}
 	}
 
 	public static JMenu getDevicesMenu() {
@@ -84,7 +92,7 @@ public class SpiritMenu {
 			adminMenu.add(new JSeparator());
 			adminMenu.add(new AdminActions.Action_ManageUsers());
 			adminMenu.add(new AdminActions.Action_AdminBiotypes());
-			if(SpiritProperties.getInstance().isChecked(PropertyKey.TAB_RESULT)) {
+			if(SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_RESULT)) {
 				adminMenu.add(new AdminActions.Action_AdminTests());
 			}
 			adminMenu.add(new JSeparator());

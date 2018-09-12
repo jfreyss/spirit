@@ -35,6 +35,7 @@ import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,7 +79,7 @@ public class ListPane<T extends JPanel> extends JComponent implements Scrollable
 
 	private List<T> panels = new ArrayList<>();
 	private Set<Integer> selectedIndexes = new TreeSet<>();
-	private Map<T, Integer> map2Index = new java.util.HashMap<>();
+	private Map<T, Integer> map2Index = new HashMap<>();
 	private int lastIndexClicked = -1;
 	private int nCols = 1;
 	private int focus = -1;
@@ -236,13 +237,30 @@ public class ListPane<T extends JPanel> extends JComponent implements Scrollable
 
 		//Set size, so that all graphs fit on the screen
 		if(getParent()!=null && getParent().getHeight()>0 && panels.size()>0) {
-			maxWidth = (int) Math.sqrt(Math.max(50, (getWidth()-40)*1.2) * getParent().getHeight()*4.0/3/panels.size());
+			maxWidth = (int) Math.sqrt((getWidth()-40) * 1.2 * getParent().getHeight()*4.0/3/panels.size());
 			if(maxWidth<MAXWIDTH) maxWidth = MAXWIDTH;
 			if(maxWidth>getParent().getHeight()*4/3) maxWidth = Math.max(MINWIDTH, getParent().getHeight()*4/3);
 		}
 
-		validate();
-		getParent().repaint();
+
+		//Adapt size
+		int width = getWidth();
+		if((getParent() instanceof JViewport)  && ((JViewport)getParent()).getParent()!=null &&  ((JViewport)getParent()).getParent().getWidth()>0 ) {
+			width = ((JViewport)getParent()).getParent().getWidth()-25;
+		}
+		if(width<=0) {
+			width = MINWIDTH;
+		}
+		nCols = (int) Math.ceil(Math.max(1, width / (double)maxWidth));
+		int nRows = (int) Math.ceil(getComponentCount() / (double)nCols);
+		int height = width / nCols * 3 / 4;
+		setPreferredSize(new Dimension(width, height*nRows));
+
+
+		//Validate to call dolayout()
+		if(getParent()!=null) getParent().validate();
+		else validate();
+		repaint();
 	}
 
 	/**
@@ -343,15 +361,14 @@ public class ListPane<T extends JPanel> extends JComponent implements Scrollable
 		if(getParent() instanceof JViewport) {
 			width = ((JViewport)getParent()).getParent().getWidth()-25;
 		}
-		nCols = (int) Math.ceil(Math.max(1, width / (double)maxWidth));//(int) Math.ceil(Math.sqrt(n));
-		int nRows = (int) Math.ceil(getComponentCount() / (double)nCols);
+		nCols = (int) Math.ceil(Math.max(1, width / (double)maxWidth));
+		//		int nRows = (int) Math.ceil(getComponentCount() / (double)nCols);
 		int height = width / nCols * 3 / 4;
 		for (int i = 0; i < getComponentCount(); i++) {
 			int col = i%nCols;
 			int row = i/nCols;
 			getComponent(i).setBounds(col * width / nCols, row*height, width / nCols, height);
 		}
-		setPreferredSize(new Dimension(width, height*nRows));
 	}
 
 	@Override
@@ -376,6 +393,6 @@ public class ListPane<T extends JPanel> extends JComponent implements Scrollable
 
 	@Override
 	public boolean getScrollableTracksViewportHeight() {
-		return false;
+		return true;
 	}
 }

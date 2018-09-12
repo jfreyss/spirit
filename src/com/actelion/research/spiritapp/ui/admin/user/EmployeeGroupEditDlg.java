@@ -30,6 +30,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import com.actelion.research.spiritapp.Spirit;
 import com.actelion.research.spiritapp.ui.SpiritFrame;
 import com.actelion.research.spiritapp.ui.util.component.EmployeeGroupComboBox;
 import com.actelion.research.spiritapp.ui.util.component.JSpiritEscapeDialog;
@@ -71,6 +72,7 @@ public class EmployeeGroupEditDlg extends JSpiritEscapeDialog {
 				group.setName(nameField.getText());
 				group.setParent(parentComboBox.getSelection());
 				group.setDisabled(disabledCheckbox.isSelected());
+				if(!Spirit.askReasonForChangeIfUpdated(Collections.singleton(group))) return;
 				DAOEmployee.persistEmployeeGroups(Collections.singleton(group), SpiritFrame.getUser());
 				dispose();
 			} catch (Exception e) {

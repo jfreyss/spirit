@@ -50,7 +50,7 @@ public class MultiComboboxCellEditor extends AbstractCellEditor implements Table
 		}
 		Collections.sort(choices);
 		cb.setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
-		cb.setAllowTyping(false);
+		cb.setAllowTyping(true);		// Karim (6-Jul-2018) : to allow free text in observation field
 		cb.setMargin(null);
 	}
 

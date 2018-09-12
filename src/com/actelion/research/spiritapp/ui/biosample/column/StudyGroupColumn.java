@@ -94,7 +94,7 @@ public class StudyGroupColumn extends Column<Biosample, Group> {
 
 	@Override
 	public boolean isEditable(Biosample row) {
-		return row!=null && row.getAttachedStudy()!=null && (row.getParent()==null || row.getParent().getInheritedStudy()==null);
+		return row!=null && row.getInheritedStudy()!=null && (row.getParent()==null || row.getParent().getInheritedGroup()==null);
 	}
 
 

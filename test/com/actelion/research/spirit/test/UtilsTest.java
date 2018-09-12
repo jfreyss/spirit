@@ -118,6 +118,10 @@ public class UtilsTest {
 		Assert.assertEquals("E=MC2", MiscUtils.deserializeStringMap(s4).get("meta\\2"));
 		Assert.assertEquals(";", MiscUtils.deserializeStringMap(s4).get("meta;3"));
 
+		//Check empty
+		String s5 = "=4";
+		Assert.assertEquals("4", MiscUtils.deserializeStringMap(s5).get(""));
+
 
 		//ending ;
 		Assert.assertEquals(1, MiscUtils.deserializeStringMap("meta1=a;").size());

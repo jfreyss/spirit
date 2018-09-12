@@ -43,9 +43,9 @@ import com.actelion.research.spiritcore.business.result.Test;
 import com.actelion.research.spiritcore.services.dao.DAOResult;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping;
 import com.actelion.research.spiritcore.services.exchange.ExchangeMapping.EntityAction;
+import com.actelion.research.util.ui.FastFont;
 import com.actelion.research.util.ui.JCustomLabel;
 import com.actelion.research.util.ui.UIUtils;
-import com.itextpdf.text.Font;
 
 public class ResultMappingPanel extends JPanel implements IMappingPanel {
 
@@ -81,7 +81,7 @@ public class ResultMappingPanel extends JPanel implements IMappingPanel {
 
 
 		JPanel existingPanel = UIUtils.createVerticalBox(BorderFactory.createEtchedBorder(),
-				new JCustomLabel("What do you want to do for the results with matching test/sampleIds/phase/input? ", Font.BOLD),
+				new JCustomLabel("What do you want to do for the results with matching test/sampleIds/phase/input? ", FastFont.BOLD),
 				UIUtils.createHorizontalBox(r1, r2, r3, Box.createVerticalGlue()));
 		existingPanel.setOpaque(true);
 		existingPanel.setBackground(LF.COLOR_ERROR_BACKGROUND);

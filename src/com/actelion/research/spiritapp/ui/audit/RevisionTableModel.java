@@ -22,15 +22,19 @@
 package com.actelion.research.spiritapp.ui.audit;
 
 import java.awt.Color;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 
 import org.hibernate.envers.RevisionType;
 
 import com.actelion.research.spiritcore.business.audit.Revision;
+import com.actelion.research.spiritcore.business.property.PropertyKey;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.FormatterUtils;
 import com.actelion.research.util.ui.exceltable.AbstractExtendTable;
 import com.actelion.research.util.ui.exceltable.Column;
@@ -42,8 +46,9 @@ import com.actelion.research.util.ui.exceltable.StringColumn;
 
 public class RevisionTableModel extends ExtendTableModel<Revision> {
 
-	//	private boolean addWhatColumn = false;
-	//	private Map<Revision, String> changeMap = null;
+	private String filterByType = null;
+	private Serializable filterById = null;
+	private Integer filterBySid = null;
 
 	private IntegerColumn<Revision> revColumn = new IntegerColumn<Revision>("RevId") {
 		@Override
@@ -70,32 +75,10 @@ public class RevisionTableModel extends ExtendTableModel<Revision> {
 		}
 	};
 
-
-	//	private StringColumn<Revision> studyColumn = new StringColumn<Revision>("Study") {
-	//		@Override
-	//		public String getValue(Revision row) {
-	//			return row.getStudy()==null?"": row.getStudy().getStudyId();
-	//		}
-	//	};
-
-	private StringColumn<Revision> whatColumn = new StringColumn<Revision>("What") {
+	private StringColumn<Revision> studyColumn = new StringColumn<Revision>("Study") {
 		@Override
 		public String getValue(Revision row) {
-			return row.getWhat().replace(", ", "\n");
-		}
-		@Override
-		public void postProcess(AbstractExtendTable<Revision> table, Revision rev, int rowNo, Object value, JComponent comp) {
-			if(rev.getRevisionType()==RevisionType.ADD) {
-				comp.setForeground(new Color(0, 80, 0));
-			} else if(rev.getRevisionType()==RevisionType.DEL) {
-				comp.setForeground(new Color(170, 0, 0));
-			} else {
-				comp.setForeground(new Color(150, 100, 0));
-			}
-		}
-		@Override
-		public boolean isMultiline() {
-			return true;
+			return row.getStudy()==null?"": row.getStudy().getStudyId();
 		}
 	};
 
@@ -104,18 +87,40 @@ public class RevisionTableModel extends ExtendTableModel<Revision> {
 		public String getValue(Revision row) {
 			return row.getReason();
 		}
-		@Override
-		public boolean isMultiline() {return true;}
 	};
 
+	/**
+	 * Column used to show the change between 2 revisions
+	 */
 	private StringColumn<Revision> changeColumn = new StringColumn<Revision>("Change") {
+
+		private JLabel htmlLabel = new JLabel();
+		/**
+		 * The value shows the change filtered by the entity
+		 */
 		@Override
 		public String getValue(Revision row) {
-			return row.getDifference().replace(", ", "\n");
+			return row.getDifferenceFormatted(filterByType, filterById, filterBySid);
+		}
+
+		/**
+		 * The tooltip shows the global change
+		 */
+		@Override
+		public String getToolTipText(Revision row) {
+			if(!"true".equals(System.getProperty("test"))) return null;
+			return row.getDifference().toString();
+		}
+		@Override
+		public JComponent getCellComponent(AbstractExtendTable<Revision> table, Revision row, int rowNo, Object value) {
+			htmlLabel.setText((String) value);
+			return htmlLabel;
 		}
 
 		@Override
 		public void postProcess(AbstractExtendTable<Revision> table, Revision rev, int rowNo, Object value, JComponent comp) {
+			super.postProcess(table, rev, rowNo, value, comp);
+			htmlLabel.setOpaque(true);
 			if(rev.getRevisionType()==RevisionType.ADD) {
 				comp.setForeground(new Color(0, 80, 0));
 			} else if(rev.getRevisionType()==RevisionType.DEL) {
@@ -139,24 +144,24 @@ public class RevisionTableModel extends ExtendTableModel<Revision> {
 		allColumns.add(revColumn.setHideable(true));
 		allColumns.add(userColumn);
 		allColumns.add(dateColumn);
-		//		allColumns.add(studyColumn);
-		allColumns.add(whatColumn);
+		allColumns.add(studyColumn);
 		allColumns.add(changeColumn);
-		allColumns.add(reasonColumn);
+		if(SpiritProperties.getInstance().isChecked(PropertyKey.SYSTEM_ASKREASON)) {
+			allColumns.add(reasonColumn);
+		}
 		setColumns(allColumns);
 		showAllHideable(true);
 	}
 
-	@Override
-	public void setRows(List<Revision> rows) {
-		super.setRows(rows);
+	/**
+	 * Sets filters to show only changes related to the entityType / entityId
+	 * (sets to null to show all changes)
+	 * @param filterByType
+	 * @param filterById
+	 */
+	public void setFilters(String filterByType, Serializable filterById, Integer filterBySid) {
+		this.filterByType = filterByType;
+		this.filterById = filterById;
+		this.filterBySid = filterBySid;
 	}
-
-	//	public void setChangeMap(Map<Revision, String> changeMap) {
-	//		this.changeMap = changeMap;
-	//	}
-	//
-	//	public Map<Revision, String> getChangeMap() {
-	//		return changeMap;
-	//	}
 }

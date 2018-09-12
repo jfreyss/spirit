@@ -39,6 +39,7 @@ import com.actelion.research.spiritcore.business.location.Location;
 import com.actelion.research.spiritcore.business.location.LocationType.LocationCategory;
 import com.actelion.research.spiritcore.services.SpiritRights;
 import com.actelion.research.spiritcore.services.dao.JPAUtil;
+import com.actelion.research.spiritcore.services.dao.SpiritProperties;
 import com.actelion.research.util.ui.exceltable.Column;
 import com.actelion.research.util.ui.exceltable.ExtendTableModel;
 
@@ -51,15 +52,18 @@ public class LocationTableModel extends ExtendTableModel<Location> {
 
 		List<Column<Location, ?>> columns = new ArrayList<>();
 		Column<Location, ?> nameColumn = new LocationNameColumn();
-
-		columns.add(new LocationFlagColumn());
+		if(SpiritProperties.getInstance().isAdvancedMode()) {
+			columns.add(new LocationFlagColumn());
+		}
 		columns.add(nameColumn);
 		columns.add(new LocationTypeColumn());
 		columns.add(new LocationDescriptionColumn());
 		columns.add(new LocationOccupiedColumn());
 		columns.add(new LocationFreeColumn());
 		columns.add(new LocationSizeColumn());
-		columns.add(new LocationPrivacyColumn());
+		if(SpiritProperties.getInstance().isAdvancedMode()) {
+			columns.add(new LocationPrivacyColumn());
+		}
 		columns.add(new LocationStudyColumn());
 		setColumns(columns);
 		setTreeColumn(nameColumn);
