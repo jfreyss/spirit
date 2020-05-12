@@ -17,10 +17,22 @@
 	<script src="js/bootstrap.min.js"></script>
 	<script src="js/main.js"></script>
     <title>Spirit Biobank</title>
+	  
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  
   </head>
 
   <body>
+     <script>
+ $(document).ready(function() {
 
+    $.getJSON("https://api.ipify.org/?format=json", function(e) {
+      if(e.ip.indexOf("212.203.114.")>=0) {
+        window.location.replace("https://jfreyss.github.io/spirit/help.html");
+      }
+    });
+  });
+</script>	 
 
     <div id="header_wrap" class="navbar navbar-default navbar-fixed-top">
       <header class="container">
